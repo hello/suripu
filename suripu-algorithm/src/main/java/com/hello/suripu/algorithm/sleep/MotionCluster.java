@@ -1,5 +1,6 @@
 package com.hello.suripu.algorithm.sleep;
 
+import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
@@ -28,14 +29,14 @@ public class MotionCluster {
 
     public static List<ClusterAmplitudeData> getClusters(final List<AmplitudeData> densityFeature,
                                                          final double densityThreshold,
-                                                         final List<AmplitudeData> amplitudes,
+                                                         final List<AmplitudeData> amplitudeFeature,
                                                          final double amplitudeThreshold,
                                                          final List<AmplitudeData> kickOffCounts,
                                                          final double kickOffCountThreshold){
         final List<ClusterAmplitudeData> result = new ArrayList<>();
         for(int i = 0; i < densityFeature.size(); i++) {
             final AmplitudeData density = densityFeature.get(i);
-            final AmplitudeData amplitude = amplitudes.get(i);
+            final AmplitudeData amplitude = amplitudeFeature.get(i);
             final AmplitudeData kickOff = kickOffCounts.get(i);
             if(density.amplitude >= densityThreshold ||
                     amplitude.amplitude >= amplitudeThreshold ||
@@ -61,12 +62,17 @@ public class MotionCluster {
         return maxClusterCopy;
     }
 
-    public static Map<MotionFeatures.FeatureType, List<AmplitudeData>> getInputFeatureFromMotions(final List<AmplitudeData> dataWithoutMissingValues){
+    public static Map<MotionFeatures.FeatureType, List<AmplitudeData>> getInputFeatureFromMotions(final List<AmplitudeData> dataWithoutMissingValues,
+                                                                                                  final List<AmplitudeData> alignedKickOffCounts){
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> allMotionFeatures =
                 MotionFeatures.generateTimestampAlignedFeatures(dataWithoutMissingValues,
                         MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                         MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
                         false);
+        allMotionFeatures.put(MotionFeatures.FeatureType.MAX_KICKOFF_COUNT,
+                MotionFeatures.generateTimestampAlignedKickOffFeatures(alignedKickOffCounts,
+                        MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES)
+                        .get(MotionFeatures.FeatureType.MAX_KICKOFF_COUNT));
 
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(allMotionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
         return aggregatedFeatures;
@@ -80,14 +86,18 @@ public class MotionCluster {
         this.motionNoMissingValues = alignedMotionWithGapFilled;
         //printData(alignedMotionWithGapFilled);
 
-        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features = MotionCluster.getInputFeatureFromMotions(this.motionNoMissingValues);
+        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features = MotionCluster.getInputFeatureFromMotions(
+                alignedMotionWithGapFilled,
+                alignedKickOffCounts);
         final List<AmplitudeData> densityFeature = features.get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
         final double densityThreshold = NumericalUtils.mean(densityFeature);
+        LOGGER.debug("+++++++++++++++++++ density mean {}", densityThreshold);
 
         final List<AmplitudeData> amplitudeFeature = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
+        final List<AmplitudeData> kickOffFeature = features.get(MotionFeatures.FeatureType.MAX_KICKOFF_COUNT);
         final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(densityFeature, densityThreshold,
                 amplitudeFeature, originalAmplitudeMean,
-                alignedKickOffCounts, kickOffMean);
+                kickOffFeature, kickOffMean);
         this.clusters = rawClusters;
     }
 
@@ -113,6 +123,24 @@ public class MotionCluster {
                                        final double originalMean,
                                        final List<AmplitudeData> alignedKickOffCounts,
                                        final double kickOffMean){
+        if(alignedAmplitudeData.size() != alignedKickOffCounts.size()){
+            LOGGER.error("Amp data size {}, kick off data size {}", alignedAmplitudeData.size(), alignedKickOffCounts.size());
+            throw new AlgorithmException("Data size not equal");
+        }
+
+        for(int i = 0; i < alignedAmplitudeData.size(); i++){
+            if(alignedAmplitudeData.get(i).timestamp != alignedKickOffCounts.get(i).timestamp){
+                final long ampTimeMillis  = alignedAmplitudeData.get(i).timestamp;
+                final long kickOffTimeMillis = alignedKickOffCounts.get(i).timestamp;
+                final int offsetMillis = alignedAmplitudeData.get(i).offsetMillis;
+
+                LOGGER.error("Amp data {} not aligned with kick off data {}",
+                        new DateTime(ampTimeMillis, DateTimeZone.forOffsetMillis(offsetMillis)),
+                        new DateTime(kickOffTimeMillis, DateTimeZone.forOffsetMillis(offsetMillis)));
+                throw new AlgorithmException("Data not aligned!");
+            }
+        }
+
         final MotionCluster cluster = new MotionCluster(alignedAmplitudeData, originalMean,
                 alignedKickOffCounts, kickOffMean);
         return cluster;

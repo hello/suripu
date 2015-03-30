@@ -58,13 +58,13 @@ public class Vote {
                 lightOutTimes,
                 firstWaveTimeOptional);
 
-        final List<AmplitudeData> noDuplicates = DataUtils.dedupe(rawData);
+        final List<AmplitudeData> noDuplicates = DataUtils.makePositive(DataUtils.dedupe(rawData));
         this.rawAmpMean = NumericalUtils.mean(noDuplicates);
         final List<AmplitudeData> noDuplicateKickOffCounts = DataUtils.dedupe(kickOffCounts);
         this.rawKickOffMean = NumericalUtils.mean(noDuplicateKickOffCounts);
 
-        List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
-        List<AmplitudeData> alignedKickOffs = DataUtils.fillMissingValuesAndMakePositive(noDuplicateKickOffCounts, DateTimeConstants.MILLIS_PER_MINUTE);
+        List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValues(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
+        List<AmplitudeData> alignedKickOffs = DataUtils.fillMissingValues(noDuplicateKickOffCounts, DateTimeConstants.MILLIS_PER_MINUTE);
         if(insertEmpty) {
             final int insertLengthMin = 20;
             dataWithGapFilled = DataUtils.insertEmptyData(dataWithGapFilled, insertLengthMin, 1);
@@ -158,7 +158,7 @@ public class Vote {
 
     private Map<MotionFeatures.FeatureType, List<AmplitudeData>> capFeaturesBySleepPeriod(final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
                                                                                           final Segment sleepPeriod){
-        final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
+        final Set<MotionFeatures.FeatureType> featureTypes = features.keySet();
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> result = new HashMap<>();
         for(final MotionFeatures.FeatureType featureType:featureTypes){
             result.put(featureType, new ArrayList<AmplitudeData>());
@@ -168,7 +168,7 @@ public class Vote {
                 result.put(featureType, Lists.newArrayList(features.get(featureType)));
             }
 
-            final List<AmplitudeData> originalFeature = aggregatedFeatures.get(featureType);
+            final List<AmplitudeData> originalFeature = features.get(featureType);
 
             for(int i = 0; i < originalFeature.size(); i++){
                 final AmplitudeData item = originalFeature.get(i);
@@ -185,6 +185,11 @@ public class Vote {
     }
 
     public SleepEvents<Segment> getResult(final boolean debug){
+        if(debug){
+            LOGGER.debug("+++++++++++++ amp mean {}, kickoff mean {}", this.rawAmpMean, this.rawKickOffMean);
+            MotionCluster.printClusters(this.motionCluster.getCopyOfClusters());
+        }
+
         final SleepEvents<Segment> sleepEvents = motionScoreAlgorithmInternal.getSleepEvents(debug);
         final SleepEvents<Segment> defaultEvents = this.motionScoreAlgorithmDefault.getSleepEvents(debug);
 
@@ -406,6 +411,9 @@ public class Vote {
         final Segment lastClusterInSleepPeriod = clustersInSleepPeriod.get(clustersInSleepPeriod.size() - 1);
         if(lastClusterInSleepPeriod.getStartTimestamp() == clusters.get(originalBounds.fst).timestamp &&
                 lastClusterInSleepPeriod.getEndTimestamp() == clusters.get(originalBounds.snd).timestamp){
+            LOGGER.debug("Wake up all agree! wake up cluster {} - {}",
+                    new DateTime(lastClusterInSleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(lastClusterInSleepPeriod.getOffsetMillis())),
+                    new DateTime(lastClusterInSleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(lastClusterInSleepPeriod.getOffsetMillis())));
             return originalBounds;
         }
 
@@ -413,6 +421,12 @@ public class Vote {
                 lastClusterInSleepPeriod.getDuration() < 20 * DateTimeConstants.MILLIS_PER_MINUTE){
             return originalBounds;
         }
+
+        LOGGER.debug("Detected cluster too far form end of sleep, detected cluster {} - {}, last cluster {} - {}",
+                new DateTime(clusters.get(originalBounds.fst).timestamp, DateTimeZone.forOffsetMillis(clusters.get(originalBounds.fst).offsetMillis)),
+                new DateTime(clusters.get(originalBounds.snd).timestamp, DateTimeZone.forOffsetMillis(clusters.get(originalBounds.snd).offsetMillis)),
+                new DateTime(lastClusterInSleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(lastClusterInSleepPeriod.getOffsetMillis())),
+                new DateTime(lastClusterInSleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(lastClusterInSleepPeriod.getOffsetMillis())));
 
         final long startSearchMillis = clusters.get(originalBounds.snd).timestamp + 5 * DateTimeConstants.MILLIS_PER_MINUTE;
         final long endSearchMillis = sleepPeriod.getEndTimestamp();

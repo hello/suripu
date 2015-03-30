@@ -44,7 +44,19 @@ public class DataUtils {
         return result;
     }
 
-    public static List<AmplitudeData> fillMissingValuesAndMakePositive(final List<AmplitudeData> rawData, final int intervalMillis){
+    public static List<AmplitudeData> makePositive(final List<AmplitudeData> rawData){
+        final List<AmplitudeData> result = new ArrayList<>();
+        final double minAmplitude = Ordering.natural().min(rawData).amplitude;
+        for(final AmplitudeData motion: rawData) {
+            result.add(new AmplitudeData(motion.timestamp,
+                    motion.amplitude - minAmplitude,  // DONOT filter out the negative values, they are just off calibration!
+                    motion.offsetMillis));
+        }
+
+        return result;
+    }
+
+    public static List<AmplitudeData> fillMissingValues(final List<AmplitudeData> rawData, final int intervalMillis){
 
         final List<AmplitudeData> result = new ArrayList<>();
         final double minAmplitude = Ordering.natural().min(rawData).amplitude;
@@ -60,10 +72,10 @@ public class DataUtils {
                     result.addAll(gapData);
                 }
             }
-            result.add(new AmplitudeData(motion.timestamp,
-                    motion.amplitude - minAmplitude,  // DONOT filter out the negative values, they are just off calibration!
-                    motion.offsetMillis));
 
+            result.add(new AmplitudeData(motion.timestamp,
+                    motion.amplitude,
+                    motion.offsetMillis));
         }
 
         return result;

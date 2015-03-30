@@ -25,17 +25,17 @@ public class MotionClusterTest extends CSVFixtureTest {
 
     @Test
     public void testGetSleepTimeSpan(){
-        final List<AmplitudeData> input = DataUtils.dedupe(loadAmpFromResource("fixtures/pang_motion_2015_03_26_raw.csv"));
+        final List<AmplitudeData> input = DataUtils.makePositive(DataUtils.dedupe(loadAmpFromResource("fixtures/pang_motion_2015_03_26_raw.csv")));
         final List<AmplitudeData> kickoffs = DataUtils.dedupe(loadKickOffFromResource("fixtures/pang_motion_2015_03_26_raw.csv"));
         final double ampMean = NumericalUtils.mean(input);
         final double kickOffMean = NumericalUtils.mean(kickoffs);
 
         final int timezoneOffset = input.get(0).offsetMillis;
         final List<AmplitudeData> alignedAmp = DataUtils.insertEmptyData(
-                DataUtils.fillMissingValuesAndMakePositive(input, DateTimeConstants.MILLIS_PER_MINUTE),
+                DataUtils.fillMissingValues(input, DateTimeConstants.MILLIS_PER_MINUTE),
                 20, 1);
         final List<AmplitudeData> alignedKicks = DataUtils.insertEmptyData(
-                DataUtils.fillMissingValuesAndMakePositive(kickoffs, DateTimeConstants.MILLIS_PER_MINUTE),
+                DataUtils.fillMissingValues(kickoffs, DateTimeConstants.MILLIS_PER_MINUTE),
                 20, 1);
 
 
