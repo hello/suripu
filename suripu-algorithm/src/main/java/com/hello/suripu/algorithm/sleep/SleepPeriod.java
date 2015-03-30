@@ -28,8 +28,8 @@ public class SleepPeriod extends Segment {
     private SleepPeriod(final Segment sleepPeriod){
         super(sleepPeriod.getStartTimestamp(), sleepPeriod.getEndTimestamp(), sleepPeriod.getOffsetMillis());
 
-        long slotMillis = sleepPeriod.getStartTimestamp() - 30 * DateTimeConstants.MILLIS_PER_MINUTE;
-        while(slotMillis < sleepPeriod.getEndTimestamp() + 30 * DateTimeConstants.MILLIS_PER_MINUTE){
+        long slotMillis = sleepPeriod.getStartTimestamp() - 10 * DateTimeConstants.MILLIS_PER_MINUTE;
+        while(slotMillis < sleepPeriod.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE){
             votes.add(new Pair<>(slotMillis, 0d));
             slotMillis += DateTimeConstants.MILLIS_PER_MINUTE;
         }
@@ -180,6 +180,8 @@ public class SleepPeriod extends Segment {
         int offsetMillis = motionClusters.get(0).getOffsetMillis();
         if(isUserInBed(startMillis, endMillis, alignedMotionAmp)){
             stack.push(new Segment(startMillis, motionClusters.get(0).getEndTimestamp(), offsetMillis));
+        }else{
+            stack.push(new Segment(motionClusters.get(0).getStartTimestamp(), motionClusters.get(0).getEndTimestamp(), offsetMillis));
         }
 
         long lastMotionMillis = alignedMotionAmp.get(alignedMotionAmp.size() - 1).timestamp;
