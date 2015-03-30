@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public class TrendGraphUtils {
 
-    private static int TRENDS_AVAILABLE_AFTER_DAYS = 3; // no trends before collecting 10 days of data
+    private static int TRENDS_AVAILABLE_AFTER_DAYS = 7; // no trends before collecting 10 days of data
 
     public static TrendGraph getDayOfWeekGraph(final TrendGraph.DataType dataType, final TrendGraph.TimePeriodType timePeriodType, final List<DowSample> rawData) {
 
@@ -100,13 +100,10 @@ public class TrendGraphUtils {
     public static List<AvailableGraph> getGraphList(final Account account) {
 
         final List<AvailableGraph> graphlist = new ArrayList<>();
-        final boolean eligible = checkEligibility(account.created);
-        if (eligible) {
-            graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_DURATION.getValue(), TrendGraph.TimePeriodType.DAY_OF_WEEK.getValue()));
+        graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_DURATION.getValue(), TrendGraph.TimePeriodType.DAY_OF_WEEK.getValue()));
 
-            for (TrendGraph.TimePeriodType timePeriodType : TrendGraph.TimePeriodType.values()) {
-                graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_SCORE.getValue(), timePeriodType.getValue()));
-            }
+        for (TrendGraph.TimePeriodType timePeriodType : TrendGraph.TimePeriodType.values()) {
+            graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_SCORE.getValue(), timePeriodType.getValue()));
         }
         return graphlist;
     }
@@ -136,13 +133,6 @@ public class TrendGraphUtils {
             dayOfWeekData.add(new DowSample(i+1, avgValue));
         }
         return dayOfWeekData;
-    }
-
-    public static boolean checkEligibility(final DateTime accountCreated) {
-        if (accountCreated.plusDays(TRENDS_AVAILABLE_AFTER_DAYS).isBeforeNow()) {
-            return true;
-        }
-        return false;
     }
 
     private static DateTime getDateTimeFromString(final String dateString) {

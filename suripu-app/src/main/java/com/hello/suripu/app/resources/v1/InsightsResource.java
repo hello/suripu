@@ -50,6 +50,7 @@ public class InsightsResource {
     private static int MIN_DATAPOINTS = 2;
     private static int MAX_INSIGHTS_NUM = 20;
     private static int DAY_OF_WEEK_LOOKBACK = 90; // days
+    private static int TRENDS_AVAILABLE_AFTER_DAYS = 7;
 
     private final AccountDAO accountDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
@@ -164,7 +165,11 @@ public class InsightsResource {
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
         if (optionalAccount.isPresent()) {
-            return TrendGraphUtils.getGraphList(optionalAccount.get());
+            final Account account = optionalAccount.get();
+            final boolean eligible = checkTrendsEligibility(account.id.get());
+            if (eligible) {
+                return TrendGraphUtils.getGraphList(optionalAccount.get());
+            }
         }
         return Collections.emptyList();
     }
@@ -191,11 +196,12 @@ public class InsightsResource {
 
         if (optionalAccount.isPresent()) {
             final Account account = optionalAccount.get();
-            final boolean eligible = TrendGraphUtils.checkEligibility(account.created);
+            final long accountId = account.id.get();
+
+            final boolean eligible = checkTrendsEligibility(accountId);
+
             if (eligible) {
                 // add all the default graphs
-                final long accountId = account.id.get();
-
                 final Optional<TrendGraph> sleepScoreDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_SCORE);
                 if (sleepScoreDayOfWeek.isPresent()) {
                     graphs.add(sleepScoreDayOfWeek.get());
@@ -309,4 +315,19 @@ public class InsightsResource {
         return trackerMotionDAO.getOffsetMillisForDates(accountId, dates);
     }
 
+    private Boolean checkTrendsEligibility(final Long accountId) {
+        final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
+        final DateTime startDate = endDate.minusDays(TRENDS_AVAILABLE_AFTER_DAYS);
+
+        final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
+                DateTimeUtil.dateToYmdString(startDate),
+                DateTimeUtil.dateToYmdString(endDate),
+                TRENDS_AVAILABLE_AFTER_DAYS);
+
+        if (sleepStats.size() < TRENDS_AVAILABLE_AFTER_DAYS) {
+            return false;
+        }
+        return true;
+
+    }
 }
