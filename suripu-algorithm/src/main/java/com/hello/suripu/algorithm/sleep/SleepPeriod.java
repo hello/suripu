@@ -18,16 +18,16 @@ import java.util.Stack;
 /**
  * Created by pangwu on 3/28/15.
  */
-public class SleepPeriod {
+public class SleepPeriod extends Segment {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepPeriod.class);
 
     public static int ACCEPTABLE_QUIET_PERIOD_MILLIS = 90 * DateTimeConstants.MILLIS_PER_MINUTE;
     private final List<List<Segment>> voteSegments = new ArrayList<>();
     private final List<Pair<Long, Double>> votes = new ArrayList<>();
-    private final Segment segment;
 
     private SleepPeriod(final Segment sleepPeriod){
-        this.segment = sleepPeriod;
+        super(sleepPeriod.getStartTimestamp(), sleepPeriod.getEndTimestamp(), sleepPeriod.getOffsetMillis());
+
         long slotMillis = sleepPeriod.getStartTimestamp() - 30 * DateTimeConstants.MILLIS_PER_MINUTE;
         while(slotMillis < sleepPeriod.getEndTimestamp() + 30 * DateTimeConstants.MILLIS_PER_MINUTE){
             votes.add(new Pair<>(slotMillis, 0d));
@@ -59,6 +59,26 @@ public class SleepPeriod {
         }
     }
 
+    private boolean isAwake(final long startMillis, final long endMillis){
+        if(endMillis - startMillis > DateTimeConstants.MILLIS_PER_MINUTE * 10){
+            return true;
+        }
+
+        double maxVote = 0;
+        for(int i = 0; i < this.votes.size(); i++){
+            final Pair<Long, Double> vote = this.votes.get(i);
+            if(vote.fst >= startMillis && vote.fst <= endMillis && vote.snd > maxVote){
+                maxVote = vote.snd;
+            }
+        }
+
+        if(maxVote >= 3){  // sure sure sure
+            return true;
+        }
+
+        return false;
+    }
+
     public List<Segment> getAwakePeriods(final boolean debug){
         long startMillis = 0;
         long endMillis = 0;
@@ -72,14 +92,23 @@ public class SleepPeriod {
                 }
                 endMillis = vote.fst;
             }else {
-                if(endMillis - startMillis > DateTimeConstants.MILLIS_PER_MINUTE * 10){
-                    result.add(new Segment(startMillis, endMillis, this.segment.getOffsetMillis()));
+                if(isAwake(startMillis, endMillis)){
+                    result.add(new Segment(startMillis, endMillis, this.getOffsetMillis()));
                     if(debug){
                         LOGGER.debug("User awake at {} - {}",
-                                new DateTime(startMillis, DateTimeZone.forOffsetMillis(this.segment.getOffsetMillis())),
-                                new DateTime(endMillis, DateTimeZone.forOffsetMillis(this.segment.getOffsetMillis())));
+                                new DateTime(startMillis, DateTimeZone.forOffsetMillis(this.getOffsetMillis())),
+                                new DateTime(endMillis, DateTimeZone.forOffsetMillis(this.getOffsetMillis())));
                     }
                 }
+            }
+        }
+
+        if(isAwake(startMillis, endMillis)){
+            result.add(new Segment(startMillis, endMillis, this.getOffsetMillis()));
+            if(debug){
+                LOGGER.debug("User awake at {} - {}",
+                        new DateTime(startMillis, DateTimeZone.forOffsetMillis(this.getOffsetMillis())),
+                        new DateTime(endMillis, DateTimeZone.forOffsetMillis(this.getOffsetMillis())));
             }
         }
         return result;

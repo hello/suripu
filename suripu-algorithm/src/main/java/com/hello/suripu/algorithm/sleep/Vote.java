@@ -41,17 +41,18 @@ public class Vote {
     private final double rawAmpMean;
     private final double rawKickOffMean;
 
-    private final Segment sleepPeriod;
+    private final SleepPeriod sleepPeriod;
 
     private final boolean insertEmpty = true;
     private final boolean ampFilter = false;
     private final boolean tailBias = false;
     private final boolean smoothCluster = false;
     private final boolean removeNoise = true;
-    private final boolean defaultOverride = false;
+    private final boolean defaultOverride = true;
 
     public Vote(final List<AmplitudeData> rawData,
                 final List<AmplitudeData> kickOffCounts,
+                final List<AmplitudeData> rawSound,
                 final List<DateTime> lightOutTimes,
                 final Optional<DateTime> firstWaveTimeOptional){
         this.motionScoreAlgorithmDefault = MotionScoreAlgorithm.createDefault(rawData,
@@ -75,7 +76,9 @@ public class Vote {
         final List<Segment> motionSegments = MotionCluster.toSegments(this.motionCluster.getCopyOfClusters());
         final Optional<Segment> inBedSegment = SleepPeriod.getSleepPeriod(dataWithGapFilled, motionSegments);
 
-        this.sleepPeriod  = inBedSegment.get();
+        this.sleepPeriod = SleepPeriod.createFromSegment(inBedSegment.get());
+        this.sleepPeriod.addVotingSegments(motionSegments);
+        this.sleepPeriod.addVotingSegments(SoundCluster.getClusters(rawSound));
         LOGGER.debug("data start from {} to {}", new DateTime(this.sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())),
                 new DateTime(this.sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())));
 
@@ -221,8 +224,8 @@ public class Vote {
 
     private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents,
                                            final SleepEvents<Segment> defaultEvents){
-        final long sleepTime = sleepEvents.fallAsleep.getStartTimestamp();
-        final long wakeUpTime = sleepEvents.wakeUp.getStartTimestamp();
+        final long sleepTime = defaultEvents.fallAsleep.getStartTimestamp();
+        final long wakeUpTime = defaultEvents.wakeUp.getStartTimestamp();
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
         final Pair<Integer, Integer> sleepBounds = pickSleepClusterIndex(clusterCopy,
                 this.getAggregatedFeatures(),
@@ -264,9 +267,9 @@ public class Vote {
             sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
                     defaultEvents.fallAsleep.getEndTimestamp(),
                     defaultEvents.fallAsleep.getOffsetMillis());
-            if(defaultEvents.goToBed.getStartTimestamp() < defaultEvents.fallAsleep.getStartTimestamp()){
-                inBed = new Segment(defaultEvents.fallAsleep.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                        defaultEvents.fallAsleep.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+            if(defaultEvents.goToBed.getStartTimestamp() > defaultEvents.fallAsleep.getStartTimestamp()){
+                inBed = new Segment(defaultEvents.fallAsleep.getStartTimestamp() - 10 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        defaultEvents.fallAsleep.getEndTimestamp() - 10 * DateTimeConstants.MILLIS_PER_MINUTE,
                         defaultEvents.fallAsleep.getOffsetMillis());
             }
         }
