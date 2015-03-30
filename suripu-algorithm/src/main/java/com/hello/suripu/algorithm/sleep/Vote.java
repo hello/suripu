@@ -230,8 +230,8 @@ public class Vote {
 
     private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents,
                                            final SleepEvents<Segment> defaultEvents){
-        final long sleepSearchTime = defaultSearch ? defaultEvents.fallAsleep.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
-        final long wakeUpSearchTime = defaultSearch ? defaultEvents.wakeUp.getStartTimestamp() : sleepEvents.fallAsleep.getStartTimestamp();
+        final long sleepSearchTime = Math.max(defaultEvents.fallAsleep.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
+        final long wakeUpSearchTime = Math.min(defaultEvents.wakeUp.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
 
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
         final Pair<Integer, Integer> sleepBounds = pickSleepClusterIndex(clusterCopy,
