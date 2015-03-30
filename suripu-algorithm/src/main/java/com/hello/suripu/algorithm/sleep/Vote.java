@@ -334,10 +334,12 @@ public class Vote {
     private static long pickMaxScoreWakeUp(final List<ClusterAmplitudeData> wakeUpMotionCluster,
                                            final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
                                            final long originalWakeUpMillis){
+        final List<AmplitudeData> feature = features.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE);
+        final long motionEndMillis = feature.get(feature.size() - 1).timestamp;
         final Optional<AmplitudeData> maxScoreItem = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                wakeUpMotionCluster.get(0).timestamp,
-                wakeUpMotionCluster.get(wakeUpMotionCluster.size() - 1).timestamp);
+                originalWakeUpMillis,
+                motionEndMillis);
         if(!maxScoreItem.isPresent()){
             return originalWakeUpMillis;
         }
@@ -357,6 +359,7 @@ public class Vote {
         final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, wakeUpMillisSleepPeriod);
         final Pair<Integer, Integer> defaultBounds = MotionCluster.getClusterByTime(clusters, wakeUpMillisGlobal);
 
+        /*
         if(isEmptyBounds(defaultBounds) && isEmptyBounds(originalBounds)){
             if(clusters.size() > 0) {
                 LOGGER.debug("No significant motion in both {}(sleep period) and {}(global)",
@@ -369,13 +372,14 @@ public class Vote {
         if(isEmptyBounds(originalBounds)){
             return pickMaxScoreWakeUp(wakeUpMotionCluster, features, wakeUpMillisGlobal);
         }
+        */
 
-        if(clusters.get(originalBounds.fst).timestamp == wakeUpMotionCluster.get(0).timestamp &&
+        if(!isEmptyBounds(originalBounds) && clusters.get(originalBounds.fst).timestamp == wakeUpMotionCluster.get(0).timestamp &&
                 clusters.get(originalBounds.snd).timestamp == wakeUpMotionCluster.get(wakeUpMotionCluster.size() - 1).timestamp){
             return wakeUpMillisSleepPeriod;
         }
 
-        return pickMaxScoreWakeUp(wakeUpMotionCluster, features, wakeUpMillisGlobal);
+        return pickMaxScoreWakeUp(wakeUpMotionCluster, features, Math.max(wakeUpMillisGlobal, wakeUpMillisSleepPeriod));
     }
 
     private static ClusterAmplitudeData getItem(final List<ClusterAmplitudeData> clusters, final int i){
