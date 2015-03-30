@@ -358,6 +358,11 @@ public class Vote {
         final Pair<Integer, Integer> defaultBounds = MotionCluster.getClusterByTime(clusters, wakeUpMillisGlobal);
 
         if(isEmptyBounds(defaultBounds) && isEmptyBounds(originalBounds)){
+            if(clusters.size() > 0) {
+                LOGGER.debug("No significant motion in both {}(sleep period) and {}(global)",
+                        new DateTime(wakeUpMillisSleepPeriod, DateTimeZone.forOffsetMillis(clusters.get(0).offsetMillis)),
+                        new DateTime(wakeUpMillisGlobal, DateTimeZone.forOffsetMillis(clusters.get(0).offsetMillis)));
+            }
             return wakeUpMillisGlobal;
         }
 
