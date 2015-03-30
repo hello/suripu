@@ -8,7 +8,6 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.DataUtils;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
 import org.joda.time.DateTimeConstants;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,7 @@ import static org.hamcrest.Matchers.is;
 public class MotionClusterTest extends CSVFixtureTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(MotionClusterTest.class);
 
-    @Test
+    //@Test
     public void testGetSleepTimeSpan(){
         final List<AmplitudeData> input = DataUtils.makePositive(DataUtils.dedupe(loadAmpFromResource("fixtures/pang_motion_2015_03_26_raw.csv")));
         final List<AmplitudeData> kickoffs = DataUtils.dedupe(loadKickOffFromResource("fixtures/pang_motion_2015_03_26_raw.csv"));

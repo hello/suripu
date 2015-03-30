@@ -256,6 +256,7 @@ public class Vote {
             inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
             final long sleepTimestamp = pickSleep(clusterCopy,
                     MotionCluster.copyRange(clusterCopy, sleepBounds.fst, sleepBounds.snd),
+                    this.sleepPeriod,
                     this.getAggregatedFeatures(),
                     sleep.getStartTimestamp());
 
@@ -371,7 +372,7 @@ public class Vote {
         }*/
 
         if(isEmptyBounds(originalBounds)){
-            return pickMaxScoreWakeUp(sleepPeriod, features, wakeUpMillisGlobal);
+            return pickMaxScoreWakeUp(sleepPeriod, features, wakeUpMillisSleepPeriod);
         }
 
         if(clusters.get(originalBounds.fst).timestamp == wakeUpMotionCluster.get(0).timestamp &&
@@ -516,7 +517,8 @@ public class Vote {
     }
 
     protected static long pickSleep(final List<ClusterAmplitudeData> clusters,
-                            final List<ClusterAmplitudeData> sleepMotionCluster,
+                             final List<ClusterAmplitudeData> sleepMotionCluster,
+                             final SleepPeriod sleepPeriod,
                              final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
                              final long originalSleepMillis){
 
@@ -532,8 +534,9 @@ public class Vote {
 
         final Optional<AmplitudeData> maxScoreItem = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
-                sleepMotionCluster.get(0).timestamp,
-                sleepMotionCluster.get(sleepMotionCluster.size() - 1).timestamp);
+                sleepPeriod.getStartTimestamp(),
+                sleepPeriod.getStartTimestamp() + sleepPeriod.getDuration() / 3);
+
         if(!maxScoreItem.isPresent()){
             return originalSleepMillis;
         }
