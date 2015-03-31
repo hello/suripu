@@ -164,7 +164,14 @@ public class DeviceResources {
     public DeviceStatusBreakdown getDeviceStatusBreakdown(final Long accountId) {
         final Jedis jedis = jedisPool.getResource();
         final DateTime currentTs = DateTime.now(DateTimeZone.UTC);
-        final long normalCount = jedis.zcount("devices", currentTs.minusDays(1).getMillis(), currentTs.getMillis());
+        long normalCount = 0;
+        try {
+            normalCount = jedis.zcount("devices", currentTs.minusDays(1).getMillis(), currentTs.getMillis());
+        } catch (Exception e) {
+            LOGGER.error("Failed to get active senses count", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
         return new DeviceStatusBreakdown((int)normalCount, -1, -1);
     }
 
