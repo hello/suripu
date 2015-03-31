@@ -33,6 +33,7 @@ import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.JedisPool;
 
 import java.util.TimeZone;
 
@@ -104,10 +105,14 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
                 120 // 2 minutes for cache
         );
+        final JedisPool jedisPool = new JedisPool(
+                configuration.getRedisConfiguration().getHost(),
+                configuration.getRedisConfiguration().getPort()
+        );
 
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
     }
 }
