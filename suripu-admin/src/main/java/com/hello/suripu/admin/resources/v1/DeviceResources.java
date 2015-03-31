@@ -162,6 +162,7 @@ public class DeviceResources {
     @Path("/status_breakdown")
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceStatusBreakdown getDeviceStatusBreakdown(final Long accountId) {
+        // TODO: move this out of url handler once we've validated this is what we want
         final Jedis jedis = jedisPool.getResource();
         final DateTime currentTs = DateTime.now(DateTimeZone.UTC);
         long normalCount = 0;
