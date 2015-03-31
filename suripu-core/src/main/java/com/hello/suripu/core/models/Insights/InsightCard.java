@@ -110,14 +110,24 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("timestamp")
     public final DateTime timestamp; // created timestamp in UTC
 
+    @JsonProperty("info_preview")
+    public final Optional<String> infoPreview;
+
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
+        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent());
+    }
+
+    public InsightCard(final Long accountId, final String title, final String message,
+                       final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                       final Optional<String> infoPreview) {
         this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
         this.category = category;
         this.timePeriod = timePeriod;
         this.timestamp = timestamp;
+        this.infoPreview = infoPreview;
     }
 
     @Override
@@ -131,6 +141,17 @@ public class InsightCard implements Comparable<InsightCard> {
 //        final DateTime objectTimestamp = this.timestamp;
 //        return (int) (objectTimestamp.getMillis() - compareTimestamp.getMillis()); // ascending
 
+    }
+
+    public InsightCard withInfoPreview(final String infoPreview) {
+        return new InsightCard(
+                this.accountId.get(),
+                this.title,
+                this.message,
+                this.category,
+                this.timePeriod,
+                this.timestamp,
+                Optional.fromNullable(infoPreview));
     }
 
 }
