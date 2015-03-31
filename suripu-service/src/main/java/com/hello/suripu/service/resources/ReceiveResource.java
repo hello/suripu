@@ -112,6 +112,14 @@ public class ReceiveResource extends BaseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public byte[] receiveBatchSenseData(final byte[] body) {
+
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        if(OTAProcessor.isPCH(ipAddress)) {
+            // return 202 to not confuse provisioning script with correct test key
+            LOGGER.info("IP {} is from PCH. Return HTTP 202", ipAddress);
+            return plainTextError(Response.Status.ACCEPTED, "");
+        }
+
         final SignedMessage signedMessage = SignedMessage.parse(body);
         DataInputProtos.batched_periodic_data data = null;
 
@@ -144,7 +152,7 @@ public class ReceiveResource extends BaseResource {
         final String deviceId = data.getDeviceId();
         final List<String> groups = groupFlipper.getGroups(deviceId);
 
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+
         final Optional<byte[]> optionalKeyBytes= getKey(deviceId, groups, ipAddress);
 
         if(!optionalKeyBytes.isPresent()) {
@@ -228,7 +236,7 @@ public class ReceiveResource extends BaseResource {
             final Long timestampMillis = data.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
-                LOGGER.error("The clock for device \"{}\" is not within reasonable bounds (2h), current time = {}, received time = {}",
+                LOGGER.error("The clock for device {} is not within reasonable bounds (2h), current time = {}, received time = {}",
                         data.getDeviceId(),
                         DateTime.now(),
                         roundedDateTime
