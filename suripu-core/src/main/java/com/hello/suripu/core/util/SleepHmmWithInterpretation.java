@@ -22,7 +22,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -308,7 +310,7 @@ CREATE CREATE CREATE
     }
 
 
-    protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
+    static protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
         Long eventTime =  SleepHmmSensorDataBinning.getTimeFromBin(index, numMinutesInWindow, t0);
 
         //  final long startTimestamp, final long endTimestamp, final int offsetMillis,
@@ -603,9 +605,9 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    Optional<SleepHmmResult> processEventsIntoResult(final int numMinutesInMeasPeriod, final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
+    static public Optional<SleepHmmResult> processEventsIntoResult(final int numMinutesInMeasPeriod, final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
 
-        List<Event> events = new ArrayList<>();
+        LinkedList<Event> events = new LinkedList<>();
         int minutesSpentInBed = 0;
         int minutesSpentSleeping = 0;
         int numTimesWokenUpDuringSleep = 0;
@@ -673,6 +675,32 @@ CREATE CREATE CREATE
         };
 
         Collections.sort(events,chronologicalComparator);
+
+
+
+        /* find orphan in/out of bed pairs and remove since there's no sleep in them */
+
+        /*
+        ListIterator<Event> it = events.listIterator();
+        Event prev = null;
+        while(it.hasNext()) {
+            final Event current = it.next();
+
+
+            if (prev != null) {
+                if (prev.getType() == Event.Type.IN_BED && current.getType() == Event.Type.OUT_OF_BED) {
+                    minutesSpentInBed -= (current.getStartTimestamp() - prev.getStartTimestamp()) / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                    it.previous();
+                    it.remove();
+                    it.next();
+                    it.remove();
+                }
+            }
+
+            prev = current;
+
+        }
+        */
 
         return Optional.of(new SleepHmmResult(new SleepStats(minutesSpentInBed,minutesSpentSleeping,numTimesWokenUpDuringSleep - 1,numSeparateSleepSegments),path,ImmutableList.copyOf(events)));
 

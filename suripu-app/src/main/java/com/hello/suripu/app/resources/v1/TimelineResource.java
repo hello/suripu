@@ -85,11 +85,15 @@ public class TimelineResource extends BaseResource {
         return Collections.EMPTY_LIST;
     }
 
-    private List<Timeline> getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
+    private List<Timeline> getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString, boolean forceUpdate){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
-        final List<Timeline> timelinesFromCache = getCachedTimelines(accountId, targetDate);
-        if(!timelinesFromCache.isEmpty()){
-            return timelinesFromCache;
+
+        //if no update forced (i.e. no HMM)
+        if (!forceUpdate) {
+            final List<Timeline> timelinesFromCache = getCachedTimelines(accountId, targetDate);
+            if (!timelinesFromCache.isEmpty()) {
+                return timelinesFromCache;
+            }
         }
 
         LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
@@ -106,12 +110,15 @@ public class TimelineResource extends BaseResource {
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
+        boolean forceUpdate = false;
+
         if (this.hasHmmEnabled(accessToken.accountId)) {
-            return this.timelineProcessor.retrieveHmmTimeline(accessToken.accountId,date);
+            forceUpdate = true;
         }
-        else {
-            return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
-        }
+
+
+        return getTimelinesFromCacheOrReprocess(accessToken.accountId, date,forceUpdate);
+
     }
 
     @Timed
@@ -127,7 +134,7 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        return getTimelinesFromCacheOrReprocess(accountId.get(), date);
+        return getTimelinesFromCacheOrReprocess(accountId.get(), date,false);
     }
 
     @Timed

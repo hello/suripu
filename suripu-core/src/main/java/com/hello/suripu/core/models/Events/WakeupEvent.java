@@ -8,13 +8,21 @@ import com.hello.suripu.core.translations.English;
  * Created by pangwu on 11/24/14.
  */
 public class WakeupEvent extends Event {
+    private final String wakeupMessage;
+
     public WakeupEvent(long startTimestamp, long endTimestamp, int timezoneOffset) {
         super(Type.WAKE_UP, startTimestamp, endTimestamp, timezoneOffset);
+        this.wakeupMessage = English.WAKE_UP_MESSAGE;
+    }
+
+    public WakeupEvent(long startTimestamp, long endTimestamp, int timezoneOffset, final String wakeupMessage) {
+        super(Type.WAKE_UP, startTimestamp, endTimestamp, timezoneOffset);
+        this.wakeupMessage = wakeupMessage;
     }
 
     @Override
     public String getDescription() {
-        return English.WAKE_UP_MESSAGE;
+        return this.wakeupMessage;
     }
 
     @Override
