@@ -181,7 +181,7 @@ public class SleepPeriod extends Segment {
         if(isUserInBed(startMillis, endMillis, alignedMotionAmp)){
             stack.push(new Segment(startMillis, motionClusters.get(0).getEndTimestamp(), offsetMillis));
         }else{
-            stack.push(new Segment(motionClusters.get(0).getStartTimestamp(), motionClusters.get(0).getEndTimestamp(), offsetMillis));
+            stack.push(new Segment(startMillis, motionClusters.get(0).getEndTimestamp(), offsetMillis));
         }
 
         long lastMotionMillis = alignedMotionAmp.get(alignedMotionAmp.size() - 1).timestamp;
@@ -195,7 +195,7 @@ public class SleepPeriod extends Segment {
             }
 
             final Segment sleepSegment = constructSegmentAndEmptyStack(stack, motionClusters.get(i));
-            stack.push(new Segment(motionClusters.get(i).getStartTimestamp(),
+            stack.push(new Segment(motionClusters.get(i - 1).getEndTimestamp(),
                     motionClusters.get(i).getEndTimestamp(),
                     motionClusters.get(i).getOffsetMillis()));
             LOGGER.debug("In bed period {} - {}",
