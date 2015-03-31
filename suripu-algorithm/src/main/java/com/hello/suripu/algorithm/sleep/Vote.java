@@ -274,7 +274,12 @@ public class Vote {
         Segment wakeUp = sleepEvents.wakeUp;
         Segment outBed = sleepEvents.outOfBed;
 
-        /*
+        final long wakeUpSearchTime = Math.min(defaultEvents.wakeUp.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
+        final Pair<Integer, Integer> wakeUpBounds = pickWakeUpClusterIndex(clusterCopy,
+                this.getAggregatedFeatures(),
+                this.sleepPeriod,
+                wakeUpSearchTime);
+        
         if(!isEmptyBounds(wakeUpBounds)){
             final ClusterAmplitudeData clusterStart = clusterCopy.get(wakeUpBounds.fst);
             final ClusterAmplitudeData clusterEnd = clusterCopy.get(wakeUpBounds.snd);
@@ -312,8 +317,9 @@ public class Vote {
                         wakeUp.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
                         wakeUp.getOffsetMillis());
             }
-        }*/
+        }
 
+        /*
         final long wakeUpMillis = pickWakeUp(sleepPeriod, getAggregatedFeatures(), wakeUp.getStartTimestamp());
         final Pair<Integer, Integer> wakeUpBounds = MotionCluster.getClusterByTime(clusterCopy, wakeUpMillis);
         if(isEmptyBounds(wakeUpBounds)){
@@ -334,6 +340,7 @@ public class Vote {
                     defaultEvents.wakeUp.getEndTimestamp(),
                     defaultEvents.wakeUp.getOffsetMillis());
         }
+        */
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
     }
@@ -353,7 +360,6 @@ public class Vote {
         return maxScoreItem.get().timestamp;
     }
 
-    /*
     protected static long pickWakeUp(final List<ClusterAmplitudeData> clusters,
                                 final List<ClusterAmplitudeData> wakeUpMotionCluster,
                                 final SleepPeriod sleepPeriod,
@@ -376,8 +382,9 @@ public class Vote {
 
         return pickMaxScoreWakeUp(sleepPeriod, features, wakeUpMillisSleepPeriod);
 
-    }*/
+    }
 
+    /*
     protected static long pickWakeUp(final SleepPeriod sleepPeriod,
                                      final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
                                      final long wakeUpMillisSleepPeriod){
@@ -395,7 +402,7 @@ public class Vote {
 
         return wakeUpMillisSleepPeriod;
 
-    }
+    }*/
 
     private static ClusterAmplitudeData getItem(final List<ClusterAmplitudeData> clusters, final int i){
         return clusters.get(i);
