@@ -132,7 +132,7 @@ public class SleepPeriod extends Segment {
         }
 
         // TODO: could be trained here, but so far I don't see it as necessary
-        if(motionCount <= 2){
+        if(motionCount > 0){
             return false;
         }
         return true;
