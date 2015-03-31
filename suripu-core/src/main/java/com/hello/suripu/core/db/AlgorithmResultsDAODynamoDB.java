@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -109,6 +110,12 @@ public class AlgorithmResultsDAODynamoDB {
         }catch (AmazonServiceException awsException){
             LOGGER.error("Server exception {} while saving {}'s result for account {}",
                     awsException.getMessage(),
+                    name,
+                    accountId);
+            return false;
+        }catch (AmazonClientException acExp){
+            LOGGER.error("AmazonClientException exception {} while saving {}'s result for account {}",
+                    acExp.getMessage(),
                     name,
                     accountId);
             return false;
