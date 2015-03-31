@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import org.slf4j.Logger;
@@ -120,7 +121,10 @@ public class FirmwareResource {
             final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
             for (String fw_version:seenFirmwares) {
                 final long fwCount = jedis.zcard(fw_version);
-                firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount));
+                if (fwCount > 0) {
+                    final long lastSeen = (long)jedis.zrevrangeWithScores(fw_version, 0, 1).iterator().next().getScore();
+                    firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount, lastSeen));
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Failed retrieving all seen firmwares.", e.getMessage());
@@ -161,5 +165,14 @@ public class FirmwareResource {
         }
 
         return fwHistory;
+    }
+
+    @DELETE
+    @Timed
+    @Path("/history/{fw_version}/")
+    public void clearFWHistory(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                      @PathParam("fw_version") final String fwVersion) {
+
+        LOGGER.debug("FW Version: {}", fwVersion);
     }
 }
