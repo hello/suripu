@@ -49,6 +49,7 @@ public class Vote {
     private final boolean smoothCluster = false;
     private final boolean removeNoise = true;
     private final boolean defaultSearch = false;
+    private final boolean capScoreOutOfPeriod = true;
     private final boolean defaultOverride = false;
 
     public Vote(final List<AmplitudeData> rawData,
@@ -91,8 +92,12 @@ public class Vote {
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
         LOGGER.debug("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
 
-        final Map<MotionFeatures.FeatureType, List<AmplitudeData>> capFeatures = capFeaturesBySleepPeriod(aggregatedFeatures, sleepPeriod);
-        this.aggregatedFeatures = capFeatures;
+        if(capScoreOutOfPeriod) {
+            final Map<MotionFeatures.FeatureType, List<AmplitudeData>> capFeatures = capFeaturesBySleepPeriod(aggregatedFeatures, sleepPeriod);
+            this.aggregatedFeatures = capFeatures;
+        }else{
+            this.aggregatedFeatures = aggregatedFeatures;
+        }
 
         final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm();
         sleepDetectionAlgorithm.addFeature(this.aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE), new AmplitudeDataScoringFunction());
@@ -234,10 +239,6 @@ public class Vote {
         //final long wakeUpSearchTime = Math.min(defaultEvents.wakeUp.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
 
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
-        /*final Pair<Integer, Integer> wakeUpBounds = pickWakeUpClusterIndex(clusterCopy,
-                this.getAggregatedFeatures(),
-                this.sleepPeriod,
-                wakeUpSearchTime);*/
 
         Segment inBed = sleepEvents.goToBed;
         Segment sleep = sleepEvents.fallAsleep;
@@ -413,7 +414,7 @@ public class Vote {
                                                            final Segment sleepPeriod,
                                                            final long originalSleepMillis){
         final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, originalSleepMillis);
-        final long endSearchTimeMillis = sleepPeriod.getStartTimestamp() + DateTimeConstants.MILLIS_PER_HOUR;
+        final long endSearchTimeMillis = sleepPeriod.getStartTimestamp() + 3 * DateTimeConstants.MILLIS_PER_HOUR;
         final Optional<AmplitudeData> maxWakeScoreItem = getMaxScore(aggregatedFeatures,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                 sleepPeriod.getStartTimestamp(),
@@ -545,7 +546,7 @@ public class Vote {
         final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                 sleepPeriod.getStartTimestamp(),
-                sleepPeriod.getStartTimestamp() + 2 * DateTimeConstants.MILLIS_PER_HOUR);
+                sleepPeriod.getStartTimestamp() + 3 * DateTimeConstants.MILLIS_PER_HOUR);
 
         final Optional<AmplitudeData> predictedMaxScoreItemOptional = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,

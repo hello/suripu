@@ -122,17 +122,26 @@ public class SleepPeriod extends Segment {
             return true;
         }
         int motionCount = 0;
+        int quietLength = 0;
+        int maxQuietLength = 0;
         for(int i = 0; i< alignedMotion.size(); i++) {
             final AmplitudeData motion = alignedMotion.get(i);
             if(motion.timestamp >= startMillis + 10 * DateTimeConstants.MILLIS_PER_MINUTE &&
-                    motion.timestamp <= endMillis - 10 * DateTimeConstants.MILLIS_PER_MINUTE &&
-                    motion.amplitude > 0) {
-                motionCount += 1;
+                    motion.timestamp <= endMillis - 10 * DateTimeConstants.MILLIS_PER_MINUTE) {
+                if(motion.amplitude > 0) {
+                    motionCount += 1;
+                    if(quietLength > maxQuietLength){
+                        maxQuietLength = quietLength;
+                    }
+                    quietLength = 0;
+                }else{
+                    quietLength++;
+                }
             }
         }
 
         // TODO: could be trained here, but so far I don't see it as necessary
-        if(motionCount > 0){
+        if(motionCount == 0 || (maxQuietLength > 90 && motionCount <= 2)){
             return false;
         }
         return true;
