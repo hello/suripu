@@ -265,6 +265,12 @@ public class Vote {
                     sleepPeriod.getOffsetMillis());
         }else{
             final ClusterAmplitudeData clusterStart = clusterCopy.get(sleepBounds.fst);
+            final ClusterAmplitudeData clusterEnd = clusterCopy.get(sleepBounds.snd);
+            /*final Optional<AmplitudeData> maxScore = getMaxScore(getAggregatedFeatures(),
+                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                    clusterStart.timestamp,
+                    clusterEnd.timestamp);*/
+
             inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
         }
 
@@ -382,7 +388,7 @@ public class Vote {
                                                            final Segment sleepPeriod,
                                                            final long originalSleepMillis){
         final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, originalSleepMillis);
-        final long endSearchTimeMillis = sleepPeriod.getStartTimestamp() + DateTimeConstants.MINUTES_PER_HOUR;
+        final long endSearchTimeMillis = sleepPeriod.getStartTimestamp() + DateTimeConstants.MILLIS_PER_HOUR;
         final Optional<AmplitudeData> maxWakeScoreItem = getMaxScore(aggregatedFeatures,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                 sleepPeriod.getStartTimestamp(),
@@ -544,14 +550,19 @@ public class Vote {
                 originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
                 originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
 
-        if(firstMaxScoreItemOptional.get().timestamp < originalSleepMillis - 2 * DateTimeConstants.MINUTES_PER_HOUR){
+        LOGGER.debug("first {}, max {}, predicted {}",
+                new DateTime(firstMaxScoreItemOptional.get().timestamp, DateTimeZone.forOffsetMillis(firstMaxScoreItemOptional.get().offsetMillis)),
+                new DateTime(predictedMaxScoreItemOptional.get().timestamp, DateTimeZone.forOffsetMillis(predictedMaxScoreItemOptional.get().offsetMillis)),
+                new DateTime(originalSleepMillis, DateTimeZone.forOffsetMillis(firstMaxScoreItemOptional.get().offsetMillis)));
+
+        if(firstMaxScoreItemOptional.get().timestamp < originalSleepMillis - 2 * DateTimeConstants.MILLIS_PER_HOUR){
             if(firstMaxScoreItemOptional.get().amplitude * 5 < predictedMaxScoreItemOptional.get().amplitude){
                 return originalSleepMillis;
             }
             final Optional<AmplitudeData> maxDrop = getMaxScore(features,
                     MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
                     sleepPeriod.getStartTimestamp(),
-                    sleepPeriod.getEndTimestamp() + 2 * DateTimeConstants.MINUTES_PER_HOUR);
+                    sleepPeriod.getEndTimestamp() + 2 * DateTimeConstants.MILLIS_PER_HOUR);
             if(!maxDrop.isPresent()){
                 return firstMaxScoreItemOptional.get().timestamp;
             }
