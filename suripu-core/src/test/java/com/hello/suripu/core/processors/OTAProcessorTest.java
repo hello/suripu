@@ -1,13 +1,15 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -119,4 +121,33 @@ public class OTAProcessorTest {
         assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, nonPchAddress2), is(true));
         assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, badAddress), is(true));
     }
+
+
+    @Test
+    public void isPCH() {
+        final String pchAddress1 = "203.166.220.233";
+        final String pchAddress2 = "116.204.105.38";
+        final String nonPchAddress1 = "203.166.220.232";
+        final String nonPchAddress2 = "116.204.105.39";
+        final String badAddress = "bad Address";
+
+        final List<String> ipAddressesPCH = Lists.newArrayList(pchAddress1, pchAddress2);
+        final List<String> ipAddressesNotPCH = Lists.newArrayList(nonPchAddress1, nonPchAddress2);
+        final List<String> ipAddressesBad = Lists.newArrayList(badAddress);
+
+        for(String ipAddress : ipAddressesPCH) {
+            assertThat(OTAProcessor.isPCH(ipAddress), is(true));
+        }
+
+        for(String ipAddress : ipAddressesNotPCH) {
+            assertThat(OTAProcessor.isPCH(ipAddress), is(false));
+        }
+
+        // bad ip addresses shouldn't be from PCH
+        for(String ipAddress : ipAddressesBad) {
+            assertThat(OTAProcessor.isPCH(ipAddress), is(false));
+        }
+    }
+
+
 }
