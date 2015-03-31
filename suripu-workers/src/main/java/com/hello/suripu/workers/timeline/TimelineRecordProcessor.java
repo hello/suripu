@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
+import com.hello.suripu.core.db.AlgorithmTestDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -34,11 +35,13 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
+    private final AlgorithmTestDAODynamoDB algorithmTestDAODynamoDB;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                    final TimelineDAODynamoDB timelineDAODynamoDB,
+                                   final AlgorithmTestDAODynamoDB algorithmTestDAODynamoDB,
                                    final TimelineWorkerConfiguration configuration){
 
         this.timelineProcessor = timelineProcessor;
@@ -46,7 +49,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
-
+        this.algorithmTestDAODynamoDB = algorithmTestDAODynamoDB;
     }
 
     @Override

@@ -167,3 +167,8 @@ kinesis_logger:
   buffer_size: 100
   origin: suripu-workers
   min_log_level : INFO
+
+algorithm_test_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: algorithm_test

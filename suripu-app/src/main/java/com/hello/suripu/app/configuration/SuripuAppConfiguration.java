@@ -184,6 +184,14 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("algorithm_test_db")
+    private DynamoDBConfiguration algorithmTestDBConfiguration;
+    public DynamoDBConfiguration getAlgorithmTestDBConfiguration(){
+        return this.algorithmTestDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("sleep_score_version")
     private String sleepScoreVersion;
     public String getSleepScoreVersion() {
