@@ -29,4 +29,8 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         return flipper.userFeatureActive(FeatureFlipper.PUSH_NOTIFICATIONS_ENABLED, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasHmmEnabled(final Long accountId) {
+        return  flipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM,accountId,Collections.EMPTY_LIST);
+    }
+
 }
