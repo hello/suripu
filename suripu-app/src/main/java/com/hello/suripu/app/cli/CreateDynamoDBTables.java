@@ -10,7 +10,7 @@ import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
-import com.hello.suripu.core.db.AlgorithmTestDAODynamoDB;
+import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
@@ -114,7 +114,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
-            final CreateTableResult result = AlgorithmTestDAODynamoDB.createTable(tableName, client);
+            final CreateTableResult result = AlgorithmResultsDAODynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }

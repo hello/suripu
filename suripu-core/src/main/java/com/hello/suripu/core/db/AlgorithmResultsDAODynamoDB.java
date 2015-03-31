@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
@@ -29,8 +30,8 @@ import java.util.HashMap;
 /**
  * Created by pangwu on 3/30/15.
  */
-public class AlgorithmTestDAODynamoDB {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AlgorithmTestDAODynamoDB.class);
+public class AlgorithmResultsDAODynamoDB {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlgorithmResultsDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
@@ -48,7 +49,7 @@ public class AlgorithmTestDAODynamoDB {
         VOTING
     }
 
-    public AlgorithmTestDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
+    public AlgorithmResultsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
@@ -103,7 +104,15 @@ public class AlgorithmTestDAODynamoDB {
                 .withKey(keys)
                 .withAttributeUpdates(items)
                 .withReturnValues(ReturnValue.ALL_NEW);
-        final UpdateItemResult result = this.dynamoDBClient.updateItem(updateItemRequest);
+        try {
+            final UpdateItemResult result = this.dynamoDBClient.updateItem(updateItemRequest);
+        }catch (AmazonServiceException awsException){
+            LOGGER.error("Server exception {} while saving {}'s result for account {}",
+                    awsException.getMessage(),
+                    name,
+                    accountId);
+            return false;
+        }
         return true;
     }
 
