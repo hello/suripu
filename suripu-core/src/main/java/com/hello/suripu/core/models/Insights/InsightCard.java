@@ -143,7 +143,7 @@ public class InsightCard implements Comparable<InsightCard> {
 
     }
 
-    public InsightCard withInfoPreview(final String infoPreview) {
+    public InsightCard withInfoPreview(final Optional<String> infoPreview) {
         return new InsightCard(
                 this.accountId.get(),
                 this.title,
@@ -151,7 +151,7 @@ public class InsightCard implements Comparable<InsightCard> {
                 this.category,
                 this.timePeriod,
                 this.timestamp,
-                Optional.fromNullable(infoPreview));
+                infoPreview);
     }
 
 }

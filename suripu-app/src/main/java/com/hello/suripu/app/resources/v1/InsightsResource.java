@@ -100,7 +100,7 @@ public class InsightsResource {
         } else {
             final List<InsightCard> cardsWithPreview = new ArrayList<>();
             for (InsightCard card : cards) {
-                cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category).orNull()));
+                cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category)));
             }
             return cardsWithPreview;
         }
