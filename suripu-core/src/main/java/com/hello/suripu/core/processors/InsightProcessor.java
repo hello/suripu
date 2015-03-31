@@ -248,10 +248,9 @@ public class InsightProcessor {
             this.insightInfoPreview = new HashMap<>();
 
             final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
-            String categoryString = null;
             for (InfoInsightCards card : infoInsightCards) {
                 // only grab the first title for a category, if multiple exists
-                categoryString = card.category.toCategoryString();
+                final String categoryString = card.category.toCategoryString();
                 if (!this.insightInfoPreview.containsKey(categoryString)) {
                     this.insightInfoPreview.put(categoryString, card.title);
                 }
