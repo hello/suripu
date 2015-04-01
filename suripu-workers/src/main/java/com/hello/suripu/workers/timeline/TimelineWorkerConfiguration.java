@@ -188,5 +188,11 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
         return this.sleepStatsVersion;
     }
 
-
+    @Valid
+    @NotNull
+    @JsonProperty("algorithm_test_db")
+    private DynamoDBConfiguration algorithmTestDBConfiguration;
+    public DynamoDBConfiguration getAlgorithmTestDBConfiguration(){
+        return this.algorithmTestDBConfiguration;
+    }
 }

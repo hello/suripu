@@ -16,6 +16,7 @@ import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -121,6 +122,10 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 configuration.getTimelineDBConfiguration().getTableName(),
                 configuration.getMaxCacheRefreshDay());
 
+        final AmazonDynamoDB algorithmTestDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlgorithmTestDBConfiguration().getEndpoint());
+        final AlgorithmResultsDAODynamoDB algorithmResultsDAODynamoDB = new AlgorithmResultsDAODynamoDB(algorithmTestDynamoDbClient,
+                configuration.getAlgorithmTestDBConfiguration().getTableName());
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
@@ -154,6 +159,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 deviceDAO,
                 mergedUserInfoDynamoDB,
                 timelineDAODynamoDB,
+                algorithmResultsDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
