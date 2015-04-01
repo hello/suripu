@@ -109,8 +109,5 @@ public class SuripuAdminConfiguration extends Configuration {
     @JsonProperty("password_reset_db")
     private DynamoDBConfiguration passwordResetDBConfiguration;
 
-    public DynamoDBConfiguration getPasswordResetDBConfiguration() {
-        return this.passwordResetDBConfiguration;
-
-    }
+    public DynamoDBConfiguration getPasswordResetDBConfiguration() { return passwordResetDBConfiguration; }
 }
