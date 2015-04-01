@@ -89,7 +89,8 @@ public class MotionCluster {
     private MotionCluster(final List<AmplitudeData> alignedMotionWithGapFilled,
                           final double originalAmplitudeMean,
                           final List<AmplitudeData> alignedKickOffCounts,
-                          final double kickOffMean){
+                          final double kickOffMean,
+                          final boolean removeNoise){
         this.motionNoMissingValues = alignedMotionWithGapFilled;
         //printData(alignedMotionWithGapFilled);
 
@@ -102,10 +103,24 @@ public class MotionCluster {
 
         final List<AmplitudeData> amplitudeFeature = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
         final List<AmplitudeData> kickOffFeature = features.get(MotionFeatures.FeatureType.MAX_KICKOFF_COUNT);
+
+        final Segment leadingNoiseFilteredPeriod = getSleepPeriod(densityFeature, amplitudeFeature, densityThreshold, originalAmplitudeMean);
+
         final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(densityFeature, densityThreshold,
                 amplitudeFeature, originalAmplitudeMean,
                 kickOffFeature, kickOffMean);
         this.clusters = rawClusters;
+
+        final List<ClusterAmplitudeData> noiseCutCopy = new ArrayList<>();
+        if(removeNoise){
+            for(final ClusterAmplitudeData datum:rawClusters){
+                if(datum.timestamp > leadingNoiseFilteredPeriod.getStartTimestamp() - 15 * DateTimeConstants.MILLIS_PER_MINUTE){
+                    noiseCutCopy.add(datum.copy());
+                }
+            }
+            this.clusters.clear();
+            this.clusters.addAll(noiseCutCopy);
+        }
     }
 
     public static void printClusters(final List<ClusterAmplitudeData> clusters){
@@ -129,7 +144,8 @@ public class MotionCluster {
     public static MotionCluster create(final List<AmplitudeData> alignedAmplitudeData,
                                        final double originalMean,
                                        final List<AmplitudeData> alignedKickOffCounts,
-                                       final double kickOffMean){
+                                       final double kickOffMean,
+                                       final boolean removeNoise){
         if(alignedAmplitudeData.size() != alignedKickOffCounts.size()){
             LOGGER.error("Amp data size {}, kick off data size {}", alignedAmplitudeData.size(), alignedKickOffCounts.size());
             throw new AlgorithmException("Data size not equal");
@@ -149,7 +165,7 @@ public class MotionCluster {
         }
 
         final MotionCluster cluster = new MotionCluster(alignedAmplitudeData, originalMean,
-                alignedKickOffCounts, kickOffMean);
+                alignedKickOffCounts, kickOffMean, removeNoise);
         return cluster;
     }
 
@@ -291,6 +307,26 @@ public class MotionCluster {
         }
 
         return new Pair<>(startIndex, endIndex);
+    }
+
+    public static Segment getSleepPeriod(final List<AmplitudeData> densityFeatures, final List<AmplitudeData> amplitudeFeatures,
+                                         final double threshold, final double originalAmpMean){
+        long firstTimestamp = densityFeatures.get(0).timestamp;
+        final long lastTimestamp = densityFeatures.get(densityFeatures.size() - 1).timestamp;
+        long startTimestamp = firstTimestamp;
+        for(int i = 0; i < densityFeatures.size(); i++) {
+            final AmplitudeData item = densityFeatures.get(i);
+            final AmplitudeData amplitudeData = amplitudeFeatures.get(i);
+            if(item.amplitude > threshold || amplitudeData.amplitude > originalAmpMean) {
+                final long peakTimestamp = item.timestamp;
+                LOGGER.debug("++++++++++++++++++++ peak {}, date {}",
+                        peakTimestamp,
+                        new DateTime(firstTimestamp, DateTimeZone.forOffsetMillis(amplitudeData.offsetMillis)));
+                startTimestamp = peakTimestamp;
+                break;
+            }
+        }
+        return new Segment(startTimestamp, lastTimestamp, densityFeatures.get(densityFeatures.size() - 1).offsetMillis);
     }
 
 }
