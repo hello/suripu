@@ -165,7 +165,7 @@ public class DeviceResources {
         // TODO: move this out of url handler once we've validated this is what we want
         final Jedis jedis = jedisPool.getResource();
         final DateTime currentTs = DateTime.now(DateTimeZone.UTC);
-        long normalCount = 0;
+        Long normalCount = 0L;
         try {
             normalCount = jedis.zcount("devices", currentTs.minusDays(1).getMillis(), currentTs.getMillis());
         } catch (Exception e) {
@@ -173,7 +173,7 @@ public class DeviceResources {
         } finally {
             jedisPool.returnResource(jedis);
         }
-        return new DeviceStatusBreakdown((int)normalCount, -1, -1);
+        return new DeviceStatusBreakdown(normalCount, -1L, -1L);
     }
 
     // Helpers

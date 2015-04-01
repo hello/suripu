@@ -114,5 +114,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new AccountResources(accountDAO));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
+
     }
 }
