@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.DeviceAdmin;
+import com.hello.suripu.admin.models.DeviceStatusBreakdown;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDAOAdmin;
@@ -22,6 +23,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -49,6 +52,7 @@ public class DeviceResources {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final KeyStore senseKeyStore;
     private final KeyStore pillKeyStore;
+    private final JedisPool jedisPool;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDAOAdmin deviceDAOAdmin,
@@ -57,7 +61,8 @@ public class DeviceResources {
                            final AccountDAO accountDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final KeyStore senseKeyStore,
-                           final KeyStore pillKeyStore) {
+                           final KeyStore pillKeyStore,
+                           final JedisPool jedisPool) {
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
@@ -66,6 +71,7 @@ public class DeviceResources {
         this.pillKeyStore = pillKeyStore;
         this.deviceDataDAO = deviceDataDAO;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.jedisPool = jedisPool;
     }
 
     @GET
@@ -151,6 +157,25 @@ public class DeviceResources {
         return ImmutableList.copyOf(accounts);
     }
 
+    @Timed
+    @GET
+    @Path("/status_breakdown")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceStatusBreakdown getDeviceStatusBreakdown(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
+        // TODO: move this out of url handler once we've validated this is what we want
+        final Jedis jedis = jedisPool.getResource();
+        final DateTime currentTs = DateTime.now(DateTimeZone.UTC);
+        Long normalCount = 0L;
+        try {
+            normalCount = jedis.zcount("devices", currentTs.minusDays(1).getMillis(), currentTs.getMillis());
+        } catch (Exception e) {
+            LOGGER.error("Failed to get active senses count", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+        return new DeviceStatusBreakdown(normalCount, -1L, -1L);
+    }
+
     // Helpers
     private List<DeviceAdmin> getSensesByAccountId(final Long accountId) {
         final ImmutableList<DeviceAccountPair> senseAccountPairs = deviceDAO.getSensesForAccountId(accountId);
@@ -173,4 +198,6 @@ public class DeviceResources {
         }
         return pills;
     }
+
+
 }
