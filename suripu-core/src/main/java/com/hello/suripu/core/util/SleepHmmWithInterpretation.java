@@ -40,6 +40,9 @@ public class SleepHmmWithInterpretation {
 
     //final static protected int MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES = 45;
     final static protected int MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES = 15;
+    final static protected int MIN_ENFORCED_SLEEP_TIME_IN_MINUTES = 5;
+    final static protected int MIN_ENFORCED_WAKE_TIME_IN_MINUTES = 5;
+
 
     final static protected int MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES = 45;
     final static protected int MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES = 45;
@@ -494,8 +497,8 @@ CREATE CREATE CREATE
                 newI1 = sleepIndex.get();
             }
 
-            if (newI1 < lastIndex) {
-                newI1 = lastIndex + 5;
+            if (newI1 < lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES) {
+                newI1 = lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES;
             }
 
 
@@ -503,8 +506,8 @@ CREATE CREATE CREATE
                 newI2 = wakeIndex.get();
             }
 
-            if (newI2 < newI1) {
-                newI2 = newI1 + 5;
+            if (newI2 < newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES) {
+                newI2 = newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES;
             }
 
 
