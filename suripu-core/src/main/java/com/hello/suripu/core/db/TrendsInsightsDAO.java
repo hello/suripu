@@ -33,4 +33,8 @@ public abstract class TrendsInsightsDAO {
     @RegisterMapper(InfoInsightCardsMapper.class)
     @SqlQuery("SELECT * FROM info_insight_cards WHERE category = (CAST(:category AS INSIGHT_CATEGORY)) ORDER BY id DESC LIMIT 1")
     public abstract List<InfoInsightCards> getGenericInsightCardsByCategory(@Bind("category") final String category);
+
+    @RegisterMapper(InfoInsightCardsMapper.class)
+    @SqlQuery("SELECT * FROM info_insight_cards ORDER BY id DESC")
+    public abstract ImmutableList<InfoInsightCards> getAllGenericInsightCards();
 }
