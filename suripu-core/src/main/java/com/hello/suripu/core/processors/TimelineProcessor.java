@@ -402,7 +402,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),extraEvents, sensorData.trackerMotions, sensorData.allSensorSampleList);
         }
         catch (Exception e) {
-            LOGGER.debug(e.toString());
+            LOGGER.error(e.toString());
         }
 
         LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
@@ -512,7 +512,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
 
         if (!hmmOptional.isPresent()) {
-            LOGGER.debug("Failed to retrieve HMM model for account_id {} on date {}",accountId,targetDate);
+            LOGGER.error("Failed to retrieve HMM model for account_id {} on date {}",accountId,targetDate);
             return Optional.absent();
         }
 
@@ -521,7 +521,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTime.getMillis());
 
         if (!optionalHmmPredictions.isPresent()) {
-            LOGGER.debug("Failed to get predictions from HMM for account_id {} on date {}",accountId,targetDate);
+            LOGGER.error("Failed to get predictions from HMM for account_id {} on date {}",accountId,targetDate);
             return Optional.absent();
         }
 
@@ -532,7 +532,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         Optional<Event> wake = Optional.absent();
         Optional<Event> outOfBed = Optional.absent();
 
-        ImmutableList<Event> events = optionalHmmPredictions.get().sleepEvents;
+        final ImmutableList<Event> events = optionalHmmPredictions.get().sleepEvents;
 
         //find first sleep, inBed, and last outOfBed and wake
         for(final Event e : events) {
@@ -559,10 +559,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         //find the events that aren't the main events
-        SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inBed,sleep,wake,outOfBed);
-        Set<Long> takenTimes = new HashSet<Long>();
+        final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inBed,sleep,wake,outOfBed);
+        final Set<Long> takenTimes = new HashSet<Long>();
 
-        for (Optional<Event> e : sleepEvents.toList()) {
+        for (final Optional<Event> e : sleepEvents.toList()) {
             if (!e.isPresent()) {
                 continue;
             }
@@ -571,7 +571,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
 
-        List<Event> otherEvents = new ArrayList<>();
+        final List<Event> otherEvents = new ArrayList<>();
         for(final Event e : events) {
             if (!takenTimes.contains(e.getStartTimestamp())) {
                 otherEvents.add(e);
