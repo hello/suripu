@@ -123,6 +123,18 @@ public class SleepHmmWithInterpretation {
 
     }
 
+    protected class TimeIndexInfo {
+        final int numMinutesInMeasPeriod;
+        final long t0;
+        final int timezoneOffset;
+
+        public TimeIndexInfo(int numMinutesInMeasPeriod, long t0, int timezoneOffset) {
+            this.numMinutesInMeasPeriod = numMinutesInMeasPeriod;
+            this.t0 = t0;
+            this.timezoneOffset = timezoneOffset;
+        }
+    }
+
 
 
     /*
@@ -279,7 +291,10 @@ CREATE CREATE CREATE
         }
 
 
-        return  processEventsIntoResult(numMinutesInMeasPeriod,sleepSplitOnGaps,onBedIgnoringGaps,startTimeMillisInUTC,timezoneOffset,bestResult.bestPath);
+        final TimeIndexInfo timeIndexInfo = new TimeIndexInfo(numMinutesInMeasPeriod,startTimeMillisInUTC,timezoneOffset);
+
+
+        return  processEventsIntoResult(sleepSplitOnGaps,onBedIgnoringGaps,bestResult.bestPath,timeIndexInfo);
 
 
     }
@@ -605,14 +620,13 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    static public Optional<SleepHmmResult> processEventsIntoResult(final int numMinutesInMeasPeriod, final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
+    static public Optional<SleepHmmResult> processEventsIntoResult(final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds,final ImmutableList<Integer> path,final TimeIndexInfo info) {
 
         LinkedList<Event> events = new LinkedList<>();
         int minutesSpentInBed = 0;
         int minutesSpentSleeping = 0;
         int numTimesWokenUpDuringSleep = 0;
         int numSeparateSleepSegments = 0;
-
 
         if (beds.isEmpty() || sleeps.isEmpty() ) {
             return Optional.absent();
@@ -635,10 +649,10 @@ CREATE CREATE CREATE
 
 
 
-            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, t0, timezoneOffset, sleepMessage,numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, t0, timezoneOffset, wakeupMessage,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, info.t0, info.timezoneOffset, sleepMessage,info.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, info.t0, info.timezoneOffset, wakeupMessage,info.numMinutesInMeasPeriod));
 
-            minutesSpentSleeping += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
+            minutesSpentSleeping += (seg.i2 - seg.i1) * info.numMinutesInMeasPeriod;
 
             numTimesWokenUpDuringSleep += 1;
             numSeparateSleepSegments += 1;
@@ -646,12 +660,12 @@ CREATE CREATE CREATE
         }
 
         for (final SegmentPair seg : beds) {
-            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, t0, timezoneOffset, English.IN_BED_MESSAGE,numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, info.t0, info.timezoneOffset, English.IN_BED_MESSAGE,info.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, info.t0, info.timezoneOffset, English.OUT_OF_BED_MESSAGE,info.numMinutesInMeasPeriod));
 
             //ignore gaps
 
-            minutesSpentInBed += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
+            minutesSpentInBed += (seg.i2 - seg.i1) * info.numMinutesInMeasPeriod;
         }
 
 
