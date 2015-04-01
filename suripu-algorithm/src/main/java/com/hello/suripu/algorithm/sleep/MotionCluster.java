@@ -114,15 +114,6 @@ public class MotionCluster {
         this.clusters = rawClusters;
 
         final List<ClusterAmplitudeData> noiseCutCopy = new ArrayList<>();
-        if(removeNoise){
-            for(final ClusterAmplitudeData datum:rawClusters){
-                if(datum.timestamp > leadingNoiseFilteredPeriod.getStartTimestamp() - 15 * DateTimeConstants.MILLIS_PER_MINUTE){
-                    noiseCutCopy.add(datum.copy());
-                }
-            }
-            this.clusters.clear();
-            this.clusters.addAll(noiseCutCopy);
-        }
     }
 
     public static void printClusters(final List<ClusterAmplitudeData> clusters){
