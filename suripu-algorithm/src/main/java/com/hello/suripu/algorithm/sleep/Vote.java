@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,9 +70,10 @@ public class Vote {
         final List<Segment> lightSegments = timeDeltaSegments(lightOutTimes,
                 20 * DateTimeConstants.MILLIS_PER_MINUTE,
                 rawData.get(0).offsetMillis);
-        final List<Segment> waveSegments = timeDeltaSegments(Lists.newArrayList(firstWaveTimeOptional.get()),
+        final List<Segment> waveSegments = firstWaveTimeOptional.isPresent() ?
+                timeDeltaSegments(Lists.newArrayList(firstWaveTimeOptional.get()),
                 5 * DateTimeConstants.MILLIS_PER_MINUTE,
-                rawData.get(0).offsetMillis);
+                rawData.get(0).offsetMillis) : Collections.EMPTY_LIST;
         final Optional<Segment> inBedSegment = SleepPeriod.getSleepPeriod(dataWithGapFilled, motionSegments);
 
         this.sleepPeriod = SleepPeriod.createFromSegment(inBedSegment.get());
