@@ -7,13 +7,10 @@ import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,9 +21,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Created by benjo on 2/25/15.
@@ -46,24 +41,14 @@ public class SleepHmmWithInterpretation {
 
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
+    static final double MIN_ENERGY = 1000.0;
+    static final int SMOOTHED_PERIOD_MINUTES = 10;
+
     final ImmutableList<NamedSleepHmmModel> models;
 
     ////////////////////////////
     //Externally available results class
-    public static class SleepStats {
-        public final int minutesSpentInBed;
-        public final int minutesSpentSleeping;
-        public final int numTimesWokenUpDuringSleep;
-        public final int numSeparateSleepSegments;
 
-
-        public SleepStats(int minutesSpentInBed, int minutesSpentSleeping, int numTimesWokenUpDuringSleep, int numSeparateSleepSegments) {
-            this.minutesSpentInBed = minutesSpentInBed;
-            this.minutesSpentSleeping = minutesSpentSleeping;
-            this.numTimesWokenUpDuringSleep = numTimesWokenUpDuringSleep;
-            this.numSeparateSleepSegments = numSeparateSleepSegments;
-        }
-    }
 
     public static class SleepHmmResult {
 
@@ -95,6 +80,10 @@ public class SleepHmmWithInterpretation {
 
         public final Integer i1;
         public final Integer i2;
+
+        public boolean isInBounds(final Integer idx) {
+            return  (idx <= i2 && idx >= i1);
+        }
     }
 
     public class SegmentPairWithGaps {
@@ -127,14 +116,25 @@ public class SleepHmmWithInterpretation {
         final int numMinutesInMeasPeriod;
         final long t0;
         final int timezoneOffset;
+        final int durationInIndices;
 
-        public TimeIndexInfo(int numMinutesInMeasPeriod, long t0, int timezoneOffset) {
+        public TimeIndexInfo(int numMinutesInMeasPeriod, long t0, int timezoneOffset, int durationInIndices) {
             this.numMinutesInMeasPeriod = numMinutesInMeasPeriod;
             this.t0 = t0;
             this.timezoneOffset = timezoneOffset;
+            this.durationInIndices = durationInIndices;
         }
     }
 
+    protected class SleepDepthSummary {
+        final public int numberMinutesInLightSleep;
+        final public int numberMinutesInDeepSleep;
+
+        public SleepDepthSummary(int numberMinutesInLightSleep, int numberMinutesInDeepSleep) {
+            this.numberMinutesInLightSleep = numberMinutesInLightSleep;
+            this.numberMinutesInDeepSleep = numberMinutesInDeepSleep;
+        }
+    }
 
 
     /*
@@ -205,6 +205,7 @@ CREATE CREATE CREATE
         final long startTimeMillisInUTC = sleepPeriodStartTimeLocal - timezoneOffset; //convert to UTC
         final long endOfThePeriodUTC = sleepPeriodEndTimeLocal - timezoneOffset; //convert to UTC
         final long endTimeMillisUTC = currentTimeInMillisUTC < endOfThePeriodUTC ? currentTimeInMillisUTC : endOfThePeriodUTC; //find earlier of end of period or current time
+        final int numMinutes = (int) ((endTimeMillisUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE);
 
 
         final List<TrackerMotion> cleanedUpPillData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(pillData);
@@ -276,25 +277,25 @@ CREATE CREATE CREATE
             //get whatever is earlier
 
 
-            final int numMinutes = (int) ((endTimeMillisUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE);
-
             double [] pillDataArray = getPillDataArray(cleanedUpPillData,startTimeMillisInUTC,numMinutes);
 
-            final PillFeats pillFeats = getSmoothedPillEnergy(pillDataArray,10);
+            final SmoothedBufferFeats smoothedBufferFeats = getSmoothedBuffer(pillDataArray, SMOOTHED_PERIOD_MINUTES, MIN_ENERGY,true);
 
             //LOGGER.debug("pillenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.filteredEnergy));
             //LOGGER.debug("diffenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.differentialEnergy));
 
-            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearchForSleep(sleepSplitOnGaps, pillFeats, numMinutesInMeasPeriod);
-            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps,pillFeats,numMinutesInMeasPeriod);
+            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearchForSleep(sleepSplitOnGaps, smoothedBufferFeats, numMinutesInMeasPeriod);
+            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps, smoothedBufferFeats,numMinutesInMeasPeriod);
             numMinutesInMeasPeriod = 1;
         }
 
 
-        final TimeIndexInfo timeIndexInfo = new TimeIndexInfo(numMinutesInMeasPeriod,startTimeMillisInUTC,timezoneOffset);
+        final TimeIndexInfo timeIndexInfo = new TimeIndexInfo(numMinutesInMeasPeriod,startTimeMillisInUTC,timezoneOffset, numMinutes/numMinutesInMeasPeriod);
+
+        final SleepDepthSummary sleepDepthSummary = getSleepDepthSummary(timeIndexInfo,cleanedUpPillData,sleepSplitOnGaps);
 
 
-        return  processEventsIntoResult(sleepSplitOnGaps,onBedIgnoringGaps,bestResult.bestPath,timeIndexInfo);
+        return  processEventsIntoResult(sleepSplitOnGaps,onBedIgnoringGaps,bestResult.bestPath,timeIndexInfo,sleepDepthSummary);
 
 
     }
@@ -405,63 +406,72 @@ CREATE CREATE CREATE
     }
 
 
-    protected  static class PillFeats {
+    protected  static class SmoothedBufferFeats {
 
         final double [] filteredEnergy;
         final double [] differentialEnergy;
 
-        public PillFeats(double[] filteredEnergy, double[] differentialEnergy) {
+        public SmoothedBufferFeats(double[] filteredEnergy, double[] differentialEnergy) {
             this.filteredEnergy = filteredEnergy;
             this.differentialEnergy = differentialEnergy;
         }
     }
 
-    protected  PillFeats getSmoothedPillEnergy(final double [] pillArray,final int interval) {
-        double[] filteredEnergy = new double[pillArray.length];
-        double[] differentialEnergy = new double[pillArray.length];
+    protected SmoothedBufferFeats getSmoothedBuffer(final double[] x, final int interval, final double minEnergy,boolean computeLog) {
+        double[] filteredEnergy = new double[x.length];
+        double[] differentialEnergy = new double[x.length];
 
-        final double MIN_ENERGY = 1000.0;
-
-        Arrays.fill(filteredEnergy, 0.0);
+        Arrays.fill(filteredEnergy, minEnergy);
         Arrays.fill(differentialEnergy, 0.0);
 
-        for (int j = 0; j < pillArray.length - interval; j++) {
+        //forwards
+        for (int j = 0; j < x.length - interval; j++) {
             double accumulator = 0.0;
             for (int i = 0; i < interval; i++) {
-                accumulator += pillArray[j + i];
+                accumulator += x[j + i];
             }
 
-            filteredEnergy[j + interval - 1] = accumulator + MIN_ENERGY;
+            accumulator /= (double)interval;
+            accumulator *= 0.5;
+
+            filteredEnergy[j + interval - 1] += accumulator;
         }
 
-        for (int j = pillArray.length - interval - 1; j >= 0; j--) {
+        //backwards
+        for (int j = x.length - interval - 1; j >= 0; j--) {
             double accumulator = 0.0;
             for (int i = 0; i < interval; i++) {
-                accumulator += pillArray[j + i];
+                accumulator += x[j + i];
             }
+
+            accumulator /= (double)interval;
+            accumulator *= 0.5;
 
             filteredEnergy[j] += accumulator;
         }
 
-        for (int j = 0; j < pillArray.length; j++) {
-            if (filteredEnergy[j] < 0.0) {
-                filteredEnergy[j] = 0.0;
-            }
+        //compute log
+        if (computeLog) {
+            for (int j = 0; j < x.length; j++) {
+                if (filteredEnergy[j] < 0.0) {
+                    filteredEnergy[j] = 0.0;
+                }
 
-            filteredEnergy[j] = Math.log(filteredEnergy[j] + 1.0);
+                filteredEnergy[j] = Math.log(filteredEnergy[j] + 1.0);
+            }
         }
 
 
         //compute differential of log energy
-        for (int j = 0; j < pillArray.length - interval; j++) {
+        for (int j = 0; j < x.length - interval; j++) {
             differentialEnergy[j + interval / 2 + 1] = filteredEnergy[j + interval] - filteredEnergy[j];
         }
 
 
-        return new PillFeats(filteredEnergy, differentialEnergy);
+        return new SmoothedBufferFeats(filteredEnergy, differentialEnergy);
     }
 
-    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForSleep(final ImmutableList<SegmentPair> segs, final PillFeats pillFeats,
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForSleep(final ImmutableList<SegmentPair> segs, final SmoothedBufferFeats smoothedBufferFeats,
                                                                                         final int numMinutesInMeasPeriod) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
@@ -475,23 +485,23 @@ CREATE CREATE CREATE
                 i1Sleep = 0;
             }
 
-            final Optional<Integer> sleepBound = getMaximumInInterval(pillFeats.filteredEnergy, i1Sleep, i2Sleep);
+            final Optional<Integer> sleepBound = getMaximumInInterval(smoothedBufferFeats.filteredEnergy, i1Sleep, i2Sleep);
 
             int i1Wake = seg.i2*numMinutesInMeasPeriod - 1*numMinutesInMeasPeriod;
             int i2Wake = seg.i2*numMinutesInMeasPeriod + 1*numMinutesInMeasPeriod;
 
-            if (i2Wake > pillFeats.filteredEnergy.length) {
-                i2Wake = pillFeats.filteredEnergy.length;
+            if (i2Wake > smoothedBufferFeats.filteredEnergy.length) {
+                i2Wake = smoothedBufferFeats.filteredEnergy.length;
             }
 
-            final Optional<Integer> wakeIndex = getMaximumInInterval(pillFeats.filteredEnergy,i1Wake,i2Wake);
+            final Optional<Integer> wakeIndex = getMaximumInInterval(smoothedBufferFeats.filteredEnergy,i1Wake,i2Wake);
 
             int newI1 = seg.i1*numMinutesInMeasPeriod;
             int newI2 = seg.i2*numMinutesInMeasPeriod;
 
             if (sleepBound.isPresent()) {
 
-                final Optional<Integer> sleepIndex = getMinimumInInterval(pillFeats.differentialEnergy,sleepBound.get(),i2Sleep);
+                final Optional<Integer> sleepIndex = getMinimumInInterval(smoothedBufferFeats.differentialEnergy,sleepBound.get(),i2Sleep);
                 newI1 = sleepIndex.get();
             }
 
@@ -518,7 +528,7 @@ CREATE CREATE CREATE
 
     }
 
-    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> segs, final PillFeats pillFeats,
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> segs, final SmoothedBufferFeats smoothedBufferFeats,
                                                                                         final int numMinutesInMeasPeriod) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
@@ -532,16 +542,16 @@ CREATE CREATE CREATE
                 i1InBed = 0;
             }
 
-            final Optional<Integer> inBed = getMaximumInInterval(pillFeats.filteredEnergy, i1InBed, i2InBed);
+            final Optional<Integer> inBed = getMaximumInInterval(smoothedBufferFeats.filteredEnergy, i1InBed, i2InBed);
 
             int i1OutOfBed = seg.i2*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
             int i2OutOfBed = seg.i2*numMinutesInMeasPeriod + numMinutesInMeasPeriod;
 
-            if (i2OutOfBed > pillFeats.filteredEnergy.length) {
-                i2OutOfBed = pillFeats.filteredEnergy.length;
+            if (i2OutOfBed > smoothedBufferFeats.filteredEnergy.length) {
+                i2OutOfBed = smoothedBufferFeats.filteredEnergy.length;
             }
 
-            final Optional<Integer> outOfBed = getMaximumInInterval(pillFeats.filteredEnergy,i1OutOfBed,i2OutOfBed);
+            final Optional<Integer> outOfBed = getMaximumInInterval(smoothedBufferFeats.filteredEnergy,i1OutOfBed,i2OutOfBed);
 
             int newI1 = seg.i1*numMinutesInMeasPeriod;
             int newI2 = seg.i2*numMinutesInMeasPeriod;
@@ -620,7 +630,7 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    static public Optional<SleepHmmResult> processEventsIntoResult(final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds,final ImmutableList<Integer> path,final TimeIndexInfo info) {
+    static public Optional<SleepHmmResult> processEventsIntoResult(final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds,final ImmutableList<Integer> path,final TimeIndexInfo info,final SleepDepthSummary sleepDepthSummary) {
 
         LinkedList<Event> events = new LinkedList<>();
         int minutesSpentInBed = 0;
@@ -716,7 +726,21 @@ CREATE CREATE CREATE
         }
         */
 
-        return Optional.of(new SleepHmmResult(new SleepStats(minutesSpentInBed,minutesSpentSleeping,numTimesWokenUpDuringSleep - 1,numSeparateSleepSegments),path,ImmutableList.copyOf(events)));
+        /*
+        final SleepStats sleepStats = new SleepStats(sleepDepthSummary.numberMinutesInDeepSleep,
+                sleepDepthSummary.numberMinutesInLightSleep,
+                minutesSpentSleeping == 0 ? minutesSpentInBed : minutesSpentSleeping,
+                numberOfMotionEvents,
+                sleepTimestampMillis,
+                wakeUpTimestampMillis,
+                sleepOnsetTimeMinutes
+        );
+        */
+
+        final SleepStats sleepStats = SleepStats.create(0,0,0,0);
+
+
+        return Optional.of(new SleepHmmResult(sleepStats,path,ImmutableList.copyOf(events)));
 
 
     }
@@ -824,7 +848,49 @@ CREATE CREATE CREATE
         return ImmutableList.copyOf(pairList);
     }
 
+    protected SleepDepthSummary getSleepDepthSummary(final TimeIndexInfo timeIndexInfo, final List<TrackerMotion> motionData,List<SegmentPair> sleeps) {
+        /*final Integer soundSleepDurationInMinutes, final Integer lightSleepDurationInMinutes,
+        final Integer sleepDurationInMinutes,
+        final Integer numberOfMotionEvents,*/
 
+
+        double[] counts = new double[timeIndexInfo.durationInIndices];
+
+        Arrays.fill(counts, 0.0);
+
+        for (final TrackerMotion m : motionData) {
+            final int idx = (int)(m.timestamp - timeIndexInfo.t0) / timeIndexInfo.numMinutesInMeasPeriod / NUMBER_OF_MILLIS_IN_A_MINUTE;
+
+            if (idx >= counts.length || idx < 0) {
+                continue;
+            }
+
+            counts[idx] = (double)m.kickOffCounts;
+        }
+
+        int interval = 15 / timeIndexInfo.numMinutesInMeasPeriod;
+        if (interval <= 0) {
+            interval = 1;
+        }
+
+        final SmoothedBufferFeats feats = getSmoothedBuffer(counts,interval,0,false);
+
+        int numMinutesInDeepSleep = 0;
+        int numMinutesInShallowSleep = 0;
+        for (final SegmentPair segment : sleeps) {
+            for (int i = segment.i1; i <= segment.i2; i++) {
+                if (feats.filteredEnergy[i] > 0.6) {
+                    numMinutesInShallowSleep += timeIndexInfo.numMinutesInMeasPeriod;
+                }
+                else {
+                    numMinutesInDeepSleep += timeIndexInfo.numMinutesInMeasPeriod;
+                }
+            }
+        }
+
+
+        return new SleepDepthSummary(numMinutesInShallowSleep,numMinutesInDeepSleep);
+    }
 
 }
 
