@@ -26,6 +26,7 @@ public class MotionCluster {
 
     private final List<AmplitudeData> motionNoMissingValues;
     private List<ClusterAmplitudeData> clusters;
+    private final Segment sleepPeriod;
 
     public static List<ClusterAmplitudeData> getClusters(final List<AmplitudeData> densityFeature,
                                                          final double densityThreshold,
@@ -105,6 +106,7 @@ public class MotionCluster {
         final List<AmplitudeData> kickOffFeature = features.get(MotionFeatures.FeatureType.MAX_KICKOFF_COUNT);
 
         final Segment leadingNoiseFilteredPeriod = getSleepPeriod(densityFeature, amplitudeFeature, densityThreshold, originalAmplitudeMean);
+        this.sleepPeriod = leadingNoiseFilteredPeriod;
 
         final List<ClusterAmplitudeData> rawClusters = MotionCluster.getClusters(densityFeature, densityThreshold,
                 amplitudeFeature, originalAmplitudeMean,
@@ -140,6 +142,9 @@ public class MotionCluster {
         }
     }
 
+    public Segment getSleepTimeSpan(){
+        return new Segment(this.sleepPeriod.getStartTimestamp(), this.sleepPeriod.getEndTimestamp(), this.sleepPeriod.getOffsetMillis());
+    }
 
     public static MotionCluster create(final List<AmplitudeData> alignedAmplitudeData,
                                        final double originalMean,
@@ -167,6 +172,16 @@ public class MotionCluster {
         final MotionCluster cluster = new MotionCluster(alignedAmplitudeData, originalMean,
                 alignedKickOffCounts, kickOffMean, removeNoise);
         return cluster;
+    }
+
+    public static List<AmplitudeData> trim(final List<AmplitudeData> alignedData, final long startTimestamp, final long endTimestamp){
+        final List<AmplitudeData> trimmed = new ArrayList<>();
+        for(final AmplitudeData datum:alignedData){
+            if(datum.timestamp >= startTimestamp && datum.timestamp <= endTimestamp){
+                trimmed.add(datum);
+            }
+        }
+        return trimmed;
     }
 
     public static Pair<Integer, Integer> getClusterByTime(final List<ClusterAmplitudeData> clusters, final long targetTimestamp){
