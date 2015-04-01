@@ -93,6 +93,10 @@ public class SleepHmmWithInterpretation {
             this.i2 = i2;
         }
 
+        public boolean contains(final Integer idx) {
+            return idx >= i1 && idx <= i2;
+        }
+
         public final Integer i1;
         public final Integer i2;
     }
@@ -288,7 +292,7 @@ CREATE CREATE CREATE
             //LOGGER.debug("diffenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.differentialEnergy));
 
             sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearchForSleep(sleepSplitOnGaps, pillFeats, numMinutesInMeasPeriod);
-            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps,pillFeats,numMinutesInMeasPeriod);
+            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps,sleepSplitOnGaps,pillFeats,numMinutesInMeasPeriod);
             numMinutesInMeasPeriod = 1;
         }
 
@@ -520,12 +524,12 @@ CREATE CREATE CREATE
 
     }
 
-    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> segs, final PillFeats pillFeats,
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> bedSegs, final ImmutableList<SegmentPair> sleepSegs, final PillFeats pillFeats,
                                                                                         final int numMinutesInMeasPeriod) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
 
-        for (final SegmentPair seg : segs) {
+        for (final SegmentPair seg : bedSegs) {
 
             int i1InBed = seg.i1*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
             int i2InBed = seg.i1*numMinutesInMeasPeriod + numMinutesInMeasPeriod;
@@ -557,6 +561,18 @@ CREATE CREATE CREATE
 
                 if (outOfBed.isPresent()) {
                 newI2 = outOfBed.get() + 1;
+            }
+
+
+            /* check that no index is contained within a sleep index */
+            for (final SegmentPair sleepSeg : sleepSegs) {
+                if (sleepSeg.contains(newI1)) {
+                    newI1 = sleepSeg.i1 - 1;
+                }
+
+                if (sleepSeg.contains(newI2)) {
+                    newI2 = sleepSeg.i2 + 1;
+                }
             }
 
 
