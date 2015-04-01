@@ -17,6 +17,7 @@ import sun.misc.BASE64Decoder;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertThat;
@@ -152,6 +153,58 @@ public class HmmTest {
         ImmutableList<SleepHmmWithInterpretation.SegmentPair> sleeps = hmm.get().testDecodeWithData(sensordata);
 
         TestCase.assertTrue(sleeps.size() == 1);
+
+
+    }
+
+    @Test
+    public void TestHmmEventProcessing() {
+        final List<SleepHmmWithInterpretation.SegmentPair> sleeps = new ArrayList<>();
+        final List<SleepHmmWithInterpretation.SegmentPair> beds = new ArrayList<>();
+
+        sleeps.add (new SleepHmmWithInterpretation.SegmentPair(10,20));
+        sleeps.add (new SleepHmmWithInterpretation.SegmentPair(36,42));
+
+        beds .add(new SleepHmmWithInterpretation.SegmentPair(5, 8));
+        beds .add(new SleepHmmWithInterpretation.SegmentPair(9,23));
+        beds .add(new SleepHmmWithInterpretation.SegmentPair(35,45));
+        beds .add(new SleepHmmWithInterpretation.SegmentPair(48,50));
+
+        final SleepHmmWithInterpretation.TimeIndexInfo timeIndexInfo = new SleepHmmWithInterpretation.TimeIndexInfo(15,0,0);
+
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> resultOptional = SleepHmmWithInterpretation.processEventsIntoResult(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(beds), ImmutableList.copyOf(Collections.EMPTY_LIST), timeIndexInfo);
+
+        TestCase.assertEquals(resultOptional.isPresent(), true);
+
+
+        SleepHmmWithInterpretation.SleepHmmResult result = resultOptional.get();
+        int numInBeds = 0;
+        int numSleeps = 0;
+        int numWakes = 0;
+        int numOutOfBeds = 0;
+        for (final Event e : result.sleepEvents) {
+            if (e.getType() == Event.Type.IN_BED) {
+                numInBeds++;
+            }
+
+            if (e.getType() == Event.Type.OUT_OF_BED) {
+                numOutOfBeds++;
+            }
+
+            if (e.getType() == Event.Type.SLEEP) {
+                numSleeps++;
+            }
+
+            if (e.getType() == Event.Type.WAKE_UP) {
+                numWakes++;
+            }
+        }
+
+        TestCase.assertEquals(numInBeds, 2);
+        TestCase.assertEquals(numOutOfBeds, 2);
+        TestCase.assertEquals(numWakes, 2);
+        TestCase.assertEquals(numSleeps, 2);
+
 
 
     }

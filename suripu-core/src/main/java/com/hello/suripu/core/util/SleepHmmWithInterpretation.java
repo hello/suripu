@@ -22,7 +22,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -65,17 +67,14 @@ public class SleepHmmWithInterpretation {
 
     public static class SleepHmmResult {
 
-        public final SleepStats stats;
         public final ImmutableList<Event> sleepEvents;
         public final ImmutableList<Integer> path;
 
 
 
-        public SleepHmmResult(SleepStats stats,
-                              ImmutableList<Integer> path,
+        public SleepHmmResult(ImmutableList<Integer> path,
                               ImmutableList<Event> sleepEvents) {
 
-            this.stats = stats;
             this.path = path;
             this.sleepEvents = sleepEvents;
         }
@@ -85,7 +84,7 @@ public class SleepHmmWithInterpretation {
     //result classes -- internal use
 
 
-    public class SegmentPair {
+    public static class SegmentPair {
         public SegmentPair(final Integer i1, final Integer i2) {
             this.i1 = i1;
             this.i2 = i2;
@@ -95,7 +94,19 @@ public class SleepHmmWithInterpretation {
         public final Integer i2;
     }
 
-    public class SegmentPairWithGaps {
+    public static class TimeIndexInfo {
+        final int numMinutesInMeasPeriod;
+        final long t0;
+        final int timezoneOffset;
+
+        public TimeIndexInfo(int numMinutesInMeasPeriod, long t0, int timezoneOffset) {
+            this.numMinutesInMeasPeriod = numMinutesInMeasPeriod;
+            this.t0 = t0;
+            this.timezoneOffset = timezoneOffset;
+        }
+    }
+
+    public static class SegmentPairWithGaps {
         public SegmentPairWithGaps(SegmentPair bounds, List<SegmentPair> gaps) {
             this.bounds = bounds;
             this.gaps = gaps;
@@ -120,6 +131,8 @@ public class SleepHmmWithInterpretation {
         this.models = models;
 
     }
+
+
 
 
 
@@ -277,7 +290,10 @@ CREATE CREATE CREATE
         }
 
 
-        return  processEventsIntoResult(numMinutesInMeasPeriod,sleepSplitOnGaps,onBedIgnoringGaps,startTimeMillisInUTC,timezoneOffset,bestResult.bestPath);
+        final TimeIndexInfo timeIndexInfo = new TimeIndexInfo(numMinutesInMeasPeriod,startTimeMillisInUTC,timezoneOffset);
+
+
+        return  processEventsIntoResult(sleepSplitOnGaps,onBedIgnoringGaps,bestResult.bestPath,timeIndexInfo);
 
 
     }
@@ -308,7 +324,7 @@ CREATE CREATE CREATE
     }
 
 
-    protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
+    static protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
         Long eventTime =  SleepHmmSensorDataBinning.getTimeFromBin(index, numMinutesInWindow, t0);
 
         //  final long startTimestamp, final long endTimestamp, final int offsetMillis,
@@ -603,14 +619,13 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    Optional<SleepHmmResult> processEventsIntoResult(final int numMinutesInMeasPeriod, final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds, final long t0, final int timezoneOffset, final ImmutableList<Integer> path) {
+    static public Optional<SleepHmmResult> processEventsIntoResult(final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds,final ImmutableList<Integer> path,final TimeIndexInfo info) {
 
-        List<Event> events = new ArrayList<>();
+        LinkedList<Event> events = new LinkedList<>();
         int minutesSpentInBed = 0;
         int minutesSpentSleeping = 0;
         int numTimesWokenUpDuringSleep = 0;
         int numSeparateSleepSegments = 0;
-
 
         if (beds.isEmpty() || sleeps.isEmpty() ) {
             return Optional.absent();
@@ -633,10 +648,10 @@ CREATE CREATE CREATE
 
 
 
-            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, t0, timezoneOffset, sleepMessage,numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, t0, timezoneOffset, wakeupMessage,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, info.t0, info.timezoneOffset, sleepMessage,info.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, info.t0, info.timezoneOffset, wakeupMessage,info.numMinutesInMeasPeriod));
 
-            minutesSpentSleeping += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
+            minutesSpentSleeping += (seg.i2 - seg.i1) * info.numMinutesInMeasPeriod;
 
             numTimesWokenUpDuringSleep += 1;
             numSeparateSleepSegments += 1;
@@ -644,12 +659,12 @@ CREATE CREATE CREATE
         }
 
         for (final SegmentPair seg : beds) {
-            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, t0, timezoneOffset, English.IN_BED_MESSAGE,numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, t0, timezoneOffset, English.OUT_OF_BED_MESSAGE,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, info.t0, info.timezoneOffset, English.IN_BED_MESSAGE,info.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, info.t0, info.timezoneOffset, English.OUT_OF_BED_MESSAGE,info.numMinutesInMeasPeriod));
 
             //ignore gaps
 
-            minutesSpentInBed += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
+            minutesSpentInBed += (seg.i2 - seg.i1) * info.numMinutesInMeasPeriod;
         }
 
 
@@ -660,11 +675,11 @@ CREATE CREATE CREATE
                 final long t1 = o1.getStartTimestamp();
                 final long t2 = o2.getStartTimestamp();
                 int ret = 0;
-                if (t1 < t2) {
+                if (t1 > t2) {
                     ret = 1;
                 }
 
-                if (t2 < t1) {
+                if (t1 < t2) {
                     ret = -1;
                 }
 
@@ -674,7 +689,35 @@ CREATE CREATE CREATE
 
         Collections.sort(events,chronologicalComparator);
 
-        return Optional.of(new SleepHmmResult(new SleepStats(minutesSpentInBed,minutesSpentSleeping,numTimesWokenUpDuringSleep - 1,numSeparateSleepSegments),path,ImmutableList.copyOf(events)));
+
+
+        /* find orphan in/out of bed pairs and remove since there's no sleep in them */
+
+
+        ListIterator<Event> it = events.listIterator();
+        Event prev = null;
+        while(it.hasNext()) {
+            Event current = it.next();
+
+
+            if (prev != null) {
+                if (prev.getType() == Event.Type.IN_BED && current.getType() == Event.Type.OUT_OF_BED) {
+                    minutesSpentInBed -= (current.getStartTimestamp() - prev.getStartTimestamp()) / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                    it.previous();
+                    it.previous();
+                    it.remove();
+                    it.next();
+                    it.remove();
+                    current = null;
+                }
+            }
+
+            prev = current;
+
+        }
+        
+
+        return Optional.of(new SleepHmmResult(path,ImmutableList.copyOf(events)));
 
 
     }

@@ -115,7 +115,11 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                         continue;
                     }
 
-                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
+                    //only save if this is not the HMM
+                    if (!this.hasHmmEnabled(accountId)) {
+                        this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
+                    }
+
                     LOGGER.info("{} Timeline saved for account {} at local utc {}",
                             DateTime.now(),
                             accountId,
