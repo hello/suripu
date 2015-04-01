@@ -619,10 +619,12 @@ public class TimelineUtils {
         int inBedDurationInSecs = 0;
         Integer numberOfMotionEvents = 0;
         long sleepTimestampMillis = 0L;
+        long firstSleepTimestampMillis = 0L;
         long wakeUpTimestampMillis = 0L;
         long outBedTimestampMillis = 0L;
         Integer sleepOnsetTimeMinutes = 0;
         long inBedTimestampMillis = 0L;
+        long firstInBedTimestampMillis = 0L;
 
         boolean sleepStarted = false;
         boolean inBedStarted = false;
@@ -631,23 +633,31 @@ public class TimelineUtils {
             if (segment.getType() == Event.Type.IN_BED) {
                 inBedTimestampMillis = segment.getTimestamp();
                 inBedStarted = true;
+
+                if (firstInBedTimestampMillis == 0L) {
+                    firstInBedTimestampMillis = segment.getTimestamp();
+                }
             }
 
             if(segment.getType() == Event.Type.SLEEP){
                 sleepStarted = true;
                 sleepTimestampMillis = segment.getTimestamp();
+
+                if (firstSleepTimestampMillis == 0L) {
+                    firstSleepTimestampMillis = segment.getTimestamp();
+                }
             }
 
             if(segment.getType() == Event.Type.WAKE_UP && sleepStarted){  //On purpose dangling case, if no wakeup present
                 sleepStarted = false;
                 wakeUpTimestampMillis = segment.getTimestamp();
-                sleepDurationInSecs = (int) (segment.getTimestamp() - sleepTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
+                sleepDurationInSecs += (int) (segment.getTimestamp() - sleepTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
             }
 
             if(segment.getType() == Event.Type.OUT_OF_BED && inBedStarted){
                 inBedStarted = false;
                 outBedTimestampMillis = segment.getTimestamp();
-                inBedDurationInSecs = (int) (segment.getTimestamp() - inBedTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
+                inBedDurationInSecs += (int) (segment.getTimestamp() - inBedTimestampMillis) / DateTimeConstants.MILLIS_PER_SECOND;
             }
 
             if(!sleepStarted){
@@ -669,7 +679,7 @@ public class TimelineUtils {
             final List<SleepSegment> sortedSegments = Ordering.natural().sortedCopy(segments);
 
             // I want to keep the final :)
-            final long firstEventTimestamp = Math.max(sleepTimestampMillis, inBedTimestampMillis) == 0 ? sortedSegments.get(0).getTimestamp() : Math.max(sleepTimestampMillis, inBedTimestampMillis);
+            final long firstEventTimestamp = Math.max(firstSleepTimestampMillis, firstInBedTimestampMillis) == 0 ? sortedSegments.get(0).getTimestamp() : Math.max(firstSleepTimestampMillis, firstInBedTimestampMillis);
             final long lastEventTimestamp = Math.max(wakeUpTimestampMillis, outBedTimestampMillis) == 0 ? sortedSegments.get(sortedSegments.size() - 1).getTimestamp() : Math.max(wakeUpTimestampMillis, outBedTimestampMillis);
             if(lastEventTimestamp - firstEventTimestamp > 4 * DateTimeConstants.MILLIS_PER_HOUR){
                 inBedDurationInSecs = (int) ((lastEventTimestamp - firstEventTimestamp) / DateTimeConstants.MILLIS_PER_SECOND);
@@ -684,15 +694,15 @@ public class TimelineUtils {
         final Integer sleepDurationInMinutes = Math.round(new Float(sleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer inBedDurationInMinutes = Math.round(new Float(inBedDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
 
-        if (inBedTimestampMillis > 0 && inBedTimestampMillis < sleepTimestampMillis) {
-            sleepOnsetTimeMinutes = (int) ((sleepTimestampMillis - inBedTimestampMillis)/MINUTE_IN_MILLIS);
+        if (firstInBedTimestampMillis > 0 && firstInBedTimestampMillis < firstSleepTimestampMillis) {
+            sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis)/MINUTE_IN_MILLIS);
         }
 
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
                 lightSleepDurationInMinutes,
                 sleepDurationInMinutes == 0 ? inBedDurationInMinutes : sleepDurationInMinutes,
                 numberOfMotionEvents,
-                sleepTimestampMillis,
+                firstSleepTimestampMillis,
                 wakeUpTimestampMillis,
                 sleepOnsetTimeMinutes
         );
