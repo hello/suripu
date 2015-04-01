@@ -15,6 +15,7 @@ public class AllSensorSampleList {
     private final List<Sample> temperature = Lists.newArrayList();
     private final List<Sample> particulates = Lists.newArrayList();
     private final List<Sample> waveCounts = Lists.newArrayList();
+    private final List<Sample> holdCounts = Lists.newArrayList();
     private final List<Sample> soundNumDisturbances = Lists.newArrayList();
     private final List<Sample> soundPeakDisturbance = Lists.newArrayList();
 
@@ -29,6 +30,7 @@ public class AllSensorSampleList {
                 Sensor.SOUND,
                 Sensor.TEMPERATURE,
                 Sensor.WAVE_COUNT,
+                Sensor.HOLD_COUNT,
                 Sensor.SOUND_NUM_DISTURBANCES,
                 Sensor.SOUND_PEAK_DISTURBANCE);
     }
@@ -52,6 +54,9 @@ public class AllSensorSampleList {
                 break;
             case WAVE_COUNT:
                 this.waveCounts.addAll(values);
+                break;
+            case HOLD_COUNT:
+                this.holdCounts.addAll(values);
                 break;
             case SOUND_NUM_DISTURBANCES:
                 this.soundNumDisturbances.addAll(values);
@@ -83,6 +88,8 @@ public class AllSensorSampleList {
                 return this.particulates;
             case WAVE_COUNT:
                 return this.waveCounts;
+            case HOLD_COUNT:
+                return this.holdCounts;
             case SOUND_NUM_DISTURBANCES:
                 return this.soundNumDisturbances;
             case SOUND_PEAK_DISTURBANCE:
@@ -100,6 +107,7 @@ public class AllSensorSampleList {
         results.put(Sensor.TEMPERATURE, this.temperature);
         results.put(Sensor.PARTICULATES, this.particulates);
         results.put(Sensor.WAVE_COUNT, this.waveCounts);
+        results.put(Sensor.HOLD_COUNT, this.holdCounts);
         results.put(Sensor.SOUND_NUM_DISTURBANCES, this.soundNumDisturbances);
         results.put(Sensor.SOUND_PEAK_DISTURBANCE, this.soundPeakDisturbance);
 
@@ -109,7 +117,7 @@ public class AllSensorSampleList {
 
     public Boolean isEmpty() {
         return light.isEmpty() && humidity.isEmpty() && sound.isEmpty() &&
-                temperature.isEmpty() && particulates.isEmpty() && waveCounts.isEmpty() &&
+                temperature.isEmpty() && particulates.isEmpty() && waveCounts.isEmpty() && holdCounts.isEmpty() &&
                 soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
     }
 

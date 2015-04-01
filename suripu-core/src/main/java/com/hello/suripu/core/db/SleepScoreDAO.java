@@ -116,6 +116,7 @@ public abstract class SleepScoreDAO {
     }
 
     @Timed
+    @Deprecated
     public int getSleepScoreForNight(final Long accountID, final DateTime nightDate, final Integer userOffsetMillis, final int dateBucketPeriod, final SleepLabelDAO sleepLabelDAO) {
 
         // get sleep and wakeup time from sleep_labels or use default
@@ -161,13 +162,14 @@ public abstract class SleepScoreDAO {
             totalScore += score.bucketScore;
         }
         final float score = 100.0f - (totalScore / (float) scores.size());
-        LOGGER.debug("TOTAL score: {}, {}", String.valueOf(totalScore), score);
+        LOGGER.debug("TOTAL score: {}, {}, size {}", String.valueOf(totalScore), score, scores.size());
         LOGGER.debug("Night {} Start: {}, end {}", nightDate, scores.get(0).dateBucketUTC, scores.get(scores.size()-1).dateBucketUTC);
 
         return Math.round((score / 100.0f) * this.SCORE_RANGE + this.SCORE_MIN);
     }
 
     @Timed
+    @Deprecated
     public List<AggregateScore> getSleepScoreForNights(final Long accountID,
                                                final List<DateTime> requiredDates,
                                                final int dateBucketPeriod,

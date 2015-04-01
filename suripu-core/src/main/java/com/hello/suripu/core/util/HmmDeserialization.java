@@ -24,13 +24,13 @@ import java.util.TreeSet;
  */
 public class HmmDeserialization {
 
-    static public ImmutableList<NamedSleepHmmModel> createModelsFromProtobuf(final SleepHmmProtos.SleepHmmModelSet allModels,final Logger logger) {
+    static public ImmutableList<NamedSleepHmmModel> createModelsFromProtobuf(final SleepHmmProtos.SleepHmmModelSet allModels) {
 
         List<NamedSleepHmmModel> models = new ArrayList<>();
 
         for (final SleepHmmProtos.SleepHmm hmmModelData : allModels.getModelsList()) {
 
-            final Optional<NamedSleepHmmModel> namedModel = createIndividualModelFromProtobuf(hmmModelData,logger);
+            final Optional<NamedSleepHmmModel> namedModel = createIndividualModelFromProtobuf(hmmModelData);
 
             if (!namedModel.isPresent()) {
                 continue;
@@ -43,7 +43,7 @@ public class HmmDeserialization {
         return ImmutableList.copyOf(models);
     }
 
-    static private Optional<NamedSleepHmmModel> createIndividualModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData,final Logger logger) {
+    static private Optional<NamedSleepHmmModel> createIndividualModelFromProtobuf(final SleepHmmProtos.SleepHmm hmmModelData) {
 
         String source = "no_source";
 

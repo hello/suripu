@@ -8,25 +8,21 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
-import com.hello.suripu.core.db.SleepLabelDAO;
-import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.Insight;
-import com.hello.suripu.core.models.Insights.TrendGraph;
+import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -63,40 +59,28 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
-    private final SleepScoreDAO sleepScoreDAO;
-    private final SleepLabelDAO sleepLabelDAO;
-    private final TrendsInsightsDAO trendsInsightsDAO;
-    private final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB;
-    private final int dateBucketPeriod;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackDAO feedbackDAO;
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountDAO accountDAO;
+    private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
-                            final SleepLabelDAO sleepLabelDAO,
-                            final SleepScoreDAO sleepScoreDAO,
-                            final TrendsInsightsDAO trendsInsightsDAO,
-                            final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB,
-                            final int dateBucketPeriod,
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final SleepHmmDAO sleepHmmDAO,
-                            final AccountDAO accountDAO) {
+                            final AccountDAO accountDAO,
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
-        this.sleepLabelDAO = sleepLabelDAO;
-        this.sleepScoreDAO = sleepScoreDAO;
-        this.trendsInsightsDAO = trendsInsightsDAO;
-        this.aggregateSleepScoreDAODynamoDB = aggregateSleepScoreDAODynamoDB;
-        this.dateBucketPeriod = dateBucketPeriod;
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
+        this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -177,22 +161,17 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         }
 
 
-
-
-    /* EVENTS FOR TIMELINE  */
+        /* EVENTS FOR TIMELINE  */
 
 
         //events for the timeline
         final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
 
-
         // Light
         final List<Event> lightEvents = Lists.newArrayList();
         lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
 
-
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
-
 
 
         /*  THE GODDAMNED HMM */
@@ -232,7 +211,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         final SleepStats stats = new SleepStats(0,0,res.stats.minutesSpentSleeping,0,0L,0L,0);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, stats);
+        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, stats);
 
         if(stats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, stats.sleepDurationInMinutes);
@@ -434,7 +413,7 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions.get(0).offsetMillis, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
@@ -668,57 +647,37 @@ public List<Timeline> retrieveHmmTimeline(final Long accountId, final String dat
 
 
     /**
-     * Sleep score
-     * @param userOffsetMillis
+     * Sleep score - always compute and update dynamo
+     * @param trackerMotions
      * @param targetDate
      * @param accountId
      * @param sleepStats
      * @return
      */
-    private Integer computeAndMaybeSaveScore(final Integer userOffsetMillis, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
-        // get scores - check dynamoDB first
-        final String targetDateString = DateTimeUtil.dateToYmdString(targetDate);
+    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
 
-        final AggregateScore targetDateScore = this.aggregateSleepScoreDAODynamoDB.getSingleScore(accountId, targetDateString);
-        Integer sleepScore = targetDateScore.score;
+        // Movement score
+        final MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
+                trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
-        if (sleepScore == 0) {
-            // score may not have been computed yet, recompute
-            // score based on amount of movement during sleep
-            final Integer motionScore = sleepScoreDAO.getSleepScoreForNight(accountId, targetDate.withTimeAtStartOfDay(),
-                    userOffsetMillis, this.dateBucketPeriod, sleepLabelDAO);
+        // Sleep duration score
+        final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+        final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+        final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
 
-            // score due to duration, and user age
-            final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-            final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-            final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
+        // TODO: Environment score
+        final Integer environmentScore = 100;
 
-            // TODO: score the external environment (lights, sound, temp and humidity)
-            final Integer environmentScore = 100;
+        // Aggregate all scores
+        final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore.score, durationScore, environmentScore);
 
-            // combine all the scores
-            sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore, durationScore, environmentScore);
+        // Always update stats and scores to Dynamo
+        final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
+        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
+                targetDate.withTimeAtStartOfDay(), sleepScore, motionScore, sleepStats, userOffsetMillis);
 
-            LOGGER.trace("SCORES: motion {}, duration {}, final {}", motionScore, durationScore, sleepScore);
-            final DateTime lastNight = new DateTime(DateTime.now(), DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
-            if (targetDate.isBefore(lastNight)) {
-                // write data to Dynamo if targetDate is old
-                this.aggregateSleepScoreDAODynamoDB.writeSingleScore(
-                        new AggregateScore(accountId,
-                                sleepScore,
-                                DateTimeUtil.dateToYmdString(targetDate.withTimeAtStartOfDay()),
-                                targetDateScore.scoreType, targetDateScore.version));
-
-                // add sleep-score and duration to day-of-week, over time tracking table
-                if (sleepScore > 0) {
-                    this.trendsInsightsDAO.updateDayOfWeekData(accountId, sleepScore, targetDate.withTimeAtStartOfDay(), userOffsetMillis, TrendGraph.DataType.SLEEP_SCORE);
-                }
-
-                if (sleepStats.sleepDurationInMinutes > 0) {
-                    this.trendsInsightsDAO.updateSleepStats(accountId, userOffsetMillis, targetDate.withTimeAtStartOfDay(), sleepStats);
-                }
-            }
-        }
+        LOGGER.debug("Updated Stats-score: status {}, account {}, motion {}, duration {}, score {}, stats {}",
+                updatedStats, accountId, motionScore, durationScore, sleepScore, sleepStats);
 
         return sleepScore;
     }
