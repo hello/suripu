@@ -128,10 +128,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     static protected class OneDaysSensorData {
         final AllSensorSampleList allSensorSampleList;
         final ImmutableList<TrackerMotion> trackerMotions;
+        final ImmutableList<TrackerMotion> partnerMotions;
 
-        public OneDaysSensorData(AllSensorSampleList allSensorSampleList, ImmutableList<TrackerMotion> trackerMotions) {
+        public OneDaysSensorData(AllSensorSampleList allSensorSampleList, ImmutableList<TrackerMotion> trackerMotions, ImmutableList<TrackerMotion> partnerMotions) {
             this.allSensorSampleList = allSensorSampleList;
             this.trackerMotions = trackerMotions;
+            this.partnerMotions = partnerMotions;
         }
     }
 
@@ -187,16 +189,21 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions)));
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions)));
 
     }
 
 
-    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, ImmutableList<Event> additionalEvents, final ImmutableList<TrackerMotion> trackerMotions, final AllSensorSampleList allSensorSampleList) {
+    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, ImmutableList<Event> additionalEvents,
+                                           final OneDaysSensorData sensorData) {
 
         // compute lights-out and sound-disturbance events
         Optional<DateTime> lightOutTimeOptional = Optional.absent();
         final List<Event> lightEvents = Lists.newArrayList();
+
+        final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
+        final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
+        final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
 
         if (!allSensorSampleList.isEmpty()) {
 
@@ -237,7 +244,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         // PARTNER MOTION
-        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, motionEvents, accountId);
+        final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, ImmutableList.copyOf(motionEvents), partnerMotions);
         for(PartnerMotionEvent partnerMotionEvent : partnerMotionEvents) {
             timelineEvents.put(partnerMotionEvent.getStartTimestamp(), partnerMotionEvent);
         }
@@ -399,7 +406,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 return getEmtpyTimelineList();
             }
 
-            return populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),extraEvents, sensorData.trackerMotions, sensorData.allSensorSampleList);
+            return populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),extraEvents, sensorData);
         }
         catch (Exception e) {
             LOGGER.error(e.toString());
@@ -427,26 +434,31 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
      * @param fallingAsleepEvent
      * @param wakeupEvent
      * @param motionEvents
-     * @param accountId
      * @return
      */
-    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final List<MotionEvent> motionEvents, final Long accountId) {
+    private List<PartnerMotionEvent> getPartnerMotionEvents(final Optional<Event> fallingAsleepEvent, final Optional<Event> wakeupEvent, final ImmutableList<MotionEvent> motionEvents, final ImmutableList<TrackerMotion> partnerMotions) {
         // add partner movement data, check if there's a partner
+        List<TrackerMotion> partnerMotionsWithinSleepBounds = new ArrayList<>();
 
-        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
-        if (optionalPartnerAccountId.isPresent() && fallingAsleepEvent.isPresent() && wakeupEvent.isPresent()) {
-            LOGGER.debug("partner account {}", optionalPartnerAccountId.get());
-            // get tracker motions for partner, query time is in UTC, not local_utc
+        if (!fallingAsleepEvent.isPresent() || !wakeupEvent.isPresent()) {
+            return Collections.EMPTY_LIST;
+        }
 
-            final DateTime startTime = new DateTime(fallingAsleepEvent.get().getStartTimestamp(), DateTimeZone.UTC);
-            final DateTime endTime = new DateTime(wakeupEvent.get().getStartTimestamp(), DateTimeZone.UTC);
+        final long t1 = fallingAsleepEvent.get().getStartTimestamp();
+        final long t2 = wakeupEvent.get().getStartTimestamp();
 
-            final List<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetween(optionalPartnerAccountId.get(), startTime, endTime);
-            if (partnerMotions.size() > 0) {
-                // use un-normalized data segments for comparison
-                return PartnerMotion.getPartnerData(motionEvents, partnerMotions, 0);
+        for (final TrackerMotion pm : partnerMotions) {
+            final long t = pm.timestamp;
+            if (t >= t1 && t <= t2) {
+                partnerMotionsWithinSleepBounds.add(pm);
             }
         }
+
+        if (partnerMotionsWithinSleepBounds.size() > 0) {
+            // use un-normalized data segments for comparison
+            return PartnerMotion.getPartnerData(motionEvents, partnerMotionsWithinSleepBounds, 0);
+        }
+
         return Collections.EMPTY_LIST;
     }
 
@@ -512,7 +524,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
 
         if (!hmmOptional.isPresent()) {
-            LOGGER.error("Failed to retrieve HMM model for account_id {} on date {}",accountId,targetDate);
+            LOGGER.error("Failed to retrieve HMM model for account_id {} on date {}", accountId, targetDate);
             return Optional.absent();
         }
 
@@ -521,7 +533,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTime.getMillis());
 
         if (!optionalHmmPredictions.isPresent()) {
-            LOGGER.error("Failed to get predictions from HMM for account_id {} on date {}",accountId,targetDate);
+            LOGGER.error("Failed to get predictions from HMM for account_id {} on date {}", accountId, targetDate);
             return Optional.absent();
         }
 
