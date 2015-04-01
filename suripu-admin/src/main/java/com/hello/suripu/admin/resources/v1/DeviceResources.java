@@ -161,7 +161,7 @@ public class DeviceResources {
     @GET
     @Path("/status_breakdown")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeviceStatusBreakdown getDeviceStatusBreakdown(final Long accountId) {
+    public DeviceStatusBreakdown getDeviceStatusBreakdown(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
         // TODO: move this out of url handler once we've validated this is what we want
         final Jedis jedis = jedisPool.getResource();
         final DateTime currentTs = DateTime.now(DateTimeZone.UTC);
