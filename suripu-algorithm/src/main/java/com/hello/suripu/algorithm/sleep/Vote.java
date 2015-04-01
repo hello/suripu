@@ -66,11 +66,19 @@ public class Vote {
 
         this.motionCluster = MotionCluster.create(dataWithGapFilled, rawAmpMean, alignedKickOffs, rawKickOffMean, removeNoise);
         final List<Segment> motionSegments = MotionCluster.toSegments(this.motionCluster.getCopyOfClusters());
+        final List<Segment> lightSegments = timeDeltaSegments(lightOutTimes,
+                20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                rawData.get(0).offsetMillis);
+        final List<Segment> waveSegments = timeDeltaSegments(Lists.newArrayList(firstWaveTimeOptional.get()),
+                5 * DateTimeConstants.MILLIS_PER_MINUTE,
+                rawData.get(0).offsetMillis);
         final Optional<Segment> inBedSegment = SleepPeriod.getSleepPeriod(dataWithGapFilled, motionSegments);
 
         this.sleepPeriod = SleepPeriod.createFromSegment(inBedSegment.get());
         this.sleepPeriod.addVotingSegments(motionSegments);
         this.sleepPeriod.addVotingSegments(SoundCluster.getClusters(rawSound));
+        this.sleepPeriod.addVotingSegments(lightSegments);
+        this.sleepPeriod.addVotingSegments(waveSegments);
 
         LOGGER.debug("data start from {} to {}", new DateTime(this.sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())),
                 new DateTime(this.sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(this.sleepPeriod.getOffsetMillis())));
@@ -90,18 +98,9 @@ public class Vote {
         }
 
         final long preserveTimeMillis = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
-        final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
+        final Set<MotionFeatures.FeatureType> featureTypes = this.aggregatedFeatures.keySet();
         for(final MotionFeatures.FeatureType featureType:featureTypes){
-            final List<AmplitudeData> originalFeature = aggregatedFeatures.get(featureType);
-            if(this.removeNoise) {
-                if(sleepPeriod.getStartTimestamp() - originalFeature.get(0).timestamp > 2 * DateTimeConstants.MILLIS_PER_HOUR) {
-                    final List<AmplitudeData> trimmed = MotionCluster.trim(originalFeature,
-                            sleepPeriod.getStartTimestamp() - preserveTimeMillis,
-                            sleepPeriod.getEndTimestamp());
-                    aggregatedFeatures.put(featureType, trimmed);
-                }
-                continue;
-            }
+            final List<AmplitudeData> originalFeature = this.aggregatedFeatures.get(featureType);
 
             for(int i = 0; i < originalFeature.size(); i++){
                 final AmplitudeData item = originalFeature.get(i);
@@ -172,6 +171,14 @@ public class Vote {
             }
         }
         return features;
+    }
+
+    private List<Segment> timeDeltaSegments(final List<DateTime> dateTimes, final int deltaMillis, final int offsetMillis){
+        final List<Segment> segments = new ArrayList<>();
+        for(final DateTime dateTime:dateTimes){
+            segments.add(new Segment(dateTime.getMillis() - deltaMillis, dateTime.getMillis() + deltaMillis, offsetMillis));
+        }
+        return segments;
     }
 
     public SleepEvents<Segment> getResult(final boolean debug){
