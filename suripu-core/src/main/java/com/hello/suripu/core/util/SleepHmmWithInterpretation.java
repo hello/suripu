@@ -40,6 +40,9 @@ public class SleepHmmWithInterpretation {
 
     //final static protected int MIN_DURATION_OF_SLEEP_SEGMENT_IN_MINUTES = 45;
     final static protected int MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES = 15;
+    final static protected int MIN_ENFORCED_SLEEP_TIME_IN_MINUTES = 5;
+    final static protected int MIN_ENFORCED_WAKE_TIME_IN_MINUTES = 5;
+
 
     final static protected int MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES = 45;
     final static protected int MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES = 45;
@@ -88,6 +91,10 @@ public class SleepHmmWithInterpretation {
         public SegmentPair(final Integer i1, final Integer i2) {
             this.i1 = i1;
             this.i2 = i2;
+        }
+
+        public boolean contains(final Integer idx) {
+            return idx >= i1 && idx <= i2;
         }
 
         public final Integer i1;
@@ -285,7 +292,7 @@ CREATE CREATE CREATE
             //LOGGER.debug("diffenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.differentialEnergy));
 
             sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearchForSleep(sleepSplitOnGaps, pillFeats, numMinutesInMeasPeriod);
-            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps,pillFeats,numMinutesInMeasPeriod);
+            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps,sleepSplitOnGaps,pillFeats,numMinutesInMeasPeriod);
             numMinutesInMeasPeriod = 1;
         }
 
@@ -494,8 +501,8 @@ CREATE CREATE CREATE
                 newI1 = sleepIndex.get();
             }
 
-            if (newI1 < lastIndex) {
-                newI1 = lastIndex + 5;
+            if (newI1 < lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES) {
+                newI1 = lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES;
             }
 
 
@@ -503,8 +510,8 @@ CREATE CREATE CREATE
                 newI2 = wakeIndex.get();
             }
 
-            if (newI2 < newI1) {
-                newI2 = newI1 + 5;
+            if (newI2 < newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES) {
+                newI2 = newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES;
             }
 
 
@@ -517,12 +524,12 @@ CREATE CREATE CREATE
 
     }
 
-    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> segs, final PillFeats pillFeats,
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> bedSegs, final ImmutableList<SegmentPair> sleepSegs, final PillFeats pillFeats,
                                                                                         final int numMinutesInMeasPeriod) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
 
-        for (final SegmentPair seg : segs) {
+        for (final SegmentPair seg : bedSegs) {
 
             int i1InBed = seg.i1*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
             int i2InBed = seg.i1*numMinutesInMeasPeriod + numMinutesInMeasPeriod;
@@ -554,6 +561,18 @@ CREATE CREATE CREATE
 
                 if (outOfBed.isPresent()) {
                 newI2 = outOfBed.get() + 1;
+            }
+
+
+            /* check that no index is contained within a sleep index */
+            for (final SegmentPair sleepSeg : sleepSegs) {
+                if (sleepSeg.contains(newI1)) {
+                    newI1 = sleepSeg.i1 - 1;
+                }
+
+                if (sleepSeg.contains(newI2)) {
+                    newI2 = sleepSeg.i2 + 1;
+                }
             }
 
 
