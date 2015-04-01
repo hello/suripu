@@ -169,7 +169,7 @@ public class DeviceResources {
         try {
             normalCount = jedis.zcount("devices", currentTs.minusDays(1).getMillis(), currentTs.getMillis());
         } catch (Exception e) {
-            LOGGER.error("Failed to get active senses count", e.getMessage());
+            LOGGER.error("Failed to get active senses count because {}", e.getMessage());
         } finally {
             jedisPool.returnResource(jedis);
         }
