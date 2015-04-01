@@ -89,6 +89,7 @@ logging:
 http:
     port: 5555
     adminPort: 5556
+    minThreads: 2
 
 dynamodb:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -144,10 +145,10 @@ sense_upload_configuration:
 
 ota_configuration:
   start_update_window_hour: 11
-  end_update_window_hour: 22
-  device_uptime_delay: 20
+  end_update_window_hour: 20
+  device_uptime_delay: 60
   always_ota_groups: [chris-dev, video-photoshoot, victor]
-  s3cache_expire_minutes: 60
+  s3cache_expire_minutes: 20
   
 kinesis_logger:
   stream_name: logs

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.util.DateTimeUtil;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -29,14 +28,15 @@ public class Account {
 
     @JsonProperty("id")
     public String generateExternalId() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(id);
-        sb.append("|");
-        sb.append(created.getMillis());
-
-        final String digest = DigestUtils.md5Hex(sb.toString());
-        return digest;
-    };
+//        final StringBuilder sb = new StringBuilder();
+//        sb.append(id);
+//        sb.append("|");
+//        sb.append(created.getMillis());
+//
+//        final String digest = DigestUtils.md5Hex(sb.toString());
+//        return digest;
+        return (id.isPresent()) ? id.get().toString() : "0";
+    }
 
     @JsonProperty("email")
     public final String email;

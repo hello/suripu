@@ -10,6 +10,7 @@ import org.joda.time.format.DateTimeFormat;
  */
 public class DateTimeUtil {
     public static final String DYNAMO_DB_DATE_FORMAT = "yyyy-MM-dd";
+    public static final String DYNAMO_DB_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final int DAY_STARTS_AT_HOUR = 20;
     public static final int DAY_ENDS_AT_HOUR = 12;
 

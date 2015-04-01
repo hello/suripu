@@ -123,6 +123,7 @@ http:
   # The port on which the HTTP server listens for administrative
   # requests. Subject to the same limitations as "port".
   adminPort: 9998
+  minThreads: 2
 
 # Logging settings.
 logging:
@@ -271,3 +272,8 @@ max_cache_refresh_days: 20
 redis:
   host: localhost
   port: 6379
+
+algorithm_test_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: algorithm_test

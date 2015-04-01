@@ -58,7 +58,12 @@ public class TimelineResource extends BaseResource {
                 LOGGER.info("Trying to cache empty timelines for account {} date {}, quit.", accountId, targetDateLocalUTC);
                 return false;
             }
-            this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), timelines);
+
+            //only cache if not the HMM
+            if (!this.hasHmmEnabled(accountId)) {
+                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), timelines);
+            }
+
             return true;
         }catch (AmazonServiceException awsExp){
             LOGGER.error("AWS error, Save timeline for account {} date {} failed, {}",
@@ -87,10 +92,13 @@ public class TimelineResource extends BaseResource {
 
     private List<Timeline> getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
+
+        //if no update forced (i.e. no HMM)
         final List<Timeline> timelinesFromCache = getCachedTimelines(accountId, targetDate);
-        if(!timelinesFromCache.isEmpty()){
+        if (!timelinesFromCache.isEmpty()) {
             return timelinesFromCache;
         }
+
 
         LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
         final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
@@ -105,13 +113,10 @@ public class TimelineResource extends BaseResource {
     public List<Timeline> getTimelines(
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
+        
 
-        if (this.hasHmmEnabled(accessToken.accountId)) {
-            return this.timelineProcessor.retrieveHmmTimeline(accessToken.accountId,date);
-        }
-        else {
-            return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
-        }
+        return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+
     }
 
     @Timed

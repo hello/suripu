@@ -1,8 +1,11 @@
 package com.hello.suripu.admin;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
 import com.hello.suripu.admin.resources.v1.AccountResources;
@@ -11,9 +14,13 @@ import com.hello.suripu.admin.resources.v1.DeviceResources;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDAOAdmin;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
@@ -21,6 +28,16 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.logging.KinesisLoggerFactory;
+import com.hello.suripu.core.oauth.OAuthAuthenticator;
+import com.hello.suripu.core.oauth.OAuthProvider;
+import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
+import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.passwordreset.PasswordResetDB;
+import com.hello.suripu.core.util.CustomJSONExceptionMapper;
+import com.hello.suripu.core.util.DropwizardServiceUtil;
+import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
@@ -32,6 +49,7 @@ import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.JedisPool;
 
 import java.util.TimeZone;
 
@@ -73,13 +91,11 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
 
-
-
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
+        final DeviceDAOAdmin deviceDAOAdmin = commonDB.onDemand(DeviceDAOAdmin.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
-
 
 
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
@@ -102,10 +118,37 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
                 120 // 2 minutes for cache
         );
+        final AmazonDynamoDB passwordResetDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPasswordResetDBConfiguration().getEndpoint());
+        final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
+
+        final ResourceConfig jrConfig = environment.getJerseyResourceConfig();
+        DropwizardServiceUtil.deregisterDWSingletons(jrConfig);
+        environment.addProvider(new CustomJSONExceptionMapper(configuration.getDebug()));
+        final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
+
+        final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
+        final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
+
+        final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
+
+        final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
+
+        final ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.withConnectionTimeout(200); // in ms
+        clientConfiguration.withMaxErrorRetry(1);
+        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
+        final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
+        final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
+        environment.addProvider(new OAuthProvider(new OAuthAuthenticator(accessTokenStore), "protected-resources", activityLogger));
+
+        final JedisPool jedisPool = new JedisPool(
+                configuration.getRedisConfiguration().getHost(),
+                configuration.getRedisConfiguration().getPort()
+        );
 
         environment.addResource(new PingResource());
-        environment.addResource(new AccountResources(accountDAO));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore));
+        environment.addResource(new AccountResources(accountDAO, passwordResetDB));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
     }
 }
