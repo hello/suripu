@@ -49,7 +49,8 @@ public class Vote {
     private final boolean smoothCluster = false;
     private final boolean removeNoise = true;
     private final boolean defaultSearch = false;
-    private final boolean capScoreOutOfPeriod = true;
+    private final boolean multiSleep = true;
+    private final boolean capScoreOutOfPeriod = false;
     private final boolean defaultOverride = false;
 
     public Vote(final List<AmplitudeData> rawData,
@@ -74,9 +75,11 @@ public class Vote {
             alignedKickOffs = DataUtils.insertEmptyData(alignedKickOffs, insertLengthMin, 1);
         }
 
-        this.motionCluster = MotionCluster.create(dataWithGapFilled, rawAmpMean, alignedKickOffs, rawKickOffMean);
+        this.motionCluster = MotionCluster.create(dataWithGapFilled, rawAmpMean, alignedKickOffs, rawKickOffMean, removeNoise);
         final List<Segment> motionSegments = MotionCluster.toSegments(this.motionCluster.getCopyOfClusters());
-        final Optional<Segment> inBedSegment = SleepPeriod.getSleepPeriod(dataWithGapFilled, motionSegments);
+        final Optional<Segment> inBedSegment = this.multiSleep == false ?
+                Optional.of(this.motionCluster.getSleepTimeSpan()) :
+                SleepPeriod.getSleepPeriod(dataWithGapFilled, motionSegments);
 
         this.sleepPeriod = SleepPeriod.createFromSegment(inBedSegment.get());
         this.sleepPeriod.addVotingSegments(motionSegments);
@@ -92,11 +95,38 @@ public class Vote {
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures = MotionFeatures.aggregateData(motionFeatures, MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES);
         LOGGER.debug("smoothed data size {}", aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE).size());
 
-        if(capScoreOutOfPeriod) {
+        if(this.capScoreOutOfPeriod) {
             final Map<MotionFeatures.FeatureType, List<AmplitudeData>> capFeatures = capFeaturesBySleepPeriod(aggregatedFeatures, sleepPeriod);
             this.aggregatedFeatures = capFeatures;
         }else{
             this.aggregatedFeatures = aggregatedFeatures;
+            final long preserveTimeMillis = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
+            final Set<MotionFeatures.FeatureType> featureTypes = aggregatedFeatures.keySet();
+            for(final MotionFeatures.FeatureType featureType:featureTypes){
+                final List<AmplitudeData> originalFeature = aggregatedFeatures.get(featureType);
+                if(this.removeNoise) {
+                    if(sleepPeriod.getStartTimestamp() - originalFeature.get(0).timestamp > 2 * DateTimeConstants.MILLIS_PER_HOUR) {
+                        final List<AmplitudeData> trimmed = MotionCluster.trim(originalFeature,
+                                sleepPeriod.getStartTimestamp() - preserveTimeMillis,
+                                sleepPeriod.getEndTimestamp());
+                        aggregatedFeatures.put(featureType, trimmed);
+                    }
+                    continue;
+                }
+
+                for(int i = 0; i < originalFeature.size(); i++){
+                    final AmplitudeData item = originalFeature.get(i);
+                    final long timestamp = item.timestamp;
+                    final int offsetMillis = item.offsetMillis;
+                    if(timestamp > sleepPeriod.getStartTimestamp() - preserveTimeMillis){
+                        continue;
+                    }
+                    if(featureType == MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE ||
+                            featureType == MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE){
+                        originalFeature.set(i, new AmplitudeData(timestamp, 0d, offsetMillis));
+                    }
+                }
+            }
         }
 
         final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm();
@@ -243,23 +273,29 @@ public class Vote {
         Segment inBed = sleepEvents.goToBed;
         Segment sleep = sleepEvents.fallAsleep;
 
-        final long sleepTimestamp = pickSleep(this.sleepPeriod,
+        final Pair<Long, Long> sleepTimesMillis = pickSleep(this.sleepPeriod,
                 this.getAggregatedFeatures(),
                 sleep.getStartTimestamp());
 
-        final Pair<Integer, Integer> sleepBounds = MotionCluster.getClusterByTime(clusterCopy, sleepTimestamp);
-        if(isEmptyBounds(sleepBounds)){
-            inBed = new Segment(sleepTimestamp - 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                    sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
-                    sleepPeriod.getOffsetMillis());
-        }else{
-            final ClusterAmplitudeData clusterStart = clusterCopy.get(sleepBounds.fst);
-            inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
-        }
+//        if(!this.multiSleep) {
+            final Pair<Integer, Integer> sleepBounds = pickSleepClusterIndexOld(clusterCopy, this.aggregatedFeatures, sleep.getStartTimestamp());
+            if (!isEmptyBounds(sleepBounds)) {
+                final ClusterAmplitudeData clusterStart = clusterCopy.get(sleepBounds.fst);
+                inBed = new Segment(clusterStart.timestamp, clusterStart.timestamp + DateTimeConstants.MILLIS_PER_MINUTE, clusterStart.offsetMillis);
+            }
+//        }
+
+
+        //if(this.multiSleep) {
+//            inBed = new Segment(sleepTimesMillis.fst,
+//                    sleepTimesMillis.fst + DateTimeConstants.MILLIS_PER_MINUTE,
+//                    sleepPeriod.getOffsetMillis());
+        //}
+
 
         if(!defaultOverride) {
-            sleep = new Segment(sleepTimestamp,
-                    sleepTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
+            sleep = new Segment(sleepTimesMillis.snd,
+                    sleepTimesMillis.snd + DateTimeConstants.MILLIS_PER_MINUTE,
                     defaultEvents.fallAsleep.getOffsetMillis());
         } else {
             sleep = new Segment(defaultEvents.fallAsleep.getStartTimestamp(),
@@ -409,6 +445,77 @@ public class Vote {
         return clusters.get(i);
     }
 
+    protected static Pair<Integer, Integer> pickSleepClusterIndexOld(final List<ClusterAmplitudeData> clusters,
+                                                                  final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures,
+                                                                  final long originalSleepMillis) {
+        final Pair<Integer, Integer> originalBounds = MotionCluster.getClusterByTime(clusters, originalSleepMillis);
+        final List<AmplitudeData> wakeFeature = aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE);
+        double maxWakeScore = 0d;
+        long maxWakeMillis = 0;
+        final List<AmplitudeData> sleepFeature = aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE);
+        double maxSleepScore = 0d;
+        long maxSleepMillis = 0;
+        final long endTimestamp = wakeFeature.get(wakeFeature.size() - 1).timestamp;
+        long searchEndMillis = endTimestamp;
+        for(int i = 0; i < wakeFeature.size(); i++) {
+            final long timestamp = wakeFeature.get(i).timestamp;
+            final double combinedForward = wakeFeature.get(i).amplitude;
+            final double combinedBackWard = sleepFeature.get(i).amplitude;
+            if((combinedForward > 0 || combinedBackWard > 0) && searchEndMillis == endTimestamp){
+                searchEndMillis = timestamp + 3 * DateTimeConstants.MILLIS_PER_HOUR;
+            }
+            if (timestamp > searchEndMillis) {
+                break;
+            }
+            if (combinedForward > maxWakeScore) {
+                maxWakeScore = combinedForward;
+                maxWakeMillis = timestamp;
+            }
+            if (combinedBackWard > maxSleepScore) {
+                maxSleepScore = combinedBackWard;
+                maxSleepMillis = timestamp;
+            }
+        }
+        final Pair<Integer, Integer> wakeBounds = MotionCluster.getClusterByTime(clusters, maxWakeMillis);
+        final Pair<Integer, Integer> sleepBounds = MotionCluster.getClusterByTime(clusters, maxSleepMillis);
+        if (wakeBounds.fst == sleepBounds.fst && wakeBounds.fst == originalBounds.fst) {
+            if(!isEmptyBounds(originalBounds)) {
+                LOGGER.debug("All agree! sleep cluster start {} end {}",
+                        new DateTime(getItem(clusters, originalBounds.fst).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, originalBounds.fst).offsetMillis)),
+                        new DateTime(getItem(clusters, originalBounds.snd).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, originalBounds.snd).offsetMillis)));
+            }
+            return new Pair<>(originalBounds.fst + 1, originalBounds.snd);
+        }
+        if (wakeBounds.fst == sleepBounds.fst && wakeBounds.fst != originalBounds.fst) {
+            if(!isEmptyBounds(originalBounds) && !isEmptyBounds(wakeBounds)) {
+                LOGGER.debug("Two agree, false detection impacted by other source (time/light). " +
+                                "sleep cluster start {} end {}, corrected {}, {}",
+                        new DateTime(getItem(clusters, originalBounds.fst).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, originalBounds.fst).offsetMillis)),
+                        new DateTime(getItem(clusters, originalBounds.snd).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, originalBounds.snd).offsetMillis)),
+                        new DateTime(getItem(clusters, wakeBounds.fst).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, wakeBounds.fst).offsetMillis)),
+                        new DateTime(getItem(clusters, wakeBounds.snd).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, wakeBounds.snd).offsetMillis)));
+            }
+            return wakeBounds;
+        }
+        if (wakeBounds.fst != sleepBounds.fst) {
+            // Need to further investigate this case
+            if(!isEmptyBounds(originalBounds) && !isEmptyBounds(wakeBounds) && !isEmptyBounds(sleepBounds)) {
+                LOGGER.debug("None agree, use wake, wake {} - {}, sleep {} - {}, detect {} - {}",
+                        new DateTime(getItem(clusters, wakeBounds.fst).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, wakeBounds.fst).offsetMillis)),
+                        new DateTime(getItem(clusters, wakeBounds.snd).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, wakeBounds.snd).offsetMillis)),
+                        new DateTime(getItem(clusters, sleepBounds.fst).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, sleepBounds.fst).offsetMillis)),
+                        new DateTime(getItem(clusters, sleepBounds.snd).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, sleepBounds.snd).offsetMillis)),
+                        new DateTime(getItem(clusters, originalBounds.fst).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, originalBounds.fst).offsetMillis)),
+                        new DateTime(getItem(clusters, originalBounds.snd).timestamp, DateTimeZone.forOffsetMillis(getItem(clusters, originalBounds.snd).offsetMillis)));
+            }
+            return wakeBounds;
+        }
+        if(isEmptyBounds(originalBounds)){
+            return originalBounds;
+        }
+        return new Pair<>(originalBounds.fst + 1, originalBounds.snd);
+    }
+
     protected static Pair<Integer, Integer> pickSleepClusterIndex(final List<ClusterAmplitudeData> clusters,
                                                            final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures,
                                                            final Segment sleepPeriod,
@@ -539,14 +646,32 @@ public class Vote {
 
     }
 
-    protected static long pickSleep(final SleepPeriod sleepPeriod,
-                             final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
+    protected static Pair<Long, Long> pickSleepOld(final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
                              final long originalSleepMillis){
 
+        final List<AmplitudeData> wakeFeature = features.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE);
+        final List<AmplitudeData> sleepFeature = features.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE);
+        final long endTimestamp = wakeFeature.get(wakeFeature.size() - 1).timestamp;
+        long searchEndMillis = endTimestamp;
+
+        for(int i = 0; i < wakeFeature.size(); i++) {
+            final long timestamp = wakeFeature.get(i).timestamp;
+            final double combinedForward = wakeFeature.get(i).amplitude;
+            final double combinedBackWard = sleepFeature.get(i).amplitude;
+            if ((combinedForward > 0 || combinedBackWard > 0) && searchEndMillis == endTimestamp) {
+                searchEndMillis = timestamp + 3 * DateTimeConstants.MILLIS_PER_HOUR;
+                break;
+            }
+        }
+
+        long inBedMillis = originalSleepMillis - 10 * DateTimeConstants.MILLIS_PER_MINUTE;
         final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                sleepPeriod.getStartTimestamp(),
-                sleepPeriod.getStartTimestamp() + 3 * DateTimeConstants.MILLIS_PER_HOUR);
+                wakeFeature.get(0).timestamp,
+                searchEndMillis);
+        if(firstMaxScoreItemOptional.isPresent()){
+            inBedMillis = firstMaxScoreItemOptional.get().timestamp;
+        }
 
         final Optional<AmplitudeData> predictedMaxScoreItemOptional = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
@@ -560,18 +685,60 @@ public class Vote {
 
         if(firstMaxScoreItemOptional.get().timestamp < originalSleepMillis - 2 * DateTimeConstants.MILLIS_PER_HOUR){
             if(firstMaxScoreItemOptional.get().amplitude * 5 < predictedMaxScoreItemOptional.get().amplitude){
-                return originalSleepMillis;
+                return new Pair<>(inBedMillis, originalSleepMillis);
+            }
+            final Optional<AmplitudeData> maxDrop = getMaxScore(features,
+                    MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
+                    sleepFeature.get(0).timestamp,
+                    searchEndMillis);
+            if(!maxDrop.isPresent()){
+                return new Pair<>(inBedMillis, inBedMillis + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+            }
+            return new Pair<>(inBedMillis, maxDrop.get().timestamp);
+        }
+        return new Pair<>(inBedMillis, originalSleepMillis);
+    }
+
+
+    protected static Pair<Long, Long> pickSleep(final SleepPeriod sleepPeriod,
+                                                final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
+                                                final long originalSleepMillis){
+
+
+        long inBedMillis = originalSleepMillis - 10 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
+                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                sleepPeriod.getStartTimestamp(),
+                sleepPeriod.getEndTimestamp() + 2 * DateTimeConstants.MILLIS_PER_HOUR);
+
+        final Optional<AmplitudeData> predictedMaxScoreItemOptional = getMaxScore(features,
+                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+
+        if(firstMaxScoreItemOptional.isPresent()){
+            inBedMillis = firstMaxScoreItemOptional.get().timestamp;
+         }
+
+        LOGGER.debug("first {}, max {}, predicted {}",
+                new DateTime(firstMaxScoreItemOptional.get().timestamp, DateTimeZone.forOffsetMillis(firstMaxScoreItemOptional.get().offsetMillis)),
+                new DateTime(predictedMaxScoreItemOptional.get().timestamp, DateTimeZone.forOffsetMillis(predictedMaxScoreItemOptional.get().offsetMillis)),
+                new DateTime(originalSleepMillis, DateTimeZone.forOffsetMillis(firstMaxScoreItemOptional.get().offsetMillis)));
+
+        if(firstMaxScoreItemOptional.get().timestamp < originalSleepMillis - 2 * DateTimeConstants.MILLIS_PER_HOUR){
+            if(firstMaxScoreItemOptional.get().amplitude * 5 < predictedMaxScoreItemOptional.get().amplitude){
+                return new Pair<>(inBedMillis, originalSleepMillis);
             }
             final Optional<AmplitudeData> maxDrop = getMaxScore(features,
                     MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
                     sleepPeriod.getStartTimestamp(),
                     sleepPeriod.getEndTimestamp() + 2 * DateTimeConstants.MILLIS_PER_HOUR);
             if(!maxDrop.isPresent()){
-                return firstMaxScoreItemOptional.get().timestamp;
+                return new Pair<>(inBedMillis, inBedMillis + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
             }
-            return maxDrop.get().timestamp;
+            return new Pair<>(inBedMillis, maxDrop.get().timestamp);
         }
-        return originalSleepMillis;
+        return new Pair<>(inBedMillis, originalSleepMillis);
     }
 
     public Map<MotionFeatures.FeatureType, List<AmplitudeData>> getAggregatedFeatures(){

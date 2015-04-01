@@ -38,8 +38,7 @@ public class MotionClusterTest extends CSVFixtureTest {
                 20, 1);
 
 
-
-        final MotionCluster cluster = MotionCluster.create(alignedAmp, ampMean, alignedKicks, kickOffMean);
+        final MotionCluster cluster = MotionCluster.create(alignedAmp, ampMean, alignedKicks, kickOffMean, true);
         MotionCluster.printClusters(cluster.getCopyOfClusters());
         final Optional<Segment> sleepPeriodOptional =  SleepPeriod.getSleepPeriod(alignedAmp, MotionCluster.toSegments(cluster.getCopyOfClusters()));
         assertThat(sleepPeriodOptional.isPresent(), is(true));
