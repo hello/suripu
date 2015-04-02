@@ -29,22 +29,34 @@ public class AccountResources {
         this.accountDAO = accountDAO;
     }
 
+
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    public Account retrieveAccountByEmail(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
-                                          @QueryParam("email") final String email) {
-        LOGGER.debug("Looking up {}", email);
+    public Account retrieveAccountByEmailOrId(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                              @QueryParam("email") final String email,
+                                              @QueryParam("id") final Long id) {
 
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
-
-        if (!accountOptional.isPresent()) {
+        if (email == null &&  id == null) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity("Account not found").build());
+                    .entity("Missing query params, please specify email or id").build());
         }
 
+        else if (email != null) {
+            LOGGER.debug("Looking account up by email {}", email);
+            final Optional<Account> accountByEmailOptional = accountDAO.getByEmail(email.toLowerCase());
+            if (!accountByEmailOptional.isPresent()) {
+                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Account not found").build());
+            }
+            return accountByEmailOptional.get();
+        }
         else {
-            return accountOptional.get();
+            LOGGER.debug("Looking up account by id {}", id);
+            final Optional<Account> accountByIdOptional = accountDAO.getById(id);
+            if (!accountByIdOptional.isPresent()) {
+                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Account not found").build());
+            }
+            return accountByIdOptional.get();
         }
     }
 

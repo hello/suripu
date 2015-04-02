@@ -281,7 +281,7 @@ CREATE CREATE CREATE
 
 
     }
-
+    
     protected ImmutableList<SegmentPair> pairsWithGapsToPairs(final ImmutableList<SegmentPairWithGaps> segs,boolean ignoreGaps) {
         List<SegmentPair> pairs = new ArrayList<>();
 
@@ -460,8 +460,8 @@ CREATE CREATE CREATE
 
             final Optional<Integer> sleepBound = getMaximumInInterval(pillFeats.filteredEnergy, i1Sleep, i2Sleep);
 
-            int i1Wake = seg.i2*numMinutesInMeasPeriod;
-            int i2Wake = seg.i2*numMinutesInMeasPeriod + 2*numMinutesInMeasPeriod;
+            int i1Wake = seg.i2*numMinutesInMeasPeriod - 1*numMinutesInMeasPeriod;
+            int i2Wake = seg.i2*numMinutesInMeasPeriod + 1*numMinutesInMeasPeriod;
 
             if (i2Wake > pillFeats.filteredEnergy.length) {
                 i2Wake = pillFeats.filteredEnergy.length;
@@ -515,7 +515,7 @@ CREATE CREATE CREATE
                 i1InBed = 0;
             }
 
-            final Optional<Integer> inBed = getMaximumInInterval(pillFeats.filteredEnergy,i1InBed,i2InBed);
+            final Optional<Integer> inBed = getMaximumInInterval(pillFeats.filteredEnergy, i1InBed, i2InBed);
 
             int i1OutOfBed = seg.i2*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
             int i2OutOfBed = seg.i2*numMinutesInMeasPeriod + numMinutesInMeasPeriod;

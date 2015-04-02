@@ -101,10 +101,11 @@ public class OAuthResource {
             LOGGER.error("Grant types don't match : {} and {}", applicationOptional.get().grantType, grantType.getType());
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
-
-        final Optional<Account> accountOptional = accountDAO.exists(username, password);
+        final String normalizedUsername = username.toLowerCase();
+        LOGGER.info("normalized username {}", normalizedUsername);
+        final Optional<Account> accountOptional = accountDAO.exists(normalizedUsername, password);
         if(!accountOptional.isPresent()) {
-            LOGGER.error("Account wasn't found", username, password);
+            LOGGER.error("Account wasn't found", normalizedUsername, password);
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
@@ -133,6 +134,7 @@ public class OAuthResource {
         }
 
         LOGGER.debug("{}", accessToken);
+        LOGGER.debug("email {}", accessToken.accountId);
         return accessToken;
     }
 

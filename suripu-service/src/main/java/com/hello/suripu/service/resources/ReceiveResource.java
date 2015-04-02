@@ -112,6 +112,14 @@ public class ReceiveResource extends BaseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public byte[] receiveBatchSenseData(final byte[] body) {
+
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        if(OTAProcessor.isPCH(ipAddress)) {
+            // return 202 to not confuse provisioning script with correct test key
+            LOGGER.info("IP {} is from PCH. Return HTTP 202", ipAddress);
+            return plainTextError(Response.Status.ACCEPTED, "");
+        }
+
         final SignedMessage signedMessage = SignedMessage.parse(body);
         DataInputProtos.batched_periodic_data data = null;
 
@@ -144,7 +152,7 @@ public class ReceiveResource extends BaseResource {
         final String deviceId = data.getDeviceId();
         final List<String> groups = groupFlipper.getGroups(deviceId);
 
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+
         final Optional<byte[]> optionalKeyBytes= getKey(deviceId, groups, ipAddress);
 
         if(!optionalKeyBytes.isPresent()) {
@@ -223,11 +231,12 @@ public class ReceiveResource extends BaseResource {
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
 
-        for(DataInputProtos.periodic_data data : batch.getDataList()) {
+        for(int i = 0; i < batch.getDataCount(); i ++) {
+            final DataInputProtos.periodic_data data = batch.getData(i);
             final Long timestampMillis = data.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
-                LOGGER.error("The clock for device \"{}\" is not within reasonable bounds (2h), current time = {}, received time = {}",
+                LOGGER.error("The clock for device {} is not within reasonable bounds (2h), current time = {}, received time = {}",
                         data.getDeviceId(),
                         DateTime.now(),
                         roundedDateTime
@@ -236,17 +245,20 @@ public class ReceiveResource extends BaseResource {
                 continue;
             }
 
-            final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
-                    roundedDateTime.getMillis(),
-                    data.getFirmwareVersion(),
-                    DateTime.now(),
-                    2);
+            // only compute the sate for the most recent conditions
+            if(i == batch.getDataCount() -1) {
 
-            responseBuilder.setRoomConditions(
-                    OutputProtos.SyncResponse.RoomConditions.valueOf(
-                            RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
+                        roundedDateTime.getMillis(),
+                        data.getFirmwareVersion(),
+                        DateTime.now(),
+                        2);
 
+                responseBuilder.setRoomConditions(
+                        OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
 
+            }
         }
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
@@ -484,34 +496,38 @@ public class ReceiveResource extends BaseResource {
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
 
+
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
-            final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
-            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS)) {
-                LOGGER.debug("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);
-                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS) && !deviceGroups.isEmpty()) {
+                final String updateGroup = deviceGroups.get(0);
+                LOGGER.info("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion);
+                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
                 return Collections.emptyList();
             }
         }
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA);
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
 
         if(canOTA) {
 
             // groups take precedence over feature
             if (!deviceGroups.isEmpty()) {
+                final String updateGroup = deviceGroups.get(0);
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceGroups.get(0), currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
-                LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
+                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
-                    LOGGER.debug("Feature release is active!");
+                    LOGGER.debug("Feature 'release' is active for device: {}", deviceID);
                     final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
-                    LOGGER.debug("{} files added to syncResponse to be downloaded", fileDownloadList.size());
+                    LOGGER.info("{} files added to syncResponse for OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
                     return fileDownloadList;
                 }
             }

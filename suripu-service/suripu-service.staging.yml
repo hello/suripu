@@ -89,6 +89,7 @@ logging:
 http:
     port: 5555
     adminPort: 5556
+    minThreads: 2
 
 dynamodb:
   endpoint : http://dynamodb.us-east-1.amazonaws.com

@@ -24,9 +24,11 @@ import java.util.List;
 public class SleepMotion {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepMotion.class);
 
-    // last computed 01/19/2015
+    // computed 01/19/2015 = 0.1673f
+    // computed 03/19/2015, prod = 0.2249f
     // SELECT SUM(agitation_num) / CAST((15 * COUNT(*)) AS FLOAT) AS perc FROM sleep_score;
-    private static float AVERAGE_SLEEP_PERC = 0.1673f;
+    private static float AVERAGE_SLEEP_PERC = 0.2249f;
+
 
     private static float SIGNIFICANT_DIFF = 3.0f; // only differences greater than 3% is worth reporting (TODO)
 
@@ -73,6 +75,7 @@ public class SleepMotion {
             }
         }
 
+        // TODO: refactor this to use Dynamo
         final List<SleepScore> motionData = scoreDAO.getByAccountBetweenDateBucket(accountId,queryStartTime, queryEndTime);
 
         // get sleep movement from sleep_score

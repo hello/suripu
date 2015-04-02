@@ -281,13 +281,15 @@ public class FirmwareUpdateStore {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
 
-        if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion)) {
+        final List<SyncResponse.FileDownload> fwList = fw_files.getValue();
 
-            if (!isExpiredPresignedUrl(fw_files.getValue().get(0).getUrl(), new Date())) {
-                return fw_files.getValue();
+        if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion) && !fwList.isEmpty()) {
+
+            if (!isExpiredPresignedUrl(fwList.get(0).getUrl(), new Date())) {
+                return fwList;
             }
             //Cache returned a valid update with an expired URL
-            LOGGER.debug("Expired URL in S3 Cache. Forcing Cleanup.");
+            LOGGER.info("Expired URL in S3 Cache. Forcing Cleanup.");
             s3FWCache.cleanUp();
         }
         return Collections.EMPTY_LIST;

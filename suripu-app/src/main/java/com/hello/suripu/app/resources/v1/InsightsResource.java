@@ -5,10 +5,12 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateScore;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
@@ -47,19 +49,24 @@ public class InsightsResource {
     private static long DAY_IN_MILLIS = 86400000L;
     private static int MIN_DATAPOINTS = 2;
     private static int MAX_INSIGHTS_NUM = 20;
+    private static int DAY_OF_WEEK_LOOKBACK = 90; // days
 
     private final AccountDAO accountDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
 
-    public InsightsResource(final AccountDAO accountDAO, final TrendsInsightsDAO trendsInsightsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB) {
+    public InsightsResource(final AccountDAO accountDAO, final TrendsInsightsDAO trendsInsightsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
+                            final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB,
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         this.accountDAO = accountDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
     }
 
     /**
@@ -215,14 +222,19 @@ public class InsightsResource {
      */
     private Optional<TrendGraph> getGraph(final Long accountId, final TrendGraph.TimePeriodType timePeriod, final TrendGraph.DataType graphType) {
 
+        final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
+
         if (timePeriod == TrendGraph.TimePeriodType.DAY_OF_WEEK) {
             // Histogram
-            List<DowSample> rawData;
-            if (graphType == TrendGraph.DataType.SLEEP_SCORE) {
-                rawData = trendsInsightsDAO.getSleepScoreDow(accountId);
-            } else {
-                rawData = trendsInsightsDAO.getSleepDurationDow(accountId);
-            }
+            // always look back 3 months
+            final DateTime startDate = endDate.minusDays(DAY_OF_WEEK_LOOKBACK);
+
+            final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
+                    DateTimeUtil.dateToYmdString(startDate),
+                    DateTimeUtil.dateToYmdString(endDate),
+                    DAY_OF_WEEK_LOOKBACK);
+
+            final List<DowSample> rawData = TrendGraphUtils.aggregateDOWData(sleepStats, graphType);
 
             if (rawData.size() < MIN_DATAPOINTS) {
                 return Optional.absent();
@@ -235,7 +247,6 @@ public class InsightsResource {
 
             // compute data date range
             final int numDays = TrendGraph.getTimePeriodDays(timePeriod);
-            final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
             final DateTime startDate = endDate.minusDays(numDays);
 
             final Optional<Account> optionalAccount = accountDAO.getById(accountId);
@@ -245,11 +256,20 @@ public class InsightsResource {
                 daysActive = DateTimeUtil.getDateDiffFromNowInDays(accountCreated) - 1;
             }
 
+            final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
+                    DateTimeUtil.dateToYmdString(startDate),
+                    DateTimeUtil.dateToYmdString(endDate),
+                    numDays);
+
             if (graphType == TrendGraph.DataType.SLEEP_SCORE) {
                 // sleep score over time, up to 365 days
-                final ImmutableList<AggregateScore> scores = scoreDAODynamoDB.getBatchScores(accountId,
-                        DateTimeUtil.dateToYmdString(startDate),
-                        DateTimeUtil.dateToYmdString(endDate), numDays);
+                final List<AggregateScore> scores = new ArrayList<>();
+                for (final AggregateSleepStats stat : sleepStats) {
+                    scores.add(new AggregateScore(accountId,
+                            stat.sleepScore,
+                            DateTimeUtil.dateToYmdString(stat.dateTime),
+                            "sleep", stat.version));
+                }
 
                 if (scores.size() < MIN_DATAPOINTS) {
                     return Optional.absent();
@@ -262,7 +282,10 @@ public class InsightsResource {
 
             } else {
                 // sleep duration over time, up to 365 days
-                ImmutableList<SleepStatsSample> statsSamples = trendsInsightsDAO.getAccountSleepStatsBetweenDates(accountId, startDate, endDate);
+                final List<SleepStatsSample> statsSamples = new ArrayList<>();
+                for (final AggregateSleepStats stat : sleepStats) {
+                    statsSamples.add(new SleepStatsSample(stat.sleepStats, stat.dateTime, stat.offsetMillis));
+                }
 
                 if (statsSamples.size() < MIN_DATAPOINTS) {
                     return Optional.absent();
