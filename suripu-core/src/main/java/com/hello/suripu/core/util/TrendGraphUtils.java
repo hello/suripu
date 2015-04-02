@@ -24,8 +24,6 @@ import java.util.Map;
  */
 public class TrendGraphUtils {
 
-    private static int TRENDS_AVAILABLE_AFTER_DAYS = 3; // no trends before collecting 10 days of data
-
     public static TrendGraph getDayOfWeekGraph(final TrendGraph.DataType dataType, final TrendGraph.TimePeriodType timePeriodType, final List<DowSample> rawData) {
 
         if (rawData.size() == 0) {
@@ -40,7 +38,10 @@ public class TrendGraphUtils {
 
         final List<GraphSample> dataPoints = new ArrayList<>();
 
-        for (int dow = 1; dow <= 7; dow++) {
+        // return data in a list for Sunday - Saturday
+        final List<Integer> dayOfWeek = Lists.newArrayList(7, 1, 2, 3, 4, 5, 6);
+
+        for (final Integer dow : dayOfWeek) {
             final String xLabel = TrendGraph.DayOfWeekLabel.fromInt(dow);
             float value = 0.0f;
             TrendGraph.DataLabel label = TrendGraph.DataLabel.OK;
@@ -97,13 +98,10 @@ public class TrendGraphUtils {
     public static List<AvailableGraph> getGraphList(final Account account) {
 
         final List<AvailableGraph> graphlist = new ArrayList<>();
-        final boolean eligible = checkEligibility(account.created);
-        if (eligible) {
-            graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_DURATION.getValue(), TrendGraph.TimePeriodType.DAY_OF_WEEK.getValue()));
+        graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_DURATION.getValue(), TrendGraph.TimePeriodType.DAY_OF_WEEK.getValue()));
 
-            for (TrendGraph.TimePeriodType timePeriodType : TrendGraph.TimePeriodType.values()) {
-                graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_SCORE.getValue(), timePeriodType.getValue()));
-            }
+        for (TrendGraph.TimePeriodType timePeriodType : TrendGraph.TimePeriodType.values()) {
+            graphlist.add(new AvailableGraph(TrendGraph.DataType.SLEEP_SCORE.getValue(), timePeriodType.getValue()));
         }
         return graphlist;
     }
@@ -133,13 +131,6 @@ public class TrendGraphUtils {
             dayOfWeekData.add(new DowSample(i+1, avgValue));
         }
         return dayOfWeekData;
-    }
-
-    public static boolean checkEligibility(final DateTime accountCreated) {
-        if (accountCreated.plusDays(TRENDS_AVAILABLE_AFTER_DAYS).isBeforeNow()) {
-            return true;
-        }
-        return false;
     }
 
     private static DateTime getDateTimeFromString(final String dateString) {
