@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.DeviceAdmin;
 import com.hello.suripu.admin.models.DeviceStatusBreakdown;
+import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDAOAdmin;
@@ -161,19 +162,29 @@ public class DeviceResources {
     @GET
     @Path("/status_breakdown")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeviceStatusBreakdown getDeviceStatusBreakdown(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
+    public DeviceStatusBreakdown getDeviceStatusBreakdown(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                          @QueryParam("start_ts") final Long startTs,
+                                                          @QueryParam("end_ts") final Long endTs) {
         // TODO: move this out of url handler once we've validated this is what we want
         final Jedis jedis = jedisPool.getResource();
-        final DateTime currentTs = DateTime.now(DateTimeZone.UTC);
-        Long normalCount = 0L;
+        Long sensesCount = -1L;
+        Long pillsCount = -1L;
+
         try {
-            normalCount = jedis.zcount("devices", currentTs.minusDays(1).getMillis(), currentTs.getMillis());
+            sensesCount = jedis.zcount(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, startTs, endTs);
+            pillsCount = jedis.zcount(ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY, startTs, endTs);
         } catch (Exception e) {
             LOGGER.error("Failed to get active senses count because {}", e.getMessage());
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(e.getMessage()).build());
         } finally {
             jedisPool.returnResource(jedis);
         }
-        return new DeviceStatusBreakdown(normalCount, -1L, -1L);
+
+        LOGGER.debug("Senses count is {} from {} to {}", sensesCount, startTs, endTs);
+        LOGGER.debug("Pills count is {} from {} to {}", pillsCount, startTs, endTs);
+
+        return new DeviceStatusBreakdown(sensesCount, pillsCount);
     }
 
     // Helpers
