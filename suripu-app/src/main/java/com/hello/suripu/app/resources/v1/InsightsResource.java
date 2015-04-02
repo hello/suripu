@@ -323,8 +323,9 @@ public class InsightsResource {
     }
 
     private Boolean checkTrendsEligibility(final Long accountId) {
+        // look back two weeks from now to make sure that user has at least 7 days of data
         final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
-        final DateTime startDate = endDate.minusDays(TRENDS_AVAILABLE_AFTER_DAYS + 1);
+        final DateTime startDate = endDate.minusDays(TRENDS_AVAILABLE_AFTER_DAYS * 2);
 
         final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
                 DateTimeUtil.dateToYmdString(startDate),
