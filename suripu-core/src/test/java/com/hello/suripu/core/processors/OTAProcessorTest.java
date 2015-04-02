@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -71,9 +72,9 @@ public class OTAProcessorTest {
         final Boolean alwaysOTA = false;
         final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 20, 1201, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 60, 3601, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 20, 1200, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 60, 3600, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
     }
 
     @Test
