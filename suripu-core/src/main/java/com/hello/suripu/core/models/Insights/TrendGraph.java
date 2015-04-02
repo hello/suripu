@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.translations.English;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 public class TrendGraph {
     public final static Map<TimePeriodType, Integer> PERIOD_TYPE_DAYS;
     static {
-       final Map<TimePeriodType, Integer> tmpMap = new HashMap<>();
+       final Map<TimePeriodType, Integer> tmpMap = new LinkedHashMap<>();
         tmpMap.put(TimePeriodType.OVER_TIME_1W, 7);
         tmpMap.put(TimePeriodType.OVER_TIME_2W, 14);
         tmpMap.put(TimePeriodType.OVER_TIME_1M, 30);
