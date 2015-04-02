@@ -270,13 +270,14 @@ public class Vote {
                 this.getAggregatedFeatures(),
                 this.sleepPeriod,
                 wakeUpSearchTime);
-        final long wakeUpTimestamp = pickWakeUp(clusterCopy,
-                MotionCluster.copyRange(clusterCopy, wakeUpBounds.fst, wakeUpBounds.snd),
-                this.sleepPeriod,
-                this.getAggregatedFeatures(),
-                sleepEvents.wakeUp.getStartTimestamp());
 
         if(!isEmptyBounds(wakeUpBounds)){
+            final long wakeUpTimestamp = pickWakeUp(clusterCopy,
+                    MotionCluster.copyRange(clusterCopy, wakeUpBounds.fst, wakeUpBounds.snd),
+                    this.sleepPeriod,
+                    this.getAggregatedFeatures(),
+                    sleepEvents.wakeUp.getStartTimestamp());
+
             final ClusterAmplitudeData clusterStart = clusterCopy.get(wakeUpBounds.fst);
             final ClusterAmplitudeData clusterEnd = clusterCopy.get(wakeUpBounds.snd);
 
