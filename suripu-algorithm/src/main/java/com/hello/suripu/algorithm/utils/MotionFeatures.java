@@ -8,6 +8,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -32,6 +33,7 @@ public class MotionFeatures {
         @Deprecated
         MAX_NO_MOTION_PERIOD,
         MAX_MOTION_PERIOD,
+        MAX_KICKOFF_COUNT,
         DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
         HOURLY_MOTION_COUNT,
         MOTION_COUNT_20MIN,
@@ -64,6 +66,7 @@ public class MotionFeatures {
                     case DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE:
                     case MAX_NO_MOTION_PERIOD:
                     case MAX_MOTION_PERIOD:
+                    case MAX_KICKOFF_COUNT:
                     case DENSITY_BACKWARD_AVERAGE_AMPLITUDE:
                     case ZERO_TO_MAX_MOTION_COUNT_DURATION:
                     case MOTION_COUNT_20MIN:
@@ -87,6 +90,7 @@ public class MotionFeatures {
                     case DENSITY_INCREASE_FORWARD_MAX_AMPLITUDE:
                     case MAX_NO_MOTION_PERIOD:
                     case MAX_MOTION_PERIOD:
+                    case MAX_KICKOFF_COUNT:
                     case DENSITY_BACKWARD_AVERAGE_AMPLITUDE:
                     case ZERO_TO_MAX_MOTION_COUNT_DURATION:
                     case MOTION_COUNT_20MIN:
@@ -322,6 +326,28 @@ public class MotionFeatures {
 
             }
 
+        }
+
+        return features;
+    }
+
+
+    public static Map<FeatureType, List<AmplitudeData>> generateTimestampAlignedKickOffFeatures(final List<AmplitudeData> rawData,
+                                                                                         final int sleepDetectionWindowSizeInMinute){
+        final LinkedList<AmplitudeData> backTrackAmpWindow = new LinkedList<>();
+
+        final HashMap<FeatureType, List<AmplitudeData>> features = new HashMap<>();
+        features.put(FeatureType.MAX_KICKOFF_COUNT, new ArrayList<AmplitudeData>());
+        int i = 0;
+
+
+        for(final AmplitudeData datum:rawData){
+            if(i >= sleepDetectionWindowSizeInMinute * 2 - 1){
+                final long timestamp = datum.timestamp;
+                final int offsetMillis = datum.offsetMillis;
+                features.get(FeatureType.MAX_KICKOFF_COUNT).add(new AmplitudeData(timestamp, datum.amplitude, offsetMillis));
+            }
+            i++;
         }
 
         return features;

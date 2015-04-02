@@ -165,11 +165,55 @@ public class MotionScoreAlgorithm {
         return this.features.size();
     }
 
+    public static MotionScoreAlgorithm create(final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures,
+                                              final List<DateTime> lightOutTimes,
+                                              final Optional<DateTime> firstWaveTimeOptional){
+        final MotionScoreAlgorithm sleepDetectionAlgorithm = new MotionScoreAlgorithm();
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE), new AmplitudeDataScoringFunction());
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.SLEEP));
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE), new MotionDensityScoringFunction(MotionDensityScoringFunction.ScoreType.WAKE_UP));
+        sleepDetectionAlgorithm.addFeature(aggregatedFeatures.get(MotionFeatures.FeatureType.ZERO_TO_MAX_MOTION_COUNT_DURATION), new ZeroToMaxMotionCountDurationScoreFunction());
+
+        if(!lightOutTimes.isEmpty()) {
+            final LinkedList<AmplitudeData> lightFeature = new LinkedList<>();
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_AMPLITUDE)) {
+                // Pad the light data
+                lightFeature.add(new AmplitudeData(amplitudeData.timestamp, 0, amplitudeData.offsetMillis));
+
+            }
+
+            sleepDetectionAlgorithm.addFeature(lightFeature, new LightOutScoringFunction(lightOutTimes, 3d));
+
+            final LinkedList<AmplitudeData> lightAndCumulatedMotionFeature = new LinkedList<>();
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.MAX_MOTION_PERIOD)) {
+                // this is the magical light feature that can keep both magic and fix broken things.
+                lightAndCumulatedMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
+                        1d / (amplitudeData.amplitude + 0.3),  // Max can go 3 times as much as the original score
+                        amplitudeData.offsetMillis));
+
+            }
+            sleepDetectionAlgorithm.addFeature(lightAndCumulatedMotionFeature, new LightOutCumulatedMotionMixScoringFunction(lightOutTimes));
+        }
+
+        if(firstWaveTimeOptional.isPresent()) {
+
+            final LinkedList<AmplitudeData> waveAndCumulateMotionFeature = new LinkedList<>();
+            for (final AmplitudeData amplitudeData : aggregatedFeatures.get(MotionFeatures.FeatureType.AWAKE_BACKWARD_DENSITY)) {
+                waveAndCumulateMotionFeature.add(new AmplitudeData(amplitudeData.timestamp,
+                        amplitudeData.amplitude,
+                        amplitudeData.offsetMillis));
+
+            }
+            sleepDetectionAlgorithm.addFeature(waveAndCumulateMotionFeature, new WaveAccumulateMotionScoreFunction(firstWaveTimeOptional.get()));
+        }
+        return sleepDetectionAlgorithm;
+    }
+
     public static MotionScoreAlgorithm createDefault(final List<AmplitudeData> rawAmplitude,
                                                  final List<DateTime> lightOutTimes,
                                                  final Optional<DateTime> firstWaveTimeOptional){
-        final List<AmplitudeData> noDuplicates = DataUtils.dedupe(rawAmplitude);
-        List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValuesAndMakePositive(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
+        final List<AmplitudeData> noDuplicates = DataUtils.makePositive(DataUtils.dedupe(rawAmplitude));
+        List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValues(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> motionFeatures = MotionFeatures.generateTimestampAlignedFeatures(dataWithGapFilled,
                 MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
                 MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,

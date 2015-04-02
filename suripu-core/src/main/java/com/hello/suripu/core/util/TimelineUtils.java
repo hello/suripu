@@ -1227,11 +1227,13 @@ public class TimelineUtils {
 
 
     public static SleepEvents<Optional<Event>> getSleepEventsFromVoting(final List<TrackerMotion> rawTrackerMotions,
+                                                                        final List<Sample> sound,
                                                               final List<DateTime> lightOutTimes,
                                                               final Optional<DateTime> firstWaveTimeOptional){
         final List<AmplitudeData> rawAmplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(rawTrackerMotions);
         final List<AmplitudeData> rawKickOffCount = TrackerMotionUtils.trackerMotionToKickOffCounts(rawTrackerMotions);
-        final Vote vote = new Vote(rawAmplitudeData, rawKickOffCount, lightOutTimes, firstWaveTimeOptional);
+        final List<AmplitudeData> rawSound = SoundUtils.sampleToAmplitudeData(sound);
+        final Vote vote = new Vote(rawAmplitudeData, rawKickOffCount, rawSound, lightOutTimes, firstWaveTimeOptional);
 
         final SleepEvents<Segment> segments = vote.getResult(false);
         final Segment goToBedSegment = segments.goToBed;

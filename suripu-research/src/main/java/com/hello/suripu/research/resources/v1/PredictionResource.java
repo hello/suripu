@@ -135,20 +135,10 @@ public class PredictionResource extends BaseResource {
     private List<Event> getSleepScoreEvents(final DateTime targetDate,
                                             final AllSensorSampleList allSensorSampleList,
                                             final List<TrackerMotion> myMotion) {
-        // compute lights-out and sound-disturbance events
-        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-
-        if (!allSensorSampleList.isEmpty()) {
-            if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && myMotion.size() > 0){
-                wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(myMotion.get(0).timestamp,
-                        myMotion.get(myMotion.size() - 1).timestamp,
-                        allSensorSampleList.get(Sensor.WAVE_COUNT));
-            }
-        }
 
         SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = TimelineProcessor.fromAlgorithm(targetDate, myMotion,
                 allSensorSampleList.get(Sensor.LIGHT),
-                wakeUpWaveTimeOptional);
+                allSensorSampleList.get(Sensor.WAVE_COUNT));
 
         List<Optional<Event>> items = sleepEventsFromAlgorithm.toList();
         List<Event> returnedEvents = new ArrayList<>();
@@ -185,6 +175,7 @@ public class PredictionResource extends BaseResource {
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
         final Vote vote = new Vote(TrackerMotionUtils.trackerMotionToAmplitudeData(trackerMotions),
                 TrackerMotionUtils.trackerMotionToKickOffCounts(trackerMotions),
+                Collections.EMPTY_LIST,
                 lightOutTimes, wakeUpWaveTimeOptional);
 
         final SleepEvents<Segment> sleepEvents = vote.getResult(false);
