@@ -22,6 +22,8 @@ public class SleepPeriod extends Segment {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepPeriod.class);
 
     public static int ACCEPTABLE_QUIET_PERIOD_MILLIS = 90 * DateTimeConstants.MILLIS_PER_MINUTE;
+    private static int MINIMUM_AWAKE_LENGTH_MILLIS = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
+
     private final List<List<Segment>> voteSegments = new ArrayList<>();
     private final List<Pair<Long, Double>> votes = new ArrayList<>();
 
@@ -60,7 +62,7 @@ public class SleepPeriod extends Segment {
     }
 
     private boolean isAwake(final long startMillis, final long endMillis){
-        if(endMillis - startMillis > DateTimeConstants.MILLIS_PER_MINUTE * 10){
+        if(endMillis - startMillis > MINIMUM_AWAKE_LENGTH_MILLIS){
             return true;
         }
 
