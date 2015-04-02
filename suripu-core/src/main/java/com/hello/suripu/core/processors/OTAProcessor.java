@@ -57,7 +57,7 @@ public class OTAProcessor {
         }
 
         if (isAlwaysOTA) {
-            LOGGER.debug("Always OTA is on for device: ", deviceID);
+            LOGGER.info("Always OTA is on for device: ", deviceID);
             canOTA = true;
         } else {
 
@@ -77,6 +77,9 @@ public class OTAProcessor {
                     canOTA = false;
                     LOGGER.debug("Device failed up-time check.");
                 }
+            } else {
+                LOGGER.error("No up-time provided in batch for device: {}", deviceID);
+                canOTA = false;
             }
 
             //Check for overrideOTAGroups as defined in the OTA configuration
