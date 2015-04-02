@@ -20,6 +20,7 @@ import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
@@ -57,16 +58,18 @@ public class InsightsResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
+    private final InsightProcessor insightProcessor;
 
     public InsightsResource(final AccountDAO accountDAO, final TrendsInsightsDAO trendsInsightsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final InsightProcessor insightProcessor) {
         this.accountDAO = accountDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        this.insightProcessor = insightProcessor;
     }
 
     /**
@@ -94,9 +97,13 @@ public class InsightsResource {
             final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId, userAgeInYears);
             this.insightsDAODynamoDB.insertListOfInsights(introCards);
             return introCards;
+        } else {
+            final List<InsightCard> cardsWithPreview = new ArrayList<>();
+            for (InsightCard card : cards) {
+                cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category)));
+            }
+            return cardsWithPreview;
         }
-
-        return cards;
     }
 
     @Timed

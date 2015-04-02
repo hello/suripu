@@ -209,6 +209,11 @@ sleephmm_db:
   region: us-east-1
   table_name: sleephmm
 
+algorithm_test_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: algorithm_test
+
 # store sleep scores and other stats
 # v0.2: score uses movement and duration
 sleep_stats_db:

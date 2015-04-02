@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public class FirmwareResource {
 
     private final DeviceDAO deviceDAO;
     private final JedisPool jedisPool;
+    private static final String REDIS_SEEN_FIRMWARE_KEY = "firmwares_seen";
 
     public FirmwareResource(final DeviceDAO deviceDAO, final JedisPool jedisPool) {
         this.deviceDAO = deviceDAO;
@@ -117,10 +119,13 @@ public class FirmwareResource {
         final Jedis jedis = jedisPool.getResource();
         final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
         try {
-            final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
+            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
             for (String fw_version:seenFirmwares) {
                 final long fwCount = jedis.zcard(fw_version);
-                firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount));
+                if (fwCount > 0) {
+                    final long lastSeen = (long)jedis.zrevrangeWithScores(fw_version, 0, 1).iterator().next().getScore();
+                    firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount, lastSeen));
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Failed retrieving all seen firmwares.", e.getMessage());
@@ -147,7 +152,7 @@ public class FirmwareResource {
         final TreeMap<Long, String> fwHistory = new TreeMap<>();
 
         try {
-            final Set<String> seenFirmwares = jedis.smembers("firmwares_seen");
+            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
             for (String fw_version:seenFirmwares) {
                 final Double score = jedis.zscore(fw_version, deviceId);
                 if(score != null) {
@@ -161,5 +166,30 @@ public class FirmwareResource {
         }
 
         return fwHistory;
+    }
+
+    @DELETE
+    @Timed
+    @Path("/history/{fw_version}/")
+    public void clearFWHistory(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                      @PathParam("fw_version") final String fwVersion) {
+        if(fwVersion == null) {
+            LOGGER.error("Missing fw_version parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Jedis jedis = jedisPool.getResource();
+        try {
+            if (jedis.srem(REDIS_SEEN_FIRMWARE_KEY, fwVersion) > 0) {
+                jedis.del(fwVersion);
+            } else {
+                LOGGER.error("Attempted to delete non-existent Redis member: {}", fwVersion);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed clearing fw history for {} {}.", fwVersion, e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+
     }
 }

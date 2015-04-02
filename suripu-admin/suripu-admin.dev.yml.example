@@ -45,3 +45,27 @@ kinesis_logger:
   enabled : false
   buffer_size: 100
   origin: suripu-admin
+
+redis:
+  host: localhost
+  port: 6379
+
+alarm_info_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: alarm_info
+
+sense_key_store_dynamo_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: key_store
+
+pill_key_store_dynamo_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: pill_key_store
+
+password_reset_db:
+    endpoint : http://localhost:7777
+    region: us-east-1
+    table_name: password_reset

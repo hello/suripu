@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
+import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -34,11 +35,13 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
+    private final AlgorithmResultsDAODynamoDB algorithmResultsDAODynamoDB;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                    final TimelineDAODynamoDB timelineDAODynamoDB,
+                                   final AlgorithmResultsDAODynamoDB algorithmResultsDAODynamoDB,
                                    final TimelineWorkerConfiguration configuration){
 
         this.timelineProcessor = timelineProcessor;
@@ -46,7 +49,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
-
+        this.algorithmResultsDAODynamoDB = algorithmResultsDAODynamoDB;
     }
 
     @Override
@@ -112,7 +115,11 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                         continue;
                     }
 
-                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
+                    //only save if this is not the HMM
+                    if (!this.hasHmmEnabled(accountId)) {
+                        this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, timelines);
+                    }
+
                     LOGGER.info("{} Timeline saved for account {} at local utc {}",
                             DateTime.now(),
                             accountId,

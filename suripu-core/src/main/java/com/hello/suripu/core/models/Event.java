@@ -242,7 +242,13 @@ public abstract class Event {
                 }
                 return new FallingAsleepEvent(startTimestamp, endTimestamp, offsetMillis, messageOptional.get());
             case WAKE_UP:
-                return new WakeupEvent(startTimestamp, endTimestamp, offsetMillis);
+                if (messageOptional.isPresent()) {
+                    return new WakeupEvent(startTimestamp, endTimestamp, offsetMillis,messageOptional.get());
+                }
+                else {
+                    return new WakeupEvent(startTimestamp, endTimestamp, offsetMillis);
+                }
+
             case IN_BED:
                 if(!messageOptional.isPresent()){
                     throw new InvalidArgumentException("message required.");
