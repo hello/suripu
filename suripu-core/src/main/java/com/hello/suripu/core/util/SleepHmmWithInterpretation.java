@@ -364,7 +364,7 @@ CREATE CREATE CREATE
             final int idx = (int) ((m.timestamp - t0) / NUMBER_OF_MILLIS_IN_A_MINUTE);
 
             if (idx > 0 && idx < numMinutes && m.value != -1) {
-                ret[idx] = m.value;
+                ret[idx] = m.motionRange;
             }
         }
 
@@ -490,26 +490,38 @@ CREATE CREATE CREATE
                 i2Wake = pillFeats.filteredEnergy.length;
             }
 
-            final Optional<Integer> wakeIndex = getMaximumInInterval(pillFeats.filteredEnergy,i1Wake,i2Wake);
+            final Optional<Integer> wakeBound = getMaximumInInterval(pillFeats.filteredEnergy,i1Wake,i2Wake);
 
+            //defaults -- just pick the search index in case something goes wrong later
             int newI1 = seg.i1*numMinutesInMeasPeriod;
             int newI2 = seg.i2*numMinutesInMeasPeriod;
 
             if (sleepBound.isPresent()) {
 
+                //get the index of the maximum decrease in energy between the max energy in the search period and the end
                 final Optional<Integer> sleepIndex = getMinimumInInterval(pillFeats.differentialEnergy,sleepBound.get(),i2Sleep);
-                newI1 = sleepIndex.get();
+
+                if (sleepIndex.isPresent()) {
+                    newI1 = sleepIndex.get();
+                }
             }
 
+            //make sure that the new sleep time is after the last wake time
             if (newI1 < lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES) {
                 newI1 = lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES;
             }
 
 
-            if (wakeIndex.isPresent()) {
-                newI2 = wakeIndex.get();
+            if (wakeBound.isPresent()) {
+                //get the index of the maximum increase in energy from the start of the search period to the maximum of the search period
+                final Optional<Integer> wakeIndex = getMaximumInInterval(pillFeats.differentialEnergy, i1Wake, wakeBound.get());
+
+                if (wakeIndex.isPresent()) {
+                    newI2 = wakeIndex.get();
+                }
             }
 
+            //make sure the new wake time is after the sleep time
             if (newI2 < newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES) {
                 newI2 = newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES;
             }
