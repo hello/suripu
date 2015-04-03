@@ -4,18 +4,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeviceStatusBreakdown {
 
-    @JsonProperty("normal_count")
-    final public Long normalCount;
+    @JsonProperty("senses_count")
+    final public Long sensesCount;
 
-    @JsonProperty("waiting_count")
-    final public Long waitingCount;
+    @JsonProperty("pills_count")
+    final public Long pillsCount;
 
-    @JsonProperty("unknown_count")
-    final public Long unknownCount;
 
-    public DeviceStatusBreakdown(final Long normalCount, final Long waitingCount, final Long unknownCount) {
-        this.normalCount = normalCount;
-        this.waitingCount = waitingCount;
-        this.unknownCount = unknownCount;
+    public DeviceStatusBreakdown(final Long sensesCount, final Long pillsCount) {
+        this.sensesCount = sensesCount;
+        this.pillsCount = pillsCount;
     }
 }

@@ -7,7 +7,6 @@ sensors_db:
   url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
-
   # any properties specific to your JDBC driver:
   properties:
     charSet: UTF-8
@@ -69,8 +68,6 @@ common_db:
 http:
   port: 3333
   adminPort: 3336
-    minThreads: 2
-    maxThreads: 10
 
 logging:
   level: INFO
