@@ -166,6 +166,12 @@ public class DeviceResources {
                                                           @QueryParam("start_ts") final Long startTs,
                                                           @QueryParam("end_ts") final Long endTs) {
         // TODO: move this out of url handler once we've validated this is what we want
+
+        if (startTs == null || endTs == null) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Require start_ts & end_ts").build());
+        }
+
         final Jedis jedis = jedisPool.getResource();
         Long sensesCount = -1L;
         Long pillsCount = -1L;
