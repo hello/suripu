@@ -21,7 +21,6 @@ import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.AppCheckinResource;
-import com.hello.suripu.app.resources.v1.ApplicationResource;
 import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.FeaturesResource;
@@ -318,7 +317,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
