@@ -11,6 +11,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
@@ -73,6 +74,7 @@ public class DeviceResources {
     private final JedisPool jedisPool;
     private final KeyStore senseKeyStore;
     private final KeyStore pillKeyStore;
+    private final PillHeartBeatDAO pillHeartBeatDAO;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDataDAO deviceDataDAO,
@@ -81,7 +83,8 @@ public class DeviceResources {
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final JedisPool jedisPool,
                            final KeyStore senseKeyStore,
-                           final KeyStore pillKeyStore) {
+                           final KeyStore pillKeyStore,
+                           final PillHeartBeatDAO pillHeartBeatDAO) {
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
@@ -90,6 +93,7 @@ public class DeviceResources {
         this.pillKeyStore = pillKeyStore;
         this.deviceDataDAO = deviceDataDAO;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.pillHeartBeatDAO = pillHeartBeatDAO;
     }
 
     @GET
@@ -347,7 +351,12 @@ public class DeviceResources {
 
 
         for (final DeviceAccountPair pill : pills) {
-            final Optional<DeviceStatus> pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId);
+            Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pill.internalDeviceId);
+            if (!pillStatusOptional.isPresent()) {
+                // no heartbeat yet, pull from tracker-motion
+                pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId);
+            }
+
             if(!pillStatusOptional.isPresent()) {
                 LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
                 devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null, pillColor));

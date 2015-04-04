@@ -58,6 +58,7 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
@@ -170,6 +171,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
         final SleepScoreDAO sleepScoreDAO = commonDB.onDemand(SleepScoreDAO.class);
         final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
+        final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -321,7 +323,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ApplicationResource(applicationStore));
         environment.addResource(new SleepLabelResource(sleepLabelDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, jedisPool, senseKeyStore, pillKeyStore, pillHeartBeatDAO));
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
