@@ -135,3 +135,11 @@ preferences_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: preferences
+
+# store sleep scores and other stats
+# v0.2: score uses movement and duration
+sleep_stats_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: sleep_stats
+sleep_stats_version: v_0_2

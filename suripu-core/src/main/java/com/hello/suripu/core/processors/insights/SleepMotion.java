@@ -2,13 +2,15 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.SleepMotionMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
 import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.SleepScore;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -34,7 +36,7 @@ public class SleepMotion {
 
     private static int MIN_DAYS_REQUIRED = 3;
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final TrendsInsightsDAO trendsInsightsDAO, final SleepScoreDAO scoreDAO, final Boolean isNewUser) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final TrendsInsightsDAO trendsInsightsDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Boolean isNewUser) {
 
         int numDays = 14; // 2 weeks comparison
         if (isNewUser) {
@@ -42,45 +44,25 @@ public class SleepMotion {
             numDays = 5;
         }
 
-        final ImmutableList<SleepStatsSample> sleepStats = trendsInsightsDAO.getAccountRecentSleepStats(accountId, numDays);
-
-        final int size = sleepStats.size();
-        if (size == 0) {
-            LOGGER.warn("No sleep stats for account {}", accountId);
-            return Optional.absent();
-        }
-
         DateTime queryEndTime = DateTime.now(DateTimeZone.UTC);
         DateTime queryStartTime = queryEndTime.minusDays(numDays);
-        Boolean foundStart = false;
-        Boolean foundEnd = false;
-        for (int i = 0; i < size; i++) {
-            if (!foundEnd) {
-                final long endWakeTime = sleepStats.get(size - (i+1)).stats.wakeTime;
-                if (endWakeTime > 0) {
-                    queryEndTime = new DateTime(endWakeTime, DateTimeZone.UTC);
-                    foundEnd = true;
-                }
-            }
 
-            if (!foundStart) {
-                final long startSleepTime = sleepStats.get(i).stats.sleepTime;
-                if (startSleepTime > 0) {
-                    queryStartTime = new DateTime(startSleepTime, DateTimeZone.UTC);
-                    foundStart = true;
-                }
-            }
-            if (foundStart && foundEnd) {
-                break;
-            }
-        }
-
-        // TODO: refactor this to use Dynamo
-        final List<SleepScore> motionData = scoreDAO.getByAccountBetweenDateBucket(accountId,queryStartTime, queryEndTime);
+        final ImmutableList<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId,
+                DateTimeUtil.dateToYmdString(queryStartTime),
+                DateTimeUtil.dateToYmdString(queryEndTime),
+                numDays);
 
         // get sleep movement from sleep_score
-        final Optional<InsightCard> card = processData(accountId, sleepStats, motionData, isNewUser);
+        final Optional<InsightCard> card = processData(accountId, sleepStats, isNewUser);
         return card;
+    }
+
+    public static Optional<InsightCard> processData(final Long accountId, final ImmutableList<AggregateSleepStats> sleepStats, final Boolean isNewUser) {
+        if (sleepStats.isEmpty()) {
+            return Optional.absent();
+        }
+        return Optional.absent();
+
     }
 
     public static Optional<InsightCard> processData(final Long accountId, final List<SleepStatsSample> sleepStats, final List<SleepScore> motionData, final Boolean isNewUser) {
