@@ -132,12 +132,12 @@ public class SleepPeriod extends Segment {
                     motion.timestamp <= endMillis - 10 * DateTimeConstants.MILLIS_PER_MINUTE) {
                 if(motion.amplitude > 0) {
                     motionCount += 1;
-                    if(quietLength > maxQuietLength){
-                        maxQuietLength = quietLength;
-                    }
                     quietLength = 0;
                 }else{
                     quietLength++;
+                    if(quietLength > maxQuietLength){
+                        maxQuietLength = quietLength;
+                    }
                 }
             }
         }
