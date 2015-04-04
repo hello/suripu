@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -61,20 +61,20 @@ public class DataScienceResource extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final InsightProcessor insightProcessor;
-    private final SleepLabelDAO sleepLabelDAO;
+    private final UserLabelDAO userLabelDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
                                final InsightProcessor insightProcessor,
-                               final SleepLabelDAO sleepLabelDAO) {
+                               final UserLabelDAO userLabelDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.insightProcessor = insightProcessor;
-        this.sleepLabelDAO = sleepLabelDAO;
+        this.userLabelDAO = userLabelDAO;
     }
 
     @GET
@@ -294,7 +294,7 @@ public class DataScienceResource extends BaseResource {
 
         final DateTime labelTimestampUTC = new DateTime(label.ts, DateTimeZone.UTC);
 
-        sleepLabelDAO.insertUserLabel(optionalAccountId.get(),
+        userLabelDAO.insertUserLabel(optionalAccountId.get(),
                 label.email, userLabel.toString().toLowerCase(),
                 nightDate, labelTimestampUTC, label.durationMillis, labelTimestampUTC.plusMillis(label.tzOffsetMillis),
                 label.tzOffsetMillis, label.note);
@@ -349,7 +349,7 @@ public class DataScienceResource extends BaseResource {
 
         int inserted = 0;
         try {
-            sleepLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates,
+            userLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates,
                     UTCTimestamps, durations, localUTCTimestamps, tzOffsets, notes);
             inserted = accountIds.size();
         } catch (UnableToExecuteStatementException exception) {
@@ -369,7 +369,7 @@ public class DataScienceResource extends BaseResource {
         final DateTime nightDate = DateTime.parse(night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
         LOGGER.debug("{} {}", email, nightDate);
-        return sleepLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
+        return userLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
     }
 
     // APIs for Benjo's analysis
