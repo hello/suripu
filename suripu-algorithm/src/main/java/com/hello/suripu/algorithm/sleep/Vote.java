@@ -27,7 +27,6 @@ import java.util.Set;
  */
 public class Vote {
     private final static Logger LOGGER = LoggerFactory.getLogger(Vote.class);
-    private final MotionScoreAlgorithm motionScoreAlgorithmInternal;
     private final MotionScoreAlgorithm motionScoreAlgorithmDefault;
 
     private final MotionCluster motionCluster;
@@ -111,17 +110,21 @@ public class Vote {
         }else{
             this.aggregatedFeatures = filtered;
         }
-
-        this.motionScoreAlgorithmInternal = MotionScoreAlgorithm.create(this.aggregatedFeatures,
-                lightOutTimes,
-                firstWaveTimeOptional);
     }
 
 
 
 
-    public final List<Segment> getAwakes(final boolean debug){
-        return this.sleepPeriod.getAwakePeriods(debug);
+    public final List<Segment> getAwakes(final long beginMillis, final long endMillis, final boolean debug){
+        final List<Segment> allAwakesPeriods = this.sleepPeriod.getAwakePeriods(debug);
+        final List<Segment> awakesInTheRange = new ArrayList<>();
+
+        for(final Segment segment:allAwakesPeriods){
+            if(beginMillis <= segment.getStartTimestamp() && endMillis >= segment.getEndTimestamp()){
+                awakesInTheRange.add(segment);
+            }
+        }
+        return awakesInTheRange;
     }
 
     @Deprecated
@@ -188,11 +191,9 @@ public class Vote {
             LOGGER.debug("+++++++++++++ amp mean {}, kickoff mean {}", this.rawAmpMean, this.rawKickOffMean);
             MotionCluster.printClusters(this.motionCluster.getCopyOfClusters());
         }
-
-        final SleepEvents<Segment> sleepEvents = motionScoreAlgorithmInternal.getSleepEvents(debug);
         final SleepEvents<Segment> defaultEvents = this.motionScoreAlgorithmDefault.getSleepEvents(debug);
 
-        final SleepEvents<Segment> events = aggregate(sleepEvents, defaultEvents);
+        final SleepEvents<Segment> events = aggregate(defaultEvents);
         if(debug){
             LOGGER.debug("IN_BED: {}",
                     new DateTime(events.goToBed.getStartTimestamp(),
@@ -218,15 +219,14 @@ public class Vote {
         return true;
     }
 
-    private SleepEvents<Segment> aggregate(final SleepEvents<Segment> sleepEvents,
-                                           final SleepEvents<Segment> defaultEvents){
+    private SleepEvents<Segment> aggregate(final SleepEvents<Segment> defaultEvents){
 
         //final long wakeUpSearchTime = Math.min(defaultEvents.wakeUp.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
 
         final List<ClusterAmplitudeData> clusterCopy = this.motionCluster.getCopyOfClusters();
 
-        Segment inBed = sleepEvents.goToBed;
-        Segment sleep = sleepEvents.fallAsleep;
+        Segment inBed = defaultEvents.goToBed;
+        Segment sleep = defaultEvents.fallAsleep;
 
         final Pair<Long, Long> sleepTimesMillis = safeGuardPickSleep(this.sleepPeriod,
                 clusterCopy,
@@ -244,62 +244,16 @@ public class Vote {
         }
 
 
-        Segment wakeUp = sleepEvents.wakeUp;
-        Segment outBed = sleepEvents.outOfBed;
+        Segment wakeUp = defaultEvents.wakeUp;
+        Segment outBed = defaultEvents.outOfBed;
 
-        if(!newSearchWakeUp) {
-            final long wakeUpSearchTime = Math.min(defaultEvents.wakeUp.getStartTimestamp(), sleepEvents.fallAsleep.getStartTimestamp());
-            final Pair<Integer, Integer> wakeUpBounds = pickWakeUpClusterIndex(clusterCopy,
-                    this.getAggregatedFeatures(),
-                    this.sleepPeriod,
-                    wakeUpSearchTime);
+        final Pair<Long, Long> wakeUpTimesMillis = safeGuardPickWakeUp(clusterCopy,
+                sleepPeriod,
+                getAggregatedFeatures(),
+                defaultEvents.wakeUp.getStartTimestamp());
+        wakeUp = new Segment(wakeUpTimesMillis.fst, wakeUpTimesMillis.fst + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
+        outBed = new Segment(wakeUpTimesMillis.snd, wakeUpTimesMillis.snd + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
 
-            if (!isEmptyBounds(wakeUpBounds)) {
-                final long wakeUpTimestamp = pickWakeUp(clusterCopy,
-                        MotionCluster.copyRange(clusterCopy, wakeUpBounds.fst, wakeUpBounds.snd),
-                        this.sleepPeriod,
-                        this.getAggregatedFeatures(),
-                        sleepEvents.wakeUp.getStartTimestamp());
-
-                final ClusterAmplitudeData clusterStart = clusterCopy.get(wakeUpBounds.fst);
-                final ClusterAmplitudeData clusterEnd = clusterCopy.get(wakeUpBounds.snd);
-
-                LOGGER.debug("Wake up cluster start at {}, end at {}",
-                        new DateTime(clusterStart.timestamp, DateTimeZone.forOffsetMillis(clusterStart.offsetMillis)),
-                        new DateTime(clusterEnd.timestamp, DateTimeZone.forOffsetMillis(clusterEnd.offsetMillis)));
-
-                outBed = new Segment(clusterEnd.timestamp,
-                        clusterEnd.timestamp + DateTimeConstants.MILLIS_PER_MINUTE,
-                        clusterEnd.offsetMillis);
-
-                if (!defaultOverride) {
-                    wakeUp = new Segment(wakeUpTimestamp,
-                            wakeUpTimestamp + DateTimeConstants.MILLIS_PER_MINUTE,
-                            defaultEvents.wakeUp.getOffsetMillis());
-                    if (outBed.getStartTimestamp() < wakeUpTimestamp) {
-                        outBed = new Segment(wakeUp.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                                wakeUp.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                                wakeUp.getOffsetMillis());
-                    }
-                }
-            } else {
-                wakeUp = new Segment(defaultEvents.wakeUp.getStartTimestamp(),
-                        defaultEvents.wakeUp.getEndTimestamp(),
-                        defaultEvents.wakeUp.getOffsetMillis());
-                if (outBed.getStartTimestamp() < wakeUp.getStartTimestamp()) {
-                    outBed = new Segment(wakeUp.getStartTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                            wakeUp.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE,
-                            wakeUp.getOffsetMillis());
-                }
-            }
-        }else{
-            final Pair<Long, Long> wakeUpTimesMillis = safeGuardPickWakeUp(clusterCopy,
-                    sleepPeriod,
-                    getAggregatedFeatures(),
-                    defaultEvents.wakeUp.getStartTimestamp());
-            wakeUp = new Segment(wakeUpTimesMillis.fst, wakeUpTimesMillis.fst + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
-            outBed = new Segment(wakeUpTimesMillis.snd, wakeUpTimesMillis.snd + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
-        }
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
     }

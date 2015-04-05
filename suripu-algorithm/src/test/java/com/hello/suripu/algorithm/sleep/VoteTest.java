@@ -26,7 +26,9 @@ public class VoteTest extends CSVFixtureTest {
         //lightOuts.add(new DateTime(1426924080000L, DateTimeZone.forOffsetMillis(input.get(0).offsetMillis)));
         final Vote vote = new Vote(input, kickoffs, sound, lightOuts, Optional.<DateTime>absent());
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
-        final List<Segment> awakes = vote.getAwakes(true);
+        final List<Segment> awakes = vote.getAwakes(sleepEvents.goToBed.getEndTimestamp(),
+                sleepEvents.outOfBed.getStartTimestamp(),
+                true);
 
         /*
         assertThat(DateTimeTestUtils.millisToLocalUTC(sleepEvents.goToBed.getStartTimestamp(), sleepEvents.goToBed.getOffsetMillis()),

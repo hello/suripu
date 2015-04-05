@@ -143,8 +143,10 @@ public class SleepPeriod extends Segment {
         }
 
         // TODO: could be trained here, but so far I don't see it as necessary
-        if(motionCount == 0 || (maxQuietLength > 90 && motionCount / (double)maxQuietLength <= 1d / 90)){
-            return false;
+        if(maxQuietLength > 90) {
+            if (motionCount / (double) maxQuietLength <= 1d / 90) {
+                return false;
+            }
         }
         return true;
     }
