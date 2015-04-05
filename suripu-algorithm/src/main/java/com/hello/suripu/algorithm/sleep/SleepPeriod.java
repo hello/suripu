@@ -132,19 +132,21 @@ public class SleepPeriod extends Segment {
                     motion.timestamp <= endMillis - 10 * DateTimeConstants.MILLIS_PER_MINUTE) {
                 if(motion.amplitude > 0) {
                     motionCount += 1;
-                    if(quietLength > maxQuietLength){
-                        maxQuietLength = quietLength;
-                    }
                     quietLength = 0;
                 }else{
                     quietLength++;
+                    if(quietLength > maxQuietLength){
+                        maxQuietLength = quietLength;
+                    }
                 }
             }
         }
 
         // TODO: could be trained here, but so far I don't see it as necessary
-        if(motionCount == 0 || (maxQuietLength > 90 && motionCount <= 2)){
-            return false;
+        if(maxQuietLength > 90) {
+            if (motionCount / (double) maxQuietLength <= 1d / 90) {
+                return false;
+            }
         }
         return true;
     }
@@ -162,7 +164,7 @@ public class SleepPeriod extends Segment {
             offsetMillis = stack.peek().getOffsetMillis();
             stack.pop();
         }
-        final Segment sleepSegment = new Segment(segmentStartMillis, current.getStartTimestamp(), offsetMillis);
+        final Segment sleepSegment = new Segment(segmentStartMillis, segmentEndMillis, offsetMillis);
         return sleepSegment;
     }
 
@@ -192,7 +194,9 @@ public class SleepPeriod extends Segment {
         if(isUserInBed(startMillis, endMillis, alignedMotionAmp)){
             stack.push(new Segment(startMillis, motionClusters.get(0).getEndTimestamp(), offsetMillis));
         }else{
-            stack.push(new Segment(startMillis, motionClusters.get(0).getEndTimestamp(), offsetMillis));
+            stack.push(new Segment(motionClusters.get(0).getStartTimestamp(),
+                    motionClusters.get(0).getEndTimestamp(),
+                    offsetMillis));
         }
 
         long lastMotionMillis = alignedMotionAmp.get(alignedMotionAmp.size() - 1).timestamp;
@@ -206,10 +210,10 @@ public class SleepPeriod extends Segment {
             }
 
             final Segment sleepSegment = constructSegmentAndEmptyStack(stack, motionClusters.get(i));
-            stack.push(new Segment(motionClusters.get(i - 1).getEndTimestamp(),
+            stack.push(new Segment(motionClusters.get(i).getStartTimestamp(),
                     motionClusters.get(i).getEndTimestamp(),
                     motionClusters.get(i).getOffsetMillis()));
-            LOGGER.debug("In bed period {} - {}",
+            LOGGER.debug("### In bed period {} - {}",
                     new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())),
                     new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())));
             sleepPeriods.add(sleepSegment);
@@ -224,7 +228,7 @@ public class SleepPeriod extends Segment {
 
         if(stack.peek() != null){
             final Segment sleepSegment = constructSegmentAndEmptyStack(stack, stack.peek());
-            LOGGER.debug("In bed period {} - {}",
+            LOGGER.debug("### In bed period {} - {}",
                     new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())),
                     new DateTime(sleepSegment.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getOffsetMillis())));
             sleepPeriods.add(sleepSegment);
@@ -234,7 +238,7 @@ public class SleepPeriod extends Segment {
         // We can also release the assumption of a virtual day stars from 8pm to noon the next day.
         final Optional<Segment> sleepPeriod = getMaxPeriod(sleepPeriods);
         if(sleepPeriod.isPresent()){
-            LOGGER.debug("Selected sleep period {} - {}",
+            LOGGER.debug("######## Selected sleep period {} - {}",
                     new DateTime(sleepPeriod.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.get().getOffsetMillis())),
                     new DateTime(sleepPeriod.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.get().getOffsetMillis())));
         }
