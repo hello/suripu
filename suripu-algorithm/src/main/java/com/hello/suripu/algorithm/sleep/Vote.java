@@ -42,7 +42,7 @@ public class Vote {
     private final boolean capScoreOutOfPeriod = false;
     private final boolean defaultOverride = false;
     private final boolean newSearch = true;
-    private final boolean newSearchWakeUp = true;
+    private final boolean newSearchWakeUp = false;
 
     public Vote(final List<AmplitudeData> rawData,
                 final List<AmplitudeData> kickOffCounts,
@@ -573,6 +573,15 @@ public class Vote {
             }
         }
 
+        Optional<Segment> predictionSegment = Optional.absent();
+        for(final Segment segment:clusterSegments){
+            if(segment.getStartTimestamp() - 10 * DateTimeConstants.MILLIS_PER_MINUTE <= wakeUpMillisPredicted &&
+                    segment.getEndTimestamp() + 10 * DateTimeConstants.MILLIS_PER_MINUTE >= wakeUpMillisPredicted){
+                predictionSegment = Optional.of(segment);
+                break;
+            }
+        }
+
         // predict in last segment of sleep period.
         if(wakeUpMillisPredicted >= lastSegmentInSleepPeriod.getStartTimestamp() &&
                 wakeUpMillisPredicted <= lastSegmentInSleepPeriod.getEndTimestamp() + 15 * DateTimeConstants.MILLIS_PER_MINUTE){
@@ -580,17 +589,27 @@ public class Vote {
             return new Pair<>(wakeUpMillisPredicted, lastSegmentInSleepPeriod.getEndTimestamp());
         }
 
-        // predict << last segment of sleep period
-        if(wakeUpMillisPredicted < lastSegmentInSleepPeriod.getStartTimestamp() - DateTimeConstants.MILLIS_PER_HOUR){
-            LOGGER.debug("predicted too far way from end");
-            final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
-                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                    lastSegmentInSleepPeriod.getEndTimestamp() - 140 * DateTimeConstants.MILLIS_PER_MINUTE,
-                    lastSegmentInSleepPeriod.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
-            if(!maxWakeUpScoreOptional.isPresent()){
-                return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
+        if(wakeUpMillisPredicted < lastSegmentInSleepPeriod.getStartTimestamp()) {
+            // predict << last segment of sleep period
+            if (wakeUpMillisPredicted < lastSegmentInSleepPeriod.getStartTimestamp() - DateTimeConstants.MILLIS_PER_HOUR) {
+                LOGGER.debug("Predicted too far way from end, predicted {}",
+                        new DateTime(wakeUpMillisPredicted, DateTimeZone.forOffsetMillis(lastSegment.getOffsetMillis())));
+                final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
+                        MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                        lastSegmentInSleepPeriod.getEndTimestamp() - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        //wakeUpMillisPredicted + 5 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        lastSegmentInSleepPeriod.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+                if (!maxWakeUpScoreOptional.isPresent()) {
+                    return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
+                }
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
             }
-            return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
+
+            LOGGER.debug("OK USER: Predict not too far from end");
+            if(!predictionSegment.isPresent()){
+                return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+            }
+            return new Pair<>(wakeUpMillisPredicted, predictionSegment.get().getEndTimestamp());
         }
 
         // predict > last segment in sleep period
@@ -605,7 +624,7 @@ public class Vote {
             LOGGER.debug("Sleep period detection wrong.");
             final List<AmplitudeData> amps = featuresNotCapped.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
             final long lastMotionMillis = amps.get(amps.size() - 1).timestamp;
-            if(lastMotionMillis - wakeUpMillisPredicted > 1 * DateTimeConstants.MILLIS_PER_HOUR){
+            if(lastMotionMillis - wakeUpMillisPredicted > DateTimeConstants.MILLIS_PER_HOUR){
                 final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                         MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                         lastMotionMillis - 60 * DateTimeConstants.MILLIS_PER_HOUR,

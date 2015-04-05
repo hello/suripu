@@ -5,7 +5,6 @@ import com.hello.suripu.algorithm.CSVFixtureTest;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -48,8 +47,8 @@ public class VoteTest extends CSVFixtureTest {
         final List<AmplitudeData> kickoffs = loadKickOffFromResource("fixtures/debug.csv");
 
         final List<DateTime> lightOuts = new ArrayList<>();
-        lightOuts.add(new DateTime(1427174340000L, DateTimeZone.forOffsetMillis(input.get(0).offsetMillis)));
-        final Vote vote = new Vote(input, kickoffs, Collections.EMPTY_LIST, lightOuts, Optional.<DateTime>absent());
+        //lightOuts.add(new DateTime(1427174340000L, DateTimeZone.forOffsetMillis(input.get(0).offsetMillis)));
+        final Vote vote = new Vote(input, kickoffs, Collections.EMPTY_LIST, lightOuts, Optional.of(new DateTime(1427290260000L)));
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
 
         /*

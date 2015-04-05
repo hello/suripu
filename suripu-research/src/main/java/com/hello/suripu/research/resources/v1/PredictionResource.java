@@ -29,10 +29,10 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
+import com.hello.suripu.core.util.SoundUtils;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
@@ -154,8 +154,7 @@ public class PredictionResource extends BaseResource {
     }
 
 
-    private List<Event> getVotingEvents(final DateTime targetDateLocalUTC,
-                                        final AllSensorSampleList allSensorSampleList,
+    private List<Event> getVotingEvents(final AllSensorSampleList allSensorSampleList,
                                         final List<TrackerMotion> trackerMotions) {
         // compute lights-out and sound-disturbance events
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
@@ -175,7 +174,7 @@ public class PredictionResource extends BaseResource {
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
         final Vote vote = new Vote(TrackerMotionUtils.trackerMotionToAmplitudeData(trackerMotions),
                 TrackerMotionUtils.trackerMotionToKickOffCounts(trackerMotions),
-                Collections.EMPTY_LIST,
+                SoundUtils.sampleToAmplitudeData(allSensorSampleList.get(Sensor.SOUND)),
                 lightOutTimes, wakeUpWaveTimeOptional);
 
         final SleepEvents<Segment> sleepEvents = vote.getResult(false);
@@ -186,19 +185,19 @@ public class PredictionResource extends BaseResource {
 
         //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
         final Event inBedEvent = new InBedEvent(goToBedSegment.getStartTimestamp(),
-                goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                goToBedSegment.getEndTimestamp(),
                 goToBedSegment.getOffsetMillis());
 
         final Event fallAsleepEvent = new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
-                fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                fallAsleepSegment.getEndTimestamp(),
                 fallAsleepSegment.getOffsetMillis());
 
         final Event wakeUpEvent = new WakeupEvent(wakeUpSegment.getStartTimestamp(),
-                wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                wakeUpSegment.getEndTimestamp(),
                 wakeUpSegment.getOffsetMillis());
 
         final Event outOfBedEvent = new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
-                outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
+                outOfBedSegment.getEndTimestamp(),
                 outOfBedSegment.getOffsetMillis());
 
         final SleepEvents<Event> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
@@ -343,7 +342,7 @@ public class PredictionResource extends BaseResource {
 
         switch (algorithm) {
             case ALGORITHM_VOTING:
-                events = getVotingEvents(targetDate, allSensorSampleList, myMotions);
+                events = getVotingEvents(allSensorSampleList, myMotions);
                 break;
             case ALGORITHM_SLEEP_SCORED:
                 events = getSleepScoreEvents(targetDate, allSensorSampleList, myMotions);
