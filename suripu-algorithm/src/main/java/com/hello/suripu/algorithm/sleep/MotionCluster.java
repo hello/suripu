@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by pangwu on 3/19/15.
@@ -24,7 +25,7 @@ public class MotionCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MotionCluster.class);
 
-    private final List<AmplitudeData> motionNoMissingValues;
+    private final double densityThreshold;
     private List<ClusterAmplitudeData> clusters;
     private final Segment sleepPeriod;
 
@@ -92,7 +93,6 @@ public class MotionCluster {
                           final List<AmplitudeData> alignedKickOffCounts,
                           final double kickOffMean,
                           final boolean removeNoise){
-        this.motionNoMissingValues = alignedMotionWithGapFilled;
         //printData(alignedMotionWithGapFilled);
 
         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features = MotionCluster.getInputFeatureFromMotions(
@@ -100,6 +100,7 @@ public class MotionCluster {
                 alignedKickOffCounts);
         final List<AmplitudeData> densityFeature = features.get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
         final double densityThreshold = NumericalUtils.mean(densityFeature);
+        this.densityThreshold = densityThreshold;
         LOGGER.debug("+++++++++++++++++++ density mean {}", densityThreshold);
 
         final List<AmplitudeData> amplitudeFeature = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
@@ -114,6 +115,52 @@ public class MotionCluster {
         this.clusters = rawClusters;
 
         final List<ClusterAmplitudeData> noiseCutCopy = new ArrayList<>();
+    }
+
+    public double getDensityThreshold(){
+        return this.densityThreshold;
+    }
+
+    public static final Map<MotionFeatures.FeatureType, List<AmplitudeData>> petFiltering(final List<ClusterAmplitudeData> clusters,
+                                                                                   final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
+                                                                                   final double densityThreshold,
+                                                                                   final double amplitudeThreshold){
+
+
+        final List<AmplitudeData> countFeature = features.get(MotionFeatures.FeatureType.MOTION_COUNT_20MIN);
+        final List<AmplitudeData> amplitudeFeature = features.get(MotionFeatures.FeatureType.MAX_AMPLITUDE);
+        long firstPeakMillis = 0;
+
+        for(int i = 0; i < countFeature.size(); i++){
+            if(countFeature.get(i).amplitude > densityThreshold || amplitudeFeature.get(i).amplitude > amplitudeThreshold){
+                firstPeakMillis = countFeature.get(i).timestamp;
+                LOGGER.debug("!!!!!!!!!!!!! first peak {}",
+                        new DateTime(firstPeakMillis, DateTimeZone.forOffsetMillis(countFeature.get(i).offsetMillis)));
+                break;
+            }
+        }
+
+        final long preserveTimeMillis = 15 * DateTimeConstants.MILLIS_PER_MINUTE;
+        final Set<MotionFeatures.FeatureType> featureTypes = features.keySet();
+        for(final MotionFeatures.FeatureType featureType:featureTypes){
+            final List<AmplitudeData> originalFeature = features.get(featureType);
+
+            for(int i = 0; i < originalFeature.size(); i++){
+                final AmplitudeData item = originalFeature.get(i);
+                final long timestamp = item.timestamp;
+                final int offsetMillis = item.offsetMillis;
+                if(timestamp > firstPeakMillis - preserveTimeMillis){
+                    continue;
+                }
+                if(featureType == MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE ||
+                        featureType == MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE){
+                    originalFeature.set(i, new AmplitudeData(timestamp, 0d, offsetMillis));
+                }
+            }
+        }
+
+        return features;
+
     }
 
     public static void printClusters(final List<ClusterAmplitudeData> clusters){
