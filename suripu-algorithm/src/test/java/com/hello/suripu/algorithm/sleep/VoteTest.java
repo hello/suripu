@@ -48,7 +48,9 @@ public class VoteTest extends CSVFixtureTest {
 
         final List<DateTime> lightOuts = new ArrayList<>();
         //lightOuts.add(new DateTime(1427174340000L, DateTimeZone.forOffsetMillis(input.get(0).offsetMillis)));
-        final Vote vote = new Vote(input, kickoffs, Collections.EMPTY_LIST, lightOuts, Optional.of(new DateTime(1427290260000L)));
+        final Vote vote = new Vote(input, kickoffs, Collections.EMPTY_LIST, lightOuts,
+                //Optional.<DateTime>absent());
+                Optional.of(new DateTime(1427280720000L)));
         final SleepEvents<Segment> sleepEvents = vote.getResult(true);
 
         /*

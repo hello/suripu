@@ -42,13 +42,17 @@ public class Vote {
     private final boolean capScoreOutOfPeriod = false;
     private final boolean defaultOverride = false;
     private final boolean newSearch = true;
-    private final boolean newSearchWakeUp = false;
+    private final boolean newSearchWakeUp = true;
 
     public Vote(final List<AmplitudeData> rawData,
                 final List<AmplitudeData> kickOffCounts,
                 final List<AmplitudeData> rawSound,
                 final List<DateTime> lightOutTimes,
                 final Optional<DateTime> firstWaveTimeOptional){
+        if(firstWaveTimeOptional.isPresent()) {
+            LOGGER.debug("--------> Wave {}, millis {}", firstWaveTimeOptional.get(), firstWaveTimeOptional.get().getMillis());
+        }
+
         this.motionScoreAlgorithmDefault = MotionScoreAlgorithm.createDefault(rawData,
                 lightOutTimes,
                 firstWaveTimeOptional);
@@ -224,7 +228,7 @@ public class Vote {
         Segment inBed = sleepEvents.goToBed;
         Segment sleep = sleepEvents.fallAsleep;
 
-        final Pair<Long, Long> sleepTimesMillis = pickSleep(this.sleepPeriod,
+        final Pair<Long, Long> sleepTimesMillis = safeGuardPickSleep(this.sleepPeriod,
                 clusterCopy,
                 this.getAggregatedFeatures(),
                 defaultEvents.fallAsleep.getStartTimestamp());
@@ -289,7 +293,7 @@ public class Vote {
                 }
             }
         }else{
-            final Pair<Long, Long> wakeUpTimesMillis = pickWakeUp2(clusterCopy,
+            final Pair<Long, Long> wakeUpTimesMillis = safeGuardPickWakeUp(clusterCopy,
                     sleepPeriod,
                     getAggregatedFeatures(),
                     defaultEvents.wakeUp.getStartTimestamp());
@@ -557,10 +561,10 @@ public class Vote {
 
     }
 
-    protected static Pair<Long, Long> pickWakeUp2(final List<ClusterAmplitudeData> clusters,
-                                                  final SleepPeriod sleepPeriod,
-                                                  final Map<MotionFeatures.FeatureType, List<AmplitudeData>> featuresNotCapped,
-                                                  final long wakeUpMillisPredicted){
+    protected static Pair<Long, Long> safeGuardPickWakeUp(final List<ClusterAmplitudeData> clusters,
+                                                          final SleepPeriod sleepPeriod,
+                                                          final Map<MotionFeatures.FeatureType, List<AmplitudeData>> featuresNotCapped,
+                                                          final long wakeUpMillisPredicted){
 
         final List<Segment> clusterSegments = MotionCluster.toSegments(clusters);
 
@@ -591,25 +595,43 @@ public class Vote {
 
         if(wakeUpMillisPredicted < lastSegmentInSleepPeriod.getStartTimestamp()) {
             // predict << last segment of sleep period
-            if (wakeUpMillisPredicted < lastSegmentInSleepPeriod.getStartTimestamp() - DateTimeConstants.MILLIS_PER_HOUR) {
+            if (lastSegmentInSleepPeriod.getStartTimestamp() - wakeUpMillisPredicted > 40 * DateTimeConstants.MILLIS_PER_MINUTE) {
                 LOGGER.debug("Predicted too far way from end, predicted {}",
                         new DateTime(wakeUpMillisPredicted, DateTimeZone.forOffsetMillis(lastSegment.getOffsetMillis())));
                 final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                         MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                        lastSegmentInSleepPeriod.getEndTimestamp() - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
-                        //wakeUpMillisPredicted + 5 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        lastSegmentInSleepPeriod.getEndTimestamp() - 120 * DateTimeConstants.MILLIS_PER_MINUTE,
                         lastSegmentInSleepPeriod.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
                 if (!maxWakeUpScoreOptional.isPresent()) {
                     return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
                 }
-                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
-            }
 
-            LOGGER.debug("OK USER: Predict not too far from end");
-            if(!predictionSegment.isPresent()){
-                return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+                final Pair<Integer, Integer> maxScoreCluster = MotionCluster.getClusterByTime(clusters, maxWakeUpScoreOptional.get().timestamp);
+                if(isEmptyBounds(maxScoreCluster)) {
+                    return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
+                }
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
+            }else {
+
+                LOGGER.debug("OK USER: Predict not too far from end");
+                final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
+                        MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                        wakeUpMillisPredicted - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                        lastSegmentInSleepPeriod.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+
+                if (!maxWakeUpScoreOptional.isPresent()) {
+                    return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+                }
+
+                final Pair<Integer, Integer> maxScoreCluster = MotionCluster.getClusterByTime(clusters, maxWakeUpScoreOptional.get().timestamp);
+                if(isEmptyBounds(maxScoreCluster)) {
+                    if(!predictionSegment.isPresent()){
+                        return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+                    }
+                    return new Pair<>(wakeUpMillisPredicted, predictionSegment.get().getEndTimestamp());
+                }
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
             }
-            return new Pair<>(wakeUpMillisPredicted, predictionSegment.get().getEndTimestamp());
         }
 
         // predict > last segment in sleep period
@@ -645,11 +667,16 @@ public class Vote {
             final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                     MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                     lastSegmentInSleepPeriod.getEndTimestamp() - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
-                    lastSegmentInSleepPeriod.getEndTimestamp() + 15 * DateTimeConstants.MILLIS_PER_MINUTE);
+                    lastSegmentInSleepPeriod.getEndTimestamp() );
             if(!maxWakeUpScoreOptional.isPresent()){
                 return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
             }
-            return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
+
+            final Pair<Integer, Integer> maxScoreCluster = MotionCluster.getClusterByTime(clusters, maxWakeUpScoreOptional.get().timestamp);
+            if(isEmptyBounds(maxScoreCluster)) {
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
+            }
+            return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
 
         }
 
@@ -711,10 +738,10 @@ public class Vote {
     }
 
 
-    protected static Pair<Long, Long> pickSleep(final SleepPeriod sleepPeriod,
-                                                final List<ClusterAmplitudeData> clusters,
-                                                final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
-                                                final long originalSleepMillis){
+    protected static Pair<Long, Long> safeGuardPickSleep(final SleepPeriod sleepPeriod,
+                                                         final List<ClusterAmplitudeData> clusters,
+                                                         final Map<MotionFeatures.FeatureType, List<AmplitudeData>> features,
+                                                         final long originalSleepMillis){
 
 
         final List<Segment> clusterSegments = MotionCluster.toSegments(clusters);

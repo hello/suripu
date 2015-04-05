@@ -157,15 +157,9 @@ public class PredictionResource extends BaseResource {
     private List<Event> getVotingEvents(final AllSensorSampleList allSensorSampleList,
                                         final List<TrackerMotion> trackerMotions) {
         // compute lights-out and sound-disturbance events
-        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-
-        if (!allSensorSampleList.isEmpty()) {
-            if(!allSensorSampleList.get(Sensor.WAVE_COUNT).isEmpty() && trackerMotions.size() > 0){
-                wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
-                        trackerMotions.get(trackerMotions.size() - 1).timestamp,
-                        allSensorSampleList.get(Sensor.WAVE_COUNT));
-            }
-        }
+        final Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+                trackerMotions.get(trackerMotions.size() - 1).timestamp,
+                allSensorSampleList.get(Sensor.WAVE_COUNT));
 
         final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(allSensorSampleList.get(Sensor.LIGHT));
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
