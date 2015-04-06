@@ -302,7 +302,7 @@ public class Vote {
                         return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
                     }
                 }
-
+                
                 if (!maxWakeUpScoreOptional.isPresent()) {
                     return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
                 }
