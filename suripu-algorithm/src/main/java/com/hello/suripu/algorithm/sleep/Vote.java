@@ -515,6 +515,13 @@ public class Vote {
 
     }
 
+    private static Pair<Long, Long> predictionBoundsMillis(final long wakeUpMillisPredicted, final Optional<Segment> predictionSegment){
+        if(!predictionSegment.isPresent()){
+            return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+        }
+        return new Pair<>(wakeUpMillisPredicted, predictionSegment.get().getEndTimestamp());
+    }
+
     protected static Pair<Long, Long> safeGuardPickWakeUp(final List<ClusterAmplitudeData> clusters,
                                                           final SleepPeriod sleepPeriod,
                                                           final Map<MotionFeatures.FeatureType, List<AmplitudeData>> featuresNotCapped,
@@ -556,6 +563,19 @@ public class Vote {
                         MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                         lastSegmentInSleepPeriod.getEndTimestamp() - 120 * DateTimeConstants.MILLIS_PER_MINUTE,
                         lastSegmentInSleepPeriod.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+
+                final Optional<AmplitudeData> maxSleepScoreOptional = getMaxScore(featuresNotCapped,
+                        MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
+                        wakeUpMillisPredicted,
+                        lastSegmentInSleepPeriod.getEndTimestamp());
+
+                if(maxSleepScoreOptional.isPresent()){
+                    if(wakeUpMillisPredicted <= maxSleepScoreOptional.get().timestamp &&
+                            maxSleepScoreOptional.get().timestamp < lastSegmentInSleepPeriod.getStartTimestamp()){
+                        LOGGER.debug("Max drop between prediction and last segment detected, prediction is likely right.");
+                        return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
+                    }
+                }
                 if (!maxWakeUpScoreOptional.isPresent()) {
                     return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
                 }
@@ -579,10 +599,7 @@ public class Vote {
 
                 final Pair<Integer, Integer> maxScoreCluster = MotionCluster.getClusterByTime(clusters, maxWakeUpScoreOptional.get().timestamp);
                 if(isEmptyBounds(maxScoreCluster)) {
-                    if(!predictionSegment.isPresent()){
-                        return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
-                    }
-                    return new Pair<>(wakeUpMillisPredicted, predictionSegment.get().getEndTimestamp());
+                    return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
                 }
                 return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
             }
@@ -618,6 +635,15 @@ public class Vote {
             LOGGER.debug("-------------* Maid found, last motion cluster in sleep period {} - {}",
                     new DateTime(lastSegmentInSleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(lastSegmentInSleepPeriod.getOffsetMillis())),
                     new DateTime(lastSegmentInSleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(lastSegmentInSleepPeriod.getOffsetMillis())));
+
+            if(wakeUpMillisPredicted < lastSegment.getStartTimestamp() && wakeUpMillisPredicted > sleepPeriod.getEndTimestamp()){
+                LOGGER.debug("Sleep period {} - {} wrong, might due to data quality issue, keep predicted result",
+                        new DateTime(sleepPeriod.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())),
+                        new DateTime(sleepPeriod.getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepPeriod.getOffsetMillis())));
+                return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
+            }
+
+
             final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                     MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                     lastSegmentInSleepPeriod.getEndTimestamp() - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
