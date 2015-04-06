@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
@@ -42,14 +41,10 @@ import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.midi.Track;
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -360,7 +355,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId,targetDate,endDate);
+        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
 
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
@@ -390,8 +385,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = results.get().allTheOtherWakesAndSleeps;
 
 
-            }
-            else {
+            } else if(this.hasVotingEnabled(accountId)){
+                sleepEventsFromAlgorithmOptional = Optional.of(fromVotingAlgorithm(sensorData.trackerMotions,
+                        sensorData.allSensorSampleList.get(Sensor.SOUND),
+                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
+            } else {
 
                 /* regular algorithm */
                 sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
@@ -665,17 +664,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return  sleepEventsFromAlgorithm;
     }
 
-    /**
-     * Pang magic version 2
-     * @param trackerMotions
-     * @param rawLight
-     * @param wakeUpWaveTimeOptional
-     * @return
-     */
     private SleepEvents<Optional<Event>> fromVotingAlgorithm(final List<TrackerMotion> trackerMotions,
                                                              final List<Sample> rawSound,
-                                                       final List<Sample> rawLight,
-                                                       final Optional<DateTime> wakeUpWaveTimeOptional) {
+                                                             final List<Sample> rawLight,
+                                                             final List<Sample> rawWave) {
         Optional<Segment> sleepSegmentOptional;
         Optional<Segment> inBedSegmentOptional = Optional.absent();
         SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(Optional.<Event>absent(),
@@ -691,19 +683,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
+            Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+                    trackerMotions.get(trackerMotions.size() - 1).timestamp,
+                    rawWave);
             sleepEventsFromAlgorithm = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
                     rawSound,
                     lightOutTimes,
                     wakeUpWaveTimeOptional);
-
-
 
             if(sleepEventsFromAlgorithm.fallAsleep.isPresent() && sleepEventsFromAlgorithm.wakeUp.isPresent()){
                 sleepSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.fallAsleep.get().getStartTimestamp(),
                         sleepEventsFromAlgorithm.wakeUp.get().getStartTimestamp(),
                         sleepEventsFromAlgorithm.wakeUp.get().getTimezoneOffset()));
 
-                LOGGER.info("Sleep Time From Awake Detection Algorithm: {} - {}",
+                LOGGER.info("Sleep Time From Voting Algorithm: {} - {}",
                         new DateTime(sleepSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())),
                         new DateTime(sleepSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(sleepSegmentOptional.get().getOffsetMillis())));
             }
@@ -712,14 +705,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 inBedSegmentOptional = Optional.of(new Segment(sleepEventsFromAlgorithm.goToBed.get().getStartTimestamp(),
                         sleepEventsFromAlgorithm.outOfBed.get().getStartTimestamp(),
                         sleepEventsFromAlgorithm.outOfBed.get().getTimezoneOffset()));
-                LOGGER.info("In Bed Time From Awake Detection Algorithm: {} - {}",
+                LOGGER.info("In Bed Time From Voting Algorithm: {} - {}",
                         new DateTime(inBedSegmentOptional.get().getStartTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())),
                         new DateTime(inBedSegmentOptional.get().getEndTimestamp(), DateTimeZone.forOffsetMillis(inBedSegmentOptional.get().getOffsetMillis())));
             }
 
 
         }catch (Exception ex){ //TODO : catch a more specific exception
-            LOGGER.error("Generate sleep period from Awake Detection Algorithm failed: {}", ex.getMessage());
+            LOGGER.error("Generate sleep period from Voting Algorithm failed: {}", ex.getMessage());
         }
 
         return  sleepEventsFromAlgorithm;
