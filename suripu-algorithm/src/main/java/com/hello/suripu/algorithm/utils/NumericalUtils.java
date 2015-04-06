@@ -59,6 +59,22 @@ public class NumericalUtils {
 
     }
 
+    public static double std(final List<AmplitudeData> data, final double mean){
+
+        double std = 0.0;
+        for(final AmplitudeData datum:data) {
+            final double diff = Math.pow(datum.amplitude - mean, 2);
+            std += diff;
+
+        }
+
+        if(data.size() - 1 > 0) {
+            return Math.sqrt(std / (double)(data.size() - 1));
+        }
+        return 0d;
+
+    }
+
     @Deprecated
     public static double getMaxAmplitude(final List<AmplitudeData> data){
         if(data.size() == 0){

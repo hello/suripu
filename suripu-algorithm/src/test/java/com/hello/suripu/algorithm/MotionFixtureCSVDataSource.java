@@ -1,3 +1,5 @@
+package com.hello.suripu.algorithm;
+
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;

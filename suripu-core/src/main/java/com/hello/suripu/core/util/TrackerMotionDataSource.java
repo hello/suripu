@@ -25,61 +25,13 @@ public class TrackerMotionDataSource implements DataSource<AmplitudeData> {
     public TrackerMotionDataSource(final List<TrackerMotion> motionsFromDBShortedByTimestamp) {
 
         //final List<TrackerMotion> positiveData = retainPositiveAmplitudes(motionsFromDBShortedByTimestamp);
-        final int minAmplitude = getMinAmplitude(motionsFromDBShortedByTimestamp);
+        final List<AmplitudeData> raw = new ArrayList<>();
         for(final TrackerMotion motion: motionsFromDBShortedByTimestamp) {
-            if(this.dataAfterAutoInsert.size() > 0) {
-                if (motion.timestamp - this.dataAfterAutoInsert.getLast().timestamp > DATA_INTERVAL) {
-                    final List<AmplitudeData> gapData = fillGap(this.dataAfterAutoInsert.getLast().timestamp,
-                            motion.timestamp,
-                            DATA_INTERVAL,
-                            0,
-                            this.dataAfterAutoInsert.getLast().offsetMillis);
-                    this.dataAfterAutoInsert.addAll(gapData);
-                }
-            }
-            this.dataAfterAutoInsert.add(new AmplitudeData(motion.timestamp,
-                    motion.value - minAmplitude,  // DONOT filter out the negative values, they are just off calibration!
-                    motion.offsetMillis));
-
+            raw.add(new AmplitudeData(motion.timestamp, motion.value, motion.offsetMillis));
         }
 
-    }
-
-    public static int getMinAmplitude(final List<TrackerMotion> data){
-        int minAmplitude = Integer.MAX_VALUE;
-        for(final TrackerMotion datum:data){
-            int amplitude = datum.value;
-
-            if(amplitude < minAmplitude){
-                minAmplitude = amplitude;
-            }
-        }
-
-        if(minAmplitude == Integer.MAX_VALUE){
-            return 0;
-        }
-
-        return minAmplitude;
-    }
-
-    /*
-    * Insert gap with empty data.
-     */
-    public static List<AmplitudeData> fillGap(final long gapStartTimestamp, final long gapEndTimestamp,
-                                       final int dataIntervalMillis, final double defaultValue,
-                                       final int timezoneOffset) {
-        final long gapInterval = gapEndTimestamp - gapStartTimestamp;
-        int insertCount = (int)(gapInterval / dataIntervalMillis);
-        if(gapInterval % dataIntervalMillis == 0){
-            insertCount--;
-        }
-
-        final ArrayList<AmplitudeData> insertData = new ArrayList<>();
-        for(int i = 0; i < insertCount; i++){
-            insertData.add(new AmplitudeData(gapStartTimestamp + (i + 1) * dataIntervalMillis, defaultValue, timezoneOffset));
-        }
-
-        return insertData;
+        final List<AmplitudeData> noDuplicates = com.hello.suripu.algorithm.utils.DataUtils.makePositive(com.hello.suripu.algorithm.utils.DataUtils.dedupe(raw));
+        this.dataAfterAutoInsert.addAll(com.hello.suripu.algorithm.utils.DataUtils.fillMissingValues(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE));
 
     }
 

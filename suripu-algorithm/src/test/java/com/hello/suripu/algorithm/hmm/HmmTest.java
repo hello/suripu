@@ -1,3 +1,5 @@
+package com.hello.suripu.algorithm.hmm;
+
 import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
