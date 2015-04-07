@@ -345,7 +345,7 @@ public class Vote {
             if(lastMotionMillis - wakeUpMillisPredicted > DateTimeConstants.MILLIS_PER_HOUR){
                 final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                         MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                        lastMotionMillis - DateTimeConstants.MILLIS_PER_HOUR,
+                        lastMotionMillis - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
                         lastMotionMillis);
                 if(maxWakeUpScoreOptional.isPresent()){
                     return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastMotionMillis);
@@ -398,8 +398,6 @@ public class Vote {
 
         final List<Segment> clusterSegments = MotionCluster.toSegments(clusters);
         Segment firstCluster = clusterSegments.get(0);
-        Optional<Segment> predictedSegmentOptional = Optional.absent();
-
         for(final Segment cluster:clusterSegments){
             if(cluster.getEndTimestamp() >= sleepPeriod.getStartTimestamp()){
                 firstCluster = cluster;
@@ -423,26 +421,10 @@ public class Vote {
             return new Pair<>(firstCluster.getStartTimestamp(), originalSleepMillis);
         }
 
-        for(final Segment cluster:clusterSegments){
-            if(cluster.getEndTimestamp() + 15 * DateTimeConstants.MILLIS_PER_MINUTE >= originalSleepMillis &&
-                    cluster.getStartTimestamp() <= originalSleepMillis){
-                predictedSegmentOptional = Optional.of(cluster);
-                break;
-            }
-        }
-
-        Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
-        if(predictedSegmentOptional.isPresent()){
-            predictedMaxScoreOptional = getMaxScore(features,
-                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                    predictedSegmentOptional.get().getStartTimestamp(),
-                    predictedSegmentOptional.get().getEndTimestamp());
-        }else {
-            predictedMaxScoreOptional = getMaxScore(features,
-                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                    originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
-                    originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
-        }
+        final Optional<AmplitudeData> predictedMaxScoreOptional = getMaxScore(features,
+                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
 
         if(predictedMaxScoreOptional.isPresent() && firstMaxScoreItemOptional.isPresent()){
             if(predictedMaxScoreOptional.get().amplitude / 5d > firstMaxScoreItemOptional.get().amplitude){
