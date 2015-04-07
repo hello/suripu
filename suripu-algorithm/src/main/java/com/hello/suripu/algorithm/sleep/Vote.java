@@ -424,8 +424,8 @@ public class Vote {
         }
 
         for(final Segment cluster:clusterSegments){
-            if(cluster.getEndTimestamp() + 15 * DateTimeConstants.MILLIS_PER_MINUTE >= originalSleepMillis &&
-                    cluster.getStartTimestamp() <= originalSleepMillis){
+            if(originalSleepMillis <= cluster.getEndTimestamp() &&
+                    originalSleepMillis >= cluster.getStartTimestamp()){
                 predictedSegmentOptional = Optional.of(cluster);
                 break;
             }
@@ -436,8 +436,8 @@ public class Vote {
         if(predictedSegmentOptional.isPresent()) {
             predictedMaxScoreOptional = getMaxScore(features,
                             MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                            predictedSegmentOptional.get().getStartTimestamp() - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
-                            predictedSegmentOptional.get().getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+                            predictedSegmentOptional.get().getStartTimestamp(),
+                            predictedSegmentOptional.get().getEndTimestamp());
         }else{
             predictedMaxScoreOptional = getMaxScore(features,
                     MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
