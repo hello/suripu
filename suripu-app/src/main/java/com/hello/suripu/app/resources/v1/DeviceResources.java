@@ -4,8 +4,6 @@ import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hello.suripu.app.models.RedisPaginator;
-import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -16,9 +14,6 @@ import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.DeviceInactive;
-import com.hello.suripu.core.models.DeviceInactivePage;
-import com.hello.suripu.core.models.DeviceInactivePaginator;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PairingInfo;
@@ -37,9 +32,7 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Tuple;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -56,8 +49,6 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -365,96 +356,6 @@ public class DeviceResources {
         return getDevicesByAccountId(accountId);
     }
 
-    @GET
-    @Timed
-    @Path("/inactive")
-    @Produces(MediaType.APPLICATION_JSON)
-    public DeviceInactivePaginator getInactiveDevices(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                   @QueryParam("start") final Long startTimeStamp,
-                                                   @QueryParam("since") final Long inactiveSince,
-                                                   @QueryParam("threshold") final Long inactiveThreshold,
-                                                   @QueryParam("page") final Integer currentPage) {
-        if(startTimeStamp == null) {
-            LOGGER.error("Missing startTimestamp parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        if(inactiveSince == null) {
-            LOGGER.error("Missing inactiveSince parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        if(inactiveThreshold == null) {
-            LOGGER.error("Missing inactiveThreshold parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        if(currentPage == null) {
-            LOGGER.error("Missing page parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        final Integer maxDevicesPerPage = 40;
-        final Integer offset = Math.max(0, (currentPage - 1) * maxDevicesPerPage);
-        final Integer count = maxDevicesPerPage;
-
-        final Jedis jedis = jedisPool.getResource();
-        final Set<Tuple> tuples = new TreeSet<>();
-        Integer totalPages = 0;
-        Long devicesOnFirmware = 0L;
-
-        LOGGER.debug("{} {} {} {}", inactiveSince - inactiveThreshold, inactiveSince, offset, count);
-        try {
-          // e.g for startTimeStamp = 1417464883000: only care about devices last seen after Dec 1, 2014
-          // for inactiveSince = 1418070001000 e.g for inactiveThreshold = 259200000, this function returns
-          // devices which have been inactive for at least 3 days since Dec 4, 2014
-            tuples.addAll(jedis.zrangeByScoreWithScores("devices", startTimeStamp, inactiveSince - inactiveThreshold, offset, count));
-            totalPages = (int)Math.ceil(jedis.zcount("devices", startTimeStamp, inactiveSince - inactiveThreshold) / (double) maxDevicesPerPage);
-
-        } catch (Exception e) {
-            LOGGER.error("Failed retrieving list of devices", e.getMessage());
-        } finally {
-            jedisPool.returnResource(jedis);
-        }
-
-        final List<DeviceInactive> inactiveDevices = new ArrayList<>();
-        for(final Tuple tuple : tuples) {
-            final Long lastSeenTimestamp = (long) tuple.getScore();
-            final Long inactivePeriod = inactiveSince - lastSeenTimestamp;
-            final DeviceInactive deviceInactive = new DeviceInactive(tuple.getElement(), inactivePeriod);
-            inactiveDevices.add(deviceInactive);
-        }
-        return new DeviceInactivePaginator(currentPage, totalPages, inactiveDevices);
-    }
-
-
-
-    @GET
-    @Timed
-    @Path("/inactive/sense")
-    @Produces(MediaType.APPLICATION_JSON)
-    public DeviceInactivePage getInactiveSenses(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                                @QueryParam("after") final Long afterTimestamp,
-                                                @QueryParam("before") final Long beforeTimestamp) {
-
-        final RedisPaginator redisPaginator = new RedisPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY);
-        final DeviceInactivePage inactiveSensesPage = redisPaginator.generatePage();
-        return inactiveSensesPage;
-    }
-
-
-    @GET
-    @Timed
-    @Path("/inactive/pill")
-    @Produces(MediaType.APPLICATION_JSON)
-    public DeviceInactivePage getInactivePills(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                               @QueryParam("after") final Long afterTimestamp,
-                                               @QueryParam("before") final Long beforeTimestamp) {
-
-        final RedisPaginator redisPaginator = new RedisPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY);
-        final DeviceInactivePage inactivePillsPage = redisPaginator.generatePage();
-        return inactivePillsPage;
-    }
 
     @GET
     @Timed

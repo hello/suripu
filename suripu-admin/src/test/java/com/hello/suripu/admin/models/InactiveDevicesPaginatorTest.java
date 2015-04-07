@@ -1,6 +1,4 @@
-package com.hello.suripu.app.models;
-
-
+package com.hello.suripu.admin.models;
 import com.hello.suripu.core.models.DeviceInactive;
 import com.hello.suripu.core.models.DeviceInactivePage;
 import org.junit.Test;
@@ -15,9 +13,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class RedisPaginatorTest {
+public class InactiveDevicesPaginatorTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisPaginatorTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(InactiveDevicesPaginatorTest.class);
     private static final Long BEFORE_CURSOR = 1418240007000L;
     private static final Long AFTER_CURSOR = 1414956807000L;
     private static final Long MAX_TIMESTAMP = Long.MAX_VALUE;
@@ -25,7 +23,7 @@ public class RedisPaginatorTest {
     private static final String DEVICE_TYPE = "test device";
     private static final Integer LIMIT = 10;
     private static final JedisPool jedisPool = mock(JedisPool.class);
-    private static final RedisPaginator redisPaginator = new RedisPaginator(jedisPool, 0L, 1L, DEVICE_TYPE, LIMIT);
+    private static final InactiveDevicesPaginator inactiveDevicesPaginator = new InactiveDevicesPaginator(jedisPool, 0L, 1L, DEVICE_TYPE, LIMIT);
     private static final DeviceInactivePage middlePage = simulateMiddlePage();
     private static final DeviceInactivePage firstPage = simulateFirstPage();
     private static final DeviceInactivePage lastPage = simulateLastPage();
@@ -84,16 +82,16 @@ public class RedisPaginatorTest {
         inactiveDevices.add(new DeviceInactive("Device40", 1414956807000L));
         inactiveDevices.add(new DeviceInactive("Device39", 1415043207000L));
         inactiveDevices.add(new DeviceInactive("Device38", 1415129607000L));
-        return redisPaginator.formatPage(AFTER_CURSOR, BEFORE_CURSOR, inactiveDevices);
+        return inactiveDevicesPaginator.formatPage(AFTER_CURSOR, BEFORE_CURSOR, inactiveDevices);
     }
 
     private static DeviceInactivePage simulateFirstPage() {
         final List<DeviceInactive> inactiveDevices = new ArrayList<>();
-        return redisPaginator.formatPage(MIN_TIMESTAMP, BEFORE_CURSOR, inactiveDevices);
+        return inactiveDevicesPaginator.formatPage(MIN_TIMESTAMP, BEFORE_CURSOR, inactiveDevices);
     }
 
     private static DeviceInactivePage simulateLastPage() {
         final List<DeviceInactive> inactiveDevices = new ArrayList<>();
-        return redisPaginator.formatPage(AFTER_CURSOR, MAX_TIMESTAMP, inactiveDevices);
+        return inactiveDevicesPaginator.formatPage(AFTER_CURSOR, MAX_TIMESTAMP, inactiveDevices);
     }
 }

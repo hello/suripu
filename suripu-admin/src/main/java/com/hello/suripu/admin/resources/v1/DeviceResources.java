@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.DeviceAdmin;
 import com.hello.suripu.admin.models.DeviceStatusBreakdown;
+import com.hello.suripu.admin.models.InactiveDevicesPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -15,6 +16,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -191,6 +193,32 @@ public class DeviceResources {
         LOGGER.debug("Pills count is {} from {} to {}", pillsCount, startTs, endTs);
 
         return new DeviceStatusBreakdown(sensesCount, pillsCount);
+    }
+
+    @GET
+    @Timed
+    @Path("/inactive/sense")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceInactivePage getInactiveSenses(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                @QueryParam("after") final Long afterTimestamp,
+                                                @QueryParam("before") final Long beforeTimestamp) {
+
+        final InactiveDevicesPaginator redisPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY);
+        final DeviceInactivePage inactiveSensesPage = redisPaginator.generatePage();
+        return inactiveSensesPage;
+    }
+
+    @GET
+    @Timed
+    @Path("/inactive/pill")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceInactivePage getInactivePills(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                               @QueryParam("after") final Long afterTimestamp,
+                                               @QueryParam("before") final Long beforeTimestamp) {
+
+        final InactiveDevicesPaginator inactiveDevicesPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY);
+        final DeviceInactivePage inactivePillsPage = inactiveDevicesPaginator.generatePage();
+        return inactivePillsPage;
     }
 
     // Helpers
