@@ -74,10 +74,10 @@ public class KeyStoreDynamoDB implements KeyStore {
     }
 
     @Override
-    public void put(final String deviceId, final String publicKey) {
-        final Map<String, AttributeValue> attributes = new HashMap<String, AttributeValue>();
+    public void put(final String deviceId, final String aesKey) {
+        final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(publicKey));
+        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey));
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(keyStoreTableName)
@@ -88,10 +88,10 @@ public class KeyStoreDynamoDB implements KeyStore {
     }
 
     @Override
-    public void put(final String deviceId, final String publicKey, final String metadata) {
-        final Map<String, AttributeValue> attributes = new HashMap<String, AttributeValue>();
+    public void put(final String deviceId, final String aesKey, final String metadata) {
+        final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(publicKey.toUpperCase()));
+        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()));
         attributes.put("metadata", new AttributeValue().withS(metadata));
 
         final PutItemRequest putItemRequest = new PutItemRequest()

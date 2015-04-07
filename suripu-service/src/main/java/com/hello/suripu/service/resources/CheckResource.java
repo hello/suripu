@@ -53,7 +53,7 @@ public class CheckResource extends BaseResource {
 
         Optional<byte[]> keyBytes;
         try {
-            keyBytes = senseKeyStore.get(senseId);
+            keyBytes = senseKeyStore.getStrict(senseId);
         } catch (Exception e) {
             LOGGER.error("CHECK_KEY FAILED. Failed to connect to senseKeyStore: {}. IP: {}", e.getMessage(), ipAddress);
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "http 500");
@@ -65,7 +65,6 @@ public class CheckResource extends BaseResource {
             return plainTextError(Response.Status.FORBIDDEN, "");
         }
 
-        final String keyHex = Hex.encodeHexString(keyBytes.get());
         SignedMessage signedMessage;
         try {
             signedMessage = SignedMessage.parse(body);

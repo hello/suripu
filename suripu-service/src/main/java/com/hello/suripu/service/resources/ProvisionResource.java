@@ -84,13 +84,16 @@ public class ProvisionResource extends BaseResource {
             LOGGER.warn("Attempting to get keys from ip={} for device_id={}", ipAddress, deviceId);
             final Optional<SignedMessage.Error> optionalError = signedMessage.validateWithKey(key);
 
-
-
-            // TODO: remove me
-            LOGGER.info("Key = {}", Hex.encodeHexString(key).toUpperCase());
             if(optionalError.isPresent()) {
                 LOGGER.error("Failed to validate signature for device_id = {} and key = {}", deviceId, Hex.encodeHexString(key));
                 return plainTextError(Response.Status.BAD_REQUEST, optionalError.get().message);
+            }
+
+            // Only allow empty SN from devices not from our office and not from PCH
+            // those devices are already in the wild, and don't have a SN
+            if(provisionRequest.getSerial().isEmpty() && (isHelloOffice || isPCH)) {
+                LOGGER.error("SN can't be empty for device_id = {} from ip = {}", deviceId, ipAddress);
+                return plainTextError(Response.Status.BAD_REQUEST, "");
             }
 
             final String serialNumber = String.format("%s%s", SN_PREFIX, provisionRequest.getSerial());
