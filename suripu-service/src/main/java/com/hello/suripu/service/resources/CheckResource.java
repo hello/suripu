@@ -39,7 +39,7 @@ public class CheckResource extends BaseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public byte[] check(final byte[] body) {
         final String senseId = request.getHeader(HelloHttpHeader.SENSE_ID);
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        final String ipAddress = getIpAddress(request);
         if (senseId == null) {
             LOGGER.error("CHECK_KEY FAILED. Request doesn't contain the required header {}. IP: {}", HelloHttpHeader.SENSE_ID, ipAddress);
             return plainTextError(Response.Status.BAD_REQUEST, "http 400");
@@ -53,7 +53,7 @@ public class CheckResource extends BaseResource {
 
         Optional<byte[]> keyBytes;
         try {
-            keyBytes = senseKeyStore.getStrict(senseId);
+            keyBytes = senseKeyStore.get(senseId);
         } catch (Exception e) {
             LOGGER.error("CHECK_KEY FAILED. Failed to connect to senseKeyStore: {}. IP: {}", e.getMessage(), ipAddress);
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "http 500");
@@ -65,7 +65,7 @@ public class CheckResource extends BaseResource {
             return plainTextError(Response.Status.FORBIDDEN, "");
         }
 
-
+        final String keyHex = Hex.encodeHexString(keyBytes.get());
         SignedMessage signedMessage;
         try {
             signedMessage = SignedMessage.parse(body);

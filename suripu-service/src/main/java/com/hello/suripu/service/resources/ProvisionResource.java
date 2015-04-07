@@ -34,6 +34,8 @@ public class ProvisionResource extends BaseResource {
 
     private final KeyStore keyStore;
 
+    private final String SN_PREFIX = "91000008";
+
     @Context
     HttpServletRequest request;
 
@@ -51,56 +53,68 @@ public class ProvisionResource extends BaseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public byte[] provision(final byte[] body) {
 
-        final String ipAddress = getIpAddress(request);
-        final Boolean isPCH = OTAProcessor.isPCH(ipAddress);
-        final Boolean isHelloOffice = OTAProcessor.isHelloOffice(ipAddress);
-
-        if(!isPCH || !isHelloOffice) {
-            LOGGER.warn("Attempting to get keys from ip={}", ipAddress);
-            return plainTextError(Response.Status.NOT_FOUND, "not found");
-        }
+        final SignedMessage signedMessage = SignedMessage.parse(body);
 
         ProvisionProtos.ProvisionRequest provisionRequest;
 
         try {
-            provisionRequest = ProvisionProtos.ProvisionRequest.parseFrom(body);
+            provisionRequest = ProvisionProtos.ProvisionRequest.parseFrom(signedMessage.body);
         } catch (InvalidProtocolBufferException e) {
             LOGGER.error("Invalid protobuf: {}", e.getMessage());
             return plainTextError(Response.Status.BAD_REQUEST, e.getMessage());
         }
 
         final String deviceId = provisionRequest.getDeviceId();
-        Optional<byte[]> optionalKeyBytes = keyStore.get(deviceId);
+        final String ipAddress = getIpAddress(request);
+        final Boolean isPCH = OTAProcessor.isPCH(ipAddress);
+        final Boolean isHelloOffice = OTAProcessor.isHelloOffice(ipAddress);
+
+
+        final Optional<byte[]> optionalKeyBytes = keyStore.get(deviceId);
 
         if(!optionalKeyBytes.isPresent()) {
-            optionalKeyBytes = Optional.of(KeyStoreDynamoDB.DEFAULT_AES_KEY);
+            LOGGER.warn("No key found for device_id = {} from ip={}", deviceId, ipAddress);
+            return plainTextError(Response.Status.NOT_FOUND, "");
+
         }
 
-        final SignedMessage signedMessage = SignedMessage.parse(body);
-        final Optional<SignedMessage.Error> optionalError = signedMessage.validateWithKey(optionalKeyBytes.get());
+        final byte[] key = optionalKeyBytes.get();
 
-        if(optionalError.isPresent()) {
-            return plainTextError(Response.Status.BAD_REQUEST, optionalError.get().message);
+        if(isPCH || isHelloOffice || KeyStoreDynamoDB.DEFAULT_AES_KEY.equals(key)) {
+            LOGGER.warn("Attempting to get keys from ip={} for device_id={}", ipAddress, deviceId);
+            final Optional<SignedMessage.Error> optionalError = signedMessage.validateWithKey(key);
+
+
+
+            // TODO: remove me
+            LOGGER.info("Key = {}", Hex.encodeHexString(key).toUpperCase());
+            if(optionalError.isPresent()) {
+                LOGGER.error("Failed to validate signature for device_id = {} and key = {}", deviceId, Hex.encodeHexString(key));
+                return plainTextError(Response.Status.BAD_REQUEST, optionalError.get().message);
+            }
+
+            final String serialNumber = String.format("%s%s", SN_PREFIX, provisionRequest.getSerial());
+
+            final byte[] newKey = new byte[16];
+            new Random().nextBytes(newKey );
+
+
+            final ProvisionProtos.ProvisionResponse provisionResponse = ProvisionProtos.ProvisionResponse.newBuilder()
+                    .setKey(ByteString.copyFrom(newKey))
+                    .build();
+
+            final Optional<byte[]> optionalSignedResponse = SignedMessage.sign(provisionResponse.toByteArray(), optionalKeyBytes.get());
+            if(optionalSignedResponse.isPresent()) {
+                if(!KeyStoreDynamoDB.DEFAULT_AES_KEY.equals(key)) {
+                    LOGGER.warn("Overriding existing non-default key for device_id = {} from ip = {}", deviceId, ipAddress);
+                }
+                keyStore.put(deviceId, Hex.encodeHexString(newKey).toUpperCase(), serialNumber);
+                LOGGER.info("Persisted new key for device_id = {} with new key={}", deviceId, Hex.encodeHexString(newKey).toUpperCase().substring(0,6));
+                return optionalSignedResponse.get();
+            }
         }
 
-        final String serialNumber = provisionRequest.getSerial();
-
-        final byte[] key = new byte[16];
-        new Random().nextBytes(key);
-        keyStore.put(deviceId, Hex.encodeHexString(key).toUpperCase(), serialNumber);
-
-
-        final ProvisionProtos.ProvisionResponse provisionResponse = ProvisionProtos.ProvisionResponse.newBuilder()
-                .setKey(ByteString.copyFrom(key))
-                .build();
-
-        final Optional<byte[]> optionalSignedResponse = SignedMessage.sign(provisionResponse.toByteArray(), optionalKeyBytes.get());
-        if(optionalSignedResponse.isPresent()) {
-            return optionalSignedResponse.get();
-        }
-
-        return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "Failed to sign response");
+        LOGGER.error("Got request from ip={} with a valid protobuf but not matching PCH/Hello IP address or not having default key in store", ipAddress);
+        return plainTextError(Response.Status.NOT_FOUND, "");
     }
-
-
 }
