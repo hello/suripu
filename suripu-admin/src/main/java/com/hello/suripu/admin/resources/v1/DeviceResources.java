@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactivePage;
+import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -219,6 +220,32 @@ public class DeviceResources {
         final InactiveDevicesPaginator inactiveDevicesPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY);
         final DeviceInactivePage inactivePillsPage = inactiveDevicesPaginator.generatePage();
         return inactivePillsPage;
+    }
+
+    @GET
+    @Timed
+    @Path("/key_store_hints/sense/{sense_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceKeyStoreRecord getKeyHintForSense(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                   @PathParam("sense_id") final String senseId) {
+        final Optional<DeviceKeyStoreRecord> senseKeyStoreRecord = senseKeyStore.getKeyStoreRecord(senseId);
+        if (!senseKeyStoreRecord.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("This sense has not been properly provisioned!").build());
+        }
+        return senseKeyStoreRecord.get();
+    }
+
+    @GET
+    @Timed
+    @Path("/key_store_hints/pill/{pill_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceKeyStoreRecord getKeyHintForPill(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                  @PathParam("pill_id") final String pillId) {
+        final Optional<DeviceKeyStoreRecord> pillKeyStoreRecord = pillKeyStore.getKeyStoreRecord(pillId);
+        if (!pillKeyStoreRecord.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("This pill has not been properly provisioned!").build());
+        }
+        return pillKeyStoreRecord.get();
     }
 
     // Helpers
