@@ -345,7 +345,7 @@ public class Vote {
             if(lastMotionMillis - wakeUpMillisPredicted > DateTimeConstants.MILLIS_PER_HOUR){
                 final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                         MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                        lastMotionMillis - 60 * DateTimeConstants.MILLIS_PER_HOUR,
+                        lastMotionMillis - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
                         lastMotionMillis);
                 if(maxWakeUpScoreOptional.isPresent()){
                     return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastMotionMillis);
