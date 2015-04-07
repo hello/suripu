@@ -22,7 +22,7 @@ public class SleepPeriod extends Segment {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepPeriod.class);
 
     private static int ACCEPTABLE_QUIET_PERIOD_MILLIS = 90 * DateTimeConstants.MILLIS_PER_MINUTE;
-    private static int ACCEPTABLE_MAX_QUIET_PERIOD_MILLIS = 90 * DateTimeConstants.MILLIS_PER_MINUTE;
+    private static int ACCEPTABLE_MAX_QUIET_PERIOD_MIN = 90;
     private static int MIN_VOTE_FOR_AWAKE = 2;
     private static int MINIMUM_AWAKE_LENGTH_MILLIS = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
 
@@ -145,8 +145,8 @@ public class SleepPeriod extends Segment {
         }
 
         // TODO: could be trained here, but so far I don't see it as necessary
-        if(maxQuietLength > ACCEPTABLE_MAX_QUIET_PERIOD_MILLIS) {
-            if (motionCount / (double) maxQuietLength <= 1d / ACCEPTABLE_MAX_QUIET_PERIOD_MILLIS) {
+        if(maxQuietLength > ACCEPTABLE_MAX_QUIET_PERIOD_MIN) {
+            if (motionCount / (double) maxQuietLength <= 1d / ACCEPTABLE_MAX_QUIET_PERIOD_MIN) {
                 return false;
             }
         }

@@ -240,7 +240,7 @@ public class Vote {
     }
 
 
-    private static org.apache.commons.math3.util.Pair<Long, Long> predictionBoundsMillis(final long wakeUpMillisPredicted, final Optional<Segment> predictionSegment){
+    private static Pair<Long, Long> predictionBoundsMillis(final long wakeUpMillisPredicted, final Optional<Segment> predictionSegment){
         if(!predictionSegment.isPresent()){
             return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
         }
@@ -301,6 +301,7 @@ public class Vote {
                         return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
                     }
                 }
+
                 if (!maxWakeUpScoreOptional.isPresent()) {
                     return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
                 }
@@ -398,6 +399,7 @@ public class Vote {
 
         final List<Segment> clusterSegments = MotionCluster.toSegments(clusters);
         Segment firstCluster = clusterSegments.get(0);
+        Optional<Segment> predictedSegmentOptional = Optional.absent();
         for(final Segment cluster:clusterSegments){
             if(cluster.getEndTimestamp() >= sleepPeriod.getStartTimestamp()){
                 firstCluster = cluster;
@@ -421,10 +423,27 @@ public class Vote {
             return new Pair<>(firstCluster.getStartTimestamp(), originalSleepMillis);
         }
 
-        final Optional<AmplitudeData> predictedMaxScoreOptional = getMaxScore(features,
-                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
-                originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+        for(final Segment cluster:clusterSegments){
+            if(originalSleepMillis <= cluster.getEndTimestamp() &&
+                    originalSleepMillis >= cluster.getStartTimestamp()){
+                predictedSegmentOptional = Optional.of(cluster);
+                break;
+            }
+        }
+
+
+        Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
+        if(predictedSegmentOptional.isPresent()) {
+            predictedMaxScoreOptional = getMaxScore(features,
+                            MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                            predictedSegmentOptional.get().getStartTimestamp(),
+                            predictedSegmentOptional.get().getEndTimestamp());
+        }else{
+            predictedMaxScoreOptional = getMaxScore(features,
+                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                    originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                    originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+        }
 
         if(predictedMaxScoreOptional.isPresent() && firstMaxScoreItemOptional.isPresent()){
             if(predictedMaxScoreOptional.get().amplitude / 5d > firstMaxScoreItemOptional.get().amplitude){
