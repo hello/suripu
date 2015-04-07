@@ -8,7 +8,7 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.DataUtils;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -194,7 +194,7 @@ public class Vote {
     }
 
     private static boolean isEmptyBounds(final Pair<Integer, Integer> bounds){
-        if(bounds.fst > -1 && bounds.snd > -1){
+        if(bounds.getFirst() > -1 && bounds.getSecond() > -1){
             return false;
         }
         return true;
@@ -213,8 +213,8 @@ public class Vote {
                 clusterCopy,
                 this.getAggregatedFeatures(),
                 defaultEvents.fallAsleep.getStartTimestamp());
-        long sleepTimeMillis = sleepTimesMillis.snd;
-        inBed = new Segment(sleepTimesMillis.fst, sleepTimesMillis.fst + DateTimeConstants.MILLIS_PER_MINUTE, sleep.getOffsetMillis());
+        long sleepTimeMillis = sleepTimesMillis.getSecond();
+        inBed = new Segment(sleepTimesMillis.getFirst(), sleepTimesMillis.getFirst() + DateTimeConstants.MILLIS_PER_MINUTE, sleep.getOffsetMillis());
         sleep = new Segment(sleepTimeMillis,
                 sleepTimeMillis + DateTimeConstants.MILLIS_PER_MINUTE,
                 defaultEvents.fallAsleep.getOffsetMillis());
@@ -232,8 +232,8 @@ public class Vote {
                 sleepPeriod,
                 getAggregatedFeatures(),
                 defaultEvents.wakeUp.getStartTimestamp());
-        wakeUp = new Segment(wakeUpTimesMillis.fst, wakeUpTimesMillis.fst + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
-        outBed = new Segment(wakeUpTimesMillis.snd, wakeUpTimesMillis.snd + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
+        wakeUp = new Segment(wakeUpTimesMillis.getFirst(), wakeUpTimesMillis.getFirst() + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
+        outBed = new Segment(wakeUpTimesMillis.getSecond(), wakeUpTimesMillis.getSecond() + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
 
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
@@ -301,6 +301,7 @@ public class Vote {
                         return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
                     }
                 }
+
                 if (!maxWakeUpScoreOptional.isPresent()) {
                     return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
                 }
@@ -309,7 +310,7 @@ public class Vote {
                 if(isEmptyBounds(maxScoreCluster)) {
                     return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
                 }
-                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.getSecond()).timestamp);
             }else {
 
                 LOGGER.debug("OK USER: Predict not too far from end");
@@ -326,7 +327,7 @@ public class Vote {
                 if(isEmptyBounds(maxScoreCluster)) {
                     return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
                 }
-                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.getSecond()).timestamp);
             }
         }
 
@@ -345,7 +346,7 @@ public class Vote {
             if(lastMotionMillis - wakeUpMillisPredicted > DateTimeConstants.MILLIS_PER_HOUR){
                 final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                         MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                        lastMotionMillis - DateTimeConstants.MILLIS_PER_HOUR,
+                        lastMotionMillis - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
                         lastMotionMillis);
                 if(maxWakeUpScoreOptional.isPresent()){
                     return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastMotionMillis);
@@ -381,7 +382,7 @@ public class Vote {
             if(isEmptyBounds(maxScoreCluster)) {
                 return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
             }
-            return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
+            return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.getSecond()).timestamp);
 
         }
 
@@ -399,7 +400,6 @@ public class Vote {
         final List<Segment> clusterSegments = MotionCluster.toSegments(clusters);
         Segment firstCluster = clusterSegments.get(0);
         Optional<Segment> predictedSegmentOptional = Optional.absent();
-
         for(final Segment cluster:clusterSegments){
             if(cluster.getEndTimestamp() >= sleepPeriod.getStartTimestamp()){
                 firstCluster = cluster;
@@ -408,6 +408,19 @@ public class Vote {
                         new DateTime(firstCluster.getEndTimestamp(), DateTimeZone.forOffsetMillis(firstCluster.getOffsetMillis())));
                 break;
             }
+        }
+
+        Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
+        if(predictedSegmentOptional.isPresent()) {
+            predictedMaxScoreOptional = getMaxScore(features,
+                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                    predictedSegmentOptional.get().getStartTimestamp(),
+                    predictedSegmentOptional.get().getEndTimestamp());
+        }else{
+            predictedMaxScoreOptional = getMaxScore(features,
+                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                    originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                    originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
         }
 
         final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
@@ -420,29 +433,13 @@ public class Vote {
             LOGGER.debug("HAPPY USER: Predicted sleep in first cluster. predicted sleep {}",
                     new DateTime(originalSleepMillis, DateTimeZone.forOffsetMillis(firstCluster.getOffsetMillis())));
 
+            if(predictedMaxScoreOptional.isPresent() && predictedMaxScoreOptional.get().timestamp > originalSleepMillis){
+                return new Pair<>(firstCluster.getStartTimestamp(), predictedMaxScoreOptional.get().timestamp);
+            }
             return new Pair<>(firstCluster.getStartTimestamp(), originalSleepMillis);
         }
 
-        for(final Segment cluster:clusterSegments){
-            if(cluster.getEndTimestamp() + 15 * DateTimeConstants.MILLIS_PER_MINUTE >= originalSleepMillis &&
-                    cluster.getStartTimestamp() <= originalSleepMillis){
-                predictedSegmentOptional = Optional.of(cluster);
-                break;
-            }
-        }
 
-        Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
-        if(predictedSegmentOptional.isPresent()){
-            predictedMaxScoreOptional = getMaxScore(features,
-                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                    predictedSegmentOptional.get().getStartTimestamp(),
-                    predictedSegmentOptional.get().getEndTimestamp());
-        }else {
-            predictedMaxScoreOptional = getMaxScore(features,
-                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                    originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
-                    originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
-        }
 
         if(predictedMaxScoreOptional.isPresent() && firstMaxScoreItemOptional.isPresent()){
             if(predictedMaxScoreOptional.get().amplitude / 5d > firstMaxScoreItemOptional.get().amplitude){

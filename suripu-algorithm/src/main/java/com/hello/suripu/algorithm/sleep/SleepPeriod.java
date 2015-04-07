@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -22,7 +22,7 @@ public class SleepPeriod extends Segment {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepPeriod.class);
 
     private static int ACCEPTABLE_QUIET_PERIOD_MILLIS = 90 * DateTimeConstants.MILLIS_PER_MINUTE;
-    private static int ACCEPTABLE_MAX_QUIET_PERIOD_MILLIS = 90 * DateTimeConstants.MILLIS_PER_MINUTE;
+    private static int ACCEPTABLE_MAX_QUIET_PERIOD_MIN = 90;
     private static int MIN_VOTE_FOR_AWAKE = 2;
     private static int MINIMUM_AWAKE_LENGTH_MILLIS = 5 * DateTimeConstants.MILLIS_PER_MINUTE;
 
@@ -42,8 +42,8 @@ public class SleepPeriod extends Segment {
     private void voteOnSegment(final Segment votingSegment){
         for(int i = 0; i < this.votes.size(); i++){
             final Pair<Long, Double> timeSlotMillis = this.votes.get(i);
-            if(timeSlotMillis.fst >= votingSegment.getStartTimestamp() && timeSlotMillis.fst <= votingSegment.getEndTimestamp()){
-                this.votes.set(i, new Pair<>(timeSlotMillis.fst, timeSlotMillis.snd + 1d));
+            if(timeSlotMillis.getFirst() >= votingSegment.getStartTimestamp() && timeSlotMillis.getFirst() <= votingSegment.getEndTimestamp()){
+                this.votes.set(i, new Pair<>(timeSlotMillis.getFirst(), timeSlotMillis.getSecond() + 1d));
             }
         }
     }
@@ -71,8 +71,8 @@ public class SleepPeriod extends Segment {
         double maxVote = 0;
         for(int i = 0; i < this.votes.size(); i++){
             final Pair<Long, Double> vote = this.votes.get(i);
-            if(vote.fst >= startMillis && vote.fst <= endMillis && vote.snd > maxVote){
-                maxVote = vote.snd;
+            if(vote.getFirst() >= startMillis && vote.getFirst() <= endMillis && vote.getSecond() > maxVote){
+                maxVote = vote.getSecond();
             }
         }
 
@@ -90,11 +90,11 @@ public class SleepPeriod extends Segment {
 
         for(int i = 0; i < this.votes.size(); i++){
             final Pair<Long, Double> vote = this.votes.get(i);
-            if(vote.snd >= 2d){
+            if(vote.getSecond() >= 2d){
                 if(startMillis == 0){
-                    startMillis = vote.fst;
+                    startMillis = vote.getFirst();
                 }
-                endMillis = vote.fst;
+                endMillis = vote.getFirst();
             }else {
                 if(isAwake(startMillis, endMillis)){
                     result.add(new Segment(startMillis, endMillis, this.getOffsetMillis()));
@@ -145,8 +145,8 @@ public class SleepPeriod extends Segment {
         }
 
         // TODO: could be trained here, but so far I don't see it as necessary
-        if(maxQuietLength > ACCEPTABLE_MAX_QUIET_PERIOD_MILLIS) {
-            if (motionCount / (double) maxQuietLength <= 1d / ACCEPTABLE_MAX_QUIET_PERIOD_MILLIS) {
+        if(maxQuietLength > ACCEPTABLE_MAX_QUIET_PERIOD_MIN) {
+            if (motionCount / (double) maxQuietLength <= 1d / ACCEPTABLE_MAX_QUIET_PERIOD_MIN) {
                 return false;
             }
         }
