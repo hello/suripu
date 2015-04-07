@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -59,5 +60,9 @@ public class BaseResource {
         plainTextError(status, message);
     }
 
+
+    protected String getIpAddress(HttpServletRequest request) {
+        return (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+    }
     // TODO: add similar method for JSON Error
 }

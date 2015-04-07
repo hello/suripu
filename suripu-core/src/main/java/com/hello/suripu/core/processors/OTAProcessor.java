@@ -15,7 +15,11 @@ import java.util.Set;
  */
 public class OTAProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(OTAProcessor.class);
+    private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
 
+    public static Boolean isHelloOffice(final String ipAddress) {
+        return LOCAL_OFFICE_IP_ADDRESS.equals(ipAddress);
+    }
 
     public static Boolean isPCH(final String ipAddress) {
         try {
