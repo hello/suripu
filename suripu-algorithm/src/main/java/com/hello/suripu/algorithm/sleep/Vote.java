@@ -15,7 +15,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.HEAD;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -432,13 +431,14 @@ public class Vote {
             }
         }
 
+
         Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
-        if(predictedSegmentOptional.isPresent()){
+        if(predictedSegmentOptional.isPresent()) {
             predictedMaxScoreOptional = getMaxScore(features,
-                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                    predictedSegmentOptional.get().getStartTimestamp(),
-                    predictedSegmentOptional.get().getEndTimestamp());
-        }else {
+                            MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                            predictedSegmentOptional.get().getStartTimestamp() - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                            predictedSegmentOptional.get().getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+        }else{
             predictedMaxScoreOptional = getMaxScore(features,
                     MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                     originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
