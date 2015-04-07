@@ -95,7 +95,7 @@ public class TimelineResource extends BaseResource {
 
         //if no update forced (i.e. no HMM)
         final List<Timeline> timelinesFromCache = getCachedTimelines(accountId, targetDate);
-        if (!timelinesFromCache.isEmpty()) {
+        if (!timelinesFromCache.isEmpty() && !this.hasVotingEnabled(accountId)) {
             return timelinesFromCache;
         }
 

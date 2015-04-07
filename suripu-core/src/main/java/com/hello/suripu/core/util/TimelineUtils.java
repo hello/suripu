@@ -1226,7 +1226,7 @@ public class TimelineUtils {
 
 
 
-    public static SleepEvents<Optional<Event>> getSleepEventsFromVoting(final List<TrackerMotion> rawTrackerMotions,
+    public static Optional<VotingSleepEvents> getSleepEventsFromVoting(final List<TrackerMotion> rawTrackerMotions,
                                                                         final List<Sample> sound,
                                                                         final List<DateTime> lightOutTimes,
                                                                         final Optional<DateTime> firstWaveTimeOptional){
@@ -1236,30 +1236,8 @@ public class TimelineUtils {
         final Vote vote = new Vote(rawAmplitudeData, rawKickOffCount, rawSound, lightOutTimes, firstWaveTimeOptional);
 
         final SleepEvents<Segment> segments = vote.getResult(false);
-        final Segment goToBedSegment = segments.goToBed;
-        final Segment fallAsleepSegment = segments.fallAsleep;
-        final Segment wakeUpSegment = segments.wakeUp;
-        final Segment outOfBedSegment = segments.outOfBed;
-
-        //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
-        final Optional<Event> inBedEvent = Optional.of((Event)new InBedEvent(goToBedSegment.getStartTimestamp(),
-                goToBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                goToBedSegment.getOffsetMillis()));
-
-        final Optional<Event> fallAsleepEvent = Optional.of((Event)new FallingAsleepEvent(fallAsleepSegment.getStartTimestamp(),
-                fallAsleepSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                fallAsleepSegment.getOffsetMillis()));
-
-        final Optional<Event> wakeUpEvent = Optional.of((Event)new WakeupEvent(wakeUpSegment.getStartTimestamp(),
-                wakeUpSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                wakeUpSegment.getOffsetMillis()));
-
-        final Optional<Event> outOfBedEvent = Optional.of((Event)new OutOfBedEvent(outOfBedSegment.getStartTimestamp(),
-                outOfBedSegment.getStartTimestamp() + 1 * DateTimeConstants.MILLIS_PER_MINUTE,
-                outOfBedSegment.getOffsetMillis()));
-
-        final SleepEvents<Optional<Event>> events = SleepEvents.create(inBedEvent, fallAsleepEvent, wakeUpEvent, outOfBedEvent);
-        return events;
+        final List<Segment> otherAwakes = vote.getAwakes(segments.fallAsleep.getEndTimestamp(), segments.wakeUp.getStartTimestamp(), false);
+        return Optional.of(new VotingSleepEvents(segments, otherAwakes));
     }
 
 
