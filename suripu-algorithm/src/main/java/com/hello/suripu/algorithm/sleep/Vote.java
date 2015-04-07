@@ -410,6 +410,19 @@ public class Vote {
             }
         }
 
+        Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
+        if(predictedSegmentOptional.isPresent()) {
+            predictedMaxScoreOptional = getMaxScore(features,
+                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                    predictedSegmentOptional.get().getStartTimestamp(),
+                    predictedSegmentOptional.get().getEndTimestamp());
+        }else{
+            predictedMaxScoreOptional = getMaxScore(features,
+                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                    originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                    originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
+        }
+
         final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                 firstCluster.getStartTimestamp(),
@@ -420,30 +433,13 @@ public class Vote {
             LOGGER.debug("HAPPY USER: Predicted sleep in first cluster. predicted sleep {}",
                     new DateTime(originalSleepMillis, DateTimeZone.forOffsetMillis(firstCluster.getOffsetMillis())));
 
+            if(predictedMaxScoreOptional.isPresent() && predictedMaxScoreOptional.get().timestamp > originalSleepMillis){
+                return new Pair<>(firstCluster.getStartTimestamp(), predictedMaxScoreOptional.get().timestamp);
+            }
             return new Pair<>(firstCluster.getStartTimestamp(), originalSleepMillis);
         }
 
-        for(final Segment cluster:clusterSegments){
-            if(originalSleepMillis <= cluster.getEndTimestamp() &&
-                    originalSleepMillis >= cluster.getStartTimestamp()){
-                predictedSegmentOptional = Optional.of(cluster);
-                break;
-            }
-        }
 
-
-        Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
-        if(predictedSegmentOptional.isPresent()) {
-            predictedMaxScoreOptional = getMaxScore(features,
-                            MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                            predictedSegmentOptional.get().getStartTimestamp(),
-                            predictedSegmentOptional.get().getEndTimestamp());
-        }else{
-            predictedMaxScoreOptional = getMaxScore(features,
-                    MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                    originalSleepMillis - 20 * DateTimeConstants.MILLIS_PER_MINUTE,
-                    originalSleepMillis + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
-        }
 
         if(predictedMaxScoreOptional.isPresent() && firstMaxScoreItemOptional.isPresent()){
             if(predictedMaxScoreOptional.get().amplitude / 5d > firstMaxScoreItemOptional.get().amplitude){
