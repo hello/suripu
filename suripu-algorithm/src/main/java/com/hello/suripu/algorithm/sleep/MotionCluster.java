@@ -5,7 +5,7 @@ import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;

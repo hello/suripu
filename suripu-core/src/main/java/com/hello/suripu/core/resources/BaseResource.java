@@ -40,6 +40,10 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasVotingEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.VOTING_ALGORITHM, accountId, Collections.EMPTY_LIST);
+    }
+
     /**
      * Use this method to return plain text errors (to Sense)
      * It returns byte[] just to match the signature of most methods interacting with Sense

@@ -229,7 +229,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSleepScoreVersion()
         );
 
-        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBScoreClient,
+        final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
+        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBStatsClient,
                 configuration.getSleepStatsDynamoConfiguration().getTableName(),
                 configuration.getSleepStatsVersion());
 

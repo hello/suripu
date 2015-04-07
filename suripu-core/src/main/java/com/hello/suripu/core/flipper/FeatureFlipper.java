@@ -19,6 +19,7 @@ public class FeatureFlipper {
     public final static String FEEDBACK_IN_TIMELINE = "feedback_in_timeline";
     public final static String IN_OUT_BED_EVENTS = "in_out_bed_events";
     public final static String HMM_ALGORITHM = "hmm_algorithm";
+    public final static String VOTING_ALGORITHM = "voting_algorithm";
     public final static String PARTNER_FILTER = "partner_filter";
     public final static String OFFICE_ONLY_OVERRIDE = "office_only_override";
 }

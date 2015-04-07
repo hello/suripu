@@ -885,7 +885,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
                 Collections.EMPTY_LIST,
                 lightOuts,
-                Optional.<DateTime>absent()).toList();
+                Optional.<DateTime>absent()).get().sleepEvents.toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();

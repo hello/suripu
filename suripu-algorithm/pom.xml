@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.3.33-SNAPSHOT</version>
+        <version>0.3.39-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -21,9 +21,9 @@
             <version>3.2</version>
         </dependency>
         <dependency>
-            <groupId>org.jvnet.sorcerer</groupId>
-            <artifactId>sorcerer-javac</artifactId>
-            <version>0.8</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.8.1</version>
         </dependency>
 
     </dependencies>
