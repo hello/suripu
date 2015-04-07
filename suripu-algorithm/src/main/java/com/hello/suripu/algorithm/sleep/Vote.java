@@ -8,7 +8,7 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.utils.DataUtils;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.algorithm.utils.NumericalUtils;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -194,7 +194,7 @@ public class Vote {
     }
 
     private static boolean isEmptyBounds(final Pair<Integer, Integer> bounds){
-        if(bounds.fst > -1 && bounds.snd > -1){
+        if(bounds.getFirst() > -1 && bounds.getSecond() > -1){
             return false;
         }
         return true;
@@ -213,8 +213,8 @@ public class Vote {
                 clusterCopy,
                 this.getAggregatedFeatures(),
                 defaultEvents.fallAsleep.getStartTimestamp());
-        long sleepTimeMillis = sleepTimesMillis.snd;
-        inBed = new Segment(sleepTimesMillis.fst, sleepTimesMillis.fst + DateTimeConstants.MILLIS_PER_MINUTE, sleep.getOffsetMillis());
+        long sleepTimeMillis = sleepTimesMillis.getSecond();
+        inBed = new Segment(sleepTimesMillis.getFirst(), sleepTimesMillis.getFirst() + DateTimeConstants.MILLIS_PER_MINUTE, sleep.getOffsetMillis());
         sleep = new Segment(sleepTimeMillis,
                 sleepTimeMillis + DateTimeConstants.MILLIS_PER_MINUTE,
                 defaultEvents.fallAsleep.getOffsetMillis());
@@ -232,15 +232,15 @@ public class Vote {
                 sleepPeriod,
                 getAggregatedFeatures(),
                 defaultEvents.wakeUp.getStartTimestamp());
-        wakeUp = new Segment(wakeUpTimesMillis.fst, wakeUpTimesMillis.fst + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
-        outBed = new Segment(wakeUpTimesMillis.snd, wakeUpTimesMillis.snd + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
+        wakeUp = new Segment(wakeUpTimesMillis.getFirst(), wakeUpTimesMillis.getFirst() + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
+        outBed = new Segment(wakeUpTimesMillis.getSecond(), wakeUpTimesMillis.getSecond() + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
 
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
     }
 
 
-    private static Pair<Long, Long> predictionBoundsMillis(final long wakeUpMillisPredicted, final Optional<Segment> predictionSegment){
+    private static org.apache.commons.math3.util.Pair<Long, Long> predictionBoundsMillis(final long wakeUpMillisPredicted, final Optional<Segment> predictionSegment){
         if(!predictionSegment.isPresent()){
             return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
         }
@@ -309,7 +309,7 @@ public class Vote {
                 if(isEmptyBounds(maxScoreCluster)) {
                     return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
                 }
-                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.getSecond()).timestamp);
             }else {
 
                 LOGGER.debug("OK USER: Predict not too far from end");
@@ -326,7 +326,7 @@ public class Vote {
                 if(isEmptyBounds(maxScoreCluster)) {
                     return predictionBoundsMillis(wakeUpMillisPredicted, predictionSegment);
                 }
-                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
+                return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.getSecond()).timestamp);
             }
         }
 
@@ -381,7 +381,7 @@ public class Vote {
             if(isEmptyBounds(maxScoreCluster)) {
                 return new Pair<>(maxWakeUpScoreOptional.get().timestamp, lastSegmentInSleepPeriod.getEndTimestamp());
             }
-            return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.snd).timestamp);
+            return new Pair<>(maxWakeUpScoreOptional.get().timestamp, clusters.get(maxScoreCluster.getSecond()).timestamp);
 
         }
 

@@ -21,9 +21,9 @@
             <version>3.2</version>
         </dependency>
         <dependency>
-            <groupId>org.jvnet.sorcerer</groupId>
-            <artifactId>sorcerer-javac</artifactId>
-            <version>0.8</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.8.1</version>
         </dependency>
 
     </dependencies>
