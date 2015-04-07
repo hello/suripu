@@ -10,19 +10,14 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.util.MatcherPatternsDB;
-import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PairingInfo;
-import com.hello.suripu.core.models.PillRegistration;
-import com.hello.suripu.core.models.SenseRegistration;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PillColorUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.skife.jdbi.v2.Transaction;
@@ -33,22 +28,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 
-import javax.validation.Valid;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
 
 @Path("/v1/devices")
 public class DeviceResources {
@@ -188,111 +177,6 @@ public class DeviceResources {
         }
     }
 
-    // TODO: MOVE ALL ADMIN STUFF OUT OF HERE
-
-    @POST
-    @Path("/sense")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void registerSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final SenseRegistration senseRegistration) {
-        try {
-            final Long senseInternalId = deviceDAO.registerSense(accessToken.accountId, senseRegistration.senseId);
-            LOGGER.info("Account {} registered sense {} with internal id = {}", accessToken.accountId, senseRegistration.senseId, senseInternalId);
-            return;
-        } catch (UnableToExecuteStatementException exception) {
-            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
-            if(matcher.find()) {
-                LOGGER.error("Failed to register sense for account id = {} and sense id = {} : {}", accessToken.accountId, senseRegistration.senseId, exception.getMessage());
-                throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
-                        .entity(new JsonError(409, "Sense already exists for this account.")).build());
-            }
-        }
-
-    }
-
-    @POST
-    @Path("/pill")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final PillRegistration pillRegistration) {
-        try {
-            final Long trackerId = deviceDAO.registerPill(accessToken.accountId, pillRegistration.pillId);
-            LOGGER.info("Account {} registered pill {} with internal id = {}", accessToken.accountId, pillRegistration.pillId, trackerId);
-
-            final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accessToken.accountId);
-            if(sensePairedWithAccount.size() == 0){
-                LOGGER.error("No sense paired with account {}", accessToken.accountId);
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
-            }
-
-            final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
-            this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accessToken.accountId, pillRegistration.pillId);
-
-            return;
-        } catch (UnableToExecuteStatementException exception) {
-            final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
-
-            if(matcher.find()) {
-                LOGGER.error("Failed to register pill for account id = {} and pill id = {} : {}", accessToken.accountId, pillRegistration.pillId, exception.getMessage());
-                throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
-                        .entity(new JsonError(409, "Pill already exists for this account.")).build());
-            }
-        } catch (AmazonServiceException awsEx){
-            LOGGER.error("Set pill color failed for pill {}, error: {}", pillRegistration.pillId, awsEx.getMessage());
-        }
-
-        throw new WebApplicationException(Response.Status.BAD_REQUEST);
-    }
-
-    @Timed
-    @GET
-    @Path("/q")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> listDeviceIDsByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                          @QueryParam("email") String email) {
-        LOGGER.debug("Searching devices for email = {}", email);
-        Optional<Long> accountId = getAccountIdByEmail(email);
-        if (!accountId.isPresent()) {
-            LOGGER.debug("ID not found for account {}", email);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-        final List<DeviceAccountPair> devices = deviceDAO.getSensesForAccountId(accountId.get());
-
-        final List<String> deviceIdList = new ArrayList<>();
-        for (DeviceAccountPair pair: devices) {
-            deviceIdList.add(pair.externalDeviceId);
-        }
-        return deviceIdList;
-    }
-
-    @GET
-    @Timed
-    @Path("/specs")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Device> getDevicesForAdmin(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                           @QueryParam("email") String email) {
-        LOGGER.debug("Querying latest devices specs for email = {}", email);
-        final Optional<Long> accountId = getAccountIdByEmail(email);
-        if (!accountId.isPresent()) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-        return getDevicesByAccountId(accountId.get());
-    }
-
-    private Optional<Long> getAccountIdByEmail(final String email) {
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
-
-        if (!accountOptional.isPresent()) {
-            LOGGER.debug("Account {} not found", email);
-            return Optional.absent();
-        }
-        final Account account = accountOptional.get();
-        if (!account.id.isPresent()) {
-            LOGGER.debug("ID not found for account {}", email);
-            return Optional.absent();
-        }
-        return account.id;
-    }
 
     public static Device.Color getPillColor(final List<UserInfo> userInfoList, final Long accountId)  {
         // mutable state. argh
