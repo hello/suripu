@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import org.joda.time.DateTimeConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,15 +47,24 @@ public class VotingSleepEvents {
 
 
         for(final Segment segment:awakes){
-            if(segment.getStartTimestamp() < fallAsleepSegment.getStartTimestamp()){
+            if(segment.getStartTimestamp() < fallAsleepSegment.getEndTimestamp()){
                 continue;
             }
 
-            if(segment.getStartTimestamp() > wakeUpSegment.getStartTimestamp()){
+            if(segment.getEndTimestamp() > wakeUpSegment.getStartTimestamp()){
                 continue;
             }
-            this.extraEvents.add(new WakeupEvent(segment.getStartTimestamp(), segment.getEndTimestamp(), segment.getOffsetMillis()));
-            this.extraEvents.add(new FallingAsleepEvent(segment.getStartTimestamp(), segment.getEndTimestamp(), segment.getOffsetMillis()));
+
+            if(segment.getDuration() <= DateTimeConstants.MILLIS_PER_MINUTE){
+                continue;
+            }
+            
+            this.extraEvents.add(new WakeupEvent(segment.getStartTimestamp(),
+                    segment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    segment.getOffsetMillis()));
+            this.extraEvents.add(new FallingAsleepEvent(segment.getEndTimestamp(),
+                    segment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    segment.getOffsetMillis()));
         }
     }
 }
