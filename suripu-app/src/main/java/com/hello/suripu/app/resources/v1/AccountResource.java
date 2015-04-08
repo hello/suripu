@@ -26,7 +26,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 import java.util.regex.Matcher;
 
 @Path("/v1/account")
@@ -166,31 +165,5 @@ public class AccountResource {
         }
 
         return accountOptional.get();
-    }
-
-    @Timed
-    @GET
-    @Path("/q")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Account getAccountByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken,
-                          @QueryParam("email") String email) {
-        LOGGER.debug("Search input email = {}", email);
-        LOGGER.debug("Normalized search input email = {}", email.toLowerCase());
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email.toLowerCase());
-        if(accountOptional.isPresent()) {
-            return accountOptional.get();
-        }
-
-        throw new WebApplicationException(Response.Status.NOT_FOUND);
-    }
-
-    @Timed
-    @GET
-    @Path("/recent")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Account> recent(@Scope(OAuthScope.ADMINISTRATION_READ) AccessToken accessToken) {
-
-        final List<Account> accounts = accountDAO.getRecent();
-        return accounts;
     }
 }
