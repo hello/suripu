@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -41,13 +42,17 @@ public class TimelineResource extends BaseResource {
     private final TimelineProcessor timelineProcessor;
     private final AccountDAO accountDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
+    private final TimelineLogDAO timelineLogDAO;
+
 
     public TimelineResource(final AccountDAO accountDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
+                            final TimelineLogDAO timelineLogDAO,
                             final TimelineProcessor timelineProcessor) {
         this.accountDAO = accountDAO;
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
+        this.timelineLogDAO = timelineLogDAO;
     }
 
     private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final List<Timeline> timelines){

@@ -66,6 +66,8 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.core.db.TimelineLogDAO;
+import com.hello.suripu.core.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -252,6 +254,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, notificationSubscriptionsDAO);
 
+        /*  Timeline Log dynamo dB stuff */
+        final String timelineLogTableName =   configuration.getTimelineLogDBConfiguration().getTableName();
+        final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
+        final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
+
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStore teamStore = new TeamStore(teamStoreDBClient, "teams");
 
@@ -335,7 +342,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 accountDAO,
                 sleepStatsDAODynamoDB);
 
-        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineProcessor));
+        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));
