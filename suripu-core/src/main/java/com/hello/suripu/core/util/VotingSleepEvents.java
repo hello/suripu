@@ -55,7 +55,7 @@ public class VotingSleepEvents {
                 continue;
             }
 
-            if(segment.getDuration() <= DateTimeConstants.MILLIS_PER_MINUTE){
+            if(segment.getDuration() <= 2 * DateTimeConstants.MILLIS_PER_MINUTE){
                 continue;
             }
 
