@@ -113,7 +113,7 @@ user_info:
     table_name: alarm_info
 
 kinesis_logger:
-  stream_name: logs
+  stream_name: dev-logs
   enabled : false
   buffer_size: 100
   origin: suripu-workers
