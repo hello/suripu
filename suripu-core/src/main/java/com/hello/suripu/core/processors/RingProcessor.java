@@ -442,7 +442,7 @@ public class RingProcessor {
                     // 3) This is the data to trigger the worker to process the next ring (If it is still alive).
                     //
                     // Use the generated on-the-fly ring time.
-                    LOGGER.info("Ring time in merge table for device {} needs to update.", deviceId);
+                    LOGGER.debug("Ring time in merge table for device {} needs to update.", deviceId);
                     nextRingTime = nextRingTimeFromTemplate;
                 }
 
