@@ -58,12 +58,12 @@ public class VotingSleepEvents {
             if(segment.getDuration() <= DateTimeConstants.MILLIS_PER_MINUTE){
                 continue;
             }
-            
+
             this.extraEvents.add(new WakeupEvent(segment.getStartTimestamp(),
                     segment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
                     segment.getOffsetMillis()));
-            this.extraEvents.add(new FallingAsleepEvent(segment.getEndTimestamp(),
-                    segment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+            this.extraEvents.add(new FallingAsleepEvent(segment.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                    segment.getEndTimestamp(),
                     segment.getOffsetMillis()));
         }
     }
