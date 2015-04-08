@@ -6,7 +6,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.provision.ProvisionProtos;
 import com.hello.suripu.core.db.KeyStore;
-import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.processors.OTAProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.service.SignedMessage;
@@ -80,7 +79,7 @@ public class ProvisionResource extends BaseResource {
 
         final byte[] key = optionalKeyBytes.get();
 
-        if(isPCH || isHelloOffice || KeyStoreDynamoDB.DEFAULT_AES_KEY.equals(key)) {
+        if(isPCH || isHelloOffice) {
             LOGGER.warn("Attempting to get keys from ip={} for device_id={}", ipAddress, deviceId);
             final Optional<SignedMessage.Error> optionalError = signedMessage.validateWithKey(key);
 
@@ -91,7 +90,7 @@ public class ProvisionResource extends BaseResource {
 
             // Only allow empty SN from devices not from our office and not from PCH
             // those devices are already in the wild, and don't have a SN
-            if(provisionRequest.getSerial().isEmpty() && (isHelloOffice || isPCH)) {
+            if(provisionRequest.getSerial().isEmpty()) {
                 LOGGER.error("SN can't be empty for device_id = {} from ip = {}", deviceId, ipAddress);
                 return plainTextError(Response.Status.BAD_REQUEST, "");
             }
@@ -106,18 +105,15 @@ public class ProvisionResource extends BaseResource {
                     .setKey(ByteString.copyFrom(newKey))
                     .build();
 
-            final Optional<byte[]> optionalSignedResponse = SignedMessage.sign(provisionResponse.toByteArray(), optionalKeyBytes.get());
+            final Optional<byte[]> optionalSignedResponse = SignedMessage.sign(provisionResponse.toByteArray(), key);
             if(optionalSignedResponse.isPresent()) {
-                if(!KeyStoreDynamoDB.DEFAULT_AES_KEY.equals(key)) {
-                    LOGGER.warn("Overriding existing non-default key for device_id = {} from ip = {}", deviceId, ipAddress);
-                }
                 keyStore.put(deviceId, Hex.encodeHexString(newKey).toUpperCase(), serialNumber);
                 LOGGER.info("Persisted new key for device_id = {} with new key={}", deviceId, Hex.encodeHexString(newKey).toUpperCase().substring(0,6));
                 return optionalSignedResponse.get();
             }
         }
 
-        LOGGER.error("Got request from ip={} with a valid protobuf but not matching PCH/Hello IP address or not having default key in store", ipAddress);
+        LOGGER.error("Got request from ip={} with a valid protobuf but not matching PCH/Hello IP address.", ipAddress);
         return plainTextError(Response.Status.NOT_FOUND, "");
     }
 }
