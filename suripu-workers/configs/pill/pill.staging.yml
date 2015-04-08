@@ -111,3 +111,10 @@ user_info:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
     region: us-east-1
     table_name: alarm_info
+
+kinesis_logger:
+  stream_name: logs
+  enabled : false
+  buffer_size: 100
+  origin: suripu-workers
+  min_log_level : INFO
