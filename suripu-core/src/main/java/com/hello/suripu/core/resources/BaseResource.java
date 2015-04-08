@@ -60,11 +60,21 @@ public class BaseResource {
         plainTextError(status, message);
     }
 
+    // TODO: add similar method for JSON Error
 
-    protected String getIpAddress(HttpServletRequest request) {
+    /**
+     * Returns the first IP address specified in headers or empty string
+     * @param request
+     * @return
+     */
+    public static String getIpAddress(final HttpServletRequest request) {
         final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        if (ipAddress == null) {
+            return "";
+        }
+
         final String[] ipAddresses = ipAddress.split(",");
         return ipAddresses[0]; // always return first one?
     }
-    // TODO: add similar method for JSON Error
+
 }
