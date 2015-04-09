@@ -176,7 +176,7 @@ public class English {
             "    <p>Hello %s,</p>\n" +
             "    <p>Someone has requested a link to change your password, and you can do this through the link below.</p>\n" +
             "    <p><a href=\"%s\">Change my password</a></p>\n" +
-            "    <p>If you didn't request this, please ignore this email..</p>\n" +
+            "    <p>If you didn't request this, please ignore this email.</p>\n" +
             "    <p>Your password won't change until you access the link above and create a new one.</p>\n" +
             "</body>\n" +
             "</html>";
