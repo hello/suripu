@@ -414,7 +414,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
 
-            return Optional.of(new TimelineResult(ImmutableList.copyOf(timelines),log));
+            return Optional.of(TimelineResult.create(timelines,log));
         }
         catch (Exception e) {
             LOGGER.error(e.toString());

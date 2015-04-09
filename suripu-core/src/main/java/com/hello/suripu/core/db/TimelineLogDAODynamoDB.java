@@ -139,7 +139,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 
-        List<TimelineLog> result = new ArrayList<>();
+        final List<TimelineLog> result = new ArrayList<>();
 
         //iterate through items
         for(final Map<String, AttributeValue> item : items) {
@@ -177,7 +177,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
 
     @Override
     public boolean putTimelineLog(final long accountId,final TimelineLog logdata) {
-        final HashMap<String, AttributeValueUpdate> items = new HashMap<>();
+        final Map<String, AttributeValueUpdate> items = new HashMap<>();
         final DateTime now = DateTime.now();
 
         final String dateString = DateTimeUtil.dateToYmdString(new DateTime(logdata.targetDate).withZone(DateTimeZone.UTC));
@@ -219,7 +219,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

@@ -21,15 +21,10 @@ public class TimelineResult {
     public final TimelineLog log;
 
     @JsonCreator
-    public static TimelineResult create(@JsonProperty("timelines") final ImmutableList<Timeline> timelines,
+    public static TimelineResult create(@JsonProperty("timelines") final List<Timeline> timelines,
                                         @JsonProperty("log") final TimelineLog log) {
 
-        return new TimelineResult(timelines,log);
-    }
-
-    public TimelineResult(ImmutableList<Timeline> timelines, TimelineLog log) {
-        this.timelines = timelines;
-        this.log = log;
+        return new TimelineResult(ImmutableList.copyOf(timelines),log);
     }
 
 
@@ -37,5 +32,11 @@ public class TimelineResult {
         final Timeline timeline = Timeline.createEmpty();
         final List<Timeline> timelines = Lists.newArrayList(timeline);
         return new TimelineResult(ImmutableList.copyOf(timelines),TimelineLog.createEmpty());
+    }
+
+
+    private TimelineResult(ImmutableList<Timeline> timelines, TimelineLog log) {
+        this.timelines = timelines;
+        this.log = log;
     }
 }
