@@ -90,9 +90,15 @@ public class LogsResource {
                 .setProduction(isProd)
                 .build();
 
+        // This is confusing, but somewhat required to avoid bringing too much code into FW
+        // We manually map one type of log to another
+        final LoggingProtos.BatchLogMessage.LogType logType = (LogProtos.LogType.KEY_VALUE.equals(log.getProperty()))
+                ? LoggingProtos.BatchLogMessage.LogType.STRUCTURED_SENSE_LOG
+                : LoggingProtos.BatchLogMessage.LogType.SENSE_LOG;
+
         final LoggingProtos.BatchLogMessage batch = LoggingProtos.BatchLogMessage.newBuilder()
                 .addMessages(logMessage)
-                .setLogType(LoggingProtos.BatchLogMessage.LogType.SENSE_LOG)
+                .setLogType(logType)
                 .setReceivedAt(DateTime.now(DateTimeZone.UTC).getMillis())
                 .build();
         try {
