@@ -6,6 +6,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -17,6 +18,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -24,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(SavePillDataProcessor.class);
@@ -34,14 +37,22 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
+    private final ActiveDevicesTracker activeDevicesTracker;
 
-    public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO, final int batchSize, final PillHeartBeatDAO pillHeartBeatDAO, final KeyStore pillKeyStore, final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
+    public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO,
+                                 final int batchSize,
+                                 final PillHeartBeatDAO pillHeartBeatDAO,
+                                 final KeyStore pillKeyStore,
+                                 final DeviceDAO deviceDAO,
+                                 final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
+                                 final ActiveDevicesTracker activeDevicesTracker) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
+        this.activeDevicesTracker = activeDevicesTracker;
     }
 
     @Override
@@ -54,11 +65,14 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
-
+        final Map<String, Long> activePills = Maps.newHashMap();
         for (final Record record : records) {
             try {
                 final SenseCommandProtos.batched_pill_data batched_pill_data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
                 for(final SenseCommandProtos.pill_data data : batched_pill_data.getPillsList()) {
+
+                    final Long pillTs = data.getTimestamp() * 1000L;
+                    activePills.put(data.getDeviceId(), pillTs);
 
                     final Optional<byte[]> decryptionKey = pillKeyStore.get(data.getDeviceId());
                     //TODO: Get the actual decryption key.
@@ -74,8 +88,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     }
 
                     final DeviceAccountPair pair = optionalPair.get();
-                    // Warning: mutable state!!!
-                    Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(batched_pill_data.getDeviceId(), pair.accountId);
+                    final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(batched_pill_data.getDeviceId(), pair.accountId);
 
                     if(!userInfoOptional.isPresent()) {
                         LOGGER.error("Missing UserInfo for account: {} and pill_id = {} and sense_id = {}", pair.accountId, pair.externalDeviceId, batched_pill_data.getDeviceId());
@@ -116,6 +129,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             }
         }
 
+
         if (trackerData.size() > 0) {
             LOGGER.info("About to batch insert: {} tracker motion samples", trackerData.size());
             this.trackerMotionDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
@@ -129,6 +143,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
             }
         }
+        activeDevicesTracker.trackPills(activePills);
 
     }
 
