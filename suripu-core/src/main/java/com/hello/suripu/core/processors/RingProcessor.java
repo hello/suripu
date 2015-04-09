@@ -442,7 +442,7 @@ public class RingProcessor {
                     // 3) This is the data to trigger the worker to process the next ring (If it is still alive).
                     //
                     // Use the generated on-the-fly ring time.
-                    LOGGER.warn("Ring time in merge table for device {} needs to update.", deviceId);
+                    LOGGER.debug("Ring time in merge table for device {} needs to update.", deviceId);
                     nextRingTime = nextRingTimeFromTemplate;
                 }
 
@@ -455,7 +455,7 @@ public class RingProcessor {
                     // 3) The user UPDATED the alarm list in this gap period.
                     //
                     // Use the generated on-the-fly ring time.
-                    LOGGER.warn("User update alarm when his/her is in smart alarm gap. Ring time in merge table for device {} needs to update.",
+                    LOGGER.info("User update alarm when his/her is in smart alarm gap. Ring time in merge table for device {} needs to update.",
                             deviceId);
                     nextRingTime = nextRingTimeFromTemplate;
                 }

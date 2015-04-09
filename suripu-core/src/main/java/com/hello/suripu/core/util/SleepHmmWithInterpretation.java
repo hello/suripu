@@ -88,17 +88,25 @@ public class SleepHmmWithInterpretation {
 
 
     public static class SegmentPair {
-        public SegmentPair(final Integer i1, final Integer i2) {
+        public SegmentPair(final int i1, final int i2) {
             this.i1 = i1;
             this.i2 = i2;
         }
 
-        public boolean contains(final Integer idx) {
-            return idx >= i1 && idx <= i2;
+        public int compare(final Integer idx) {
+            if (idx < i1) {
+                return -1;
         }
 
-        public final Integer i1;
-        public final Integer i2;
+            if (idx > i2) {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        public final int i1;
+        public final int i2;
     }
 
     public static class TimeIndexInfo {
@@ -278,6 +286,8 @@ CREATE CREATE CREATE
         ImmutableList<SegmentPair> sleepSplitOnGaps = pairsWithGapsToPairs(sleep,false);
         ImmutableList<SegmentPair> onBedIgnoringGaps = pairsWithGapsToPairs(onBed,true);
 
+        logPairs(sleepSplitOnGaps,"sleepOrig");
+        logPairs(onBedIgnoringGaps,"bedOrig");
         if (bestModel.isUsingIntervalSearch) {
             //get whatever is earlier
 
@@ -291,8 +301,11 @@ CREATE CREATE CREATE
             //LOGGER.debug("pillenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.filteredEnergy));
             //LOGGER.debug("diffenergy={}",SleepHmmSensorDataBinning.getDoubleVectorAsString(pillFeats.differentialEnergy));
 
-            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearchForSleep(sleepSplitOnGaps, pillFeats, numMinutesInMeasPeriod);
-            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps,sleepSplitOnGaps,pillFeats,numMinutesInMeasPeriod);
+            onBedIgnoringGaps = getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(onBedIgnoringGaps, pillFeats,numMinutesInMeasPeriod);
+            sleepSplitOnGaps = getIndiciesInMinutesWithIntervalSearchForSleep(sleepSplitOnGaps,onBedIgnoringGaps, pillFeats, numMinutesInMeasPeriod);
+
+            logPairs(sleepSplitOnGaps,"sleepSearched");
+            logPairs(onBedIgnoringGaps,"bedSearched");
             numMinutesInMeasPeriod = 1;
         }
 
@@ -305,6 +318,20 @@ CREATE CREATE CREATE
 
     }
     
+    protected void logPairs(final ImmutableList<SegmentPair> pairs, final String name) {
+        String message = String.format("%s = [",name);
+
+        int i = 0;
+        for (final SegmentPair pair : pairs) {
+            if (i++ != 0) {
+                message += ",";
+            }
+            message += String.format("[%d,%d]",pair.i1,pair.i2);
+        }
+        message += "]";
+
+        LOGGER.debug(message);
+    }
     protected ImmutableList<SegmentPair> pairsWithGapsToPairs(final ImmutableList<SegmentPairWithGaps> segs,boolean ignoreGaps) {
         List<SegmentPair> pairs = new ArrayList<>();
 
@@ -467,13 +494,14 @@ CREATE CREATE CREATE
         return new PillFeats(filteredEnergy, differentialEnergy);
     }
 
-    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForSleep(final ImmutableList<SegmentPair> segs, final PillFeats pillFeats,
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForSleep(final ImmutableList<SegmentPair> segs,final ImmutableList<SegmentPair> bedSegsAtMinuteResolution, final PillFeats pillFeats,
                                                                                         final int numMinutesInMeasPeriod) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
         int lastIndex = -1;
         for (final SegmentPair seg : segs) {
 
+            //search interval for sleep
             int i1Sleep = seg.i1*numMinutesInMeasPeriod - numMinutesInMeasPeriod;
             int i2Sleep = seg.i1*numMinutesInMeasPeriod + numMinutesInMeasPeriod;
 
@@ -481,8 +509,10 @@ CREATE CREATE CREATE
                 i1Sleep = 0;
             }
 
+            //find max energy in search interval
             final Optional<Integer> sleepBound = getMaximumInInterval(pillFeats.filteredEnergy, i1Sleep, i2Sleep);
 
+            //search interval for wake
             int i1Wake = seg.i2*numMinutesInMeasPeriod - 1*numMinutesInMeasPeriod;
             int i2Wake = seg.i2*numMinutesInMeasPeriod + 1*numMinutesInMeasPeriod;
 
@@ -490,17 +520,21 @@ CREATE CREATE CREATE
                 i2Wake = pillFeats.filteredEnergy.length;
             }
 
+            //find max energy in wake interval
             final Optional<Integer> wakeIndex = getMaximumInInterval(pillFeats.filteredEnergy,i1Wake,i2Wake);
 
             int newI1 = seg.i1*numMinutesInMeasPeriod;
             int newI2 = seg.i2*numMinutesInMeasPeriod;
 
+            //use max energy as bound on start time of sleep
             if (sleepBound.isPresent()) {
 
+                //find max decrease in energy, and say that's sleep (verrry scientific)
                 final Optional<Integer> sleepIndex = getMinimumInInterval(pillFeats.differentialEnergy,sleepBound.get(),i2Sleep);
                 newI1 = sleepIndex.get();
             }
 
+            //enforce that this sleep index is spaced a minimum time from the last wake index
             if (newI1 < lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES) {
                 newI1 = lastIndex + MIN_ENFORCED_WAKE_TIME_IN_MINUTES;
             }
@@ -510,10 +544,52 @@ CREATE CREATE CREATE
                 newI2 = wakeIndex.get();
             }
 
+            //enforce that this wake index is spaced far enough from the last sleep index
             if (newI2 < newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES) {
                 newI2 = newI1 + MIN_ENFORCED_SLEEP_TIME_IN_MINUTES;
             }
 
+            //enforce on bed constraints
+            boolean thisSegmentIsNoGood = false;
+            boolean foundOne = false;
+
+
+            for (final SegmentPair bedpair : bedSegsAtMinuteResolution) {
+                //if both are not zero then there's no overlap, so continue onto the next segment
+                if (bedpair.compare(newI1) != 0 && bedpair.compare(newI2) != 0) {
+                    continue;
+                }
+
+                foundOne = true;
+
+                //sleep is before on bed
+                if (bedpair.compare(newI1) < 0) {
+                    newI1 = bedpair.i1 + 1;
+                }
+
+                //wake is after out-of-bed
+                if (bedpair.compare(newI2) > 0) {
+                    newI2 = bedpair.i2 - 1;
+                }
+
+                //sleep is after out-of-bed
+                if (bedpair.compare(newI1) > 0) {
+                    thisSegmentIsNoGood = true;
+                    break;
+                }
+
+                //wake is before in-bed
+                if (bedpair.compare(newI2) < 0) {
+                    thisSegmentIsNoGood = true;
+                    break;
+                }
+            }
+
+            //fuck
+            //didn't find ANY overlap?  orphan. poof.
+            if (thisSegmentIsNoGood || !foundOne) {
+                continue;
+            }
 
             newSegments.add(new SegmentPair(newI1,newI2));
 
@@ -524,7 +600,7 @@ CREATE CREATE CREATE
 
     }
 
-    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> bedSegs, final ImmutableList<SegmentPair> sleepSegs, final PillFeats pillFeats,
+    protected ImmutableList<SegmentPair> getIndiciesInMinutesWithIntervalSearchForInAndOutOfBed(final ImmutableList<SegmentPair> bedSegs, final PillFeats pillFeats,
                                                                                         final int numMinutesInMeasPeriod) {
 
         List<SegmentPair> newSegments = new ArrayList<>();
@@ -564,16 +640,6 @@ CREATE CREATE CREATE
             }
 
 
-            /* check that no index is contained within a sleep index */
-            for (final SegmentPair sleepSeg : sleepSegs) {
-                if (sleepSeg.contains(newI1)) {
-                    newI1 = sleepSeg.i1 - 1;
-                }
-
-                if (sleepSeg.contains(newI2)) {
-                    newI2 = sleepSeg.i2 + 1;
-                }
-            }
 
 
 

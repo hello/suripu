@@ -1,4 +1,4 @@
-package com.hello.suripu.app.resources.v1;
+package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -25,12 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Path("/v1/applications")
-public class ApplicationResource {
+public class ApplicationResources {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationResources.class);
     private final ApplicationStore<Application, ApplicationRegistration> applicationStore;
 
-    public ApplicationResource(final ApplicationStore<Application, ApplicationRegistration> applicationStore) {
+    public ApplicationResources(final ApplicationStore<Application, ApplicationRegistration> applicationStore) {
         this.applicationStore = applicationStore;
     }
 
@@ -72,7 +72,6 @@ public class ApplicationResource {
         for(OAuthScope scope : OAuthScope.values()) {
             scopes.add(scope);
         }
-
         return scopes;
     }
 
