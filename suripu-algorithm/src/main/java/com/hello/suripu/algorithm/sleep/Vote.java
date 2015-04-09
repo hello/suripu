@@ -403,13 +403,14 @@ public class Vote {
     }
 
     private static Segment getLastClusterInSleep(final List<Segment> clusterSegments, final SleepPeriod sleepPeriod){
+        Segment last = clusterSegments.get(clusterSegments.size() - 1);
         for(final Segment segment:clusterSegments){
             if(segment.getStartTimestamp() <= sleepPeriod.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE) {
-                return segment;
+                last = segment;
             }
         }
 
-        return clusterSegments.get(clusterSegments.size() - 1);
+        return last;
     }
 
     protected static Pair<Long, Long> safeGuardPickSleep(final SleepPeriod sleepPeriod,
