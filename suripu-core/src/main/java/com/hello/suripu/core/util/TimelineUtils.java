@@ -695,8 +695,11 @@ public class TimelineUtils {
         final Integer sleepDurationInMinutes = Math.round(new Float(sleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer inBedDurationInMinutes = Math.round(new Float(inBedDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
 
-        if (firstInBedTimestampMillis > 0 && firstInBedTimestampMillis < firstSleepTimestampMillis) {
-            sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis)/MINUTE_IN_MILLIS);
+        if (firstInBedTimestampMillis > 0) {
+            sleepOnsetTimeMinutes = 1;
+            if (firstInBedTimestampMillis < firstSleepTimestampMillis) {
+                sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis) / MINUTE_IN_MILLIS);
+            }
         }
 
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
