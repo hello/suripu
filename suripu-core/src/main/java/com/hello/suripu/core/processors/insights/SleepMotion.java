@@ -29,10 +29,11 @@ public class SleepMotion {
     // computed 01/19/2015 = 0.1673f
     // computed 03/19/2015, prod = 0.2249f
     // SELECT SUM(agitation_num) / CAST((15 * COUNT(*)) AS FLOAT) AS perc FROM sleep_score;
-    private static float AVERAGE_SLEEP_PERC = 0.2249f;
+    // sleep scores are now saved in DynamoDB
+    // computed 04/08/2015, 7632 scores, prod_sleep_stats_v_0_2 = 0.121882824828
+    private static float AVERAGE_SLEEP_PERC = 0.1219f;
 
-
-    private static float SIGNIFICANT_DIFF = 3.0f; // only differences greater than 3% is worth reporting (TODO)
+    private static float SIGNIFICANT_DIFF = 20.0f; // only differences greater than 30% is worth reporting (TODO)
 
     private static int MIN_DAYS_REQUIRED = 3;
 
@@ -61,10 +62,46 @@ public class SleepMotion {
         if (sleepStats.isEmpty()) {
             return Optional.absent();
         }
-        return Optional.absent();
+
+        int totDuration = 0;
+        int totMotion = 0;
+        int numDays = 0;
+
+        for (final AggregateSleepStats stat : sleepStats) {
+            if (stat.motionScore.motionPeriodMinutes == 0) {
+                continue;
+            }
+
+            totMotion += stat.motionScore.numMotions;
+            totDuration += stat.motionScore.motionPeriodMinutes;
+            numDays++;
+        }
+
+        if (totMotion == 0 || numDays < MIN_DAYS_REQUIRED) {
+            return Optional.absent();
+        }
+
+        final float averageMotionPercentage = (float) totMotion / (float) totDuration;
+        final float overallDiff = (averageMotionPercentage - AVERAGE_SLEEP_PERC) / AVERAGE_SLEEP_PERC * 100.0f;
+
+        Text text;
+        if (Math.abs(overallDiff) >= SIGNIFICANT_DIFF) {
+            if (overallDiff > 0) {
+                text = SleepMotionMsgEN.moreMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
+            } else {
+                text = SleepMotionMsgEN.lessMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
+            }
+        } else {
+            text = SleepMotionMsgEN.equalMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
+        }
+
+        return Optional.of(new InsightCard(accountId, text.title, text.message,
+                InsightCard.Category.SLEEP_QUALITY, InsightCard.TimePeriod.RECENTLY,
+                DateTime.now(DateTimeZone.UTC)));
 
     }
 
+    @Deprecated
     public static Optional<InsightCard> processData(final Long accountId, final List<SleepStatsSample> sleepStats, final List<SleepScore> motionData, final Boolean isNewUser) {
 
         if (motionData.isEmpty()) {
