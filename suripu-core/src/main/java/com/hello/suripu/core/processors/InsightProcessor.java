@@ -260,7 +260,7 @@ public class InsightProcessor {
         }
 
         public Builder withSleepStatsDAODynamoDB(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
-            this.scoreDAODynamoDB = scoreDAODynamoDB;
+            this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
             return this;
         }
 

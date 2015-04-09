@@ -7,7 +7,6 @@ import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
 import com.hello.suripu.core.models.Insights.GraphSample;
-import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -82,13 +81,13 @@ public class TrendGraphUtils {
     }
 
     public static TrendGraph getDurationOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType,
-                                                      final List<SleepStatsSample> statsSamples, final int numDaysActive) {
+                                                      final List<AggregateSleepStats> sleepStats, final int numDaysActive) {
 
         final List<GraphSample> dataPoints = new ArrayList<>();
-        for (final SleepStatsSample sample : statsSamples) {
-            final Integer value = sample.stats.sleepDurationInMinutes;
+        for (final AggregateSleepStats stat : sleepStats) {
+            final Integer value = stat.sleepStats.sleepDurationInMinutes;
             final TrendGraph.DataLabel label = TrendGraph.getDataLabel(TrendGraph.DataType.SLEEP_DURATION, value);
-            dataPoints.add(new GraphSample(sample.localUTCDate.getMillis(), value, sample.timeZoneOffset, label));
+            dataPoints.add(new GraphSample(stat.dateTime.getMillis(), value, stat.offsetMillis, label));
         }
 
         final List<String> timeSeriesOptions = TrendGraph.TimePeriodType.getTimeSeriesOptions(numDaysActive);

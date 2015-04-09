@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db;
 
-import com.hello.suripu.core.db.mappers.SleepLabelMapper;
 import com.hello.suripu.core.db.mappers.UserLabelMapper;
 import com.hello.suripu.core.models.DataScience.UserLabel;
 import org.joda.time.DateTime;
@@ -15,7 +14,6 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import java.util.List;
 
 
-@RegisterMapper(SleepLabelMapper.class)
 public interface UserLabelDAO extends Transactional<UserLabelDAO> {
 
     @GetGeneratedKeys
