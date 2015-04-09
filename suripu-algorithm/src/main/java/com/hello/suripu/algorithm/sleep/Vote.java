@@ -417,6 +417,14 @@ public class Vote {
         Segment firstCluster = clusterSegments.get(0);
         Optional<Segment> predictedSegmentOptional = Optional.absent();
         for(final Segment cluster:clusterSegments){
+            if(originalSleepMillis <= cluster.getEndTimestamp() &&
+                    originalSleepMillis >= cluster.getStartTimestamp()){
+                predictedSegmentOptional = Optional.of(cluster);
+                break;
+            }
+        }
+        
+        for(final Segment cluster:clusterSegments){
             if(cluster.getEndTimestamp() >= sleepPeriod.getStartTimestamp()){
                 firstCluster = cluster;
                 LOGGER.debug("First motion cluster in sleep period {} - {}",
