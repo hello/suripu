@@ -15,7 +15,6 @@ import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import com.hello.suripu.core.models.Insights.TrendGraph;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -295,16 +294,11 @@ public class InsightsResource {
 
             } else {
                 // sleep duration over time, up to 365 days
-                final List<SleepStatsSample> statsSamples = new ArrayList<>();
-                for (final AggregateSleepStats stat : sleepStats) {
-                    statsSamples.add(new SleepStatsSample(stat.sleepStats, stat.dateTime, stat.offsetMillis));
-                }
-
-                if (statsSamples.size() < MIN_DATAPOINTS) {
+                if (sleepStats.size() < MIN_DATAPOINTS) {
                     return Optional.absent();
                 }
 
-                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, statsSamples, daysActive));
+                return Optional.of(TrendGraphUtils.getDurationOverTimeGraph(timePeriod, sleepStats, daysActive));
             }
 
         }

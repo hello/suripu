@@ -21,7 +21,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
-import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -73,7 +73,6 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
         commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
         final AccountDAO accountDAO = commonDBI.onDemand(AccountDAOImpl.class);
-        final SleepScoreDAO scoreDAO = commonDBI.onDemand(SleepScoreDAO.class);
         final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
 
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
@@ -159,6 +158,12 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 configuration.getSleepScoreVersion()
         );
 
+        final AmazonDynamoDB dynamoDBStatsClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
+        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBStatsClient,
+                configuration.getSleepStatsDynamoConfiguration().getTableName(),
+                configuration.getSleepStatsVersion());
+
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
@@ -174,7 +179,7 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 insightsDAODynamoDB,
                 trendsInsightsDAO,
                 questionResponseDAO,
-                scoreDAO,
+                sleepStatsDAODynamoDB,
                 lightData,
                 accountPreferencesDynamoDB);
         final Worker worker = new Worker(factory, kinesisConfig);

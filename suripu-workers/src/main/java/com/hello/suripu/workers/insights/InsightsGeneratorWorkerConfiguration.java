@@ -73,4 +73,21 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getPreferencesDynamoDB() {
         return preferencesDynamoDB;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_stats_db")
+    private DynamoDBConfiguration sleepStatsDynamoDBConfiguration;
+    public DynamoDBConfiguration getSleepStatsDynamoConfiguration(){
+        return this.sleepStatsDynamoDBConfiguration;
+    }
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_stats_version")
+    private String sleepStatsVersion;
+    public String getSleepStatsVersion() {
+        return this.sleepStatsVersion;
+    }
+
+
 }

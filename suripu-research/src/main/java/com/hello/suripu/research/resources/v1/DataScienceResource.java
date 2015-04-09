@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -53,18 +53,18 @@ public class DataScienceResource extends BaseResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final SleepLabelDAO sleepLabelDAO;
+    private final UserLabelDAO userLabelDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
-                               final SleepLabelDAO sleepLabelDAO) {
+                               final UserLabelDAO userLabelDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.sleepLabelDAO = sleepLabelDAO;
+        this.userLabelDAO = userLabelDAO;
     }
 
     @GET
@@ -194,7 +194,7 @@ public class DataScienceResource extends BaseResource {
         final DateTime nightDate = DateTime.parse(night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
         LOGGER.debug("{} {}", email, nightDate);
-        return sleepLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
+        return userLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
     }
 
     // APIs for Benjo's analysis

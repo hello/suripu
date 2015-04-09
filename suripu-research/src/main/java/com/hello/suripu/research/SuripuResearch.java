@@ -18,7 +18,7 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.SleepLabelDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
@@ -91,7 +91,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
-        final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
+        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
@@ -130,7 +130,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         environment.getJerseyResourceConfig()
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
-                deviceDataDAO, deviceDAO, sleepLabelDAO));
+                deviceDataDAO, deviceDAO, userLabelDAO));
 
 
     }
