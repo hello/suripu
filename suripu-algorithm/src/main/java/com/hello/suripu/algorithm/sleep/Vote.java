@@ -441,7 +441,11 @@ public class Vote {
                 new DateTime(firstCluster.getStartTimestamp(), DateTimeZone.forOffsetMillis(firstCluster.getOffsetMillis())),
                 new DateTime(firstCluster.getEndTimestamp(), DateTimeZone.forOffsetMillis(firstCluster.getOffsetMillis())));
 
-        final Optional<Segment> predictedSegmentOptional = getClusterByTimeMillis(clusterSegments, originalSleepMillis, 0, 0);
+        final Optional<Segment> predictedSegmentOptional = getClusterByTimeMillis(clusterSegments, originalSleepMillis,
+                // The delta is important because features are in 10 min's chunk
+                // need to give a chance for mis-align
+                20 * DateTimeConstants.MILLIS_PER_MINUTE,
+                20 * DateTimeConstants.MILLIS_PER_MINUTE);
 
 
         Optional<AmplitudeData> predictedMaxScoreOptional = Optional.absent();
