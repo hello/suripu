@@ -21,6 +21,7 @@ import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
@@ -128,8 +129,8 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
             int hasScore = 0;
             for (int i = 0; i < numDays; i++) {
                 final DateTime targetDate = startTargetDate.plusDays(i);
-                final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
-                final Timeline timeline = timelines.get(0);
+                final TimelineResult result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+                final Timeline timeline = result.timelines.get(0);
 
                 if (timeline.events.isEmpty()) {
                     LOGGER.info("Nothing for Date {}", targetDate);

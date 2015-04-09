@@ -26,6 +26,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.joda.time.DateTime;

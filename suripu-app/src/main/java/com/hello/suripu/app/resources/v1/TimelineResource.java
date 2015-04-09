@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -55,10 +56,10 @@ public class TimelineResource extends BaseResource {
         this.timelineLogDAO = timelineLogDAO;
     }
 
-    private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final List<Timeline> timelines){
+    private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final TimelineResult result){
 
         try{
-            if(timelines == null || timelines.isEmpty()){
+            if(result.timelines == null || result.timelines.isEmpty()){
                 // WARNING: DONOT cache empty timeline!
                 LOGGER.info("Trying to cache empty timelines for account {} date {}, quit.", accountId, targetDateLocalUTC);
                 return false;
@@ -66,7 +67,7 @@ public class TimelineResource extends BaseResource {
 
             //only cache if not the HMM
             if (!this.hasHmmEnabled(accountId)) {
-                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), timelines);
+                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result.timelines);
             }
 
             return true;
@@ -85,30 +86,33 @@ public class TimelineResource extends BaseResource {
         return false;
     }
 
-    private List<Timeline> getCachedTimelines(final Long accountId, final DateTime targetDate){
+    private TimelineResult getCachedTimelines(final Long accountId, final DateTime targetDate){
+
         final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
         if (!cachedTimelines.isEmpty()) {
             LOGGER.info("Timeline for account {}, date {} returned from cache.", accountId, targetDate);
-            return cachedTimelines;
+            return new TimelineResult(cachedTimelines);
         }
 
-        return Collections.EMPTY_LIST;
+        return TimelineResult.createEmpty();
+
     }
 
-    private List<Timeline> getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
+    private TimelineResult getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
 
         //if no update forced (i.e. no HMM)
-        final List<Timeline> timelinesFromCache = getCachedTimelines(accountId, targetDate);
-        if (!timelinesFromCache.isEmpty() && !this.hasVotingEnabled(accountId)) {
-            return timelinesFromCache;
+        final TimelineResult cachedResult = getCachedTimelines(accountId, targetDate);
+        if (!cachedResult.timelines.isEmpty() && !this.hasVotingEnabled(accountId)) {
+            return cachedResult;
         }
 
 
         LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
-        final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
-        cacheTimeline(accountId, targetDate, timelines);
-        return timelines;
+        final TimelineResult result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+        cacheTimeline(accountId, targetDate, result);
+
+        return result;
     }
 
     @Timed
@@ -120,7 +124,9 @@ public class TimelineResource extends BaseResource {
             @PathParam("date") String date) {
         
 
-        return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+
+        return result.timelines;
 
     }
 
@@ -137,7 +143,9 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        return getTimelinesFromCacheOrReprocess(accountId.get(), date);
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(accountId.get(), date);
+
+        return result.timelines;
     }
 
     @Timed
