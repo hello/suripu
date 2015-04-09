@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
 import com.hello.suripu.admin.resources.v1.AccountResources;
+import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
 import com.hello.suripu.admin.resources.v1.DeviceResources;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
@@ -150,5 +151,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new AccountResources(accountDAO, passwordResetDB));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
+        environment.addResource(new ApplicationResources(applicationStore));
     }
 }

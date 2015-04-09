@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -40,6 +41,10 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasVotingEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.VOTING_ALGORITHM, accountId, Collections.EMPTY_LIST);
+    }
+
     /**
      * Use this method to return plain text errors (to Sense)
      * It returns byte[] just to match the signature of most methods interacting with Sense
@@ -60,4 +65,20 @@ public class BaseResource {
     }
 
     // TODO: add similar method for JSON Error
+
+    /**
+     * Returns the first IP address specified in headers or empty string
+     * @param request
+     * @return
+     */
+    public static String getIpAddress(final HttpServletRequest request) {
+        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        if (ipAddress == null) {
+            return "";
+        }
+
+        final String[] ipAddresses = ipAddress.split(",");
+        return ipAddresses[0]; // always return first one?
+    }
+
 }

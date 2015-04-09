@@ -1,3 +1,5 @@
+package com.hello.suripu.algorithm.sleep;
+
 import com.google.common.base.Optional;
 import com.hello.suripu.algorithm.pdf.LinearRankAscendingScoringFunction;
 import com.hello.suripu.algorithm.pdf.LinearRankDescendingScoringFunction;

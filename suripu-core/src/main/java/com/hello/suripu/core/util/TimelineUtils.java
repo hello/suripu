@@ -11,6 +11,7 @@ import com.hello.suripu.algorithm.sensordata.LightEventsDetector;
 import com.hello.suripu.algorithm.sensordata.SoundEventsDetector;
 import com.hello.suripu.algorithm.sleep.MotionScoreAlgorithm;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.algorithm.sleep.Vote;
 import com.hello.suripu.algorithm.sleep.scores.AmplitudeDataScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutCumulatedMotionMixScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.LightOutScoringFunction;
@@ -939,7 +940,7 @@ public class TimelineUtils {
 
         final long startDetectionTimestampMillis = (lastMotionTimestampMillis - firstMotionTimestampMillis) / 2 + firstMotionTimestampMillis;
         for(final Sample wave:waveData){
-            if(wave.dateTime >= startDetectionTimestampMillis && wave.dateTime <= lastMotionTimestampMillis){
+            if(wave.value > 0 && wave.dateTime >= startDetectionTimestampMillis && wave.dateTime <= lastMotionTimestampMillis){
                 return Optional.of(new DateTime(wave.dateTime, DateTimeZone.forOffsetMillis(wave.offsetMillis)));
             }
         }
@@ -1225,7 +1226,19 @@ public class TimelineUtils {
 
 
 
+    public static Optional<VotingSleepEvents> getSleepEventsFromVoting(final List<TrackerMotion> rawTrackerMotions,
+                                                                        final List<Sample> sound,
+                                                                        final List<DateTime> lightOutTimes,
+                                                                        final Optional<DateTime> firstWaveTimeOptional){
+        final List<AmplitudeData> rawAmplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(rawTrackerMotions);
+        final List<AmplitudeData> rawKickOffCount = TrackerMotionUtils.trackerMotionToKickOffCounts(rawTrackerMotions);
+        final List<AmplitudeData> rawSound = SoundUtils.sampleToAmplitudeData(sound);
+        final Vote vote = new Vote(rawAmplitudeData, rawKickOffCount, rawSound, lightOutTimes, firstWaveTimeOptional);
 
+        final SleepEvents<Segment> segments = vote.getResult(false);
+        final List<Segment> otherAwakes = vote.getAwakes(segments.fallAsleep.getEndTimestamp(), segments.wakeUp.getStartTimestamp(), false);
+        return Optional.of(new VotingSleepEvents(segments, otherAwakes));
+    }
 
 
     /**

@@ -1,13 +1,10 @@
 package com.hello.suripu.core.util;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.FixtureTest;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -22,17 +19,14 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -44,15 +38,9 @@ import static org.hamcrest.Matchers.is;
 /**
  * Created by pangwu on 12/18/14.
  */
-public class TimelineUtilsTest {
+public class TimelineUtilsTest extends FixtureTest {
 
-    private final ObjectMapper mapper = new ObjectMapper();
 
-    @Before
-    public void setUp(){
-        this.mapper.registerModule(new GuavaModule());
-        this.mapper.registerModule(new GuavaExtrasModule());
-    }
 
     @Test
     public void testConvertLightMotionToNone() {
@@ -367,21 +355,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsWeekEndSleepLate(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_17_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/pang_motion_2015_01_17_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1421575200000L, DateTimeZone.UTC));
@@ -428,21 +402,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsLightIsOnlyStrongIndicator(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/ksg_motion_2015_01_26_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/ksg_motion_2015_01_26_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422346440000L, DateTimeZone.UTC));
@@ -481,33 +441,12 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsTwoLightsOut(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/ryan_motion_2015_03_09_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/ryan_motion_2015_03_09_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
-        final URL fixtureJSONFileValid = Resources.getResource("fixtures/algorithm/ryan_light_event_2015_03_09.valid.json");
-        try {
+        final List<Event> lightEventsValid = loadLightEventsFromJSON("fixtures/algorithm/ryan_light_event_2015_03_09.valid.json");
+        lightOutTimes.addAll(MultiLightOutUtils.getLightOutTimes(lightEventsValid));
 
-            final String validJSONString = Resources.toString(fixtureJSONFileValid, Charsets.UTF_8);
-            final List<Event> lightEventsValid = this.mapper.readValue(validJSONString, new TypeReference<List<Event>>() {});
-            lightOutTimes.addAll(MultiLightOutUtils.getLightOutTimes(lightEventsValid));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assertThat(true, is(false));
-        }
 
         final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 3, 9, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
@@ -543,17 +482,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsBigMotionBeforeGetIntoBed() throws IOException {
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_24_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-        final String[] lines = csvString.split("\\n");
-        for(int i = 1; i < lines.length; i++){
-            final String[] columns = lines[i].split(",");
-            final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-            //if(trackerMotion.value > 0){
-            trackerMotions.add(trackerMotion);
-            //}
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/pang_motion_2015_01_24_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422181740000L, DateTimeZone.UTC));
@@ -598,21 +527,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsWaveCanImprove(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_01_21_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/pang_motion_2015_01_21_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1421913780000L, DateTimeZone.UTC));
@@ -661,21 +576,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsCannotFallAsleepAfterInBed(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/tim_motion_2015_01_04_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/tim_motion_2015_01_04_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1420445760000L, DateTimeZone.UTC));
@@ -721,20 +622,58 @@ public class TimelineUtilsTest {
     }
 
 
+
+    @Test
+    public void testGetFullSleepEventsQuinoDebug(){
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/quino_motion_2015_03_12_raw.csv");
+
+        final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
+        lightOutTimes.add(new DateTime(1426218480000L, DateTimeZone.UTC));
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 3, 12, 0, 0, DateTimeZone.UTC),
+                trackerMotions,
+                lightOutTimes,
+                Optional.<DateTime>absent(),
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.MOTION_AGGREGATE_WINDOW_IN_MINUTES,
+                MotionFeatures.WAKEUP_FEATURE_AGGREGATE_WINDOW_IN_MINUTES,
+                true).toList();
+
+        final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
+
+
+        // Out put from python script suripu_sum.py:
+        /*
+        in bed at 2014-12-03 01:22:00, prob: 1.11502650032, amp: 2967
+        wake up at 2014-12-03 09:38:00, prob: 0.0631222110581, amp: 522
+        */
+
+        final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getTimezoneOffset()));
+        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
+
+        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUpSegment.getTimezoneOffset()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getTimezoneOffset()));
+
+        final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+
+        /*
+        Same thing, cannot deal with wake up at the middle of night. because we use light and time as a feature.
+         */
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 3, 12, 20, 59, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 3, 12, 21, 43, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 13, 7, 59, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 3, 13, 9, 49, DateTimeZone.UTC)));  //heuristic
+    }
+
+
     @Test
     public void testGetFullSleepEventsWeekend() throws IOException {
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/pang_motion_2015_02_01_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-
-        final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-        final String[] lines = csvString.split("\\n");
-        for(int i = 1; i < lines.length; i++){
-            final String[] columns = lines[i].split(",");
-            final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-            //if(trackerMotion.value > 0){
-            trackerMotions.add(trackerMotion);
-            //}
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/pang_motion_2015_02_01_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422866580000L, DateTimeZone.UTC));
@@ -779,21 +718,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsRoomMaidMadeBed(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/millionaires_challenge_2015_01_31_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/millionaires_challenge_2015_01_31_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422775560000L, DateTimeZone.UTC));
@@ -831,21 +756,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsRoomMaidMadeBed2(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/millionaires_challenge_2015_02_20_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/millionaires_challenge_2015_02_20_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1424497800000L, DateTimeZone.UTC));
@@ -886,21 +797,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsPetOrRoomMaidMotionMultipleTimes(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/carlgish_motion_2015_01_20_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/carlgish_motion_2015_01_20_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1421823120000L, DateTimeZone.UTC));
@@ -939,21 +836,7 @@ public class TimelineUtilsTest {
 
     @Test
     public void testGetFullSleepEventsUserLeftBed(){
-        final URL fixtureCSVFile = Resources.getResource("fixtures/algorithm/mark_motion_2015_02_14_raw.csv");
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-        try {
-            final String csvString = Resources.toString(fixtureCSVFile, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(int i = 1; i < lines.length; i++){
-                final String[] columns = lines[i].split(",");
-                final TrackerMotion trackerMotion = new TrackerMotion(0L, 0L, 0L, Long.valueOf(columns[0]), Integer.valueOf(columns[1]), Integer.valueOf(columns[2]), 0L, 0L,0L);
-                //if(trackerMotion.value > 0){
-                trackerMotions.add(trackerMotion);
-                //}
-            }
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/mark_motion_2015_02_14_raw.csv");
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1423962900000L, DateTimeZone.UTC));
@@ -990,6 +873,44 @@ public class TimelineUtilsTest {
         //assertThat(sleepLocalUTC, is(new DateTime(2015, 2, 1, 2, 34, DateTimeZone.UTC)));
         assertThat(wakeUpLocalUTC, is(new DateTime(2015, 2, 15, 9, 49, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 2, 15, 9, 50, DateTimeZone.UTC)));
+    }
+
+
+    //@Test
+    public void testGetResultVotingAlgorithm(){
+        final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/qf_motion_2015_03_12_raw.csv");
+        final List<DateTime> lightOuts = new ArrayList<>();
+        lightOuts.add(new DateTime(1426218480000L, DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis)));
+
+        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+                Collections.EMPTY_LIST,
+                lightOuts,
+                Optional.<DateTime>absent()).get().sleepEvents.toList();
+
+        final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
+        final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
+
+        assertThat(sleepEvents.get(0).isPresent(), is(true));
+        assertThat(sleepEvents.get(1).isPresent(), is(true));
+
+        final WakeupEvent wakeUpSegment = (WakeupEvent) sleepEvents.get(2).get();
+        final OutOfBedEvent outOfBedSegment = (OutOfBedEvent) sleepEvents.get(3).get();
+
+        final DateTime goToBedTime = new DateTime(goToBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(goToBedSegment.getTimezoneOffset()));
+        final DateTime sleepTime = new DateTime(sleepSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(sleepSegment.getTimezoneOffset()));
+
+        final DateTime wakeUpTime = new DateTime(wakeUpSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(wakeUpSegment.getTimezoneOffset()));
+        final DateTime outOfBedTime = new DateTime(outOfBedSegment.getStartTimestamp(), DateTimeZone.forOffsetMillis(outOfBedSegment.getTimezoneOffset()));
+
+        final DateTime goToBedLocalUTC = new DateTime(goToBedTime.getYear(), goToBedTime.getMonthOfYear(), goToBedTime.getDayOfMonth(), goToBedTime.getHourOfDay(), goToBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime sleepLocalUTC = new DateTime(sleepTime.getYear(), sleepTime.getMonthOfYear(), sleepTime.getDayOfMonth(), sleepTime.getHourOfDay(), sleepTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime wakeUpLocalUTC = new DateTime(wakeUpTime.getYear(), wakeUpTime.getMonthOfYear(), wakeUpTime.getDayOfMonth(), wakeUpTime.getHourOfDay(), wakeUpTime.getMinuteOfHour(), DateTimeZone.UTC);
+        final DateTime outOfBedLocalUTC = new DateTime(outOfBedTime.getYear(), outOfBedTime.getMonthOfYear(), outOfBedTime.getDayOfMonth(), outOfBedTime.getHourOfDay(), outOfBedTime.getMinuteOfHour(), DateTimeZone.UTC);
+
+        assertThat(goToBedLocalUTC, is(new DateTime(2015, 3, 12, 20, 28, DateTimeZone.UTC)));
+        assertThat(sleepLocalUTC, is(new DateTime(2015, 3, 12, 21, 34, DateTimeZone.UTC)));
+        assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 13, 8, 1, DateTimeZone.UTC)));
+        assertThat(outOfBedLocalUTC, is(new DateTime(2015, 3, 13, 8, 56, DateTimeZone.UTC)));
     }
 
     @Test

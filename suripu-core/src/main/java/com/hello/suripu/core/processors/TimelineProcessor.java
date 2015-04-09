@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
-import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
@@ -40,16 +39,13 @@ import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.hello.suripu.core.util.VotingSleepEvents;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.midi.Track;
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -194,7 +190,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, ImmutableList<Event> additionalEvents,
+    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, List<Event> additionalEvents,
                                            final OneDaysSensorData sensorData) {
 
         // compute lights-out and sound-disturbance events
@@ -238,7 +234,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             LOGGER.info("Overriding {} with {} for account {}", event.getType().name(), event, accountId);
             timelineEvents.put(event.getStartTimestamp(), event);
         }
-
+        
         if (this.hasHmmEnabled(accountId)) {
             LOGGER.info("Using HMM for account {}", accountId);
         }
@@ -349,8 +345,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
     public List<Timeline> retrieveTimelinesFast(final Long accountId, final DateTime date) {
-
-        final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
         final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
         final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
@@ -360,7 +354,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId,targetDate,endDate);
+        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
 
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
@@ -375,7 +369,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         /*  This can get overided by the HMM if the feature is enabled */
             Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
-            ImmutableList<Event> extraEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
+            List<Event> extraEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
 
 
             if (this.hasHmmEnabled(accountId)) {
@@ -390,8 +384,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = results.get().allTheOtherWakesAndSleeps;
 
 
-            }
-            else {
+            } else if(this.hasVotingEnabled(accountId)){
+                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
+                        sensorData.allSensorSampleList.get(Sensor.SOUND),
+                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
+                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
+                extraEvents = votingSleepEventsOptional.get().extraEvents;
+            } else {
 
                 /* regular algorithm */
                 sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
@@ -663,6 +663,34 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         return  sleepEventsFromAlgorithm;
+    }
+
+    private Optional<VotingSleepEvents> fromVotingAlgorithm(final List<TrackerMotion> trackerMotions,
+                                                             final List<Sample> rawSound,
+                                                             final List<Sample> rawLight,
+                                                             final List<Sample> rawWave) {
+        Optional<VotingSleepEvents> votingSleepEventsOptional = Optional.absent();
+
+        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
+        final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
+
+        final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
+
+        // A day starts with 8pm local time and ends with 4pm local time next day
+        try {
+            Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+                    trackerMotions.get(trackerMotions.size() - 1).timestamp,
+                    rawWave);
+            votingSleepEventsOptional = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+                    rawSound,
+                    lightOutTimes,
+                    wakeUpWaveTimeOptional);
+        }catch (Exception ex){ //TODO : catch a more specific exception
+            LOGGER.error("Generate sleep period from Voting Algorithm failed: {}", ex.getMessage());
+        }
+
+        return  votingSleepEventsOptional;
     }
 
 

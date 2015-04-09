@@ -110,8 +110,7 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("timestamp")
     public final DateTime timestamp; // created timestamp in UTC
 
-    // @JsonProperty("info_preview")  TODO: enable on Monday after Android's release
-    @JsonIgnore
+    @JsonProperty("info_preview")
     public final Optional<String> infoPreview;
 
     public InsightCard(final Long accountId, final String title, final String message,
