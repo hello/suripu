@@ -344,7 +344,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-    public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime date) {
+    public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
         final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
         final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
@@ -358,7 +358,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-            return TimelineResult.createEmpty();
+            return Optional.absent();
         }
 
 
@@ -379,7 +379,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate, sensorData.trackerMotions, sensorData.allSensorSampleList);
 
                 if (!results.isPresent()) {
-                    return TimelineResult.createEmpty();
+                    return Optional.absent();
                 }
 
                 sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
@@ -407,21 +407,21 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
                 LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-                return TimelineResult.createEmpty();
+                return Optional.absent();
             }
 
             final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),extraEvents, sensorData);
 
-            final TimelineLog log = new TimelineLog(accountId,algorithm,currentTime,targetDate,version);
+            final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
 
-            return new TimelineResult(ImmutableList.copyOf(timelines),log);
+            return Optional.of(new TimelineResult(ImmutableList.copyOf(timelines),log));
         }
         catch (Exception e) {
             LOGGER.error(e.toString());
         }
 
         LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-        return TimelineResult.createEmpty();
+        return Optional.absent();
 
     }
 

@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.CachedTimelines;
@@ -13,6 +14,8 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineLog;
+import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -116,8 +119,8 @@ public class TimelineDAODynamoDBIT {
     @Test
     public void testGetNoneExistingDate(){
         final DateTime startOfDay = DateTime.now().withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
-        final ImmutableList<Timeline> actual = this.timelineDAODynamoDB.getTimelinesForDate(1L, startOfDay);
-        assertThat(actual.isEmpty(), is(true));
+        final Optional<TimelineResult> actual = this.timelineDAODynamoDB.getTimelinesForDate(1L, startOfDay);
+        assertThat(!actual.isPresent(), is(true));
     }
 
     @Test
@@ -134,35 +137,40 @@ public class TimelineDAODynamoDBIT {
         final ArrayList<Timeline> timelinesForDay1 = new ArrayList<>();
 
         timelinesForDay1.add(this.timeline1);
+
+        TimelineResult resultsForDay1 = new TimelineResult(ImmutableList.copyOf(timelinesForDay1), TimelineLog.createEmpty());
+
         long accountId = 1;
 
 
         final DateTime startOfDay2 = startOfDay1.plusDays(1);
         final ArrayList<Timeline> timelinesForDay2 = new ArrayList<>();
         timelinesForDay2.add(this.timeline2);
+        TimelineResult resultsForDay2 = new TimelineResult(ImmutableList.copyOf(timelinesForDay2), TimelineLog.createEmpty());
 
-        final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
-        dateTimelinesMap.put(startOfDay1, timelinesForDay1);
-        dateTimelinesMap.put(startOfDay2, timelinesForDay2);
+
+        final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
+        dateTimelinesMap.put(startOfDay1, resultsForDay1);
+        dateTimelinesMap.put(startOfDay2, resultsForDay2);
         this.timelineDAODynamoDB.saveTimelinesForDates(accountId, dateTimelinesMap);
 
-        final Map<DateTime, ImmutableList<Timeline>> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, dateTimelinesMap.keySet());
+        final Map<DateTime, TimelineResult> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, dateTimelinesMap.keySet());
 
         assertThat(actual.size(), is(2));
         for(final DateTime targetDay:dateTimelinesMap.keySet()){
             assertThat(actual.containsKey(targetDay), is(Boolean.TRUE));
-            assertThat(actual.get(targetDay).size(), is(1));
-            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            assertThat(actual.get(targetDay).timelines.size(), is(1));
+            assertThat(actual.get(targetDay).timelines.get(0).statistics.isPresent(), is(false));
             //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
 
             if(targetDay.equals(startOfDay1)) {
-                assertThat(actual.get(targetDay).get(0).score, is(80));
-                assertThat(actual.get(targetDay).get(0).message, is("test1"));
+                assertThat(actual.get(targetDay).timelines.get(0).score, is(80));
+                assertThat(actual.get(targetDay).timelines.get(0).message, is("test1"));
             }
 
             if(targetDay.equals(startOfDay2)) {
-                assertThat(actual.get(targetDay).get(0).score, is(90));
-                assertThat(actual.get(targetDay).get(0).message, is("test2"));
+                assertThat(actual.get(targetDay).timelines.get(0).score, is(90));
+                assertThat(actual.get(targetDay).timelines.get(0).message, is("test2"));
             }
 
         }
@@ -185,25 +193,28 @@ public class TimelineDAODynamoDBIT {
         final ArrayList<Timeline> timelinesForDay2 = new ArrayList<>();
         timelinesForDay2.add(this.timeline2);
 
-        final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
-        dateTimelinesMap.put(startOfDay1, timelinesForDay1);
-        dateTimelinesMap.put(startOfDay2, timelinesForDay2);
+        final TimelineResult resultsForDay1 = new TimelineResult(ImmutableList.copyOf(timelinesForDay1),TimelineLog.createEmpty());
+        final TimelineResult resultsForDay2 = new TimelineResult(ImmutableList.copyOf(timelinesForDay2),TimelineLog.createEmpty());
+
+        final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
+        dateTimelinesMap.put(startOfDay1, resultsForDay1);
+        dateTimelinesMap.put(startOfDay2, resultsForDay2);
         this.timelineDAODynamoDB.saveTimelinesForDates(accountId, dateTimelinesMap);
         final HashSet<DateTime> queryDates = new HashSet<>();
         queryDates.add(startOfDay1);
 
-        final Map<DateTime, ImmutableList<Timeline>> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
+        final Map<DateTime, TimelineResult> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
 
         assertThat(actual.size(), is(1));
         for(final DateTime targetDay:actual.keySet()){
-            assertThat(actual.get(targetDay).size(), is(1));
+            assertThat(actual.get(targetDay).timelines.size(), is(1));
 
 
             assertThat(targetDay, is(startOfDay1));
-            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            assertThat(actual.get(targetDay).timelines.get(0).statistics.isPresent(), is(false));
             //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
-            assertThat(actual.get(targetDay).get(0).score, is(80));
-            assertThat(actual.get(targetDay).get(0).message, is("test1"));
+            assertThat(actual.get(targetDay).timelines.get(0).score, is(80));
+            assertThat(actual.get(targetDay).timelines.get(0).message, is("test1"));
 
         }
 
@@ -221,24 +232,28 @@ public class TimelineDAODynamoDBIT {
         long accountId = 1;
 
 
-        final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
-        dateTimelinesMap.put(startOfDay1, timelinesForDay1);
+        final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
+
+        final TimelineResult resultsForDay1 = new TimelineResult(ImmutableList.copyOf(timelinesForDay1),TimelineLog.createEmpty());
+
+
+        dateTimelinesMap.put(startOfDay1, resultsForDay1);
         this.timelineDAODynamoDB.saveTimelinesForDates(accountId, dateTimelinesMap);
         final HashSet<DateTime> queryDates = new HashSet<>();
         queryDates.add(startOfDay1);
 
-        Map<DateTime, ImmutableList<Timeline>> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
+        Map<DateTime, TimelineResult> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
 
         assertThat(actual.size(), is(1));
         for(final DateTime targetDay:actual.keySet()){
-            assertThat(actual.get(targetDay).size(), is(1));
+            assertThat(actual.get(targetDay).timelines.size(), is(1));
 
 
             assertThat(targetDay, is(startOfDay1));
-            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            assertThat(actual.get(targetDay).timelines.get(0).statistics.isPresent(), is(false));
             //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
-            assertThat(actual.get(targetDay).get(0).score, is(80));
-            assertThat(actual.get(targetDay).get(0).message, is("test1"));
+            assertThat(actual.get(targetDay).timelines.get(0).score, is(80));
+            assertThat(actual.get(targetDay).timelines.get(0).message, is("test1"));
 
         }
 
@@ -267,24 +282,26 @@ public class TimelineDAODynamoDBIT {
         long accountId = 1;
 
 
-        final Map<DateTime, List<Timeline>> dateTimelinesMap = new HashMap<>();
-        dateTimelinesMap.put(startOfDay1, timelinesForDay1);
+        TimelineResult resultsForDay1 = new TimelineResult(ImmutableList.copyOf(timelinesForDay1), TimelineLog.createEmpty());
+
+        final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
+        dateTimelinesMap.put(startOfDay1, resultsForDay1);
         this.timelineDAODynamoDB.saveTimelinesForDates(accountId, dateTimelinesMap);
         final HashSet<DateTime> queryDates = new HashSet<>();
         queryDates.add(startOfDay1);
 
-        Map<DateTime, ImmutableList<Timeline>> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
+        Map<DateTime, TimelineResult> actual = this.timelineDAODynamoDB.getTimelinesForDates(accountId, queryDates);
 
         assertThat(actual.size(), is(1));
         for(final DateTime targetDay:actual.keySet()){
-            assertThat(actual.get(targetDay).size(), is(1));
+            assertThat(actual.get(targetDay).timelines.size(), is(1));
 
 
             assertThat(targetDay, is(startOfDay1));
-            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            assertThat(actual.get(targetDay).timelines.get(0).statistics.isPresent(), is(false));
             //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
-            assertThat(actual.get(targetDay).get(0).score, is(80));
-            assertThat(actual.get(targetDay).get(0).message, is("test1"));
+            assertThat(actual.get(targetDay).timelines.get(0).score, is(80));
+            assertThat(actual.get(targetDay).timelines.get(0).message, is("test1"));
 
         }
 
@@ -294,12 +311,12 @@ public class TimelineDAODynamoDBIT {
         assertThat(actual.size(), is(1));
 
         for(final DateTime targetDay:actual.keySet()){
-            assertThat(actual.get(targetDay).size(), is(1));
+            assertThat(actual.get(targetDay).timelines.size(), is(1));
             assertThat(targetDay, is(startOfDay1));
-            assertThat(actual.get(targetDay).get(0).statistics.isPresent(), is(false));
+            assertThat(actual.get(targetDay).timelines.get(0).statistics.isPresent(), is(false));
             //assertThat(actual.get(targetDay).get(0).statistics.get(), is((SleepStats)null));
-            assertThat(actual.get(targetDay).get(0).score, is(80));
-            assertThat(actual.get(targetDay).get(0).message, is("test1"));
+            assertThat(actual.get(targetDay).timelines.get(0).score, is(80));
+            assertThat(actual.get(targetDay).timelines.get(0).message, is("test1"));
 
         }
 

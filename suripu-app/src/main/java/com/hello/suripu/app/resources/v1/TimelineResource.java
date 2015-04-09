@@ -67,7 +67,7 @@ public class TimelineResource extends BaseResource {
 
             //only cache if not the HMM
             if (!this.hasHmmEnabled(accountId)) {
-                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result.timelines);
+                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
             }
 
             return true;
@@ -86,33 +86,49 @@ public class TimelineResource extends BaseResource {
         return false;
     }
 
-    private TimelineResult getCachedTimelines(final Long accountId, final DateTime targetDate){
 
-        final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
-        if (!cachedTimelines.isEmpty()) {
-            LOGGER.info("Timeline for account {}, date {} returned from cache.", accountId, targetDate);
-            return new TimelineResult(cachedTimelines);
-        }
-
-        return TimelineResult.createEmpty();
-
-    }
 
     private TimelineResult getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
 
         //if no update forced (i.e. no HMM)
-        final TimelineResult cachedResult = getCachedTimelines(accountId, targetDate);
-        if (!cachedResult.timelines.isEmpty() && !this.hasVotingEnabled(accountId)) {
-            return cachedResult;
+
+        //first try to get a cached result
+        final Optional<TimelineResult> cachedResult = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
+
+        if (cachedResult.isPresent() && !this.hasVotingEnabled(accountId)) {
+
+            //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
+            timelineLogDAO.putTimelineLog(accountId,cachedResult.get().log);
+
+            return cachedResult.get();
         }
+        else {
 
+            LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
 
-        LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
-        final TimelineResult result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
-        cacheTimeline(accountId, targetDate, result);
+            //generate timeline from one of our many algorithms
+            final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
 
-        return result;
+            //if it was successful,
+            if (result.isPresent()) {
+
+                //place in cache cache, money money, yo.
+                cacheTimeline(accountId, targetDate, result.get());
+
+                //log it, too
+                timelineLogDAO.putTimelineLog(accountId,result.get().log);
+
+                return result.get();
+
+            }
+            else {
+
+                //not successful in generating timeline for whatever reason,
+                //no cache, no log, just return empty
+                return TimelineResult.createEmpty();
+            }
+        }
     }
 
     @Timed

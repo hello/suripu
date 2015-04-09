@@ -3,6 +3,7 @@ package com.hello.suripu.app.cli;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.google.common.base.Optional;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.core.ObjectGraphRoot;
@@ -129,8 +130,13 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
             int hasScore = 0;
             for (int i = 0; i < numDays; i++) {
                 final DateTime targetDate = startTargetDate.plusDays(i);
-                final TimelineResult result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
-                final Timeline timeline = result.timelines.get(0);
+                final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+
+                if (!result.isPresent()) {
+                    continue;
+                }
+
+                final Timeline timeline = result.get().timelines.get(0);
 
                 if (timeline.events.isEmpty()) {
                     LOGGER.info("Nothing for Date {}", targetDate);

@@ -30,6 +30,7 @@ import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +167,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
             final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(dateAndAlgList[0]);
             final String algorithm = dateAndAlgList[1];
 
-            result.add(new TimelineLog(resultAccountId,algorithm,createdDate,targetDate,version));
+            result.add(new TimelineLog(algorithm,version,createdDate.getMillis(),targetDate.getMillis()));
 
         }
 
@@ -175,16 +176,16 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
     }
 
     @Override
-    public boolean putTimelineLog(final TimelineLog logdata) {
+    public boolean putTimelineLog(final long accountId,final TimelineLog logdata) {
         final HashMap<String, AttributeValueUpdate> items = new HashMap<>();
         final DateTime now = DateTime.now();
 
-        final String dateString = DateTimeUtil.dateToYmdString(logdata.targetDate);
-        final String createdString = DateTimeUtil.dateToYmdString(logdata.createdDate);
+        final String dateString = DateTimeUtil.dateToYmdString(new DateTime(logdata.targetDate).withZone(DateTimeZone.UTC));
+        final String createdString = DateTimeUtil.dateToYmdString(new DateTime(logdata.createdDate).withZone(DateTimeZone.UTC));
         final String dateAlgString = String.format("%s_%s",dateString,logdata.algorithm);
 
         final HashMap<String, AttributeValue> keys = new HashMap<>();
-        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(logdata.accountId)));
+        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
         keys.put(DATEALG_ATTRIBUTE_NAME, new AttributeValue().withS(dateAlgString));
         keys.put(CREATEDATE_ATTRIBUTE_NAME,new AttributeValue().withS(createdString));
         keys.put(VERSION_ATTRIBUTE_NAME,new AttributeValue().withS(logdata.version));
@@ -203,13 +204,13 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
             LOGGER.error("Server exception {} while saving {} result for account {}",
                     awsException.getMessage(),
                     dateAlgString,
-                    logdata.accountId);
+                    accountId);
             return false;
         }catch (AmazonClientException acExp){
             LOGGER.error("AmazonClientException exception {} while saving {} result for account {}",
                     acExp.getMessage(),
                     dateAlgString,
-                    logdata.accountId);
+                    accountId);
             return false;
         }
 

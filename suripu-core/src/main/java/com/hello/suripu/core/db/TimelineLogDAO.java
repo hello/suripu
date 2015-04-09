@@ -13,5 +13,5 @@ public interface TimelineLogDAO {
 
     public ImmutableList<TimelineLog> getLogsForUserAndDay(long accountId, DateTime day,Optional<Integer> numDaysAfterday);
 
-    public boolean putTimelineLog(final TimelineLog logdata);
+    public boolean putTimelineLog(final long accountId,final TimelineLog logdata);
 }
