@@ -118,3 +118,7 @@ kinesis_logger:
   buffer_size: 100
   origin: suripu-workers
   min_log_level : INFO
+
+redis:
+  host: stats.xoe7je.0001.use1.cache.amazonaws.com
+  port: 6379
