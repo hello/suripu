@@ -173,12 +173,13 @@ public class English {
             "    <title>Password Reset</title>\n" +
             "</head>\n" +
             "<body>\n" +
-            "    <p>Hi %s,</p>\n" +
-            "    <p>Forgot your password? You can reset it <a href=\"%s\">here</a>.</p>\n" +
-            "    <p>Please reset it right away. This link will expire in 1 day.</p>\n" +
-            "    <p>If you did not initiate this password reset request, you can safely ignore this email.</p>\n" +
+            "    <p>Hello %s,</p>\n" +
+            "    <p>Someone has requested a link to change your password, and you can do this through the link below.</p>\n" +
+            "    <p><a href=\"%s\">Change my password</a></p>\n" +
+            "    <p>If you didn't request this, please ignore this email..</p>\n" +
+            "    <p>Your password won't change until you access the link above and create a new one.</p>\n" +
             "</body>\n" +
             "</html>";
 
-    public final static String EMAIL_PASSWORD_RESET_SUBJECT = "Password reset";
+    public final static String EMAIL_PASSWORD_RESET_SUBJECT = "Reset your account password";
 }
