@@ -30,6 +30,8 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
+import com.hello.suripu.core.models.TimelineLog;
+import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
@@ -70,6 +72,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     final private static int SLOT_DURATION_MINUTES = 1;
     final private static int MININIMUM_NUMBER_OF_TRACKER_MOTIIONS = 20;
 
+    public final static String ALGORITHM_NAME_REGULAR = "wupang";
+    public final static String ALGORITHM_NAME_VOTING = "voting";
+    public final static String ALGORITHM_NAME_HMM = "hmm";
 
     public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
@@ -338,13 +343,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    static private List<Timeline> getEmtpyTimelineList() {
-        final Timeline timeline = Timeline.createEmpty();
-        final List<Timeline> timelines = Lists.newArrayList(timeline);
-        return timelines;
-    }
 
-    public List<Timeline> retrieveTimelinesFast(final Long accountId, final DateTime date) {
+    public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
         final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
         final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
@@ -358,12 +358,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-            return getEmtpyTimelineList();
+            return Optional.absent();
         }
 
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
+        String algorithm = TimelineLog.NO_ALGORITHM;
+        String version = TimelineLog.NO_VERSION;
 
         try {
 
@@ -377,12 +379,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate, sensorData.trackerMotions, sensorData.allSensorSampleList);
 
                 if (!results.isPresent()) {
-                    return getEmtpyTimelineList();
+                    return Optional.absent();
                 }
 
                 sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
                 extraEvents = results.get().allTheOtherWakesAndSleeps;
-
+                algorithm = ALGORITHM_NAME_HMM;
 
             } else if(this.hasVotingEnabled(accountId)){
                 final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
@@ -391,6 +393,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                         sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
                 sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
                 extraEvents = votingSleepEventsOptional.get().extraEvents;
+                algorithm = ALGORITHM_NAME_VOTING;
             } else {
 
                 /* regular algorithm */
@@ -398,22 +401,27 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                         sensorData.trackerMotions,
                         sensorData.allSensorSampleList.get(Sensor.LIGHT),
                         sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
+                algorithm = ALGORITHM_NAME_REGULAR;
 
             }
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
                 LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-                return getEmtpyTimelineList();
+                return Optional.absent();
             }
 
-            return populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),extraEvents, sensorData);
+            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),extraEvents, sensorData);
+
+            final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
+
+            return Optional.of(TimelineResult.create(timelines,log));
         }
         catch (Exception e) {
             LOGGER.error(e.toString());
         }
 
         LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-        return getEmtpyTimelineList();
+        return Optional.absent();
 
     }
 

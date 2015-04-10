@@ -1,5 +1,6 @@
 package com.hello.suripu.core.metrics;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import org.joda.time.DateTime;
 
@@ -18,5 +19,14 @@ public class DeviceEvents {
         this.deviceId = deviceId;
         this.createdAt = createdAt;
         this.events = ImmutableSet.copyOf(events);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(DeviceEvents.class)
+                .add("device_id", deviceId)
+                .add("created_at", createdAt)
+                .add("events", events)
+                .toString();
     }
 }

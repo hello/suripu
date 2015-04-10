@@ -33,11 +33,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.CachedTimelines;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import com.yammer.metrics.annotation.Timed;
@@ -101,22 +103,22 @@ public class TimelineDAODynamoDB {
     }
 
     @Timed
-    public ImmutableList<Timeline> getTimelinesForDate(long accountId, final DateTime targetDateOfNightLocalUTC){
+    public Optional<TimelineResult> getTimelinesForDate(long accountId, final DateTime targetDateOfNightLocalUTC){
         final Collection<DateTime> convertedParam = new ArrayList<DateTime>();
         convertedParam.add(targetDateOfNightLocalUTC);
-        final ImmutableMap<DateTime, ImmutableList<Timeline>> result = this.getTimelinesForDates(accountId, convertedParam);
+        final ImmutableMap<DateTime,TimelineResult> result = this.getTimelinesForDates(accountId, convertedParam);
         if(result.containsKey(targetDateOfNightLocalUTC)){
-            return result.get(targetDateOfNightLocalUTC);
+            return Optional.of(result.get(targetDateOfNightLocalUTC));
         }
 
-        return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        return Optional.absent();
     }
 
-    public static Map<DateTime, ImmutableList<Timeline>> filterExpiredCache(final ImmutableMap<Long, CachedTimelines> dataFromCache,
+    public static Map<DateTime, TimelineResult> filterExpiredCache(final ImmutableMap<Long, CachedTimelines> dataFromCache,
                                                                             final Map<Long, DateTime> requestDatesLocalUTCMillis,
                                                                             final DateTime now,
                                                                             final int maxInvalidateSpanInDay){
-        final Map<DateTime, ImmutableList<Timeline>> finalResultMap = new HashMap<>();
+        final Map<DateTime, TimelineResult> finalResultMap = new HashMap<>();
         for(final Long timelineDateLocalUTCMillis:dataFromCache.keySet()){
             if(requestDatesLocalUTCMillis.containsKey(timelineDateLocalUTCMillis)){
                 final DateTime requestDateLocalUTC = requestDatesLocalUTCMillis.get(timelineDateLocalUTCMillis);
@@ -124,7 +126,7 @@ public class TimelineDAODynamoDB {
                     continue;  // Do not return out-dated timeline from dynamoDB.
                 }
 
-                finalResultMap.put(requestDateLocalUTC, ImmutableList.copyOf(dataFromCache.get(timelineDateLocalUTCMillis).timeline));
+                finalResultMap.put(requestDateLocalUTC, dataFromCache.get(timelineDateLocalUTCMillis).result);
             }
         }
 
@@ -132,7 +134,7 @@ public class TimelineDAODynamoDB {
     }
 
     @Timed
-    public ImmutableMap<DateTime, ImmutableList<Timeline>> getTimelinesForDates(long accountId, final Collection<DateTime> dates){
+    public ImmutableMap<DateTime, TimelineResult> getTimelinesForDates(long accountId, final Collection<DateTime> dates){
         final Map<Long, DateTime> requestDatesLocalUTCMillisToDateTimeMap = new HashMap<>();
         for(final DateTime date:dates){
             requestDatesLocalUTCMillisToDateTimeMap.put(date.getMillis(), date);
@@ -141,7 +143,7 @@ public class TimelineDAODynamoDB {
         final Collection<Long> requestDatesLocalUTCMillis = requestDatesLocalUTCMillisToDateTimeMap.keySet();
         final ImmutableMap<Long, CachedTimelines> cachedData = this.getTimelinesForDatesImpl(accountId, requestDatesLocalUTCMillis);
 
-        final Map<DateTime, ImmutableList<Timeline>> finalResultMap = filterExpiredCache(cachedData,  // Tim you are right, wrong level of abstract makes program read like shit.
+        final Map<DateTime, TimelineResult> finalResultMap = filterExpiredCache(cachedData,  // Tim you are right, wrong level of abstract makes program read like shit.
                 requestDatesLocalUTCMillisToDateTimeMap,
                 DateTime.now(),
                 this.maxBackTrackDays);
@@ -280,8 +282,10 @@ public class TimelineDAODynamoDB {
                 try {
                     final byte[] decompressed = Compression.decompress(compressed, compressionType);
                     final String jsonString = new String(decompressed, JSON_CHARSET);
-                    final List<Timeline> eventList = mapper.readValue(jsonString, new TypeReference<List<Timeline>>() {});
-                    eventsWithAllTypes.addAll(eventList);
+                    final TimelineResult result = mapper.readValue(jsonString, new TypeReference<TimelineResult>() {});
+
+                    final CachedTimelines cachedTimelines = CachedTimelines.create(result, version, expiredAtMillis);
+                    finalResult.put(dateInMillis, cachedTimelines);
 
                 }catch (JsonParseException jpe){
                     LOGGER.error("Parsing event list for account {}, failed: {}",
@@ -302,10 +306,6 @@ public class TimelineDAODynamoDB {
                             //dataAttributeName,
                             ioe.getMessage());
                 }
-
-                final CachedTimelines cachedTimelines = CachedTimelines.create(eventsWithAllTypes, version, expiredAtMillis);
-                finalResult.put(dateInMillis, cachedTimelines);
-
             }
 
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
@@ -326,15 +326,15 @@ public class TimelineDAODynamoDB {
 
 
     @Timed
-    public void saveTimelinesForDate(final Long accountId, final DateTime dateOfTheNightLocalUTC, final List<Timeline> data){
-        final Map<DateTime, List<Timeline>> convertedParam = new HashMap<>();
+    public void saveTimelinesForDate(final Long accountId, final DateTime dateOfTheNightLocalUTC, final TimelineResult data ){
+        final Map<DateTime, TimelineResult> convertedParam = new HashMap<>();
         convertedParam.put(dateOfTheNightLocalUTC, data);
         saveTimelinesForDates(accountId, convertedParam);
     }
 
     @Timed
-    public void saveTimelinesForDates(final Long accountId, final Map<DateTime, List<Timeline>> data){
-        final Map<Long, List<Timeline>> dataWithStringDates = new HashMap<>();
+    public void saveTimelinesForDates(final Long accountId, final Map<DateTime,TimelineResult> data){
+        final Map<Long, TimelineResult> dataWithStringDates = new HashMap<>();
 
         for(final DateTime dateOfTheNightLocalUTC:data.keySet()){
             dataWithStringDates.put(dateOfTheNightLocalUTC.getMillis(), data.get(dateOfTheNightLocalUTC));
@@ -343,7 +343,7 @@ public class TimelineDAODynamoDB {
         setTimelinesForDatesLong(accountId, dataWithStringDates);
     }
 
-    private void setTimelinesForDatesLong(final Long accountId, final Map<Long, List<Timeline>> data){
+    private void setTimelinesForDatesLong(final Long accountId, final Map<Long, TimelineResult> data){
         if(data.size() == 0){
             LOGGER.info("Empty motion data for account_id = {}", accountId);
             return;
@@ -360,7 +360,7 @@ public class TimelineDAODynamoDB {
 
         for(final Long targetDateOfNightLocalUTC:data.keySet()) {
 
-            final List<Timeline> timelines = data.get(targetDateOfNightLocalUTC);
+            final TimelineResult timelines = data.get(targetDateOfNightLocalUTC);
 
 
             try {
