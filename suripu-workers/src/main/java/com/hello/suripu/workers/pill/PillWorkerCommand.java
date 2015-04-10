@@ -19,9 +19,9 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
+import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
-import com.yammer.dropwizard.cli.ConfiguredCommand;
-import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSource;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 
-public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfiguration> {
+public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorkerConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillWorkerCommand.class);
 
@@ -44,7 +44,7 @@ public final class PillWorkerCommand extends ConfiguredCommand<PillWorkerConfigu
     }
 
     @Override
-    public final void run(Bootstrap<PillWorkerConfiguration> bootstrap, Namespace namespace, PillWorkerConfiguration configuration) throws Exception {
+    protected void run(Environment environment, Namespace namespace, PillWorkerConfiguration configuration) throws Exception {
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorDB());
 

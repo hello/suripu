@@ -1,4 +1,4 @@
-package com.hello.suripu.app.models;
+package com.hello.suripu.admin.models;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.DeviceInactive;
@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class RedisPaginator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisPaginator.class);
+public class InactiveDevicesPaginator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InactiveDevicesPaginator.class);
     private static final Integer DEFAULT_MAX_ITEMS_PER_PAGE = 40;
 
     public final JedisPool jedisPool;
@@ -24,7 +24,7 @@ public class RedisPaginator {
     public final String deviceType;
     public final Integer maxItemsPerPage;
 
-    public RedisPaginator(final JedisPool jedisPool, final Long afterTimestamp, final Long beforeTimestamp, final String deviceType, final Integer maxItemsPerPage) {
+    public InactiveDevicesPaginator(final JedisPool jedisPool, final Long afterTimestamp, final Long beforeTimestamp, final String deviceType, final Integer maxItemsPerPage) {
         this.jedisPool = jedisPool;
         this.afterTimestamp = Optional.fromNullable(afterTimestamp);
         this.beforeTimestamp = Optional.fromNullable(beforeTimestamp);
@@ -32,7 +32,7 @@ public class RedisPaginator {
         this.maxItemsPerPage = maxItemsPerPage;
     }
 
-    public RedisPaginator(final JedisPool jedisPool, final Long afterTimestamp, final Long beforeTimestamp, final String deviceType) {
+    public InactiveDevicesPaginator(final JedisPool jedisPool, final Long afterTimestamp, final Long beforeTimestamp, final String deviceType) {
         this(jedisPool, afterTimestamp, beforeTimestamp, deviceType, DEFAULT_MAX_ITEMS_PER_PAGE);
     }
 

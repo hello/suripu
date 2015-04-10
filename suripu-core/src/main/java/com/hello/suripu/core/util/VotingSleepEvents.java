@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import org.joda.time.DateTimeConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +20,22 @@ public class VotingSleepEvents {
     public final SleepEvents<Optional<Event>> sleepEvents;
     public final List<Event> extraEvents = new ArrayList<>();
     public VotingSleepEvents(final SleepEvents<Segment> segments, final List<Segment> awakes){
-        final Segment goToBedSegment = segments.goToBed;
+        Segment goToBedSegment = segments.goToBed;
         final Segment fallAsleepSegment = segments.fallAsleep;
+
+        if(fallAsleepSegment.getStartTimestamp() == goToBedSegment.getStartTimestamp()){
+            goToBedSegment = new Segment(fallAsleepSegment.getStartTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                    fallAsleepSegment.getStartTimestamp(),
+                    goToBedSegment.getOffsetMillis());
+        }
+
         final Segment wakeUpSegment = segments.wakeUp;
-        final Segment outOfBedSegment = segments.outOfBed;
+        Segment outOfBedSegment = segments.outOfBed;
+        if(wakeUpSegment.getStartTimestamp() == outOfBedSegment.getStartTimestamp()){
+            outOfBedSegment = new Segment(wakeUpSegment.getEndTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    wakeUpSegment.getEndTimestamp() + 2 * DateTimeConstants.MILLIS_PER_MINUTE,
+                    outOfBedSegment.getOffsetMillis());
+        }
 
         //final int smoothWindowSizeInMillis = smoothWindowSizeInMinutes * DateTimeConstants.MILLIS_PER_MINUTE;
         final Optional<Event> inBedEvent = Optional.of((Event)new InBedEvent(goToBedSegment.getStartTimestamp(),
@@ -46,15 +59,24 @@ public class VotingSleepEvents {
 
 
         for(final Segment segment:awakes){
-            if(segment.getStartTimestamp() < fallAsleepSegment.getStartTimestamp()){
+            if(segment.getStartTimestamp() < fallAsleepSegment.getEndTimestamp()){
                 continue;
             }
 
-            if(segment.getStartTimestamp() > wakeUpSegment.getStartTimestamp()){
+            if(segment.getEndTimestamp() > wakeUpSegment.getStartTimestamp()){
                 continue;
             }
-            this.extraEvents.add(new WakeupEvent(segment.getStartTimestamp(), segment.getEndTimestamp(), segment.getOffsetMillis()));
-            this.extraEvents.add(new FallingAsleepEvent(segment.getStartTimestamp(), segment.getEndTimestamp(), segment.getOffsetMillis()));
+
+            if(segment.getDuration() <= 2 * DateTimeConstants.MILLIS_PER_MINUTE){
+                continue;
+            }
+
+            this.extraEvents.add(new WakeupEvent(segment.getStartTimestamp(),
+                    segment.getStartTimestamp() + DateTimeConstants.MILLIS_PER_MINUTE,
+                    segment.getOffsetMillis()));
+            this.extraEvents.add(new FallingAsleepEvent(segment.getEndTimestamp() - DateTimeConstants.MILLIS_PER_MINUTE,
+                    segment.getEndTimestamp(),
+                    segment.getOffsetMillis()));
         }
     }
 }
