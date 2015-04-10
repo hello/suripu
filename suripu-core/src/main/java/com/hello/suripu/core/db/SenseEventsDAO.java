@@ -42,7 +42,7 @@ public class SenseEventsDAO {
     }
 
 
-    public static String deviceEventsKey(DeviceEvents deviceEvents) {
+    public static String deviceEventsKey(final DeviceEvents deviceEvents) {
         final String createdAt = deviceEvents.createdAt.toString("yyyy-MM-dd HH:mm:ss");
         return String.format("%s|%s", deviceEvents.deviceId, createdAt);
 
@@ -84,8 +84,8 @@ public class SenseEventsDAO {
 
 
             final Multimap<String, String> eventsPerSecond = transform(deviceEventsSublist);
-            for(final String key : eventsPerSecond.keySet()) {
-                final String[] parts = key.split("|");
+            for(final String key : eventsPerSecond.asMap().keySet()) {
+                final String[] parts = key.split("\\|");
                 final String deviceId = parts[0];
                 final String createdAt = parts[1];
 
