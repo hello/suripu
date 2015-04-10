@@ -11,6 +11,9 @@ import java.util.List;
  */
 public class TimelineLog {
 
+    public final static String NO_ALGORITHM = "none";
+    public final static String NO_VERSION = "none";
+
     @JsonProperty("algorithm")
     public final String algorithm;
 
@@ -43,6 +46,6 @@ public class TimelineLog {
     }
 
     static public TimelineLog createEmpty() {
-        return new TimelineLog("","",0L,0L);
+        return new TimelineLog("none","none",0L,0L);
     }
 }

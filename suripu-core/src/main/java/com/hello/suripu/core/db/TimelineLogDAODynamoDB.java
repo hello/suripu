@@ -14,6 +14,8 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
@@ -184,22 +186,20 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
         final String createdString = DateTimeUtil.dateToYmdString(new DateTime(logdata.createdDate).withZone(DateTimeZone.UTC));
         final String dateAlgString = String.format("%s_%s",dateString,logdata.algorithm);
 
-        final HashMap<String, AttributeValue> keys = new HashMap<>();
-        keys.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
-        keys.put(DATEALG_ATTRIBUTE_NAME, new AttributeValue().withS(dateAlgString));
-        keys.put(CREATEDATE_ATTRIBUTE_NAME,new AttributeValue().withS(createdString));
-        keys.put(VERSION_ATTRIBUTE_NAME,new AttributeValue().withS(logdata.version));
-        keys.put(TIMELINE_DATA_ATTRIBUTE_NAME,new AttributeValue().withS("{}"));
+        final HashMap<String, AttributeValue> keyValueMap = new HashMap<>();
+        keyValueMap.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
+        keyValueMap.put(DATEALG_ATTRIBUTE_NAME, new AttributeValue().withS(dateAlgString));
+        keyValueMap.put(CREATEDATE_ATTRIBUTE_NAME, new AttributeValue().withS(createdString));
+        keyValueMap.put(VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(logdata.version));
+        keyValueMap.put(TIMELINE_DATA_ATTRIBUTE_NAME, new AttributeValue().withS("{}"));
 
 
-        final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
+        final PutItemRequest request = new PutItemRequest()
                 .withTableName(this.tableName)
-                .withKey(keys)
-                .withAttributeUpdates(items)
-                .withReturnValues(ReturnValue.ALL_NEW);
+                .withItem(keyValueMap);
 
         try {
-            final UpdateItemResult result = this.dynamoDBClient.updateItem(updateItemRequest);
+            final PutItemResult result = this.dynamoDBClient.putItem(request);
         }catch (AmazonServiceException awsException){
             LOGGER.error("Server exception {} while saving {} result for account {}",
                     awsException.getMessage(),

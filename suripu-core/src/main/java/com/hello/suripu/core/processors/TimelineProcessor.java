@@ -364,8 +364,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
-        String algorithm = "";
-        String version = "";
+        String algorithm = TimelineLog.NO_ALGORITHM;
+        String version = TimelineLog.NO_VERSION;
 
         try {
 
