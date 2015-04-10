@@ -277,3 +277,10 @@ algorithm_test_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: algorithm_test
+
+timeline_log_db:
+  endpoint: http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: timeline_log
+
+
