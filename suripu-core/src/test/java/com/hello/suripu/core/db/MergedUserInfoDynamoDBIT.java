@@ -82,10 +82,10 @@ public class MergedUserInfoDynamoDBIT {
 
     @Test
     public void testCreateAndRetrieve(){
-        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(this.deviceId, this.accountId, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.setTimeZone(this.deviceId, this.accountId, DateTimeZone.UTC);
         final Optional<UserInfo> retrieved = this.mergedUserInfoDynamoDB.getInfo(this.deviceId, this.accountId);
         assertThat(retrieved.isPresent(), is(true));
-        assertThat(retrieved.get().timeZone.isPresent(), is(false));
+        assertThat(retrieved.get().timeZone.isPresent(), is(true));
     }
 
     @Test
@@ -124,8 +124,8 @@ public class MergedUserInfoDynamoDBIT {
     @Test
     public void testUnlinkAccountAndDeviceId(){
         final String deviceId = "Pang's Morpheus";
-        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(deviceId, 0L, DateTimeZone.UTC);
-        this.mergedUserInfoDynamoDB.createUserInfoWithEmptyAlarmList(deviceId, 1L, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.setTimeZone(deviceId, 0L, DateTimeZone.UTC);
+        this.mergedUserInfoDynamoDB.setTimeZone(deviceId, 1L, DateTimeZone.UTC);
         final Optional<UserInfo> deleted = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(0L, deviceId);
         assertThat(deleted.isPresent(), is(true));
         assertThat(deleted.get().deviceId, is(deviceId));
@@ -226,6 +226,7 @@ public class MergedUserInfoDynamoDBIT {
 
         final DateTime now = DateTime.now();
         final DateTime previousRing = now.plusHours(1);
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
                 previousRing.getMillis(), new long[0], true));
 
@@ -258,6 +259,7 @@ public class MergedUserInfoDynamoDBIT {
 
         final DateTime now = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
         final DateTime previousRing = now.plusHours(1);
+        this.mergedUserInfoDynamoDB.setTimeZone(senseId, accountId, DateTimeZone.getDefault());
         this.mergedUserInfoDynamoDB.setRingTime(senseId, accountId, new RingTime(previousRing.minusMinutes(5).getMillis(),
                 previousRing.getMillis(), new long[0], true));
         assertThat(this.mergedUserInfoDynamoDB.getInfo(senseId, accountId).get().ringTime.get().actualRingTimeUTC,
