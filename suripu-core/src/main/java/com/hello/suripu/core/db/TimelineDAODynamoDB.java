@@ -282,7 +282,7 @@ public class TimelineDAODynamoDB {
                 try {
                     final byte[] decompressed = Compression.decompress(compressed, compressionType);
                     final String jsonString = new String(decompressed, JSON_CHARSET);
-                    final TimelineResult result = mapper.readValue(jsonString, new TypeReference<List<Timeline>>() {});
+                    final TimelineResult result = mapper.readValue(jsonString, new TypeReference<TimelineResult>() {});
 
                     final CachedTimelines cachedTimelines = CachedTimelines.create(result, version, expiredAtMillis);
                     finalResult.put(dateInMillis, cachedTimelines);
