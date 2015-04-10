@@ -19,6 +19,7 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -55,6 +56,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createRingTimeHistoryTable(configuration, awsCredentialsProvider);
         createSleepStatsTable(configuration, awsCredentialsProvider);
         createAlgorithmTestTable(configuration, awsCredentialsProvider);
+        createSmartAlarmLogTable(configuration, awsCredentialsProvider);
+    }
+
+    private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
+        final DynamoDBConfiguration config = configuration.getSmartAlarmLogDBConfiguration();
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = SmartAlarmLoggerDynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
     }
 
     private void createAccountPreferencesTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {

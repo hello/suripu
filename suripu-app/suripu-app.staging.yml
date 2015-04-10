@@ -277,3 +277,8 @@ algorithm_test_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: algorithm_test
+
+smart_alarm_log_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: smart_alarm_log

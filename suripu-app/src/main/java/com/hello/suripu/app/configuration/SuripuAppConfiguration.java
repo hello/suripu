@@ -192,6 +192,14 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("smart_alarm_log_db")
+    private DynamoDBConfiguration smartAlarmLogDBConfiguration;
+    public DynamoDBConfiguration getSmartAlarmLogDBConfiguration(){
+        return this.smartAlarmLogDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("sleep_score_version")
     private String sleepScoreVersion;
     public String getSleepScoreVersion() {

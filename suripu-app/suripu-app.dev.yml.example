@@ -229,3 +229,8 @@ redis:
   host: localhost
   port: 6379
 
+smart_alarm_log_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: smart_alarm_log
+
