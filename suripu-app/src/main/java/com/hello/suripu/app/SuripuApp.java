@@ -21,7 +21,6 @@ import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.AppCheckinResource;
-import com.hello.suripu.app.resources.v1.DataScienceResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.FeedbackResource;
 import com.hello.suripu.app.resources.v1.FirmwareResource;
@@ -361,8 +360,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final InsightProcessor insightProcessor = insightBuilder.build();
 
         environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB, insightProcessor));
-        environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO, deviceDataDAO, deviceDAO, insightProcessor, userLabelDAO));
-
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
