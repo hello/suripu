@@ -12,9 +12,11 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Multimap;
 import com.hello.suripu.core.metrics.DeviceEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,13 +42,38 @@ public class SenseEventsDAO {
     }
 
 
+    public static String deviceEventsKey(DeviceEvents deviceEvents) {
+        final String createdAt = deviceEvents.createdAt.toString("yyyy-MM-dd HH:mm:ss");
+        return String.format("%s|%s", deviceEvents.deviceId, createdAt);
+
+    }
+    /**
+     * Group events per device_id and seconds
+     * @param deviceEventsList
+     * @return
+     */
+    public static Multimap<String, String> transform(List<DeviceEvents> deviceEventsList) {
+        // This is ugly
+        //
+        // DEVICE_ID | 2015-04-09 10:00:01 -> { ble_dismissed, led : color }
+        // DEVICE_ID | 2015-04-09 10:00:02 -> { ble_dismissed, led : color }
+
+        final Multimap<String, String> eventsPerSecond = ArrayListMultimap.create();
+        for (final DeviceEvents deviceEvents : deviceEventsList) {
+
+            final String uniqueKey = deviceEventsKey(deviceEvents);
+            eventsPerSecond.putAll(uniqueKey, deviceEvents.events);
+        }
+
+        return eventsPerSecond;
+    }
+
+
     public Integer write(final List<DeviceEvents> deviceEventsList) {
 
         if(deviceEventsList.isEmpty()) {
-            LOGGER.warn("Can't persist empty list of events");
             return 0;
         }
-
 
         final List<DeviceEvents> reversed = Lists.reverse(deviceEventsList);
         for(final List<DeviceEvents> deviceEventsSublist : Lists.partition(reversed, 20)) {
@@ -55,55 +82,49 @@ public class SenseEventsDAO {
             final Map<String, List<WriteRequest>> requests = Maps.newHashMap();
             final List<WriteRequest> writeRequests = Lists.newArrayList();
 
-            final Set<String> uniquesHashRange = Sets.newHashSet();
-            for (final DeviceEvents deviceEvents : deviceEventsSublist) {
 
+            final Multimap<String, String> eventsPerSecond = transform(deviceEventsSublist);
+            for(final String key : eventsPerSecond.keySet()) {
+                final String[] parts = key.split("|");
+                final String deviceId = parts[0];
+                final String createdAt = parts[1];
 
-                final String createdAt = deviceEvents.createdAt.toString("yyyy-MM-dd HH:mm:ss");
-                final String uniqueKey = String.format("%s-%s", deviceEvents.deviceId, createdAt);
-                if(!uniquesHashRange.add(uniqueKey)) {
-                    LOGGER.warn("Key {} already exists in this batch write requests, keeping first one seen.", uniqueKey);
-                    continue;
-                }
-
-                if (deviceEvents.events.isEmpty()) {
-                    LOGGER.debug("Skipping empty events list for device_id = {}", deviceEvents.deviceId);
+                if(eventsPerSecond.get(key).isEmpty()) {
+                    LOGGER.debug("Skipping empty events list for device_id = {}", deviceId);
                     continue;
                 }
 
                 final Map<String, AttributeValue> req = Maps.newHashMap();
-                req.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceEvents.deviceId));
+                req.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
 
                 req.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(createdAt));
-                final Set<String> events = Sets.newHashSet();
-                for (final String key : deviceEvents.events.keySet()) {
-                    final String event = String.format("%s_%s", key, deviceEvents.events.get(key));
-                    events.add(event);
-                }
+                final Set<String> events = ImmutableSet.copyOf(eventsPerSecond.get(key));
+
                 req.put(EVENTS_ATTRIBUTE_NAME, new AttributeValue().withSS(events));
                 final PutRequest pr = new PutRequest().withItem(req);
 
                 writeRequests.add(new WriteRequest().withPutRequest(pr));
-            }
 
-            if(writeRequests.isEmpty()) {
-                LOGGER.warn("No requests to send to dynamoDB");
-                continue;
-            }
-
-            requests.put(tableName, writeRequests);
-            BatchWriteItemResult results = amazonDynamoDB.batchWriteItem(requests);
-
-            while(!results.getUnprocessedItems().isEmpty() && retries < 5) {
-
-                retries += 1;
-                try {
-                    LOGGER.debug("retrying for the {} time", retries);
-                    Thread.sleep(retries * retries * 500L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if(writeRequests.isEmpty()) {
+                    LOGGER.warn("No requests to send to dynamoDB");
+                    continue;
                 }
-                amazonDynamoDB.batchWriteItem(results.getUnprocessedItems());
+
+
+                requests.put(tableName, writeRequests);
+                BatchWriteItemResult results = amazonDynamoDB.batchWriteItem(requests);
+
+                while(!results.getUnprocessedItems().isEmpty() && retries < 5) {
+
+                    retries += 1;
+                    try {
+                        LOGGER.debug("retrying for the {} time", retries);
+                        Thread.sleep(retries * retries * 500L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    results = amazonDynamoDB.batchWriteItem(results.getUnprocessedItems());
+                }
             }
 
         }
