@@ -1,8 +1,12 @@
 package com.hello.suripu.workers.logs;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
@@ -12,6 +16,7 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -32,6 +37,9 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
     @Override
     protected void run(final Bootstrap<LogIndexerWorkerConfiguration> bootstrap, final Namespace namespace, final LogIndexerWorkerConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
+
+        init(configuration, awsCredentialsProvider);
+
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
@@ -39,6 +47,7 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
         LOGGER.debug("{}", queueNames);
         final String queueName = queueNames.get(QueueName.LOGS);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
+
 
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(
                 configuration.getAppName(),
@@ -57,8 +66,23 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final IRecordProcessorFactory factory = new LogIndexerProcessorFactory(configuration);
+        final IRecordProcessorFactory factory = new LogIndexerProcessorFactory(configuration, amazonDynamoDBClientFactory);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
+    }
+
+
+    protected void init(LogIndexerWorkerConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDB amazonDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
+        amazonDynamoDB.setEndpoint(configuration.getSenseEventsDynamoDBConfiguration().getEndpoint());
+        final String tableName = configuration.getSenseEventsDynamoDBConfiguration().getTableName();
+        try {
+            amazonDynamoDB.describeTable(tableName);
+            LOGGER.info("{} already exists.", tableName);
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = SenseEventsDAO.createTable(tableName, amazonDynamoDB);
+            final TableDescription description = result.getTableDescription();
+            LOGGER.info("{}: {}", tableName, description.getTableStatus());
+        }
     }
 }

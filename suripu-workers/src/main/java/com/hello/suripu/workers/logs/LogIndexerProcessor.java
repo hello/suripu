@@ -9,6 +9,7 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.db.SenseEventsDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,17 +22,25 @@ public class LogIndexerProcessor implements IRecordProcessor {
     private final LogIndexer<LoggingProtos.BatchLogMessage> applicationIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> workersIndexer;
+    private final LogIndexer<LoggingProtos.BatchLogMessage> senseStructuredLogsIndexer;
 
     private LogIndexerProcessor(final LogIndexer<LoggingProtos.BatchLogMessage> applicationIndexer,
                                 final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer,
-                                final LogIndexer<LoggingProtos.BatchLogMessage> workersIndexer) {
+                                final LogIndexer<LoggingProtos.BatchLogMessage> workersIndexer,
+                                final LogIndexer<LoggingProtos.BatchLogMessage> senseStructuredLogsIndexer) {
         this.applicationIndexer = applicationIndexer;
         this.senseIndexer = senseIndexer;
         this.workersIndexer = workersIndexer;
+        this.senseStructuredLogsIndexer = senseStructuredLogsIndexer;
     }
 
-    public static LogIndexerProcessor create(final IndexTankClient.Index applicationIndex, final IndexTankClient.Index senseIndex, final IndexTankClient.Index workersIndex) {
-        return new LogIndexerProcessor(new GenericLogIndexer(applicationIndex), new SenseLogIndexer(senseIndex), new GenericLogIndexer(workersIndex));
+    public static LogIndexerProcessor create(final IndexTankClient.Index applicationIndex, final IndexTankClient.Index senseIndex, final IndexTankClient.Index workersIndex, final SenseEventsDAO senseEventsDAO) {
+        return new LogIndexerProcessor(
+                new GenericLogIndexer(applicationIndex),
+                new SenseLogIndexer(senseIndex),
+                new GenericLogIndexer(workersIndex),
+                new SenseStructuredLogIndexer(senseEventsDAO)
+        );
     }
 
     @Override
@@ -44,7 +53,6 @@ public class LogIndexerProcessor implements IRecordProcessor {
         for(final Record record : records) {
             try {
                 final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(record.getData().array());
-
                 if(batchLogMessage.hasLogType()) {
                     switch (batchLogMessage.getLogType()) {
                         case APPLICATION_LOG:
@@ -55,6 +63,9 @@ public class LogIndexerProcessor implements IRecordProcessor {
                             break;
                         case WORKERS_LOG:
                             workersIndexer.collect(batchLogMessage);
+                            break;
+                        case STRUCTURED_SENSE_LOG:
+                            senseStructuredLogsIndexer.collect(batchLogMessage);
                             break;
                     }
                 } else { // old protobuf messages don't have a LogType
@@ -71,9 +82,10 @@ public class LogIndexerProcessor implements IRecordProcessor {
             final Integer applicationLogsCount = applicationIndexer.index();
             final Integer senseLogsCount = senseIndexer.index();
             final Integer workersLogsCount = workersIndexer.index();
+            final Integer eventsCount = senseStructuredLogsIndexer.index();
 
             iRecordProcessorCheckpointer.checkpoint();
-            LOGGER.info("Checkpointing {} records ({} app logs, {} sense logs and {} workers logs)", records.size(), applicationLogsCount, senseLogsCount, workersLogsCount);
+            LOGGER.info("Checkpointing {} records ({} app logs, {} sense logs, {} workers logs and {} kv logs.)", records.size(), applicationLogsCount, senseLogsCount, workersLogsCount, eventsCount);
         } catch (ShutdownException e) {
             LOGGER.error("Shutdown: {}", e.getMessage());
         } catch (InvalidStateException e) {
