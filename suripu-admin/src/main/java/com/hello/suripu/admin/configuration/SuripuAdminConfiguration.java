@@ -111,11 +111,17 @@ public class SuripuAdminConfiguration extends Configuration {
 
     public DynamoDBConfiguration getPasswordResetDBConfiguration() { return passwordResetDBConfiguration; }
 
-
     @Valid
     @NotNull
     @JsonProperty("sense_events")
     private DynamoDBConfiguration senseEventsDBConfiguration;
 
     public DynamoDBConfiguration getSenseEventsDBConfiguration() { return senseEventsDBConfiguration; }
+
+    @JsonProperty("teams_db")
+    private DynamoDBConfiguration teamsDynamoDBConfiguration;
+
+    public DynamoDBConfiguration getTeamsDynamoDBConfiguration(){
+        return teamsDynamoDBConfiguration;
+    }
 }

@@ -123,3 +123,8 @@ sense_events:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: sense_events
+
+teams_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region: us-east-1
+    table_name: teams

@@ -1,4 +1,4 @@
-package com.hello.suripu.app.resources.v1;
+package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -25,11 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 
 @Path("/v1/teams")
-public class TeamsResource {
+public class TeamsResources {
 
     private final TeamStore teamStore;
 
-    public TeamsResource(final TeamStore teamStore) {
+    public TeamsResources(final TeamStore teamStore) {
         this.teamStore = teamStore;
     }
 
