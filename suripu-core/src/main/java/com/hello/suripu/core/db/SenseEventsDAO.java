@@ -57,10 +57,7 @@ public class SenseEventsDAO {
     }
 
 
-<<<<<<< Updated upstream
-    public static String deviceEventsKey(DeviceEvents deviceEvents) {
-        final String createdAt = deviceEvents.createdAt.toString("yyyy-MM-dd HH:mm:ss");
-=======
+
     public static String dateTimeToString(final DateTime dateTime) {
         return dateTime.toString(DATETIME_FORMAT);
     }
@@ -69,10 +66,8 @@ public class SenseEventsDAO {
         return new DateTime(DateTime.parse(createdAt, DateTimeFormat.forPattern(DATETIME_FORMAT)), DateTimeZone.UTC);
     }
 
-
     public static String deviceEventsKey(final DeviceEvents deviceEvents) {
         final String createdAt = dateTimeToString(deviceEvents.createdAt);
->>>>>>> Stashed changes
         return String.format("%s|%s", deviceEvents.deviceId, createdAt);
     }
 
