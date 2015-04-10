@@ -57,7 +57,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
-    public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "accountId";
+    public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     public static final String DATEALG_ATTRIBUTE_NAME = "date_and_alg";
     public static final String TIMELINE_DATA_ATTRIBUTE_NAME = "timeline_data";
     public static final String VERSION_ATTRIBUTE_NAME = "version";
