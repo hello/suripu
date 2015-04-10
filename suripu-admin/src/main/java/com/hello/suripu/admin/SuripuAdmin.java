@@ -32,6 +32,7 @@ import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.logging.DataLogger;
@@ -103,6 +104,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final DeviceDAOAdmin deviceDAOAdmin = commonDB.onDemand(DeviceDAOAdmin.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
 
 
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
@@ -163,7 +165,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
-        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
+        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO));
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));
