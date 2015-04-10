@@ -45,6 +45,8 @@ public class DeviceResources {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceResources.class);
 
+    private static final Integer PILL_BATTERY_ALERT_THRESHOLD = 10;
+
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final TrackerMotionDAO trackerMotionDAO;
@@ -236,7 +238,8 @@ public class DeviceResources {
                 devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null, pillColor));
             } else {
                 final DeviceStatus deviceStatus = pillStatusOptional.get();
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.NORMAL, deviceStatus.firmwareVersion, deviceStatus.lastSeen, pillColor));
+                final Device.State state = (deviceStatus.batteryLevel <= PILL_BATTERY_ALERT_THRESHOLD) ? Device.State.LOW_BATTERY : Device.State.NORMAL;
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, state, deviceStatus.firmwareVersion, deviceStatus.lastSeen, pillColor));
             }
         }
 
