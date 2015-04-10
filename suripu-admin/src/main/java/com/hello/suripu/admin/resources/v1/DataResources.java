@@ -6,6 +6,7 @@ import com.hello.suripu.admin.models.UserInteraction;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -13,11 +14,13 @@ import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.JsonError;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -48,12 +51,14 @@ public class DataResources {
     private final DeviceDAO deviceDAO;
     private final AccountDAO accountDAO;
     private final UserLabelDAO userLabelDAO;
+    private final TrackerMotionDAO trackerMotionDAO;
 
-    public DataResources(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final AccountDAO accountDAO, final UserLabelDAO userLabelDAO) {
+    public DataResources(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final AccountDAO accountDAO, final UserLabelDAO userLabelDAO, final TrackerMotionDAO trackerMotionDAO) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.userLabelDAO = userLabelDAO;
+        this.trackerMotionDAO = trackerMotionDAO;
     }
 
     @GET
@@ -89,6 +94,64 @@ public class DataResources {
     }
 
 
+    @GET
+    @Path("/pill/{email}/{query_date_local_utc}/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TrackerMotion> getMotionAdmin(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                              @PathParam("query_date_local_utc") String date,
+                                              @PathParam("email") String email) {
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+        final Optional<Long> accountId = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId.get(), targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
+
+        return trackerMotions;
+    }
+
+    @Timed
+    @GET
+    @Path("/{email}/{sensor}/day")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getAdminLastDay(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+            @PathParam("email") final String email,
+            @PathParam("sensor") final String sensor,
+            @QueryParam("from") Long queryEndTimestampInUTC) {
+
+        final Optional<Long> optionalAccountId = Util.getAccountIdByEmail(accountDAO, email);
+        if (!optionalAccountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final int slotDurationInMinutes = 5;
+        /*
+        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
+        * data, instead of 24 hours.
+         */
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
+
+        // get latest device_id connected to this account
+        final Long accountId = optionalAccountId.get();
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                accountId, deviceId.get(), slotDurationInMinutes, sensor, 0);
+    }
+
+
     @POST
     @Path("/label")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -114,6 +177,7 @@ public class DataResources {
                 label.tzOffsetMillis, label.note);
 
     }
+
 
     @POST
     @Path("/batch_label")
@@ -172,6 +236,7 @@ public class DataResources {
 
         return inserted;
     }
+
 
     @GET
     @Path("/label/{email}/{night}")
