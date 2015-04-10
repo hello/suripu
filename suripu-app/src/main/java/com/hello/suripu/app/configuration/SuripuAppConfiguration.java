@@ -324,4 +324,12 @@ public class SuripuAppConfiguration extends Configuration {
     public RedisConfiguration getRedisConfiguration() {
         return redisConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_log_db")
+    private DynamoDBConfiguration timelineLogDBConfiguration;
+    public DynamoDBConfiguration getTimelineLogDBConfiguration(){
+        return this.timelineLogDBConfiguration;
+    }
 }
