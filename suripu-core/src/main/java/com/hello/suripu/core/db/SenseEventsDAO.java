@@ -57,7 +57,6 @@ public class SenseEventsDAO {
     }
 
 
-
     public static String dateTimeToString(final DateTime dateTime) {
         return dateTime.toString(DATETIME_FORMAT);
     }
@@ -109,10 +108,11 @@ public class SenseEventsDAO {
 
         queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, byTime);
 
+
         final QueryRequest queryRequest = new QueryRequest();
         queryRequest.withTableName(tableName)
                 .withKeyConditions(queryConditions)
-                .withLimit(limit);
+                .withLimit(Math.max(limit, DEFAULT_LIMIT_SIZE * 2));
 
         final QueryResult queryResult = amazonDynamoDB.query(queryRequest);
         return fromDynamoDBItems(queryResult.getItems());

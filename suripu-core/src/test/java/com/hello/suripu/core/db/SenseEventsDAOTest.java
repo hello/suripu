@@ -22,6 +22,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SenseEventsDAOTest {
 
 
+    @Test public void testSplitKey() {
+        final String key = "ABC|123";
+        final String[] parts = key.split("\\|");
+        assertThat(parts[0], is("ABC"));
+        assertThat(parts[1], is("123"));
+    }
+
     @Test public void testTransformEmptyList() {
         final List<DeviceEvents> deviceEventsList = Lists.newArrayList();
         final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
