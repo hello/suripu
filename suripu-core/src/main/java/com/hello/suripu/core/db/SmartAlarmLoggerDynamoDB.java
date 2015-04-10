@@ -72,12 +72,13 @@ public class SmartAlarmLoggerDynamoDB {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH)
+                new KeySchemaElement().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(CURRENT_TIME_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
-
+                new AttributeDefinition().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
+                new AttributeDefinition().withAttributeName(CURRENT_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
         );
 
 
