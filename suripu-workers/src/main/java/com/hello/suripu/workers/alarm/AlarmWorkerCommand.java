@@ -14,6 +14,7 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
@@ -70,6 +71,10 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeDBConfiguration().getEndpoint());
         final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB = new ScheduledRingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeDBConfiguration().getTableName());
 
+        final AmazonDynamoDB alarmLoggerDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSmartAlarmLogDBConfiguration().getEndpoint());
+        final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = new SmartAlarmLoggerDynamoDB(alarmLoggerDynamoDBClient,
+                configuration.getSmartAlarmLogDBConfiguration().getTableName());
+
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
@@ -97,6 +102,7 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
 
         final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(mergedUserInfoDynamoDB,
                 scheduledRingTimeHistoryDAODynamoDB,
+                smartAlarmLoggerDynamoDB,
                 trackerMotionDAO,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
