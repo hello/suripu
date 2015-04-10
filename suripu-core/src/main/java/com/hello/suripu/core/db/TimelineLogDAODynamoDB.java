@@ -62,6 +62,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
     public static final String TIMELINE_DATA_ATTRIBUTE_NAME = "timeline_data";
     public static final String VERSION_ATTRIBUTE_NAME = "version";
     public static final String CREATEDATE_ATTRIBUTE_NAME = "created_date";
+    public static final int RETURNED_ITEM_LIMIT = 1000;
 
 
     public static final long DEFAULT_ACCOUNT_ID = -1;
@@ -131,7 +132,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
                 .withTableName(this.tableName)
                 .withKeyConditions(queryConditions)
                 .withAttributesToGet(targetAttributeSet)
-                .withLimit(1);
+                .withLimit(RETURNED_ITEM_LIMIT);
 
         final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
