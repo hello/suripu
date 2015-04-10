@@ -63,9 +63,7 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
     public static final String VERSION_ATTRIBUTE_NAME = "version";
     public static final String CREATEDATE_ATTRIBUTE_NAME = "created_date";
     public static final int RETURNED_ITEM_LIMIT = 1000;
-
-
-    public static final long DEFAULT_ACCOUNT_ID = -1;
+    
 
     public final String JSON_CHARSET = "UTF-8";
 
