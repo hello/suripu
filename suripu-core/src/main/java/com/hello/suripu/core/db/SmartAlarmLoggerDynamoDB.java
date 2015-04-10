@@ -62,9 +62,9 @@ public class SmartAlarmLoggerDynamoDB {
         try {
             final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
         }catch (AmazonServiceException awsEx){
-            LOGGER.error("Log smart alarm for account {} failed, client error", accountId);
+            LOGGER.error("Log smart alarm for account {} failed, aws service error {}", accountId, awsEx.getMessage());
         }catch (AmazonClientException awcEx){
-            LOGGER.error("Log smart alarm for account {} failed, client error.", accountId);
+            LOGGER.error("Log smart alarm for account {} failed, client error.", accountId, awcEx.getMessage());
         }
     }
 
