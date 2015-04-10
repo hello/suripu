@@ -98,3 +98,8 @@ aggregate_window_size_min: 15
 smart_alarm_process_ahead_in_minutes: 30
 
 light_sleep_init_threshold: 0.2
+
+smart_alarm_log_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: smart_alarm_log

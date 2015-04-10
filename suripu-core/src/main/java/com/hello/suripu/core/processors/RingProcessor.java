@@ -9,6 +9,7 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
@@ -75,6 +76,7 @@ public class RingProcessor {
     @Timed
     public static RingTime updateAndReturnNextRingTimeForSense(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                                                final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
+                                                               final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                                                final TrackerMotionDAO trackerMotionDAO,
                                                                final String morpheusId,
                                                                final DateTime currentTimeNotAligned,
@@ -120,7 +122,9 @@ public class RingProcessor {
                             slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                             nextRingTimeFromWorker, nextRingTimeFromTemplate,
                             userInfo,
-                            trackerMotionDAO, mergedUserInfoDynamoDB);
+                            trackerMotionDAO,
+                            mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB,
+                            feature);
 
                     if(!nextRingTime.isEmpty()) {
                         ringTimes.add(nextRingTime);
@@ -134,7 +138,9 @@ public class RingProcessor {
                         slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                         nextRingTimeFromWorker, nextRingTimeFromTemplate,
                         userInfo,
-                        trackerMotionDAO, mergedUserInfoDynamoDB);
+                        trackerMotionDAO,
+                        mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB,
+                        feature);
 
                 if(!nextRingTime.isEmpty()) {
                     ringTimes.add(nextRingTime);
@@ -159,7 +165,9 @@ public class RingProcessor {
                                                                    final RingTime nextRingTimeFromTemplate,
                                                                    final UserInfo userInfo,
                                                                    final TrackerMotionDAO trackerMotionDAO,
-                                                                   final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
+                                                                   final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
+                                                                   final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
+                                                                   final RolloutClient feature){
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         
@@ -227,7 +235,9 @@ public class RingProcessor {
                     userInfo.timeZone.get(),
                     nextRingTimeFromTemplate,
                     slidingWindowSizeInMinutes, lightSleepThreshold,
-                    trackerMotionDAO);
+                    trackerMotionDAO,
+                    smartAlarmLoggerDynamoDB,
+                    feature);
 
             LOGGER.info("Device {} smart ring time updated to {}", userInfo.deviceId, new DateTime(nextRingTime.actualRingTimeUTC, userInfo.timeZone.get()));
             mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, nextRingTime);
@@ -316,7 +326,9 @@ public class RingProcessor {
                                                            final RingTime nextRegularRingTime,
                                                            final int slidingWindowSizeInMinutes,
                                                            final float lightSleepThreshold,
-                                                           final TrackerMotionDAO trackerMotionDAO){
+                                                           final TrackerMotionDAO trackerMotionDAO,
+                                                           final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
+                                                           final RolloutClient feature){
         final DateTime dataCollectionTime = new DateTime(now, timeZone);
         // Convert the local data collection time to local UTC time, for select motion data.
         final DateTime dataCollectionTimeLocalUTC = new DateTime(dataCollectionTime.getYear(),
@@ -348,6 +360,16 @@ public class RingProcessor {
                     now.getMillis(),
                     minRingTime.getMillis(),
                     nextRegularRingTime.expectedRingTimeUTC);
+
+            if(feature != null && feature.userFeatureActive(FeatureFlipper.SMART_ALARM_LOGGING, accountId, Collections.EMPTY_LIST)){
+                DateTime lastCycleEnds = new DateTime(0, DateTimeZone.UTC);
+                if(sleepCycles.size() > 0){
+                    lastCycleEnds = new DateTime(sleepCycles.get(sleepCycles.size() - 1).getEndTimestamp(), timeZone);
+                }
+                smartAlarmLoggerDynamoDB.log(accountId, lastCycleEnds, DateTime.now().withZone(timeZone),
+                        new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone),
+                        smartAlarmRingTimeUTC.withZone(timeZone));
+            }
             LOGGER.info("User {} smartAlarm time is {}", accountId, new DateTime(smartAlarmRingTimeUTC, timeZone));
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();
         }

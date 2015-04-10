@@ -14,6 +14,7 @@ import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
@@ -49,6 +50,7 @@ public class RingProcessorSingleUserIT {
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorSingleUserIT.class);
 
     private final AlarmDAODynamoDB alarmDAODynamoDB = mock(AlarmDAODynamoDB.class);
+    private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = mock(SmartAlarmLoggerDynamoDB.class);
 
     private ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
     private BasicAWSCredentials awsCredentials;
@@ -151,6 +153,19 @@ public class RingProcessorSingleUserIT {
         }
     }
 
+    private RingTime updateRingTime(final DateTime dataCollectionTime){
+        return RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                this.scheduledRingTimeHistoryDAODynamoDB,
+                this.smartAlarmLoggerDynamoDB,
+                this.trackerMotionDAO,
+                this.testDeviceId,
+                dataCollectionTime,
+                20,
+                15,
+                0.2f,
+                null);
+    }
+
     @Test
     public void testSmartAlarmOn_09_23_2014_Update(){
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
@@ -166,15 +181,7 @@ public class RingProcessorSingleUserIT {
                 Optional.of(nextRingTime), userInfo1.timeZone, userInfo1.pillColor,
                 0));
 
-        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        RingTime ringTime = updateRingTime(new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -187,15 +194,7 @@ public class RingProcessorSingleUserIT {
 
 
         // For minute that triggered smart alarm computation
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -223,15 +222,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For minutes that not yet trigger smart alarm computation
-        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        RingTime ringTime = updateRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -244,15 +235,7 @@ public class RingProcessorSingleUserIT {
 
         // For the minute trigger smart alarm computation
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
@@ -278,15 +261,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For moments that not yet trigger smart alarm computation
-        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        RingTime ringTime = updateRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -298,15 +273,7 @@ public class RingProcessorSingleUserIT {
                 0));
 
         // For moments that triggered smart alarm computation
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -338,15 +305,7 @@ public class RingProcessorSingleUserIT {
 
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        final RingTime ringTime = updateRingTime(dataCollectionTime);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -366,15 +325,7 @@ public class RingProcessorSingleUserIT {
                 0));
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        final RingTime ringTime = updateRingTime(dataCollectionTime);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -394,15 +345,7 @@ public class RingProcessorSingleUserIT {
 
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        final RingTime ringTime = updateRingTime(dataCollectionTime);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -424,15 +367,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        final RingTime ringTime = updateRingTime(dataCollectionTime);
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
@@ -460,15 +395,7 @@ public class RingProcessorSingleUserIT {
 
 
         // Minutes before smart alarm triggered.
-        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        RingTime ringTime = updateRingTime(new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -476,15 +403,7 @@ public class RingProcessorSingleUserIT {
         assertThat(ringTime.processed(), is(false));
 
         // Minutes after smart alarm triggered but before deadline.
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -515,15 +434,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        final RingTime ringTime = updateRingTime(dataCollectionTime);
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -553,15 +464,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        final RingTime ringTime = updateRingTime(dataCollectionTime);
 
         assertThat(ringTime.isEmpty(), is(true));
     }
@@ -590,15 +493,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        final RingTime ringTime = updateRingTime(dataCollectionTime);
 
         assertThat(ringTime.isEmpty(), is(true));
     }
@@ -642,15 +537,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
-        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        RingTime ringTime = updateRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -668,15 +555,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -694,15 +573,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm, smart: 2014-09-24 09:20
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                actualRingTime.plusMinutes(1),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(actualRingTime.plusMinutes(1));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -712,15 +583,7 @@ public class RingProcessorSingleUserIT {
         // 1st smart alarm expected ring time past, but not yet reach teh processing time of 2nd
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
@@ -767,15 +630,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
-        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        RingTime ringTime = updateRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -793,15 +648,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                dataCollectionTime,
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -819,15 +666,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm, smart: 2014-09-24 09:20
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                actualRingTime.plusMinutes(1),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(actualRingTime.plusMinutes(1));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -847,15 +686,7 @@ public class RingProcessorSingleUserIT {
         // 3rd alarm, smart: 2014-09-23 10:00
         // Now: [actual ring time + 2 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                actualRingTime.plusMinutes(2),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(actualRingTime.plusMinutes(2));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -865,15 +696,7 @@ public class RingProcessorSingleUserIT {
         // 3rd alarm, smart: 2014-09-23 10:00
         // Now: [actual ring time + 2 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(new DateTime(2014, 9, 23, 10, 0, DateTimeZone.forID("America/Los_Angeles"))), is(true));
@@ -886,15 +709,7 @@ public class RingProcessorSingleUserIT {
         // 1st smart alarm expected ring time past, but not yet reach the processing time of 2nd
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 10, 1, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(new DateTime(2014, 9, 23, 10, 1, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
@@ -921,15 +736,7 @@ public class RingProcessorSingleUserIT {
 
 
         // For moments that not yet trigger smart alarm computation
-        RingTime ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        RingTime ringTime = updateRingTime(new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -942,15 +749,7 @@ public class RingProcessorSingleUserIT {
                 0));
 
         // For moments that triggered smart alarm computation
-        ringTime = RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                this.scheduledRingTimeHistoryDAODynamoDB,
-                this.trackerMotionDAO,
-                this.testDeviceId,
-                new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")),
-                20,
-                15,
-                0.2f,
-                null);
+        ringTime = updateRingTime(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         assertThat(ringTime.actualRingTimeUTC, is(deadline.minusMinutes(3).getMillis()));
