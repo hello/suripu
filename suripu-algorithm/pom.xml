@@ -13,7 +13,7 @@
         <dependency>
             <groupId>suripu-jodatime</groupId>
             <artifactId>suripu-jodatime</artifactId>
-            <version>911</version>
+            <version>${jodatime.version}</version>
         </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
