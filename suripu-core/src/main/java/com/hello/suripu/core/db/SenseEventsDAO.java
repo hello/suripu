@@ -112,7 +112,7 @@ public class SenseEventsDAO {
         final QueryRequest queryRequest = new QueryRequest();
         queryRequest.withTableName(tableName)
                 .withKeyConditions(queryConditions)
-                .withLimit(Math.max(limit, DEFAULT_LIMIT_SIZE * 2));
+                .withLimit(Math.min(limit, DEFAULT_LIMIT_SIZE * 2));
 
         final QueryResult queryResult = amazonDynamoDB.query(queryRequest);
         return fromDynamoDBItems(queryResult.getItems());
