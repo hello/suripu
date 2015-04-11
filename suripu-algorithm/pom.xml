@@ -11,9 +11,20 @@
 
     <dependencies>
         <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${jodatime.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
             <version>${dropwizard.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>joda-time</artifactId>
+                    <groupId>joda-time</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

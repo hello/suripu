@@ -29,11 +29,23 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
             <version>${aws.sdk.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>joda-time</artifactId>
+                    <groupId>joda-time</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>amazon-kinesis-client</artifactId>
             <version>1.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>joda-time</artifactId>
+                    <groupId>joda-time</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.roaringbitmap</groupId>
@@ -55,6 +67,12 @@
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
             <version>${dropwizard.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>joda-time</artifactId>
+                    <groupId>joda-time</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
