@@ -9,7 +9,7 @@
   <artifactId>suripu-jodatime</artifactId>
   <packaging>jar</packaging>
   <name>Joda-Time</name>
-  <version>2.7</version>
+  <version>911</version>
   <description>Date and time library to replace JDK date handling</description>
   <url>http://www.joda.org/joda-time/</url>
 

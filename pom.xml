@@ -62,9 +62,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>joda-time</groupId>
-                <artifactId>joda-time</artifactId>
-                <version>2.7</version>
+                <groupId>suripu-jodatime</groupId>
+                <artifactId>suripu-jodatime</artifactId>
+                <version>911</version>
             </dependency>
             <dependency>
                 <groupId>com.hello.dropwizard</groupId>
