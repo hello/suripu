@@ -4,10 +4,8 @@ import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -27,7 +25,6 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPool;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -50,28 +47,16 @@ public class DeviceResources {
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final TrackerMotionDAO trackerMotionDAO;
-    private final AccountDAO accountDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    private final JedisPool jedisPool;
-    private final KeyStore senseKeyStore;
-    private final KeyStore pillKeyStore;
     private final PillHeartBeatDAO pillHeartBeatDAO;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDataDAO deviceDataDAO,
                            final TrackerMotionDAO trackerMotionDAO,
-                           final AccountDAO accountDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                           final JedisPool jedisPool,
-                           final KeyStore senseKeyStore,
-                           final KeyStore pillKeyStore,
                            final PillHeartBeatDAO pillHeartBeatDAO) {
         this.deviceDAO = deviceDAO;
-        this.accountDAO = accountDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
-        this.jedisPool = jedisPool;
-        this.senseKeyStore = senseKeyStore;
-        this.pillKeyStore = pillKeyStore;
         this.deviceDataDAO = deviceDataDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
