@@ -156,14 +156,15 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
+
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace);
+        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, configuration.getFeaturesDynamoDBConfiguration().getTableName(), namespace);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
-        final TeamStore teamStore = new TeamStore(teamStoreDBClient, "teams");
+        final TeamStore teamStore = new TeamStore(teamStoreDBClient, configuration.getTeamsDynamoDBConfiguration().getTableName());
 
         final AmazonDynamoDB senseEventsDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseEventsDBConfiguration().getEndpoint());
-        final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(senseEventsDBClient, "sense_events");
+        final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(senseEventsDBClient, configuration.getSenseEventsDBConfiguration().getTableName());
 
 
         environment.addResource(new PingResource());
