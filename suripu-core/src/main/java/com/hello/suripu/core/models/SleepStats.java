@@ -51,7 +51,7 @@ public class SleepStats {
     public static SleepStats create(
             @JsonProperty("sound_sleep") Integer soundSleepDurationInMinutes,
             @JsonProperty("total_sleep") Integer sleepDurationInMinutes,
-            @JsonProperty("is_sleep-duration") Boolean isSleepDuration,
+            @JsonProperty("is_sleep_duration") Boolean isSleepDuration,
             @JsonProperty("times_awake") Integer numberOfMotionEvents,
             @JsonProperty("time_to_sleep") Integer sleepOnsetTimeMinutes) {
 
