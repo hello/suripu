@@ -103,7 +103,7 @@ public class SenseEventsDAO {
         queryConditions.put(DEVICE_ID_ATTRIBUTE_NAME, byDeviceId);
 
         final Condition byTime = new Condition()
-                .withComparisonOperator(ComparisonOperator.LT)
+                .withComparisonOperator(ComparisonOperator.LE)
                 .withAttributeValueList(new AttributeValue().withS(dateTimeToString(start)));
 
         queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, byTime);
