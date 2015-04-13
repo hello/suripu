@@ -103,7 +103,7 @@ public class SenseEventsDAO {
         queryConditions.put(DEVICE_ID_ATTRIBUTE_NAME, byDeviceId);
 
         final Condition byTime = new Condition()
-                .withComparisonOperator(ComparisonOperator.LT)
+                .withComparisonOperator(ComparisonOperator.LE)
                 .withAttributeValueList(new AttributeValue().withS(dateTimeToString(start)));
 
         queryConditions.put(CREATED_AT_ATTRIBUTE_NAME, byTime);
@@ -112,9 +112,10 @@ public class SenseEventsDAO {
         final QueryRequest queryRequest = new QueryRequest();
         queryRequest.withTableName(tableName)
                 .withKeyConditions(queryConditions)
-                .withLimit(Math.min(limit, DEFAULT_LIMIT_SIZE * 2));
-
+                .withLimit(Math.min(limit, DEFAULT_LIMIT_SIZE * 2))
+                .setScanIndexForward(false);
         final QueryResult queryResult = amazonDynamoDB.query(queryRequest);
+
         return fromDynamoDBItems(queryResult.getItems());
     }
 
