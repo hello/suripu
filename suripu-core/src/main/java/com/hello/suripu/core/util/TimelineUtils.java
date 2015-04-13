@@ -702,6 +702,7 @@ public class TimelineUtils {
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
                 lightSleepDurationInMinutes,
                 sleepDurationInMinutes == 0 ? inBedDurationInMinutes : sleepDurationInMinutes,
+                sleepDurationInMinutes != 0,
                 numberOfMotionEvents,
                 firstSleepTimestampMillis,
                 wakeUpTimestampMillis,
@@ -718,7 +719,7 @@ public class TimelineUtils {
      * @param sleepStats
      * @return
      */
-    public static String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents, final Boolean reportSleepDuration) {
+    public static String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents) {
 
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
@@ -726,11 +727,11 @@ public class TimelineUtils {
 
         // report in-bed time
         String message = String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
-
-        if (reportSleepDuration) {
-            // report sleep duration
-            message = String.format("You were asleep for **%.1f hours**, and sleeping soundly for %.1f hours",
-                    sleepDurationInHours, soundDurationInHours);
+        if(sleepStats.isSleepDuration.isPresent()){
+            if(sleepStats.isSleepDuration.get()){
+                message = String.format("You were asleep for **%.1f hours**",
+                        sleepDurationInHours, soundDurationInHours);
+            }
         }
 
         if (soundDurationInHours > 0) {

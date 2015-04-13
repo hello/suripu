@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 
 public class SleepStats {
 
@@ -28,8 +29,11 @@ public class SleepStats {
     @JsonProperty("time_to_sleep")
     final public Integer sleepOnsetTimeMinutes;
 
+    @JsonProperty("is_sleep_duration")
+    public final Optional<Boolean> isSleepDuration;
+
     public SleepStats(final Integer soundSleepDurationInMinutes, final Integer lightSleepDurationInMinutes,
-                      final Integer sleepDurationInMinutes,
+                      final Integer sleepDurationInMinutes, final Boolean isSleepDuration,
                       final Integer numberOfMotionEvents,
                       final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMinutes) {
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
@@ -39,6 +43,7 @@ public class SleepStats {
         this.sleepTime = sleepTime;
         this.wakeTime = wakeTime;
         this.sleepOnsetTimeMinutes = sleepOnsetTimeMinutes;
+        this.isSleepDuration = Optional.fromNullable(isSleepDuration);
     }
 
 
@@ -46,10 +51,13 @@ public class SleepStats {
     public static SleepStats create(
             @JsonProperty("sound_sleep") Integer soundSleepDurationInMinutes,
             @JsonProperty("total_sleep") Integer sleepDurationInMinutes,
+            @JsonProperty("is_sleep-duration") Boolean isSleepDuration,
             @JsonProperty("times_awake") Integer numberOfMotionEvents,
             @JsonProperty("time_to_sleep") Integer sleepOnsetTimeMinutes) {
 
-        return new SleepStats(soundSleepDurationInMinutes,0,sleepDurationInMinutes,numberOfMotionEvents,0L,0L,sleepOnsetTimeMinutes);
+        return new SleepStats(soundSleepDurationInMinutes, 0,
+                sleepDurationInMinutes, isSleepDuration,
+                numberOfMotionEvents, 0L, 0L, sleepOnsetTimeMinutes);
     }
 
     @Override
