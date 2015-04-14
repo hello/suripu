@@ -13,7 +13,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Created by kingshy on 10/20/14.
  */
 public class DeviceDataTest {
-    private final static Logger LOGGER = LoggerFactory.getLogger(SleepScoreTest.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataTest.class);
 
     @Test
     public void testBuilder() {

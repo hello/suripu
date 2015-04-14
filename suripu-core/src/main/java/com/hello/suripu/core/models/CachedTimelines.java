@@ -11,26 +11,26 @@ import java.util.List;
 public class CachedTimelines {
     public static final Long NEVER_EXPIRE = -1L;
 
-    public final List<Timeline> timeline;
+    public final TimelineResult result;
     public final String version;
     public final Long expiredAtMillis;
 
-    private CachedTimelines(final List<Timeline> timeline, final String version, final Long expiredAtMillis){
-        this.timeline = timeline;
+    private CachedTimelines(final TimelineResult result, final String version, final Long expiredAtMillis){
+        this.result = result;
         this.version = version;
         this.expiredAtMillis = expiredAtMillis;
     }
 
-    public static CachedTimelines create(final List<Timeline> timeline, final String version, final Long expiredAtMillis){
-        return new CachedTimelines(timeline, version, expiredAtMillis);
+    public static CachedTimelines create(final TimelineResult result, final String version, final Long expiredAtMillis){
+        return new CachedTimelines(result, version, expiredAtMillis);
     }
 
     public static CachedTimelines createEmpty(){
-        return new CachedTimelines(Collections.<Timeline>emptyList(), "", -1L);
+        return new CachedTimelines(TimelineResult.createEmpty(), "", -1L);
     }
 
     public boolean isEmpty(){
-        return this.timeline.size() == 0 && this.version.isEmpty() && this.expiredAtMillis == -1;
+        return this.result.timelines.size() == 0 && this.version.isEmpty() && this.expiredAtMillis == -1;
     }
 
     public boolean shouldInvalidate(final String latestVersion, final DateTime targetDateUTC, final DateTime nowUTC, final int maxBackTrackDays){

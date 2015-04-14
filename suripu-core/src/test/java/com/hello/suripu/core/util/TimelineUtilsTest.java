@@ -876,6 +876,7 @@ public class TimelineUtilsTest extends FixtureTest {
     }
 
 
+    
     //@Test
     public void testGetResultVotingAlgorithm(){
         final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/qf_motion_2015_03_12_raw.csv");
@@ -912,6 +913,7 @@ public class TimelineUtilsTest extends FixtureTest {
         assertThat(wakeUpLocalUTC, is(new DateTime(2015, 3, 13, 8, 1, DateTimeZone.UTC)));
         assertThat(outOfBedLocalUTC, is(new DateTime(2015, 3, 13, 8, 56, DateTimeZone.UTC)));
     }
+
 
     @Test
     public void testInsertOneMinuteEvent(){

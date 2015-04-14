@@ -20,8 +20,8 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
-import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -103,7 +103,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
-        final SleepLabelDAO sleepLabelDAO = commonDB.onDemand(SleepLabelDAO.class);
+        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
@@ -152,9 +152,9 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         environment.getJerseyResourceConfig()
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
-                deviceDataDAO, deviceDAO, sleepLabelDAO, feedbackDAO));
+                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO));
 
-        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO,sleepLabelDAO,sleepHmmDAODynamoDB));
+        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB));
         environment.addResource(new AccountInfoResource(accountDAO, deviceDAO));
 
     }
