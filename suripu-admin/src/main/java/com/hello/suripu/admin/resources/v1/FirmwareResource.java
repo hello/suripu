@@ -1,46 +1,45 @@
-package com.hello.suripu.app.resources.v1;
+package com.hello.suripu.admin.resources.v1;
 
-import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.models.FirmwareInfo;
+import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.models.FirmwareCountInfo;
+import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Tuple;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Tuple;
 
 @Path("/v1/firmware")
 public class FirmwareResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmwareResource.class);
 
-    private final DeviceDAO deviceDAO;
+    private final FirmwareVersionMappingDAO firmwareVersionMappingDAO;
     private final JedisPool jedisPool;
     private static final String REDIS_SEEN_FIRMWARE_KEY = "firmwares_seen";
 
-    public FirmwareResource(final DeviceDAO deviceDAO, final JedisPool jedisPool) {
-        this.deviceDAO = deviceDAO;
+    public FirmwareResource(final JedisPool jedisPool, final FirmwareVersionMappingDAO firmwareVersionMappingDAO) {
         this.jedisPool = jedisPool;
+        this.firmwareVersionMappingDAO = firmwareVersionMappingDAO;
     }
 
     @GET
@@ -191,5 +190,16 @@ public class FirmwareResource {
             jedisPool.returnResource(jedis);
         }
 
+    }
+
+
+    @GET
+    @Timed
+    @Path("/names/{fw_hash}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getFWNames(
+            @Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+            @PathParam("fw_hash") final String fwHash) {
+        return firmwareVersionMappingDAO.get(fwHash);
     }
 }
