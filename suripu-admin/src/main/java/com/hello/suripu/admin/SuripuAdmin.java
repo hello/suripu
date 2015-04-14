@@ -14,6 +14,7 @@ import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
 import com.hello.suripu.admin.resources.v1.DeviceResources;
+import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
 import com.hello.suripu.admin.resources.v1.FirmwareResource;
 import com.hello.suripu.admin.resources.v1.TeamsResources;
@@ -32,8 +33,10 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.logging.DataLogger;
@@ -105,6 +108,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final DeviceDAOAdmin deviceDAOAdmin = commonDB.onDemand(DeviceDAOAdmin.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
 
 
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
@@ -156,11 +160,16 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
+
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace);
+        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, configuration.getFeaturesDynamoDBConfiguration().getTableName(), namespace);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
-        final TeamStore teamStore = new TeamStore(teamStoreDBClient, "teams");
+        final TeamStore teamStore = new TeamStore(teamStoreDBClient, configuration.getTeamsDynamoDBConfiguration().getTableName());
+
+        final AmazonDynamoDB senseEventsDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseEventsDBConfiguration().getEndpoint());
+        final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(senseEventsDBClient, configuration.getSenseEventsDBConfiguration().getTableName());
+
 
         final AmazonDynamoDB fwVersionMapping = dynamoDBClientFactory.getForEndpoint(configuration.getFirmwareVersionsDynamoDBConfiguration().getEndpoint());
         final FirmwareVersionMappingDAO firmwareVersionMappingDAO = new FirmwareVersionMappingDAO(fwVersionMapping, configuration.getFirmwareVersionsDynamoDBConfiguration().getTableName());
@@ -168,10 +177,12 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
-        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
+        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO));
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));
         environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO));
+        environment.addResource(new EventsResources(senseEventsDAO));
+
     }
 }

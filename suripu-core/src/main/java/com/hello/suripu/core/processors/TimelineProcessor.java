@@ -328,8 +328,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
-        final Boolean reportSleepDuration = false;
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents, reportSleepDuration);
+        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 

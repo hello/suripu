@@ -47,6 +47,7 @@ public class SleepStatsDAODynamoDB {
     private final String tableName;
     private final String version;
     public final Set<String> targetAttributes;
+    public final Set<String> mustHaveAttributes;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id"; // hash
     public static final String DATE_ATTRIBUTE_NAME = "date"; // range
@@ -68,6 +69,7 @@ public class SleepStatsDAODynamoDB {
 
     // sleep stats stuff
     public static final String SLEEP_DURATION_ATTRIBUTE_NAME = "sleep_duration";
+    public static final String IS_INBED_DURATION_ATTRIBUTE_NAME = "is_inbed_duration";
     public static final String LIGHT_SLEEP_ATTRIBUTE_NAME = "light_sleep";
     public static final String SOUND_SLEEP_ATTRIBUTE_NAME = "sound_sleep";
     public static final String ASLEEP_TIME_ATTRIBUTE_NAME = "fall_asleep_time";
@@ -85,8 +87,8 @@ public class SleepStatsDAODynamoDB {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName + "_" + version;
         this.version = version;
-        this.targetAttributes = new HashSet<>();
-        Collections.addAll(targetAttributes, ACCOUNT_ID_ATTRIBUTE_NAME, DATE_ATTRIBUTE_NAME,
+        this.mustHaveAttributes = new HashSet<>();
+        Collections.addAll(mustHaveAttributes, ACCOUNT_ID_ATTRIBUTE_NAME, DATE_ATTRIBUTE_NAME,
                 DOW_ATTRIBUTE_NAME, OFFSET_MILLIS_ATTRIBUTE_NAME,
                 SCORE_ATTRIBUTE_NAME, TYPE_ATTRIBUTE_NAME, VERSION_ATTRIBUTE_NAME,
                 MOTION_SCORE_ATTRIBUTE_NAME,
@@ -99,6 +101,10 @@ public class SleepStatsDAODynamoDB {
                 AWAKE_TIME_ATTRIBUTE_NAME,
                 SLEEP_ONSET_ATTRIBUTE_NAME,
                 SLEEP_MOTION_COUNT_ATTRIBUTE_NAME);
+
+        this.targetAttributes = new HashSet<>();
+        this.targetAttributes.addAll(this.mustHaveAttributes);
+        Collections.addAll(this.targetAttributes, IS_INBED_DURATION_ATTRIBUTE_NAME);
     }
 
     @Timed public Boolean updateStat(final Long accountId, final DateTime date, final Integer sleepScore, final MotionScore motionScore, final SleepStats stats, final Integer offsetMillis) {
@@ -160,7 +166,7 @@ public class SleepStatsDAODynamoDB {
             return Optional.absent();
         }
 
-        if(!item.keySet().containsAll(this.targetAttributes)){
+        if(!item.keySet().containsAll(this.mustHaveAttributes)){
             LOGGER.warn("Missing field in item {}", item);
             return Optional.absent();
         }
@@ -203,7 +209,7 @@ public class SleepStatsDAODynamoDB {
 
             if (queryResult.getItems() != null) {
                 for (final Map<String, AttributeValue> item : items) {
-                    if (!item.keySet().containsAll(targetAttributes)) {
+                    if (!item.keySet().containsAll(this.mustHaveAttributes)) {
                         LOGGER.warn("Missing field in item {}", item);
                         continue;
                     }
@@ -287,6 +293,7 @@ public class SleepStatsDAODynamoDB {
         item.put(AWAKE_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(String.valueOf(stats.wakeTime)));
         item.put(SLEEP_ONSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.sleepOnsetTimeMinutes)));
         item.put(SLEEP_MOTION_COUNT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.numberOfMotionEvents)));
+        item.put(IS_INBED_DURATION_ATTRIBUTE_NAME, new AttributeValue().withBOOL(stats.isInBedDuration));
 
         return item;
     }
@@ -330,6 +337,7 @@ public class SleepStatsDAODynamoDB {
                 Integer.valueOf(item.get(SOUND_SLEEP_ATTRIBUTE_NAME).getN()),
                 Integer.valueOf(item.get(LIGHT_SLEEP_ATTRIBUTE_NAME).getN()),
                 Integer.valueOf(item.get(SLEEP_DURATION_ATTRIBUTE_NAME).getN()),
+                item.containsKey(IS_INBED_DURATION_ATTRIBUTE_NAME) ? item.get(IS_INBED_DURATION_ATTRIBUTE_NAME).getBOOL() : true,
                 Integer.valueOf(item.get(SLEEP_MOTION_COUNT_ATTRIBUTE_NAME).getN()),
                 Long.valueOf(item.get(ASLEEP_TIME_ATTRIBUTE_NAME).getS()),
                 Long.valueOf(item.get(AWAKE_TIME_ATTRIBUTE_NAME).getS()),

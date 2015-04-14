@@ -1,25 +1,39 @@
 package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.UserInteraction;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.JsonError;
+import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -36,12 +50,15 @@ public class DataResources {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final AccountDAO accountDAO;
+    private final UserLabelDAO userLabelDAO;
+    private final TrackerMotionDAO trackerMotionDAO;
 
-    public DataResources(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final AccountDAO accountDAO) {
+    public DataResources(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final AccountDAO accountDAO, final UserLabelDAO userLabelDAO, final TrackerMotionDAO trackerMotionDAO) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
-
+        this.userLabelDAO = userLabelDAO;
+        this.trackerMotionDAO = trackerMotionDAO;
     }
 
     @GET
@@ -77,6 +94,165 @@ public class DataResources {
     }
 
 
+    @GET
+    @Path("/pill/{email}/{query_date_local_utc}/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TrackerMotion> getMotionAdmin(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                              @PathParam("query_date_local_utc") String date,
+                                              @PathParam("email") String email) {
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+        final Optional<Long> accountId = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountId.isPresent()) {
+            LOGGER.debug("ID not found for account {}", email);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId.get(), targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
+
+        return trackerMotions;
+    }
+
+    @Timed
+    @GET
+    @Path("/{email}/{sensor}/day")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Sample> getAdminLastDay(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+            @PathParam("email") final String email,
+            @PathParam("sensor") final String sensor,
+            @QueryParam("from") Long queryEndTimestampInUTC) {
+
+        final Optional<Long> optionalAccountId = Util.getAccountIdByEmail(accountDAO, email);
+        if (!optionalAccountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final int slotDurationInMinutes = 5;
+        /*
+        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
+        * data, instead of 24 hours.
+         */
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
+
+        // get latest device_id connected to this account
+        final Long accountId = optionalAccountId.get();
+        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        if(!deviceId.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                accountId, deviceId.get(), slotDurationInMinutes, sensor, 0);
+    }
+
+
+    @POST
+    @Path("/label")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                      @Valid final UserLabel label) {
+
+        final Optional<Long> optionalAccountId = Util.getAccountIdByEmail(accountDAO, label.email);
+        if (!optionalAccountId.isPresent()) {
+            LOGGER.debug("Account {} not found", label.email);
+            return;
+        }
+
+        UserLabel.UserLabelType userLabel = UserLabel.UserLabelType.fromString(label.labelString);
+
+        final DateTime nightDate = DateTime.parse(label.night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+
+        final DateTime labelTimestampUTC = new DateTime(label.ts, DateTimeZone.UTC);
+
+        userLabelDAO.insertUserLabel(optionalAccountId.get(),
+                label.email, userLabel.toString().toLowerCase(),
+                nightDate, labelTimestampUTC, label.durationMillis, labelTimestampUTC.plusMillis(label.tzOffsetMillis),
+                label.tzOffsetMillis, label.note);
+
+    }
+
+
+    @POST
+    @Path("/batch_label")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public int label(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                     @Valid final List<UserLabel> labels) {
+
+        final List<Long> accountIds = new ArrayList<>();
+        final List<String> emails = new ArrayList<>();
+        final List<String> userLabels = new ArrayList<>();
+        final List<DateTime> nightDates = new ArrayList<>();
+        final List<DateTime> UTCTimestamps = new ArrayList<>();
+        final List<Integer> durations = new ArrayList<>();
+        final List<DateTime> localUTCTimestamps = new ArrayList<>();
+        final List<Integer> tzOffsets = new ArrayList<>();
+        final List<String> notes = new ArrayList<>();
+
+        for (UserLabel label : labels) {
+
+            final Optional<Long> optionalAccountId = Util.getAccountIdByEmail(accountDAO, label.email);
+            if (!optionalAccountId.isPresent()) {
+                LOGGER.debug("Account {} not found", label.email);
+                continue;
+            }
+
+            final Long accountId = optionalAccountId.get();
+            accountIds.add(accountId);
+            emails.add(label.email);
+
+            UserLabel.UserLabelType userLabel = UserLabel.UserLabelType.fromString(label.labelString);
+            userLabels.add(userLabel.toString().toLowerCase());
+
+            final DateTime nightDate = DateTime.parse(label.night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                    .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+            nightDates.add(nightDate);
+
+            final DateTime labelTimestampUTC = new DateTime(label.ts, DateTimeZone.UTC);
+            UTCTimestamps.add(labelTimestampUTC);
+            durations.add(label.durationMillis);
+            localUTCTimestamps.add(labelTimestampUTC.plusMillis(label.tzOffsetMillis));
+
+            tzOffsets.add(label.tzOffsetMillis);
+
+            notes.add(label.note);
+        }
+
+        int inserted = 0;
+        try {
+            userLabelDAO.batchInsertUserLabels(accountIds, emails, userLabels, nightDates,
+                    UTCTimestamps, durations, localUTCTimestamps, tzOffsets, notes);
+            inserted = accountIds.size();
+        } catch (UnableToExecuteStatementException exception) {
+            LOGGER.warn("Batch insert user labels fails for some reason");
+        }
+
+        return inserted;
+    }
+
+
+    @GET
+    @Path("/label/{email}/{night}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<UserLabel> getLabels(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                     @PathParam("email") String email,
+                                     @PathParam("night") String night) {
+        final DateTime nightDate = DateTime.parse(night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+        LOGGER.debug("{} {}", email, nightDate);
+        return userLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
+    }
+
+
+    //Helpers
     private List<UserInteraction> getUserInteractionsData(final Long accountId, final Long startTimestamp, final Long endTimestamp) {
 
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
