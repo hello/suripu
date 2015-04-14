@@ -702,7 +702,7 @@ public class TimelineUtils {
         final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
                 lightSleepDurationInMinutes,
                 sleepDurationInMinutes == 0 ? inBedDurationInMinutes : sleepDurationInMinutes,
-                sleepDurationInMinutes != 0,
+                sleepDurationInMinutes == 0,
                 numberOfMotionEvents,
                 firstSleepTimestampMillis,
                 wakeUpTimestampMillis,
@@ -727,11 +727,8 @@ public class TimelineUtils {
 
         // report in-bed time
         String message = String.format("You were in bed for **%.1f hours**", sleepDurationInHours);
-        if(sleepStats.isSleepDuration.isPresent()){
-            if(sleepStats.isSleepDuration.get()){
-                message = String.format("You were asleep for **%.1f hours**",
-                        sleepDurationInHours, soundDurationInHours);
-            }
+        if(!sleepStats.isInBedDuration){
+            message = String.format("You were asleep for **%.1f hours**", sleepDurationInHours);
         }
 
         if (soundDurationInHours > 0) {

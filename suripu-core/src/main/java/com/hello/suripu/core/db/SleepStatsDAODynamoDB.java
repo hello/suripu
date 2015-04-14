@@ -69,7 +69,7 @@ public class SleepStatsDAODynamoDB {
 
     // sleep stats stuff
     public static final String SLEEP_DURATION_ATTRIBUTE_NAME = "sleep_duration";
-    public static final String IS_SLEEP_DURATION_ATTRIBUTE_NAME = "is_sleep_duration";
+    public static final String IS_INBED_DURATION_ATTRIBUTE_NAME = "is_inbed_duration";
     public static final String LIGHT_SLEEP_ATTRIBUTE_NAME = "light_sleep";
     public static final String SOUND_SLEEP_ATTRIBUTE_NAME = "sound_sleep";
     public static final String ASLEEP_TIME_ATTRIBUTE_NAME = "fall_asleep_time";
@@ -104,7 +104,7 @@ public class SleepStatsDAODynamoDB {
 
         this.targetAttributes = new HashSet<>();
         this.targetAttributes.addAll(this.mustHaveAttributes);
-        Collections.addAll(this.targetAttributes, IS_SLEEP_DURATION_ATTRIBUTE_NAME);
+        Collections.addAll(this.targetAttributes, IS_INBED_DURATION_ATTRIBUTE_NAME);
     }
 
     @Timed public Boolean updateStat(final Long accountId, final DateTime date, final Integer sleepScore, final MotionScore motionScore, final SleepStats stats, final Integer offsetMillis) {
@@ -293,10 +293,7 @@ public class SleepStatsDAODynamoDB {
         item.put(AWAKE_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(String.valueOf(stats.wakeTime)));
         item.put(SLEEP_ONSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.sleepOnsetTimeMinutes)));
         item.put(SLEEP_MOTION_COUNT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.numberOfMotionEvents)));
-
-        if(stats.isSleepDuration.isPresent()){
-            item.put(IS_SLEEP_DURATION_ATTRIBUTE_NAME, new AttributeValue().withBOOL(stats.isSleepDuration.get()));
-        }
+        item.put(IS_INBED_DURATION_ATTRIBUTE_NAME, new AttributeValue().withBOOL(stats.isInBedDuration));
 
         return item;
     }
@@ -340,7 +337,7 @@ public class SleepStatsDAODynamoDB {
                 Integer.valueOf(item.get(SOUND_SLEEP_ATTRIBUTE_NAME).getN()),
                 Integer.valueOf(item.get(LIGHT_SLEEP_ATTRIBUTE_NAME).getN()),
                 Integer.valueOf(item.get(SLEEP_DURATION_ATTRIBUTE_NAME).getN()),
-                item.containsKey(IS_SLEEP_DURATION_ATTRIBUTE_NAME) ? item.get(IS_SLEEP_DURATION_ATTRIBUTE_NAME).getBOOL() : null,
+                item.containsKey(IS_INBED_DURATION_ATTRIBUTE_NAME) ? item.get(IS_INBED_DURATION_ATTRIBUTE_NAME).getBOOL() : true,
                 Integer.valueOf(item.get(SLEEP_MOTION_COUNT_ATTRIBUTE_NAME).getN()),
                 Long.valueOf(item.get(ASLEEP_TIME_ATTRIBUTE_NAME).getS()),
                 Long.valueOf(item.get(AWAKE_TIME_ATTRIBUTE_NAME).getS()),
