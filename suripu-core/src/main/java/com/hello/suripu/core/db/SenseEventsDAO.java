@@ -25,7 +25,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.metrics.DeviceEvents;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +61,6 @@ public class SenseEventsDAO {
     }
 
     public static DateTime stringToDateTime(final String createdAt) {
-        DateTimeZone.getDefault();
         final String adjustedCreatedAt = (createdAt.contains("Z")) ? createdAt : createdAt + "Z"; // we need to self correct for old values in db
         return DateTime.parse(adjustedCreatedAt, DateTimeFormat.forPattern(DATETIME_FORMAT));
     }
