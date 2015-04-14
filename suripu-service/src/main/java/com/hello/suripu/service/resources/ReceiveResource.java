@@ -497,11 +497,22 @@ public class ReceiveResource extends BaseResource {
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
         final String ipAddress = getIpAddress(request);
-        final boolean pchOTA = ((featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceID, deviceGroups) && OTAProcessor.isPCH(ipAddress)));
+
+        final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
+
+        final boolean pchOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceID, deviceGroups) &&
+                (OTAProcessor.isPCH(ipAddress) || isOfficeDeviceWithOverride));
+
+        if(pchOTA) {
+            LOGGER.debug("PCH Special OTA for device: {}", deviceID);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
+            LOGGER.info("{} files added to syncResponse for PCH Special OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
+            return fileDownloadList;
+        }
 
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
-        if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
-            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS) && !deviceGroups.isEmpty()) {
+        if (isOfficeDeviceWithOverride) {
+            if (!deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
                 LOGGER.info("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
                 final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion, false);
@@ -510,13 +521,6 @@ public class ReceiveResource extends BaseResource {
             } else {
                 return Collections.emptyList();
             }
-        }
-
-        if(pchOTA) {
-            LOGGER.debug("PCH Special OTA for device: {}", deviceID);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
-            LOGGER.info("{} files added to syncResponse for PCH Special OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
-            return fileDownloadList;
         }
 
         final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
