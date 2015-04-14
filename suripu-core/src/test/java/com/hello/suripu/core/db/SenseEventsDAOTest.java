@@ -50,7 +50,7 @@ public class SenseEventsDAOTest {
 
         final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
         assertThat(groupedEvents.asMap().size(), is(1));
-        final String key = "ABC|" + now.toString("yyyy-MM-dd HH:mm:ss");
+        final String key = "ABC|" + SenseEventsDAO.dateTimeToString(now);
         final Collection<String> res = groupedEvents.get(key);
         assertThat(res == null, is(false));
         assertThat(res.size(), is(2));
@@ -70,7 +70,7 @@ public class SenseEventsDAOTest {
 
         final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
         assertThat(groupedEvents.size(), is(2));
-        final String key = "ABC|" + now.toString("yyyy-MM-dd HH:mm:ss");
+        final String key = "ABC|" + SenseEventsDAO.dateTimeToString(now);
         final Collection<String> res = groupedEvents.get(key);
         assertThat(res == null, is(false));
         assertThat(res.size(), is(1));

@@ -118,10 +118,21 @@ public class SuripuAdminConfiguration extends Configuration {
 
     public DynamoDBConfiguration getSenseEventsDBConfiguration() { return senseEventsDBConfiguration; }
 
+    @Valid
+    @NotNull
     @JsonProperty("teams_db")
     private DynamoDBConfiguration teamsDynamoDBConfiguration;
 
     public DynamoDBConfiguration getTeamsDynamoDBConfiguration(){
         return teamsDynamoDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("firmware_versions")
+    private DynamoDBConfiguration firmwareVersionsDynamoDBConfiguration;
+
+    public DynamoDBConfiguration getFirmwareVersionsDynamoDBConfiguration(){
+        return firmwareVersionsDynamoDBConfiguration;
     }
 }
