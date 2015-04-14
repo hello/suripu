@@ -145,7 +145,7 @@ public class Vote {
         if(awakesInMotionCluster.size() < 2){
             return awakesInMotionCluster;
         }
-        
+
         for(final Segment awake:awakesInMotionCluster){
             if(awake.getDuration() < 20 * DateTimeConstants.MILLIS_PER_MINUTE){
                 continue;
