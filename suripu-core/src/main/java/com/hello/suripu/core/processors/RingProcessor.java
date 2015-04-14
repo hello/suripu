@@ -367,8 +367,8 @@ public class RingProcessor {
                     lastCycleEnds = new DateTime(sleepCycles.get(sleepCycles.size() - 1).getEndTimestamp(), timeZone);
                 }
                 smartAlarmLoggerDynamoDB.log(accountId, lastCycleEnds, DateTime.now().withZone(timeZone),
-                        new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone),
-                        smartAlarmRingTimeUTC.withZone(timeZone));
+                        smartAlarmRingTimeUTC.withZone(timeZone),
+                        new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone));
             }
             LOGGER.info("User {} smartAlarm time is {}", accountId, new DateTime(smartAlarmRingTimeUTC, timeZone));
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();
