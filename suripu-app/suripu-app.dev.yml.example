@@ -214,6 +214,11 @@ algorithm_test_db:
   region: us-east-1
   table_name: algorithm_test
 
+timeline_log_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: timeline_log
+
 # store sleep scores and other stats
 # v0.2: score uses movement and duration
 sleep_stats_db:
@@ -228,4 +233,9 @@ max_cache_refresh_days: 20
 redis:
   host: localhost
   port: 6379
+
+smart_alarm_log_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: smart_alarm_log
 

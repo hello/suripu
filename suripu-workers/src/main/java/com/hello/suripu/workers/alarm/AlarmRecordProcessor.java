@@ -9,6 +9,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -27,18 +28,21 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmRecordProcessor.class);
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
+    private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB;
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
 
     public AlarmRecordProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
+                                final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                 final TrackerMotionDAO trackerMotionDAO,
                                 final AlarmWorkerConfiguration configuration){
 
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.scheduledRingTimeHistoryDAODynamoDB = scheduledRingTimeHistoryDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.smartAlarmLoggerDynamoDB = smartAlarmLoggerDynamoDB;
 
         this.configuration = configuration;
 
@@ -75,6 +79,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         for(final String senseId : senseIds) {
             RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                     this.scheduledRingTimeHistoryDAODynamoDB,
+                    this.smartAlarmLoggerDynamoDB,
                     this.trackerMotionDAO,
                     senseId,
                     DateTime.now(),

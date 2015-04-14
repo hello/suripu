@@ -15,7 +15,7 @@ public class CachedTimelinesTest {
     @Test
     public void testShouldInvalidateDifferentVersion(){
         final long expireMillis = DateTime.now().getMillis();
-        final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
+        final CachedTimelines cachedTimelines = CachedTimelines.create(TimelineResult.createEmpty(), new Integer(1).toString(), expireMillis);
         assertThat(cachedTimelines.shouldInvalidate(new Integer(2).toString(),
                 DateTime.now().withTimeAtStartOfDay(),
                 DateTime.now().withTimeAtStartOfDay(),
@@ -26,7 +26,7 @@ public class CachedTimelinesTest {
     @Test
     public void testShouldNotInvalidateDifferentVersionButTargetDateTooOld(){
         final long expireMillis = DateTime.now().getMillis();
-        final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
+        final CachedTimelines cachedTimelines = CachedTimelines.create(TimelineResult.createEmpty(), new Integer(1).toString(), expireMillis);
         assertThat(cachedTimelines.shouldInvalidate(new Integer(2).toString(),
                         DateTime.now().withTimeAtStartOfDay().minusDays(20),
                         DateTime.now().withTimeAtStartOfDay(),
@@ -37,7 +37,7 @@ public class CachedTimelinesTest {
     @Test
     public void shouldNotInvalidateTargetDateTooOld(){
         final long expireMillis = DateTime.now().getMillis();
-        final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
+        final CachedTimelines cachedTimelines = CachedTimelines.create(TimelineResult.createEmpty(), new Integer(1).toString(), expireMillis);
         assertThat(cachedTimelines.shouldInvalidate(new Integer(2).toString(),
                 DateTime.now().withTimeAtStartOfDay().minusDays(20),
                 DateTime.now(), 5),
@@ -47,7 +47,7 @@ public class CachedTimelinesTest {
     @Test
     public void shouldNotInvalidateExpiredButTargetDateTooOld(){
         final long expireMillis = DateTime.now().plusMinutes(1).getMillis();
-        final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
+        final CachedTimelines cachedTimelines = CachedTimelines.create(TimelineResult.createEmpty(), new Integer(1).toString(), expireMillis);
         assertThat(cachedTimelines.shouldInvalidate(new Integer(2).toString(),
                 DateTime.now().withTimeAtStartOfDay().minusDays(20),
                 DateTime.now().plusMinutes(6),
@@ -58,7 +58,7 @@ public class CachedTimelinesTest {
     @Test
     public void shouldInvalidateExpired(){
         final long expireMillis = DateTime.now().getMillis();
-        final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
+        final CachedTimelines cachedTimelines = CachedTimelines.create(TimelineResult.createEmpty(), new Integer(1).toString(), expireMillis);
         assertThat(cachedTimelines.shouldInvalidate(new Integer(1).toString(),
                 DateTime.now().withTimeAtStartOfDay(),
                 DateTime.now().plusMinutes(1),
@@ -69,7 +69,7 @@ public class CachedTimelinesTest {
     @Test
     public void shouldNotInvalidateNotExpired(){
         final long expireMillis = DateTime.now().plusMinutes(1).getMillis();
-        final CachedTimelines cachedTimelines = CachedTimelines.create(new ArrayList<Timeline>(), new Integer(1).toString(), expireMillis);
+        final CachedTimelines cachedTimelines = CachedTimelines.create(TimelineResult.createEmpty(), new Integer(1).toString(), expireMillis);
         assertThat(cachedTimelines.shouldInvalidate(new Integer(1).toString(),
                         DateTime.now().withTimeAtStartOfDay(),
                         DateTime.now(),

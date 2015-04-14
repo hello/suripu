@@ -1,4 +1,4 @@
-package com.hello.suripu.app.resources.v1;
+package com.hello.suripu.admin.resources.v1;
 
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.models.Feature;
@@ -18,12 +18,12 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/v1/features")
-public class FeaturesResource {
+public class FeaturesResources {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeaturesResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeaturesResources.class);
     private final FeatureStore featureStore;
 
-    public FeaturesResource(final FeatureStore featureStore) {
+    public FeaturesResources(final FeatureStore featureStore) {
         this.featureStore = featureStore;
     }
 

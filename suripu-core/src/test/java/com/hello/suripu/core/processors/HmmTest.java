@@ -12,9 +12,8 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.HmmDeserialization;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import junit.framework.TestCase;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
-import sun.misc.BASE64Decoder;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,9 +55,8 @@ public class HmmTest {
         public Optional<SleepHmmWithInterpretation> getLatestModelForDate(long accountId, long timeOfInterestMillis) {
             Optional<SleepHmmWithInterpretation> ret = Optional.absent();
 
-            BASE64Decoder decoder = new BASE64Decoder();
             try {
-                final byte[] decodedBytes = decoder.decodeBuffer(this.protbufData);
+                final byte[] decodedBytes = Base64.decodeBase64(this.protbufData);
 
                 final SleepHmmProtos.SleepHmmModelSet proto = SleepHmmProtos.SleepHmmModelSet.parseFrom(decodedBytes);
 

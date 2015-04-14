@@ -28,8 +28,11 @@ public class SleepStats {
     @JsonProperty("time_to_sleep")
     final public Integer sleepOnsetTimeMinutes;
 
+    @JsonIgnore
+    public final boolean isInBedDuration;
+
     public SleepStats(final Integer soundSleepDurationInMinutes, final Integer lightSleepDurationInMinutes,
-                      final Integer sleepDurationInMinutes,
+                      final Integer sleepDurationInMinutes, final boolean isInBedDuration,
                       final Integer numberOfMotionEvents,
                       final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMinutes) {
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
@@ -39,6 +42,7 @@ public class SleepStats {
         this.sleepTime = sleepTime;
         this.wakeTime = wakeTime;
         this.sleepOnsetTimeMinutes = sleepOnsetTimeMinutes;
+        this.isInBedDuration = isInBedDuration;
     }
 
 
@@ -49,7 +53,9 @@ public class SleepStats {
             @JsonProperty("times_awake") Integer numberOfMotionEvents,
             @JsonProperty("time_to_sleep") Integer sleepOnsetTimeMinutes) {
 
-        return new SleepStats(soundSleepDurationInMinutes,0,sleepDurationInMinutes,numberOfMotionEvents,0L,0L,sleepOnsetTimeMinutes);
+        return new SleepStats(soundSleepDurationInMinutes, 0,
+                sleepDurationInMinutes, true,
+                numberOfMotionEvents, 0L, 0L, sleepOnsetTimeMinutes);
     }
 
     @Override

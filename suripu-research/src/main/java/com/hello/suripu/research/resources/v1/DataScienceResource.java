@@ -7,8 +7,8 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataScience.JoinedSensorsMinuteData;
@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Created by pangwu on 12/1/14.
  */
@@ -62,20 +63,20 @@ public class DataScienceResource extends BaseResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final SleepLabelDAO sleepLabelDAO;
     private final FeedbackDAO feedbackDAO;
+    private final UserLabelDAO userLabelDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
-                               final SleepLabelDAO sleepLabelDAO,
+                               final UserLabelDAO userLabelDAO,
                                final FeedbackDAO feedbackDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.sleepLabelDAO = sleepLabelDAO;
+        this.userLabelDAO = userLabelDAO;
         this.feedbackDAO = feedbackDAO;
     }
 
@@ -259,7 +260,7 @@ public class DataScienceResource extends BaseResource {
         final DateTime nightDate = DateTime.parse(night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
         LOGGER.debug("{} {}", email, nightDate);
-        return sleepLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
+        return userLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
     }
 
     // APIs for Benjo's analysis
