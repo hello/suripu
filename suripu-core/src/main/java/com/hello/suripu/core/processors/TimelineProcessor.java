@@ -237,7 +237,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         //  get the feedback in one form or another
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
-        final Map<Event.Type, Event> feedbackEvents = FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
+        final Map<Event.Type, Event> feedbackEvents = FeedbackUtils.getFeedbackAsEventMap(feedbackList, offsetMillis);
 
         for(final Event event : feedbackEvents.values()) {
             LOGGER.info("Overriding {} with {} for account {}", event.getType().name(), event, accountId);

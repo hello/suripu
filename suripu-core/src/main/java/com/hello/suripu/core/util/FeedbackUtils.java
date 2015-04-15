@@ -117,7 +117,7 @@ public class FeedbackUtils {
     }
 
     /* returns map of events by event type */
-    public static Map<Event.Type, Event> convertFeedbackToDateTime(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
+    public static Map<Event.Type, Event> getFeedbackAsEventMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
         final Map<Event.Type, Event> events = Maps.newHashMap();
 
         /* iterate through list*/
