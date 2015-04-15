@@ -3,7 +3,6 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
@@ -233,8 +232,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
+        //USER-GENERATED FEEDBACK
         final Integer offsetMillis = trackerMotions.get(0).offsetMillis;
-        final Map<Event.Type, Event> feedbackEvents = fromFeedback(accountId, targetDate, offsetMillis);
+
+        //  get the feedback in one form or another
+        final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
+        final Map<Event.Type, Event> feedbackEvents = FeedbackUtils.getFeedbackAsEventMap(feedbackList, offsetMillis);
+
         for(final Event event : feedbackEvents.values()) {
             LOGGER.info("Overriding {} with {} for account {}", event.getType().name(), event, accountId);
             timelineEvents.put(event.getStartTimestamp(), event);
@@ -243,6 +247,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (this.hasHmmEnabled(accountId)) {
             LOGGER.info("Using HMM for account {}", accountId);
         }
+
+        //MOVE EVENTS BASED ON FEEDBACK
+        additionalEvents = FeedbackUtils.reprocessExtraEventsBasedOnFeedback(feedbackList,additionalEvents,offsetMillis);
+
 
         // PARTNER MOTION
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, ImmutableList.copyOf(motionEvents), partnerMotions);
@@ -738,18 +746,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    private Map<Event.Type, Event> fromFeedback(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
+    private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
         if(!hasFeedbackInTimeline(accountId)) {
             LOGGER.debug("Timeline feedback not enabled for account {}", accountId);
-            return Maps.newHashMap();
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
         // this is needed to match the datetime created when receiving user feedback
         // I believe we should change how we create datetime in feedback once we have time
         // TODO: tim
         final DateTime nightOfUTC = new DateTime(nightOf.getYear(),
                 nightOf.getMonthOfYear(), nightOf.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
-        final ImmutableList<TimelineFeedback> feedbackList = feedbackDAO.getForNight(accountId, nightOfUTC);
-        return FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
+        return feedbackDAO.getForNight(accountId, nightOfUTC);
     }
 
 }
