@@ -11,22 +11,37 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class FeedbackUtils {
 
-    public static Optional<DateTime> convertFeedbackToDateTime(final TimelineFeedback feedback, final Integer offsetMillis) {
+    public static Optional<DateTime> convertFeedbackToDateTimeByNewTime(final TimelineFeedback feedback, final Integer offsetMillis) {
+
+        return convertFeedbackStringToDateTime(feedback.eventType,feedback.dateOfNight,feedback.newTimeOfEvent,offsetMillis);
+
+    }
+
+    public static Optional<DateTime> convertFeedbackToDateTimeByOldTime(final TimelineFeedback feedback, final Integer offsetMillis) {
+
+        return convertFeedbackStringToDateTime(feedback.eventType,feedback.dateOfNight,feedback.oldTimeOfEvent,offsetMillis);
+
+    }
+
+
+    private static Optional<DateTime> convertFeedbackStringToDateTime(final Event.Type eventType,final DateTime dateOfNight, final String feedbacktime, final Integer offsetMillis) {
         // in bed can not be after after noon AND before 8PM
         // same for fall asleep
         // Wake up has to be after midnight (day +1) and before noon
         // same for out of bed
-        final String[] parts = feedback.newTimeOfEvent.split(":");
+        final String[] parts = feedbacktime.split(":");
         final Integer hour = Integer.valueOf(parts[0]);
         final Integer minute = Integer.valueOf(parts[1]);
 
         boolean nextDay = false;
-        switch (feedback.eventType) {
+        switch (eventType) {
             case IN_BED:
             case SLEEP:
                 if(hour >= 0 && hour < 16) {
@@ -46,7 +61,7 @@ public class FeedbackUtils {
                 break;
         }
 
-        DateTime dateTimeOfEvent = feedback.dateOfNight;
+        DateTime dateTimeOfEvent = dateOfNight;
         if(nextDay) {
             dateTimeOfEvent = dateTimeOfEvent.plusDays(1);
         }
@@ -101,16 +116,83 @@ public class FeedbackUtils {
         return Optional.of(event);
     }
 
-
+    /* returns map of events by event type */
     public static Map<Event.Type, Event> convertFeedbackToDateTime(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
         final Map<Event.Type, Event> events = Maps.newHashMap();
+
+        /* iterate through list*/
         for(final TimelineFeedback timelineFeedback : timelineFeedbackList) {
-            final Optional<DateTime> optionalDateTime = convertFeedbackToDateTime(timelineFeedback, offsetMillis);
+
+            /* get datetime of the new time */
+            final Optional<DateTime> optionalDateTime = convertFeedbackToDateTimeByNewTime(timelineFeedback, offsetMillis);
+
             if(optionalDateTime.isPresent()) {
+
+                /* turn into event */
                 final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, optionalDateTime.get(), offsetMillis);
                 events.put(event.get().getType(), event.get());
             }
         }
         return events;
+    }
+
+    /* returns map of events by original event type */
+    public static Map<Long,Event> getFeedbackEventsInOriginalTimeMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
+        final Map<Long,Event> eventMap = Maps.newHashMap();
+
+        /* iterate through list*/
+        for(final TimelineFeedback timelineFeedback : timelineFeedbackList) {
+
+            /* get datetime of the new time */
+            final Optional<DateTime> oldTime = convertFeedbackToDateTimeByOldTime(timelineFeedback, offsetMillis);
+            final Optional<DateTime> newTime = convertFeedbackToDateTimeByNewTime(timelineFeedback, offsetMillis);
+
+            if (!oldTime.isPresent() || !newTime.isPresent()) {
+                continue;
+            }
+
+            /* turn into event */
+            final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, newTime.get(), offsetMillis);
+
+            if (!event.isPresent()) {
+                continue;
+            }
+
+
+            eventMap.put(oldTime.get().getMillis(),event.get());
+
+        }
+
+        return eventMap;
+    }
+
+    public static List<Event> reprocessExtraEventsBasedOnFeedback(final List<TimelineFeedback> timelineFeedbackList, final List<Event> extraEvents,final Integer offsetMillis) {
+        List<Event> matchedEvents = new ArrayList<>();
+        final  Map<Long,Event> feedbackEventMapByOriginalTime = getFeedbackEventsInOriginalTimeMap(timelineFeedbackList,offsetMillis);
+
+        /* procedure: if extra event has match in map (type matches, and time matches), we replace it with the feedback
+          *           otherwise, place extra event in results */
+
+        for (final Event e : extraEvents) {
+            if (feedbackEventMapByOriginalTime.containsKey(e.getStartTimestamp())) {
+                final Event feedbackEvent = feedbackEventMapByOriginalTime.get(e.getStartTimestamp());
+
+
+                if (feedbackEvent.getType().equals(e.getType())) {
+                    //match!
+                    matchedEvents.add(feedbackEvent);
+                    continue;
+                }
+            }
+
+            //otherwise, no match, just add the event
+            matchedEvents.add(e);
+
+        }
+
+
+
+        return matchedEvents;
+
     }
 }
