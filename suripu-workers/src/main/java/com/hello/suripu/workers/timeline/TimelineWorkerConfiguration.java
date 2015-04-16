@@ -195,4 +195,12 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getAlgorithmTestDBConfiguration(){
         return this.algorithmTestDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_log_db")
+    private DynamoDBConfiguration timelineLogDbConfiguration;
+    public DynamoDBConfiguration getTimelineLogDbConfiguration(){
+        return this.timelineLogDbConfiguration;
+    }
 }
