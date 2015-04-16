@@ -30,6 +30,7 @@ public class Vote {
     private final MotionScoreAlgorithm motionScoreAlgorithmDefault;
 
     private final MotionCluster motionCluster;
+    private final List<AmplitudeData> alignedAmplitude;
     private final Map<MotionFeatures.FeatureType, List<AmplitudeData>> aggregatedFeatures;
     private final double rawAmpMean;
     private final double rawKickOffMean;
@@ -62,6 +63,7 @@ public class Vote {
         this.rawKickOffMean = NumericalUtils.mean(noDuplicateKickOffCounts);
 
         List<AmplitudeData> dataWithGapFilled = DataUtils.fillMissingValues(noDuplicates, DateTimeConstants.MILLIS_PER_MINUTE);
+        this.alignedAmplitude = Lists.newArrayList(dataWithGapFilled);
         List<AmplitudeData> alignedKickOffs = DataUtils.fillMissingValues(noDuplicateKickOffCounts, DateTimeConstants.MILLIS_PER_MINUTE);
         if(insertEmpty) {
             final int insertLengthMin = 20;
@@ -116,22 +118,26 @@ public class Vote {
 
 
     public final List<Segment> getAwakes(final long fallAsleepMillis, final long wakeUpMillis, final boolean debug){
-        final List<Segment> allAwakesPeriods = this.sleepPeriod.getAwakePeriods(debug);
-        final List<Segment> awakesInTheRange = new ArrayList<>();
+        final List<VotingSegment> allAwakesPeriods = this.sleepPeriod.getAwakePeriods(debug);
+        final List<VotingSegment> awakesInTheRange = new ArrayList<>();
 
-        for(final Segment segment:allAwakesPeriods){
+        for(final VotingSegment segment:allAwakesPeriods){
             if(fallAsleepMillis <= segment.getStartTimestamp() && wakeUpMillis >= segment.getEndTimestamp()){
                 awakesInTheRange.add(segment);
             }
         }
-        final List<Segment> smoothedAwakes = smoothAwakes(awakesInTheRange, MotionCluster.toSegments(this.motionCluster.getCopyOfClusters()));
-        return smoothedAwakes;
+        final List<VotingSegment> smoothedAwakes = smoothAwakes(awakesInTheRange, MotionCluster.toSegments(this.motionCluster.getCopyOfClusters()));
+        final List<Segment> results = new ArrayList<>();
+        for(final VotingSegment votingSegment:smoothedAwakes){
+            results.add(votingSegment);
+        }
+        return results;
     }
 
 
-    private List<Segment> getAwakesInTimeSpanMillis(final List<Segment> awakes, final long startMillis, final long endMillis){
-        final List<Segment> result = new ArrayList<>();
-        for(final Segment awake:awakes){
+    private List<VotingSegment> getAwakesInTimeSpanMillis(final List<VotingSegment> awakes, final long startMillis, final long endMillis){
+        final List<VotingSegment> result = new ArrayList<>();
+        for(final VotingSegment awake:awakes){
             if(awake.getStartTimestamp() >= startMillis && awake.getEndTimestamp() <= endMillis){
                 result.add(awake);
             }
@@ -140,13 +146,13 @@ public class Vote {
         return result;
     }
 
-    private List<Segment> filterAwakeFragments(final List<Segment> awakesInMotionCluster){
-        final List<Segment> result = new ArrayList<>();
+    private List<VotingSegment> filterAwakeFragments(final List<VotingSegment> awakesInMotionCluster){
+        final List<VotingSegment> result = new ArrayList<>();
         if(awakesInMotionCluster.size() < 2){
             return awakesInMotionCluster;
         }
 
-        for(final Segment awake:awakesInMotionCluster){
+        for(final VotingSegment awake:awakesInMotionCluster){
             if(awake.getDuration() < 20 * DateTimeConstants.MILLIS_PER_MINUTE){
                 continue;
             }
@@ -160,10 +166,10 @@ public class Vote {
     * Idea: if multiple awakes is in the same motion cluster, filter out those less than
     * 20 minutes, less is more.
      */
-    private List<Segment> smoothAwakes(final List<Segment> awakes, final List<Segment> motionClusters){
-        final List<Segment> smoothedAwakes = new ArrayList<>();
+    private List<VotingSegment> smoothAwakes(final List<VotingSegment> awakes, final List<Segment> motionClusters){
+        final List<VotingSegment> smoothedAwakes = new ArrayList<>();
         for(final Segment currentCluster:motionClusters){
-            final List<Segment> awakesInMotionCluster = getAwakesInTimeSpanMillis(awakes,
+            final List<VotingSegment> awakesInMotionCluster = getAwakesInTimeSpanMillis(awakes,
                     currentCluster.getStartTimestamp(),
                     currentCluster.getEndTimestamp());
             smoothedAwakes.addAll(filterAwakeFragments(awakesInMotionCluster));
@@ -258,11 +264,10 @@ public class Vote {
                 clusterCopy,
                 this.getAggregatedFeatures(),
                 defaultEvents.fallAsleep.getStartTimestamp());
-        long sleepTimeMillis = sleepTimesMillis.getSecond();
-        inBed = new Segment(sleepTimesMillis.getFirst(), sleepTimesMillis.getFirst() + DateTimeConstants.MILLIS_PER_MINUTE, sleep.getOffsetMillis());
-        sleep = new Segment(sleepTimeMillis,
-                sleepTimeMillis + DateTimeConstants.MILLIS_PER_MINUTE,
-                defaultEvents.fallAsleep.getOffsetMillis());
+        long sleepTimeMillis = DataUtils.findNearestDataTime(this.alignedAmplitude, sleepTimesMillis.getSecond());
+        long inBedTimeMillis = DataUtils.findNearestDataTime(this.alignedAmplitude, sleepTimesMillis.getFirst());
+        inBed = new Segment(inBedTimeMillis, inBedTimeMillis + DateTimeConstants.MILLIS_PER_MINUTE, defaultEvents.goToBed.getOffsetMillis());
+        sleep = new Segment(sleepTimeMillis, sleepTimeMillis + DateTimeConstants.MILLIS_PER_MINUTE, defaultEvents.fallAsleep.getOffsetMillis());
         if(inBed.getStartTimestamp() > sleep.getStartTimestamp()){
             inBed = new Segment(sleep.getStartTimestamp() - 10 * DateTimeConstants.MILLIS_PER_MINUTE,
                     sleep.getStartTimestamp() - 9 * DateTimeConstants.MILLIS_PER_MINUTE,
@@ -273,12 +278,19 @@ public class Vote {
         Segment wakeUp = defaultEvents.wakeUp;
         Segment outBed = defaultEvents.outOfBed;
 
-        final Pair<Long, Long> wakeUpTimesMillis = safeGuardPickWakeUp(clusterCopy,
+        Pair<Long, Long> wakeUpTimesMillis = safeGuardPickWakeUp(clusterCopy,
                 sleepPeriod,
                 getAggregatedFeatures(),
                 defaultEvents.wakeUp.getStartTimestamp());
-        wakeUp = new Segment(wakeUpTimesMillis.getFirst(), wakeUpTimesMillis.getFirst() + DateTimeConstants.MILLIS_PER_MINUTE, wakeUp.getOffsetMillis());
-        outBed = new Segment(wakeUpTimesMillis.getSecond(), wakeUpTimesMillis.getSecond() + DateTimeConstants.MILLIS_PER_MINUTE, inBed.getOffsetMillis());
+        /*wakeUpTimesMillis = votingSafeGuardPickWakeUp(this.sleepPeriod.getAwakePeriods(false),
+                sleepPeriod,
+                getAggregatedFeatures(),
+                wakeUpTimesMillis);*/
+
+        long wakeUpMillis = DataUtils.findNearestDataTime(this.alignedAmplitude, wakeUpTimesMillis.getFirst());
+        long outBedMillis = DataUtils.findNearestDataTime(this.alignedAmplitude, wakeUpTimesMillis.getSecond());
+        wakeUp = new Segment(wakeUpMillis, wakeUpMillis + DateTimeConstants.MILLIS_PER_MINUTE, defaultEvents.wakeUp.getOffsetMillis());
+        outBed = new Segment(outBedMillis, outBedMillis + DateTimeConstants.MILLIS_PER_MINUTE, defaultEvents.outOfBed.getOffsetMillis());
 
 
         return SleepEvents.create(inBed, sleep, wakeUp, outBed);
@@ -290,6 +302,54 @@ public class Vote {
             return new Pair<>(wakeUpMillisPredicted, wakeUpMillisPredicted + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
         }
         return new Pair<>(wakeUpMillisPredicted, predictionSegment.get().getEndTimestamp());
+    }
+
+    private static Optional<VotingSegment> getLastAwakeInSleepPeriod(final List<VotingSegment> awakesUnfiltered,
+                                                                     final SleepPeriod sleepPeriod){
+        Optional<VotingSegment> lastAwake = Optional.absent();
+        for(final VotingSegment votingSegment:awakesUnfiltered){
+            if(votingSegment.getStartTimestamp() <= sleepPeriod.getEndTimestamp()){
+                lastAwake = Optional.of(votingSegment);
+            }
+        }
+
+        return lastAwake;
+    }
+
+    protected static Pair<Long, Long> votingSafeGuardPickWakeUp(final List<VotingSegment> awakesUnfiltered,
+                                                                final SleepPeriod sleepPeriod,
+                                                                final Map<MotionFeatures.FeatureType, List<AmplitudeData>> featuresNotCapped,
+                                                                final Pair<Long, Long> wakeUpTimesSafeGuarded){
+        final Optional<VotingSegment> lastAwakeInSleepPeriod = getLastAwakeInSleepPeriod(awakesUnfiltered, sleepPeriod);
+        if(!lastAwakeInSleepPeriod.isPresent()){
+            return wakeUpTimesSafeGuarded;
+        }
+
+        if(lastAwakeInSleepPeriod.get().getStartTimestamp() - wakeUpTimesSafeGuarded.getFirst() < 15 * DateTimeConstants.MILLIS_PER_MINUTE){
+            LOGGER.debug("HAPPY USER3: Last wake up close to safeguarded result, last wake up {} - {}",
+                    new DateTime(lastAwakeInSleepPeriod.get().getStartTimestamp(),
+                            DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())),
+                    new DateTime(lastAwakeInSleepPeriod.get().getEndTimestamp(),
+                            DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())));
+            return wakeUpTimesSafeGuarded;
+        }
+        final Optional<AmplitudeData> maxScore = getMaxScore(featuresNotCapped,
+                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
+                lastAwakeInSleepPeriod.get().getStartTimestamp(),
+                lastAwakeInSleepPeriod.get().getEndTimestamp());
+
+        LOGGER.debug("Wrong safeguarding: Last wake up far away from safeguarded result, last wake up {} - {}",
+                new DateTime(lastAwakeInSleepPeriod.get().getStartTimestamp(),
+                        DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())),
+                new DateTime(lastAwakeInSleepPeriod.get().getEndTimestamp(),
+                        DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())));
+
+        if(!maxScore.isPresent()){
+            return new Pair<Long, Long>(lastAwakeInSleepPeriod.get().getStartTimestamp(),
+                    Math.min(lastAwakeInSleepPeriod.get().getEndTimestamp(), sleepPeriod.getEndTimestamp()));
+        }
+        return new Pair<Long, Long>(maxScore.get().timestamp,
+                Math.max(lastAwakeInSleepPeriod.get().getEndTimestamp(), sleepPeriod.getEndTimestamp()));
     }
 
     protected static Pair<Long, Long> safeGuardPickWakeUp(final List<ClusterAmplitudeData> clusters,
@@ -327,6 +387,20 @@ public class Vote {
                         MotionFeatures.FeatureType.DENSITY_DROP_BACKTRACK_MAX_AMPLITUDE,
                         wakeUpMillisPredicted,
                         lastSegmentInSleepPeriod.getEndTimestamp());
+                /*
+                final Optional<AmplitudeData> maxMotionScore = getMaxScore(featuresNotCapped,
+                        MotionFeatures.FeatureType.MAX_AMPLITUDE,
+                        wakeUpMillisPredicted,
+                        sleepPeriod.getEndTimestamp());
+
+                if(maxMotionScore.isPresent() && maxSleepScoreOptional.isPresent() && maxMotionScore.get().timestamp > maxSleepScoreOptional.get().timestamp){
+                    final Optional<Segment> maxMotionClusterOptional = getClusterByTimeMillis(clusterSegments, maxMotionScore.get().timestamp, 0, 0);
+                    if(!maxMotionClusterOptional.isPresent()){
+                        return new Pair<Long, Long>(maxMotionScore.get().timestamp, maxMotionScore.get().timestamp + 10 * DateTimeConstants.MILLIS_PER_MINUTE);
+                    }
+                    return new Pair<Long, Long>(maxMotionScore.get().timestamp, maxMotionClusterOptional.get().getEndTimestamp());
+                }
+                */
 
                 if(maxSleepScoreOptional.isPresent()){
                     if(wakeUpMillisPredicted <= maxSleepScoreOptional.get().timestamp &&
@@ -508,7 +582,7 @@ public class Vote {
 
         final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                firstCluster.getStartTimestamp(),
+                sleepPeriod.getStartTimestamp(),
                 firstCluster.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
         final Optional<AmplitudeData> maxScoreSinceSleep = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
