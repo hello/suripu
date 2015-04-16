@@ -582,7 +582,7 @@ public class Vote {
 
         final Optional<AmplitudeData> firstMaxScoreItemOptional = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                sleepPeriod.getStartTimestamp(),
+                firstCluster.getStartTimestamp(),
                 firstCluster.getEndTimestamp() + 20 * DateTimeConstants.MILLIS_PER_MINUTE);
         final Optional<AmplitudeData> maxScoreSinceSleep = getMaxScore(features,
                 MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
@@ -614,7 +614,7 @@ public class Vote {
 
 
         if(predictedMaxScoreOptional.isPresent() && firstMaxScoreItemOptional.isPresent()){
-            if(predictedMaxScoreOptional.get().amplitude / 5d > firstMaxScoreItemOptional.get().amplitude){
+            if(originalSleepMillis >= sleepPeriod.getStartTimestamp() && predictedMaxScoreOptional.get().amplitude / 5d > firstMaxScoreItemOptional.get().amplitude){
                 final Optional<Segment> maxScoreCluster = getClusterByTimeMillis(clusterSegments,
                         predictedMaxScoreOptional.get().timestamp,
                         0, 0);
@@ -627,6 +627,11 @@ public class Vote {
                     return new Pair<>(cluster.getStartTimestamp(), originalSleepMillis);
                 }
 
+            }
+
+            if(originalSleepMillis < sleepPeriod.getStartTimestamp()){
+                LOGGER.debug("NOISY OUT OF BOUND: fallback to 1st cluster in sleep period");
+                return new Pair<Long, Long>(firstCluster.getStartTimestamp(), firstMaxScoreItemOptional.get().timestamp);
             }
         }
 
