@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -166,14 +167,14 @@ public class FeedbackUtils {
         return eventMap;
     }
 
-    public static List<Event> reprocessExtraEventsBasedOnFeedback(final List<TimelineFeedback> timelineFeedbackList, final List<Event> extraEvents,final Integer offsetMillis) {
+    public static ImmutableList<Event> reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> events,final Integer offsetMillis) {
         List<Event> matchedEvents = new ArrayList<>();
         final  Map<Long,Event> feedbackEventMapByOriginalTime = getFeedbackEventsInOriginalTimeMap(timelineFeedbackList,offsetMillis);
 
         /* procedure: if extra event has match in map (type matches, and time matches), we replace it with the feedback
           *           otherwise, place extra event in results */
 
-        for (final Event e : extraEvents) {
+        for (final Event e : events) {
             if (feedbackEventMapByOriginalTime.containsKey(e.getStartTimestamp())) {
                 final Event feedbackEvent = feedbackEventMapByOriginalTime.get(e.getStartTimestamp());
 
@@ -192,7 +193,7 @@ public class FeedbackUtils {
 
 
 
-        return matchedEvents;
+        return ImmutableList.copyOf(matchedEvents);
 
     }
 }
