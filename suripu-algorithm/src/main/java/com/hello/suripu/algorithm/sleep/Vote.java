@@ -15,6 +15,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.HEAD;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -153,7 +154,7 @@ public class Vote {
         }
 
         for(final VotingSegment awake:awakesInMotionCluster){
-            if(awake.getDuration() < 20 * DateTimeConstants.MILLIS_PER_MINUTE){
+            if(awake.getDuration() < 10 * DateTimeConstants.MILLIS_PER_MINUTE){
                 continue;
             }
             result.add(awake);
@@ -282,11 +283,6 @@ public class Vote {
                 sleepPeriod,
                 getAggregatedFeatures(),
                 defaultEvents.wakeUp.getStartTimestamp());
-        wakeUpTimesMillis = votingSafeGuardPickWakeUp(this.sleepPeriod.getAwakePeriods(false),
-                sleepPeriod,
-                getAggregatedFeatures(),
-                wakeUpTimesMillis,
-                defaultEvents.wakeUp.getStartTimestamp());
 
         long wakeUpMillis = findNearestDataTime(this.alignedAmplitude, wakeUpTimesMillis.getFirst());
         long outBedMillis = findNearestDataTime(this.alignedAmplitude, wakeUpTimesMillis.getSecond());
@@ -348,43 +344,13 @@ public class Vote {
         return Optional.absent();
     }
 
-    protected static Pair<Long, Long> votingSafeGuardPickWakeUp(final List<VotingSegment> awakesUnfiltered,
-                                                                final SleepPeriod sleepPeriod,
-                                                                final Map<MotionFeatures.FeatureType, List<AmplitudeData>> featuresNotCapped,
-                                                                final Pair<Long, Long> wakeUpTimesSafeGuarded,
-                                                                final long wakeUpMillisPredicted){
-        if(wakeUpMillisPredicted < wakeUpTimesSafeGuarded.getFirst()){
-            return wakeUpTimesSafeGuarded;
+    protected static Optional<Segment> getAwakeCluster(final List<Segment> clusters, final VotingSegment awake){
+        for(final Segment cluster:clusters){
+            if(cluster.getStartTimestamp() >= awake.getStartTimestamp() && cluster.getEndTimestamp() <= awake.getEndTimestamp()){
+                return Optional.of(cluster);
+            }
         }
-
-        final Optional<VotingSegment> lastAwakeInSleepPeriod = getNextAwakeInSleepPeriod(awakesUnfiltered, sleepPeriod, wakeUpTimesSafeGuarded.getFirst());
-        if(!lastAwakeInSleepPeriod.isPresent()){
-            return wakeUpTimesSafeGuarded;
-        }
-
-        if(lastAwakeInSleepPeriod.get().getStartTimestamp() - wakeUpTimesSafeGuarded.getFirst() < 15 * DateTimeConstants.MILLIS_PER_MINUTE){
-            LOGGER.debug("HAPPY USER3: Last wake up close to safeguarded result, last wake up {} - {}",
-                    new DateTime(lastAwakeInSleepPeriod.get().getStartTimestamp(),
-                            DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())),
-                    new DateTime(lastAwakeInSleepPeriod.get().getEndTimestamp(),
-                            DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())));
-            return wakeUpTimesSafeGuarded;
-        }
-        final Optional<AmplitudeData> maxScore = getMaxScore(featuresNotCapped,
-                MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
-                lastAwakeInSleepPeriod.get().getStartTimestamp(),
-                lastAwakeInSleepPeriod.get().getEndTimestamp());
-
-        LOGGER.debug("Wrong safeguarding: Last wake up far away from safeguarded result, last wake up {} - {}",
-                new DateTime(lastAwakeInSleepPeriod.get().getStartTimestamp(),
-                        DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())),
-                new DateTime(lastAwakeInSleepPeriod.get().getEndTimestamp(),
-                        DateTimeZone.forOffsetMillis(lastAwakeInSleepPeriod.get().getOffsetMillis())));
-
-        if(!maxScore.isPresent()){
-            return new Pair<>(lastAwakeInSleepPeriod.get().getStartTimestamp(), lastAwakeInSleepPeriod.get().getEndTimestamp());
-        }
-        return new Pair<>(maxScore.get().timestamp, lastAwakeInSleepPeriod.get().getEndTimestamp());
+        return Optional.absent();
     }
 
     protected static Pair<Long, Long> safeGuardPickWakeUp(final List<ClusterAmplitudeData> clusters,
@@ -519,7 +485,7 @@ public class Vote {
             final Optional<AmplitudeData> maxWakeUpScoreOptional = getMaxScore(featuresNotCapped,
                     MotionFeatures.FeatureType.DENSITY_BACKWARD_AVERAGE_AMPLITUDE,
                     lastSegmentInSleepPeriod.getEndTimestamp() - 60 * DateTimeConstants.MILLIS_PER_MINUTE,
-                    lastSegmentInSleepPeriod.getEndTimestamp() );
+                    lastSegmentInSleepPeriod.getEndTimestamp());
             // No obvious motion, edge case
             if(!maxWakeUpScoreOptional.isPresent()){
                 return new Pair<>(lastSegmentInSleepPeriod.getStartTimestamp(), lastSegmentInSleepPeriod.getEndTimestamp());
