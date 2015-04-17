@@ -61,7 +61,9 @@ public class SenseEventsDAO {
     }
 
     public static DateTime stringToDateTime(final String createdAt) {
-        final String adjustedCreatedAt = (createdAt.contains("Z")) ? createdAt : createdAt + "Z"; // we need to self correct for old values in db
+        LOGGER.info("created at {}", createdAt);
+        final String adjustedCreatedAt = (createdAt.contains("Z") || createdAt.contains("+")) ? createdAt : createdAt + "Z"; // we need to self correct for old values in db
+        LOGGER.info("adjusted created at{}", adjustedCreatedAt);
         return DateTime.parse(adjustedCreatedAt, DateTimeFormat.forPattern(DATETIME_FORMAT));
     }
 
