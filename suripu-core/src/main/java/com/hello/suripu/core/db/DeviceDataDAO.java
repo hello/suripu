@@ -111,13 +111,12 @@ public abstract class DeviceDataDAO {
     @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
-            "WHERE account_id = :account_id AND device_id = :device_id " +
+            "WHERE account_id = :account_id " +
             "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts " +
             "GROUP BY ts_bucket " +
             "ORDER BY ts_bucket ASC")
     public abstract ImmutableList<DeviceData> getBetweenByLocalTimeAggregateBySlotDuration(
             @Bind("account_id") Long accountId,
-            @Bind("device_id") Long deviceId,
             @Bind("start_ts") DateTime start,
             @Bind("end_ts") DateTime end,
             @Bind("slot_duration") Integer slotDuration);
@@ -282,7 +281,6 @@ public abstract class DeviceDataDAO {
             final Long queryStartTimestampInLocalUTC,
             final Long queryEndTimestampInLocalUTC,
             final Long accountId,
-            final Long deviceId,
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue) {
 
@@ -294,7 +292,7 @@ public abstract class DeviceDataDAO {
         LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
         LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
-        final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
+        final List<DeviceData> rows = getBetweenByLocalTimeAggregateBySlotDuration(accountId, queryStartTime, queryEndTime, slotDurationInMinutes);
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
         final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
