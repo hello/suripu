@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -39,12 +40,12 @@ public class FeedbackUtilsTest {
 
 
          */
-        final TimelineFeedback feedback = TimelineFeedback.create("2015-04-15","22:41","22:45","SLEEP");
+        final TimelineFeedback feedback = TimelineFeedback.create("2015-04-15","22:41","22:45",Event.Type.SLEEP.name());
 
         final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
         timelineFeedbacks.add(feedback);
 
-        final  List<Event>  newEvents = FeedbackUtils.reprocessExtraEventsBasedOnFeedback(timelineFeedbacks,events,offset);
+        final  ImmutableList<Event>  newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks), ImmutableList.copyOf(events), offset);
 
 
         final long mysleeptime = newEvents.get(0).getStartTimestamp();
