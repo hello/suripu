@@ -498,7 +498,6 @@ public class ReceiveResource extends BaseResource {
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
         final String ipAddress = getIpAddress(request);
 
-        final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
         final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
         final boolean pchOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceID, deviceGroups) &&
                 OTAProcessor.isPCH(ipAddress, ipGroups));
@@ -510,6 +509,7 @@ public class ReceiveResource extends BaseResource {
             return fileDownloadList;
         }
 
+        final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (isOfficeDeviceWithOverride) {
             if (!deviceGroups.isEmpty()) {
