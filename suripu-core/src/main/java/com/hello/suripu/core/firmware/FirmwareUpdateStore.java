@@ -46,6 +46,7 @@ public class FirmwareUpdateStore {
     private final AmazonS3 s3;
     private final String bucketName;
     private final AmazonS3 s3Signer;
+    private final static String FIRMWARE_BUCKET_ASIA = "hello-firmware-asia";
 
     final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
 
@@ -139,7 +140,7 @@ public class FirmwareUpdateStore {
         return fileDownloadList;
     }
 
-    public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForGroup(final String group) {
+    public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForGroup(final String group, final String bucketName) {
 
         final Pair<Integer, List<SyncResponse.FileDownload>> emptyPair = new Pair(-1, Collections.EMPTY_LIST);
 
@@ -264,22 +265,28 @@ public class FirmwareUpdateStore {
      * @param group
      * @return
      */
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final Integer currentFirmwareVersion) {
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final Integer currentFirmwareVersion, final Boolean pchOTA) {
 
         Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
-        
-        try {
-            fw_files = s3FWCache.get(group, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
-                @Override
-                public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
-                    LOGGER.info("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
-                    return getFirmwareFilesForGroup(group);
-                }
-            });
+
+        if(pchOTA) {
+            LOGGER.info("PCH Device attempting OTA. Getting non-cached file-list for: [{}] from {}.", group, FIRMWARE_BUCKET_ASIA);
+            fw_files = getFirmwareFilesForGroup(group, FIRMWARE_BUCKET_ASIA);
+        } else {
+            try {
+                fw_files = s3FWCache.get(group, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
+                    @Override
+                    public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
+                        LOGGER.info("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
+                        return getFirmwareFilesForGroup(group, bucketName);
+                    }
+                });
 
             } catch (ExecutionException e) {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
+        }
+
 
         final List<SyncResponse.FileDownload> fwList = fw_files.getValue();
 

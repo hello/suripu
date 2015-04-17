@@ -83,10 +83,22 @@ public class SleepPeriod extends Segment {
         return false;
     }
 
-    public List<Segment> getAwakePeriods(final boolean debug){
+    private double getVote(final long startMillis, final long endMillis){
+
+        double maxVote = 0;
+        for(int i = 0; i < this.votes.size(); i++){
+            final Pair<Long, Double> vote = this.votes.get(i);
+            if(vote.getFirst() >= startMillis && vote.getFirst() <= endMillis && vote.getSecond() > maxVote){
+                maxVote = vote.getSecond();
+            }
+        }
+        return maxVote;
+    }
+
+    public List<VotingSegment> getAwakePeriods(final boolean debug){
         long startMillis = 0;
         long endMillis = 0;
-        final List<Segment> result = new ArrayList<>();
+        final List<VotingSegment> result = new ArrayList<>();
 
         for(int i = 0; i < this.votes.size(); i++){
             final Pair<Long, Double> vote = this.votes.get(i);
@@ -97,7 +109,7 @@ public class SleepPeriod extends Segment {
                 endMillis = vote.getFirst();
             }else {
                 if(isAwake(startMillis, endMillis)){
-                    result.add(new Segment(startMillis, endMillis, this.getOffsetMillis()));
+                    result.add(new VotingSegment(startMillis, endMillis, this.getOffsetMillis(), getVote(startMillis, endMillis)));
                     if(debug){
                         LOGGER.debug("User awake at {} - {}",
                                 new DateTime(startMillis, DateTimeZone.forOffsetMillis(this.getOffsetMillis())),
@@ -110,7 +122,7 @@ public class SleepPeriod extends Segment {
         }
 
         if(isAwake(startMillis, endMillis)){
-            result.add(new Segment(startMillis, endMillis, this.getOffsetMillis()));
+            result.add(new VotingSegment(startMillis, endMillis, this.getOffsetMillis(), getVote(startMillis, endMillis)));
             if(debug){
                 LOGGER.debug("User awake at {} - {}",
                         new DateTime(startMillis, DateTimeZone.forOffsetMillis(this.getOffsetMillis())),

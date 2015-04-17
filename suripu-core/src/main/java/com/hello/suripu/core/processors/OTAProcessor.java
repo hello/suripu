@@ -56,7 +56,7 @@ public class OTAProcessor {
         boolean canOTA;
 
         if(OTAProcessor.isPCH(ipAddress)) {
-                LOGGER.warn("IP Address {} is from PCH, prevent OTA", ipAddress);
+                LOGGER.warn("IP Address {} is from PCH, failing device canOTA check", ipAddress);
                 return false;
         }
 

@@ -9,12 +9,14 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
+import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
 import com.hello.suripu.admin.resources.v1.DeviceResources;
 import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
+import com.hello.suripu.admin.resources.v1.FirmwareResource;
 import com.hello.suripu.admin.resources.v1.TeamsResources;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -34,6 +36,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.logging.DataLogger;
@@ -54,6 +57,7 @@ import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
 import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +70,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
     public static void main(final String[] args) throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateTimeZone.setDefault(DateTimeZone.UTC);
         new SuripuAdmin().run(args);
     }
 
@@ -105,6 +110,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final DeviceDAOAdmin deviceDAOAdmin = commonDB.onDemand(DeviceDAOAdmin.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
 
 
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
@@ -167,13 +173,17 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(senseEventsDBClient, configuration.getSenseEventsDBConfiguration().getTableName());
 
 
+        final AmazonDynamoDB fwVersionMapping = dynamoDBClientFactory.getForEndpoint(configuration.getFirmwareVersionsDynamoDBConfiguration().getEndpoint());
+        final FirmwareVersionMappingDAO firmwareVersionMappingDAO = new FirmwareVersionMappingDAO(fwVersionMapping, configuration.getFirmwareVersionsDynamoDBConfiguration().getTableName());
+
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
-        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO));
+        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO));
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));
+        environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO));
         environment.addResource(new EventsResources(senseEventsDAO));
 
     }
