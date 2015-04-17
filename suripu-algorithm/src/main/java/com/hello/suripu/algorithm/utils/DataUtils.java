@@ -116,29 +116,4 @@ public class DataUtils {
         result.addAll(data);
         return result;
     }
-
-    public static long findNearestDataTime(final List<AmplitudeData> data, final long targetMillis){
-        int minDiff = Integer.MAX_VALUE;
-        long time = 0;
-        for(int i = 0; i < data.size(); i++){
-            if(data.get(i).amplitude == 0){
-                continue;
-            }
-
-            final int diff = (int) Math.abs(data.get(i).timestamp - targetMillis);
-            if(diff < minDiff){
-                minDiff = diff;
-                time = data.get(i).timestamp;
-            }
-        }
-
-        if(minDiff == Integer.MAX_VALUE){
-            return targetMillis;
-        }
-
-        /*if(Math.abs(time - targetMillis) > 15 * DateTimeConstants.MILLIS_PER_MINUTE){
-            return targetMillis;
-        }*/
-        return time;
-    }
 }
