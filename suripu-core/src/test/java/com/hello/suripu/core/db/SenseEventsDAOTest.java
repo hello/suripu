@@ -98,4 +98,22 @@ public class SenseEventsDAOTest {
         deviceEventsOptional = SenseEventsDAO.fromDynamoDBItem(incompleteMap);
         assertThat(deviceEventsOptional.isPresent(), is(false));
     }
+
+    @Test public void parseDateTimeStringWithoutTimezone() {
+        final String testDateTimeSting = "2015-04-16 15:00:52";
+        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
+    }
+
+    @Test public void parseDateTimeStringWithTimezoneContainingPlus() {
+        final String testDateTimeSting = "2015-04-16 15:00:52+0000";
+        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
+    }
+
+    @Test public void parseDateTimeStringWithTimezoneEndsWithZ() {
+        final String testDateTimeSting = "2015-04-16 15:00:52Z";
+        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
+    }
 }
