@@ -280,6 +280,24 @@ public class RingProcessorSingleUserIT {
         assertThat(actualRingTime.isBefore(deadline), is(true));
         assertThat(new DateTime(ringTime.expectedRingTimeUTC, DateTimeZone.forID("America/Los_Angeles")).equals(deadline), is(true));
         assertThat(ringTime.processed(), is(true));
+
+        this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
+                userInfo1.alarmList,
+                Optional.of(ringTime),
+                userInfo1.timeZone,
+                userInfo1.pillColor,
+                0));
+
+        // 1st alarm, smart: 2014-09-23 08:20
+        // 2nd alarm, smart: 2014-09-24 08:20
+        // Now: 2014-9-24 08:21
+        // Both alarm expired for this week
+        deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles")).plusWeeks(1);
+        ringTime = updateRingTime(new DateTime(2014, 9, 24, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
+
+        actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+        assertThat(actualRingTime.equals(deadline), is(true));
+        assertThat(ringTime.processed(), is(false));
     }
 
     @Test
