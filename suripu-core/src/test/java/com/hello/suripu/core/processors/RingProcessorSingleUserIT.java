@@ -11,7 +11,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.hello.suripu.api.output.OutputProtos;
-import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
@@ -48,8 +47,6 @@ import static org.mockito.Mockito.when;
 public class RingProcessorSingleUserIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessorSingleUserIT.class);
-
-    private final AlarmDAODynamoDB alarmDAODynamoDB = mock(AlarmDAODynamoDB.class);
     private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = mock(SmartAlarmLoggerDynamoDB.class);
 
     private ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
@@ -247,16 +244,8 @@ public class RingProcessorSingleUserIT {
     public void testNoneRepeatedSmartAlarmOn_09_23_2014_Update(){
         // Test scenario when computation get triggered, an ring time from previous alarm settings is set,
         // but user updated his/her next alarm to non-repeated after the last ring was computed.
-
-        final List<Alarm> alarmList = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.TUESDAY);
-
-        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id"));
-
-        when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
@@ -379,16 +368,8 @@ public class RingProcessorSingleUserIT {
     public void testNoneRepeatedAlarmOn_09_23_2014_InitWithData(){
         // Test scenario when computation get triggered all the alarm is non-repeated and not expired.
         // pill has data.
-
-        final List<Alarm> alarmList = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.TUESDAY);
-
-        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id"));
-
-        when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
@@ -414,15 +395,8 @@ public class RingProcessorSingleUserIT {
     public void testNoneRepeatedAlarmOn_09_23_2014_InitWithNoData(){
         // Test scenario when computation get triggered all the alarm is non-repeated and not expired.
         // pill has no data.
-        final List<Alarm> alarmList = new ArrayList<Alarm>();
         final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
         dayOfWeek.add(DateTimeConstants.TUESDAY);
-
-        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
-                false, true, true, true,
-                new AlarmSound(100, "The Star Spangled Banner"), "id"));
-
-        when(this.alarmDAODynamoDB.getAlarms(1)).thenReturn(ImmutableList.copyOf(alarmList));
 
         // pill has no data
         final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);

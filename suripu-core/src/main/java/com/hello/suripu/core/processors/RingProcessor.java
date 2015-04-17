@@ -192,7 +192,8 @@ public class RingProcessor {
         // We should return RingTime.empty because we don't want the alarm ring again during
         // this period.
         // We CANNOT just simply return nextRingTimeFromTemplate because they might be the same.
-        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) && nextRingTimeFromWorker.processed()) {
+        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) && nextRingTimeFromWorker.processed() &&
+                currentTime.isBefore(nextRingTimeFromWorker.expectedRingTimeUTC)) {
             LOGGER.debug("{} smart alarm {} expired for device {}, account {}. Next alarm {}",
                     currentTime.withZone(userInfo.timeZone.get()),
                     new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
