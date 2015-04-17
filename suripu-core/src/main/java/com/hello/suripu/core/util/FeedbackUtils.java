@@ -47,7 +47,7 @@ public class FeedbackUtils {
             case SLEEP:
                 if(hour >= 0 && hour < 16) {
                     nextDay =  true;
-                } else if(hour >= 16 && hour <= 20) {
+                } else if(hour >= 16 && hour < 20) {
                     return Optional.absent();
                 }
 
