@@ -2,6 +2,7 @@ package com.hello.suripu.core.processors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.util.Collections;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -25,6 +26,7 @@ public class OTAProcessorTest {
 
         String deviceID = "fake-sense";
         final List<String> deviceGroups = Arrays.asList("group1", "group2", "group3");
+        final List<String> ipGroups = Collections.emptyList();
         final Set<String> overrideOTAGroups =  Sets.newHashSet("override");
         final DateTimeZone userTimeZone = DateTimeZone.UTC;
         final Integer deviceUptimeDelayMinutes = 20;
@@ -34,9 +36,9 @@ public class OTAProcessorTest {
         final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(22).withMinuteOfHour(0);
         final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, ipAddress), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, ipAddress), is(true));
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, false, ipAddress), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, false, ipAddress), is(false));
     }
 
     @Test
@@ -44,6 +46,7 @@ public class OTAProcessorTest {
 
         String deviceID = "fake-sense";
         final List<String> deviceGroups = Arrays.asList("group1", "group2", "group3");
+        final List<String> ipGroups = Collections.emptyList();
         final Set<String> overrideOTAGroups =  Sets.newHashSet("override");
         final DateTimeZone userTimeZone = DateTimeZone.UTC;
         final Integer deviceUptimeDelayMinutes = 20;
@@ -55,8 +58,8 @@ public class OTAProcessorTest {
         final Boolean alwaysOTA = false;
         final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, badDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, badDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
     }
 
     @Test
@@ -64,6 +67,7 @@ public class OTAProcessorTest {
 
         String deviceID = "fake-sense";
         final List<String> deviceGroups = Arrays.asList("group1", "group2", "group3");
+        final List<String> ipGroups = Collections.emptyList();
         final Set<String> overrideOTAGroups =  Sets.newHashSet("override");
         final DateTimeZone userTimeZone = DateTimeZone.UTC;
         final DateTime goodDTZ = new DateTime(userTimeZone).withHourOfDay(14).withMinuteOfHour(0);
@@ -72,9 +76,9 @@ public class OTAProcessorTest {
         final Boolean alwaysOTA = false;
         final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 60, 3601, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, 60, 3601, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, 60, 3600, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, 60, 3600, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
     }
 
     @Test
@@ -82,6 +86,7 @@ public class OTAProcessorTest {
 
         String deviceID = "fake-sense";
         final List<String> deviceGroups = Arrays.asList("group1", "group2", "group3");
+        final List<String> ipGroups = Collections.emptyList();
         final Set<String> overrideOTAGroups =  Sets.newHashSet("group1");
         final Set<String> nonOverrideOTAGroups =  Sets.newHashSet("group4");
         final DateTimeZone userTimeZone = DateTimeZone.UTC;
@@ -93,9 +98,9 @@ public class OTAProcessorTest {
         final Boolean alwaysOTA = false;
         final String ipAddress = "127.0.0.1";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(true));
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, nonOverrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, nonOverrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, goodDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress), is(false));
     }
 
     @Test
@@ -103,6 +108,7 @@ public class OTAProcessorTest {
 
         String deviceID = "fake-sense";
         final List<String> deviceGroups = Arrays.asList("group1", "group2", "group3");
+        final List<String> ipGroups = Collections.emptyList();
         final Set<String> overrideOTAGroups =  Sets.newHashSet("override");
         final DateTimeZone userTimeZone = DateTimeZone.UTC;
         final Integer deviceUptimeDelayMinutes = 20;
@@ -116,11 +122,11 @@ public class OTAProcessorTest {
         final String nonPchAddress2 = "116.204.105.39";
         final String badAddress = "bad Address";
 
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, pchAddress1), is(false));
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, pchAddress2), is(false));
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, nonPchAddress1), is(true));
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, nonPchAddress2), is(true));
-        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, badAddress), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, pchAddress1), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, pchAddress2), is(false));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, nonPchAddress1), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, nonPchAddress2), is(true));
+        assertThat(OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, overrideOTAGroups, deviceUptimeDelayMinutes, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, true, badAddress), is(true));
     }
 
 
@@ -135,19 +141,26 @@ public class OTAProcessorTest {
         final List<String> ipAddressesPCH = Lists.newArrayList(pchAddress1, pchAddress2);
         final List<String> ipAddressesNotPCH = Lists.newArrayList(nonPchAddress1, nonPchAddress2);
         final List<String> ipAddressesBad = Lists.newArrayList(badAddress);
+        final List<String> ipGroupsGood = Lists.newArrayList("additional_pch_ips");
+        final List<String> ipGroupsBad = Lists.newArrayList("additional_pch_fake");
 
         for(String ipAddress : ipAddressesPCH) {
-            assertThat(OTAProcessor.isPCH(ipAddress), is(true));
+            assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsGood), is(true));
         }
 
         for(String ipAddress : ipAddressesNotPCH) {
-            assertThat(OTAProcessor.isPCH(ipAddress), is(false));
+            assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsGood), is(false));
         }
 
         // bad ip addresses shouldn't be from PCH
         for(String ipAddress : ipAddressesBad) {
-            assertThat(OTAProcessor.isPCH(ipAddress), is(false));
+            assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsGood), is(false));
         }
+
+        for(String ipAddress : ipAddressesPCH) {
+            assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsBad), is(false));
+        }
+
     }
 
 
