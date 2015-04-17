@@ -36,7 +36,7 @@ public class FeedbackResource {
     @POST
     @Path("/sleep")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void saveTimelineFeedback(final AccessToken accessToken, final TimelineFeedback feedback) {
+    public void saveTimelineFeedback(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken, final TimelineFeedback feedback) {
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, feedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, feedback.dateOfNight, DateTime.now());
     }

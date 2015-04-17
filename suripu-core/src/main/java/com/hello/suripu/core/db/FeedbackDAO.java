@@ -25,6 +25,10 @@ public abstract class FeedbackDAO {
     @SqlUpdate("UPDATE timeline_feedback SET new_time=:new_time,created=now() WHERE account_id=:account_id AND date_of_night=:date_of_night AND event_type=:event_type AND new_time=:old_time")
     abstract int updateExistingFeedbackByAccountAndDateAndTime(@Bind("account_id") final Long accountId,@BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
+    /* if old times match, update the new time.   */
+    @SqlUpdate("UPDATE timeline_feedback SET new_time=:new_time,created=now() WHERE account_id=:account_id AND date_of_night=:date_of_night AND event_type=:event_type AND old_time=:old_time")
+    public abstract int updateDuplicate(@Bind("account_id") final Long accountId,@BindTimelineFeedback final TimelineFeedback timelineFeedback);
+
     @SqlUpdate("INSERT INTO timeline_feedback (account_id, date_of_night, old_time, new_time, event_type, created) VALUES(:account_id, :date_of_night, :old_time, :new_time, :event_type, now())")
     public abstract void insertNewTimelineFeedback(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
@@ -37,16 +41,28 @@ public abstract class FeedbackDAO {
 
     public void insertTimelineFeedback(final long accountId,final TimelineFeedback feedback) {
 
+        /*  if old times match up (like two items sent at the same time) just update it and return  */
+        final int numDuplicateUpdates = updateDuplicate(accountId, feedback);
+
+        if (numDuplicateUpdates > 0) {
+            return;
+        }
+
         //attempt to update existing
-        int numUpdateRow = updateExistingFeedbackByAccountAndDateAndTime(accountId, feedback);
+        final int numUpdateRow = updateExistingFeedbackByAccountAndDateAndTime(accountId, feedback);
+
+        if (numUpdateRow > 0) {
+            return;
+        }
 
         //if nothing was updated, than insert this
-        if (numUpdateRow == 0) {
-            insertTimelineFeedback(accountId,feedback);
-        }
+        insertNewTimelineFeedback(accountId, feedback);
+
 
     }
 
     @SqlQuery("SELECT * FROM timeline_feedback where account_id = :account_id AND date_of_night = :date_of_night order by created")
     public abstract ImmutableList<TimelineFeedback> getForNight(@Bind("account_id") final Long accountId, @Bind("date_of_night") final DateTime dateOfNight);
+
+
 }
