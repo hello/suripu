@@ -149,7 +149,7 @@ public class OTAProcessorTest {
         }
 
         for(String ipAddress : ipAddressesNotPCH) {
-            assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsGood), is(false));
+            assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsBad), is(false));
         }
 
         // bad ip addresses shouldn't be from PCH
@@ -157,7 +157,7 @@ public class OTAProcessorTest {
             assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsGood), is(false));
         }
 
-        for(String ipAddress : ipAddressesPCH) {
+        for(String ipAddress : ipAddressesNotPCH) {
             assertThat(OTAProcessor.isPCH(ipAddress, ipGroupsBad), is(false));
         }
 
