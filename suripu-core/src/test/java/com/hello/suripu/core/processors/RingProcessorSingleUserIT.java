@@ -77,7 +77,32 @@ public class RingProcessorSingleUserIT {
                 0));
     }
 
+    private void mockMotionData20150923OffsetByDay(final int dayOffset){
+        final URL url = Resources.getResource("fixtures/algorithm/pill_data_09_23_2014_pang.csv");
+        final List<TrackerMotion> motions = new ArrayList<TrackerMotion>();
+        final int offset = DateTimeConstants.MILLIS_PER_DAY * dayOffset;
 
+        try {
+            final String csvString = Resources.toString(url, Charsets.UTF_8);
+            final String[] lines = csvString.split("\\n");
+            for(final String line:lines){
+                final String[] columns = line.split("\\t");
+                long timestamp = Long.valueOf(columns[0]) + offset;
+                long value = Long.valueOf(columns[1]);
+                int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
+                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis, 0L, 0L, 0L));
+            }
+        }catch (IOException ioe){
+            LOGGER.error("Failed parsing CSV: {}", ioe.getMessage());
+        }
+
+        final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC).plusDays(dayOffset);
+        final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
+        final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
+
+        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+                .thenReturn(ImmutableList.copyOf(motions));
+    }
 
     @Before
     public void setUp(){
@@ -109,28 +134,7 @@ public class RingProcessorSingleUserIT {
 
         when(this.mergedUserInfoDynamoDB.getInfo(testDeviceId)).thenReturn(userInfoList1);
 
-        final URL url = Resources.getResource("fixtures/algorithm/pill_data_09_23_2014_pang.csv");
-        final List<TrackerMotion> motions = new ArrayList<TrackerMotion>();
-        try {
-            final String csvString = Resources.toString(url, Charsets.UTF_8);
-            final String[] lines = csvString.split("\\n");
-            for(final String line:lines){
-                final String[] columns = line.split("\\t");
-                long timestamp = Long.valueOf(columns[0]);
-                long value = Long.valueOf(columns[1]);
-                int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
-                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis, 0L, 0L, 0L));
-            }
-        }catch (IOException ioe){
-            LOGGER.error("Failed parsing CSV: {}", ioe.getMessage());
-        }
-
-        final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);
-        final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
-        final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
-
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
-                .thenReturn(ImmutableList.copyOf(motions));
+        mockMotionData20150923OffsetByDay(0);
 
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -224,12 +228,13 @@ public class RingProcessorSingleUserIT {
         // Test scenario when computation get triggered, an ring time from previous alarm settings is set,
         // but user updated his/her next alarm to non-repeated after the last ring was computed.
         // and user's pill has no data.
-
         final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        setAlarm(true, false);
+        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+                .thenReturn(ImmutableList.copyOf(Collections.<TrackerMotion>emptyList()));
+
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For minutes that not yet trigger smart alarm computation
@@ -239,8 +244,17 @@ public class RingProcessorSingleUserIT {
         assertThat(actualRingTime.isEqual(deadline), is(true));
         assertThat(ringTime.processed(), is(false));
 
+
+        final List<Alarm> alarmList = new ArrayList<>();
+        final HashSet<Integer> dayOfWeek = new HashSet<>();
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
+
+        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
+                false, true, true, true,
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
+
         final UserInfo userInfo1 = userInfoList1.get(0);
-        userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
+        userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, alarmList,
                 Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor,
                 0));
 
@@ -249,6 +263,8 @@ public class RingProcessorSingleUserIT {
         ringTime = updateRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
+
+        // User has no pill data, everything is regular
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
         assertThat(ringTime.processed(), is(false));
     }
@@ -258,7 +274,13 @@ public class RingProcessorSingleUserIT {
     public void testNoneRepeatedSmartAlarmOn_09_23_2014_Update(){
         // Test scenario when computation get triggered, an ring time from previous alarm settings is set,
         // but user updated his/her next alarm to non-repeated after the last ring was computed.
-        setAlarm(false, true);
+        final List<Alarm> alarmList = new ArrayList<>();
+        final HashSet<Integer> dayOfWeek = new HashSet<>();
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
+
+        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
+                      false, true, true, true,
+                      new AlarmSound(100, "The Star Spangled Banner"), "id"));
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
@@ -270,7 +292,7 @@ public class RingProcessorSingleUserIT {
         assertThat(ringTime.processed(), is(false));
 
         final UserInfo userInfo1 = userInfoList1.get(0);
-        userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, userInfo1.alarmList,
+        userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, alarmList,
                 Optional.of(ringTime), userInfo1.timeZone, userInfo1.pillColor,
                 0));
 
