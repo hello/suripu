@@ -39,7 +39,7 @@ public class CheckResource extends BaseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public byte[] check(final byte[] body) {
         final String senseId = request.getHeader(HelloHttpHeader.SENSE_ID);
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        final String ipAddress = getIpAddress(request);
         if (senseId == null) {
             LOGGER.error("CHECK_KEY FAILED. Request doesn't contain the required header {}. IP: {}", HelloHttpHeader.SENSE_ID, ipAddress);
             return plainTextError(Response.Status.BAD_REQUEST, "http 400");
@@ -64,7 +64,6 @@ public class CheckResource extends BaseResource {
             // DO not leak that the device id exists or not. return forbidden
             return plainTextError(Response.Status.FORBIDDEN, "");
         }
-
 
         SignedMessage signedMessage;
         try {

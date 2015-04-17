@@ -21,7 +21,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
-import com.hello.suripu.core.db.SleepScoreDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -29,9 +29,9 @@ import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
-import com.yammer.dropwizard.cli.ConfiguredCommand;
-import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSource;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kingshy on 1/6/15.
  */
-public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGeneratorWorkerConfiguration> {
+public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<InsightsGeneratorWorkerConfiguration> {
     private final static Logger LOGGER = LoggerFactory.getLogger(InsightsGeneratorWorkerCommand.class);
 
     public InsightsGeneratorWorkerCommand(String name, String description) {
@@ -60,10 +60,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
     }
 
     @Override
-    public final void run(Bootstrap<InsightsGeneratorWorkerConfiguration> bootstrap,
-                          Namespace namespace,
-                          InsightsGeneratorWorkerConfiguration configuration) throws Exception {
-
+    protected void run(Environment environment, Namespace namespace, InsightsGeneratorWorkerConfiguration configuration) throws Exception {
         // postgres setup
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource commonDBDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
@@ -76,7 +73,6 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
         commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
         final AccountDAO accountDAO = commonDBI.onDemand(AccountDAOImpl.class);
-        final SleepScoreDAO scoreDAO = commonDBI.onDemand(SleepScoreDAO.class);
         final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
 
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
@@ -162,6 +158,12 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 configuration.getSleepScoreVersion()
         );
 
+        final AmazonDynamoDB dynamoDBStatsClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
+        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBStatsClient,
+                configuration.getSleepStatsDynamoConfiguration().getTableName(),
+                configuration.getSleepStatsVersion());
+
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
@@ -177,7 +179,7 @@ public class InsightsGeneratorWorkerCommand extends ConfiguredCommand<InsightsGe
                 insightsDAODynamoDB,
                 trendsInsightsDAO,
                 questionResponseDAO,
-                scoreDAO,
+                sleepStatsDAODynamoDB,
                 lightData,
                 accountPreferencesDynamoDB);
         final Worker worker = new Worker(factory, kinesisConfig);

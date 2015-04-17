@@ -10,8 +10,8 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
-import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -71,7 +71,7 @@ public class PredictionResource extends BaseResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final SleepLabelDAO sleepLabelDAO;
+    private final UserLabelDAO userLabelDAO;
     private final SleepHmmDAO sleepHmmDAO;
 
 
@@ -79,14 +79,14 @@ public class PredictionResource extends BaseResource {
                               final TrackerMotionDAO trackerMotionDAO,
                               final DeviceDataDAO deviceDataDAO,
                               final DeviceDAO deviceDAO,
-                              final SleepLabelDAO sleepLabelDAO,
+                              final UserLabelDAO userLabelDAO,
                               final SleepHmmDAO sleepHmmDAO) {
 
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.sleepLabelDAO = sleepLabelDAO;
+        this.userLabelDAO = userLabelDAO;
         this.sleepHmmDAO = sleepHmmDAO;
     }
 

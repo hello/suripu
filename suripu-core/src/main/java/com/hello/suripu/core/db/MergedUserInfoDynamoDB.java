@@ -312,6 +312,7 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+    @Deprecated
     public boolean createUserInfoWithEmptyAlarmList(final String deviceId, final long accountId, final DateTimeZone userTimeZone){
         final Map<String, AttributeValueUpdate> items = generateAlarmUpdateItem(Collections.EMPTY_LIST, Collections.EMPTY_LIST, userTimeZone);
 

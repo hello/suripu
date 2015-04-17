@@ -54,6 +54,7 @@ import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.CheckResource;
 import com.hello.suripu.service.resources.DownloadResource;
 import com.hello.suripu.service.resources.LogsResource;
+import com.hello.suripu.service.resources.ProvisionResource;
 import com.hello.suripu.service.resources.ReceiveResource;
 import com.hello.suripu.service.resources.RegisterResource;
 import com.yammer.dropwizard.Service;
@@ -261,7 +262,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                         senseKeyStore));
 
         environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
-
+        environment.addResource(new ProvisionResource(senseKeyStore));
         // Manage the lifecycle of our clients
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));
         environment.manage(new KinesisClientManaged(kinesisClient));

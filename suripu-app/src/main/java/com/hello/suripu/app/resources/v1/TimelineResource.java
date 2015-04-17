@@ -5,8 +5,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -41,19 +43,23 @@ public class TimelineResource extends BaseResource {
     private final TimelineProcessor timelineProcessor;
     private final AccountDAO accountDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
+    private final TimelineLogDAO timelineLogDAO;
+
 
     public TimelineResource(final AccountDAO accountDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
+                            final TimelineLogDAO timelineLogDAO,
                             final TimelineProcessor timelineProcessor) {
         this.accountDAO = accountDAO;
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
+        this.timelineLogDAO = timelineLogDAO;
     }
 
-    private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final List<Timeline> timelines){
+    private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final TimelineResult result){
 
         try{
-            if(timelines == null || timelines.isEmpty()){
+            if(result.timelines == null || result.timelines.isEmpty()){
                 // WARNING: DONOT cache empty timeline!
                 LOGGER.info("Trying to cache empty timelines for account {} date {}, quit.", accountId, targetDateLocalUTC);
                 return false;
@@ -61,7 +67,7 @@ public class TimelineResource extends BaseResource {
 
             //only cache if not the HMM
             if (!this.hasHmmEnabled(accountId)) {
-                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), timelines);
+                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
             }
 
             return true;
@@ -80,30 +86,49 @@ public class TimelineResource extends BaseResource {
         return false;
     }
 
-    private List<Timeline> getCachedTimelines(final Long accountId, final DateTime targetDate){
-        final ImmutableList<Timeline> cachedTimelines = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
-        if (!cachedTimelines.isEmpty()) {
-            LOGGER.info("Timeline for account {}, date {} returned from cache.", accountId, targetDate);
-            return cachedTimelines;
-        }
 
-        return Collections.EMPTY_LIST;
-    }
 
-    private List<Timeline> getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
+    private TimelineResult getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
 
         //if no update forced (i.e. no HMM)
-        final List<Timeline> timelinesFromCache = getCachedTimelines(accountId, targetDate);
-        if (!timelinesFromCache.isEmpty() && !this.hasVotingEnabled(accountId)) {
-            return timelinesFromCache;
+
+        //first try to get a cached result
+        final Optional<TimelineResult> cachedResult = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
+
+        if (cachedResult.isPresent() && !this.hasVotingEnabled(accountId)) {
+
+            //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
+            timelineLogDAO.putTimelineLog(accountId,cachedResult.get().log);
+
+            return cachedResult.get();
         }
+        else {
 
+            LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
 
-        LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
-        final List<Timeline> timelines = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
-        cacheTimeline(accountId, targetDate, timelines);
-        return timelines;
+            //generate timeline from one of our many algorithms
+            final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+
+            //if it was successful,
+            if (result.isPresent()) {
+
+                //place in cache cache, money money, yo.
+                cacheTimeline(accountId, targetDate, result.get());
+
+                //log it, too
+                timelineLogDAO.putTimelineLog(accountId,result.get().log);
+
+                return result.get();
+
+            }
+            else {
+
+                //not successful in generating timeline for whatever reason,
+                //no cache, no log, just return empty
+                return TimelineResult.createEmpty();
+            }
+        }
     }
 
     @Timed
@@ -115,7 +140,9 @@ public class TimelineResource extends BaseResource {
             @PathParam("date") String date) {
         
 
-        return getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+
+        return result.timelines;
 
     }
 
@@ -132,7 +159,9 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        return getTimelinesFromCacheOrReprocess(accountId.get(), date);
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(accountId.get(), date);
+
+        return result.timelines;
     }
 
     @Timed

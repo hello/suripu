@@ -8,7 +8,6 @@ import com.hello.suripu.workers.insights.InsightsGeneratorWorkerCommand;
 import com.hello.suripu.workers.logs.LogIndexerWorkerCommand;
 import com.hello.suripu.workers.notifications.PushNotificationsWorkerCommand;
 import com.hello.suripu.workers.pill.PillWorkerCommand;
-import com.hello.suripu.workers.pillscorer.PillScoreWorkerCommand;
 import com.hello.suripu.workers.sense.SenseSaveWorkerCommand;
 import com.hello.suripu.workers.timeline.TimelineWorkerCommand;
 import com.yammer.dropwizard.Service;
@@ -33,7 +32,6 @@ public class HelloWorker extends Service<WorkerConfiguration> {
             }
         });
         bootstrap.addCommand(new PillWorkerCommand("pill", "all things about pill"));
-        bootstrap.addCommand(new PillScoreWorkerCommand("pillscorer", "scoring sleep pill data"));
         bootstrap.addCommand(new SenseSaveWorkerCommand("sense_save", "saving sense sensor data"));
         bootstrap.addCommand(new AlarmWorkerCommand("smart_alarm", "Start smart alarm worker"));
         bootstrap.addCommand(new LogIndexerWorkerCommand("index_logs", "Indexes logs from Kinesis stream into searchify index"));

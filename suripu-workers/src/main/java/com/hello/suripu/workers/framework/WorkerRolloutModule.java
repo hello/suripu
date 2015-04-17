@@ -8,7 +8,6 @@ import com.hello.suripu.workers.insights.InsightsGenerator;
 import com.hello.suripu.workers.notifications.PushNotificationsProcessor;
 import com.hello.suripu.workers.pill.S3RecordProcessor;
 import com.hello.suripu.workers.pill.SavePillDataProcessor;
-import com.hello.suripu.workers.pillscorer.PillScoreProcessor;
 import com.hello.suripu.workers.sense.SenseSaveProcessor;
 import com.hello.suripu.workers.timeline.TimelineRecordProcessor;
 import com.librato.rollout.RolloutAdapter;
@@ -25,7 +24,6 @@ import javax.inject.Singleton;
         AlarmRecordProcessor.class,
         S3RecordProcessor.class,
         SavePillDataProcessor.class,
-        PillScoreProcessor.class,
         SenseSaveProcessor.class,
         InsightsGenerator.class,
         PushNotificationsProcessor.class,

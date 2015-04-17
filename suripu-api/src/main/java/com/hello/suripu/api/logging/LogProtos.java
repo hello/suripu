@@ -8,6 +8,88 @@ public final class LogProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
+  /**
+   * Protobuf enum {@code LogType}
+   */
+  public enum LogType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>UNSTRUCTURED = 1;</code>
+     */
+    UNSTRUCTURED(0, 1),
+    /**
+     * <code>KEY_VALUE = 2;</code>
+     */
+    KEY_VALUE(1, 2),
+    ;
+
+    /**
+     * <code>UNSTRUCTURED = 1;</code>
+     */
+    public static final int UNSTRUCTURED_VALUE = 1;
+    /**
+     * <code>KEY_VALUE = 2;</code>
+     */
+    public static final int KEY_VALUE_VALUE = 2;
+
+
+    public final int getNumber() { return value; }
+
+    public static LogType valueOf(int value) {
+      switch (value) {
+        case 1: return UNSTRUCTURED;
+        case 2: return KEY_VALUE;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<LogType>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<LogType>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<LogType>() {
+            public LogType findValueByNumber(int number) {
+              return LogType.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return com.hello.suripu.api.logging.LogProtos.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final LogType[] VALUES = values();
+
+    public static LogType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private LogType(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:LogType)
+  }
+
   public interface sense_logOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -50,6 +132,16 @@ public final class LogProtos {
      */
     com.google.protobuf.ByteString
         getTextBytes();
+
+    // optional .LogType property = 4;
+    /**
+     * <code>optional .LogType property = 4;</code>
+     */
+    boolean hasProperty();
+    /**
+     * <code>optional .LogType property = 4;</code>
+     */
+    com.hello.suripu.api.logging.LogProtos.LogType getProperty();
   }
   /**
    * Protobuf type {@code sense_log}
@@ -115,6 +207,17 @@ public final class LogProtos {
             case 26: {
               bitField0_ |= 0x00000004;
               text_ = input.readBytes();
+              break;
+            }
+            case 32: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.logging.LogProtos.LogType value = com.hello.suripu.api.logging.LogProtos.LogType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(4, rawValue);
+              } else {
+                bitField0_ |= 0x00000008;
+                property_ = value;
+              }
               break;
             }
           }
@@ -259,10 +362,27 @@ public final class LogProtos {
       }
     }
 
+    // optional .LogType property = 4;
+    public static final int PROPERTY_FIELD_NUMBER = 4;
+    private com.hello.suripu.api.logging.LogProtos.LogType property_;
+    /**
+     * <code>optional .LogType property = 4;</code>
+     */
+    public boolean hasProperty() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .LogType property = 4;</code>
+     */
+    public com.hello.suripu.api.logging.LogProtos.LogType getProperty() {
+      return property_;
+    }
+
     private void initFields() {
       unixTime_ = 0;
       deviceId_ = "";
       text_ = "";
+      property_ = com.hello.suripu.api.logging.LogProtos.LogType.UNSTRUCTURED;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -285,6 +405,9 @@ public final class LogProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, getTextBytes());
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeEnum(4, property_.getNumber());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -305,6 +428,10 @@ public final class LogProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, getTextBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(4, property_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -428,6 +555,8 @@ public final class LogProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         text_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
+        property_ = com.hello.suripu.api.logging.LogProtos.LogType.UNSTRUCTURED;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -468,6 +597,10 @@ public final class LogProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.text_ = text_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.property_ = property_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -496,6 +629,9 @@ public final class LogProtos {
           bitField0_ |= 0x00000004;
           text_ = other.text_;
           onChanged();
+        }
+        if (other.hasProperty()) {
+          setProperty(other.getProperty());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -705,6 +841,42 @@ public final class LogProtos {
         return this;
       }
 
+      // optional .LogType property = 4;
+      private com.hello.suripu.api.logging.LogProtos.LogType property_ = com.hello.suripu.api.logging.LogProtos.LogType.UNSTRUCTURED;
+      /**
+       * <code>optional .LogType property = 4;</code>
+       */
+      public boolean hasProperty() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .LogType property = 4;</code>
+       */
+      public com.hello.suripu.api.logging.LogProtos.LogType getProperty() {
+        return property_;
+      }
+      /**
+       * <code>optional .LogType property = 4;</code>
+       */
+      public Builder setProperty(com.hello.suripu.api.logging.LogProtos.LogType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        property_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .LogType property = 4;</code>
+       */
+      public Builder clearProperty() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        property_ = com.hello.suripu.api.logging.LogProtos.LogType.UNSTRUCTURED;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:sense_log)
     }
 
@@ -730,9 +902,11 @@ public final class LogProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\tlog.proto\"?\n\tsense_log\022\021\n\tunix_time\030\001 " +
-      "\001(\005\022\021\n\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\tB)\n\034" +
-      "com.hello.suripu.api.loggingB\tLogProtos"
+      "\n\tlog.proto\"[\n\tsense_log\022\021\n\tunix_time\030\001 " +
+      "\001(\005\022\021\n\tdevice_id\030\002 \001(\t\022\014\n\004text\030\003 \001(\t\022\032\n\010" +
+      "property\030\004 \001(\0162\010.LogType**\n\007LogType\022\020\n\014U" +
+      "NSTRUCTURED\020\001\022\r\n\tKEY_VALUE\020\002B)\n\034com.hell" +
+      "o.suripu.api.loggingB\tLogProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -744,7 +918,7 @@ public final class LogProtos {
           internal_static_sense_log_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_sense_log_descriptor,
-              new java.lang.String[] { "UnixTime", "DeviceId", "Text", });
+              new java.lang.String[] { "UnixTime", "DeviceId", "Text", "Property", });
           return null;
         }
       };

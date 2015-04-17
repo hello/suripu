@@ -7,8 +7,8 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.SleepLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataScience.JoinedSensorsMinuteData;
@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Created by pangwu on 12/1/14.
  */
@@ -62,20 +63,20 @@ public class DataScienceResource extends BaseResource {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
-    private final SleepLabelDAO sleepLabelDAO;
     private final FeedbackDAO feedbackDAO;
+    private final UserLabelDAO userLabelDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
-                               final SleepLabelDAO sleepLabelDAO,
+                               final UserLabelDAO userLabelDAO,
                                final FeedbackDAO feedbackDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
-        this.sleepLabelDAO = sleepLabelDAO;
+        this.userLabelDAO = userLabelDAO;
         this.feedbackDAO = feedbackDAO;
     }
 
@@ -259,7 +260,7 @@ public class DataScienceResource extends BaseResource {
         final DateTime nightDate = DateTime.parse(night, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
         LOGGER.debug("{} {}", email, nightDate);
-        return sleepLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
+        return userLabelDAO.getUserLabelsByEmailAndNight(email, nightDate);
     }
 
     // APIs for Benjo's analysis
@@ -360,16 +361,16 @@ public class DataScienceResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public BinnedSensorData getBinnedSensorDataByEmailOrAccountID(@Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
-                                                                    @QueryParam("email") String email,
-                                                                    @QueryParam("account_id") Long accountId,
-                                                                    @QueryParam("from_ts") Long fromTimestamp,
-                                                                    @DefaultValue("3") @QueryParam("num_days") Integer numDays,
-                                                                    @QueryParam("pill_threshold_counts") Double pillThreshold,
-                                                                    @QueryParam("sound_threshold_db") Double soundThreshold,
-                                                                    @QueryParam("nat_light_start_hour") Double naturalLightStartHour,
-                                                                    @QueryParam("nat_light_stop_hour") Double naturalLightStopHour,
-                                                                    @QueryParam("meas_period") Integer numMinutesInMeasPeriod
-                                                                    ) {
+                                                                  @QueryParam("email") String email,
+                                                                  @QueryParam("account_id") Long accountId,
+                                                                  @QueryParam("from_ts") Long fromTimestamp,
+                                                                  @DefaultValue("3") @QueryParam("num_days") Integer numDays,
+                                                                  @QueryParam("pill_threshold_counts") Double pillThreshold,
+                                                                  @QueryParam("sound_threshold_db") Double soundThreshold,
+                                                                  @QueryParam("nat_light_start_hour") Double naturalLightStartHour,
+                                                                  @QueryParam("nat_light_stop_hour") Double naturalLightStopHour,
+                                                                  @QueryParam("meas_period") Integer numMinutesInMeasPeriod
+    ) {
 
 
        /* String modelName,
@@ -413,25 +414,30 @@ public class DataScienceResource extends BaseResource {
 
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         if (!deviceAccountPairOptional.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity("This account does not have a sense recently").build());
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(500,"This account does not have a sense recently")).build());
         }
 
-        final DateTime startTs = new DateTime(fromTimestamp, DateTimeZone.UTC);
-        final DateTime endTs = startTs.plusDays(numDays);
+        final DateTime date = new DateTime(fromTimestamp);
+
+        final DateTime startTs = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
+        final DateTime endTs = date.withTimeAtStartOfDay().plusDays(numDays).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
 
 
         LOGGER.debug("Getting binned sensor minute data for account id {} between {} and {}", accountId, startTs,endTs);
 
-        final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
+
+
+        final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetweenLocalUTC(
                 accountId,
                 startTs,
                 endTs
         );
 
+
         if (motionData.isEmpty()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity("no data on this day").build());
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(500,"No data on this day")).build());
         }
 
         List<TrackerMotion> filteredTrackerData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(motionData.asList());
@@ -448,12 +454,21 @@ public class DataScienceResource extends BaseResource {
         );
 
         final int timezoneOffset = filteredTrackerData.get(0).offsetMillis;
-        Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTs.getMillis(), endTs.getMillis(), timezoneOffset);
+        Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = Optional.absent();
+        try {
+            optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTs.getMillis(), endTs.getMillis(), timezoneOffset);
 
+        }
+        catch (Exception e) {
+            LOGGER.debug(e.toString());
+
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(500, "something failed when getting the binned sensor data.  go check the logs")).build());
+        }
 
         if (!optionalBinnedData.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity("Failed to get binned data").build());
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(500,"failed to get binned data")).build());
         }
 
         final SleepHmmSensorDataBinning.BinnedData result = optionalBinnedData.get();
@@ -476,6 +491,8 @@ public class DataScienceResource extends BaseResource {
         return new BinnedSensorData(accountId,matrix,times,timezoneOffset);
 
 
+
+
     }
-    
+
 }

@@ -192,6 +192,14 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("smart_alarm_log_db")
+    private DynamoDBConfiguration smartAlarmLogDBConfiguration;
+    public DynamoDBConfiguration getSmartAlarmLogDBConfiguration(){
+        return this.smartAlarmLogDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("sleep_score_version")
     private String sleepScoreVersion;
     public String getSleepScoreVersion() {
@@ -323,5 +331,13 @@ public class SuripuAppConfiguration extends Configuration {
     private RedisConfiguration redisConfiguration;
     public RedisConfiguration getRedisConfiguration() {
         return redisConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_log_db")
+    private DynamoDBConfiguration timelineLogDBConfiguration;
+    public DynamoDBConfiguration getTimelineLogDBConfiguration(){
+        return this.timelineLogDBConfiguration;
     }
 }

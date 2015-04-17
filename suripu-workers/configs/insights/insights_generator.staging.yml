@@ -149,3 +149,10 @@ preferences_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: preferences
+
+kinesis_logger:
+  stream_name: dev-logs
+  enabled : false
+  buffer_size: 100
+  origin: suripu-workers
+  min_log_level : INFO

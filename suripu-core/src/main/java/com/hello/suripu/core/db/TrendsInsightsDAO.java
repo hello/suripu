@@ -2,9 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.mappers.InfoInsightCardsMapper;
-import com.hello.suripu.core.db.mappers.SleepStatsSampleMapper;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
-import com.hello.suripu.core.models.Insights.SleepStatsSample;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -20,13 +18,6 @@ import java.util.List;
  */
 public abstract class TrendsInsightsDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsInsightsDAO.class);
-
-    @RegisterMapper(SleepStatsSampleMapper.class)
-    @SqlQuery("SELECT * FROM sleep_stats_time WHERE account_id = :account_id AND duration > 0" +
-            "ORDER BY local_utc_date LIMIT :days")
-    public abstract ImmutableList<SleepStatsSample> getAccountRecentSleepStats(@Bind("account_id") Long accountId,
-                                                                                     @Bind("days") int days);
-
 
     // Insights Stuff
 

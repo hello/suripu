@@ -95,4 +95,12 @@ public class AlarmWorkerConfiguration extends WorkerConfiguration {
         return this.alarmInfoDynamoDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("smart_alarm_log_db")
+    private DynamoDBConfiguration smartAlarmLogDBConfiguration;
+    public DynamoDBConfiguration getSmartAlarmLogDBConfiguration(){
+        return this.smartAlarmLogDBConfiguration;
+    }
+
 }
