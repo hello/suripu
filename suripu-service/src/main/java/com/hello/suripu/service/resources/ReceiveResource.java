@@ -145,10 +145,10 @@ public class ReceiveResource extends BaseResource {
 
         final String deviceId = data.getDeviceId();
         final List<String> groups = groupFlipper.getGroups(deviceId);
-
         final String ipAddress = getIpAddress(request);
+        final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
 
-        if(OTAProcessor.isPCH(ipAddress) && !(featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceId, groups))){
+        if(OTAProcessor.isPCH(ipAddress, ipGroups) && !(featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceId, groups))){
             // return 202 to not confuse provisioning script with correct test key
             LOGGER.info("IP {} is from PCH. Return HTTP 202", ipAddress);
             return plainTextError(Response.Status.ACCEPTED, "");
@@ -499,9 +499,9 @@ public class ReceiveResource extends BaseResource {
         final String ipAddress = getIpAddress(request);
 
         final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
-
+        final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
         final boolean pchOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceID, deviceGroups) &&
-                (OTAProcessor.isPCH(ipAddress) || isOfficeDeviceWithOverride));
+                OTAProcessor.isPCH(ipAddress, ipGroups));
 
         if(pchOTA) {
             LOGGER.debug("PCH Special OTA for device: {}", deviceID);
@@ -523,7 +523,7 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
 
         if(canOTA) {
 

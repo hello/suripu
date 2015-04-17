@@ -262,7 +262,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                         senseKeyStore));
 
         environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
-        environment.addResource(new ProvisionResource(senseKeyStore));
+        environment.addResource(new ProvisionResource(senseKeyStore, groupFlipper));
         // Manage the lifecycle of our clients
         environment.manage(new DynamoDBClientManaged(dynamoDBClient));
         environment.manage(new KinesisClientManaged(kinesisClient));

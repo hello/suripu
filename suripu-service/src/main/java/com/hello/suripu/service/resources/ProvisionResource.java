@@ -6,10 +6,12 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.provision.ProvisionProtos;
 import com.hello.suripu.core.db.KeyStore;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.processors.OTAProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.service.SignedMessage;
 import com.librato.rollout.RolloutClient;
+import java.util.List;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ public class ProvisionResource extends BaseResource {
     RolloutClient featureFlipper;
 
     private final KeyStore keyStore;
+    private final GroupFlipper groupFlipper;
 
     private final String SN_PREFIX = "91000008";
 
@@ -41,8 +44,9 @@ public class ProvisionResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProvisionResource.class);
 
 
-    public ProvisionResource(final KeyStore senseKeyStore) {
+    public ProvisionResource(final KeyStore senseKeyStore, final GroupFlipper groupFlipper) {
         this.keyStore = senseKeyStore;
+        this.groupFlipper = groupFlipper;
     }
 
 
@@ -65,9 +69,9 @@ public class ProvisionResource extends BaseResource {
 
         final String deviceId = provisionRequest.getDeviceId();
         final String ipAddress = getIpAddress(request);
-        final Boolean isPCH = OTAProcessor.isPCH(ipAddress);
-        final Boolean isHelloOffice = OTAProcessor.isHelloOffice(ipAddress);
+        final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
 
+        final Boolean isPCH = OTAProcessor.isPCH(ipAddress, ipGroups);
 
         final Optional<byte[]> optionalKeyBytes = keyStore.get(deviceId);
 
@@ -79,7 +83,7 @@ public class ProvisionResource extends BaseResource {
 
         final byte[] key = optionalKeyBytes.get();
 
-        if(isPCH || isHelloOffice) {
+        if(isPCH) {
             LOGGER.warn("Attempting to get keys from ip={} for device_id={}", ipAddress, deviceId);
             final Optional<SignedMessage.Error> optionalError = signedMessage.validateWithKey(key);
 
