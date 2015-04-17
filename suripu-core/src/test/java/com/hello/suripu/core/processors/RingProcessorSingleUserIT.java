@@ -62,6 +62,22 @@ public class RingProcessorSingleUserIT {
     private final List<UserInfo> userInfoList1 = new ArrayList<>();
     private final List<UserInfo> userInfoList2 = new ArrayList<>();
 
+    private void setAlarm(final boolean isRepeated, final boolean isSmart){
+        final List<Alarm> alarmList = new ArrayList<Alarm>();
+        final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
+        dayOfWeek.add(DateTimeConstants.TUESDAY);
+
+        alarmList.add(new Alarm(2014, 9, 23, 8, 20, dayOfWeek,
+                isRepeated, true, true, isSmart,
+                new AlarmSound(100, "The Star Spangled Banner"), "id"));
+
+        final UserInfo userInfo1 = userInfoList1.get(0);
+        userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId, alarmList,
+                userInfo1.ringTime, userInfo1.timeZone, userInfo1.pillColor,
+                0));
+    }
+
+
 
     @Before
     public void setUp(){
@@ -213,9 +229,7 @@ public class RingProcessorSingleUserIT {
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
-                .thenReturn(ImmutableList.copyOf(Collections.<TrackerMotion>emptyList()));
-
+        setAlarm(true, false);
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For minutes that not yet trigger smart alarm computation
@@ -244,8 +258,7 @@ public class RingProcessorSingleUserIT {
     public void testNoneRepeatedSmartAlarmOn_09_23_2014_Update(){
         // Test scenario when computation get triggered, an ring time from previous alarm settings is set,
         // but user updated his/her next alarm to non-repeated after the last ring was computed.
-        final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
-        dayOfWeek.add(DateTimeConstants.TUESDAY);
+        setAlarm(false, true);
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
@@ -346,6 +359,7 @@ public class RingProcessorSingleUserIT {
         // Test scenario when computation get triggered all the alarm is repeated and,
         // no alarm is set yet.
         // And pill has no data upload.
+        setAlarm(true, false);
 
         final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
@@ -368,8 +382,7 @@ public class RingProcessorSingleUserIT {
     public void testNoneRepeatedAlarmOn_09_23_2014_InitWithData(){
         // Test scenario when computation get triggered all the alarm is non-repeated and not expired.
         // pill has data.
-        final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
-        dayOfWeek.add(DateTimeConstants.TUESDAY);
+        setAlarm(false, true);
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
@@ -395,8 +408,7 @@ public class RingProcessorSingleUserIT {
     public void testNoneRepeatedAlarmOn_09_23_2014_InitWithNoData(){
         // Test scenario when computation get triggered all the alarm is non-repeated and not expired.
         // pill has no data.
-        final HashSet<Integer> dayOfWeek = new HashSet<Integer>();
-        dayOfWeek.add(DateTimeConstants.TUESDAY);
+        setAlarm(false, true);
 
         // pill has no data
         final DateTime alarmDeadlineLocalUTC = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.UTC);
