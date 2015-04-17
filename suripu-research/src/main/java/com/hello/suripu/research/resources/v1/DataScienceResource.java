@@ -109,26 +109,16 @@ public class DataScienceResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final Optional<Long> internalSenseIdOptional = this.deviceDAO.getMostRecentSenseByAccountId(accountId.get());
+        final int slotDurationMins = 1;
 
-        if(!internalSenseIdOptional.isPresent()){
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        if (internalSenseIdOptional.isPresent()) {
-            final int slotDurationMins = 1;
-
-            final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
-                    targetDate.getMillis(), endDate.getMillis(),
-                    accountId.get(), internalSenseIdOptional.get(),
-                    slotDurationMins,
-                    missingDataDefaultValue(accountId.get()));
-            final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
-            final List<Event> lightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(lightData);
-            return lightEvents;
-        }
-
-        throw new WebApplicationException(Response.Status.NOT_FOUND);
+        final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+                targetDate.getMillis(), endDate.getMillis(),
+                accountId.get(),
+                slotDurationMins,
+                missingDataDefaultValue(accountId.get()));
+        final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
+        final List<Event> lightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(lightData);
+        return lightEvents;
     }
 
 
@@ -150,19 +140,15 @@ public class DataScienceResource extends BaseResource {
             LOGGER.debug("ID not found for account {}", email);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        final Optional<Long> deviceId = this.deviceDAO.getMostRecentSenseByAccountId(accountId.get());
-        if (deviceId.isPresent()) {
             final int slotDurationMins = 1;
 
-            AllSensorSampleList sensorData = this.deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
-                    targetDate.getMillis(), endDate.getMillis(),
-                    accountId.get(), deviceId.get(),
-                    slotDurationMins,
-                    missingDataDefaultValue(accountId.get()));
-            final List<Sample> data = sensorData.get(Sensor.valueOf(dataType));
-            return data;
-        }
-        throw new WebApplicationException(Response.Status.NOT_FOUND);
+        AllSensorSampleList sensorData = this.deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+                targetDate.getMillis(), endDate.getMillis(),
+                accountId.get(),
+                slotDurationMins,
+                missingDataDefaultValue(accountId.get()));
+        final List<Sample> data = sensorData.get(Sensor.valueOf(dataType));
+        return data;
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {

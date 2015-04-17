@@ -102,6 +102,11 @@ ALTER TABLE device_sensors_master ADD COLUMN audio_num_disturbances INTEGER DEFA
 ALTER TABLE device_sensors_master ADD COLUMN audio_peak_disturbances_db INTEGER DEFAULT 0; -- converted to DB
 ALTER TABLE device_sensors_master ADD COLUMN audio_peak_background_db INTEGER DEFAULT 0;
 
+-- add index to query by account_id and ts (04/16/2015)
+CREATE INDEX device_sensors_account_id_ts_idx on device_sensors_master(account_id, ts);
+
+
+
 -- Trigger function for master insert
 CREATE OR REPLACE FUNCTION device_sensors_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
 $BODY$

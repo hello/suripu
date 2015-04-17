@@ -170,19 +170,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
-
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
-
-        if (!deviceId.isPresent()) {
-            LOGGER.debug("No device ID for account_id = {} and day = {}", accountId, targetDate);
-            return Optional.absent();
-        }
-
-
         final AllSensorSampleList allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                 targetDate.getMillis(), endDate.getMillis(),
-                accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
+                accountId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
 
         if (allSensorSampleList.isEmpty()) {
             LOGGER.debug("No sense sensor data ID for account_id = {} and day = {}", accountId, targetDate);
