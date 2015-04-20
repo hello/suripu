@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
+import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
 import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
@@ -78,6 +79,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
     public void initialize(final Bootstrap<SuripuAdminConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTables());
+        bootstrap.addCommand(new ScanSerialNumbers());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAdminConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAdminConfiguration configuration) {
