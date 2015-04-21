@@ -370,7 +370,7 @@ public class RingProcessor {
                 smartAlarmLoggerDynamoDB.log(accountId, lastCycleEnds, DateTime.now().withZone(timeZone),
                         smartAlarmRingTimeUTC.withZone(timeZone),
                         new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone),
-                        timeZone.getID());
+                        timeZone.getOffset(nextRegularRingTime.expectedRingTimeUTC));
             }
             LOGGER.info("User {} smartAlarm time is {}", accountId, new DateTime(smartAlarmRingTimeUTC, timeZone));
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();
