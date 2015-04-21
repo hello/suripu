@@ -35,6 +35,7 @@ public class SmartAlarmLoggerDynamoDB {
     public static final String EXPECTED_RING_TIME_ATTRIBUTE_NAME = "expected_ring_time";
     public static final String SMART_RING_TIME_ATTRIBUTE_NAME = "smart_ring_time";
     public static final String LAST_SLEEP_CYCLE_ATTRIBUTE_NAME = "last_sleep_cycle_time";
+    public static final String TIMEZONE_ATTRIBUTE_NAME = "timezone_id";
     public static final String CURRENT_TIME_ATTRIBUTE_NAME = "current_time";
 
     public static final String CREATED_AT_ATTRIBUTE_NAME = "created_at_utc";
@@ -50,13 +51,15 @@ public class SmartAlarmLoggerDynamoDB {
 
     public void log(final Long accountId, final DateTime lastSleepCycleEnd, final DateTime now,
                     final DateTime nextRingTime,
-                    final DateTime nextRegularRingTime){
+                    final DateTime nextRegularRingTime,
+                    final String timeZoneId){
         final Map<String, AttributeValue> items = new HashMap<>();
         items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
         items.put(CURRENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(now.toString(DATETIME_FORMAT)));
         items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(nextRegularRingTime.toString(DATETIME_FORMAT)));
         items.put(SMART_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(nextRingTime.toString(DATETIME_FORMAT)));
         items.put(LAST_SLEEP_CYCLE_ATTRIBUTE_NAME, new AttributeValue().withS(lastSleepCycleEnd.toString(DATETIME_FORMAT)));
+        items.put(TIMEZONE_ATTRIBUTE_NAME, new AttributeValue().withS(timeZoneId));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
         try {
