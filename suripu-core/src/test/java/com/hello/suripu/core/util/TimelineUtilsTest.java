@@ -883,16 +883,14 @@ public class TimelineUtilsTest extends FixtureTest {
         final List<TrackerMotion> trackerMotions = loadTrackerMotionFromCSV("fixtures/algorithm/qf_motion_2015_03_12_raw.csv");
         final List<DateTime> lightOuts = new ArrayList<>();
         lightOuts.add(new DateTime(1426218480000L, DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis)));
-        
 
-        Optional<VotingSleepEvents> votingSleepEventsOptional = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+
+        final Optional<VotingSleepEvents> votingSleepEventsOptional = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
                 Collections.EMPTY_LIST,
                 lightOuts,
                 Optional.<DateTime>absent());
 
-        if (!votingSleepEventsOptional.isPresent()) {
-            return;
-        }
+        assertThat(votingSleepEventsOptional.isPresent(),is(true));
 
         final SleepEvents<Optional<Event>> sleepEventObj = votingSleepEventsOptional.get().sleepEvents;
 
