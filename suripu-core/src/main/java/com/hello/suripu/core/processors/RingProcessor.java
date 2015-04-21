@@ -213,7 +213,9 @@ public class RingProcessor {
         if (isRingTimeFromNextComputedSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)) {
             if(feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST) &&
                     hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker)){
-
+                final Optional<RingTime> progressiveRIngTimeOptional = getProgressiveRingTime(userInfo.accountId,
+                        nextRingTimeFromWorker,
+                        trackerMotionDAO);
                 LOGGER.info("Reset smart alarm with updated progressive smart alarm, original ring time {}, updated ring time {}");
             }
 
