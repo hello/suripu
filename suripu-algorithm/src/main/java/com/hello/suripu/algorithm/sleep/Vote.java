@@ -115,16 +115,61 @@ public class Vote {
 
 
 
-    public final List<Segment> getAwakes(final long beginMillis, final long endMillis, final boolean debug){
+    public final List<Segment> getAwakes(final long fallAsleepMillis, final long wakeUpMillis, final boolean debug){
         final List<Segment> allAwakesPeriods = this.sleepPeriod.getAwakePeriods(debug);
         final List<Segment> awakesInTheRange = new ArrayList<>();
 
         for(final Segment segment:allAwakesPeriods){
-            if(beginMillis <= segment.getStartTimestamp() && endMillis >= segment.getEndTimestamp()){
+            if(fallAsleepMillis <= segment.getStartTimestamp() && wakeUpMillis >= segment.getEndTimestamp()){
                 awakesInTheRange.add(segment);
             }
         }
-        return awakesInTheRange;
+        final List<Segment> smoothedAwakes = smoothAwakes(awakesInTheRange, MotionCluster.toSegments(this.motionCluster.getCopyOfClusters()));
+        return smoothedAwakes;
+    }
+
+
+    private List<Segment> getAwakesInTimeSpanMillis(final List<Segment> awakes, final long startMillis, final long endMillis){
+        final List<Segment> result = new ArrayList<>();
+        for(final Segment awake:awakes){
+            if(awake.getStartTimestamp() >= startMillis && awake.getEndTimestamp() <= endMillis){
+                result.add(awake);
+            }
+        }
+
+        return result;
+    }
+
+    private List<Segment> filterAwakeFragments(final List<Segment> awakesInMotionCluster){
+        final List<Segment> result = new ArrayList<>();
+        if(awakesInMotionCluster.size() < 2){
+            return awakesInMotionCluster;
+        }
+
+        for(final Segment awake:awakesInMotionCluster){
+            if(awake.getDuration() < 20 * DateTimeConstants.MILLIS_PER_MINUTE){
+                continue;
+            }
+            result.add(awake);
+        }
+        return result;
+    }
+
+    /*
+    * Smooth out the intermediate awake fragments caused by noisy sensor readings
+    * Idea: if multiple awakes is in the same motion cluster, filter out those less than
+    * 20 minutes, less is more.
+     */
+    private List<Segment> smoothAwakes(final List<Segment> awakes, final List<Segment> motionClusters){
+        final List<Segment> smoothedAwakes = new ArrayList<>();
+        for(final Segment currentCluster:motionClusters){
+            final List<Segment> awakesInMotionCluster = getAwakesInTimeSpanMillis(awakes,
+                    currentCluster.getStartTimestamp(),
+                    currentCluster.getEndTimestamp());
+            smoothedAwakes.addAll(filterAwakeFragments(awakesInMotionCluster));
+
+        }
+        return smoothedAwakes;
     }
 
 

@@ -50,7 +50,7 @@ public class SenseEventsDAOTest {
 
         final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
         assertThat(groupedEvents.asMap().size(), is(1));
-        final String key = "ABC|" + now.toString("yyyy-MM-dd HH:mm:ss");
+        final String key = "ABC|" + SenseEventsDAO.dateTimeToString(now);
         final Collection<String> res = groupedEvents.get(key);
         assertThat(res == null, is(false));
         assertThat(res.size(), is(2));
@@ -70,7 +70,7 @@ public class SenseEventsDAOTest {
 
         final Multimap<String, String> groupedEvents = SenseEventsDAO.transform(deviceEventsList);
         assertThat(groupedEvents.size(), is(2));
-        final String key = "ABC|" + now.toString("yyyy-MM-dd HH:mm:ss");
+        final String key = "ABC|" + SenseEventsDAO.dateTimeToString(now);
         final Collection<String> res = groupedEvents.get(key);
         assertThat(res == null, is(false));
         assertThat(res.size(), is(1));
@@ -97,5 +97,23 @@ public class SenseEventsDAOTest {
         // omitting events attribute
         deviceEventsOptional = SenseEventsDAO.fromDynamoDBItem(incompleteMap);
         assertThat(deviceEventsOptional.isPresent(), is(false));
+    }
+
+    @Test public void parseDateTimeStringWithoutTimezone() {
+        final String testDateTimeSting = "2015-04-16 15:00:52";
+        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
+    }
+
+    @Test public void parseDateTimeStringWithTimezoneContainingPlus() {
+        final String testDateTimeSting = "2015-04-16 15:00:52+0000";
+        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
+    }
+
+    @Test public void parseDateTimeStringWithTimezoneEndsWithZ() {
+        final String testDateTimeSting = "2015-04-16 15:00:52Z";
+        final DateTime adjustedCreatedTs = SenseEventsDAO.stringToDateTime(testDateTimeSting);
+        assertThat(adjustedCreatedTs.isEqual(new DateTime("2015-04-16T15:00:52.000-00:00")), is(true));
     }
 }

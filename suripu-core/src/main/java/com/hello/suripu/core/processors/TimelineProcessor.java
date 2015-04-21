@@ -3,7 +3,6 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
@@ -195,7 +194,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, List<Event> additionalEvents,
+    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, final ImmutableList<Event> extraEvents,
                                            final OneDaysSensorData sensorData) {
 
         // compute lights-out and sound-disturbance events
@@ -233,16 +232,28 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
+        //USER-GENERATED FEEDBACK
         final Integer offsetMillis = trackerMotions.get(0).offsetMillis;
-        final Map<Event.Type, Event> feedbackEvents = fromFeedback(accountId, targetDate, offsetMillis);
-        for(final Event event : feedbackEvents.values()) {
-            LOGGER.info("Overriding {} with {} for account {}", event.getType().name(), event, accountId);
-            timelineEvents.put(event.getStartTimestamp(), event);
+
+
+        // get sleep events as list
+        final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
+        final List<Event> sleepEvents = new ArrayList<>();
+
+        for(final Optional<Event> sleepEventOptional: eventList){
+            if(sleepEventOptional.isPresent()){
+                sleepEvents.add(sleepEventOptional.get());
+            }
         }
-        
-        if (this.hasHmmEnabled(accountId)) {
-            LOGGER.info("Using HMM for account {}", accountId);
-        }
+
+
+        //  get the feedback in one form or another
+        final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
+
+        //MOVE EVENTS BASED ON FEEDBACK
+        final ImmutableList<Event> extraEventsModifiedByFeedback = FeedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, extraEvents, offsetMillis);
+        final ImmutableList<Event> sleepEventsModifiedByFeedback = FeedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents), offsetMillis);
+
 
         // PARTNER MOTION
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, ImmutableList.copyOf(motionEvents), partnerMotions);
@@ -262,13 +273,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             numSoundEvents = soundEvents.size();
         }
 
-        // insert IN-BED, SLEEP, WAKE, OUT-of-BED
-        final List<Optional<Event>> eventList = sleepEventsFromAlgorithm.toList();
-        for(final Optional<Event> sleepEventOptional: eventList){
-            if(sleepEventOptional.isPresent() && !feedbackEvents.containsKey(sleepEventOptional.get().getType())){
-                timelineEvents.put(sleepEventOptional.get().getStartTimestamp(), sleepEventOptional.get());
-            }
-        }
 
 
         // ALARM
@@ -296,8 +300,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
+        /* add sleep/wake events  */
+        for (final Event event : sleepEventsModifiedByFeedback) {
+            timelineEvents.put(event.getStartTimestamp(), event);
+        }
+
         /*  add "additional" events -- which is wake/sleep/get up to pee events */
-        for (final Event event : additionalEvents) {
+        for (final Event event : extraEventsModifiedByFeedback) {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
@@ -409,7 +418,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 return Optional.absent();
             }
 
-            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),extraEvents, sensorData);
+            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
 
             final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
 
@@ -737,18 +746,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
 
-    private Map<Event.Type, Event> fromFeedback(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
+    private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
         if(!hasFeedbackInTimeline(accountId)) {
             LOGGER.debug("Timeline feedback not enabled for account {}", accountId);
-            return Maps.newHashMap();
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
         // this is needed to match the datetime created when receiving user feedback
         // I believe we should change how we create datetime in feedback once we have time
         // TODO: tim
         final DateTime nightOfUTC = new DateTime(nightOf.getYear(),
                 nightOf.getMonthOfYear(), nightOf.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
-        final ImmutableList<TimelineFeedback> feedbackList = feedbackDAO.getForNight(accountId, nightOfUTC);
-        return FeedbackUtils.convertFeedbackToDateTime(feedbackList, offsetMillis);
+        return feedbackDAO.getForNight(accountId, nightOfUTC);
     }
 
 }

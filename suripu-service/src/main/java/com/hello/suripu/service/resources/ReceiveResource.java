@@ -113,12 +113,6 @@ public class ReceiveResource extends BaseResource {
     @Timed
     public byte[] receiveBatchSenseData(final byte[] body) {
 
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
-        if(OTAProcessor.isPCH(ipAddress)) {
-            // return 202 to not confuse provisioning script with correct test key
-            LOGGER.info("IP {} is from PCH. Return HTTP 202", ipAddress);
-            return plainTextError(Response.Status.ACCEPTED, "");
-        }
 
         final SignedMessage signedMessage = SignedMessage.parse(body);
         DataInputProtos.batched_periodic_data data = null;
@@ -151,7 +145,14 @@ public class ReceiveResource extends BaseResource {
 
         final String deviceId = data.getDeviceId();
         final List<String> groups = groupFlipper.getGroups(deviceId);
+        final String ipAddress = getIpAddress(request);
+        final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
 
+        if(OTAProcessor.isPCH(ipAddress, ipGroups) && !(featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceId, groups))){
+            // return 202 to not confuse provisioning script with correct test key
+            LOGGER.info("IP {} is from PCH. Return HTTP 202", ipAddress);
+            return plainTextError(Response.Status.ACCEPTED, "");
+        }
 
         final Optional<byte[]> optionalKeyBytes= getKey(deviceId, groups, ipAddress);
 
@@ -495,16 +496,26 @@ public class ReceiveResource extends BaseResource {
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
+        final String ipAddress = getIpAddress(request);
 
+        final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
+        final boolean pchOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceID, deviceGroups) &&
+                OTAProcessor.isPCH(ipAddress, ipGroups));
 
-        final String ipAddress = (request.getHeader("X-Forwarded-For") == null) ? request.getRemoteAddr() : request.getHeader("X-Forwarded-For");
+        if(pchOTA) {
+            LOGGER.debug("PCH Special OTA for device: {}", deviceID);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
+            LOGGER.info("{} files added to syncResponse for PCH Special OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
+            return fileDownloadList;
+        }
 
+        final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
-        if (featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups)) {
-            if (ipAddress.equals(LOCAL_OFFICE_IP_ADDRESS) && !deviceGroups.isEmpty()) {
+        if (isOfficeDeviceWithOverride) {
+            if (!deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
                 LOGGER.info("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion, false);
                 LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
@@ -512,7 +523,7 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
 
         if(canOTA) {
 
@@ -520,13 +531,13 @@ public class ReceiveResource extends BaseResource {
             if (!deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion);//TODO: Create a better way of knowing which group the device will belong to
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion, false);//TODO: Create a better way of knowing which group the device will belong to
                 LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
                     LOGGER.debug("Feature 'release' is active for device: {}", deviceID);
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion);
+                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, false);
                     LOGGER.info("{} files added to syncResponse for OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
                     return fileDownloadList;
                 }
