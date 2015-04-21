@@ -24,4 +24,5 @@ public class FeatureFlipper {
     public final static String OFFICE_ONLY_OVERRIDE = "office_only_override";
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
     public final static String PCH_SPECIAL_OTA = "pch_special_ota";
+    public final static String PROGRESSIVE_SMART_ALARM = "progressive_smart_alarm";
 }
