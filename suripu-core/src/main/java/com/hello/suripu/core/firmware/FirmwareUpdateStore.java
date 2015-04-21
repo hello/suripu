@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -18,6 +19,8 @@ import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 
+import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
+import com.hello.suripu.core.models.OTAHistory;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -28,6 +31,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.math3.util.Pair;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +46,7 @@ public class FirmwareUpdateStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmwareUpdateStore.class);
 
-    private final FirmwareUpdateDAO firmwareUpdateDAO;
+    private final OTAHistoryDAODynamoDB otaHistoryDAO;
     private final AmazonS3 s3;
     private final String bucketName;
     private final AmazonS3 s3Signer;
@@ -50,27 +54,27 @@ public class FirmwareUpdateStore {
 
     final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
 
-    public FirmwareUpdateStore(final FirmwareUpdateDAO firmwareUpdateDAOImpl, 
+    public FirmwareUpdateStore(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                final AmazonS3 s3, 
                                final String bucketName, 
                                final AmazonS3 s3Signer,
                                final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache) {
-        this.firmwareUpdateDAO = firmwareUpdateDAOImpl;
+        this.otaHistoryDAO = otaHistoryDAO;
         this.s3 = s3;
         this.bucketName = bucketName;
         this.s3Signer = s3Signer;
         this.s3FWCache = s3FWCache;
     }
 
-    public static FirmwareUpdateStore create(final FirmwareUpdateDAO firmwareUpdateDAOImpl,
+    public static FirmwareUpdateStore create(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                              final AmazonS3 s3,
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
                                              final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3Cache) {
-        return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
+        return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache);
     }
 
-    public static FirmwareUpdateStore create(final FirmwareUpdateDAO firmwareUpdateDAOImpl,
+    public static FirmwareUpdateStore create(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                              final AmazonS3 s3,
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
@@ -78,66 +82,7 @@ public class FirmwareUpdateStore {
         final Cache<String, Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(s3CacheExpireMinutes, TimeUnit.MINUTES)
                 .build();
-        return new FirmwareUpdateStore(firmwareUpdateDAOImpl, s3, bucketName, s3Signer, s3Cache);
-    }
-    
-    public void insertFile(final FirmwareFile firmwareFile, final String deviceId, final Integer firmwareVersion) {
-        firmwareUpdateDAO.insert(firmwareFile, deviceId, firmwareVersion);
-    }
-
-    public void reset(final String deviceId) {
-        firmwareUpdateDAO.reset(deviceId);
-    }
-
-
-    public List<FirmwareFile> getFirmwareFiles(final String deviceId, final Integer firmwareVersion) {
-        return firmwareUpdateDAO.getFiles(deviceId, firmwareVersion);
-    }
-
-    public List<SyncResponse.FileDownload> getFirmwareUpdateContent(final String deviceId, final Integer currentFirmwareVersion) {
-
-        final List<FirmwareFile> files = firmwareUpdateDAO.getFiles(deviceId, currentFirmwareVersion);
-
-        LOGGER.debug("Found {} files to update", files.size());
-        final List<SyncResponse.FileDownload> fileDownloadList = new ArrayList<>();
-
-        final Date expiration = new java.util.Date();
-        long msec = expiration.getTime();
-        msec += 1000 * 60 * 60; // 1 hour.
-        expiration.setTime(msec);
-
-        for(final FirmwareFile f : files) {
-
-            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(f.s3Bucket, f.s3Key);
-            generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
-            generatePresignedUrlRequest.setExpiration(expiration);
-
-            final URL s = s3Signer.generatePresignedUrl(generatePresignedUrlRequest);
-            LOGGER.debug("{}", s);
-
-            final SyncResponse.FileDownload.Builder fileDownloadBuilder = SyncResponse.FileDownload.newBuilder()
-                    .setUrl(s.getPath() + "?" + s.getQuery())
-                    .setHost(s.getHost())
-                    .setCopyToSerialFlash(f.copyToSerialFlash)
-                    .setResetApplicationProcessor(f.resetApplicationProcessor)
-                    .setResetNetworkProcessor(f.resetNetworkProcessor)
-                    .setSerialFlashFilename(f.serialFlashFilename)
-                    .setSerialFlashPath(f.serialFlashPath)
-                    .setSdCardFilename(f.sdCardFilename)
-                    .setSdCardPath(f.sdCardPath);
-
-            if(!f.sha1.isEmpty()) {
-                try {
-                    fileDownloadBuilder.setSha1(ByteString.copyFrom(Hex.decodeHex(f.sha1.toCharArray())));
-                } catch (DecoderException e) {
-                    LOGGER.error("Failed decoding sha1 from hex");
-                }
-            }
-
-            fileDownloadList.add(fileDownloadBuilder.build());
-        }
-
-        return fileDownloadList;
+        return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache);
     }
 
     public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForGroup(final String group, final String bucketName) {
@@ -265,7 +210,7 @@ public class FirmwareUpdateStore {
      * @param group
      * @return
      */
-    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String group, final Integer currentFirmwareVersion, final Boolean pchOTA) {
+    public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final Integer currentFirmwareVersion, final Boolean pchOTA) {
 
         Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
 
@@ -293,6 +238,18 @@ public class FirmwareUpdateStore {
         if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion) && !fwList.isEmpty()) {
 
             if (!isExpiredPresignedUrl(fwList.get(0).getUrl(), new Date())) {
+                //Store OTA Log Data
+                final List<String> urlList = new ArrayList<>();
+                for (final SyncResponse.FileDownload fileDL : fwList) {
+                    urlList.add(fileDL.getUrl());
+                }
+                final Long eventTime = DateTime.now().getMillis();
+
+                final OTAHistory newHistoryEntry = new OTAHistory(deviceId, eventTime, currentFirmwareVersion, fw_files.getKey(), urlList);
+                final Optional<OTAHistory> insertedEntry = otaHistoryDAO.insertOTAEvent(newHistoryEntry);
+                if (insertedEntry.isPresent()) {
+                    LOGGER.debug("OTA: {} => {} for {} at {} with files: {}", currentFirmwareVersion, fw_files.getKey(), deviceId, DateTime.now().getMillis(), fwList.toString());
+                }
                 return fwList;
             }
             //Cache returned a valid update with an expired URL
