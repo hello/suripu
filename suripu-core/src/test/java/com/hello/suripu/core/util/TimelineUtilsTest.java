@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.FixtureTest;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -883,10 +884,17 @@ public class TimelineUtilsTest extends FixtureTest {
         final List<DateTime> lightOuts = new ArrayList<>();
         lightOuts.add(new DateTime(1426218480000L, DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis)));
 
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+
+        final Optional<VotingSleepEvents> votingSleepEventsOptional = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
                 Collections.EMPTY_LIST,
                 lightOuts,
-                Optional.<DateTime>absent()).get().sleepEvents.toList();
+                Optional.<DateTime>absent());
+
+        assertThat(votingSleepEventsOptional.isPresent(),is(true));
+
+        final SleepEvents<Optional<Event>> sleepEventObj = votingSleepEventsOptional.get().sleepEvents;
+
+        final List<Optional<Event>> sleepEvents = sleepEventObj.toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
