@@ -232,12 +232,9 @@ public class SleepCycleAlgorithm {
         return segments;
     }
 
-    public static boolean isAwake(final List<AmplitudeData> maxAmplitude, final List<AmplitudeData> kickOffCounts){
-        if(maxAmplitude.size() != kickOffCounts.size()){
-            return false;
-        }
-
-        if(maxAmplitude.size() > 5){
+    public static boolean isAwake(final List<AmplitudeData> maxAmplitude,
+                                  final List<AmplitudeData> kickOffCounts){
+        if(maxAmplitude.size() != kickOffCounts.size()) {
             return false;
         }
 

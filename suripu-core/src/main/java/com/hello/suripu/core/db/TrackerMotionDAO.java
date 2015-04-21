@@ -55,12 +55,6 @@ public abstract class TrackerMotionDAO {
                                                    @Bind("start_timestamp_local_utc") final DateTime startTimestampLocalUTC,
                                                    @Bind("end_timestamp_local_utc") final DateTime endTimestampLocalUTC);
 
-    @RegisterMapper(TrackerMotionMapper.class)
-    @SqlQuery("SELECT * FROM tracker_motion_master WHERE " +
-            "account_id = :account_id LIMIT 5 ORDER BY ts ASC;"
-    )
-    public abstract ImmutableList<TrackerMotion> getLatest5Minutes(@Bind("account_id") final long accountId);
-
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
     @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")

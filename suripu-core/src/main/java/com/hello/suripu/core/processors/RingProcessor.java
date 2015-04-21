@@ -188,7 +188,11 @@ public class RingProcessor {
                                                                final DateTime nowAlignedToBeginOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
                                                                final TrackerMotionDAO trackerMotionDAO){
-        final List<TrackerMotion> motionFromLast5Minutes = trackerMotionDAO.getLatest5Minutes(accountId);
+        final DateTime now = DateTime.now().withZone(DateTimeZone.UTC);
+        final DateTime dataCollectionBeginTime = now.minusMinutes(5);
+
+        final List<TrackerMotion> motionFromLast5Minutes = trackerMotionDAO.getBetween(accountId, dataCollectionBeginTime, now);
+
         if(motionFromLast5Minutes.size() == 0){
             return Optional.absent();
         }
