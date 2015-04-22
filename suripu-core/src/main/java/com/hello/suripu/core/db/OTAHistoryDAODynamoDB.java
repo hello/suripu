@@ -58,11 +58,11 @@ public class OTAHistoryDAODynamoDB {
     @Timed
     public Optional<OTAHistory> insertOTAEvent(final OTAHistory historyEntry) {
         final Map<String, AttributeValue> item = new HashMap<>();
-        item.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.device_id));
-        item.put(EVENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.event_time));
-        item.put(CURRENT_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.current_fw_version.toString()));
-        item.put(NEW_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.new_fw_version.toString()));
-        item.put(FILE_LIST_ATTRIBUTE_NAME, new AttributeValue().withSS(historyEntry.file_list));
+        item.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.deviceId));
+        item.put(EVENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(SenseEventsDAO.dateTimeToString(historyEntry.eventTime)));
+        item.put(CURRENT_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.currentFWVersion.toString()));
+        item.put(NEW_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.newFWVersion.toString()));
+        item.put(FILE_LIST_ATTRIBUTE_NAME, new AttributeValue().withSS(historyEntry.fileList));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
         try {
@@ -81,8 +81,8 @@ public class OTAHistoryDAODynamoDB {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
 
-        values.add(new AttributeValue().withS(startTime.toString()));
-        values.add(new AttributeValue().withS(endTime.toString()));
+        values.add(new AttributeValue().withS(SenseEventsDAO.dateTimeToString(startTime)));
+        values.add(new AttributeValue().withS(SenseEventsDAO.dateTimeToString(endTime)));
 
         final Condition betweenDatesCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
@@ -120,12 +120,27 @@ public class OTAHistoryDAODynamoDB {
 
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
         for(final Map<String, AttributeValue> item: items){
-            final OTAHistory otaEntry = new OTAHistory(item.get(DEVICE_ID_ATTRIBUTE_NAME).getS(),
-                    item.get(EVENT_TIME_ATTRIBUTE_NAME).getS(),
-                    Integer.parseInt(item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN()),
-                    Integer.parseInt(item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN()),
-                    item.get(FILE_LIST_ATTRIBUTE_NAME).getSS());
-            otaHistoryList.add(otaEntry);
+            if(item == null || item.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+
+            if (item.containsKey(DEVICE_ID_ATTRIBUTE_NAME)
+                    && item.containsKey(EVENT_TIME_ATTRIBUTE_NAME)
+                    && item.containsKey(CURRENT_FW_VERSION_ATTRIBUTE_NAME)
+                    && item.containsKey(NEW_FW_VERSION_ATTRIBUTE_NAME)
+                    && item.containsKey(FILE_LIST_ATTRIBUTE_NAME)) {
+
+                final String itemDeviceId = item.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
+                final DateTime itemEventTime = SenseEventsDAO.stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
+                final Integer itemCurrentFW = Integer.parseInt(item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN());
+                final Integer itemNewFW = Integer.parseInt(item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN());
+                final List<String> itemFileList = item.get(FILE_LIST_ATTRIBUTE_NAME).getSS();
+
+                otaHistoryList.add(new OTAHistory(itemDeviceId, itemEventTime, itemCurrentFW, itemNewFW, itemFileList));
+            }else {
+                LOGGER.error("OTA history query returned invalid result.");
+                return Collections.EMPTY_LIST;
+            }
         }
         return otaHistoryList;
     }

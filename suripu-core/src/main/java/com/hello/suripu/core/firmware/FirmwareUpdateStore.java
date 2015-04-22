@@ -242,7 +242,7 @@ public class FirmwareUpdateStore {
                 for (final SyncResponse.FileDownload fileDL : fwList) {
                     urlList.add(fileDL.getHost() + fileDL.getUrl());
                 }
-                final String eventTime = new DateTime().toDateTime(DateTimeZone.UTC).toString();
+                final DateTime eventTime = new DateTime().toDateTime(DateTimeZone.UTC);
                 final OTAHistory newHistoryEntry = new OTAHistory(deviceId, eventTime, currentFirmwareVersion, fw_files.getKey(), urlList);
                 final Optional<OTAHistory> insertedEntry = otaHistoryDAO.insertOTAEvent(newHistoryEntry);
                 if (!insertedEntry.isPresent()) {
