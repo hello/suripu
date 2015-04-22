@@ -303,13 +303,16 @@ public class DataScienceResource extends BaseResource {
                     .entity("This account does not have a sense recently").build());
         }
 
-        final DateTime startTs = new DateTime(ts, DateTimeZone.UTC);
-        final DateTime endTs = startTs.plusDays(numDays); // return 3 days of data max.
+
+        final DateTime date = new DateTime(ts,DateTimeZone.UTC);
+
+        final DateTime startTs = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
+        final DateTime endTs = date.withTimeAtStartOfDay().plusDays(numDays).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
 
 
         LOGGER.debug("Getting joined sensor minute data for account id {} between {} and {}", accountId, startTs,endTs);
 
-        final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetween(
+        final ImmutableList<TrackerMotion> motionData = trackerMotionDAO.getBetweenLocalUTC(
                 accountId,
                 startTs,
                 endTs
@@ -322,7 +325,7 @@ public class DataScienceResource extends BaseResource {
 
         final int slotDurationInMinutes = 1;
         final Integer missingDataDefaultValue = 0;
-        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                 startTs.getMillis(),
                 endTs.getMillis(),
                 accountId,
@@ -412,13 +415,16 @@ public class DataScienceResource extends BaseResource {
 
         final Account account = optionalAccount.get();
 
+
+
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         if (!deviceAccountPairOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(500,"This account does not have a sense recently")).build());
         }
 
-        final DateTime date = new DateTime(fromTimestamp);
+        //day--should be something like 00:00 of evening of interest in UTC
+        final DateTime date = new DateTime(fromTimestamp,DateTimeZone.UTC);
 
         final DateTime startTs = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endTs = date.withTimeAtStartOfDay().plusDays(numDays).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
@@ -436,6 +442,7 @@ public class DataScienceResource extends BaseResource {
 
 
         if (motionData.isEmpty()) {
+            LOGGER.warn("No data on day {} for user {}",date,accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(500,"No data on this day")).build());
         }
@@ -444,7 +451,7 @@ public class DataScienceResource extends BaseResource {
 
         final int slotDurationInMinutes = 1;
         final Integer missingDataDefaultValue = 0;
-        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                 startTs.getMillis(),
                 endTs.getMillis(),
                 accountId,
@@ -454,9 +461,11 @@ public class DataScienceResource extends BaseResource {
         );
 
         final int timezoneOffset = filteredTrackerData.get(0).offsetMillis;
+        final long startTimeUTC = startTs.getMillis() - timezoneOffset;
+        final long stopTimeUTC = endTs.getMillis() - timezoneOffset;
         Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = Optional.absent();
         try {
-            optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTs.getMillis(), endTs.getMillis(), timezoneOffset);
+            optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTimeUTC, stopTimeUTC, timezoneOffset);
 
         }
         catch (Exception e) {
@@ -485,7 +494,7 @@ public class DataScienceResource extends BaseResource {
 
         List<Long> times = new ArrayList<>();
         for (int i = 0; i < result.data[0].length; i++) {
-            times.add(startTs.getMillis() + i*numMinutesInMeasPeriod*60000L);
+            times.add(startTimeUTC + i*numMinutesInMeasPeriod*60000L);
         }
 
         return new BinnedSensorData(accountId,matrix,times,timezoneOffset);
