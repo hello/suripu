@@ -32,6 +32,7 @@ import java.util.Set;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,7 @@ public class OTAHistoryDAODynamoDB {
     public static final String CURRENT_FW_VERSION_ATTRIBUTE_NAME = "current_firmware_version";
     public static final String NEW_FW_VERSION_ATTRIBUTE_NAME = "new_firmware_version";
     public static final String FILE_LIST_ATTRIBUTE_NAME = "file_list";
+    public final static String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ssZ";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(OTAHistoryDAODynamoDB.class);
 
@@ -59,7 +61,7 @@ public class OTAHistoryDAODynamoDB {
     public Optional<OTAHistory> insertOTAEvent(final OTAHistory historyEntry) {
         final Map<String, AttributeValue> item = new HashMap<>();
         item.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(historyEntry.deviceId));
-        item.put(EVENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(SenseEventsDAO.dateTimeToString(historyEntry.eventTime)));
+        item.put(EVENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(dateTimeToString(historyEntry.eventTime)));
         item.put(CURRENT_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.currentFWVersion.toString()));
         item.put(NEW_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(historyEntry.newFWVersion.toString()));
         item.put(FILE_LIST_ATTRIBUTE_NAME, new AttributeValue().withSS(historyEntry.fileList));
@@ -81,8 +83,8 @@ public class OTAHistoryDAODynamoDB {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
 
-        values.add(new AttributeValue().withS(SenseEventsDAO.dateTimeToString(startTime)));
-        values.add(new AttributeValue().withS(SenseEventsDAO.dateTimeToString(endTime)));
+        values.add(new AttributeValue().withS(dateTimeToString(startTime)));
+        values.add(new AttributeValue().withS(dateTimeToString(endTime)));
 
         final Condition betweenDatesCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
@@ -131,7 +133,7 @@ public class OTAHistoryDAODynamoDB {
                     && item.containsKey(FILE_LIST_ATTRIBUTE_NAME)) {
 
                 final String itemDeviceId = item.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
-                final DateTime itemEventTime = SenseEventsDAO.stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
+                final DateTime itemEventTime = stringToDateTime(item.get(EVENT_TIME_ATTRIBUTE_NAME).getS());
                 final Integer itemCurrentFW = Integer.parseInt(item.get(CURRENT_FW_VERSION_ATTRIBUTE_NAME).getN());
                 final Integer itemNewFW = Integer.parseInt(item.get(NEW_FW_VERSION_ATTRIBUTE_NAME).getN());
                 final List<String> itemFileList = item.get(FILE_LIST_ATTRIBUTE_NAME).getSS();
@@ -164,6 +166,14 @@ public class OTAHistoryDAODynamoDB {
                 .withWriteCapacityUnits(1L));
 
         return dynamoDBClient.createTable(request);
+    }
+
+    public static String dateTimeToString(final DateTime dateTime) {
+        return dateTime.toString(DATETIME_FORMAT);
+    }
+
+    public static DateTime stringToDateTime(final String dateString) {
+        return DateTime.parse(dateString, DateTimeFormat.forPattern(DATETIME_FORMAT));
     }
 
 }
