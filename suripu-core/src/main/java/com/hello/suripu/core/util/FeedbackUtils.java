@@ -181,7 +181,17 @@ public class FeedbackUtils {
 
                 if (feedbackEvent.getType().equals(e.getType())) {
                     //match!
-                    matchedEvents.add(feedbackEvent);
+
+                    //clone feedback, but changing the message from the default message to the alg-generated event's message
+                    matchedEvents.add(Event.createFromType(
+                            feedbackEvent.getType(),
+                            feedbackEvent.getStartTimestamp(),
+                            feedbackEvent.getEndTimestamp(),
+                            feedbackEvent.getTimezoneOffset(),
+                            e.getDescription(),
+                            feedbackEvent.getSoundInfo(),
+                            feedbackEvent.getSleepDepth()));
+
                     continue;
                 }
             }
