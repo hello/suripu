@@ -27,11 +27,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -238,20 +237,20 @@ public class FirmwareUpdateStore {
         if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion) && !fwList.isEmpty()) {
 
             if (!isExpiredPresignedUrl(fwList.get(0).getUrl(), new Date())) {
-                //Store OTA Log Data
+                //Store OTA Data
                 final List<String> urlList = new ArrayList<>();
                 for (final SyncResponse.FileDownload fileDL : fwList) {
-                    urlList.add(fileDL.getUrl());
+                    urlList.add(fileDL.getHost() + fileDL.getUrl());
                 }
-                final Long eventTime = DateTime.now().getMillis();
-
+                final String eventTime = new DateTime().toDateTime(DateTimeZone.UTC).toString();
                 final OTAHistory newHistoryEntry = new OTAHistory(deviceId, eventTime, currentFirmwareVersion, fw_files.getKey(), urlList);
                 final Optional<OTAHistory> insertedEntry = otaHistoryDAO.insertOTAEvent(newHistoryEntry);
-                if (insertedEntry.isPresent()) {
-                    LOGGER.debug("OTA: {} => {} for {} at {} with files: {}", currentFirmwareVersion, fw_files.getKey(), deviceId, DateTime.now().getMillis(), fwList.toString());
+                if (!insertedEntry.isPresent()) {
+                    LOGGER.error("OTA History Insertion Failed: {} => {} for {} at {}", currentFirmwareVersion, fw_files.getKey(), deviceId, eventTime);
                 }
                 return fwList;
             }
+
             //Cache returned a valid update with an expired URL
             LOGGER.info("Expired URL in S3 Cache. Forcing Cleanup.");
             s3FWCache.cleanUp();

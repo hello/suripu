@@ -135,4 +135,12 @@ public class SuripuAdminConfiguration extends Configuration {
     public DynamoDBConfiguration getFirmwareVersionsDynamoDBConfiguration(){
         return firmwareVersionsDynamoDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("ota_history_db")
+    private DynamoDBConfiguration otaHistoryDBConfiguration;
+    public DynamoDBConfiguration getOTAHistoryDBConfiguration(){
+        return this.otaHistoryDBConfiguration;
+    }
 }
