@@ -159,13 +159,11 @@ public class RingProcessor {
 
 
     protected static boolean isRingTimeFromNextComputedSmartAlarm(final DateTime currentTimeAlignedToBeginOfMinute,
-                                                                  final RingTime nextRingTimeFromWorker,
-                                                                  final int smartAlarmProcessAheadInMinutes){
-        return currentTimeAlignedToBeginOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false &&
-                nextRingTimeFromWorker.processed() &&
-                currentTimeAlignedToBeginOfMinute
-                        .plusMinutes(smartAlarmProcessAheadInMinutes)
-                        .isBefore(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+                                                                  final RingTime nextRingTimeFromWorker){
+        final boolean isCurrentTimeAfterNextRingTime = currentTimeAlignedToBeginOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+        final boolean isProcessedSmartAlarm = nextRingTimeFromWorker.processed();
+
+        return isCurrentTimeAfterNextRingTime && isProcessedSmartAlarm;
     }
 
     protected static boolean isCurrentTimeBetweenActualRingTimeAndExpectedRingTime(final DateTime currentTimeAlignedToBeginOfMinute,
@@ -176,22 +174,27 @@ public class RingProcessor {
     }
 
     protected static boolean hasSufficientTimeToApplyProgressiveSmartAlarm(final DateTime currentTimeAlignedToBeginOfMinute,
-                                                                           final RingTime nextRingTimeFromWorker){
+                                                                           final RingTime nextRingTimeFromWorker,
+                                                                           final int smartAlarmProcessAheadInMinutes){
         if(!nextRingTimeFromWorker.fromSmartAlarm || !nextRingTimeFromWorker.processed()){
             return false;
         }
 
-        return currentTimeAlignedToBeginOfMinute.plusMinutes(SMART_ALARM_MIN_DELAY_MILLIS).isBefore(nextRingTimeFromWorker.actualRingTimeUTC);
+        final boolean isNextSmartAlarmWithinProcessRange =  currentTimeAlignedToBeginOfMinute
+                .plusMinutes(smartAlarmProcessAheadInMinutes)
+                .isBefore(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+        final boolean notTooCloseToRingTime = currentTimeAlignedToBeginOfMinute.plusMillis(SMART_ALARM_MIN_DELAY_MILLIS).isBefore(nextRingTimeFromWorker.actualRingTimeUTC);
+        return isNextSmartAlarmWithinProcessRange && notTooCloseToRingTime;
     }
 
     protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
                                                                final DateTime nowAlignedToBeginOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
                                                                final TrackerMotionDAO trackerMotionDAO){
-        final DateTime now = DateTime.now().withZone(DateTimeZone.UTC);
-        final DateTime dataCollectionBeginTime = now.minusMinutes(5);
+        final DateTime dataCollectionBeginTime = nowAlignedToBeginOfMinute.minusMinutes(5);
 
-        final List<TrackerMotion> motionFromLast5Minutes = trackerMotionDAO.getBetween(accountId, dataCollectionBeginTime, now);
+        final List<TrackerMotion> motionFromLast5Minutes = trackerMotionDAO.getBetween(accountId,
+                dataCollectionBeginTime, nowAlignedToBeginOfMinute.plusMinutes(1));
 
         if(motionFromLast5Minutes.size() == 0){
             return Optional.absent();
@@ -223,9 +226,9 @@ public class RingProcessor {
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
-        if (isRingTimeFromNextComputedSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)) {
-            if(feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST) &&
-                    hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker)){
+        if (isRingTimeFromNextComputedSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker)) {
+            if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
+                    hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
 
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToBeginOfMinute,
