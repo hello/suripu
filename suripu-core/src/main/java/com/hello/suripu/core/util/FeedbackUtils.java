@@ -167,27 +167,37 @@ public class FeedbackUtils {
         return eventMap;
     }
 
-    public static ImmutableList<Event> reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> events,final Integer offsetMillis) {
+    public static ImmutableList<Event> reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final Integer offsetMillis) {
         List<Event> matchedEvents = new ArrayList<>();
         final  Map<Long,Event> feedbackEventMapByOriginalTime = getFeedbackEventsInOriginalTimeMap(timelineFeedbackList,offsetMillis);
 
         /* procedure: if extra event has match in map (type matches, and time matches), we replace it with the feedback
           *           otherwise, place extra event in results */
 
-        for (final Event e : events) {
-            if (feedbackEventMapByOriginalTime.containsKey(e.getStartTimestamp())) {
-                final Event feedbackEvent = feedbackEventMapByOriginalTime.get(e.getStartTimestamp());
+        for (final Event algEvent : algEvents) {
+            if (feedbackEventMapByOriginalTime.containsKey(algEvent.getStartTimestamp())) {
+                final Event feedbackEvent = feedbackEventMapByOriginalTime.get(algEvent.getStartTimestamp());
 
 
-                if (feedbackEvent.getType().equals(e.getType())) {
+                if (feedbackEvent.getType().equals(algEvent.getType())) {
                     //match!
-                    matchedEvents.add(feedbackEvent);
+
+                    //clone feedback, but changing the message from the default message to the alg-generated event's message
+                    matchedEvents.add(Event.createFromType(
+                            feedbackEvent.getType(),
+                            feedbackEvent.getStartTimestamp(),
+                            feedbackEvent.getEndTimestamp(),
+                            feedbackEvent.getTimezoneOffset(),
+                            algEvent.getDescription(),
+                            feedbackEvent.getSoundInfo(),
+                            feedbackEvent.getSleepDepth()));
+
                     continue;
                 }
             }
 
             //otherwise, no match, just add the event
-            matchedEvents.add(e);
+            matchedEvents.add(algEvent);
 
         }
 
