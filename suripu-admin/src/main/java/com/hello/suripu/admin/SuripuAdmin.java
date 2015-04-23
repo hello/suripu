@@ -34,6 +34,7 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -178,6 +179,9 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final AmazonDynamoDB fwVersionMapping = dynamoDBClientFactory.getForEndpoint(configuration.getFirmwareVersionsDynamoDBConfiguration().getEndpoint());
         final FirmwareVersionMappingDAO firmwareVersionMappingDAO = new FirmwareVersionMappingDAO(fwVersionMapping, configuration.getFirmwareVersionsDynamoDBConfiguration().getTableName());
 
+        final AmazonDynamoDB otaHistoryClient = dynamoDBClientFactory.getForEndpoint(configuration.getOTAHistoryDBConfiguration().getEndpoint());
+        final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB = new OTAHistoryDAODynamoDB(otaHistoryClient, configuration.getOTAHistoryDBConfiguration().getTableName());
+
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool));
@@ -185,7 +189,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));
-        environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO));
+        environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO, otaHistoryDAODynamoDB));
         environment.addResource(new EventsResources(senseEventsDAO));
 
     }

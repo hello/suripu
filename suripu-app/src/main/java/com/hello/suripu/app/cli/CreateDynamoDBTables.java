@@ -15,6 +15,7 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
@@ -53,12 +54,13 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createPillKeyStoreTable(configuration, awsCredentialsProvider);
         createTimelineTable(configuration, awsCredentialsProvider);
         createPasswordResetTable(configuration, awsCredentialsProvider);
-        createSleepHmmTable(configuration,awsCredentialsProvider);
+        createSleepHmmTable(configuration, awsCredentialsProvider);
         createRingTimeHistoryTable(configuration, awsCredentialsProvider);
         createSleepStatsTable(configuration, awsCredentialsProvider);
         createAlgorithmTestTable(configuration, awsCredentialsProvider);
-        createTimelineLogTable(configuration,awsCredentialsProvider);
+        createTimelineLogTable(configuration, awsCredentialsProvider);
         createSmartAlarmLogTable(configuration, awsCredentialsProvider);
+        createOTAHistoryTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -352,6 +354,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = TimelineLogDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createOTAHistoryTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getOTAHistoryDBConfiguration();
+        final String tableName = configuration.getOTAHistoryDBConfiguration().getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = OTAHistoryDAODynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }

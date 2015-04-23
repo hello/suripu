@@ -239,3 +239,7 @@ smart_alarm_log_db:
   region: us-east-1
   table_name: smart_alarm_log
 
+ota_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: ota_history

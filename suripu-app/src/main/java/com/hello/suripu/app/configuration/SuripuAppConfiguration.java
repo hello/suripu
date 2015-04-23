@@ -340,4 +340,12 @@ public class SuripuAppConfiguration extends Configuration {
     public DynamoDBConfiguration getTimelineLogDBConfiguration(){
         return this.timelineLogDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("ota_history_db")
+    private DynamoDBConfiguration otaHistoryDBConfiguration;
+    public DynamoDBConfiguration getOTAHistoryDBConfiguration(){
+        return this.otaHistoryDBConfiguration;
+    }
 }

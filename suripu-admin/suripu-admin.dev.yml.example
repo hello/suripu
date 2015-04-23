@@ -84,3 +84,8 @@ firmware_versions:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: firmware_versions_mapping
+
+ota_history_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: ota_history
