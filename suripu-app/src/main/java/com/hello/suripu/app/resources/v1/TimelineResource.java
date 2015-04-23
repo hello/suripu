@@ -2,10 +2,17 @@ package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
+import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineResult;
@@ -29,7 +36,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.List;
 
 @Path("/v1/timeline")
@@ -40,20 +46,53 @@ public class TimelineResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineResource.class);
 
-    private final TimelineProcessor timelineProcessor;
-    private final AccountDAO accountDAO;
-    private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final TimelineLogDAO timelineLogDAO;
+    private final DAOs daos;
+
+    static public class DAOs {
+        public DAOs(AccountDAO accountDAO, TimelineDAODynamoDB timelineDAODynamoDB, TimelineLogDAO timelineLogDAO, TrackerMotionDAO trackerMotionDAO, DeviceDAO deviceDAO, DeviceDataDAO deviceDataDAO, RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB, FeedbackDAO feedbackDAO, SleepHmmDAO sleepHmmDAO, SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+            this.accountDAO = accountDAO;
+            this.timelineDAODynamoDB = timelineDAODynamoDB;
+            this.timelineLogDAO = timelineLogDAO;
+            this.trackerMotionDAO = trackerMotionDAO;
+            this.deviceDAO = deviceDAO;
+            this.deviceDataDAO = deviceDataDAO;
+            this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
+            this.feedbackDAO = feedbackDAO;
+            this.sleepHmmDAO = sleepHmmDAO;
+            this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        }
+
+        final public AccountDAO accountDAO;
+        final public TimelineDAODynamoDB timelineDAODynamoDB;
+        final public TimelineLogDAO timelineLogDAO;
+        final public TrackerMotionDAO trackerMotionDAO;
+        final public DeviceDAO deviceDAO;
+        final public DeviceDataDAO deviceDataDAO;
+        final public RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
+        final public FeedbackDAO feedbackDAO;
+        final public SleepHmmDAO sleepHmmDAO;
+        final public SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
 
 
-    public TimelineResource(final AccountDAO accountDAO,
-                            final TimelineDAODynamoDB timelineDAODynamoDB,
-                            final TimelineLogDAO timelineLogDAO,
-                            final TimelineProcessor timelineProcessor) {
-        this.accountDAO = accountDAO;
-        this.timelineProcessor = timelineProcessor;
-        this.timelineDAODynamoDB = timelineDAODynamoDB;
-        this.timelineLogDAO = timelineLogDAO;
+    }
+
+    public TimelineResource(final DAOs myDAOs) {
+        this.daos = myDAOs;
+    }
+
+    //Each timeline processor returned will have a unique session ID
+    private TimelineProcessor getNewTimelineProcessor(final Logger logger) {
+
+        return new TimelineProcessor(
+                daos.trackerMotionDAO,
+                daos.deviceDAO,
+                daos.deviceDataDAO,
+                daos.ringTimeHistoryDAODynamoDB,
+                daos.feedbackDAO,
+                daos.sleepHmmDAO,
+                daos.accountDAO,
+                daos.sleepStatsDAODynamoDB,
+                logger);
     }
 
     private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final TimelineResult result){
@@ -67,7 +106,7 @@ public class TimelineResource extends BaseResource {
 
             //only cache if not the HMM
             if (!this.hasHmmEnabled(accountId)) {
-                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
+                this.daos.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
             }
 
             return true;
@@ -88,24 +127,24 @@ public class TimelineResource extends BaseResource {
 
 
 
-    private TimelineResult getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
+    private TimelineResult getTimelinesFromCacheOrReprocess(final Logger logger, final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
-
+        final TimelineProcessor timelineProcessor = getNewTimelineProcessor(logger);
         //if no update forced (i.e. no HMM)
 
         //first try to get a cached result
-        final Optional<TimelineResult> cachedResult = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
+        final Optional<TimelineResult> cachedResult = this.daos.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
 
         if (cachedResult.isPresent() && !this.hasVotingEnabled(accountId)) {
 
             //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
-            timelineLogDAO.putTimelineLog(accountId,cachedResult.get().log);
+            this.daos.timelineLogDAO.putTimelineLog(accountId, cachedResult.get().log);
 
             return cachedResult.get();
         }
         else {
 
-            LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
+            logger.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
 
             //generate timeline from one of our many algorithms
             final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
@@ -117,7 +156,7 @@ public class TimelineResource extends BaseResource {
                 cacheTimeline(accountId, targetDate, result.get());
 
                 //log it, too
-                timelineLogDAO.putTimelineLog(accountId,result.get().log);
+                this.daos.timelineLogDAO.putTimelineLog(accountId,result.get().log);
 
                 return result.get();
 
@@ -138,9 +177,11 @@ public class TimelineResource extends BaseResource {
     public List<Timeline> getTimelines(
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
-        
 
-        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+
+        final Logger logger = new LoggerWithSessionId(LOGGER,"reg");
+
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(logger,accessToken.accountId, date);
 
         return result.timelines;
 
@@ -159,7 +200,9 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final TimelineResult result = getTimelinesFromCacheOrReprocess(accountId.get(), date);
+        final Logger logger = new LoggerWithSessionId(LOGGER,"admin");
+
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(logger, accountId.get(), date);
 
         return result.timelines;
     }
@@ -178,11 +221,11 @@ public class TimelineResource extends BaseResource {
         }
 
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(date);
-        return this.timelineDAODynamoDB.invalidateCache(accountId.get(), targetDate, DateTime.now());
+        return this.daos.timelineDAODynamoDB.invalidateCache(accountId.get(), targetDate, DateTime.now());
     }
 
     private Optional<Long> getAccountIdByEmail(final String email) {
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+        final Optional<Account> accountOptional = this.daos.accountDAO.getByEmail(email);
 
         if (!accountOptional.isPresent()) {
             LOGGER.debug("Account {} not found", email);
