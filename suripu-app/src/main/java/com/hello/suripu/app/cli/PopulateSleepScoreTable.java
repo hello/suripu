@@ -105,7 +105,8 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
-        final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO,
+        final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
+                trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,

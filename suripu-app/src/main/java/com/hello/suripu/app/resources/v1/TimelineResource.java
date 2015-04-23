@@ -31,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Path("/v1/timeline")
 public class TimelineResource extends BaseResource {
@@ -88,9 +89,9 @@ public class TimelineResource extends BaseResource {
 
 
 
-    private TimelineResult getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
+    private TimelineResult getTimelinesFromCacheOrReprocess(final String sessionUUID, final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
-
+        final TimelineProcessor timelineProcessor = this.timelineProcessor.copyMeWithNewUUID(sessionUUID);
         //if no update forced (i.e. no HMM)
 
         //first try to get a cached result
@@ -105,7 +106,7 @@ public class TimelineResource extends BaseResource {
         }
         else {
 
-            LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
+            LOGGER.info("{} No cached timeline, reprocess timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //generate timeline from one of our many algorithms
             final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
@@ -140,7 +141,9 @@ public class TimelineResource extends BaseResource {
             @PathParam("date") String date) {
         
 
-        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+        final String sessionUUID = UUID.randomUUID().toString();
+
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(sessionUUID,accessToken.accountId, date);
 
         return result.timelines;
 
@@ -158,8 +161,9 @@ public class TimelineResource extends BaseResource {
         if (!accountId.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
+        final String sessionUUID = UUID.randomUUID().toString();
 
-        final TimelineResult result = getTimelinesFromCacheOrReprocess(accountId.get(), date);
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(sessionUUID,accountId.get(), date);
 
         return result.timelines;
     }

@@ -53,6 +53,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class TimelineProcessor extends FeatureFlippedProcessor {
 
@@ -75,14 +76,39 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public final static String ALGORITHM_NAME_VOTING = "voting";
     public final static String ALGORITHM_NAME_HMM = "hmm";
 
-    public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
+
+    static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
+                                                            final DeviceDAO deviceDAO,
+                                                            final DeviceDataDAO deviceDataDAO,
+                                                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+                                                            final FeedbackDAO feedbackDAO,
+                                                            final SleepHmmDAO sleepHmmDAO,
+                                                            final AccountDAO accountDAO,
+                                                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,"default");
+    }
+
+    public TimelineProcessor copyMeWithNewUUID() {
+        final String uuid = UUID.randomUUID().toString();
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,uuid);
+    }
+
+    public TimelineProcessor copyMeWithNewUUID(final String uuid) {
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,uuid);
+    }
+
+    //private SessionLogDebug(final String)
+
+    private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                              final String uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
