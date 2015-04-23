@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -58,7 +59,7 @@ import java.util.UUID;
 public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
-    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
@@ -68,6 +69,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountDAO accountDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
+    private final Logger LOGGER;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     final private static int MININIMUM_NUMBER_OF_TRACKER_MOTIIONS = 20;
@@ -86,16 +88,19 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final AccountDAO accountDAO,
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,"default");
+        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER,false);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,logger);
     }
 
     public TimelineProcessor copyMeWithNewUUID() {
-        final String uuid = UUID.randomUUID().toString();
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,uuid);
+        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER,true);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,logger);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final String uuid) {
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,uuid);
+        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,logger);
     }
 
     //private SessionLogDebug(final String)
@@ -108,7 +113,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
-                              final String uuid) {
+                              final Logger localLogger) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -117,6 +122,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        this.LOGGER = localLogger;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
