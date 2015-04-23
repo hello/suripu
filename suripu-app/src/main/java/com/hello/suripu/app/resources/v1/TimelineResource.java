@@ -99,6 +99,8 @@ public class TimelineResource extends BaseResource {
 
         if (cachedResult.isPresent() && !this.hasVotingEnabled(accountId)) {
 
+            LOGGER.info("{} Found cached timeline for account {}, date {}",sessionUUID, accountId, targetDate);
+
             //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
             timelineLogDAO.putTimelineLog(accountId,cachedResult.get().log);
 

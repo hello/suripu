@@ -70,6 +70,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final AccountDAO accountDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final Logger LOGGER;
+    private final TimelineUtils timelineUtils;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     final private static int MININIMUM_NUMBER_OF_TRACKER_MOTIIONS = 20;
@@ -89,18 +90,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER,false);
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,logger);
-    }
-
-    public TimelineProcessor copyMeWithNewUUID() {
-        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER,true);
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,logger);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,"");
     }
 
     public TimelineProcessor copyMeWithNewUUID(final String uuid) {
-        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER,uuid);
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,logger);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,uuid);
     }
 
     //private SessionLogDebug(final String)
@@ -113,7 +108,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
-                              final Logger localLogger) {
+                              final String uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -122,7 +117,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
-        this.LOGGER = localLogger;
+
+        this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+        timelineUtils = new TimelineUtils(uuid);
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -154,7 +151,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, startQueryTime, endQueryTime);
 
-        return TimelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
     static protected class OneDaysSensorData {
@@ -240,9 +237,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (!allSensorSampleList.isEmpty()) {
 
             // Light
-            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
+            lightEvents.addAll(timelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
             if (lightEvents.size() > 0) {
-                lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
+                lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
             }
 
         }
@@ -255,7 +252,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         // create sleep-motion segments
-        final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
 
@@ -344,21 +341,21 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
-        final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
+        final List<Event> smoothedEvents = timelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
+        final List<Event> cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
                 sleepEventsFromAlgorithm.goToBed,
                 sleepEventsFromAlgorithm.outOfBed);
 
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
                 sleepEventsFromAlgorithm.goToBed,
                 sleepEventsFromAlgorithm.outOfBed);
-        final List<Event> nonSignificantFilteredEvents = TimelineUtils.removeEventBeforeSignificant(greyEvents);
+        final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
 
-        final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(nonSignificantFilteredEvents);
+        final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, lightSleepThreshold);
+        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, lightSleepThreshold);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
@@ -369,12 +366,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
+        final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
 
-        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, sleepStats.sleepTime, accountId);
+        final List<Insight> insights = timelineUtils.generatePreSleepInsights(allSensorSampleList, sleepStats.sleepTime, accountId);
         final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
@@ -504,7 +501,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
-            return PartnerMotion.getPartnerData(motionEvents, partnerMotionsWithinSleepBounds, 0);
+            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
+
+            return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
         }
 
         return Collections.EMPTY_LIST;
@@ -553,7 +552,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        return TimelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
+        return timelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
     }
 
     static private class HmmAlgorithmResults {
@@ -662,7 +661,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 Optional.<Event>absent(),
                 Optional.<Event>absent());
 
-        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(rawLight);
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
@@ -671,11 +670,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
 
-            Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+            Optional<DateTime> wakeUpWaveTimeOptional = timelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
                     trackerMotions.get(trackerMotions.size() - 1).timestamp,
                     waves );
 
-            sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
+            sleepEventsFromAlgorithm = timelineUtils.getSleepEvents(targetDate,
                     trackerMotions,
                     lightOutTimes,
                     wakeUpWaveTimeOptional,
@@ -719,7 +718,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                              final List<Sample> rawWave) {
         Optional<VotingSleepEvents> votingSleepEventsOptional = Optional.absent();
 
-        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(rawLight);
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
@@ -727,10 +726,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+            Optional<DateTime> wakeUpWaveTimeOptional = timelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
                     trackerMotions.get(trackerMotions.size() - 1).timestamp,
                     rawWave);
-            votingSleepEventsOptional = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+            votingSleepEventsOptional = timelineUtils.getSleepEventsFromVoting(trackerMotions,
                     rawSound,
                     lightOutTimes,
                     wakeUpWaveTimeOptional);
