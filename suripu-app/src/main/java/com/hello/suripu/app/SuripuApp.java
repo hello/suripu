@@ -315,25 +315,26 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 120 // 2 minutes for cache
         );
 
-        environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
-        environment.addResource(new AccountResource(accountDAO));
-        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO));
-        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
-        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
-        final TimelineProcessor timelineProcessor = new TimelineProcessor(
+        final TimelineResource.DAOs timeineResourceDAOs = new TimelineResource.DAOs(
+                accountDAO,
+                timelineDAODynamoDB,
+                timelineLogDAO,
                 trackerMotionDAO,
                 deviceDAO,
                 deviceDataDAO,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
-                accountDAO,
                 sleepStatsDAODynamoDB);
 
-        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
-
+        environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
+        environment.addResource(new AccountResource(accountDAO));
+        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO));
+        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
+        environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
+        environment.addResource(new TimelineResource(timeineResourceDAOs));
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));
 

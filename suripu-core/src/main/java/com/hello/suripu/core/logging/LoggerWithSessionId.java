@@ -17,7 +17,7 @@ public class LoggerWithSessionId implements Logger {
         //UID as token
         String uuidString=  UUID.randomUUID().toString();
 
-        if (!extraInfo.isEmpty()) {
+        if (extraInfo != null && !extraInfo.isEmpty()) {
             uuidString += " " + extraInfo;
         }
         return  uuidString;
@@ -28,7 +28,19 @@ public class LoggerWithSessionId implements Logger {
     }
 
     final public Logger logger;
-    public LoggerWithSessionId(Logger original,final String extraInfo) {
+
+    public LoggerWithSessionId(final Logger original,final String extraInfo,final boolean useSessionId) {
+        logger = original;
+
+        if (useSessionId) {
+            uniqeString = getToken(extraInfo);
+        }
+        else {
+            uniqeString = extraInfo;
+        }
+    }
+
+    public LoggerWithSessionId(final Logger original,final String extraInfo) {
         logger = original;
         uniqeString = getToken(extraInfo);
     }

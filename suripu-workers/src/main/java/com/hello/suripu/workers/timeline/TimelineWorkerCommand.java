@@ -29,6 +29,7 @@ import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
@@ -129,13 +130,15 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
+
         final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
                 accountDAO,
-                sleepStatsDAODynamoDB);
+                sleepStatsDAODynamoDB,
+                LOGGER);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

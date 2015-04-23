@@ -44,7 +44,6 @@ import com.hello.suripu.core.util.VotingSleepEvents;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,7 +56,7 @@ import java.util.Set;
 public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
-    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
+    private final Logger LOGGER;
     private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
@@ -82,7 +81,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final FeedbackDAO feedbackDAO,
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                             final Logger logger) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -91,6 +91,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        this.LOGGER = logger;
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
