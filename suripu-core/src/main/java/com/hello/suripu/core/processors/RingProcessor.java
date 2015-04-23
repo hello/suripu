@@ -202,7 +202,7 @@ public class RingProcessor {
         final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionFromLast5Minutes);
         final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionFromLast5Minutes);
         if(SleepCycleAlgorithm.isAwake(amplitudeData, kickOffCounts)){
-            final RingTime progressiveRingTime = new RingTime(nowAlignedToBeginOfMinute.plusMinutes(1).getMillis(),
+            final RingTime progressiveRingTime = new RingTime(nowAlignedToBeginOfMinute.plusMinutes(3).getMillis(),
                     nextRingTimeFromWorker.expectedRingTimeUTC,
                     nextRingTimeFromWorker.soundIds,
                     true);

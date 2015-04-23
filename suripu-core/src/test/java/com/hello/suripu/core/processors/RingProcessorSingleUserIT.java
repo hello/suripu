@@ -266,7 +266,7 @@ public class RingProcessorSingleUserIT {
 
         assertThat(ringTime.isEmpty(), is(false));
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, userInfo1.timeZone.get());
-        assertThat(actualRingTime.equals(now.plusMinutes(1)), is(true));
+        assertThat(actualRingTime.equals(now.plusMinutes(3)), is(true));
 
         userInfo1 = this.userInfoList1.get(0);
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,
