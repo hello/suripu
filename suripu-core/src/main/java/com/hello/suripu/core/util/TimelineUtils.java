@@ -19,6 +19,7 @@ import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
@@ -56,10 +57,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class TimelineUtils {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineUtils.class);
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineUtils.class);
 
     public static final Integer HIGHEST_SLEEP_DEPTH = 100;
     public static final Integer HIGH_SLEEP_DEPTH = 80;
@@ -78,7 +80,9 @@ public class TimelineUtils {
     private static final int SOUND_WINDOW_SIZE_MINS = 30; // smoothing windows, binning
     private static final int MAX_SOUND_EVENT_SIZE = 5; // max sound event allowed in timeline
 
-    public static List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
+    private final Logger LOGGER;
+
+    public List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
         for(final Event event:eventList){
             if(event.getType() == Event.Type.NONE || event.getSleepDepth() > thresholdSleepDepth && (event.getType() == Event.Type.MOTION)){
@@ -95,13 +99,20 @@ public class TimelineUtils {
         return ImmutableList.copyOf(convertedEvents);
     }
 
+    public TimelineUtils(final UUID uuid) {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+    }
+
+    public TimelineUtils() {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+    }
 
     /**
      * Harmonizes sleep depth into n buckets
      * @param sleepDepth
      * @return
      */
-    public static Integer categorizeSleepDepth(final Integer sleepDepth) {
+    public Integer categorizeSleepDepth(final Integer sleepDepth) {
         // TODO: tune these
         if (sleepDepth > 90 && sleepDepth <= 100) {
             return HIGHEST_SLEEP_DEPTH;
@@ -116,7 +127,7 @@ public class TimelineUtils {
         return LOWEST_SLEEP_DEPTH;
     }
 
-    public static List<TrackerMotion> removeNegativeAmplitudes(final List<TrackerMotion> trackerMotions){
+    public List<TrackerMotion> removeNegativeAmplitudes(final List<TrackerMotion> trackerMotions){
         final List<TrackerMotion> positiveMotions = new LinkedList<>();
         for(final TrackerMotion motion:trackerMotions){
             if(motion.value > 0){
@@ -127,7 +138,7 @@ public class TimelineUtils {
         return positiveMotions;
     }
 
-    public static List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
+    public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
         final List<MotionEvent> motionEvents = new ArrayList<>();
 
         final List<TrackerMotion> positiveMotions = removeNegativeAmplitudes(trackerMotions);
@@ -159,7 +170,7 @@ public class TimelineUtils {
         return motionEvents;
     }
 
-    public static Integer getSleepDepth(final Integer amplitude, final Map<Integer, Integer> positionMap, final Integer maxSVM){
+    public Integer getSleepDepth(final Integer amplitude, final Map<Integer, Integer> positionMap, final Integer maxSVM){
         if(positionMap.size() < 5){
             return normalizeSleepDepth(amplitude, maxSVM);
         }
@@ -171,7 +182,7 @@ public class TimelineUtils {
         return normalizeSleepDepth(amplitude, maxSVM);
     }
 
-    public static Integer getMaxSVM(final List<TrackerMotion> amplitudes){
+    public Integer getMaxSVM(final List<TrackerMotion> amplitudes){
         int maxSVM = 0;
         for(final TrackerMotion trackerMotion : amplitudes) {
             maxSVM = Math.max(maxSVM, trackerMotion.value);
@@ -180,7 +191,7 @@ public class TimelineUtils {
         return maxSVM;
     }
 
-    public static Map<Integer, Integer> constructValuePositionMap(final List<TrackerMotion> amplitudes){
+    public Map<Integer, Integer> constructValuePositionMap(final List<TrackerMotion> amplitudes){
 
         final Integer[] sortedSVMs = new Integer[amplitudes.size()];
 
@@ -202,7 +213,7 @@ public class TimelineUtils {
         return positionIndex;
     }
 
-    public static List<SleepSegment> eventsToSegments(final List<Event> events){
+    public List<SleepSegment> eventsToSegments(final List<Event> events){
         final List<SleepSegment> segments = new ArrayList<>();
         for(final Event event:events){
             segments.add(new SleepSegment((long)segments.size(), event, Collections.EMPTY_LIST));
@@ -212,7 +223,7 @@ public class TimelineUtils {
 
     }
 
-    public static List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events,
+    public List<Event> removeMotionEventsOutsideBedPeriod(final List<Event> events,
                                                                  final Optional<Event> inBedEventOptional,
                                                                  final Optional<Event> outOfBedEventOptional){
         final LinkedList<Event> newEventList = new LinkedList<>();
@@ -240,7 +251,7 @@ public class TimelineUtils {
         return newEventList;
     }
 
-    public static Optional<Event> getFirstSignificantEvent(final List<Event> events){
+    public Optional<Event> getFirstSignificantEvent(final List<Event> events){
         for(final Event event:events){
             if(event.getType() != Event.Type.NONE && event.getType() != Event.Type.MOTION){
                 return Optional.of(event);
@@ -250,7 +261,7 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
-    public static boolean shouldRemoveEventsBeforeSignificantEvent(final Optional<Event> significantEvent,
+    public boolean shouldRemoveEventsBeforeSignificantEvent(final Optional<Event> significantEvent,
                                                                    final List<Event> events){
         if(!significantEvent.isPresent()){
             return false;
@@ -267,7 +278,7 @@ public class TimelineUtils {
         return true;
     }
 
-    public static List<Event> removeEventBeforeSignificant(final List<Event> events){
+    public List<Event> removeEventBeforeSignificant(final List<Event> events){
         final Optional<Event> significantEvent = getFirstSignificantEvent(events);
         final boolean shouldRemoveEvents = shouldRemoveEventsBeforeSignificantEvent(significantEvent, events);
         if(!shouldRemoveEvents){
@@ -286,7 +297,7 @@ public class TimelineUtils {
         return filteredEvents;
     }
 
-    public static List<Event> greyNullEventsOutsideBedPeriod(final List<Event> events,
+    public List<Event> greyNullEventsOutsideBedPeriod(final List<Event> events,
                                                                  final Optional<Event> inBedEventOptional,
                                                                  final Optional<Event> outOfBedEventOptional){
         final LinkedList<Event> newEventList = new LinkedList<>();
@@ -322,7 +333,7 @@ public class TimelineUtils {
     }
 
 
-    public static List<Event> insertOneMinuteDurationEvents(final List<Event> eventList, final Event sleepEvent){
+    public List<Event> insertOneMinuteDurationEvents(final List<Event> eventList, final Event sleepEvent){
         final ArrayList<Event> result =  new ArrayList<>();
         boolean inserted = false;
         for(final Event event:eventList){
@@ -387,7 +398,7 @@ public class TimelineUtils {
         return result;
     }
 
-    public static List<Event> smoothEvents(final List<Event> eventList){
+    public List<Event> smoothEvents(final List<Event> eventList){
         if(eventList.size() == 0){
             return eventList;
         }
@@ -431,7 +442,7 @@ public class TimelineUtils {
         return result;
     }
 
-    public static List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
+    public List<Event> generateAlignedSegmentsByTypeWeight(final List<Event> eventList,
                                                                          int slotDurationMS, int mergeSlotCount,
                                                                          boolean collapseNullSegments){
         // Step 1: Get the start and end time of the given segment list
@@ -591,7 +602,7 @@ public class TimelineUtils {
      * @param maxValue
      * @return
      */
-    public static Integer normalizeSleepDepth(final int value, int maxValue) {
+    public Integer normalizeSleepDepth(final int value, int maxValue) {
 
         int sleepDepth = 100;
         if (value < 0) {
@@ -613,7 +624,7 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public static SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold) {
+    public SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold) {
         Integer soundSleepDurationInSecs = 0;
         Integer lightSleepDurationInSecs = 0;
         int sleepDurationInSecs = 0;
@@ -719,7 +730,7 @@ public class TimelineUtils {
      * @param sleepStats
      * @return
      */
-    public static String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents) {
+    public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents) {
 
         final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
@@ -786,7 +797,7 @@ public class TimelineUtils {
 
     }
 
-    public static List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
+    public List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
         final List<Insight> generatedInsights = Lists.newArrayList();
 
         if (allSensorSampleList.isEmpty()) {
@@ -881,7 +892,7 @@ public class TimelineUtils {
      * @param thresholdInMinutes
      * @return
      */
-    public static Optional<FallingAsleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
+    public Optional<FallingAsleepEvent> getSleepEvent(final List<MotionEvent> sleepMotions, int thresholdInMinutes, int motionThreshold, final Optional<DateTime> sleepTimeThreshold) {
 
         if(sleepMotions.isEmpty()) {
             return Optional.absent();
@@ -929,7 +940,7 @@ public class TimelineUtils {
     }
 
 
-    public static Optional<DateTime> getFirstAwakeWaveTime(final long firstMotionTimestampMillis,
+    public Optional<DateTime> getFirstAwakeWaveTime(final long firstMotionTimestampMillis,
                                                            final long lastMotionTimestampMillis,
                                                            final List<Sample> waveData){
         if(waveData.size() == 0){
@@ -947,7 +958,7 @@ public class TimelineUtils {
 
     }
 
-    public static List<Event> getLightEvents(List<Sample> lightData) {
+    public List<Event> getLightEvents(List<Sample> lightData) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1000,7 +1011,7 @@ public class TimelineUtils {
     }
 
 
-    public static List<Event> getLightEventsWithMultipleLightOut(final List<Sample> lightData) {
+    public List<Event> getLightEventsWithMultipleLightOut(final List<Sample> lightData) {
 
         if (lightData.size() == 0) {
             return Collections.EMPTY_LIST;
@@ -1044,7 +1055,7 @@ public class TimelineUtils {
         return events;
     }
 
-    public static Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
+    public Optional<DateTime> getLightsOutTime(final List<Event> lightEvents) {
         for (final Event event : lightEvents) {
             if (event.getType() == Event.Type.LIGHTS_OUT) {
                 final DateTime lightsOutTime = new DateTime(event.getEndTimestamp(), DateTimeZone.forOffsetMillis(event.getTimezoneOffset()));
@@ -1066,7 +1077,7 @@ public class TimelineUtils {
      * @param soundData
      * @return
      */
-    public static List<Event> getSoundEvents(final List<Sample> soundData,
+    public List<Event> getSoundEvents(final List<Sample> soundData,
                                              final Map<Long, Integer> sleepDepths,
                                              final Optional<DateTime> optionalLightsOut,
                                              final Optional<DateTime> optionalSleepTime,
@@ -1131,7 +1142,7 @@ public class TimelineUtils {
         return events;
     }
 
-    public static SleepEvents<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
+    public SleepEvents<Optional<Event>> getSleepEvents(final DateTime targetDateLocalUTC,
                                          final List<TrackerMotion> trackerMotions,
                                          final List<DateTime> lightOutTimes,
                                          final Optional<DateTime> firstWaveTimeOptional,
@@ -1224,7 +1235,7 @@ public class TimelineUtils {
 
 
 
-    public static Optional<VotingSleepEvents> getSleepEventsFromVoting(final List<TrackerMotion> rawTrackerMotions,
+    public Optional<VotingSleepEvents> getSleepEventsFromVoting(final List<TrackerMotion> rawTrackerMotions,
                                                                         final List<Sample> sound,
                                                                         final List<DateTime> lightOutTimes,
                                                                         final Optional<DateTime> firstWaveTimeOptional){
@@ -1247,7 +1258,7 @@ public class TimelineUtils {
      * @param offsetMillis
      * @return
      */
-    public static List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime queryStartTime, final DateTime queryEndTime, final Integer offsetMillis, final DateTime nowInUTC) {
+    public List<Event> getAlarmEvents(final List<RingTime> ringTimes, final DateTime queryStartTime, final DateTime queryEndTime, final Integer offsetMillis, final DateTime nowInUTC) {
         final List<Event> events = Lists.newArrayList();
 
         for(final RingTime ringTime : ringTimes) {

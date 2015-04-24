@@ -129,7 +129,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final TimelineProcessor timelineProcessor = new TimelineProcessor(trackerMotionDAO,
+        final TimelineProcessor timelineProcessor =
+                TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,

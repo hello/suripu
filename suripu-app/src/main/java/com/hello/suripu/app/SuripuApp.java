@@ -322,7 +322,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
-        final TimelineProcessor timelineProcessor = new TimelineProcessor(
+        final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 trackerMotionDAO,
                 deviceDAO,
                 deviceDataDAO,
