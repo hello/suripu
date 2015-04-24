@@ -18,7 +18,7 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
 
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id AND last_updated is not null AND last_updated <= :end_ts ORDER BY id DESC LIMIT 168;")
+    @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id AND last_updated <= :end_ts ORDER BY id DESC LIMIT 168;")
     ImmutableList<DeviceStatus> pillStatusBeforeTs(@Bind("pill_id") final Long pillId, @Bind("end_ts") final DateTime endTs);
 
     @RegisterMapper(AccountMapper.class)
