@@ -43,6 +43,7 @@ import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.VotingSleepEvents;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,10 +183,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
 
+        /*
         if(originalTrackerMotions.size() < MININIMUM_NUMBER_OF_TRACKER_MOTIIONS) {
             LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
             return Optional.absent();
         }
+        */
 
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
@@ -386,7 +389,19 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return timelines;
     }
 
+    /*
+    * Check if the motion span in a large enough time.
+     */
+    private boolean isValidMotionData(final List<TrackerMotion> motionData){
+        if(motionData.size() == 0){
+            return false;
+        }
+        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+            return false;
+        }
 
+        return true;
+    }
 
     public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
         final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
@@ -408,6 +423,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
+        if(!isValidMotionData(sensorData.trackerMotions)){
+            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
         String algorithm = TimelineLog.NO_ALGORITHM;
         String version = TimelineLog.NO_VERSION;
 
