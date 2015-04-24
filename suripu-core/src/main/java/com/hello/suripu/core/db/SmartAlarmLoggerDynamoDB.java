@@ -42,7 +42,6 @@ public class SmartAlarmLoggerDynamoDB {
     public static final String CREATED_AT_ATTRIBUTE_NAME = "created_at_utc";
 
     private static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss Z";
-    private static final String RANGE_KEY_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
 
 
@@ -57,7 +56,7 @@ public class SmartAlarmLoggerDynamoDB {
                     final Optional<DateTime> progressiveRingTimeOptional){
         final Map<String, AttributeValue> items = new HashMap<>();
         items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
-        items.put(CURRENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(now.toString(RANGE_KEY_DATETIME_FORMAT)));
+        items.put(CURRENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(now.toString(DATETIME_FORMAT)));
         items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(nextRegularRingTimeWithLocalTimeZone.toString(DATETIME_FORMAT)));
         items.put(SMART_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(nextRingTimeWithLocalTimeZone.toString(DATETIME_FORMAT)));
         items.put(LAST_SLEEP_CYCLE_ATTRIBUTE_NAME, new AttributeValue().withS(lastSleepCycleEnd.toString(DATETIME_FORMAT)));
