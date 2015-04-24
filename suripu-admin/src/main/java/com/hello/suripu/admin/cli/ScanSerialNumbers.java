@@ -77,6 +77,8 @@ public class ScanSerialNumbers extends ConfiguredCommand<SuripuAdminConfiguratio
             if(!store.containsKey(sn)) {
                 notFound += 1;
                 System.out.println("SN " + sn + " NOT FOUND");
+            } else {
+//                System.out.println(store.get(sn));
             }
         }
         System.out.println("Not found = " + notFound);
