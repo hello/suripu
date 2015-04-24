@@ -183,13 +183,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
 
-        /*
-        if(originalTrackerMotions.size() < MININIMUM_NUMBER_OF_TRACKER_MOTIIONS) {
-            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
-            return Optional.absent();
-        }
-        */
-
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
@@ -392,7 +385,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     /*
     * Check if the motion span in a large enough time.
      */
-    private boolean isValidMotionData(final List<TrackerMotion> motionData){
+    private boolean isValidNight(final Long accountId, final List<TrackerMotion> motionData){
+        if(!hasNewInvalidNightFilterEnabled(accountId)){
+            return motionData.size() >= MININIMUM_NUMBER_OF_TRACKER_MOTIIONS;
+        }
+
         if(motionData.size() == 0){
             return false;
         }
@@ -423,7 +420,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
-        if(!isValidMotionData(sensorData.trackerMotions)){
+        if(!isValidNight(accountId, sensorData.trackerMotions)){
             LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
             return Optional.absent();
         }
