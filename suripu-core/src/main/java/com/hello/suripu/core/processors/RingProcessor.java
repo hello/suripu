@@ -13,9 +13,10 @@ import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -157,7 +158,61 @@ public class RingProcessor {
     }
 
 
-    public static RingTime updateAndReturnNextSmartRingTimeForUser(final DateTime currentTime,
+    protected static boolean isGivenRingTimeFromNextSmartAlarm(final DateTime currentTimeAlignedToStartOfMinute,
+                                                               final RingTime nextRingTimeFromWorker){
+        final boolean isCurrentTimeAfterNextRingTime = currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+        final boolean isProcessedSmartAlarm = nextRingTimeFromWorker.processed();
+
+        return isCurrentTimeAfterNextRingTime && isProcessedSmartAlarm;
+    }
+
+    protected static boolean isCurrentTimeBetweenActualRingTimeAndExpectedRingTime(final DateTime currentTimeAlignedToStartOfMinute,
+                                                                                   final RingTime nextRingTimeFromWorker){
+        return currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) &&
+                nextRingTimeFromWorker.processed() &&
+                currentTimeAlignedToStartOfMinute.isBefore(nextRingTimeFromWorker.expectedRingTimeUTC);
+    }
+
+    protected static boolean hasSufficientTimeToApplyProgressiveSmartAlarm(final DateTime currentTimeAlignedToStartOfMinute,
+                                                                           final RingTime nextRingTimeFromWorker,
+                                                                           final int smartAlarmProcessAheadInMinutes){
+        if(!nextRingTimeFromWorker.fromSmartAlarm || !nextRingTimeFromWorker.processed()){
+            return false;
+        }
+
+        final boolean isNextSmartAlarmWithinProcessRange =  currentTimeAlignedToStartOfMinute
+                .plusMinutes(smartAlarmProcessAheadInMinutes)
+                .isBefore(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+        final boolean notTooCloseToRingTime = currentTimeAlignedToStartOfMinute.plusMillis(SMART_ALARM_MIN_DELAY_MILLIS).isBefore(nextRingTimeFromWorker.actualRingTimeUTC);
+        return isNextSmartAlarmWithinProcessRange && notTooCloseToRingTime;
+    }
+
+    protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
+                                                               final DateTime nowAlignedToStartOfMinute,
+                                                               final RingTime nextRingTimeFromWorker,
+                                                               final TrackerMotionDAO trackerMotionDAO){
+        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(5);
+
+        final List<TrackerMotion> motionFromLast5Minutes = trackerMotionDAO.getBetween(accountId,
+                dataCollectionBeginTime, nowAlignedToStartOfMinute.plusMinutes(1));
+
+        if(motionFromLast5Minutes.size() == 0){
+            return Optional.absent();
+        }
+        final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionFromLast5Minutes);
+        final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionFromLast5Minutes);
+        if(SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts)){
+            final RingTime progressiveRingTime = new RingTime(nowAlignedToStartOfMinute.plusMinutes(3).getMillis(),
+                    nextRingTimeFromWorker.expectedRingTimeUTC,
+                    nextRingTimeFromWorker.soundIds,
+                    true);
+            return Optional.of(progressiveRingTime);
+        }
+        return Optional.absent();
+    }
+
+
+    public static RingTime updateAndReturnNextSmartRingTimeForUser(final DateTime currentTimeAlignedToStartOfMinute,
                                                                    final int slidingWindowSizeInMinutes,
                                                                    final float lightSleepThreshold,
                                                                    final int smartAlarmProcessAheadInMinutes,
@@ -170,10 +225,32 @@ public class RingProcessor {
                                                                    final RolloutClient feature){
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
-        
-        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false && nextRingTimeFromWorker.processed()) {
+        // smart alarm computed, but not yet proceed to the actual ring time.
+        if (isGivenRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
+            if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
+                    hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
+
+                final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
+                        currentTimeAlignedToStartOfMinute,
+                        nextRingTimeFromWorker,
+                        trackerMotionDAO);
+                if(progressiveRingTimeOptional.isPresent()){
+                    mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
+                    smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
+                            currentTimeAlignedToStartOfMinute.withZone(userInfo.timeZone.get()),
+                            new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
+                            new DateTime(progressiveRingTimeOptional.get().expectedRingTimeUTC, userInfo.timeZone.get()),
+                            Optional.of(new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get())));
+                    LOGGER.info("Reset smart alarm with updated progressive smart alarm, original ring time {}, updated ring time {}",
+                            new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
+                            new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get()));
+                    return progressiveRingTimeOptional.get();
+                }
+
+            }
+
             LOGGER.debug("{} smart alarm already set to {} for device {}, account {}.",
-                    currentTime.withZone(userInfo.timeZone.get()),
+                    currentTimeAlignedToStartOfMinute.withZone(userInfo.timeZone.get()),
                     new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
                     userInfo.accountId);
@@ -192,10 +269,9 @@ public class RingProcessor {
         // We should return RingTime.empty because we don't want the alarm ring again during
         // this period.
         // We CANNOT just simply return nextRingTimeFromTemplate because they might be the same.
-        if (currentTime.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) && nextRingTimeFromWorker.processed() &&
-                currentTime.isBefore(nextRingTimeFromWorker.expectedRingTimeUTC)) {
+        if (isCurrentTimeBetweenActualRingTimeAndExpectedRingTime(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
             LOGGER.debug("{} smart alarm {} expired for device {}, account {}. Next alarm {}",
-                    currentTime.withZone(userInfo.timeZone.get()),
+                    currentTimeAlignedToStartOfMinute.withZone(userInfo.timeZone.get()),
                     new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                     userInfo.deviceId,
                     userInfo.accountId,
@@ -220,7 +296,7 @@ public class RingProcessor {
         // let's see if it is time to trigger the smart alarm processing.
 
         LOGGER.debug("{} worker alarm {} for device {}, account {}. Next template alarm {}",
-                currentTime.withZone(userInfo.timeZone.get()),
+                currentTimeAlignedToStartOfMinute.withZone(userInfo.timeZone.get()),
                 new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                 userInfo.deviceId,
                 userInfo.accountId,
@@ -228,11 +304,11 @@ public class RingProcessor {
         // Try to get smart alarm time.
         // Check if the current time is N min before next ring.
         final DateTime nextRegularRingTimeLocal = new DateTime(nextRingTimeFromTemplate.expectedRingTimeUTC, userInfo.timeZone.get());
-        if (shouldTriggerSmartAlarmProcessing(currentTime, nextRegularRingTimeLocal, smartAlarmProcessAheadInMinutes)) {
+        if (shouldTriggerSmartAlarmProcessing(currentTimeAlignedToStartOfMinute, nextRegularRingTimeLocal, smartAlarmProcessAheadInMinutes)) {
             // It is time to compute sleep cycles.
             nextRingTime = processNextSmartRingTimeForUser(userInfo.accountId,
-                    currentTime,
-                    currentTime.plusMillis(SMART_ALARM_MIN_DELAY_MILLIS),
+                    currentTimeAlignedToStartOfMinute,
+                    currentTimeAlignedToStartOfMinute.plusMillis(SMART_ALARM_MIN_DELAY_MILLIS),
                     userInfo.timeZone.get(),
                     nextRingTimeFromTemplate,
                     slidingWindowSizeInMinutes, lightSleepThreshold,
@@ -369,7 +445,8 @@ public class RingProcessor {
                 }
                 smartAlarmLoggerDynamoDB.log(accountId, lastCycleEnds, DateTime.now().withZone(timeZone),
                         smartAlarmRingTimeUTC.withZone(timeZone),
-                        new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone));
+                        new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone),
+                        Optional.<DateTime>absent());
             }
             LOGGER.info("User {} smartAlarm time is {}", accountId, new DateTime(smartAlarmRingTimeUTC, timeZone));
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();
