@@ -232,8 +232,13 @@ public class SleepCycleAlgorithm {
         return segments;
     }
 
-    public static boolean isAwake(final List<AmplitudeData> maxAmplitude,
-                                  final List<AmplitudeData> kickOffCounts){
+    /*
+    * Check if the user is awake in the data's duration by following criteria:
+    * If the amplitude is larger than certain threshold for >= 2 minutes, or
+    * In a certain minute, the user moves more than [certain threshold] times.
+     */
+    public static boolean isUserAwakeInGivenDataSpan(final List<AmplitudeData> maxAmplitude,
+                                                     final List<AmplitudeData> kickOffCounts){
         if(maxAmplitude.size() != kickOffCounts.size()) {
             return false;
         }
