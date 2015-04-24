@@ -158,8 +158,8 @@ public class RingProcessor {
     }
 
 
-    protected static boolean isRingTimeFromNextComputedSmartAlarm(final DateTime currentTimeAlignedToBeginOfMinute,
-                                                                  final RingTime nextRingTimeFromWorker){
+    protected static boolean isGivenRingTimeFromNextSmartAlarm(final DateTime currentTimeAlignedToBeginOfMinute,
+                                                               final RingTime nextRingTimeFromWorker){
         final boolean isCurrentTimeAfterNextRingTime = currentTimeAlignedToBeginOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
         final boolean isProcessedSmartAlarm = nextRingTimeFromWorker.processed();
 
@@ -226,7 +226,7 @@ public class RingProcessor {
 
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
-        if (isRingTimeFromNextComputedSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker)) {
+        if (isGivenRingTimeFromNextSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker)) {
             if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
                     hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToBeginOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
 

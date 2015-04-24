@@ -170,7 +170,7 @@ public class RingProcessorSingleUserIT {
         }
     }
 
-    private RingTime getNextRingTime(final DateTime dataCollectionTime){
+    private RingTime updateAndReturnNextRingTime(final DateTime dataCollectionTime){
         return RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.scheduledRingTimeHistoryDAODynamoDB,
                 this.smartAlarmLoggerDynamoDB,
@@ -224,7 +224,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 08:20
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -242,7 +242,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 08:20
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
-        ringTime = getNextRingTime(dataCollectionTime);
+        ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -262,7 +262,7 @@ public class RingProcessorSingleUserIT {
         // Minutes after smart alarm processing but before alarm take off time -11 minutes.
         DateTime now = actualRingTime.minusMinutes(11);
         mockProgressiveMotionData(now.minusMinutes(5), now);
-        ringTime = getNextRingTime(now);
+        ringTime = updateAndReturnNextRingTime(now);
 
         assertThat(ringTime.isEmpty(), is(false));
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, userInfo1.timeZone.get());
@@ -281,7 +281,7 @@ public class RingProcessorSingleUserIT {
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before alarm take off time -11 minutes.
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, actualRingTime.getZone());
-        ringTime = getNextRingTime(actualRingTime.plusMinutes(1));
+        ringTime = updateAndReturnNextRingTime(actualRingTime.plusMinutes(1));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -293,7 +293,7 @@ public class RingProcessorSingleUserIT {
         // 1st smart alarm expected ring time past, but not yet reach the processing time of 2nd
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = getNextRingTime(new DateTime(2014, 9, 24, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 24, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
@@ -305,7 +305,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-24 08:00
         // 1st smart alarm expected ring time past, 2nd smart alarm triggered.
         deadline = new DateTime(2014, 9, 24, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = getNextRingTime(new DateTime(2014, 9, 24, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 24, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -324,7 +324,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-24 08:21
         // Both alarm expired for this week
         deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles")).plusWeeks(1);
-        ringTime = getNextRingTime(new DateTime(2014, 9, 24, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 24, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
@@ -361,7 +361,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 08:20
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -379,7 +379,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 08:20
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
-        ringTime = getNextRingTime(dataCollectionTime);
+        ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -397,7 +397,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm, smart: 2014-09-24 08:20
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = getNextRingTime(actualRingTime.plusMinutes(1));
+        ringTime = updateAndReturnNextRingTime(actualRingTime.plusMinutes(1));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -410,7 +410,7 @@ public class RingProcessorSingleUserIT {
         // 1st smart alarm expected ring time past, but not yet reach the processing time of 2nd
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = getNextRingTime(new DateTime(2014, 9, 24, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 24, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
@@ -422,7 +422,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-24 08:00
         // 1st smart alarm expected ring time past, 2nd smart alarm triggered.
         deadline = new DateTime(2014, 9, 24, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = getNextRingTime(new DateTime(2014, 9, 24, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 24, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -441,7 +441,7 @@ public class RingProcessorSingleUserIT {
         // Now: 2014-9-24 08:21
         // Both alarm expired for this week
         deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles")).plusWeeks(1);
-        ringTime = getNextRingTime(new DateTime(2014, 9, 24, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 24, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
@@ -463,7 +463,7 @@ public class RingProcessorSingleUserIT {
                 Optional.of(nextRingTime), userInfo1.timeZone, userInfo1.pillColor,
                 0));
 
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -476,7 +476,7 @@ public class RingProcessorSingleUserIT {
 
 
         // For minute that triggered smart alarm computation
-        ringTime = getNextRingTime(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -503,7 +503,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For minutes that not yet trigger smart alarm computation
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -525,7 +525,7 @@ public class RingProcessorSingleUserIT {
 
         // For the minute trigger smart alarm computation
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = getNextRingTime(dataCollectionTime);
+        ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
 
@@ -550,7 +550,7 @@ public class RingProcessorSingleUserIT {
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
 
         // For moments that not yet trigger smart alarm computation
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -562,7 +562,7 @@ public class RingProcessorSingleUserIT {
                 0));
 
         // For moments that triggered smart alarm computation
-        ringTime = getNextRingTime(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -594,7 +594,7 @@ public class RingProcessorSingleUserIT {
 
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = getNextRingTime(dataCollectionTime);
+        final RingTime ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -614,7 +614,7 @@ public class RingProcessorSingleUserIT {
                 0));
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = getNextRingTime(dataCollectionTime);
+        final RingTime ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -634,7 +634,7 @@ public class RingProcessorSingleUserIT {
 
 
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = getNextRingTime(dataCollectionTime);
+        final RingTime ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
 
         assertThat(ringTime.isEmpty(), is(true));
@@ -657,7 +657,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = getNextRingTime(dataCollectionTime);
+        final RingTime ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.getMillis(), is(deadline.getMillis()));
@@ -676,7 +676,7 @@ public class RingProcessorSingleUserIT {
 
 
         // Minutes before smart alarm triggered.
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 0, DateTimeZone.forID("America/Los_Angeles")));
 
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
@@ -684,7 +684,7 @@ public class RingProcessorSingleUserIT {
         assertThat(ringTime.processed(), is(false));
 
         // Minutes after smart alarm triggered but before deadline.
-        ringTime = getNextRingTime(dataCollectionTime);
+        ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -707,7 +707,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = getNextRingTime(dataCollectionTime);
+        final RingTime ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         final DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -737,7 +737,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = getNextRingTime(dataCollectionTime);
+        final RingTime ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         assertThat(ringTime.isEmpty(), is(true));
     }
@@ -766,7 +766,7 @@ public class RingProcessorSingleUserIT {
 
         final DateTime deadline = new DateTime(2014, 9, 22, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
         final DateTime dataCollectionTime = new DateTime(2014, 9, 23, 8, 0, DateTimeZone.forID("America/Los_Angeles"));
-        final RingTime ringTime = getNextRingTime(dataCollectionTime);
+        final RingTime ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         assertThat(ringTime.isEmpty(), is(true));
     }
@@ -810,7 +810,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -828,7 +828,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
-        ringTime = getNextRingTime(dataCollectionTime);
+        ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -846,7 +846,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm, smart: 2014-09-24 09:20
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = getNextRingTime(actualRingTime.plusMinutes(1));
+        ringTime = updateAndReturnNextRingTime(actualRingTime.plusMinutes(1));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -856,7 +856,7 @@ public class RingProcessorSingleUserIT {
         // 1st smart alarm expected ring time past, but not yet reach the processing time of 2nd
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = getNextRingTime(new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
@@ -903,7 +903,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 07:20
         // Minutes before alarm triggered
-        RingTime ringTime = getNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
+        RingTime ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 7, 20, DateTimeZone.forID("America/Los_Angeles")));
 
         DateTime actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isEqual(deadline), is(true));
@@ -921,7 +921,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm: 2014-09-24 09:20
         // Now: 2014-9-23 08:00
         // Minute that trigger smart alarm processing
-        ringTime = getNextRingTime(dataCollectionTime);
+        ringTime = updateAndReturnNextRingTime(dataCollectionTime);
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.isBefore(deadline), is(true));
@@ -939,7 +939,7 @@ public class RingProcessorSingleUserIT {
         // 2nd alarm, smart: 2014-09-24 09:20
         // Now: [actual ring time + 1 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = getNextRingTime(actualRingTime.plusMinutes(1));
+        ringTime = updateAndReturnNextRingTime(actualRingTime.plusMinutes(1));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -959,7 +959,7 @@ public class RingProcessorSingleUserIT {
         // 3rd alarm, smart: 2014-09-23 10:00
         // Now: [actual ring time + 2 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = getNextRingTime(actualRingTime.plusMinutes(2));
+        ringTime = updateAndReturnNextRingTime(actualRingTime.plusMinutes(2));
 
         assertThat(ringTime.isEmpty(), is(true));
 
@@ -969,7 +969,7 @@ public class RingProcessorSingleUserIT {
         // 3rd alarm, smart: 2014-09-23 10:00
         // Now: [actual ring time + 2 minute]
         // Minutes after smart alarm processing but before next smart alarm process triggered.
-        ringTime = getNextRingTime(new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 8, 21, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(new DateTime(2014, 9, 23, 10, 0, DateTimeZone.forID("America/Los_Angeles"))), is(true));
@@ -982,7 +982,7 @@ public class RingProcessorSingleUserIT {
         // 1st smart alarm expected ring time past, but not yet reach the processing time of 2nd
         // smart alarm.
         deadline = new DateTime(2014, 9, 24, 9, 20, DateTimeZone.forID("America/Los_Angeles"));
-        ringTime = getNextRingTime(new DateTime(2014, 9, 23, 10, 1, DateTimeZone.forID("America/Los_Angeles")));
+        ringTime = updateAndReturnNextRingTime(new DateTime(2014, 9, 23, 10, 1, DateTimeZone.forID("America/Los_Angeles")));
 
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, DateTimeZone.forID("America/Los_Angeles"));
         assertThat(actualRingTime.equals(deadline), is(true));
