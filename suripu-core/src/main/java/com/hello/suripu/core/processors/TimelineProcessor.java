@@ -74,7 +74,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TimelineUtils timelineUtils;
 
     final private static int SLOT_DURATION_MINUTES = 1;
-    final private static int MININIMUM_NUMBER_OF_TRACKER_MOTIIONS = 20;
+    final private static int MINIMUM_NUMBER_OF_TRACKER_MOTIONS = 20;
 
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";
@@ -387,7 +387,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
      */
     private boolean isValidNight(final Long accountId, final List<TrackerMotion> motionData){
         if(!hasNewInvalidNightFilterEnabled(accountId)){
-            return motionData.size() >= MININIMUM_NUMBER_OF_TRACKER_MOTIIONS;
+            return motionData.size() >= MINIMUM_NUMBER_OF_TRACKER_MOTIONS;
         }
 
         if(motionData.size() == 0){
