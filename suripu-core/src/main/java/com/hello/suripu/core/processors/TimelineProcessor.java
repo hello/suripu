@@ -89,13 +89,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final AccountDAO accountDAO,
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
-        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER,false);
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,"");
+        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,Optional.<UUID>absent());
     }
 
-    public TimelineProcessor copyMeWithNewUUID(final String uuid) {
+    public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,uuid);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,Optional.of(uuid));
     }
 
     //private SessionLogDebug(final String)
@@ -108,7 +108,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
-                              final String uuid) {
+                              final Optional<UUID> uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -118,8 +118,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
 
-        this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
-        timelineUtils = new TimelineUtils(uuid);
+        if (uuid.isPresent()) {
+            this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
+            timelineUtils = new TimelineUtils(uuid.get());
+
+        }
+        else {
+            this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+            timelineUtils = new TimelineUtils();
+        }
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,

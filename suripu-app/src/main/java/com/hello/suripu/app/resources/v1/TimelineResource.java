@@ -89,7 +89,7 @@ public class TimelineResource extends BaseResource {
 
 
 
-    private TimelineResult getTimelinesFromCacheOrReprocess(final String sessionUUID, final Long accountId, final String targetDateString){
+    private TimelineResult getTimelinesFromCacheOrReprocess(final UUID sessionUUID, final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
         final TimelineProcessor timelineProcessor = this.timelineProcessor.copyMeWithNewUUID(sessionUUID);
         //if no update forced (i.e. no HMM)
@@ -143,9 +143,7 @@ public class TimelineResource extends BaseResource {
             @PathParam("date") String date) {
         
 
-        final String sessionUUID = UUID.randomUUID().toString();
-
-        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(sessionUUID,accessToken.accountId, date);
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(UUID.randomUUID(),accessToken.accountId, date);
 
         return result.timelines;
 
@@ -163,9 +161,8 @@ public class TimelineResource extends BaseResource {
         if (!accountId.isPresent()) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        final String sessionUUID = UUID.randomUUID().toString();
 
-        final TimelineResult result = getTimelinesFromCacheOrReprocess(sessionUUID,accountId.get(), date);
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(UUID.randomUUID(),accountId.get(), date);
 
         return result.timelines;
     }

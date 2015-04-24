@@ -57,6 +57,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class TimelineUtils {
 
@@ -98,12 +99,12 @@ public class TimelineUtils {
         return ImmutableList.copyOf(convertedEvents);
     }
 
-    public TimelineUtils(final String uuid) {
+    public TimelineUtils(final UUID uuid) {
         LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
     public TimelineUtils() {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,false);
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
     }
 
     /**

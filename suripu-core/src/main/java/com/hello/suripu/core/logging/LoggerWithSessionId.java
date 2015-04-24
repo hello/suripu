@@ -29,20 +29,15 @@ public class LoggerWithSessionId implements Logger {
 
     final public Logger logger;
 
-    public LoggerWithSessionId(final Logger original,final boolean useUUID) {
+    public LoggerWithSessionId(final Logger original) {
         logger = original;
+        uniqeString = "";
 
-        if (useUUID) {
-            uniqeString = getToken(null);
-        }
-        else {
-            uniqeString = "";
-        }
     }
 
-    public LoggerWithSessionId(final Logger original,final String uuid) {
+    public LoggerWithSessionId(final Logger original,final UUID uuid) {
         logger = original;
-        uniqeString = uuid;
+        uniqeString = uuid.toString();
     }
 
 
