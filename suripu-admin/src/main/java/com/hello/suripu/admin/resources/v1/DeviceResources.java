@@ -255,26 +255,35 @@ public class DeviceResources {
     @Path("/register/pill")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final PillRegistration pillRegistration) {
-        try {
-            final Long trackerId = deviceDAO.registerPill(accessToken.accountId, pillRegistration.pillId);
-            LOGGER.info("Account {} registered pill {} with internal id = {}", accessToken.accountId, pillRegistration.pillId, trackerId);
+    public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                             @Valid final PillRegistration pillRegistration) {
 
-            final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accessToken.accountId);
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, pillRegistration.email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Account not found")).build());
+        }
+        final Long accountId = accountIdOptional.get();
+
+        try {
+            final Long trackerId = deviceDAO.registerPill(accountId, pillRegistration.pillId);
+            LOGGER.info("Account {} registered pill {} with internal id = {}", accountId, pillRegistration.pillId, trackerId);
+
+            final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accountId);
             if(sensePairedWithAccount.size() == 0){
-                LOGGER.error("No sense paired with account {}", accessToken.accountId);
+                LOGGER.error("No sense paired with account {}", accountId);
                 throw new WebApplicationException(Response.Status.BAD_REQUEST);
             }
 
             final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
-            this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accessToken.accountId, pillRegistration.pillId);
+            this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accountId, pillRegistration.pillId);
 
             return;
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
 
             if(matcher.find()) {
-                LOGGER.error("Failed to register pill for account id = {} and pill id = {} : {}", accessToken.accountId, pillRegistration.pillId, exception.getMessage());
+                LOGGER.error("Failed to register pill for account id = {} and pill id = {} : {}", accountId, pillRegistration.pillId, exception.getMessage());
                 throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                         .entity(new JsonError(409, "Pill already exists for this account.")).build());
             }
