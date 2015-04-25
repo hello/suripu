@@ -5,7 +5,6 @@ import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
@@ -63,27 +62,29 @@ public class ScanInvalidNightsCommand extends ConfiguredCommand<SuripuAppConfigu
 
     }
 
-    private static List<TrackerMotion> getDataForNight(final Long accountId, final DateTime targetDateLocalUTC, final TrackerMotionDAO trackerMotionDAO){
+    private static int getDataForNight(final Long accountId, final DateTime targetDateLocalUTC, final TrackerMotionDAO trackerMotionDAO){
         final DateTime startQueryTimeLocalUTC = targetDateLocalUTC.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endQueryTimeLocalUTC = targetDateLocalUTC.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
-        return trackerMotionDAO.getBetweenLocalUTC(accountId, startQueryTimeLocalUTC, endQueryTimeLocalUTC);
+        return trackerMotionDAO.getDataCountBetweenLocalUTC(accountId, startQueryTimeLocalUTC, endQueryTimeLocalUTC);
     }
 
     private static void printInvalidNights(final AccountDAOImpl accountDAO, final TrackerMotionDAO trackerMotionDAO){
         final List<Account> allAccounts = accountDAO.getAll();
-
+        LOGGER.info("Start to scan...");
         for(final Account account:allAccounts){
             final DateTime startSearchDateLocalUTC = new DateTime(account.created, DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
             DateTime targetDateLocalUTC = startSearchDateLocalUTC;
             while(!targetDateLocalUTC.isAfter(DateTime.now().withTimeAtStartOfDay().plusDays(1))){
-                final List<TrackerMotion> trackerMotions = getDataForNight(account.id.get(), targetDateLocalUTC, trackerMotionDAO);
-                if(trackerMotions.size() < TimelineProcessor.MIN_TRACKER_MOTION_COUNT && trackerMotions.size() > 0){
+                final int count = getDataForNight(account.id.get(), targetDateLocalUTC, trackerMotionDAO);
+                if(count < TimelineProcessor.MIN_TRACKER_MOTION_COUNT && count > 0){
                     LOGGER.info("{},{}", account.id.get(), DateTimeUtil.dateToYmdString(targetDateLocalUTC));
                 }
 
                 targetDateLocalUTC = targetDateLocalUTC.plusDays(1);
             }
         }
+
+        LOGGER.info("Scan finished.");
 
     }
 }
