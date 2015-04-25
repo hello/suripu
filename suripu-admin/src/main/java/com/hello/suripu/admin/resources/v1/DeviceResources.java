@@ -23,6 +23,7 @@ import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.models.SenseRegistration;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -30,6 +31,9 @@ import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionIsolationLevel;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +42,7 @@ import redis.clients.jedis.JedisPool;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -316,6 +321,65 @@ public class DeviceResources {
         }
 
         throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+
+
+    @DELETE
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sense/{email}/{sense_id}")
+    public void unregisterSenseByUser(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                      @PathParam("email") final String email,
+                                      @PathParam("sense_id") final String senseId) {
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Account %s not found", email))).build());
+        }
+        final Long accountId = accountIdOptional.get();
+        final List<UserInfo> pairedUsers = mergedUserInfoDynamoDB.getInfo(senseId);
+
+        if (pairedUsers.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(400, String.format("Sense %s has not been paired to any account", senseId))).build());
+        }
+
+        final List<Long> pairedAccountIdList = new ArrayList<>();
+        for (final UserInfo pairUser: pairedUsers) {
+            pairedAccountIdList.add(pairUser.accountId);
+        }
+
+        if (!pairedAccountIdList.contains(accountId)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(400, String.format("Sense %s has not been paired to %s", senseId, email))).build());
+        }
+        try {
+            this.deviceDAO.inTransaction(TransactionIsolationLevel.SERIALIZABLE, new Transaction<Void, DeviceDAO>() {
+                @Override
+                public Void inTransaction(final DeviceDAO transactional, final TransactionStatus status) throws Exception {
+                    final Integer pillDeleted = transactional.deletePillPairingByAccount(accountId);
+                    LOGGER.info("Factory reset delete {} Pills linked to account {}", pillDeleted, accountId);
+
+                    final Integer accountUnlinked = transactional.unlinkAllAccountsPairedToSense(senseId);
+                    LOGGER.info("Factory reset delete {} accounts linked to Sense {}", accountUnlinked, accountId);
+
+                    try {
+                        mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
+                    } catch (AmazonServiceException awsEx) {
+                        LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
+                                accountId,
+                                senseId,
+                                awsEx.getErrorMessage());
+                    }
+
+                    return null;
+                }
+            });
+        }catch (UnableToExecuteStatementException sqlExp){
+            LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GET
