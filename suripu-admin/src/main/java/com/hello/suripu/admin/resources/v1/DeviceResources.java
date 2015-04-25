@@ -241,7 +241,7 @@ public class DeviceResources {
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, senseRegistration.email);
         if (!accountIdOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity(new JsonError(404, "Account not found")).build());
+                    .entity(new JsonError(404, String.format("Account %s not found", senseRegistration.email))).build());
         }
         final Long accountId = accountIdOptional.get();
 
@@ -284,7 +284,7 @@ public class DeviceResources {
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, pillRegistration.email);
         if (!accountIdOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity(new JsonError(404, "Account not found")).build());
+                    .entity(new JsonError(404, String.format("Account %s not found", pillRegistration.email))).build());
         }
         final Long accountId = accountIdOptional.get();
 
@@ -293,9 +293,10 @@ public class DeviceResources {
             LOGGER.info("Account {} registered pill {} with internal id = {}", accountId, pillRegistration.pillId, trackerId);
 
             final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accountId);
-            if(sensePairedWithAccount.size() == 0){
+            if(sensePairedWithAccount.isEmpty()){
                 LOGGER.error("No sense paired with account {}", accountId);
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(400, String.format("Registered pill %s but no sense has been paired to account %s", pillRegistration.pillId, pillRegistration.email))).build());
             }
 
             final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
