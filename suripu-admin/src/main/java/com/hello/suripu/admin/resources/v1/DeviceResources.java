@@ -382,6 +382,47 @@ public class DeviceResources {
         }
     }
 
+
+    @DELETE
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/pill/{email}/{pill_id}")
+    public void unregisterPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                               @PathParam("email") final String email,
+                               @PathParam("pill_id") String externalPillId) {
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Account %s not found", email))).build());
+        }
+        final Long accountId = accountIdOptional.get();
+
+        final Integer numRows = deviceDAO.deletePillPairing(externalPillId, accountId);
+        if(numRows == 0) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Did not find active pill %s to unregister for %s", externalPillId, email))).build());
+        }
+
+        final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accountId);
+        if(sensePairedWithAccount.size() == 0){
+            LOGGER.error("No sense paired with account {}", accountId);
+            return;
+        }
+
+        final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
+
+        try {
+            this.mergedUserInfoDynamoDB.deletePillColor(senseId, accountId, externalPillId);
+        }catch (Exception ex){
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404,
+                            String.format("Failed to delete pill %s color from user info table for sense %s and account %s because %s",
+                                    externalPillId, senseId, accountId, ex.getMessage()))).build());
+        }
+    }
+    
+    
     @GET
     @Timed
     @Path("/key_store_hints/sense/{sense_id}")
