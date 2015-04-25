@@ -15,6 +15,7 @@ import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
 import com.hello.suripu.app.cli.PopulateSleepScoreTable;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
+import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
@@ -124,6 +125,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new RecreatePillColorCommand());
         bootstrap.addCommand(new PopulateSleepScoreTable());
+        bootstrap.addCommand(new ScanInvalidNightsCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {

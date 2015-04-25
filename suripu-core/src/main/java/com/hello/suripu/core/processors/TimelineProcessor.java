@@ -74,7 +74,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TimelineUtils timelineUtils;
 
     final private static int SLOT_DURATION_MINUTES = 1;
-    final private static int MIN_TRACKER_MOTION_COUNT = 20;
+    public final static int MIN_TRACKER_MOTION_COUNT = 20;
 
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";

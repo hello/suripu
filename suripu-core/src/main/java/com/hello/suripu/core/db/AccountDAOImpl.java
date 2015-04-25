@@ -42,6 +42,9 @@ public abstract class AccountDAOImpl implements AccountDAO {
     @SqlQuery("SELECT * FROM accounts order by id desc LIMIT 100;")
     public abstract List<Account> getRecent();
 
+    @SqlQuery("SELECT * FROM accounts ORDER BY id DESC;")
+    public abstract List<Account> getAll();
+
     @SqlUpdate("INSERT INTO accounts (name, email, password_hash, dob, height, weight, tz_offset, created, last_modified) VALUES(:name, :email, :password, :dob, :height, :weight, :tz_offset, :created, :last_modified)")
     @GetGeneratedKeys
     public abstract long insertAccount(@BindRegistration Registration registration, @Bind("last_modified") Long lastModified);
