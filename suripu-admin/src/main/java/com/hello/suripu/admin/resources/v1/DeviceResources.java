@@ -235,20 +235,43 @@ public class DeviceResources {
     @Path("/register/sense")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void registerSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final SenseRegistration senseRegistration) {
+    public void registerSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                              @Valid final SenseRegistration senseRegistration) {
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, senseRegistration.email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Account not found")).build());
+        }
+        final Long accountId = accountIdOptional.get();
+
+
         try {
-            final Long senseInternalId = deviceDAO.registerSense(accessToken.accountId, senseRegistration.senseId);
-            LOGGER.info("Account {} registered sense {} with internal id = {}", accessToken.accountId, senseRegistration.senseId, senseInternalId);
-            return;
+            final Long senseInternalId = deviceDAO.registerSense(accountId, senseRegistration.senseId);
+            LOGGER.info("Account {} registered sense {} with internal id = {}", accountId, senseRegistration.senseId, senseInternalId);
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
             if(matcher.find()) {
-                LOGGER.error("Failed to register sense for account id = {} and sense id = {} : {}", accessToken.accountId, senseRegistration.senseId, exception.getMessage());
+                LOGGER.error("Failed to register sense for account id = {} and sense id = {} : {}", accountId, senseRegistration.senseId, exception.getMessage());
                 throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                         .entity(new JsonError(409, "Sense already exists for this account.")).build());
             }
         }
 
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(accountId);
+
+        for (final DeviceAccountPair deviceAccountPair:deviceAccountMap) {
+            try {
+                this.mergedUserInfoDynamoDB.setTimeZone(deviceAccountPair.externalDeviceId, accountId, DateTimeZone.forID(senseRegistration.timezone));
+            } catch (AmazonServiceException awsException) {
+                LOGGER.error("Aws failed when account {} tries to set timezone.", accountId);
+                throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(new JsonError(500, "Failed to set timezone")).build());
+            } catch (IllegalArgumentException illegalArgumentException) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(400, "Unrecognized timezone")).build());
+            }
+        }
     }
 
     @POST
