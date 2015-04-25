@@ -77,7 +77,7 @@ public class ScanInvalidNightsCommand extends ConfiguredCommand<SuripuAppConfigu
             DateTime targetDateLocalUTC = startSearchDateLocalUTC;
             while(!targetDateLocalUTC.isAfter(DateTime.now().withTimeAtStartOfDay().plusDays(1))){
                 final List<TrackerMotion> trackerMotions = getDataForNight(account.id.get(), targetDateLocalUTC, trackerMotionDAO);
-                if(trackerMotions.size() < TimelineProcessor.MIN_TRACKER_MOTION_COUNT){
+                if(trackerMotions.size() < TimelineProcessor.MIN_TRACKER_MOTION_COUNT && trackerMotions.size() > 0){
                     LOGGER.info("{},{}", account.id.get(), DateTimeUtil.dateToYmdString(targetDateLocalUTC));
                 }
 
