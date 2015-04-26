@@ -104,6 +104,25 @@ public class DataScienceResource extends BaseResource {
         return trackerMotions;
     }
 
+
+    @GET
+    @Path("/motion/{id}/{query_date_local_utc}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TrackerMotion> getMotion(@Scope({OAuthScope.SENSORS_BASIC, OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                         @PathParam("query_date_local_utc") final String date,
+                                         @PathParam("id") final Long id) {
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+        final List<TrackerMotion> trackerMotions = trackerMotionDAO.getBetweenLocalUTC(id, targetDate, endDate);
+        LOGGER.debug("Length of trackerMotion: {}", trackerMotions.size());
+
+        return trackerMotions;
+    }
+
     @GET
     @Path("/pill/partner/{email}/{query_date_local_utc}")
     @Produces(MediaType.APPLICATION_JSON)
