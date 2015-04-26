@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.DeviceDAOAdmin;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
@@ -65,6 +66,7 @@ public class DeviceResources {
     private final KeyStore senseKeyStore;
     private final KeyStore pillKeyStore;
     private final JedisPool jedisPool;
+    private final PillHeartBeatDAO pillHeartBeatDAO;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDAOAdmin deviceDAOAdmin,
@@ -74,7 +76,8 @@ public class DeviceResources {
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final KeyStore senseKeyStore,
                            final KeyStore pillKeyStore,
-                           final JedisPool jedisPool) {
+                           final JedisPool jedisPool,
+                           final PillHeartBeatDAO pillHeartBeatDAO) {
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
@@ -84,6 +87,7 @@ public class DeviceResources {
         this.deviceDataDAO = deviceDataDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.jedisPool = jedisPool;
+        this.pillHeartBeatDAO = pillHeartBeatDAO;
     }
 
     @GET
@@ -328,7 +332,7 @@ public class DeviceResources {
         final List<DeviceAdmin> pills = new ArrayList<>();
 
         for (final DeviceAccountPair pillAccountPair: pillAccountPairs) {
-            final Optional<DeviceStatus> pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
+            final Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
             pills.add(new DeviceAdmin(pillAccountPair, pillStatusOptional.orNull()));
         }
         return pills;
