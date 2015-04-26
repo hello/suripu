@@ -70,6 +70,7 @@ public class ScanInvalidNightsCommand extends ConfiguredCommand<SuripuAppConfigu
 
     private static void printInvalidNights(final AccountDAOImpl accountDAO, final TrackerMotionDAO trackerMotionDAO){
         final List<Account> allAccounts = accountDAO.getAll();
+        final DateTimeZone runnerTimeZone = DateTimeZone.forID("America/Los_Angeles");
         LOGGER.info("Start to scan...");
         for(final Account account:allAccounts){
             final DateTime startSearchDateLocalUTC = new DateTime(account.created, DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
@@ -81,6 +82,14 @@ public class ScanInvalidNightsCommand extends ConfiguredCommand<SuripuAppConfigu
                 }
 
                 targetDateLocalUTC = targetDateLocalUTC.plusDays(1);
+                final DateTime localToday = DateTime.now().withZone(runnerTimeZone).withTimeAtStartOfDay();
+                final DateTime todayLocalUTC = new DateTime(localToday.getYear(),
+                        localToday.getMonthOfYear(),
+                        localToday.getDayOfMonth(),
+                        0, 0, 0, DateTimeZone.UTC);
+                if(!targetDateLocalUTC.isBefore(todayLocalUTC)){
+                    break;
+                }
             }
         }
 
