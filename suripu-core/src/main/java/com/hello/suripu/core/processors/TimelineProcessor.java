@@ -393,7 +393,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if(motionData.size() == 0){
             return false;
         }
-        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 3 * DateTimeConstants.MILLIS_PER_HOUR) {
+        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
             return false;
         }
 
