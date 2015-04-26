@@ -26,5 +26,5 @@ public class FeatureFlipper {
     public final static String PCH_SPECIAL_OTA = "pch_special_ota";
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
     public final static String SENSORS_DB_UNAVAILABLE = "sensors_db_unavailable";
-    public final static String COMMON_DB_UNAVAILABLE = "sensors_db_unavailable";
+    public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
 }
