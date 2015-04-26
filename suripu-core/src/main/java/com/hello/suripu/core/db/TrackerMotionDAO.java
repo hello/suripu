@@ -55,6 +55,13 @@ public abstract class TrackerMotionDAO {
                                                    @Bind("start_timestamp_local_utc") final DateTime startTimestampLocalUTC,
                                                    @Bind("end_timestamp_local_utc") final DateTime endTimestampLocalUTC);
 
+    @SqlQuery("SELECT COUNT(*) FROM tracker_motion_master WHERE " +
+            "account_id = :account_id AND local_utc_ts >= :start_timestamp_local_utc AND local_utc_ts <= :end_timestamp_local_utc;"
+    )
+    public abstract Integer getDataCountBetweenLocalUTC(@Bind("account_id") long accountId,
+                                                                    @Bind("start_timestamp_local_utc") final DateTime startTimestampLocalUTC,
+                                                                    @Bind("end_timestamp_local_utc") final DateTime endTimestampLocalUTC);
+
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
     @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime from tracker_motion_master WHERE tracker_id = :pill_id ORDER BY id DESC LIMIT 1;")
