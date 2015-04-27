@@ -96,7 +96,7 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(SenseDeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY id DESC LIMIT 1;")
+    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -244,7 +244,6 @@ public abstract class DeviceDataDAO {
         final int currentOffsetMillis = rows.get(0).offsetMillis;
         final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
         final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
-        final int minuteBucket = now.getMinuteOfHour() - remainder;
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
@@ -406,7 +405,6 @@ public abstract class DeviceDataDAO {
         final int currentOffsetMillis = rows.get(0).offsetMillis;
         final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
         final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
-        final int minuteBucket = now.getMinuteOfHour() - remainder;
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);

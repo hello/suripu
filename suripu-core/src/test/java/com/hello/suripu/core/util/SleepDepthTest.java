@@ -21,6 +21,7 @@ public class SleepDepthTest {
     public void testPercentagePositionSleepDepth(){
         final File csvFile = new File(FileUtils.getResourceFilePath("fixtures/algorithm/pill_data_12_06_2014_caroline.csv"));
 
+        final TimelineUtils timelineUtils = new TimelineUtils();
 
         try {
             final BufferedReader bufferedReader = new BufferedReader(new FileReader(csvFile));
@@ -42,7 +43,7 @@ public class SleepDepthTest {
             }
             bufferedReader.close();
 
-            final Map<Integer, Integer> valuePositions = TimelineUtils.constructValuePositionMap(trackerMotionList);
+            final Map<Integer, Integer> valuePositions = timelineUtils.constructValuePositionMap(trackerMotionList);
             assertThat(valuePositions.get(2940), is(100 - 89));
         }catch (Exception ex){
             ex.printStackTrace();
@@ -66,6 +67,8 @@ public class SleepDepthTest {
                     0,0L, 0L,0L));
         }
 
-        assertThat(TimelineUtils.getSleepDepth(70, TimelineUtils.constructValuePositionMap(trackerMotionList), 100), is(100-70));
+        final TimelineUtils timelineUtils = new TimelineUtils();
+
+        assertThat(timelineUtils.getSleepDepth(70, timelineUtils.constructValuePositionMap(trackerMotionList), 100), is(100-70));
     }
 }
