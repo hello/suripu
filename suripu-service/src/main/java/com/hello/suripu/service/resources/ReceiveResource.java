@@ -346,27 +346,7 @@ public class ReceiveResource extends BaseResource {
         }
 
         if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALLOW_RESPONSE_COMMANDS, deviceName, groups)) {
-            LOGGER.info("Response Commands Allowed for Device: {}", deviceName);
-            //Create a list of SyncResponse commands to be fetched from DynamoDB for a given device & firmware
-            final List<String> respCommandsToFetch = new ArrayList<>();
-            respCommandsToFetch.add("reset_to_factory_fw");
-
-            Map<String,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
-
-            if (!commandMap.isEmpty()) {
-                //Process and inject commands
-                for (Descriptors.FieldDescriptor desc : OutputProtos.SyncResponse.getDescriptor().getFields()) {
-                    final String cmdName = desc.getName();
-                    if (commandMap.containsKey(cmdName)) {
-                        final String cmdValue = commandMap.get(cmdName);
-                        switch(desc.getNumber()) {
-                            case OutputProtos.SyncResponse.RESET_TO_FACTORY_FW_FIELD_NUMBER:
-                                responseBuilder.setField(desc, Boolean.parseBoolean(cmdValue));
-                                break;
-                        }
-                    }
-                }
-            }
+            addCommandsToResponse(deviceName, firmwareVersion, responseBuilder);
         }
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
@@ -587,5 +567,29 @@ public class ReceiveResource extends BaseResource {
         }
         return keyStore.get(deviceId);
 
+    }
+
+    private void addCommandsToResponse(final String deviceName, final Integer firmwareVersion, final OutputProtos.SyncResponse.Builder responseBuilder) {
+
+        LOGGER.info("Response commands allowed for DeviceId: {}", deviceName);
+        //Create a list of SyncResponse commands to be fetched from DynamoDB for a given device & firmware
+        final List<String> respCommandsToFetch = new ArrayList<>();
+        respCommandsToFetch.add("reset_to_factory_fw");
+
+        Map<String,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
+
+        if (!commandMap.isEmpty()) {
+            //Process and inject commands
+            for (final String cmdName : respCommandsToFetch) {
+                if (commandMap.containsKey(cmdName)) {
+                    final String cmdValue = commandMap.get(cmdName);
+                    switch(cmdName) {
+                        case "reset_to_factory_fw":
+                            responseBuilder.setResetToFactoryFw(Boolean.parseBoolean(cmdValue));
+                            break;
+                    }
+                }
+            }
+        }
     }
 }

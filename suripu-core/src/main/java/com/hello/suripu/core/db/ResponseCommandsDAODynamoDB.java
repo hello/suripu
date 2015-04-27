@@ -20,6 +20,7 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.google.common.base.Joiner;
 import com.yammer.metrics.annotation.Timed;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -108,36 +109,39 @@ public class ResponseCommandsDAODynamoDB {
 
             if (updateResult.getAttributes() == null) {
                 LOGGER.debug("Update results null. Nothing removed.");
-            } else {
-                LOGGER.debug(updateResult.getAttributes().toString());
-                final Map<String, String> respCommandMap = new HashMap<>();
-                final Map<String, AttributeValue> updatedEntry = updateResult.getAttributes();
-                if(updatedEntry == null || updatedEntry.isEmpty()) {
-                    return Collections.EMPTY_MAP;
-                }
-
-                for(final String remCmd: commandsList){
-                    //Build response Command map
-                    if(!updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM().containsKey(remCmd)) {
-                        continue;
-                    }
-
-                    if (updatedEntry.containsKey(DEVICE_ID_ATTRIBUTE_NAME)
-                            && updatedEntry.containsKey(FW_VERSION_ATTRIBUTE_NAME)
-                            && updatedEntry.containsKey(COMMAND_ATTRIBUTE_NAME)
-                            && updatedEntry.containsKey(TIMESTAMP_ATTRIBUTE_NAME)) {
-
-                        final Integer itemFWVersion = Integer.parseInt(updatedEntry.get(FW_VERSION_ATTRIBUTE_NAME).getN());
-                        final Map<String, AttributeValue> itemCommand = updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM();
-                        final String itemCmdValue = itemCommand.get(remCmd).getS();
-
-                        if (itemFWVersion.equals(fwVersion)) {
-                            respCommandMap.put(remCmd, itemCmdValue);
-                        }
-                    }
-                }
-                return respCommandMap;
+                return Collections.EMPTY_MAP;
             }
+
+            final Map<String, String> respCommandMap = new HashMap<>();
+            final Map<String, AttributeValue> updatedEntry = updateResult.getAttributes();
+
+            if(updatedEntry == null || updatedEntry.isEmpty()) {
+                return Collections.EMPTY_MAP;
+            }
+
+            for(final String remCmd: commandsList){
+                //Build response Command map
+                if(!updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM().containsKey(remCmd)) {
+                    continue;
+                }
+
+                if (updatedEntry.containsKey(DEVICE_ID_ATTRIBUTE_NAME)
+                        && updatedEntry.containsKey(FW_VERSION_ATTRIBUTE_NAME)
+                        && updatedEntry.containsKey(COMMAND_ATTRIBUTE_NAME)
+                        && updatedEntry.containsKey(TIMESTAMP_ATTRIBUTE_NAME)) {
+
+                    final Integer itemFWVersion = Integer.parseInt(updatedEntry.get(FW_VERSION_ATTRIBUTE_NAME).getN());
+                    final Map<String, AttributeValue> itemCommand = updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM();
+                    final String itemCmdValue = itemCommand.get(remCmd).getS();
+
+                    if (itemFWVersion.equals(fwVersion)) {
+                        respCommandMap.put(remCmd, itemCmdValue);
+                    }
+                }
+            }
+
+            return respCommandMap;
+
         }   catch (Exception e) {
             LOGGER.debug(e.toString());
         }
