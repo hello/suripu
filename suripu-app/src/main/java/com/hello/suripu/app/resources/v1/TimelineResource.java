@@ -2,7 +2,6 @@ package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
@@ -29,7 +28,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -143,7 +141,7 @@ public class TimelineResource extends BaseResource {
             @PathParam("date") String date) {
         
 
-        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(UUID.randomUUID(),accessToken.accountId, date);
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(UUID.randomUUID(), accessToken.accountId, date);
 
         return result.timelines;
 
@@ -162,7 +160,7 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final TimelineResult result = getTimelinesFromCacheOrReprocess(UUID.randomUUID(),accountId.get(), date);
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(UUID.randomUUID(), accountId.get(), date);
 
         return result.timelines;
     }

@@ -244,7 +244,6 @@ public abstract class DeviceDataDAO {
         final int currentOffsetMillis = rows.get(0).offsetMillis;
         final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
         final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
-        final int minuteBucket = now.getMinuteOfHour() - remainder;
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
@@ -406,7 +405,6 @@ public abstract class DeviceDataDAO {
         final int currentOffsetMillis = rows.get(0).offsetMillis;
         final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
         final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
-        final int minuteBucket = now.getMinuteOfHour() - remainder;
         // if 4:36 -> bucket = 4:35
 
         final DateTime nowRounded = now.minusMinutes(remainder);
