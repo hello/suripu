@@ -105,22 +105,21 @@ public class ResponseCommandsDAODynamoDB {
                     .withReturnValues(ReturnValue.ALL_OLD);
 
             final UpdateItemResult updateResult = this.dynamoDBClient.updateItem(updateItemRequest);
+
             if (updateResult.getAttributes() == null) {
                 LOGGER.debug("Update results null. Nothing removed.");
             } else {
                 LOGGER.debug(updateResult.getAttributes().toString());
                 final Map<String, String> respCommandMap = new HashMap<>();
                 final Map<String, AttributeValue> updatedEntry = updateResult.getAttributes();
+                if(updatedEntry == null || updatedEntry.isEmpty()) {
+                    return Collections.EMPTY_MAP;
+                }
+
                 for(final String remCmd: commandsList){
-
                     //Build response Command map
-
                     if(!updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM().containsKey(remCmd)) {
                         continue;
-                    }
-
-                    if(updatedEntry == null || updatedEntry.isEmpty()) {
-                        return Collections.EMPTY_MAP;
                     }
 
                     if (updatedEntry.containsKey(DEVICE_ID_ATTRIBUTE_NAME)
@@ -128,11 +127,9 @@ public class ResponseCommandsDAODynamoDB {
                             && updatedEntry.containsKey(COMMAND_ATTRIBUTE_NAME)
                             && updatedEntry.containsKey(TIMESTAMP_ATTRIBUTE_NAME)) {
 
-                        final String itemDeviceId = updatedEntry.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
                         final Integer itemFWVersion = Integer.parseInt(updatedEntry.get(FW_VERSION_ATTRIBUTE_NAME).getN());
                         final Map<String, AttributeValue> itemCommand = updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM();
                         final String itemCmdValue = itemCommand.get(remCmd).getS();
-                        final DateTime itemEventTime = stringToDateTime(updatedEntry.get(TIMESTAMP_ATTRIBUTE_NAME).getS());
 
                         if (itemFWVersion.equals(fwVersion)) {
                             respCommandMap.put(remCmd, itemCmdValue);
