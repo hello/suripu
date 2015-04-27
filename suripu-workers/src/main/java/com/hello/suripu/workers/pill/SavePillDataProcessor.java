@@ -19,6 +19,8 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -27,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(SavePillDataProcessor.class);
@@ -38,6 +41,10 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final ActiveDevicesTracker activeDevicesTracker;
+
+
+    private final Meter messagesProcessed;
+    private final Meter batchSaved;
 
     public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO,
                                  final int batchSize,
@@ -53,6 +60,9 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.activeDevicesTracker = activeDevicesTracker;
+
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
     }
 
     @Override
@@ -133,6 +143,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         if (trackerData.size() > 0) {
             LOGGER.info("About to batch insert: {} tracker motion samples", trackerData.size());
             this.trackerMotionDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
+            batchSaved.mark(trackerData.size());
             LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
             try {
                 iRecordProcessorCheckpointer.checkpoint();
@@ -144,7 +155,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             }
         }
         activeDevicesTracker.trackPills(activePills);
-
+        messagesProcessed.mark(records.size());
     }
 
     @Override
