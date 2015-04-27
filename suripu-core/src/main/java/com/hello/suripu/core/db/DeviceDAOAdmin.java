@@ -19,12 +19,12 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
     @SqlQuery("SELECT id, pill_id, fw_version as firmware_version, battery_level, last_updated as last_seen, uptime FROM pill_status WHERE pill_id = :pill_id AND last_updated <= :end_ts ORDER BY id DESC LIMIT 168;")
-    ImmutableList<DeviceStatus> pillStatusBeforeTs(@Bind("pill_id") final Long pillId, @Bind("end_ts") final DateTime endTs);
+    public ImmutableList<DeviceStatus> pillStatusBeforeTs(@Bind("pill_id") final Long pillId, @Bind("end_ts") final DateTime endTs);
 
     @RegisterMapper(AccountMapper.class)
     @SingleValueResult(Account.class)
     @SqlQuery("SELECT * FROM account_device_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_name = :device_id LIMIT :max_devices;")
-    ImmutableList<Account> getAccountsBySenseId(
+    public ImmutableList<Account> getAccountsBySenseId(
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
     );
@@ -32,7 +32,7 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
     @RegisterMapper(AccountMapper.class)
     @SingleValueResult(Account.class)
     @SqlQuery("SELECT * FROM account_tracker_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_id = :device_id LIMIT :max_devices;")
-    ImmutableList<Account> getAccountsByPillId(
+    public ImmutableList<Account> getAccountsByPillId(
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
     );
@@ -40,5 +40,5 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
     @RegisterMapper(DeviceAccountPairMapper.class)
     @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id LIKE '%'||:pill_id||'%' ORDER BY id LIMIT 10;")
-    ImmutableList<DeviceAccountPair> getPillsByPillIdHint(@Bind("pill_id") final String pillId);
+    public ImmutableList<DeviceAccountPair> getPillsByPillIdHint(@Bind("pill_id") final String pillId);
 }
