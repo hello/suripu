@@ -65,4 +65,8 @@ public class Timeline {
     }
 
 
+    public static Timeline createEmpty(final String message) {
+        return new Timeline(0, message, "", Collections.EMPTY_LIST, Collections.EMPTY_LIST, null);
+    }
+
 }

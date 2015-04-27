@@ -32,6 +32,8 @@ public class AccountResources {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResources.class);
     private final AccountDAO accountDAO;
     private final PasswordResetDB passwordResetDB;
+    private final Integer DEFAULT_RECENT_USERS_LIMIT = 100;
+    private final Integer MAX_RECENT_USERS_LIMIT = 500;
 
     public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB) {
         this.accountDAO = accountDAO;
@@ -94,9 +96,12 @@ public class AccountResources {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/recent")
-    public List<Account> retrieveRecentlyCreatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken){
-        final List<Account> accounts = accountDAO.getRecent();
-        return accounts;
+    public List<Account> retrieveRecentlyCreatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                                         @QueryParam("limit") final Integer limit){
+        if (limit == null) {
+            return accountDAO.getRecent(DEFAULT_RECENT_USERS_LIMIT);
+        }
+        return accountDAO.getRecent(Math.min(limit, MAX_RECENT_USERS_LIMIT));
     }
 
 

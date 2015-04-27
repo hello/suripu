@@ -43,6 +43,7 @@ import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.VotingSleepEvents;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TimelineUtils timelineUtils;
 
     final private static int SLOT_DURATION_MINUTES = 1;
-    final private static int MININIMUM_NUMBER_OF_TRACKER_MOTIIONS = 20;
+    public final static int MIN_TRACKER_MOTION_COUNT = 20;
 
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";
@@ -181,11 +182,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     protected Optional<OneDaysSensorData> getSensorData(final long accountId, final DateTime targetDate, final DateTime endDate) {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
-
-        if(originalTrackerMotions.size() < MININIMUM_NUMBER_OF_TRACKER_MOTIIONS) {
-            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
-            return Optional.absent();
-        }
 
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
@@ -401,7 +397,23 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return timelines;
     }
 
+    /*
+    * Check if the motion span in a large enough time.
+     */
+    private boolean isValidNight(final Long accountId, final List<TrackerMotion> motionData){
+        if(!hasNewInvalidNightFilterEnabled(accountId)){
+            return motionData.size() >= MIN_TRACKER_MOTION_COUNT;
+        }
 
+        if(motionData.size() == 0){
+            return false;
+        }
+        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
+            return false;
+        }
+
+        return true;
+    }
 
     public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
         final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
@@ -423,6 +435,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
+        if(!isValidNight(accountId, sensorData.trackerMotions)){
+            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
         String algorithm = TimelineLog.NO_ALGORITHM;
         String version = TimelineLog.NO_VERSION;
 
