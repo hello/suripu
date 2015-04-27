@@ -332,7 +332,10 @@ public class DeviceResources {
         final List<DeviceAdmin> pills = new ArrayList<>();
 
         for (final DeviceAccountPair pillAccountPair: pillAccountPairs) {
-            final Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
+            Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
+            if (!pillStatusOptional.isPresent()){
+                pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
+            }
             pills.add(new DeviceAdmin(pillAccountPair, pillStatusOptional.orNull()));
         }
         return pills;
