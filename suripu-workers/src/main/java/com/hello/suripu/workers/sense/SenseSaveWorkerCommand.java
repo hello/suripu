@@ -79,9 +79,7 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
             final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
 
             final String env = (configuration.getDebug()) ? "dev" : "prod";
-            final String hostName = InetAddress.getLocalHost().getHostName();
-
-            final String prefix = String.format("%s.%s.%s", apiKey, env, hostName);
+            final String prefix = String.format("%s.%s.suripu-workers", apiKey, env);
 
             final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
             final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
