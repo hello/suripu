@@ -211,10 +211,25 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
+        AllSensorSampleList allSensorSampleList;
+        if (hasAllSensorQueryUseUTCTs(accountId)) {
+            // query dates in utc_ts (table has an index for this)
+            LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
 
-        final AllSensorSampleList allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
-                targetDate.getMillis(), endDate.getMillis(),
-                accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
+            final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
+            allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                    endDate.minusMillis(tzOffsetMillis).getMillis(),
+                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
+        } else {
+            // query dates are in local_utc_ts
+            LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
+
+            allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+                    targetDate.getMillis(),
+                    endDate.getMillis(),
+                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
+        }
 
         if (allSensorSampleList.isEmpty()) {
             LOGGER.debug("No sense sensor data ID for account_id = {} and day = {}", accountId, targetDate);

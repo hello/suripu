@@ -150,7 +150,7 @@ public class TimelineResource extends BaseResource {
             return timelines;
         }
 
-        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(UUID.randomUUID(),accessToken.accountId, date);
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(UUID.randomUUID(), accessToken.accountId, date);
 
         return result.timelines;
 
@@ -169,7 +169,7 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final TimelineResult result = getTimelinesFromCacheOrReprocess(UUID.randomUUID(),accountId.get(), date);
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(UUID.randomUUID(), accountId.get(), date);
 
         return result.timelines;
     }
