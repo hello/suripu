@@ -41,4 +41,11 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
     @SingleValueResult(DeviceAccountPair.class)
     @SqlQuery("SELECT * FROM account_tracker_map WHERE device_id LIKE '%'||:pill_id||'%' ORDER BY id LIMIT 10;")
     public ImmutableList<DeviceAccountPair> getPillsByPillIdHint(@Bind("pill_id") final String pillId);
+
+    @RegisterMapper(AccountMapper.class)
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM account_device_map AS s LEFT OUTER JOIN account_tracker_map AS p ON s.account_id = p.account_id LEFT OUTER JOIN accounts AS a ON s.account_id = a.id WHERE p.account_id IS NULL ORDER BY p.id DESC LIMIT :limit;")
+    public ImmutableList<Account> getAccountsWithSenseWithoutPill(
+            @Bind("limit") final Integer limit
+    );
 }
