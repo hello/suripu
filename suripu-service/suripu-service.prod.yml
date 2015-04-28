@@ -172,4 +172,4 @@ ota_history_db:
 resp_commands_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prodresponse_commands
+  table_name: prod_response_commands
