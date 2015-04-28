@@ -201,6 +201,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
+        if (trackerMotions.size() == 0) {
+            LOGGER.debug("No tracker motion data ID for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
         // get all sensor data, used for light and sound disturbances, and presleep-insights
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
