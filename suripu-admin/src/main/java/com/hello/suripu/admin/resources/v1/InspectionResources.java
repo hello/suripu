@@ -39,4 +39,30 @@ public class InspectionResources {
         }
         return deviceDAOAdmin.getAccountsWithSenseWithoutPill(Math.min(MAX_INSPECTED_POPULATION, limit));
     }
+
+
+    @GET
+    @Timed
+    @Path("/low_battery_pill")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ImmutableList<Account> getInactiveUsers(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                   @QueryParam("battery") final Integer battery,
+                                                   @QueryParam("limit") final Integer limit){
+        Integer criticalBatteryLevel;
+        if (battery == null) {
+            criticalBatteryLevel = DEFAULT_CRITICAL_BATTERY_LEVEL;
+        }
+        else {
+            criticalBatteryLevel = battery;
+        }
+        Integer inspectedPopulation;
+        if (limit == null) {
+            inspectedPopulation = DEFAULT_INSPECTED_POPULATION;
+        }
+        else {
+            inspectedPopulation = Math.min(MAX_INSPECTED_POPULATION, limit);
+        }
+        return deviceDAOAdmin.getAccountsWithLowPillBattery(criticalBatteryLevel, inspectedPopulation);
+    }
+
 }
