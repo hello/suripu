@@ -131,6 +131,14 @@ public class SuripuConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("resp_commands_db")
+    private DynamoDBConfiguration respCommandsDBConfiguration;
+    public DynamoDBConfiguration getResponseCommandsDBConfiguration(){
+        return this.respCommandsDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
 

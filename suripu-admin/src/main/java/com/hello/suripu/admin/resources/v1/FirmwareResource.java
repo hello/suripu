@@ -2,6 +2,7 @@ package com.hello.suripu.admin.resources.v1;
 
 import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.models.FirmwareCountInfo;
 import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.OTAHistory;
@@ -9,6 +10,8 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
+import java.util.HashMap;
+import javax.ws.rs.PUT;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +41,18 @@ public class FirmwareResource {
 
     private final FirmwareVersionMappingDAO firmwareVersionMappingDAO;
     private final OTAHistoryDAODynamoDB otaHistoryDAO;
+    private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
     private final JedisPool jedisPool;
     private static final String REDIS_SEEN_FIRMWARE_KEY = "firmwares_seen";
 
-    public FirmwareResource(final JedisPool jedisPool, final FirmwareVersionMappingDAO firmwareVersionMappingDAO, final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB) {
+    public FirmwareResource(final JedisPool jedisPool,
+                            final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
+                            final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB,
+                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
         this.jedisPool = jedisPool;
         this.firmwareVersionMappingDAO = firmwareVersionMappingDAO;
         this.otaHistoryDAO = otaHistoryDAODynamoDB;
+        this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
     }
 
     @GET
@@ -236,5 +244,27 @@ public class FirmwareResource {
         final List<OTAHistory> otaHistoryEntries = otaHistoryDAO.getOTAEvents(deviceId, rangeStartDate, rangeEndDate);
 
         return otaHistoryEntries;
+    }
+
+    @PUT
+    @Timed
+    @Path("/{device_id}/reset_to_factory_fw")
+    public void resetDeviceToFactoryFW(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                                    @PathParam("device_id") final String deviceId,
+                                                    @QueryParam("fw_version") final Integer fwVersion) {
+        if(deviceId == null) {
+            LOGGER.error("Missing device_id parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(fwVersion == null) {
+            LOGGER.error("Missing fw_version parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        LOGGER.info("Resetting to factory FW for device: {} on FW Version: {}", deviceId, fwVersion);
+        final Map<String, Object> issuedCommands = new HashMap<>();
+        issuedCommands.put("reset_to_factory_fw", true);
+        responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
     }
 }

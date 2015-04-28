@@ -35,6 +35,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.TeamStore;
@@ -183,6 +184,9 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final AmazonDynamoDB otaHistoryClient = dynamoDBClientFactory.getForEndpoint(configuration.getOTAHistoryDBConfiguration().getEndpoint());
         final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB = new OTAHistoryDAODynamoDB(otaHistoryClient, configuration.getOTAHistoryDBConfiguration().getTableName());
 
+        final AmazonDynamoDB respCommandsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getResponseCommandsDBConfiguration().getEndpoint());
+        final ResponseCommandsDAODynamoDB respCommandsDAODynamoDB = new ResponseCommandsDAODynamoDB(respCommandsDynamoDBClient, configuration.getResponseCommandsDBConfiguration().getTableName());
+
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO));
@@ -190,7 +194,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));
-        environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO, otaHistoryDAODynamoDB));
+        environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO, otaHistoryDAODynamoDB, respCommandsDAODynamoDB));
         environment.addResource(new EventsResources(senseEventsDAO));
 
     }

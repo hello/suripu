@@ -243,3 +243,8 @@ ota_history_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: ota_history
+
+resp_commands_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: response_commands

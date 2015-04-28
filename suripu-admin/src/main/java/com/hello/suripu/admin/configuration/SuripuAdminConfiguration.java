@@ -143,4 +143,12 @@ public class SuripuAdminConfiguration extends Configuration {
     public DynamoDBConfiguration getOTAHistoryDBConfiguration(){
         return this.otaHistoryDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("resp_commands_db")
+    private DynamoDBConfiguration respCommandsDBConfiguration;
+    public DynamoDBConfiguration getResponseCommandsDBConfiguration(){
+        return this.respCommandsDBConfiguration;
+    }
 }
