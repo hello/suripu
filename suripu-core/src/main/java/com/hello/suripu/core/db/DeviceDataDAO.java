@@ -114,6 +114,7 @@ public abstract class DeviceDataDAO {
 
 
 
+    @Deprecated
     @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
@@ -282,6 +283,7 @@ public abstract class DeviceDataDAO {
     }
 
     // used by timeline, query by local_utc_ts
+    @Deprecated
     @Timed
     public AllSensorSampleList generateTimeSeriesByLocalTimeAllSensors(
             final Long queryStartTimestampInLocalUTC,
