@@ -23,7 +23,9 @@ import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PillRegistration;
+import com.hello.suripu.core.models.ProvisionRequest;
 import com.hello.suripu.core.models.SenseRegistration;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -39,6 +41,7 @@ import redis.clients.jedis.JedisPool;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -239,46 +242,79 @@ public class DeviceResources {
     @Path("/register/sense")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void registerSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final SenseRegistration senseRegistration) {
+    public void registerSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                              @Valid final SenseRegistration senseRegistration) {
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, senseRegistration.email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Account %s not found", senseRegistration.email))).build());
+        }
+        final Long accountId = accountIdOptional.get();
+
+
         try {
-            final Long senseInternalId = deviceDAO.registerSense(accessToken.accountId, senseRegistration.senseId);
-            LOGGER.info("Account {} registered sense {} with internal id = {}", accessToken.accountId, senseRegistration.senseId, senseInternalId);
-            return;
+            final Long senseInternalId = deviceDAO.registerSense(accountId, senseRegistration.senseId);
+            LOGGER.info("Account {} registered sense {} with internal id = {}", accountId, senseRegistration.senseId, senseInternalId);
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
             if(matcher.find()) {
-                LOGGER.error("Failed to register sense for account id = {} and sense id = {} : {}", accessToken.accountId, senseRegistration.senseId, exception.getMessage());
+                LOGGER.error("Failed to register sense for account id = {} and sense id = {} : {}", accountId, senseRegistration.senseId, exception.getMessage());
                 throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                         .entity(new JsonError(409, "Sense already exists for this account.")).build());
             }
         }
 
+        final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(accountId);
+
+        for (final DeviceAccountPair deviceAccountPair:deviceAccountMap) {
+            try {
+                this.mergedUserInfoDynamoDB.setTimeZone(deviceAccountPair.externalDeviceId, accountId, DateTimeZone.forID(senseRegistration.timezone));
+            } catch (AmazonServiceException awsException) {
+                LOGGER.error("Aws failed when account {} tries to set timezone.", accountId);
+                throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(new JsonError(500, "Failed to set timezone")).build());
+            } catch (IllegalArgumentException illegalArgumentException) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(400, "Unrecognized timezone")).build());
+            }
+        }
     }
 
     @POST
     @Path("/register/pill")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final PillRegistration pillRegistration) {
-        try {
-            final Long trackerId = deviceDAO.registerPill(accessToken.accountId, pillRegistration.pillId);
-            LOGGER.info("Account {} registered pill {} with internal id = {}", accessToken.accountId, pillRegistration.pillId, trackerId);
+    public void registerPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                             @Valid final PillRegistration pillRegistration) {
 
-            final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accessToken.accountId);
-            if(sensePairedWithAccount.size() == 0){
-                LOGGER.error("No sense paired with account {}", accessToken.accountId);
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, pillRegistration.email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Account %s not found", pillRegistration.email))).build());
+        }
+        final Long accountId = accountIdOptional.get();
+
+        try {
+            final Long trackerId = deviceDAO.registerPill(accountId, pillRegistration.pillId);
+            LOGGER.info("Account {} registered pill {} with internal id = {}", accountId, pillRegistration.pillId, trackerId);
+
+            final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accountId);
+            if(sensePairedWithAccount.isEmpty()){
+                LOGGER.error("No sense paired with account {}", accountId);
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(400, String.format("Registered pill %s but no sense has been paired to account %s", pillRegistration.pillId, pillRegistration.email))).build());
             }
 
             final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
-            this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accessToken.accountId, pillRegistration.pillId);
+            this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accountId, pillRegistration.pillId);
 
             return;
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
 
             if(matcher.find()) {
-                LOGGER.error("Failed to register pill for account id = {} and pill id = {} : {}", accessToken.accountId, pillRegistration.pillId, exception.getMessage());
+                LOGGER.error("Failed to register pill for account id = {} and pill id = {} : {}", accountId, pillRegistration.pillId, exception.getMessage());
                 throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                         .entity(new JsonError(409, "Pill already exists for this account.")).build());
             }
@@ -289,6 +325,117 @@ public class DeviceResources {
         throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
 
+
+    @DELETE
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sense/{email}/{sense_id}")
+    public void unregisterSenseByUser(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                      @PathParam("email") final String email,
+                                      @PathParam("sense_id") final String senseId) {
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Account %s not found", email))).build());
+        }
+        final Long accountId = accountIdOptional.get();
+        final List<UserInfo> pairedUsers = mergedUserInfoDynamoDB.getInfo(senseId);
+
+        if (pairedUsers.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(400, String.format("Sense %s has not been paired to any account", senseId))).build());
+        }
+
+        final List<Long> pairedAccountIdList = new ArrayList<>();
+        for (final UserInfo pairUser: pairedUsers) {
+            pairedAccountIdList.add(pairUser.accountId);
+        }
+
+        if (!pairedAccountIdList.contains(accountId)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(400, String.format("Sense %s has not been paired to %s", senseId, email))).build());
+        }
+
+
+//            this.deviceDAO.inTransaction(TransactionIsolationLevel.SERIALIZABLE, new Transaction<Void, DeviceDAO>() {
+//                @Override
+//                public Void inTransaction(final DeviceDAO transactional, final TransactionStatus status) throws Exception {
+//                    final Integer pillDeleted = transactional.deletePillPairingByAccount(accountId);
+//                    LOGGER.info("Factory reset delete {} Pills linked to account {}", pillDeleted, accountId);
+//
+//                    final Integer accountUnlinked = transactional.unlinkAllAccountsPairedToSense(senseId);
+//                    LOGGER.info("Factory reset delete {} accounts linked to Sense {}", accountUnlinked, accountId);
+//
+//                    try {
+//                        mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
+//                    } catch (AmazonServiceException awsEx) {
+//                        LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
+//                                accountId,
+//                                senseId,
+//                                awsEx.getErrorMessage());
+//                    }
+//
+//                    return null;
+//                }
+//            });
+
+        try {
+            deviceDAO.unlinkAllAccountsPairedToSense(senseId);
+            mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
+        }
+        catch (AmazonServiceException awsEx) {
+            LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
+                    accountId,
+                    senseId,
+                    awsEx.getErrorMessage());
+        }catch (UnableToExecuteStatementException sqlExp){
+            LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @DELETE
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/pill/{email}/{pill_id}")
+    public void unregisterPill(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                               @PathParam("email") final String email,
+                               @PathParam("pill_id") String externalPillId) {
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Account %s not found", email))).build());
+        }
+        final Long accountId = accountIdOptional.get();
+
+        final Integer numRows = deviceDAO.deletePillPairing(externalPillId, accountId);
+        if(numRows == 0) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, String.format("Did not find active pill %s to unregister for %s", externalPillId, email))).build());
+        }
+
+        final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accountId);
+        if(sensePairedWithAccount.size() == 0){
+            LOGGER.error("No sense paired with account {}", accountId);
+            return;
+        }
+
+        final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
+
+        try {
+            this.mergedUserInfoDynamoDB.deletePillColor(senseId, accountId, externalPillId);
+        }catch (Exception ex){
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404,
+                            String.format("Failed to delete pill %s color from user info table for sense %s and account %s because %s",
+                                    externalPillId, senseId, accountId, ex.getMessage()))).build());
+        }
+    }
+    
+    
     @GET
     @Timed
     @Path("/key_store_hints/sense/{sense_id}")
@@ -313,6 +460,35 @@ public class DeviceResources {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("This pill has not been properly provisioned!").build());
         }
         return pillKeyStoreRecord.get();
+    }
+
+    @POST
+    @Path("/provision/sense")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+
+    public void senseProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final ProvisionRequest provisionRequest) {
+        senseKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
+    }
+
+    @POST
+    @Path("/provision/pill")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+
+    public void pillProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final ProvisionRequest provisionRequest) {
+        pillKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
+    }
+
+    @POST
+    @Path("/provision/batch_pills")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+
+    public void batchPillsProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final List<ProvisionRequest> provisionRequests) {
+        for (final ProvisionRequest provisionRequest : provisionRequests) {
+            pillKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
+        }
     }
 
     // Helpers
