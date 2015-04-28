@@ -48,4 +48,12 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
     public ImmutableList<Account> getAccountsWithSenseWithoutPill(
             @Bind("limit") final Integer limit
     );
+
+    @RegisterMapper(AccountMapper.class)
+    @SingleValueResult(Account.class)
+    @SqlQuery("SELECT * FROM accounts WHERE id IN (SELECT account_id FROM account_tracker_map WHERE id IN (SELECT ps2.pill_id FROM pill_status ps1 INNER JOIN (SELECT pill_id, MAX(last_updated) AS max_last_updated FROM pill_status WHERE battery_level < :critical_battery_level GROUP BY pill_id) ps2 ON ps1.pill_id = ps2.pill_id AND ps2.max_last_updated = ps1.last_updated)) LIMIT :limit;")
+    ImmutableList<Account> getAccountsWithLowPillBattery(
+            @Bind("critical_battery_level") final Integer criticalBatteryLevel,
+            @Bind("limit") final Integer limit
+    );
 }
