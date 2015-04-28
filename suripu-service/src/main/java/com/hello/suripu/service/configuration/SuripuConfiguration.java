@@ -123,6 +123,22 @@ public class SuripuConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("ota_history_db")
+    private DynamoDBConfiguration otaHistoryDBConfiguration;
+    public DynamoDBConfiguration getOTAHistoryDBConfiguration(){
+        return this.otaHistoryDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("resp_commands_db")
+    private DynamoDBConfiguration respCommandsDBConfiguration;
+    public DynamoDBConfiguration getResponseCommandsDBConfiguration(){
+        return this.respCommandsDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
 

@@ -23,6 +23,8 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -134,6 +136,14 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient,
                 configuration.getRingTimeHistoryDBConfiguration().getTableName());
 
+        final AmazonDynamoDBClientFactory otaHistoryDynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB otaHistoryDynamoDBClient = otaHistoryDynamoDBFactory.getForEndpoint(configuration.getOTAHistoryDBConfiguration().getEndpoint());
+        final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB = new OTAHistoryDAODynamoDB(otaHistoryDynamoDBClient, configuration.getOTAHistoryDBConfiguration().getTableName());
+
+        final AmazonDynamoDBClientFactory respCommandsDynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB respCommandsDynamoDBClient = respCommandsDynamoDBFactory.getForEndpoint(configuration.getResponseCommandsDBConfiguration().getEndpoint());
+        final ResponseCommandsDAODynamoDB respCommandsDAODynamoDB = new ResponseCommandsDAODynamoDB(respCommandsDynamoDBClient, configuration.getResponseCommandsDBConfiguration().getTableName());
+
         // This is used to sign S3 urls with a shorter signature
         final AWSCredentials s3credentials = new AWSCredentials() {
             @Override
@@ -192,7 +202,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         }
 
         final FirmwareUpdateStore firmwareUpdateStore = FirmwareUpdateStore.create(
-                firmwareUpdateDAO, 
+                otaHistoryDAODynamoDB,
                 s3Client,
                 "hello-firmware",
                 amazonS3UrlSigner,
@@ -221,7 +231,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 firmwareUpdateStore,
                 groupFlipper,
                 configuration.getSenseUploadConfiguration(),
-                configuration.getOTAConfiguration()
+                configuration.getOTAConfiguration(),
+                respCommandsDAODynamoDB
         );
 
 

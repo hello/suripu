@@ -1,6 +1,7 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -11,6 +12,7 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.FeatureFlipper;
@@ -32,6 +34,7 @@ import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
+import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -76,6 +79,7 @@ public class ReceiveResource extends BaseResource {
     private final GroupFlipper groupFlipper;
     private final SenseUploadConfiguration senseUploadConfiguration;
     private final OTAConfiguration otaConfiguration;
+    private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
 
     @Context
     HttpServletRequest request;
@@ -88,7 +92,8 @@ public class ReceiveResource extends BaseResource {
                            final FirmwareUpdateStore firmwareUpdateStore,
                            final GroupFlipper groupFlipper,
                            final SenseUploadConfiguration senseUploadConfiguration,
-                           final OTAConfiguration otaConfiguration) {
+                           final OTAConfiguration otaConfiguration,
+                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
 
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
@@ -102,6 +107,7 @@ public class ReceiveResource extends BaseResource {
         this.groupFlipper = groupFlipper;
         this.senseUploadConfiguration = senseUploadConfiguration;
         this.otaConfiguration = otaConfiguration;
+        this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
     }
 
 
@@ -339,6 +345,9 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
+        if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALLOW_RESPONSE_COMMANDS, deviceName, groups)) {
+            addCommandsToResponse(deviceName, firmwareVersion, responseBuilder);
+        }
 
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
 
@@ -504,7 +513,7 @@ public class ReceiveResource extends BaseResource {
 
         if(pchOTA) {
             LOGGER.debug("PCH Special OTA for device: {}", deviceID);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
+            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
             LOGGER.info("{} files added to syncResponse for PCH Special OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
             return fileDownloadList;
         }
@@ -515,7 +524,7 @@ public class ReceiveResource extends BaseResource {
             if (!deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
                 LOGGER.info("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion, false);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
                 LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
@@ -531,13 +540,13 @@ public class ReceiveResource extends BaseResource {
             if (!deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(updateGroup, currentFirmwareVersion, false);//TODO: Create a better way of knowing which group the device will belong to
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);//TODO: Create a better way of knowing which group the device will belong to
                 LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
                 return fileDownloadList;
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
                     LOGGER.debug("Feature 'release' is active for device: {}", deviceID);
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, false);
+                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, false);
                     LOGGER.info("{} files added to syncResponse for OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
                     return fileDownloadList;
                 }
@@ -558,5 +567,29 @@ public class ReceiveResource extends BaseResource {
         }
         return keyStore.get(deviceId);
 
+    }
+
+    private void addCommandsToResponse(final String deviceName, final Integer firmwareVersion, final OutputProtos.SyncResponse.Builder responseBuilder) {
+
+        LOGGER.info("Response commands allowed for DeviceId: {}", deviceName);
+        //Create a list of SyncResponse commands to be fetched from DynamoDB for a given device & firmware
+        final List<String> respCommandsToFetch = new ArrayList<>();
+        respCommandsToFetch.add("reset_to_factory_fw");
+
+        Map<String,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
+
+        if (!commandMap.isEmpty()) {
+            //Process and inject commands
+            for (final String cmdName : respCommandsToFetch) {
+                if (commandMap.containsKey(cmdName)) {
+                    final String cmdValue = commandMap.get(cmdName);
+                    switch(cmdName) {
+                        case "reset_to_factory_fw":
+                            responseBuilder.setResetToFactoryFw(Boolean.parseBoolean(cmdValue));
+                            break;
+                    }
+                }
+            }
+        }
     }
 }

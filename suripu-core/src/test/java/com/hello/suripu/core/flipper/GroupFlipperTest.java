@@ -45,4 +45,17 @@ public class GroupFlipperTest {
     }
 
 
+    @Test
+    public void testPercentage() {
+        final List<Long> accountIds = Lists.newArrayList(1000L, 1001L, 1002L, 1003L, 1004L, 1005L, 1006L, 1007L, 1008L, 1009L);
+        final Integer percentage = 40;
+        final List<Long> correctIds = new ArrayList<>();
+        for (final Long hashId : accountIds) {
+            if (hashId % 10 < percentage / 10) {
+                correctIds.add(hashId);
+            }
+        }
+        assertThat(correctIds.size(), is(percentage/10));
+
+    }
 }

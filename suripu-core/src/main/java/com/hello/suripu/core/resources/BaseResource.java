@@ -81,4 +81,9 @@ public class BaseResource {
         return ipAddresses[0]; // always return first one?
     }
 
+
+    protected Boolean isSensorsDBUnavailable(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSORS_DB_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
+    }
+
 }

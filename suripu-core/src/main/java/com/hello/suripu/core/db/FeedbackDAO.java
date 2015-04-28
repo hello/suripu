@@ -28,6 +28,7 @@ public abstract class FeedbackDAO {
     /* if old times match, update the new time.   */
     @SqlUpdate("UPDATE timeline_feedback SET new_time=:new_time,created=now() WHERE account_id=:account_id AND date_of_night=:date_of_night AND event_type=:event_type AND old_time=:old_time")
     public abstract int updateDuplicate(@Bind("account_id") final Long accountId,@BindTimelineFeedback final TimelineFeedback timelineFeedback);
+
     @SqlUpdate("INSERT INTO timeline_feedback (account_id, date_of_night, old_time, new_time, event_type, created) VALUES(:account_id, :date_of_night, :old_time, :new_time, :event_type, now())")
     public abstract void insertNewTimelineFeedback(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
@@ -60,9 +61,13 @@ public abstract class FeedbackDAO {
 
     }
 
-    @SqlQuery("SELECT * FROM timeline_feedback where account_id = :account_id AND date_of_night = :date_of_night order by created")
+    @SqlQuery("SELECT * FROM timeline_feedback WHERE account_id = :account_id AND date_of_night = :date_of_night order by created")
     public abstract ImmutableList<TimelineFeedback> getForNight(@Bind("account_id") final Long accountId, @Bind("date_of_night") final DateTime dateOfNight);
     
+    @SqlQuery("SELECT * FROM timeline_feedback WHERE date_of_night >= :tstartUTC and date_of_night < :tstopUTC")
+    public abstract ImmutableList<TimelineFeedback> getForTimeRange(@Bind("start_time") final Long tstartUTC, @Bind("stop_time") final Long tstopUTC);
+
+
     @SqlQuery("SELECT * FROM timeline_feedback where account_id = :account_id")
     public abstract ImmutableList<TimelineFeedback> getForAccount(@Bind("account_id") final Long accountId);
 }
