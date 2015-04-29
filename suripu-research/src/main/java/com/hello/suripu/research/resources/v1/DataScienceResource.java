@@ -339,7 +339,7 @@ public class DataScienceResource extends BaseResource {
 
                     //is existing entry older than the proposed entry?
                     if (entry.createdDate < log.createdDate) {
-                        LOGGER.debug("skipping {} {} {} {} {} because it's created date is older",accountId,targetDate,log.algorithm,log.version,log.createdDate);
+                        //LOGGER.debug("skipping {} {} {} {} {} because its created date is older",accountId,targetDate,log.algorithm,log.version,log.createdDate);
                         continue;
                     }
                 }
