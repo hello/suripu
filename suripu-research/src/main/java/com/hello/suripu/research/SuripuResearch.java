@@ -24,6 +24,8 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimelineLogDAO;
+import com.hello.suripu.core.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -156,6 +158,11 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
                 configuration.getSleepStatsDynamoConfiguration().getTableName(),
                 configuration.getSleepStatsVersion());
 
+        /*  Timeline Log dynamo dB stuff */
+        final String timelineLogTableName =   configuration.getTimelineLogDBConfiguration().getTableName();
+        final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
+        final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
+
         final RolloutResearchModule module = new RolloutResearchModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
@@ -169,7 +176,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         environment.getJerseyResourceConfig()
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
-                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO));
+                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO,timelineLogDAO));
 
 
 

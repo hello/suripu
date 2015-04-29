@@ -108,5 +108,13 @@ public class SuripuResearchConfiguration extends Configuration {
         return this.sleepStatsVersion;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_log_db")
+    private DynamoDBConfiguration timelineLogDBConfiguration;
+    public DynamoDBConfiguration getTimelineLogDBConfiguration(){
+        return this.timelineLogDBConfiguration;
+    }
+
 
 }
