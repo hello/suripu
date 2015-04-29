@@ -13,12 +13,21 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.google.common.util.concurrent.RateLimiter;
+import com.hello.suripu.core.models.RingTime;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,6 +55,80 @@ public class SmartAlarmLoggerDynamoDB {
     public SmartAlarmLoggerDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
+    }
+
+    public List<Map.Entry<Long, RingTime>> scanSmartRingTimesTooCloseToExpected(){
+        final List<Map.Entry<Long, RingTime>> nonSmartRings = new ArrayList<>();
+
+        final RateLimiter rateLimiter = RateLimiter.create(10.0);
+
+        // Track how much throughput we consume on each page
+        int permitsToConsume = 1;
+        Map<String, AttributeValue> exclusiveStartKey = null;
+
+        int total = 0;
+        LOGGER.info(",account,smart,expected,last_cycle,diff,fixable");
+        do {
+            rateLimiter.acquire(permitsToConsume);
+            final ScanRequest scan = new ScanRequest()
+                    .withTableName(this.tableName)
+                    .withLimit(100)
+                    .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                    .withExclusiveStartKey(exclusiveStartKey);
+            final ScanResult result = this.dynamoDBClient.scan(scan);
+            exclusiveStartKey = result.getLastEvaluatedKey();
+
+            // Account for the rest of the throughput we consumed,
+            // now that we know how much that scan request cost
+            double consumedCapacity = result.getConsumedCapacity().getCapacityUnits();
+            permitsToConsume = (int)(consumedCapacity - 1.0);
+            if(permitsToConsume <= 0) {
+                permitsToConsume = 1;
+            }
+
+            total += result.getItems().size();
+
+            // Process results here
+            nonSmartRings.addAll(getNonSmartAlarmResult(result));
+
+        } while (exclusiveStartKey  != null);
+
+        LOGGER.info("Scanned {} items, {} are within 5 minutes of expected ring time.", total, nonSmartRings.size());
+        return nonSmartRings;
+    }
+
+    private List<Map.Entry<Long, RingTime>> getNonSmartAlarmResult(final ScanResult scanResult){
+        final List<Map.Entry<Long, RingTime>> result = new ArrayList<>();
+
+        final List<Map<String, AttributeValue>> items = scanResult.getItems();
+
+        for(final Map<String, AttributeValue> row:items){
+            final String smartRingTimeString = row.get(SMART_RING_TIME_ATTRIBUTE_NAME).getS();
+            final String expectedRingTimeString = row.get(EXPECTED_RING_TIME_ATTRIBUTE_NAME).getS();
+            if(smartRingTimeString == null || expectedRingTimeString == null){
+                LOGGER.error("invalid row, missing smart ring time or expected ring time");
+                continue;
+            }
+            final DateTime expectedRingTime = DateTime.parse(expectedRingTimeString, DateTimeFormat.forPattern(DATETIME_FORMAT));
+            final DateTime smartRingTime = DateTime.parse(smartRingTimeString, DateTimeFormat.forPattern(DATETIME_FORMAT));
+            final Long accountId = Long.valueOf(row.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
+            if(expectedRingTime.minusMinutes(5).isBefore(smartRingTime)){
+
+                final RingTime ringTime  = new RingTime(smartRingTime.getMillis(), expectedRingTime.getMillis(), new long[0], true);
+
+                final AbstractMap.SimpleEntry entry = new AbstractMap.SimpleEntry(accountId, ringTime);
+                result.add(entry);
+
+            }
+
+            final double diffInMinute = (expectedRingTime.getMillis() - smartRingTime.getMillis()) / 1000 / 60d;
+            LOGGER.info(",{},{},{},{},{},{}", accountId,
+                    smartRingTimeString, expectedRingTimeString, row.get(LAST_SLEEP_CYCLE_ATTRIBUTE_NAME).getS(),
+                    diffInMinute,
+                    diffInMinute < 5 ? true : false);
+        }
+
+        return result;
     }
 
     public void log(final Long accountId, final DateTime lastSleepCycleEnd, final DateTime now,
