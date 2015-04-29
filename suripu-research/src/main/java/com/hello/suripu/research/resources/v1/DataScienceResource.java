@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.models.Account;
@@ -18,18 +19,21 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TimelineFeedback;
+import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.NamedSleepHmmModel;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmSensorDataBinning;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.research.models.BinnedSensorData;
+import com.hello.suripu.research.models.MatchedFeedback;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -49,8 +53,10 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -65,19 +71,22 @@ public class DataScienceResource extends BaseResource {
     private final DeviceDAO deviceDAO;
     private final FeedbackDAO feedbackDAO;
     private final UserLabelDAO userLabelDAO;
+    private final TimelineLogDAO timelineLogDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
                                final DeviceDataDAO deviceDataDAO,
                                final DeviceDAO deviceDAO,
                                final UserLabelDAO userLabelDAO,
-                               final FeedbackDAO feedbackDAO) {
+                               final FeedbackDAO feedbackDAO,
+                               final TimelineLogDAO timelineLogDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.userLabelDAO = userLabelDAO;
         this.feedbackDAO = feedbackDAO;
+        this.timelineLogDAO = timelineLogDAO;
     }
 
     @GET
@@ -267,8 +276,125 @@ public class DataScienceResource extends BaseResource {
         return feedback;
     }
 
+    @GET
+    @Path("/matchedfeedback")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ImmutableList<MatchedFeedback> getAllMatchedFeedbackData(@Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                                                  @QueryParam("from_ts_utc")final Long fromTimestamp,
+                                                                  @DefaultValue("3") @QueryParam("num_days")final  Integer numDays
+    ) {
 
 
+        List<MatchedFeedback> results = new ArrayList<>();
+
+        //day--should be something like 00:00 of evening of interest in UTC
+        final DateTime startTs = new DateTime(fromTimestamp, DateTimeZone.UTC);
+        final DateTime endTs = startTs.plusDays(numDays).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
+
+        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForTimeRange(startTs, endTs);
+
+        //get unique account Ids that provided feedback in date range
+        final Set<Long> accountIds = new HashSet<>();
+
+        for (final TimelineFeedback feedback : feedbacks) {
+
+            if (!feedback.accountId.isPresent()) {
+                continue;
+            }
+
+            accountIds.add(feedback.accountId.get());
+        }
+
+        LOGGER.info("Found {} accounts that provided {} items of feedback between {} and {}",accountIds.size(),feedbacks.size(),startTs,endTs);
+
+        final Map<Long,Map<Long,TimelineLog>> logByAccountIdThenDate = new HashMap<>();
+
+        //EXPENSIVE!  go through each account Id and retrieve for date range
+
+        for (final Long accountId : accountIds) {
+            final ImmutableList<TimelineLog> logs = timelineLogDAO.getLogsForUserAndDay(accountId, startTs, Optional.of(numDays));
+
+           // for (final TimelineLog log : logs) {
+           //     LOGGER.debug("timeline log {} -- {} -- {}", accountId, log.algorithm, new DateTime(log.targetDate).withZone(DateTimeZone.UTC).withTimeAtStartOfDay());
+           // }
+
+                //populate map of accountid, then date, then alg
+            for (final TimelineLog log : logs) {
+
+                final DateTime targetDateTime = new DateTime(log.targetDate).withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+                final Long targetDate = targetDateTime.getMillis();
+
+                if (!logByAccountIdThenDate.containsKey(accountId)) {
+                    logByAccountIdThenDate.put(accountId, new HashMap<Long, TimelineLog>());
+                }
+
+
+                final Map<Long,TimelineLog> entryForThisAccount = logByAccountIdThenDate.get(accountId);
+
+                //if you find multiple logs for the same target date, take the one with the oldest created date
+                //this should protect us against changing algorithms
+                if (entryForThisAccount.containsKey(targetDate)) {
+                    final TimelineLog entry = entryForThisAccount.get(targetDate);
+
+                    //is existing entry older than the proposed entry?
+                    if (entry.createdDate < log.createdDate) {
+                        //LOGGER.debug("skipping {} {} {} {} {} because its created date is older",accountId,targetDate,log.algorithm,log.version,log.createdDate);
+                        continue;
+                    }
+                }
+
+                //LOGGER.debug("putting {} {} {}",accountId,targetDate,log.algorithm);
+                entryForThisAccount.put(targetDate, log);
+
+                //put back into the map
+                logByAccountIdThenDate.put(accountId,entryForThisAccount);
+
+            }
+
+        }
+
+        LOGGER.info("{} of {} accounts had logs between {} and {}",logByAccountIdThenDate.size(),accountIds.size(),startTs,endTs);
+
+        //go through feedbacks and figure out which algorithm they came from
+        for (final TimelineFeedback feedback : feedbacks) {
+            if (!feedback.accountId.isPresent()) {
+                continue;
+            }
+
+
+            final Long accountId = feedback.accountId.get();
+            final Long date = feedback.dateOfNight.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis();
+
+           // LOGGER.debug("feedback {} -- {}",accountId,new DateTime(date).withZone(DateTimeZone.UTC).withTimeAtStartOfDay());
+
+            final Map<Long,TimelineLog> entryForThisAccount = logByAccountIdThenDate.get(accountId);
+
+            if (entryForThisAccount == null) {
+                continue;
+            }
+
+            if (entryForThisAccount.containsKey(date)) {
+                final TimelineLog log = entryForThisAccount.get(date);
+
+
+                final Optional<DateTime> oldTime = FeedbackUtils.convertFeedbackToDateTimeByOldTime(feedback, 0);
+                final Optional<DateTime> newTime = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback, 0);
+
+                if (oldTime.isPresent() && newTime.isPresent()) {
+                    //populate the results
+                    Integer delta = (int) (newTime.get().getMillis() - oldTime.get().getMillis());
+                    results.add(new MatchedFeedback(accountId,date,feedback.eventType.toString(),delta,log.algorithm,log.version));
+                }
+
+            }
+
+        }
+
+        LOGGER.info("returning {} results",results.size());
+        return ImmutableList.copyOf(results);
+
+    }
 
     @GET
     @Path("/label/{email}/{night}")
