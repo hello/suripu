@@ -73,6 +73,8 @@ public class PredictionResource extends BaseResource {
     private final DeviceDAO deviceDAO;
     private final UserLabelDAO userLabelDAO;
     private final SleepHmmDAO sleepHmmDAO;
+    private final TimelineProcessor timelineProcessor;
+    private final TimelineUtils timelineUtils;
 
 
     public PredictionResource(final AccountDAO accountDAO,
@@ -80,7 +82,8 @@ public class PredictionResource extends BaseResource {
                               final DeviceDataDAO deviceDataDAO,
                               final DeviceDAO deviceDAO,
                               final UserLabelDAO userLabelDAO,
-                              final SleepHmmDAO sleepHmmDAO) {
+                              final SleepHmmDAO sleepHmmDAO,
+                              final TimelineProcessor timelineProcessor) {
 
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
@@ -88,6 +91,8 @@ public class PredictionResource extends BaseResource {
         this.deviceDAO = deviceDAO;
         this.userLabelDAO = userLabelDAO;
         this.sleepHmmDAO = sleepHmmDAO;
+        this.timelineProcessor = timelineProcessor;
+        this.timelineUtils = new TimelineUtils();
     }
 
 
@@ -136,7 +141,8 @@ public class PredictionResource extends BaseResource {
                                             final AllSensorSampleList allSensorSampleList,
                                             final List<TrackerMotion> myMotion) {
 
-        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = TimelineProcessor.fromAlgorithm(targetDate, myMotion,
+
+        SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = timelineProcessor.fromAlgorithm(targetDate, myMotion,
                 allSensorSampleList.get(Sensor.LIGHT),
                 allSensorSampleList.get(Sensor.WAVE_COUNT));
 
@@ -157,11 +163,11 @@ public class PredictionResource extends BaseResource {
     private List<Event> getVotingEvents(final AllSensorSampleList allSensorSampleList,
                                         final List<TrackerMotion> trackerMotions) {
         // compute lights-out and sound-disturbance events
-        final Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+        final Optional<DateTime> wakeUpWaveTimeOptional = timelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
                 trackerMotions.get(trackerMotions.size() - 1).timestamp,
                 allSensorSampleList.get(Sensor.WAVE_COUNT));
 
-        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(allSensorSampleList.get(Sensor.LIGHT));
+        final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(allSensorSampleList.get(Sensor.LIGHT));
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
