@@ -117,7 +117,11 @@ public class SmartAlarmLoggerDynamoDB {
                 final RingTime ringTime  = new RingTime(smartRingTime.getMillis(), expectedRingTime.getMillis(), new long[0], true);
 
                 final AbstractMap.SimpleEntry entry = new AbstractMap.SimpleEntry(accountId, ringTime);
-                result.add(entry);
+                if(result.size() > 0 && result.get(result.size() - 1).getValue().expectedRingTimeUTC == expectedRingTime.getMillis()) {
+                    result.set(result.size() - 1, entry);
+                }else{
+                    result.add(entry);
+                }
 
             }
 
