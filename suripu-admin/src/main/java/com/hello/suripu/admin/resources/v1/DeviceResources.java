@@ -219,14 +219,9 @@ public class DeviceResources {
                                                 @QueryParam("after") final Long afterTimestamp,
                                                 @QueryParam("before") final Long beforeTimestamp,
                                                 @QueryParam("limit") final Integer limit) {
-        InactiveDevicesPaginator redisPaginator;
-        if (limit == null) {
-            redisPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY);
-        }
-        else {
-            redisPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, limit);
-        }
-        return redisPaginator.generatePage();
+
+        return new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, limit)
+                .generatePage();
     }
 
     @GET
