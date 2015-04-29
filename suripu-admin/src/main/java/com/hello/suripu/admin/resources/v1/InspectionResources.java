@@ -48,20 +48,10 @@ public class InspectionResources {
     public ImmutableList<Account> getInactiveUsers(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                    @QueryParam("battery") final Integer battery,
                                                    @QueryParam("limit") final Integer limit){
-        Integer criticalBatteryLevel;
-        if (battery == null) {
-            criticalBatteryLevel = DEFAULT_CRITICAL_BATTERY_LEVEL;
-        }
-        else {
-            criticalBatteryLevel = battery;
-        }
-        Integer inspectedPopulation;
-        if (limit == null) {
-            inspectedPopulation = DEFAULT_INSPECTED_POPULATION;
-        }
-        else {
-            inspectedPopulation = Math.min(MAX_INSPECTED_POPULATION, limit);
-        }
+
+        final Integer criticalBatteryLevel = (battery == null) ? DEFAULT_CRITICAL_BATTERY_LEVEL : battery;
+        final Integer inspectedPopulation = (limit == null) ? DEFAULT_INSPECTED_POPULATION : Math.min(MAX_INSPECTED_POPULATION, limit);
+
         return deviceDAOAdmin.getAccountsWithLowPillBattery(criticalBatteryLevel, inspectedPopulation);
     }
 
