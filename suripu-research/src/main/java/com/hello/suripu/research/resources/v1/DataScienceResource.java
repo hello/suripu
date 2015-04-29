@@ -292,7 +292,7 @@ public class DataScienceResource extends BaseResource {
         final DateTime startTs = new DateTime(fromTimestamp, DateTimeZone.UTC);
         final DateTime endTs = startTs.plusDays(numDays).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
 
-        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForTimeRange(startTs.getMillis(), endTs.getMillis());
+        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForTimeRange(startTs, endTs);
 
         //get unique account Ids that provided feedback in date range
         final Set<Long> accountIds = new HashSet<>();
@@ -306,38 +306,55 @@ public class DataScienceResource extends BaseResource {
             accountIds.add(feedback.accountId.get());
         }
 
-        LOGGER.info("Found {} accounts that provided feedback between {} and {}",accountIds.size(),startTs,endTs);
+        LOGGER.info("Found {} accounts that provided {} items of feedback between {} and {}",accountIds.size(),feedbacks.size(),startTs,endTs);
 
         final Map<Long,Map<Long,TimelineLog>> logByAccountIdThenDate = new HashMap<>();
 
         //EXPENSIVE!  go through each account Id and retrieve for date range
+
         for (final Long accountId : accountIds) {
             final ImmutableList<TimelineLog> logs = timelineLogDAO.getLogsForUserAndDay(accountId, startTs, Optional.of(numDays));
 
-            //populate map of accountid, then date, then alg
+           // for (final TimelineLog log : logs) {
+           //     LOGGER.debug("timeline log {} -- {} -- {}", accountId, log.algorithm, new DateTime(log.targetDate).withZone(DateTimeZone.UTC).withTimeAtStartOfDay());
+           // }
+
+                //populate map of accountid, then date, then alg
             for (final TimelineLog log : logs) {
+
+                final DateTime targetDateTime = new DateTime(log.targetDate).withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
+                final Long targetDate = targetDateTime.getMillis();
 
                 if (!logByAccountIdThenDate.containsKey(accountId)) {
                     logByAccountIdThenDate.put(accountId, new HashMap<Long, TimelineLog>());
                 }
 
+
                 final Map<Long,TimelineLog> entryForThisAccount = logByAccountIdThenDate.get(accountId);
 
                 //if you find multiple logs for the same target date, take the one with the oldest created date
                 //this should protect us against changing algorithms
-                if (entryForThisAccount.containsKey(log.targetDate)) {
-                    final TimelineLog entry = entryForThisAccount.get(log.targetDate);
+                if (entryForThisAccount.containsKey(targetDate)) {
+                    final TimelineLog entry = entryForThisAccount.get(targetDate);
 
                     //is existing entry older than the proposed entry?
                     if (entry.createdDate < log.createdDate) {
+                        LOGGER.debug("skipping {} {} {} {} {} because it's created date is older",accountId,targetDate,log.algorithm,log.version,log.createdDate);
                         continue;
                     }
                 }
 
-                entryForThisAccount.put(log.targetDate, log);
+                //LOGGER.debug("putting {} {} {}",accountId,targetDate,log.algorithm);
+                entryForThisAccount.put(targetDate, log);
+
+                //put back into the map
+                logByAccountIdThenDate.put(accountId,entryForThisAccount);
+
             }
 
         }
+
+        LOGGER.info("{} of {} accounts had logs between {} and {}",logByAccountIdThenDate.size(),accountIds.size(),startTs,endTs);
 
         //go through feedbacks and figure out which algorithm they came from
         for (final TimelineFeedback feedback : feedbacks) {
@@ -345,11 +362,17 @@ public class DataScienceResource extends BaseResource {
                 continue;
             }
 
-            final Long accountId = feedback.accountId.get();
-            final Long date = feedback.dateOfNight.getMillis();
 
+            final Long accountId = feedback.accountId.get();
+            final Long date = feedback.dateOfNight.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis();
+
+           // LOGGER.debug("feedback {} -- {}",accountId,new DateTime(date).withZone(DateTimeZone.UTC).withTimeAtStartOfDay());
 
             final Map<Long,TimelineLog> entryForThisAccount = logByAccountIdThenDate.get(accountId);
+
+            if (entryForThisAccount == null) {
+                continue;
+            }
 
             if (entryForThisAccount.containsKey(date)) {
                 final TimelineLog log = entryForThisAccount.get(date);
@@ -358,15 +381,17 @@ public class DataScienceResource extends BaseResource {
                 final Optional<DateTime> oldTime = FeedbackUtils.convertFeedbackToDateTimeByOldTime(feedback, 0);
                 final Optional<DateTime> newTime = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback, 0);
 
-                if (!oldTime.isPresent() || !newTime.isPresent()) {
+                if (oldTime.isPresent() && newTime.isPresent()) {
                     //populate the results
                     Integer delta = (int) (newTime.get().getMillis() - oldTime.get().getMillis());
                     results.add(new MatchedFeedback(accountId,date,feedback.eventType.toString(),delta,log.algorithm,log.version));
                 }
+
             }
+
         }
 
-        LOGGER.info("returning {} results from {} different accounts",results.size(),logByAccountIdThenDate.size());
+        LOGGER.info("returning {} results",results.size());
         return ImmutableList.copyOf(results);
 
     }
