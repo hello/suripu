@@ -217,11 +217,11 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceInactivePage getInactiveSenses(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                 @QueryParam("after") final Long afterTimestamp,
-                                                @QueryParam("before") final Long beforeTimestamp) {
+                                                @QueryParam("before") final Long beforeTimestamp,
+                                                @QueryParam("limit") final Integer limit) {
 
-        final InactiveDevicesPaginator redisPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY);
-        final DeviceInactivePage inactiveSensesPage = redisPaginator.generatePage();
-        return inactiveSensesPage;
+        return new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, limit)
+                .generatePage();
     }
 
     @GET
@@ -230,11 +230,17 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceInactivePage getInactivePills(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                @QueryParam("after") final Long afterTimestamp,
-                                               @QueryParam("before") final Long beforeTimestamp) {
+                                               @QueryParam("before") final Long beforeTimestamp,
+                                               @QueryParam("limit") final Integer limit) {
 
-        final InactiveDevicesPaginator inactiveDevicesPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY);
-        final DeviceInactivePage inactivePillsPage = inactiveDevicesPaginator.generatePage();
-        return inactivePillsPage;
+        InactiveDevicesPaginator inactiveDevicesPaginator;
+        if (limit == null) {
+            inactiveDevicesPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY);
+        }
+        else {
+            inactiveDevicesPaginator = new InactiveDevicesPaginator(jedisPool, afterTimestamp, beforeTimestamp, ActiveDevicesTrackerConfiguration.PILL_ACTIVE_SET_KEY, limit);
+        }
+        return inactiveDevicesPaginator.generatePage();
     }
 
 
