@@ -27,10 +27,7 @@ import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSource;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
-import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
+import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -56,28 +53,18 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorDB());
 
-        final DBI jdbiSensor = new DBI(sensorDataSource);
-        jdbiSensor.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorDB().getDriverClass()));
-        jdbiSensor.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbiSensor.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbiSensor.registerContainerFactory(new OptionalContainerFactory());
-        jdbiSensor.registerArgumentFactory(new JodaArgumentFactory());
 
-        final TrackerMotionDAO trackerMotionDAO = jdbiSensor.onDemand(TrackerMotionDAO.class);
+        final DBIFactory dbiFactory = new DBIFactory();
+        final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
+        final DBI commonDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
 
+        // Joda Argument factory is not supported by default by DW, needs to be added manually
+        sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
-
-        final DBI jdbiCommon = new DBI(commonDataSource);
-        jdbiCommon.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        jdbiCommon.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbiCommon.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbiCommon.registerContainerFactory(new OptionalContainerFactory());
-        jdbiCommon.registerArgumentFactory(new JodaArgumentFactory());
-
-
-        final DeviceDAO deviceDAO = jdbiCommon.onDemand(DeviceDAO.class);
-        final PillHeartBeatDAO heartBeatDAO = jdbiCommon.onDemand(PillHeartBeatDAO.class);
+        final TrackerMotionDAO trackerMotionDAO = sensorsDBI.onDemand(TrackerMotionDAO.class);
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
+        final PillHeartBeatDAO heartBeatDAO = commonDBI.onDemand(PillHeartBeatDAO.class);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
