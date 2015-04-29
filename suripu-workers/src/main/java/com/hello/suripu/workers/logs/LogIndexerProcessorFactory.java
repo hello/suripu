@@ -5,6 +5,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
 
 public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
@@ -27,6 +28,8 @@ public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
         final AmazonDynamoDB amazonDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(config.getSenseEventsDynamoDBConfiguration().getEndpoint());
         final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(amazonDynamoDB, config.getSenseEventsDynamoDBConfiguration().getTableName());
-        return LogIndexerProcessor.create(applicationIndex, senseIndex, workersIndex, senseEventsDAO);
+        final AmazonDynamoDB mergedUserInfoDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(config.getUserInfoDynamoDBConfiguration().getEndpoint());
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient, config.getUserInfoDynamoDBConfiguration().getTableName());
+        return LogIndexerProcessor.create(applicationIndex, senseIndex, workersIndex, senseEventsDAO, mergedUserInfoDynamoDB);
     }
 }

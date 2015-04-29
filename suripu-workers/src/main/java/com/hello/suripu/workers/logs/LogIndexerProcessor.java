@@ -9,6 +9,7 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,10 @@ public class LogIndexerProcessor implements IRecordProcessor {
         this.senseStructuredLogsIndexer = senseStructuredLogsIndexer;
     }
 
-    public static LogIndexerProcessor create(final IndexTankClient.Index applicationIndex, final IndexTankClient.Index senseIndex, final IndexTankClient.Index workersIndex, final SenseEventsDAO senseEventsDAO) {
+    public static LogIndexerProcessor create(final IndexTankClient.Index applicationIndex, final IndexTankClient.Index senseIndex, final IndexTankClient.Index workersIndex, final SenseEventsDAO senseEventsDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
         return new LogIndexerProcessor(
                 new GenericLogIndexer(applicationIndex),
-                new SenseLogIndexer(senseIndex),
+                new SenseLogIndexer(senseIndex, mergedUserInfoDynamoDB),
                 new GenericLogIndexer(workersIndex),
                 new SenseStructuredLogIndexer(senseEventsDAO)
         );
