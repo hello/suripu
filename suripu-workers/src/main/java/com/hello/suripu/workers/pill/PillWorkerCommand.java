@@ -56,7 +56,7 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
 
         final DBIFactory dbiFactory = new DBIFactory();
         final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
-        final DBI commonDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
+        final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
 
         // Joda Argument factory is not supported by default by DW, needs to be added manually
         sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
