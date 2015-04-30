@@ -25,6 +25,7 @@ import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PillRegistration;
 import com.hello.suripu.core.models.ProvisionRequest;
 import com.hello.suripu.core.models.SenseRegistration;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -455,6 +456,7 @@ public class DeviceResources {
         return senseKeyStoreRecord.get();
     }
 
+
     @GET
     @Timed
     @Path("/key_store_hints/pill/{pill_id}")
@@ -468,34 +470,58 @@ public class DeviceResources {
         return pillKeyStoreRecord.get();
     }
 
+
     @POST
     @Path("/provision/sense")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-
     public void senseProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final ProvisionRequest provisionRequest) {
         senseKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
     }
+
 
     @POST
     @Path("/provision/pill")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-
     public void pillProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final ProvisionRequest provisionRequest) {
         pillKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
     }
+
 
     @POST
     @Path("/provision/batch_pills")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-
     public void batchPillsProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final List<ProvisionRequest> provisionRequests) {
         for (final ProvisionRequest provisionRequest : provisionRequests) {
             pillKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
         }
     }
+
+    @GET
+    @Path("/timezone")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TimeZoneHistory getTimezone(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                       @QueryParam("sense_id") final String senseId,
+                                       @QueryParam("email") final String email,
+                                       @QueryParam("event_ts") final Long eventTs){
+
+        if (senseId == null && email == null) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Require sense_id OR email!").build());
+        }
+        final DateTime eventDateTime = eventTs == null ? DateTime.now(DateTimeZone.UTC) : new DateTime(eventTs);
+
+        final Optional<TimeZoneHistory> timeZoneHistoryOptional = (senseId != null) ?
+            getTimeZoneBySenseId(senseId, eventDateTime) : getTimeZoneByEmail(email, eventDateTime);
+
+        if (!timeZoneHistoryOptional.isPresent()){
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Failed to retrieve timezone")).build());
+        }
+        return timeZoneHistoryOptional.get();
+    }
+
 
     // Helpers
     private List<DeviceAdmin> getSensesByAccountId(final Long accountId) {
@@ -521,5 +547,36 @@ public class DeviceResources {
             pills.add(new DeviceAdmin(pillAccountPair, pillStatusOptional.orNull()));
         }
         return pills;
+    }
+
+    private Optional<TimeZoneHistory> getTimeZoneBySenseId(final String senseId, final DateTime eventDateTime) {
+        final List <UserInfo> userInfoList = mergedUserInfoDynamoDB.getInfo(senseId);
+        if (userInfoList.isEmpty()) {
+            return Optional.absent();
+        }
+        final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(senseId, userInfoList.get(0).accountId);
+
+        if (!dateTimeZoneOptional.isPresent()) {
+            return Optional.absent();
+        }
+        return Optional.of(new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID()));
+    }
+
+    private Optional<TimeZoneHistory> getTimeZoneByEmail(final String email, final DateTime eventDateTime) {
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            return Optional.absent();
+        }
+
+        final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountIdOptional.get());
+        if (!deviceAccountPairOptional.isPresent()) {
+            return Optional.absent();
+        }
+        final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(deviceAccountPairOptional.get().externalDeviceId, accountIdOptional.get());
+
+        if (!dateTimeZoneOptional.isPresent()) {
+            return Optional.absent();
+        }
+        return Optional.of(new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID()));
     }
 }
