@@ -262,6 +262,8 @@ public class RegisterResource extends BaseResource {
         }
 
         final Long accountId = accessTokenOptional.get().accountId;
+        kinesisLogger.setAccountId(accountId);
+
         final String logMessage = String.format("accountId = %d", accountId);
         LOGGER.debug(logMessage);
 
@@ -274,6 +276,7 @@ public class RegisterResource extends BaseResource {
         switch (action) {
             case PAIR_MORPHEUS:
                 senseId = deviceId;
+                kinesisLogger.setSenseId(senseId);  // We need this until the provision problem got fixed.
                 break;
             case PAIR_PILL:
                 pillId = deviceId;
@@ -327,7 +330,7 @@ public class RegisterResource extends BaseResource {
                     final PairState pairState = getSensePairingState(senseId, accountId);
                     if (pairState == PairState.NOT_PAIRED) {
                         this.deviceDAO.registerSense(accountId, senseId);
-                        kinesisLogger.logProgress(Optional.<String>absent(),
+                        kinesisLogger.logSuccess(Optional.<String>absent(),
                                 String.format("Account id %d linked to senseId %s in DB.", accountId, senseId));
                     }
 
@@ -355,7 +358,7 @@ public class RegisterResource extends BaseResource {
                         this.deviceDAO.registerPill(accountId, deviceId);
                         final String message = String.format("Linked pill %s to account %d in DB", pillId, accountId);
                         LOGGER.warn(message);
-                        kinesisLogger.logProgress(Optional.fromNullable(pillId), message);
+                        kinesisLogger.logSuccess(Optional.fromNullable(pillId), message);
 
                         this.setPillColor(senseId, accountId, deviceId);
                     }

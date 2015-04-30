@@ -14,10 +14,22 @@ import org.slf4j.LoggerFactory;
 public class RegistrationLogger {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationLogger.class);
 
-    private final String senseId;
+    private String senseId;
     private final DataLogger dataLogger;
     private final PairAction action;
     private final String ip;
+    private Optional<Long> accountId = Optional.absent();
+
+
+    public void setSenseId(final String senseId){
+        this.senseId = senseId;
+    }
+
+
+    public void setAccountId(final Long accountId){
+        this.accountId = Optional.fromNullable(accountId);
+    }
+
 
     private RegistrationLogger(final String senseId, final PairAction action, final String ip, final DataLogger logger){
         this.senseId = senseId;
@@ -31,22 +43,27 @@ public class RegistrationLogger {
         return new RegistrationLogger(sendId, action, ip, logger);
     }
 
-    private static LoggingProtos.RegistrationLog.Builder getRegistrationLogBuilder(final String senseId,
-                                                                            final String pillId,
-                                                                            final PairAction action,
+    private LoggingProtos.RegistrationLog.Builder getRegistrationLogBuilder(final Optional<String> pillId,
                                                                             final String info,
-                                                                            final RegistrationActionResults result,
-                                                                            final String ip){
-        return LoggingProtos.RegistrationLog.newBuilder().setSenseId(senseId)
-                .setPillId(pillId)
-                .setAction(action.toString())
+                                                                            final RegistrationActionResults result){
+        final LoggingProtos.RegistrationLog.Builder builder = LoggingProtos.RegistrationLog.newBuilder().setSenseId(this.senseId)
+                .setAction(this.action.toString())
                 .setResult(result.toString())
                 .setTimestamp(DateTime.now().getMillis())
-                .setIpAddress(ip)
+                .setIpAddress(this.ip)
                 .setInfo(info);
+        if(this.accountId.isPresent()){
+            builder.setAccountId(this.accountId.get());
+        }
+
+        if(pillId.isPresent()){
+            builder.setPillId(pillId.get());
+        }
+
+        return builder;
     }
 
-    private static boolean postLog(final DataLogger logger, final String senseId, final LoggingProtos.RegistrationLog log){
+    private boolean postLog(final DataLogger logger, final String senseId, final LoggingProtos.RegistrationLog log){
         try{
             logger.put(senseId, log.toByteArray());
             return true;
@@ -57,34 +74,28 @@ public class RegistrationLogger {
         return false;
     }
 
-    private static boolean logImpl(final String senseId, final Optional<String> pillId,
-                                     final PairAction action,
-                                     final String info,
-                                     final RegistrationActionResults result,
-                                     final DataLogger registrationLogger,
-                                     final String ip){
-        final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(senseId,
-                pillId.isPresent() ? pillId.get() : "",
-                action,
+    private boolean logImpl(final Optional<String> pillId,
+                             final String info,
+                             final RegistrationActionResults result){
+        final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                 info,
-                result,
-                ip)
+                result)
                 .build();
-        return postLog(registrationLogger, senseId, log);
+        return postLog(this.dataLogger, this.senseId, log);
     }
 
     public boolean logFailure(final Optional<String> pillId,
                                   final String info){
-        return logImpl(this.senseId, pillId, this.action, info, RegistrationActionResults.FAILED, this.dataLogger, this.ip);
+        return logImpl(pillId, info, RegistrationActionResults.FAILED);
     }
 
     public boolean logProgress(final Optional<String> pillId,
                                final String info){
-        return logImpl(this.senseId, pillId, this.action, info, RegistrationActionResults.IN_PROGRESS, this.dataLogger, this.ip);
+        return logImpl(pillId, info, RegistrationActionResults.IN_PROGRESS);
     }
 
     public boolean logSuccess(final Optional<String> pillId,
                                       final String info){
-        return logImpl(this.senseId, pillId, this.action, info, RegistrationActionResults.SUCCESS, this.dataLogger, this.ip);
+        return logImpl(pillId, info, RegistrationActionResults.SUCCESS);
     }
 }
