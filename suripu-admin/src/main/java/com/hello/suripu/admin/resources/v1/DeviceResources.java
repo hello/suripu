@@ -510,46 +510,13 @@ public class DeviceResources {
         if (senseId == null && email == null) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Require sense_id OR email!").build());
         }
-
-        Optional<DateTimeZone> dateTimeZoneOptional;
-        Long accountId;
-        if (senseId != null) {
-            final List <UserInfo> userInfoList = mergedUserInfoDynamoDB.getInfo(senseId);
-            if (userInfoList.isEmpty()) {
-                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                        .entity(new JsonError(404, "Sense-Account pair not found")).build());
-            }
-            accountId = userInfoList.get(0).accountId;
-            dateTimeZoneOptional = this.mergedUserInfoDynamoDB.getTimezone(senseId, accountId);
-        }
-        else {
-            final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
-            if (!accountIdOptional.isPresent()) {
-                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                        .entity(new JsonError(404, "Account not found")).build());
-            }
-
-            final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountIdOptional.get());
-            if (!deviceAccountPairOptional.isPresent()) {
-                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                        .entity(new JsonError(404, "Account-Sense pair not found")).build());
-            }
-            accountId = deviceAccountPairOptional.get().accountId;
-            dateTimeZoneOptional = this.mergedUserInfoDynamoDB.getTimezone(deviceAccountPairOptional.get().externalDeviceId, accountId);
-        }
-
-        if (!dateTimeZoneOptional.isPresent()){
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity(new JsonError(404, "Timezone not found")).build());
-        }
-
         final DateTime eventDateTime = eventTs == null ? DateTime.now(DateTimeZone.UTC) : new DateTime(eventTs);
-        LOGGER.info("{}", eventDateTime);
 
-        return new TimeZoneHistory(
-                dateTimeZoneOptional.get().getOffset(eventDateTime),
-                dateTimeZoneOptional.get().getID()
-        );
+        if (senseId != null) {
+            return getTimeZoneBySenseId(senseId, eventDateTime);
+        }
+
+        return getTimeZoneByEmail(email, eventDateTime);
     }
 
 
@@ -577,5 +544,36 @@ public class DeviceResources {
             pills.add(new DeviceAdmin(pillAccountPair, pillStatusOptional.orNull()));
         }
         return pills;
+    }
+
+    private TimeZoneHistory getTimeZoneBySenseId(final String senseId, final DateTime eventDateTime) {
+        final List <UserInfo> userInfoList = mergedUserInfoDynamoDB.getInfo(senseId);
+        if (userInfoList.isEmpty()) {
+            return new TimeZoneHistory(-1, "");
+        }
+        final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(senseId, userInfoList.get(0).accountId);
+
+        if (!dateTimeZoneOptional.isPresent()) {
+            return new TimeZoneHistory(-1, "missing timezone");
+        }
+        return new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID());
+    }
+
+    private TimeZoneHistory getTimeZoneByEmail(final String email, final DateTime eventDateTime) {
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            return new TimeZoneHistory(-1, "");
+        }
+
+        final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountIdOptional.get());
+        if (!deviceAccountPairOptional.isPresent()) {
+            return new TimeZoneHistory(-1, "");
+        }
+        final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(deviceAccountPairOptional.get().externalDeviceId, accountIdOptional.get());
+
+        if (!dateTimeZoneOptional.isPresent()) {
+            return new TimeZoneHistory(-1, "missing timezone");
+        }
+        return new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID());
     }
 }
