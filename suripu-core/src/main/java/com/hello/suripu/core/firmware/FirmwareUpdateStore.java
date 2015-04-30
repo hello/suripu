@@ -225,18 +225,7 @@ public class FirmwareUpdateStore {
 
         Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
 
-        firmwareUpgradePathDAO.insertFWUpgradeNode(group, currentFirmwareVersion, 1680031756);
-
-        //Retrieve destination fw version
-        final Integer nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(group, currentFirmwareVersion);
-
-        //Get human-readable name from versionmappingDAO & use this for the S3 FW object
-        final List<String> humanNames = firmwareVersionMappingDAO.get(Integer.toHexString(nextFirmwareVersion));
-        final String humanName = (!humanNames.isEmpty()) ? humanNames.get(0) : group;
-
-        final String s3ObjectKey = (nextFirmwareVersion > -1) ? humanName : group;
-
-        LOGGER.debug("Requested update from {} to {} for Group: {} & deviceId: {}", currentFirmwareVersion, nextFirmwareVersion, group, deviceId);
+        final String s3ObjectKey = getS3ObjectForGroup(group, currentFirmwareVersion);
 
         if(pchOTA) {
             LOGGER.info("PCH Device attempting OTA. Getting non-cached file-list for: [{}] from {}.", s3ObjectKey, FIRMWARE_BUCKET_ASIA);
@@ -246,7 +235,7 @@ public class FirmwareUpdateStore {
                 fw_files = s3FWCache.get(s3ObjectKey, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
                     @Override
                     public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
-                        LOGGER.info("Nothing in cache found for group: [{}]. Grabbing info from S3.", s3ObjectKey);
+                        LOGGER.info("Nothing in cache found for S3 Object Key: [{}]. Grabbing info from S3.", s3ObjectKey);
                         return getFirmwareFilesForS3ObjectKey(s3ObjectKey, bucketName);
                     }
                 });
@@ -334,6 +323,24 @@ public class FirmwareUpdateStore {
         } catch (NumberFormatException e) {
             LOGGER.error("Invalid pre-signed URL.");
             return true;
+        }
+    }
+
+    private String getS3ObjectForGroup(final String group, final Integer currentFWVersion) {
+        //Retrieve destination fw version
+        final Optional<Integer> nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(group, currentFWVersion);
+        final List<String> humanNames = new ArrayList<>();
+
+        if (nextFirmwareVersion.isPresent()) {
+            //Get human-readable name(s) from firmwareVersionMappingDAO & use this for the S3 FW object
+            humanNames.addAll(firmwareVersionMappingDAO.get(Integer.toHexString(nextFirmwareVersion.get())));
+        }
+
+        if (humanNames.isEmpty()) {
+            LOGGER.debug("No non-hashed fw version exists, defaulting to '{}'.", group);
+            return group;
+        } else {
+            return humanNames.get(0);
         }
     }
 }

@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.google.common.base.Optional;
 import com.yammer.metrics.annotation.Timed;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +69,7 @@ public class FirmwareUpgradePathDAO {
     }
 
     @Timed
-    public Integer getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
+    public Optional<Integer> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
 
         final Condition byGroupName = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -92,19 +93,19 @@ public class FirmwareUpgradePathDAO {
             queryResult = this.dynamoDBClient.query(queryRequest);
         } catch (AmazonServiceException ase){
             LOGGER.error("getNextFirmwareVersion query failed. {}", ase.getErrorMessage());
-            return -1;
+            return Optional.absent();
         }
 
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
         if (items.isEmpty()) {
-            return -1;
+            return Optional.absent();
         }
 
         final Map<String, AttributeValue> item = items.get(0);
         final Integer itemNextFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
 
-        return itemNextFW;
+        return Optional.of(itemNextFW);
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
