@@ -114,6 +114,7 @@ kinesis:
     audio_features : audio_features
     activity_stream : activity_stream
     registrations: registrations
+    registration_log: on_board_log
     encode_audio: encode_audio
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
