@@ -1,6 +1,6 @@
 package com.hello.suripu.admin.resources.v1;
 
-import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
+import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.models.FirmwareCountInfo;

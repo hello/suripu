@@ -1,4 +1,4 @@
-package com.hello.suripu.admin.db;
+package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
