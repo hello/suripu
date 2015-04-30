@@ -512,11 +512,14 @@ public class DeviceResources {
         }
         final DateTime eventDateTime = eventTs == null ? DateTime.now(DateTimeZone.UTC) : new DateTime(eventTs);
 
-        if (senseId != null) {
-            return getTimeZoneBySenseId(senseId, eventDateTime);
-        }
+        final Optional<TimeZoneHistory> timeZoneHistoryOptional = (senseId != null) ?
+            getTimeZoneBySenseId(senseId, eventDateTime) : getTimeZoneByEmail(email, eventDateTime);
 
-        return getTimeZoneByEmail(email, eventDateTime);
+        if (!timeZoneHistoryOptional.isPresent()){
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Failed to retrieve timezone")).build());
+        }
+        return timeZoneHistoryOptional.get();
     }
 
 
@@ -546,34 +549,34 @@ public class DeviceResources {
         return pills;
     }
 
-    private TimeZoneHistory getTimeZoneBySenseId(final String senseId, final DateTime eventDateTime) {
+    private Optional<TimeZoneHistory> getTimeZoneBySenseId(final String senseId, final DateTime eventDateTime) {
         final List <UserInfo> userInfoList = mergedUserInfoDynamoDB.getInfo(senseId);
         if (userInfoList.isEmpty()) {
-            return new TimeZoneHistory(-1, "");
+            return Optional.absent();
         }
         final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(senseId, userInfoList.get(0).accountId);
 
         if (!dateTimeZoneOptional.isPresent()) {
-            return new TimeZoneHistory(-1, "missing timezone");
+            return Optional.absent();
         }
-        return new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID());
+        return Optional.of(new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID()));
     }
 
-    private TimeZoneHistory getTimeZoneByEmail(final String email, final DateTime eventDateTime) {
+    private Optional<TimeZoneHistory> getTimeZoneByEmail(final String email, final DateTime eventDateTime) {
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
         if (!accountIdOptional.isPresent()) {
-            return new TimeZoneHistory(-1, "");
+            return Optional.absent();
         }
 
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountIdOptional.get());
         if (!deviceAccountPairOptional.isPresent()) {
-            return new TimeZoneHistory(-1, "");
+            return Optional.absent();
         }
         final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(deviceAccountPairOptional.get().externalDeviceId, accountIdOptional.get());
 
         if (!dateTimeZoneOptional.isPresent()) {
-            return new TimeZoneHistory(-1, "missing timezone");
+            return Optional.absent();
         }
-        return new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID());
+        return Optional.of(new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID()));
     }
 }
