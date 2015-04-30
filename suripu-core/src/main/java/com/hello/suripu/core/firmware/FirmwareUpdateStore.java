@@ -19,6 +19,8 @@ import com.google.protobuf.ByteString;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse;
 
+import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
+import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.models.OTAHistory;
 import java.util.Date;
@@ -46,6 +48,8 @@ public class FirmwareUpdateStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmwareUpdateStore.class);
 
     private final OTAHistoryDAODynamoDB otaHistoryDAO;
+    private final FirmwareVersionMappingDAO firmwareVersionMappingDAO;
+    private final FirmwareUpgradePathDAO firmwareUpgradePathDAO;
     private final AmazonS3 s3;
     private final String bucketName;
     private final AmazonS3 s3Signer;
@@ -57,40 +61,48 @@ public class FirmwareUpdateStore {
                                final AmazonS3 s3, 
                                final String bucketName, 
                                final AmazonS3 s3Signer,
-                               final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache) {
+                               final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache,
+                               final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
+                               final FirmwareUpgradePathDAO firmwareUpgradePathDAO) {
         this.otaHistoryDAO = otaHistoryDAO;
         this.s3 = s3;
         this.bucketName = bucketName;
         this.s3Signer = s3Signer;
         this.s3FWCache = s3FWCache;
+        this.firmwareVersionMappingDAO = firmwareVersionMappingDAO;
+        this.firmwareUpgradePathDAO = firmwareUpgradePathDAO;
     }
 
     public static FirmwareUpdateStore create(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                              final AmazonS3 s3,
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
-                                             final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3Cache) {
-        return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache);
+                                             final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3Cache,
+                                             final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
+                                             final FirmwareUpgradePathDAO firmwareUpgradePathDAO) {
+        return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache, firmwareVersionMappingDAO, firmwareUpgradePathDAO);
     }
 
     public static FirmwareUpdateStore create(final OTAHistoryDAODynamoDB otaHistoryDAO,
                                              final AmazonS3 s3,
                                              final String bucketName,
                                              final AmazonS3 s3Signer,
-                                             final Integer s3CacheExpireMinutes) {
+                                             final Integer s3CacheExpireMinutes,
+                                             final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
+                                             final FirmwareUpgradePathDAO firmwareUpgradePathDAO) {
         final Cache<String, Pair<Integer, List<OutputProtos.SyncResponse.FileDownload>>> s3Cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(s3CacheExpireMinutes, TimeUnit.MINUTES)
                 .build();
-        return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache);
+        return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache, firmwareVersionMappingDAO, firmwareUpgradePathDAO);
     }
 
-    public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForGroup(final String group, final String bucketName) {
+    public Pair<Integer, List<SyncResponse.FileDownload>> getFirmwareFilesForS3ObjectKey(final String objectKey, final String bucketName) {
 
         final Pair<Integer, List<SyncResponse.FileDownload>> emptyPair = new Pair(-1, Collections.EMPTY_LIST);
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
-        listObjectsRequest.withPrefix("sense/" + group + "/");
+        listObjectsRequest.withPrefix("sense/" + objectKey + "/");
 
         final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
         final List<String> files = new ArrayList<>();
@@ -118,7 +130,7 @@ public class FirmwareUpdateStore {
                 try {
                     firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
                 } catch (NumberFormatException nfe) {
-                    LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", group);
+                    LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", objectKey);
                     return emptyPair;
                 }
             }
@@ -213,16 +225,29 @@ public class FirmwareUpdateStore {
 
         Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
 
+        firmwareUpgradePathDAO.insertFWUpgradeNode(group, currentFirmwareVersion, 1680031756);
+
+        //Retrieve destination fw version
+        final Integer nextFirmwareVersion = firmwareUpgradePathDAO.getNextFWVersionForGroup(group, currentFirmwareVersion);
+
+        //Get human-readable name from versionmappingDAO & use this for the S3 FW object
+        final List<String> humanNames = firmwareVersionMappingDAO.get(Integer.toHexString(nextFirmwareVersion));
+        final String humanName = (!humanNames.isEmpty()) ? humanNames.get(0) : group;
+
+        final String s3ObjectKey = (nextFirmwareVersion > -1) ? humanName : group;
+
+        LOGGER.debug("Requested update from {} to {} for Group: {} & deviceId: {}", currentFirmwareVersion, nextFirmwareVersion, group, deviceId);
+
         if(pchOTA) {
-            LOGGER.info("PCH Device attempting OTA. Getting non-cached file-list for: [{}] from {}.", group, FIRMWARE_BUCKET_ASIA);
-            fw_files = getFirmwareFilesForGroup(group, FIRMWARE_BUCKET_ASIA);
+            LOGGER.info("PCH Device attempting OTA. Getting non-cached file-list for: [{}] from {}.", s3ObjectKey, FIRMWARE_BUCKET_ASIA);
+            fw_files = getFirmwareFilesForS3ObjectKey(s3ObjectKey, FIRMWARE_BUCKET_ASIA);
         } else {
             try {
-                fw_files = s3FWCache.get(group, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
+                fw_files = s3FWCache.get(s3ObjectKey, new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
                     @Override
                     public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
-                        LOGGER.info("Nothing in cache found for group: [{}]. Grabbing info from S3.", group);
-                        return getFirmwareFilesForGroup(group, bucketName);
+                        LOGGER.info("Nothing in cache found for group: [{}]. Grabbing info from S3.", s3ObjectKey);
+                        return getFirmwareFilesForS3ObjectKey(s3ObjectKey, bucketName);
                     }
                 });
 
@@ -230,7 +255,6 @@ public class FirmwareUpdateStore {
                 LOGGER.error("Exception while retrieving S3 file list.");
             }
         }
-
 
         final List<SyncResponse.FileDownload> fwList = fw_files.getValue();
 
@@ -248,6 +272,7 @@ public class FirmwareUpdateStore {
                 if (!insertedEntry.isPresent()) {
                     LOGGER.error("OTA History Insertion Failed: {} => {} for {} at {}", currentFirmwareVersion, fw_files.getKey(), deviceId, eventTime);
                 }
+                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fwList.size(), s3ObjectKey, deviceId);
                 return fwList;
             }
 

@@ -202,4 +202,12 @@ public class SuripuConfiguration extends Configuration {
     public DynamoDBConfiguration getFirmwareVersionsDynamoDBConfiguration(){
         return firmwareVersionsDynamoDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("fw_path_db")
+    private DynamoDBConfiguration fwUpgradePathDBConfiguration;
+    public DynamoDBConfiguration getFWUpgradePathDBConfiguration(){
+        return this.fwUpgradePathDBConfiguration;
+    }
 }

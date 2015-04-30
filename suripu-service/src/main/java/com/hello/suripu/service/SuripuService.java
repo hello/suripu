@@ -20,6 +20,7 @@ import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
@@ -148,6 +149,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AmazonDynamoDB fwVersionMapping = dynamoDBFactory.getForEndpoint(configuration.getFirmwareVersionsDynamoDBConfiguration().getEndpoint());
         final FirmwareVersionMappingDAO firmwareVersionMappingDAO = new FirmwareVersionMappingDAO(fwVersionMapping, configuration.getFirmwareVersionsDynamoDBConfiguration().getTableName());
 
+        final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBFactory.getForEndpoint(configuration.getFWUpgradePathDBConfiguration().getEndpoint());
+        final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, configuration.getFWUpgradePathDBConfiguration().getTableName());
 
         // This is used to sign S3 urls with a shorter signature
         final AWSCredentials s3credentials = new AWSCredentials() {
@@ -212,7 +215,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 "hello-firmware",
                 amazonS3UrlSigner,
                 configuration.getOTAConfiguration().getS3CacheExpireMinutes(),
-                firmwareVersionMappingDAO);
+                firmwareVersionMappingDAO,
+                firmwareUpgradePathDAO);
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
