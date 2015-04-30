@@ -1,9 +1,11 @@
 package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.models.Account;
+import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.PasswordResetAdmin;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -19,6 +21,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -30,14 +33,17 @@ import java.util.List;
 public class AccountResources {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResources.class);
-    private final AccountDAO accountDAO;
-    private final PasswordResetDB passwordResetDB;
     private final Integer DEFAULT_RECENT_USERS_LIMIT = 100;
     private final Integer MAX_RECENT_USERS_LIMIT = 500;
 
-    public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB) {
+    private final AccountDAO accountDAO;
+    private final PasswordResetDB passwordResetDB;
+    final DeviceDAO deviceDAO;
+
+    public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB, final DeviceDAO deviceDAO) {
         this.accountDAO = accountDAO;
         this.passwordResetDB = passwordResetDB;
+        this.deviceDAO = deviceDAO;
     }
 
 
@@ -132,5 +138,30 @@ public class AccountResources {
         }
 
         return Response.serverError().build();
+    }
+
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{email}/partner")
+    public Account retrievePartnerAccount(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                          @PathParam("email") final String email){
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Account not found")).build());
+        }
+
+        final Optional<Long> partnerAccountIdOptional = deviceDAO.getPartnerAccountId(accountIdOptional.get());
+
+        if (!partnerAccountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Partner account not found")).build());
+        }
+
+        return accountDAO.getById(partnerAccountIdOptional.get()).get();
     }
 }
