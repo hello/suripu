@@ -79,6 +79,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";
     public final static String ALGORITHM_NAME_HMM = "hmm";
+    public final static String VERSION_BACKUP = "wupang_backup_for_hmm"; //let us know the HMM had some issues
 
 
     static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
@@ -472,6 +473,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             sensorData.allSensorSampleList.get(Sensor.LIGHT),
                             sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
                     algorithm = ALGORITHM_NAME_REGULAR;
+                    version = VERSION_BACKUP;
                 }
 
             } else if(this.hasVotingEnabled(accountId)){
