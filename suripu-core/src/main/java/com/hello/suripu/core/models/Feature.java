@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -14,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public class Feature {
+public class Feature implements Comparable<Feature> {
 
     @JsonProperty("name")
     public final String name;
@@ -89,5 +90,13 @@ public class Feature {
         public FeatureException(String msg) {
             super(msg);
         }
+    }
+
+
+    @Override
+    public int compareTo(Feature other) {
+        return ComparisonChain.start()
+                .compare(name, other.name)
+                .result();
     }
 }
