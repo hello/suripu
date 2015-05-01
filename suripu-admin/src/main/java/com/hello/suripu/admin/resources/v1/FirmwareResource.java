@@ -7,11 +7,14 @@ import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.models.FirmwareCountInfo;
 import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.OTAHistory;
+import com.hello.suripu.core.models.UpgradeNodeRequest;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import java.util.HashMap;
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -274,27 +277,11 @@ public class FirmwareResource {
 
     @PUT
     @Timed
-    @Path("/updates/{group_name}/add_node")
-    public void addFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
-                                 @PathParam("group_name") final String groupName,
-                                 @QueryParam("from_fw_version") final Integer fromFWVersion,
-                                 @QueryParam("to_fw_version") final Integer toFWVersion) {
-        if(groupName == null) {
-            LOGGER.error("Missing group parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/updates/add_node")
+    public void addFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final UpgradeNodeRequest nodeRequest) {
 
-        if(fromFWVersion == null) {
-            LOGGER.error("Missing fw_version parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        if(toFWVersion == null) {
-            LOGGER.error("Missing fw_version parameter");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        LOGGER.info("Adding FW upgrade node for group: {} on FW Version: {}", groupName, fromFWVersion);
-        firmwareUpgradePathDAO.insertFWUpgradeNode(groupName, fromFWVersion, toFWVersion);
+        LOGGER.info("Adding FW upgrade node for group: {} on FW Version: {} to FW Version: {}", nodeRequest.groupName, nodeRequest.fromFWVersion, nodeRequest.toFWVersion);
+        firmwareUpgradePathDAO.insertFWUpgradeNode(nodeRequest);
     }
 }

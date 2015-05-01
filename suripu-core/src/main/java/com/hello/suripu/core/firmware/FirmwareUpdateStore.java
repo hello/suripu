@@ -340,7 +340,9 @@ public class FirmwareUpdateStore {
             LOGGER.debug("No non-hashed fw version exists, defaulting to '{}'.", group);
             return group;
         } else {
-            return humanNames.get(0);
+            final String humanName = humanNames.get(0);
+            LOGGER.info("Found upgrade path {} => {}({}) for group: {}", currentFWVersion, nextFirmwareVersion.get(), humanName, group);
+            return humanName;
         }
     }
 }

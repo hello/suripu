@@ -19,12 +19,12 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.models.UpgradeNodeRequest;
 import com.yammer.metrics.annotation.Timed;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +50,12 @@ public class FirmwareUpgradePathDAO {
     }
 
     @Timed
-    public void insertFWUpgradeNode(final String groupName, final Integer fromFWVersion, final Integer toFWVersion) {
+    public void insertFWUpgradeNode(final UpgradeNodeRequest upgradeNode) {
 
         final Map<String, AttributeValue> item = new HashMap<>();
-        item.put(GROUP_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(groupName));
-        item.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(fromFWVersion.toString()));
-        item.put(TO_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(toFWVersion.toString()));
+        item.put(GROUP_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(upgradeNode.groupName));
+        item.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.fromFWVersion.toString()));
+        item.put(TO_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.toFWVersion.toString()));
         item.put(TIMESTAMP_ATTRIBUTE_NAME, new AttributeValue().withS(dateTimeToString(DateTime.now())));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
@@ -130,9 +130,5 @@ public class FirmwareUpgradePathDAO {
     }
     public static String dateTimeToString(final DateTime dateTime) {
         return dateTime.toString(DATETIME_FORMAT);
-    }
-
-    public static DateTime stringToDateTime(final String dateString) {
-        return DateTime.parse(dateString, DateTimeFormat.forPattern(DATETIME_FORMAT));
     }
 }
