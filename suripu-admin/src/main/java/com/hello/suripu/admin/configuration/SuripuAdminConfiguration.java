@@ -151,4 +151,12 @@ public class SuripuAdminConfiguration extends Configuration {
     public DynamoDBConfiguration getResponseCommandsDBConfiguration(){
         return this.respCommandsDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("fw_path_db")
+    private DynamoDBConfiguration fwUpgradePathDBConfiguration;
+    public DynamoDBConfiguration getFWUpgradePathDBConfiguration(){
+        return this.fwUpgradePathDBConfiguration;
+    }
 }

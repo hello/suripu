@@ -1,5 +1,6 @@
 package com.hello.suripu.admin.resources.v1;
 
+import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
@@ -40,6 +41,7 @@ public class FirmwareResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmwareResource.class);
 
     private final FirmwareVersionMappingDAO firmwareVersionMappingDAO;
+    final FirmwareUpgradePathDAO firmwareUpgradePathDAO;
     private final OTAHistoryDAODynamoDB otaHistoryDAO;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
     private final JedisPool jedisPool;
@@ -48,11 +50,13 @@ public class FirmwareResource {
     public FirmwareResource(final JedisPool jedisPool,
                             final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                             final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB,
-                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
+                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
+                            final FirmwareUpgradePathDAO firmwareUpgradePathDAO) {
         this.jedisPool = jedisPool;
         this.firmwareVersionMappingDAO = firmwareVersionMappingDAO;
         this.otaHistoryDAO = otaHistoryDAODynamoDB;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
+        this.firmwareUpgradePathDAO = firmwareUpgradePathDAO;
     }
 
     @GET
@@ -266,5 +270,31 @@ public class FirmwareResource {
         final Map<String, Object> issuedCommands = new HashMap<>();
         issuedCommands.put("reset_to_factory_fw", true);
         responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
+    }
+
+    @PUT
+    @Timed
+    @Path("/updates/{group_name}/add_node")
+    public void addFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                 @PathParam("group_name") final String groupName,
+                                 @QueryParam("from_fw_version") final Integer fromFWVersion,
+                                 @QueryParam("to_fw_version") final Integer toFWVersion) {
+        if(groupName == null) {
+            LOGGER.error("Missing group parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(fromFWVersion == null) {
+            LOGGER.error("Missing fw_version parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(toFWVersion == null) {
+            LOGGER.error("Missing fw_version parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        LOGGER.info("Adding FW upgrade node for group: {} on FW Version: {}", groupName, fromFWVersion);
+        firmwareUpgradePathDAO.insertFWUpgradeNode(groupName, fromFWVersion, toFWVersion);
     }
 }
