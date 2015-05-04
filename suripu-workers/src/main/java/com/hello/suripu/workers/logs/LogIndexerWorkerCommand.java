@@ -11,6 +11,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorF
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -26,12 +27,20 @@ import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
 import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.workers.framework.WorkerRolloutModule;
+import com.yammer.dropwizard.cli.ConfiguredCommand;
+import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerConfiguration> {
 
@@ -46,6 +55,26 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         init(configuration, awsCredentialsProvider);
+
+
+        if(configuration.getMetricsEnabled()) {
+            final String graphiteHostName = configuration.getGraphite().getHost();
+            final String apiKey = configuration.getGraphite().getApiKey();
+            final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
+
+            final String env = (configuration.getDebug()) ? "dev" : "prod";
+            final String prefix = String.format("%s.%s.suripu-workers", apiKey, env);
+
+            final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
+            final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
+            final Joiner joiner = Joiner.on(", ");
+            LOGGER.info("Logging the following metrics: {}", joiner.join(metrics));
+            GraphiteReporter.enable(Metrics.defaultRegistry(), interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix, predicate);
+
+            LOGGER.info("Metrics enabled.");
+        } else {
+            LOGGER.warn("Metrics not enabled.");
+        }
 
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
 
@@ -94,7 +123,7 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
     }
 
 
-    protected void init(LogIndexerWorkerConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+    protected void init(final LogIndexerWorkerConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDB amazonDynamoDB = new AmazonDynamoDBClient(awsCredentialsProvider);
         amazonDynamoDB.setEndpoint(configuration.getSenseEventsDynamoDBConfiguration().getEndpoint());
         final String tableName = configuration.getSenseEventsDynamoDBConfiguration().getTableName();

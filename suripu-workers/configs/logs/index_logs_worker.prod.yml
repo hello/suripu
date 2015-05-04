@@ -1,5 +1,5 @@
-metrics_enabled: false
-debug: true
+metrics_enabled: true
+debug: false
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336

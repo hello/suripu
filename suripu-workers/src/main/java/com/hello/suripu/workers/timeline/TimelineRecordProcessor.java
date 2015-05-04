@@ -13,11 +13,12 @@ import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
-import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by pangwu on 1/26/15.
@@ -38,6 +40,11 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
     private final AlgorithmResultsDAODynamoDB algorithmResultsDAODynamoDB;
+
+
+    private final Meter messagesProcessed;
+    private final Meter timelinesSaved;
+    private final Meter timelinesExpired;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
@@ -52,6 +59,10 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.algorithmResultsDAODynamoDB = algorithmResultsDAODynamoDB;
+
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
+        this.timelinesSaved = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-saved", "timelines-saved", TimeUnit.SECONDS);
+        this.timelinesExpired = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-expired", "timelines-expired", TimeUnit.SECONDS);
     }
 
     @Override
@@ -61,6 +72,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void processRecords(final List<Record> list, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
+        messagesProcessed.mark(list.size());
         final List<SenseCommandProtos.batched_pill_data> batchedPillData = new ArrayList<>();
         for(final Record record:list){
             try {
@@ -99,6 +111,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
             LOGGER.error("checkpoint {}", e.getMessage());
         } catch (ShutdownException e) {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+            System.exit(1);
         }
     }
 
@@ -117,10 +130,8 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                         continue;
                     }
 
-                    //only save if this is not the HMM
-                    if (!this.hasHmmEnabled(accountId)) {
-                        this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, result.get());
-                    }
+                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, result.get());
+                    timelinesSaved.mark(1);
 
                     LOGGER.info("{} Timeline saved for account {} at local utc {}",
                             DateTime.now(),
@@ -149,6 +160,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                             expired,
                             accountId,
                             DateTimeUtil.dateToYmdString(targetDate));
+                    timelinesExpired.mark(1);
                 } catch (AmazonServiceException awsException) {
                     LOGGER.error("Failed to expire timeline: {}", awsException.getErrorMessage());
                 } catch (Exception ex) {
@@ -162,5 +174,6 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     @Override
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
+        System.exit(1);
     }
 }

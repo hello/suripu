@@ -21,12 +21,7 @@ import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.db.ManagedDataSource;
-import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
-import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
+import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -50,26 +45,14 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
     @Override
     protected void run(Environment environment, Namespace namespace, SenseSaveWorkerConfiguration configuration) throws Exception {
 
-        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+        final DBIFactory dbiFactory = new DBIFactory();
+        final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
+        final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorsDB(), "postgresql");
 
-        final ManagedDataSource sensorsDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
-
-        final DBI commonDBI = new DBI(commonDataSource);
-        commonDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        commonDBI.registerContainerFactory(new ImmutableListContainerFactory());
-        commonDBI.registerContainerFactory(new ImmutableSetContainerFactory());
-        commonDBI.registerContainerFactory(new OptionalContainerFactory());
-        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
-        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
-
-
-        final DBI sensorsDBI = new DBI(sensorsDataSource);
-        sensorsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        sensorsDBI.registerContainerFactory(new ImmutableListContainerFactory());
-        sensorsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
-        sensorsDBI.registerContainerFactory(new OptionalContainerFactory());
         sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
+
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDBI.onDemand(DeviceDataDAO.class);
 
 

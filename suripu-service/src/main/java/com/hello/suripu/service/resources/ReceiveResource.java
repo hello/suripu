@@ -1,7 +1,6 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -33,8 +32,9 @@ import com.hello.suripu.service.configuration.OTAConfiguration;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
+import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
-import java.util.Map;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -54,7 +54,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 
 @Path("/in")
@@ -80,6 +82,9 @@ public class ReceiveResource extends BaseResource {
     private final SenseUploadConfiguration senseUploadConfiguration;
     private final OTAConfiguration otaConfiguration;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
+
+    private final Meter senseClockOutOfSync;
+    private final Meter pillClockOutOfSync;
 
     @Context
     HttpServletRequest request;
@@ -108,6 +113,8 @@ public class ReceiveResource extends BaseResource {
         this.senseUploadConfiguration = senseUploadConfiguration;
         this.otaConfiguration = otaConfiguration;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
+        this.senseClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "sense-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.pillClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "pill-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
     }
 
 
@@ -237,6 +244,7 @@ public class ReceiveResource extends BaseResource {
 
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
+        final List<String> groups = groupFlipper.getGroups(deviceName);
 
         for(int i = 0; i < batch.getDataCount(); i ++) {
             final DataInputProtos.periodic_data data = batch.getData(i);
@@ -244,12 +252,17 @@ public class ReceiveResource extends BaseResource {
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                 LOGGER.error("The clock for device {} is not within reasonable bounds (2h), current time = {}, received time = {}",
-                        data.getDeviceId(),
+                        deviceName,
                         DateTime.now(),
                         roundedDateTime
-                        );
+                );
                 // TODO: throw exception?
-                continue;
+                senseClockOutOfSync.mark(1);
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.REBOOT_CLOCK_OUT_OF_SYNC_DEVICES, deviceName, groups)) {
+                    responseBuilder.setResetDevice(true);
+                } else {
+                    continue;
+                }
             }
 
             // only compute the sate for the most recent conditions
@@ -269,7 +282,7 @@ public class ReceiveResource extends BaseResource {
         }
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
-        final List<String> groups = groupFlipper.getGroups(deviceName);
+
 
         if(userTimeZone.isPresent()) {
             final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now());
@@ -451,6 +464,7 @@ public class ReceiveResource extends BaseResource {
                         pill.getDeviceId(),
                         now,
                         new DateTime(pillTimestamp, DateTimeZone.UTC));
+                pillClockOutOfSync.mark(1);
                 continue;
             }
             cleanBatch.addPills(pill);

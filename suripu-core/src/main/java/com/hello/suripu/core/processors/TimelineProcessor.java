@@ -79,6 +79,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";
     public final static String ALGORITHM_NAME_HMM = "hmm";
+    public final static String VERSION_BACKUP = "wupang_backup_for_hmm"; //let us know the HMM had some issues
 
 
     static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
@@ -456,16 +457,24 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
             if (this.hasHmmEnabled(accountId)) {
-                /* DO HMM */
+
+                /* DO HMM, unless you get no result, then do the regular algorithm */
                 Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate, sensorData.trackerMotions, sensorData.allSensorSampleList);
 
-                if (!results.isPresent()) {
-                    return Optional.absent();
+                if (results.isPresent()) {
+                    LOGGER.debug("HMM Suceeded.");
+                    sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
+                    extraEvents = results.get().allTheOtherWakesAndSleeps;
+                    algorithm = ALGORITHM_NAME_HMM;
+                } else {
+                    LOGGER.debug("HMM Failed, trying regular algorithm instead");
+                    sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
+                            sensorData.trackerMotions,
+                            sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                            sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
+                    algorithm = ALGORITHM_NAME_REGULAR;
+                    version = VERSION_BACKUP;
                 }
-
-                sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
-                extraEvents = results.get().allTheOtherWakesAndSleeps;
-                algorithm = ALGORITHM_NAME_HMM;
 
             } else if(this.hasVotingEnabled(accountId)){
                 final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
