@@ -180,10 +180,11 @@ public abstract class DeviceDataDAO {
     @SingleValueResult(DeviceData.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
-            "AND ts < :utc_ts_limit ORDER BY ts DESC LIMIT 1;")
+            "AND ts < :max_utc_ts_limit and ts > :min_utc_ts_limit ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceData> getMostRecent(@Bind("account_id") final Long accountId,
                                                        @Bind("device_id") Long deviceId,
-                                                       @Bind("utc_ts_limit") final DateTime tsLimit);
+                                                       @Bind("max_utc_ts_limit") final DateTime maxTsLimit,
+                                                       @Bind("min_utc_ts_limit") final DateTime minTsLimit);
 
     public int batchInsertWithFailureFallback(final List<DeviceData> data){
         int inserted = 0;
