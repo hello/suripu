@@ -46,7 +46,7 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("common")
+    @JsonProperty("common_db")
     private DatabaseConfiguration commonDBConfiguration;
     public DatabaseConfiguration getCommonDBConfiguration() {
         return this.commonDBConfiguration;
