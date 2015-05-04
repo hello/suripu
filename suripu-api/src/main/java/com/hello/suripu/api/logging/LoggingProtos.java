@@ -1096,6 +1096,31 @@ public final class LoggingProtos {
      * <code>optional int64 received_at = 4;</code>
      */
     long getReceivedAt();
+
+    // repeated .RegistrationLog registration_log = 5;
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    java.util.List<RegistrationLog>
+        getRegistrationLogList();
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    RegistrationLog getRegistrationLog(int index);
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    int getRegistrationLogCount();
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    java.util.List<? extends RegistrationLogOrBuilder>
+        getRegistrationLogOrBuilderList();
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    RegistrationLogOrBuilder getRegistrationLogOrBuilder(
+            int index);
   }
   /**
    * Protobuf type {@code BatchLogMessage}
@@ -1177,6 +1202,14 @@ public final class LoggingProtos {
               receivedAt_ = input.readInt64();
               break;
             }
+            case 42: {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                registrationLog_ = new java.util.ArrayList<RegistrationLog>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              registrationLog_.add(input.readMessage(RegistrationLog.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1187,6 +1220,9 @@ public final class LoggingProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           messages_ = java.util.Collections.unmodifiableList(messages_);
+        }
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          registrationLog_ = java.util.Collections.unmodifiableList(registrationLog_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1240,6 +1276,10 @@ public final class LoggingProtos {
        * <code>STRUCTURED_SENSE_LOG = 3;</code>
        */
       STRUCTURED_SENSE_LOG(3, 3),
+      /**
+       * <code>ONBOARDING_LOG = 4;</code>
+       */
+      ONBOARDING_LOG(4, 4),
       ;
 
       /**
@@ -1258,6 +1298,10 @@ public final class LoggingProtos {
        * <code>STRUCTURED_SENSE_LOG = 3;</code>
        */
       public static final int STRUCTURED_SENSE_LOG_VALUE = 3;
+      /**
+       * <code>ONBOARDING_LOG = 4;</code>
+       */
+      public static final int ONBOARDING_LOG_VALUE = 4;
 
 
       public final int getNumber() { return value; }
@@ -1268,6 +1312,7 @@ public final class LoggingProtos {
           case 1: return SENSE_LOG;
           case 2: return WORKERS_LOG;
           case 3: return STRUCTURED_SENSE_LOG;
+          case 4: return ONBOARDING_LOG;
           default: return null;
         }
       }
@@ -1431,11 +1476,48 @@ public final class LoggingProtos {
       return receivedAt_;
     }
 
+    // repeated .RegistrationLog registration_log = 5;
+    public static final int REGISTRATION_LOG_FIELD_NUMBER = 5;
+    private java.util.List<RegistrationLog> registrationLog_;
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public java.util.List<RegistrationLog> getRegistrationLogList() {
+      return registrationLog_;
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public java.util.List<? extends RegistrationLogOrBuilder>
+        getRegistrationLogOrBuilderList() {
+      return registrationLog_;
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public int getRegistrationLogCount() {
+      return registrationLog_.size();
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public RegistrationLog getRegistrationLog(int index) {
+      return registrationLog_.get(index);
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public RegistrationLogOrBuilder getRegistrationLogOrBuilder(
+        int index) {
+      return registrationLog_.get(index);
+    }
+
     private void initFields() {
       messages_ = java.util.Collections.emptyList();
       appVersion_ = "";
       logType_ = LogType.APPLICATION_LOG;
       receivedAt_ = 0L;
+      registrationLog_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1461,6 +1543,9 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt64(4, receivedAt_);
       }
+      for (int i = 0; i < registrationLog_.size(); i++) {
+        output.writeMessage(5, registrationLog_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1485,6 +1570,10 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(4, receivedAt_);
+      }
+      for (int i = 0; i < registrationLog_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, registrationLog_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1595,6 +1684,7 @@ public final class LoggingProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getMessagesFieldBuilder();
+          getRegistrationLogFieldBuilder();
         }
       }
       private static Builder create() {
@@ -1615,6 +1705,12 @@ public final class LoggingProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         receivedAt_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (registrationLogBuilder_ == null) {
+          registrationLog_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          registrationLogBuilder_.clear();
+        }
         return this;
       }
 
@@ -1664,6 +1760,15 @@ public final class LoggingProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.receivedAt_ = receivedAt_;
+        if (registrationLogBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+            registrationLog_ = java.util.Collections.unmodifiableList(registrationLog_);
+            bitField0_ = (bitField0_ & ~0x00000010);
+          }
+          result.registrationLog_ = registrationLog_;
+        } else {
+          result.registrationLog_ = registrationLogBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1716,6 +1821,32 @@ public final class LoggingProtos {
         }
         if (other.hasReceivedAt()) {
           setReceivedAt(other.getReceivedAt());
+        }
+        if (registrationLogBuilder_ == null) {
+          if (!other.registrationLog_.isEmpty()) {
+            if (registrationLog_.isEmpty()) {
+              registrationLog_ = other.registrationLog_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+            } else {
+              ensureRegistrationLogIsMutable();
+              registrationLog_.addAll(other.registrationLog_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.registrationLog_.isEmpty()) {
+            if (registrationLogBuilder_.isEmpty()) {
+              registrationLogBuilder_.dispose();
+              registrationLogBuilder_ = null;
+              registrationLog_ = other.registrationLog_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+              registrationLogBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getRegistrationLogFieldBuilder() : null;
+            } else {
+              registrationLogBuilder_.addAllMessages(other.registrationLog_);
+            }
+          }
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2125,6 +2256,246 @@ public final class LoggingProtos {
         receivedAt_ = 0L;
         onChanged();
         return this;
+      }
+
+      // repeated .RegistrationLog registration_log = 5;
+      private java.util.List<RegistrationLog> registrationLog_ =
+        java.util.Collections.emptyList();
+      private void ensureRegistrationLogIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          registrationLog_ = new java.util.ArrayList<RegistrationLog>(registrationLog_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          RegistrationLog, RegistrationLog.Builder, RegistrationLogOrBuilder> registrationLogBuilder_;
+
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public java.util.List<RegistrationLog> getRegistrationLogList() {
+        if (registrationLogBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(registrationLog_);
+        } else {
+          return registrationLogBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public int getRegistrationLogCount() {
+        if (registrationLogBuilder_ == null) {
+          return registrationLog_.size();
+        } else {
+          return registrationLogBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog getRegistrationLog(int index) {
+        if (registrationLogBuilder_ == null) {
+          return registrationLog_.get(index);
+        } else {
+          return registrationLogBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder setRegistrationLog(
+          int index, RegistrationLog value) {
+        if (registrationLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRegistrationLogIsMutable();
+          registrationLog_.set(index, value);
+          onChanged();
+        } else {
+          registrationLogBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder setRegistrationLog(
+          int index, RegistrationLog.Builder builderForValue) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          registrationLogBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(RegistrationLog value) {
+        if (registrationLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(value);
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(
+          int index, RegistrationLog value) {
+        if (registrationLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(index, value);
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(
+          RegistrationLog.Builder builderForValue) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(builderForValue.build());
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(
+          int index, RegistrationLog.Builder builderForValue) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addAllRegistrationLog(
+          Iterable<? extends RegistrationLog> values) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          super.addAll(values, registrationLog_);
+          onChanged();
+        } else {
+          registrationLogBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder clearRegistrationLog() {
+        if (registrationLogBuilder_ == null) {
+          registrationLog_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+          onChanged();
+        } else {
+          registrationLogBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder removeRegistrationLog(int index) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.remove(index);
+          onChanged();
+        } else {
+          registrationLogBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog.Builder getRegistrationLogBuilder(
+          int index) {
+        return getRegistrationLogFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLogOrBuilder getRegistrationLogOrBuilder(
+          int index) {
+        if (registrationLogBuilder_ == null) {
+          return registrationLog_.get(index);  } else {
+          return registrationLogBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public java.util.List<? extends RegistrationLogOrBuilder>
+           getRegistrationLogOrBuilderList() {
+        if (registrationLogBuilder_ != null) {
+          return registrationLogBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(registrationLog_);
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog.Builder addRegistrationLogBuilder() {
+        return getRegistrationLogFieldBuilder().addBuilder(
+            RegistrationLog.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog.Builder addRegistrationLogBuilder(
+          int index) {
+        return getRegistrationLogFieldBuilder().addBuilder(
+            index, RegistrationLog.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public java.util.List<RegistrationLog.Builder>
+           getRegistrationLogBuilderList() {
+        return getRegistrationLogFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          RegistrationLog, RegistrationLog.Builder, RegistrationLogOrBuilder>
+          getRegistrationLogFieldBuilder() {
+        if (registrationLogBuilder_ == null) {
+          registrationLogBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              RegistrationLog, RegistrationLog.Builder, RegistrationLogOrBuilder>(
+                  registrationLog_,
+                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  getParentForChildren(),
+                  isClean());
+          registrationLog_ = null;
+        }
+        return registrationLogBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:BatchLogMessage)
@@ -8598,33 +8969,34 @@ public final class LoggingProtos {
       "\n\024suripu_logging.proto\"v\n\nLogMessage\022\016\n\006" +
       "origin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001(" +
       "\003\022\031\n\nproduction\030\004 \001(\010:\005false\022\r\n\005level\030\005 " +
-      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\340\001\n\017BatchLogMessa" +
+      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\240\002\n\017BatchLogMessa" +
       "ge\022\035\n\010messages\030\001 \003(\0132\013.LogMessage\022\023\n\013app" +
       "_version\030\002 \001(\t\022*\n\010log_type\030\003 \001(\0162\030.Batch" +
-      "LogMessage.LogType\022\023\n\013received_at\030\004 \001(\003\"" +
-      "X\n\007LogType\022\023\n\017APPLICATION_LOG\020\000\022\r\n\tSENSE" +
-      "_LOG\020\001\022\017\n\013WORKERS_LOG\020\002\022\030\n\024STRUCTURED_SE" +
-      "NSE_LOG\020\003\"\250\002\n\013HttpRequest\022\014\n\004path\030\001 \001(\t\022",
-      "\024\n\014access_token\030\002 \001(\t\022\022\n\naccount_id\030\003 \001(" +
-      "\003\022\026\n\016application_id\030\004 \001(\003\022\025\n\rtimestamp_u" +
-      "tc\030\005 \001(\003\022\027\n\017required_scopes\030\006 \003(\t\022\027\n\017pro" +
-      "vided_scopes\030\007 \003(\t\022\037\n\027access_token_creat" +
-      "ed_at\030\010 \001(\003\022\022\n\nuser_agent\030\t \001(\t\022$\n\007heade" +
-      "rs\030\n \003(\0132\023.HttpRequest.Header\032%\n\006Header\022" +
-      "\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\\n\014Registra" +
-      "tion\022\021\n\tdevice_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001" +
-      "(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_address\030\004 \001" +
-      "(\t\"\235\001\n\017RegistrationLog\022\020\n\010sense_id\030\001 \001(\t",
-      "\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount_id\030\003 \001(\003\022" +
-      "\022\n\nip_address\030\004 \001(\t\022\016\n\006action\030\005 \001(\t\022\017\n\007p" +
-      "ill_id\030\006 \001(\t\022\016\n\006result\030\007 \001(\t\022\014\n\004info\030\010 \001" +
-      "(\t\"e\n\017DecryptionError\022\021\n\tdevice_id\030\001 \001(\t" +
-      "\022\016\n\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_" +
-      "body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020ProvisionRe" +
-      "quest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_number\030\002 \001" +
-      "(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\tB-\n\034co" +
-      "m.hello.suripu.api.loggingB\rLoggingProto" +
-      "s"
+      "LogMessage.LogType\022\023\n\013received_at\030\004 \001(\003\022" +
+      "*\n\020registration_log\030\005 \003(\0132\020.Registration" +
+      "Log\"l\n\007LogType\022\023\n\017APPLICATION_LOG\020\000\022\r\n\tS" +
+      "ENSE_LOG\020\001\022\017\n\013WORKERS_LOG\020\002\022\030\n\024STRUCTURE",
+      "D_SENSE_LOG\020\003\022\022\n\016ONBOARDING_LOG\020\004\"\250\002\n\013Ht" +
+      "tpRequest\022\014\n\004path\030\001 \001(\t\022\024\n\014access_token\030" +
+      "\002 \001(\t\022\022\n\naccount_id\030\003 \001(\003\022\026\n\016application" +
+      "_id\030\004 \001(\003\022\025\n\rtimestamp_utc\030\005 \001(\003\022\027\n\017requ" +
+      "ired_scopes\030\006 \003(\t\022\027\n\017provided_scopes\030\007 \003" +
+      "(\t\022\037\n\027access_token_created_at\030\010 \001(\003\022\022\n\nu" +
+      "ser_agent\030\t \001(\t\022$\n\007headers\030\n \003(\0132\023.HttpR" +
+      "equest.Header\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n" +
+      "\005value\030\002 \001(\t\"\\\n\014Registration\022\021\n\tdevice_i" +
+      "d\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount_id",
+      "\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\"\235\001\n\017Registrat" +
+      "ionLog\022\020\n\010sense_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 " +
+      "\001(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_address\030\004 " +
+      "\001(\t\022\016\n\006action\030\005 \001(\t\022\017\n\007pill_id\030\006 \001(\t\022\016\n\006" +
+      "result\030\007 \001(\t\022\014\n\004info\030\010 \001(\t\"e\n\017Decryption" +
+      "Error\022\021\n\tdevice_id\030\001 \001(\t\022\016\n\006keyHex\030\002 \001(\t" +
+      "\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_body\030\004 \001(\014\022\r\n\005ot" +
+      "her\030\005 \001(\t\"W\n\020ProvisionRequest\022\014\n\004body\030\001 " +
+      "\001(\014\022\025\n\rserial_number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022" +
+      "\n\nip_address\030\004 \001(\tB-\n\034com.hello.suripu.a",
+      "pi.loggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -8642,7 +9014,7 @@ public final class LoggingProtos {
           internal_static_BatchLogMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_BatchLogMessage_descriptor,
-              new String[] { "Messages", "AppVersion", "LogType", "ReceivedAt", });
+              new String[] { "Messages", "AppVersion", "LogType", "ReceivedAt", "RegistrationLog", });
           internal_static_HttpRequest_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_HttpRequest_fieldAccessorTable = new
