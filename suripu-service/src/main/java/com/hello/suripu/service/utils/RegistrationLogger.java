@@ -89,6 +89,7 @@ public class RegistrationLogger {
     private void logImpl(final Optional<String> pillId,
                              final String info,
                              final RegistrationActionResults result){
+        start();
         final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                 info,
                 result)
@@ -111,13 +112,18 @@ public class RegistrationLogger {
         logImpl(pillId, info, RegistrationActionResults.SUCCESS);
     }
 
-    public void start(){
+    private void start(){
+        if(this.logs.size() != 0){
+            return;
+        }
         logImpl(Optional.<String>absent(), "enter function call", RegistrationActionResults.START);
     }
 
     public void commit(){
+        LOGGER.info("Committing onboarding log...");
         logImpl(Optional.<String>absent(), "exit function call", RegistrationActionResults.EXIT);
         this.postLog();
         this.logs.clear();
+        LOGGER.info("Onboarding log comitted.");
     }
 }
