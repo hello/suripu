@@ -220,7 +220,6 @@ public class RegisterResource extends BaseResource {
                 action,
                 request.getHeader("X-Forwarded-For"),
                 registrationLogger);
-        kinesisLogger.start();
 
         final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
         MorpheusCommand morpheusCommand = MorpheusCommand.getDefaultInstance();
