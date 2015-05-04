@@ -102,7 +102,7 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(SenseDeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id and ts > now() - '1 hours' ORDER BY ts DESC LIMIT 1;")
+    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id and ts > now() - interval '1 hours' ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceStatus> senseStatusLastHour(@Bind("sense_id") final Long senseId);
 
     @RegisterMapper(DeviceDataMapper.class)
