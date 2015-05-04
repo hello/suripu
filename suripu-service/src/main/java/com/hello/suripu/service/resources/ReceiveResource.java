@@ -1,7 +1,6 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -34,7 +33,6 @@ import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
-import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -54,6 +52,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -237,6 +236,7 @@ public class ReceiveResource extends BaseResource {
 
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
+        final List<String> groups = groupFlipper.getGroups(deviceName);
 
         for(int i = 0; i < batch.getDataCount(); i ++) {
             final DataInputProtos.periodic_data data = batch.getData(i);
@@ -244,12 +244,17 @@ public class ReceiveResource extends BaseResource {
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                 LOGGER.error("The clock for device {} is not within reasonable bounds (2h), current time = {}, received time = {}",
-                        data.getDeviceId(),
+                        deviceName,
                         DateTime.now(),
                         roundedDateTime
-                        );
+                );
                 // TODO: throw exception?
-                continue;
+
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.REBOOT_CLOCK_OUT_OF_SYNC_DEVICES, deviceName, groups)) {
+                    responseBuilder.setResetDevice(true);
+                } else {
+                    continue;
+                }
             }
 
             // only compute the sate for the most recent conditions
@@ -269,7 +274,7 @@ public class ReceiveResource extends BaseResource {
         }
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
-        final List<String> groups = groupFlipper.getGroups(deviceName);
+
 
         if(userTimeZone.isPresent()) {
             final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now());
