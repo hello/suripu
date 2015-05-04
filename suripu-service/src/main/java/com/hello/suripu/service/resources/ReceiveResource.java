@@ -32,7 +32,9 @@ import com.hello.suripu.service.configuration.OTAConfiguration;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
+import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -54,6 +56,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 
 @Path("/in")
@@ -79,6 +82,9 @@ public class ReceiveResource extends BaseResource {
     private final SenseUploadConfiguration senseUploadConfiguration;
     private final OTAConfiguration otaConfiguration;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
+
+    private final Meter senseClockOutOfSync;
+    private final Meter pillClockOutOfSync;
 
     @Context
     HttpServletRequest request;
@@ -107,6 +113,8 @@ public class ReceiveResource extends BaseResource {
         this.senseUploadConfiguration = senseUploadConfiguration;
         this.otaConfiguration = otaConfiguration;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
+        this.senseClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "sense-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.pillClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "pill-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
     }
 
 
@@ -249,7 +257,7 @@ public class ReceiveResource extends BaseResource {
                         roundedDateTime
                 );
                 // TODO: throw exception?
-
+                senseClockOutOfSync.mark(1);
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.REBOOT_CLOCK_OUT_OF_SYNC_DEVICES, deviceName, groups)) {
                     responseBuilder.setResetDevice(true);
                 } else {
@@ -456,6 +464,7 @@ public class ReceiveResource extends BaseResource {
                         pill.getDeviceId(),
                         now,
                         new DateTime(pillTimestamp, DateTimeZone.UTC));
+                pillClockOutOfSync.mark(1);
                 continue;
             }
             cleanBatch.addPills(pill);
