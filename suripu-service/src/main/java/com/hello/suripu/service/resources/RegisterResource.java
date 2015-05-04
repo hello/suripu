@@ -215,11 +215,12 @@ public class RegisterResource extends BaseResource {
     private MorpheusCommand.Builder pair(final String senseIdFromHeader, final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
         final MorpheusCommand.Builder builder = MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
-        final DataLogger registrationLogger = kinesisLoggerFactory.get(QueueName.REGISTRATION_LOG);
+        final DataLogger registrationLogger = kinesisLoggerFactory.get(QueueName.LOGS);
         final RegistrationLogger kinesisLogger = RegistrationLogger.create(senseIdFromHeader,
                 action,
                 request.getHeader("X-Forwarded-For"),
                 registrationLogger);
+        kinesisLogger.start();
 
         final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
         MorpheusCommand morpheusCommand = MorpheusCommand.getDefaultInstance();
@@ -257,7 +258,7 @@ public class RegisterResource extends BaseResource {
             LOGGER.error(logMessage);
 
             kinesisLogger.logFailure(Optional.<String>absent(), logMessage);
-
+            kinesisLogger.commit();
             return builder;
         }
 
@@ -289,6 +290,8 @@ public class RegisterResource extends BaseResource {
 
                     builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                     builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
+
+                    kinesisLogger.commit();
                     return builder;
                 }
                 senseId = deviceAccountPairs.get(0).externalDeviceId;
@@ -321,6 +324,8 @@ public class RegisterResource extends BaseResource {
             final String errorMessage = String.format("Wrong request command type %s", morpheusCommand.getType().toString());
             LOGGER.error(errorMessage);
             kinesisLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+            kinesisLogger.commit();
+
             return builder;
         }
 
@@ -419,6 +424,7 @@ public class RegisterResource extends BaseResource {
             LOGGER.error("Failed inserting registration into kinesis stream: {}", e.getMessage());
         }
 
+        kinesisLogger.commit();
         return builder;
     }
 

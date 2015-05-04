@@ -5,16 +5,21 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.SenseEventsDAO;
 
 public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
     private final LogIndexerWorkerConfiguration config;
     private final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory;
+    private final OnBoardingLogDAO onBoardingLogDAO;
 
-    public LogIndexerProcessorFactory(final LogIndexerWorkerConfiguration config, final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory) {
+    public LogIndexerProcessorFactory(final LogIndexerWorkerConfiguration config,
+                                      final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory,
+                                      final OnBoardingLogDAO onBoardingLogDAO) {
         this.config = config;
         this.amazonDynamoDBClientFactory = amazonDynamoDBClientFactory;
+        this.onBoardingLogDAO = onBoardingLogDAO;
     }
 
     @Override
@@ -27,6 +32,7 @@ public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
         final AmazonDynamoDB amazonDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(config.getSenseEventsDynamoDBConfiguration().getEndpoint());
         final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(amazonDynamoDB, config.getSenseEventsDynamoDBConfiguration().getTableName());
-        return LogIndexerProcessor.create(applicationIndex, senseIndex, workersIndex, senseEventsDAO);
+
+        return LogIndexerProcessor.create(applicationIndex, senseIndex, workersIndex, senseEventsDAO, this.onBoardingLogDAO);
     }
 }

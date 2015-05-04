@@ -8,6 +8,9 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by pangwu on 4/29/15.
  */
@@ -19,6 +22,7 @@ public class RegistrationLogger {
     private final PairAction action;
     private final String ip;
     private Optional<Long> accountId = Optional.absent();
+    private List<LoggingProtos.RegistrationLog> logs = new ArrayList<>();
 
 
     public void setSenseId(final String senseId){
@@ -63,39 +67,57 @@ public class RegistrationLogger {
         return builder;
     }
 
-    private boolean postLog(final DataLogger logger, final String senseId, final LoggingProtos.RegistrationLog log){
+    private boolean postLog(){
         try{
-            logger.put(senseId, log.toByteArray());
+            final LoggingProtos.BatchLogMessage.Builder builder = LoggingProtos.BatchLogMessage.newBuilder();
+            builder.setLogType(LoggingProtos.BatchLogMessage.LogType.ONBOARDING_LOG);
+            builder.addAllRegistrationLog(this.logs);
+
+            this.dataLogger.put(this.senseId, builder.build().toByteArray());
             return true;
         }catch (AmazonServiceException awsEx){
-            LOGGER.error("Post log message for sense {} failed: {}", senseId, awsEx.getErrorMessage());
+            LOGGER.error("Post log message for sense {} failed: {}", this.senseId, awsEx.getErrorMessage());
         }
 
         return false;
     }
 
-    private boolean logImpl(final Optional<String> pillId,
+    private void bufferLog(final LoggingProtos.RegistrationLog log){
+        this.logs.add(log);
+    }
+
+    private void logImpl(final Optional<String> pillId,
                              final String info,
                              final RegistrationActionResults result){
         final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                 info,
                 result)
                 .build();
-        return postLog(this.dataLogger, this.senseId, log);
+        bufferLog(log);
     }
 
-    public boolean logFailure(final Optional<String> pillId,
+    public void logFailure(final Optional<String> pillId,
                                   final String info){
-        return logImpl(pillId, info, RegistrationActionResults.FAILED);
+        logImpl(pillId, info, RegistrationActionResults.FAILED);
     }
 
-    public boolean logProgress(final Optional<String> pillId,
+    public void logProgress(final Optional<String> pillId,
                                final String info){
-        return logImpl(pillId, info, RegistrationActionResults.IN_PROGRESS);
+        logImpl(pillId, info, RegistrationActionResults.IN_PROGRESS);
     }
 
-    public boolean logSuccess(final Optional<String> pillId,
+    public void logSuccess(final Optional<String> pillId,
                                       final String info){
-        return logImpl(pillId, info, RegistrationActionResults.SUCCESS);
+        logImpl(pillId, info, RegistrationActionResults.SUCCESS);
+    }
+
+    public void start(){
+        logImpl(Optional.<String>absent(), "enter function call", RegistrationActionResults.START);
+    }
+
+    public void commit(){
+        logImpl(Optional.<String>absent(), "exit function call", RegistrationActionResults.EXIT);
+        this.postLog();
+        this.logs.clear();
     }
 }
