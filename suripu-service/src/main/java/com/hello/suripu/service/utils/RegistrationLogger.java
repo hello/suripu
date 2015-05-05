@@ -1,6 +1,7 @@
 package com.hello.suripu.service.utils;
 
-import com.amazonaws.AmazonServiceException;
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.services.kinesis.model.ProvisionedThroughputExceededException;
 import com.google.common.base.Optional;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.logging.DataLogger;
@@ -69,23 +70,30 @@ public class RegistrationLogger {
         return builder;
     }
 
+    protected byte[] getByteLog(){
+        final LoggingProtos.BatchLogMessage.Builder builder = LoggingProtos.BatchLogMessage.newBuilder();
+        builder.setLogType(LoggingProtos.BatchLogMessage.LogType.ONBOARDING_LOG);
+        builder.addAllRegistrationLog(this.logs);
+
+        final byte[] bytes = builder.build().toByteArray();
+        return bytes;
+    }
+
     private boolean postLog(){
         try{
-            final LoggingProtos.BatchLogMessage.Builder builder = LoggingProtos.BatchLogMessage.newBuilder();
-            builder.setLogType(LoggingProtos.BatchLogMessage.LogType.ONBOARDING_LOG);
-            builder.addAllRegistrationLog(this.logs);
-
-            final byte[] bytes = builder.build().toByteArray();
+            final byte[] bytes = getByteLog();
             if(bytes.length >= MAX_LOG_SIZE){
                 LOGGER.warn("Log message too large, size {}", bytes.length);
                 return false;
             }
-            this.dataLogger.put(this.senseId, builder.build().toByteArray());
+            this.dataLogger.put(this.senseId, bytes);
             return true;
-        }catch (AmazonServiceException awsEx){
-            LOGGER.error("Post log message for sense {} failed: {}", this.senseId, awsEx.getErrorMessage());
-        }catch (Exception ex){
-            LOGGER.error("Post log message for sense {} failed: {}", this.senseId, ex.getMessage());
+        } catch (ProvisionedThroughputExceededException ptEx){
+            LOGGER.error("Provisioned Throughput Exceeded.");
+        } catch (AmazonClientException awsEx){
+            LOGGER.error("Post log message for sense {} failed: {}", this.senseId, awsEx.getMessage());
+        } catch (Exception ex){
+            LOGGER.error("Post log message for sense {} failed, generic error: {}", this.senseId, ex.getMessage());
         }
 
         return false;
@@ -94,11 +102,13 @@ public class RegistrationLogger {
     private void logImpl(final Optional<String> pillId,
                              final String info,
                              final RegistrationActionResults result){
+
+        final DateTime now = DateTime.now();
         if(this.logs.size() == 0){
             final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                     "enter function call",
                     RegistrationActionResults.START,
-                    DateTime.now())
+                    now)
                     .build();
             this.logs.add(log);
         }
@@ -106,7 +116,7 @@ public class RegistrationLogger {
         final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                 info,
                 result,
-                DateTime.now().plusMillis(1))
+                now.plusMillis(1))
                 .build();
         this.logs.add(log);
     }
