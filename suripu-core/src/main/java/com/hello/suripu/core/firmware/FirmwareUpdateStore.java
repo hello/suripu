@@ -54,6 +54,8 @@ public class FirmwareUpdateStore {
     private final String bucketName;
     private final AmazonS3 s3Signer;
     private final static String FIRMWARE_BUCKET_ASIA = "hello-firmware-asia";
+    private final static String S3_CACHE_CLEAR_GROUP_NAME = "clear_cache";
+    private final static Integer S3_CACHE_CLEAR_VERSION_NUMBER = 666666;
 
     final Cache<String, Pair<Integer, List<SyncResponse.FileDownload>>> s3FWCache;
     final Cache<Pair<String, Integer>, String> s3ObjectKeyCache;
@@ -336,6 +338,11 @@ public class FirmwareUpdateStore {
     }
 
     private String getCachedS3ObjectForGroup(final String group, final Integer currentFWVersion) {
+
+        if (group.equals(S3_CACHE_CLEAR_GROUP_NAME) && currentFWVersion.equals(S3_CACHE_CLEAR_VERSION_NUMBER)) {
+            LOGGER.info("Received command to clear S3 ObjectKey Cache.");
+            s3ObjectKeyCache.invalidateAll();
+        }
 
         final Pair<String, Integer> groupFWPair = new Pair<>(group, currentFWVersion);
         String objectKey = "";
