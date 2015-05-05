@@ -69,7 +69,7 @@ public class OTAProcessor {
         }
 
         if (isAlwaysOTA) {
-            LOGGER.info("Always OTA is on for device: ", deviceID);
+            LOGGER.info("Always OTA is on for device: {}", deviceID);
             canOTA = true;
         } else {
 

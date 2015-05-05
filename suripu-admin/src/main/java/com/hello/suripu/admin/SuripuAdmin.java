@@ -10,7 +10,8 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
-import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
+import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
+import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
@@ -188,6 +189,9 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final AmazonDynamoDB respCommandsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getResponseCommandsDBConfiguration().getEndpoint());
         final ResponseCommandsDAODynamoDB respCommandsDAODynamoDB = new ResponseCommandsDAODynamoDB(respCommandsDynamoDBClient, configuration.getResponseCommandsDBConfiguration().getTableName());
 
+        final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBClientFactory.getForEndpoint(configuration.getFWUpgradePathDBConfiguration().getEndpoint());
+        final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, configuration.getFWUpgradePathDBConfiguration().getTableName());
+
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO));
@@ -195,7 +199,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));
-        environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO, otaHistoryDAODynamoDB, respCommandsDAODynamoDB));
+        environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO, otaHistoryDAODynamoDB, respCommandsDAODynamoDB, firmwareUpgradePathDAO));
         environment.addResource(new EventsResources(senseEventsDAO));
         environment.addResource(new InspectionResources(deviceDAOAdmin));
 
