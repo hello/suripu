@@ -339,6 +339,7 @@ public class FirmwareUpdateStore {
 
     private String getCachedS3ObjectForGroup(final String group, final Integer currentFWVersion) {
 
+        //TODO: Refactor the way cache clearing is called. 
         if (group.equals(S3_CACHE_CLEAR_GROUP_NAME) && currentFWVersion.equals(S3_CACHE_CLEAR_VERSION_NUMBER)) {
             LOGGER.info("Received command to clear S3 ObjectKey Cache.");
             s3ObjectKeyCache.invalidateAll();
