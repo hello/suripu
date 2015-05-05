@@ -9,6 +9,7 @@ import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class SuripuConfiguration extends Configuration {
@@ -192,6 +193,15 @@ public class SuripuConfiguration extends Configuration {
     private String awsAccessSecretS3;
     public String getAwsAccessSecretS3() {
         return awsAccessSecretS3;
+    }
+
+    @Valid
+    @NotNull
+    @Min(60)
+    @JsonProperty("ring_duration_sec")
+    private Integer ringDuration;
+    public Integer getRingDuration(){
+        return this.ringDuration;
     }
 
 }
