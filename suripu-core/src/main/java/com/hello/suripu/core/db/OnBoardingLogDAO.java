@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +41,7 @@ public abstract class OnBoardingLogDAO {
 
     @SqlBatch("INSERT INTO onboarding_logs (sense_id, account_id, pill_id, utc_ts, info, result, operation, ip) " +
             "VALUES (:sense_id, :account_id, :pill_id, :utc_ts, :info, :result, :operation, :ip)")
-    public abstract Integer batchInsert(@Bind("sense_id") List<String> senseId,
+    public abstract void batchInsert(@Bind("sense_id") List<String> senseId,
                             @Bind("account_id") List<Long> accountId,
                             @Bind("pill_id") List<String> pillId,
                             @Bind("utc_ts") List<DateTime> timestamp,
@@ -70,16 +69,21 @@ public abstract class OnBoardingLogDAO {
             accountIds.add(registrationLog.hasAccountId() ? registrationLog.getAccountId() : null);
             senseIds.add(registrationLog.getSenseId());
             timestamps.add(new DateTime(registrationLog.getTimestamp(), DateTimeZone.UTC));
+
             pillIds.add(registrationLog.hasPillId() ? registrationLog.getPillId() : null);
-            info.add(registrationLog.getInfo());
+            info.add(registrationLog.hasInfo() ? registrationLog.getInfo() : null);
             results.add(registrationLog.getResult());
             operations.add(registrationLog.getAction());
-            ips.add(registrationLog.hasIpAddress() ? registrationLog.getIpAddress() : null);
+            ips.add(registrationLog.getIpAddress());
+            LOGGER.info("sense_id {}, account_id {}, ts {}",
+                    registrationLog.getSenseId(),
+                    registrationLog.getAccountId(),
+                    registrationLog.getTimestamp());
         }
 
 
         try{
-            this.batchInsert(senseIds, accountIds, Collections.EMPTY_LIST, timestamps, info, results, operations, ips);
+            this.batchInsert(senseIds, accountIds, pillIds, timestamps, info, results, operations, ips);
             return accountIds.size();
         } catch (UnableToExecuteStatementException ex){
             LOGGER.error("Unable to insert batch onboarding log, duplication.");
@@ -107,6 +111,8 @@ public abstract class OnBoardingLogDAO {
                         registrationLog.getIpAddress()
                 );
 
+                inserted++;
+
                 if (id == null) {
                     LOGGER.warn("id is null");
                     continue;
@@ -132,7 +138,6 @@ public abstract class OnBoardingLogDAO {
                         registrationLog.getTimestamp(),
                         exp.getMessage());
             }
-            inserted++;
         }
         return inserted;
     }
