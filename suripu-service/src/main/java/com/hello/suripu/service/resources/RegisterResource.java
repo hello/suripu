@@ -264,7 +264,7 @@ public class RegisterResource extends BaseResource {
         final Long accountId = accessTokenOptional.get().accountId;
         kinesisLogger.setAccountId(accountId);
 
-        final String logMessage = String.format("accountId = %d", accountId);
+        final String logMessage = String.format("AccountId from protobuf = %d", accountId);
         LOGGER.debug(logMessage);
 
         kinesisLogger.logProgress(Optional.<String>absent(), logMessage);

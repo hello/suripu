@@ -16,6 +16,7 @@ import java.util.List;
  */
 public class RegistrationLogger {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationLogger.class);
+    private static final long MAX_LOG_SIZE = 10 * 1024;  // 10K per commit
 
     private String senseId;
     private final DataLogger dataLogger;
@@ -49,11 +50,12 @@ public class RegistrationLogger {
 
     private LoggingProtos.RegistrationLog.Builder getRegistrationLogBuilder(final Optional<String> pillId,
                                                                             final String info,
-                                                                            final RegistrationActionResults result){
+                                                                            final RegistrationActionResults result,
+                                                                            final DateTime currentTime){
         final LoggingProtos.RegistrationLog.Builder builder = LoggingProtos.RegistrationLog.newBuilder().setSenseId(this.senseId)
                 .setAction(this.action.toString())
                 .setResult(result.toString())
-                .setTimestamp(DateTime.now().getMillis())
+                .setTimestamp(currentTime.getMillis())
                 .setIpAddress(this.ip)
                 .setInfo(info);
         if(this.accountId.isPresent()){
@@ -73,28 +75,40 @@ public class RegistrationLogger {
             builder.setLogType(LoggingProtos.BatchLogMessage.LogType.ONBOARDING_LOG);
             builder.addAllRegistrationLog(this.logs);
 
+            final byte[] bytes = builder.build().toByteArray();
+            if(bytes.length >= MAX_LOG_SIZE){
+                LOGGER.warn("Log message too large, size {}", bytes.length);
+                return false;
+            }
             this.dataLogger.put(this.senseId, builder.build().toByteArray());
             return true;
         }catch (AmazonServiceException awsEx){
             LOGGER.error("Post log message for sense {} failed: {}", this.senseId, awsEx.getErrorMessage());
+        }catch (Exception ex){
+            LOGGER.error("Post log message for sense {} failed: {}", this.senseId, ex.getMessage());
         }
 
         return false;
     }
 
-    private void bufferLog(final LoggingProtos.RegistrationLog log){
-        this.logs.add(log);
-    }
-
     private void logImpl(final Optional<String> pillId,
                              final String info,
                              final RegistrationActionResults result){
-        start();
+        if(this.logs.size() == 0){
+            final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
+                    "enter function call",
+                    RegistrationActionResults.START,
+                    DateTime.now())
+                    .build();
+            this.logs.add(log);
+        }
+
         final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                 info,
-                result)
+                result,
+                DateTime.now().plusMillis(1))
                 .build();
-        bufferLog(log);
+        this.logs.add(log);
     }
 
     public void logFailure(final Optional<String> pillId,
@@ -112,18 +126,12 @@ public class RegistrationLogger {
         logImpl(pillId, info, RegistrationActionResults.SUCCESS);
     }
 
-    private void start(){
-        if(this.logs.size() != 0){
-            return;
-        }
-        logImpl(Optional.<String>absent(), "enter function call", RegistrationActionResults.START);
-    }
-
-    public void commit(){
+    public boolean commit(){
         LOGGER.info("Committing onboarding log...");
         logImpl(Optional.<String>absent(), "exit function call", RegistrationActionResults.EXIT);
-        this.postLog();
+        final boolean result = this.postLog();
         this.logs.clear();
         LOGGER.info("Onboarding log comitted.");
+        return result;
     }
 }
