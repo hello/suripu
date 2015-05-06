@@ -295,7 +295,11 @@ public class ReceiveResource extends BaseResource {
 
             // Start generate protobuf for alarm
             int ringOffsetFromNowInSecond = -1;
-            int ringDurationInMS = this.ringDurationSec * DateTimeConstants.MILLIS_PER_SECOND;
+            int ringDurationInMS = 120 * DateTimeConstants.MILLIS_PER_SECOND;
+            if(this.featureFlipper.deviceFeatureActive(FeatureFlipper.RING_DURATION_FROM_CONFIG, deviceName, Collections.EMPTY_LIST)){
+                ringDurationInMS = this.ringDurationSec * DateTimeConstants.MILLIS_PER_SECOND;
+            }
+            
             if (!nextRingTime.isEmpty()) {
                 ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - now.getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
                 if(ringOffsetFromNowInSecond < 0){
