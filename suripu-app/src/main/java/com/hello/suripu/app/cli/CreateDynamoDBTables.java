@@ -350,6 +350,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
         final String tableName = configuration.getTimelineLogDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
 
         try {
             client.describeTable(tableName);
