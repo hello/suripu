@@ -1,16 +1,20 @@
 package com.hello.suripu.admin.resources.v1;
 
-import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
+import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
+import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.models.FirmwareCountInfo;
 import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.OTAHistory;
+import com.hello.suripu.core.models.UpgradeNodeRequest;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
 import java.util.HashMap;
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -40,6 +44,7 @@ public class FirmwareResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmwareResource.class);
 
     private final FirmwareVersionMappingDAO firmwareVersionMappingDAO;
+    final FirmwareUpgradePathDAO firmwareUpgradePathDAO;
     private final OTAHistoryDAODynamoDB otaHistoryDAO;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
     private final JedisPool jedisPool;
@@ -48,11 +53,13 @@ public class FirmwareResource {
     public FirmwareResource(final JedisPool jedisPool,
                             final FirmwareVersionMappingDAO firmwareVersionMappingDAO,
                             final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB,
-                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
+                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
+                            final FirmwareUpgradePathDAO firmwareUpgradePathDAO) {
         this.jedisPool = jedisPool;
         this.firmwareVersionMappingDAO = firmwareVersionMappingDAO;
         this.otaHistoryDAO = otaHistoryDAODynamoDB;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
+        this.firmwareUpgradePathDAO = firmwareUpgradePathDAO;
     }
 
     @GET
@@ -266,5 +273,15 @@ public class FirmwareResource {
         final Map<String, Object> issuedCommands = new HashMap<>();
         issuedCommands.put("reset_to_factory_fw", true);
         responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
+    }
+
+    @PUT
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/updates/add_node")
+    public void addFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final UpgradeNodeRequest nodeRequest) {
+
+        LOGGER.info("Adding FW upgrade node for group: {} on FW Version: {} to FW Version: {}", nodeRequest.groupName, nodeRequest.fromFWVersion, nodeRequest.toFWVersion);
+        firmwareUpgradePathDAO.insertFWUpgradeNode(nodeRequest);
     }
 }

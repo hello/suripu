@@ -250,7 +250,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, notificationSubscriptionsDAO);
 
         /*  Timeline Log dynamo dB stuff */
-        final String timelineLogTableName =   configuration.getTimelineLogDBConfiguration().getTableName();
+        final String timelineLogTableName = configuration.getTimelineLogDBConfiguration().getTableName();
         final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
