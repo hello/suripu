@@ -13,7 +13,8 @@ public enum DynamoDBTableName {
     TEAMS("teams"),
     FIRMWARE_VERSIONS("firmware_versions"),
     SYNC_RESPONSE_COMMANDS("sync_response_commands"),
-    OTA_HISTORY("ota_history");
+    OTA_HISTORY("ota_history"),
+    FIRMWARE_UPGRADE_PATH("firmware_upgrade_path");
 
     private String value;
 

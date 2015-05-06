@@ -194,4 +194,20 @@ public class SuripuConfiguration extends Configuration {
         return awsAccessSecretS3;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("firmware_versions")
+    private DynamoDBConfiguration firmwareVersionsDynamoDBConfiguration;
+
+    public DynamoDBConfiguration getFirmwareVersionsDynamoDBConfiguration(){
+        return firmwareVersionsDynamoDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("fw_path_db")
+    private DynamoDBConfiguration fwUpgradePathDBConfiguration;
+    public DynamoDBConfiguration getFWUpgradePathDBConfiguration(){
+        return this.fwUpgradePathDBConfiguration;
+    }
 }
