@@ -25,14 +25,6 @@ public class BaseResource {
         ObjectGraphRoot.getInstance().inject(this);
     }
 
-    protected BaseResource(final ObjectGraphRoot objectGraphRoot){
-        inject(objectGraphRoot);
-    }
-
-    protected final void inject(final ObjectGraphRoot objectGraphRoot){
-        objectGraphRoot.inject(this);
-    }
-
 
     /**
      * Changes the default value for missing data when generating graphs
