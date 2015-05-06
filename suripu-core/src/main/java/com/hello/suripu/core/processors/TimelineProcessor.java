@@ -145,6 +145,94 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return false;
     }
 
+    public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
+        final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
+        final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
+        final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
+
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+
+
+        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
+
+        if (!sensorDataOptional.isPresent()) {
+            LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
+
+
+        final OneDaysSensorData sensorData = sensorDataOptional.get();
+        if(!isValidNight(accountId, sensorData.trackerMotions)){
+            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
+        String algorithm = TimelineLog.NO_ALGORITHM;
+        String version = TimelineLog.NO_VERSION;
+
+        try {
+
+            Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
+            List<Event> extraEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
+
+            if(this.hasVotingEnabled(accountId)){
+                // Voting algorithm feature
+                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
+                        sensorData.allSensorSampleList.get(Sensor.SOUND),
+                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
+                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
+                extraEvents = votingSleepEventsOptional.get().extraEvents;
+                algorithm = ALGORITHM_NAME_VOTING;
+
+            } else {
+
+                // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
+                Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
+                        sensorData.trackerMotions,
+                        sensorData.allSensorSampleList);
+
+                if (results.isPresent()) {
+                    LOGGER.debug("HMM Suceeded.");
+                    sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
+                    extraEvents = results.get().allTheOtherWakesAndSleeps;
+                    algorithm = ALGORITHM_NAME_HMM;
+                } else {
+                    LOGGER.debug("HMM Failed, trying regular algorithm instead");
+                    sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
+                            sensorData.trackerMotions,
+                            sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                            sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
+                    algorithm = ALGORITHM_NAME_REGULAR;
+                    version = VERSION_BACKUP;
+                }
+            }
+
+            if (!sleepEventsFromAlgorithmOptional.isPresent()) {
+                LOGGER.debug("returning empty timeline for account_id = {} and day = {} and algo = {}", accountId, targetDate, algorithm);
+                return Optional.absent();
+            }
+
+            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
+
+            final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
+
+            return Optional.of(TimelineResult.create(timelines, log));
+        }
+        catch (Exception e) {
+            LOGGER.error(e.toString());
+        }
+
+        LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
+        return Optional.absent();
+
+    }
+
+
+
     private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
@@ -420,102 +508,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         return true;
     }
-
-    public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
-        final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
-        final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
-        final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
-
-        LOGGER.debug("Target date: {}", targetDate);
-        LOGGER.debug("End date: {}", endDate);
-
-
-
-        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
-
-        if (!sensorDataOptional.isPresent()) {
-            LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-            return Optional.absent();
-        }
-
-
-
-        final OneDaysSensorData sensorData = sensorDataOptional.get();
-        if(!isValidNight(accountId, sensorData.trackerMotions)){
-            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
-            return Optional.absent();
-        }
-
-        String algorithm = TimelineLog.NO_ALGORITHM;
-        String version = TimelineLog.NO_VERSION;
-
-        try {
-
-        /*  This can get overided by the HMM if the feature is enabled */
-            Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
-            List<Event> extraEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
-
-
-            if (this.hasHmmEnabled(accountId)) {
-
-                /* DO HMM, unless you get no result, then do the regular algorithm */
-                Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate, sensorData.trackerMotions, sensorData.allSensorSampleList);
-
-                if (results.isPresent()) {
-                    LOGGER.debug("HMM Suceeded.");
-                    sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
-                    extraEvents = results.get().allTheOtherWakesAndSleeps;
-                    algorithm = ALGORITHM_NAME_HMM;
-                } else {
-                    LOGGER.debug("HMM Failed, trying regular algorithm instead");
-                    sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
-                            sensorData.trackerMotions,
-                            sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                            sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
-                    algorithm = ALGORITHM_NAME_REGULAR;
-                    version = VERSION_BACKUP;
-                }
-
-            } else if(this.hasVotingEnabled(accountId)){
-                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
-                        sensorData.allSensorSampleList.get(Sensor.SOUND),
-                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
-                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
-                extraEvents = votingSleepEventsOptional.get().extraEvents;
-                algorithm = ALGORITHM_NAME_VOTING;
-            } else {
-
-                /* regular algorithm */
-                sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
-                        sensorData.trackerMotions,
-                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
-                algorithm = ALGORITHM_NAME_REGULAR;
-
-            }
-
-            if (!sleepEventsFromAlgorithmOptional.isPresent()) {
-                LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.absent();
-            }
-
-            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
-
-            final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
-
-            return Optional.of(TimelineResult.create(timelines,log));
-        }
-        catch (Exception e) {
-            LOGGER.error(e.toString());
-        }
-
-        LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-        return Optional.absent();
-
-    }
-
-
 
 
     private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
