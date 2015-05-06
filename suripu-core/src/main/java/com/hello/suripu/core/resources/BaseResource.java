@@ -21,7 +21,6 @@ public class BaseResource {
     RolloutClient featureFlipper;
 
     protected BaseResource()  {
-        // Constructor DI will make unit testing hard: http://www.javaranch.com/journal/200709/dependency-injection-unit-testing.html
         ObjectGraphRoot.getInstance().inject(this);
     }
 
