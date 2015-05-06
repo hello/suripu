@@ -32,9 +32,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Created by pangwu on 5/5/15.
- *
- * This class demonstrates how to test a resource class and gain fine grain control of the input,
- * so we can cover as much internal code path as possible.
  */
 public class RegisterResourceIntegrationTest extends ResourceTest {
 
@@ -214,6 +211,9 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
         verify(this.deviceDAO, times(0)).registerSense(1L, SENSE_ID);
     }
 
+    /*
+    * Happy pass for pairing
+     */
     @Test
     public void testPairSense(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
@@ -228,6 +228,9 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
         assertThat(command.getType(), is(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE));
     }
 
+    /*
+    * Happy pass for testing the endpoint function
+     */
     @Test
     public void testRegisterSense(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
@@ -251,6 +254,9 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     }
 
 
+    /*
+    * Test when the sam account tries to pair twice
+     */
     @Test
     public void testPairAlreadyPairedSense(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
@@ -265,6 +271,9 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
         assertThat(command.getType(), is(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE));
     }
 
+    /*
+    * Test one account tries to pair to two different Senses.
+     */
     @Test
     public void testPairAlreadyPairedSenseToDifferentAccount(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
