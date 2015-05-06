@@ -66,7 +66,7 @@ public class BucketingTest {
         assertThat(populatedMap.isPresent(), is(true));
 
         assertThat(populatedMap.get().size(), is(1));
-        assertThat(populatedMap.get().get(startDate.getMillis()).value, is(-0.56F)); // round(222/100)
+        assertThat(populatedMap.get().get(startDate.getMillis()).value, is(-1.67F)); // 2.22 - 3.89 (current temp offset)
 
     }
 
