@@ -1,7 +1,7 @@
 package com.hello.suripu.workers.sense;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.core.configuration.RedisConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -32,10 +32,11 @@ public class SenseSaveWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("merged_info_db")
-    private DynamoDBConfiguration mergedInfoDB;
-    public DynamoDBConfiguration getMergedInfoDB() {
-        return mergedInfoDB;
+    @JsonProperty("dynamodb")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+
+    public NewDynamoDBConfiguration dynamoDBConfiguration(){
+        return dynamoDBConfiguration;
     }
 
     @Valid
