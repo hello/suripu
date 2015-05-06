@@ -37,3 +37,8 @@ sense_events:
     endpoint : http://localhost:7777
     region: us-east-1
     table_name: sense_events
+
+alarm_info_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: alarm_info

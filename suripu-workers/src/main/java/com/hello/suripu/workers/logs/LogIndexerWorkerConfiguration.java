@@ -41,4 +41,12 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getSenseEventsDynamoDBConfiguration() {
         return senseEventsDynamoDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("alarm_info_db")
+    private DynamoDBConfiguration userInfoDynamoDBConfiguration;
+    public DynamoDBConfiguration getUserInfoDynamoDBConfiguration(){
+        return userInfoDynamoDBConfiguration;
+    }
 }
