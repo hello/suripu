@@ -1,6 +1,7 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -8,6 +9,7 @@ import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.service.utils.PairAction;
 import org.joda.time.DateTime;
@@ -135,7 +137,6 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
 
         BaseReourceTestHelper.kinesisLoggerFactoryStubGet(this.kinesisLoggerFactory, QueueName.LOGS, this.dataLogger);
         BaseReourceTestHelper.kinesisLoggerFactoryStubGet(this.kinesisLoggerFactory, QueueName.REGISTRATIONS, this.dataLogger);
-        BaseReourceTestHelper.stubInject(this.objectGraphRoot, RegisterResource.class);
 
         final RegisterResource registerResource = new RegisterResource(deviceDAO,
                 oAuthTokenStore,
@@ -143,10 +144,9 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
                 keyStore,
                 mergedUserInfoDynamoDB,
                 groupFlipper,
-                objectGraphRoot,
                 true);
         registerResource.request = httpServletRequest;
-        this.registerResource = spy(registerResource);
+        this.registerResource = spy(registerResource);  // the registerResource is a real object, we need to spy it.
 
         BaseReourceTestHelper.stubGetHeader(this.registerResource.request, "X-Forwarded-For", "127.0.0.1");
     }
@@ -226,8 +226,30 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
                 PairAction.PAIR_MORPHEUS).build();
         verify(this.deviceDAO, times(1)).registerSense(1L, SENSE_ID);
         assertThat(command.getType(), is(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE));
-
     }
+
+    @Test
+    public void testRegisterSense(){
+        stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
+        BaseReourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
+        stubGetSensePairingState(this.registerResource, RegisterResource.PairState.NOT_PAIRED);
+        BaseReourceTestHelper.stubGetHeader(this.httpServletRequest, HelloHttpHeader.SENSE_ID, SENSE_ID);
+
+        final byte[] data = this.registerResource.registerMorpheus(generateValidProtobufWithSignature(KEY));
+        verify(this.deviceDAO, times(1)).registerSense(1L, SENSE_ID);
+
+        final byte[] protobufBytes = Arrays.copyOfRange(data, 16 + 32, data.length);
+        final SenseCommandProtos.MorpheusCommand command;
+        try {
+            command = SenseCommandProtos.MorpheusCommand.parseFrom(protobufBytes);
+            assertThat(command.hasAccountId(), is(false));
+            assertThat(command.getType(), is(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE));
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            assertThat(true, is(false));
+        }
+    }
+
 
     @Test
     public void testPairAlreadyPairedSense(){
@@ -241,7 +263,6 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
                 PairAction.PAIR_MORPHEUS).build();
         verify(this.deviceDAO, times(0)).registerSense(1L, SENSE_ID);
         assertThat(command.getType(), is(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE));
-
     }
 
     @Test

@@ -6,7 +6,6 @@ import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand;
 import com.hello.suripu.api.logging.LoggingProtos;
-import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
@@ -87,9 +86,7 @@ public class RegisterResource extends BaseResource {
                             final KeyStore senseKeyStore,
                             final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final GroupFlipper groupFlipper,
-                            final ObjectGraphRoot objectGraphRoot,
                             final Boolean debug){
-        super(objectGraphRoot);
 
         this.deviceDAO = deviceDAO;
         this.tokenStore = tokenStore;
@@ -139,7 +136,7 @@ public class RegisterResource extends BaseResource {
         }
     }
 
-    protected final PairState getPillPairingState(final String senseId, final String pillId, final long accountId, final RegistrationLogger kinesisLogger){
+    protected final PairState getPillPairingState(final String senseId, final String pillId, final long accountId, final RegistrationLogger onboardingLogger){
         final List<DeviceAccountPair> pillsPairedToCurrentAccount = this.deviceDAO.getPillsForAccountId(accountId);
         final List<DeviceAccountPair> accountsPairedToCurrentPill = this.deviceDAO.getLinkedAccountFromPillId(pillId);
         if(pillsPairedToCurrentAccount.size() > 1){  // This account already paired with multiple pills
@@ -172,7 +169,7 @@ public class RegisterResource extends BaseResource {
                 }
                 final String errorMessage = String.format("Account %d already paired with %d pills.", accountId, pillsPairedToCurrentAccount.size());
                 LOGGER.error(errorMessage);
-                kinesisLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+                onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
                 return PairState.PAIRING_VIOLATION;
             }
         }
@@ -183,7 +180,7 @@ public class RegisterResource extends BaseResource {
                     pillsPairedToCurrentAccount.size(),
                     accountsPairedToCurrentPill.size());
             LOGGER.warn(errorMessage);
-            kinesisLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
             return PairState.PAIRING_VIOLATION;
         }
 
@@ -192,7 +189,7 @@ public class RegisterResource extends BaseResource {
             // pill already paired with an account, but this account is new, stolen pill?
             final String errorMessage  = String.format("Pill %s might got stolen, account %d is a theft!", pillId, accountId);
             LOGGER.error(errorMessage);
-            kinesisLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
         }
         if(pillsPairedToCurrentAccount.size() == 1 && accountsPairedToCurrentPill.size() == 0){
             // account already paired with a pill, only one pill is allowed
@@ -201,7 +198,7 @@ public class RegisterResource extends BaseResource {
                     pillsPairedToCurrentAccount.get(0).externalDeviceId,
                     pillId);
             LOGGER.error(errorMessage);
-            kinesisLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
 
         }
 
@@ -210,7 +207,7 @@ public class RegisterResource extends BaseResource {
                 pillsPairedToCurrentAccount.size(),
                 accountsPairedToCurrentPill.size());
         LOGGER.warn(errorMessage);
-        kinesisLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+        onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
 
         return PairState.PAIRING_VIOLATION;
 

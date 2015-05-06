@@ -101,9 +101,8 @@ public class RegistrationLogger {
 
     private void logImpl(final Optional<String> pillId,
                              final String info,
+                             final DateTime now,
                              final RegistrationActionResults result){
-
-        final DateTime now = DateTime.now();
         if(this.logs.size() == 0){
             final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                     "enter function call",
@@ -123,22 +122,22 @@ public class RegistrationLogger {
 
     public void logFailure(final Optional<String> pillId,
                                   final String info){
-        logImpl(pillId, info, RegistrationActionResults.FAILED);
+        logImpl(pillId, info, DateTime.now(), RegistrationActionResults.FAILED);
     }
 
     public void logProgress(final Optional<String> pillId,
                                final String info){
-        logImpl(pillId, info, RegistrationActionResults.IN_PROGRESS);
+        logImpl(pillId, info, DateTime.now(), RegistrationActionResults.IN_PROGRESS);
     }
 
     public void logSuccess(final Optional<String> pillId,
                                       final String info){
-        logImpl(pillId, info, RegistrationActionResults.SUCCESS);
+        logImpl(pillId, info, DateTime.now(), RegistrationActionResults.SUCCESS);
     }
 
     public boolean commit(){
         LOGGER.info("Committing onboarding log...");
-        logImpl(Optional.<String>absent(), "exit function call", RegistrationActionResults.EXIT);
+        logImpl(Optional.<String>absent(), "exit function call", DateTime.now().plusMillis(1), RegistrationActionResults.EXIT);
         final boolean result = this.postLog();
         this.logs.clear();
         LOGGER.info("Onboarding log comitted.");
