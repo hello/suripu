@@ -242,7 +242,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 groupFlipper,
                 configuration.getSenseUploadConfiguration(),
                 configuration.getOTAConfiguration(),
-                respCommandsDAODynamoDB
+                respCommandsDAODynamoDB,
+                configuration.getRingDuration()
         );
 
 
