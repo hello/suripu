@@ -21,7 +21,16 @@ public class BaseResource {
     RolloutClient featureFlipper;
 
     protected BaseResource()  {
+        // Constructor DI will make unit testing hard: http://www.javaranch.com/journal/200709/dependency-injection-unit-testing.html
         ObjectGraphRoot.getInstance().inject(this);
+    }
+
+    protected BaseResource(final ObjectGraphRoot objectGraphRoot){
+        inject(objectGraphRoot);
+    }
+
+    protected final void inject(final ObjectGraphRoot objectGraphRoot){
+        objectGraphRoot.inject(this);
     }
 
 
@@ -60,7 +69,7 @@ public class BaseResource {
         );
     }
 
-    protected void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
+    public void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
         plainTextError(status, message);
     }
 
