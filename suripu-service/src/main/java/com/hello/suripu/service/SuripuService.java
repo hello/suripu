@@ -245,6 +245,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 senseKeyStore,
                 mergedUserInfoDynamoDB,
                 groupFlipper,
+                ObjectGraphRoot.getInstance(),
                 configuration.getDebug()));
 
 

@@ -6,6 +6,7 @@ import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.ble.SenseCommandProtos.MorpheusCommand;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
@@ -66,7 +67,7 @@ public class RegisterResource extends BaseResource {
 
     private final Boolean debug;
 
-    private enum PairState{
+    protected enum PairState{
         NOT_PAIRED,
         PAIRED_WITH_CURRENT_ACCOUNT,
         PAIRING_VIOLATION;
@@ -86,7 +87,10 @@ public class RegisterResource extends BaseResource {
                             final KeyStore senseKeyStore,
                             final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final GroupFlipper groupFlipper,
+                            final ObjectGraphRoot objectGraphRoot,
                             final Boolean debug){
+        super(objectGraphRoot);
+
         this.deviceDAO = deviceDAO;
         this.tokenStore = tokenStore;
         this.debug = debug;
@@ -96,7 +100,7 @@ public class RegisterResource extends BaseResource {
         this.groupFlipper = groupFlipper;
     }
 
-    private boolean checkCommandType(final MorpheusCommand morpheusCommand, final PairAction action){
+    protected final boolean checkCommandType(final MorpheusCommand morpheusCommand, final PairAction action){
         switch (action){
             case PAIR_PILL:
                 return morpheusCommand.getType() == MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL;
@@ -107,7 +111,7 @@ public class RegisterResource extends BaseResource {
         }
     }
 
-    private void setPillColor(final String senseId, final long accountId, final String pillId){
+    protected final void setPillColor(final String senseId, final long accountId, final String pillId){
 
         try {
             // WARNING: potential race condition here.
@@ -118,7 +122,7 @@ public class RegisterResource extends BaseResource {
         }
     }
 
-    private PairState getSensePairingState(final String senseId, final long accountId){
+    protected PairState getSensePairingState(final String senseId, final long accountId){
         final List<DeviceAccountPair> pairedSense = this.deviceDAO.getSensesForAccountId(accountId);
         if(pairedSense.size() > 1){  // This account already paired with multiple senses
             return PairState.PAIRING_VIOLATION;
@@ -135,7 +139,7 @@ public class RegisterResource extends BaseResource {
         }
     }
 
-    private PairState getPillPairingState(final String senseId, final String pillId, final long accountId, final RegistrationLogger kinesisLogger){
+    protected final PairState getPillPairingState(final String senseId, final String pillId, final long accountId, final RegistrationLogger kinesisLogger){
         final List<DeviceAccountPair> pillsPairedToCurrentAccount = this.deviceDAO.getPillsForAccountId(accountId);
         final List<DeviceAccountPair> accountsPairedToCurrentPill = this.deviceDAO.getLinkedAccountFromPillId(pillId);
         if(pillsPairedToCurrentAccount.size() > 1){  // This account already paired with multiple pills
@@ -212,7 +216,7 @@ public class RegisterResource extends BaseResource {
 
     }
 
-    private MorpheusCommand.Builder pair(final String senseIdFromHeader, final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
+    protected final MorpheusCommand.Builder pair(final String senseIdFromHeader, final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
         final MorpheusCommand.Builder builder = MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
         final DataLogger registrationLogger = kinesisLoggerFactory.get(QueueName.LOGS);
@@ -221,12 +225,22 @@ public class RegisterResource extends BaseResource {
                 request.getHeader("X-Forwarded-For"),
                 registrationLogger);
 
-        final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
         MorpheusCommand morpheusCommand = MorpheusCommand.getDefaultInstance();
+        SignedMessage signedMessage = null;
+
         try {
+            signedMessage = SignedMessage.parse(encryptedRequest);  // This call will throw
             morpheusCommand = MorpheusCommand.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
+            LOGGER.error(errorMessage);
+
+            onboardingLogger.logFailure(Optional.<String>absent(), errorMessage);
+
+            // We can't return a proper error because we can't decode the protobuf
+            throwPlainTextError(Response.Status.BAD_REQUEST, "");
+        } catch (RuntimeException rtEx){
+            final String errorMessage = String.format("Failed parsing input: %s", rtEx.getMessage());
             LOGGER.error(errorMessage);
 
             onboardingLogger.logFailure(Optional.<String>absent(), errorMessage);
@@ -303,7 +317,7 @@ public class RegisterResource extends BaseResource {
             LOGGER.error(errorMessage);
             onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
 
-            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "no key");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
@@ -313,7 +327,7 @@ public class RegisterResource extends BaseResource {
             LOGGER.error(errorMessage);
             onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
 
-            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "invalid signature");
         }
 
         if(!checkCommandType(morpheusCommand, action)){
