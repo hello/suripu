@@ -17,14 +17,21 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.SenseEventsDAO;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.db.ManagedDataSourceFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
+import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,10 +96,25 @@ public class LogIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerC
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
+        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
+        final DBI commonDB = new DBI(managedDataSourceFactory.build(configuration.getCommonDBConfiguration()));
+
+        commonDB.registerContainerFactory(new OptionalContainerFactory());
+        commonDB.registerContainerFactory(new ImmutableListContainerFactory());
+        commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
+        commonDB.registerArgumentFactory(new JodaArgumentFactory());
+
+
+        final OnBoardingLogDAO onBoardingLogDAO = commonDB.onDemand(OnBoardingLogDAO.class);
+
+
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final IRecordProcessorFactory factory = new LogIndexerProcessorFactory(configuration, amazonDynamoDBClientFactory);
+        final IRecordProcessorFactory factory = new LogIndexerProcessorFactory(configuration,
+                amazonDynamoDBClientFactory,
+                onBoardingLogDAO);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }

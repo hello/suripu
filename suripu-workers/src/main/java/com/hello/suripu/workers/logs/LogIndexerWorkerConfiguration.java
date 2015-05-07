@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.SearchifyConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
+import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -46,7 +47,15 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
     @NotNull
     @JsonProperty("features_db")
     private DynamoDBConfiguration featuresDynamoDBConfiguration;
-    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration() {
         return this.featuresDynamoDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("common_db")
+    private DatabaseConfiguration commonDBConfiguration;
+    public DatabaseConfiguration getCommonDBConfiguration() {
+        return this.commonDBConfiguration;
     }
 }

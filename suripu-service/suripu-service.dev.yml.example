@@ -187,7 +187,14 @@ resp_commands_db:
   region: us-east-1
   table_name: response_commands
 
+ring_duration_sec: 240
+
 firmware_versions:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  endpoint : http://localhost:7777
   region: us-east-1
   table_name: firmware_versions_mapping
+
+fw_path_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: fw_upgrade_path
