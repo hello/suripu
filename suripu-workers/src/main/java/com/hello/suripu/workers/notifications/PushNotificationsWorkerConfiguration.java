@@ -60,6 +60,14 @@ public class PushNotificationsWorkerConfiguration extends WorkerConfiguration {
     }
 
     @Valid
+    @NotNull
+    @JsonProperty("features_db")
+    private DynamoDBConfiguration featuresDynamoDBConfiguration;
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+        return this.featuresDynamoDBConfiguration;
+    }
+
+    @Valid
     @NotEmpty
     @JsonProperty("active_hours")
     private Set<Integer> activeHours = Sets.newHashSet();
