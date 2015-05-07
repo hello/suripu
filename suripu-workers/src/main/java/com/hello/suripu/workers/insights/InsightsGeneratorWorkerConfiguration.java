@@ -81,6 +81,7 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getSleepStatsDynamoConfiguration(){
         return this.sleepStatsDynamoDBConfiguration;
     }
+
     @Valid
     @NotNull
     @JsonProperty("sleep_stats_version")
@@ -89,5 +90,12 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
         return this.sleepStatsVersion;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("features_db")
+    private DynamoDBConfiguration featuresDynamoDBConfiguration;
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+        return this.featuresDynamoDBConfiguration;
+    }
 
 }

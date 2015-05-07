@@ -51,4 +51,13 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
     public DatabaseConfiguration getCommonDBConfiguration() {
         return this.commonDBConfiguration;
     }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("features_db")
+    private DynamoDBConfiguration featuresDynamoDBConfiguration;
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+        return this.featuresDynamoDBConfiguration;
+    }
 }

@@ -103,4 +103,12 @@ public class AlarmWorkerConfiguration extends WorkerConfiguration {
         return this.smartAlarmLogDBConfiguration;
     }
 
+
+    @Valid
+    @NotNull
+    @JsonProperty("features_db")
+    private DynamoDBConfiguration featuresDynamoDBConfiguration;
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+        return this.featuresDynamoDBConfiguration;
+    }
 }

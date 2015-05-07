@@ -203,4 +203,12 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getTimelineLogDbConfiguration(){
         return this.timelineLogDbConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("features_db")
+    private DynamoDBConfiguration featuresDynamoDBConfiguration;
+    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
+        return this.featuresDynamoDBConfiguration;
+    }
 }
