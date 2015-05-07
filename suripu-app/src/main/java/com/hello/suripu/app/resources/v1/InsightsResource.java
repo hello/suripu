@@ -86,7 +86,7 @@ public class InsightsResource {
         final ImmutableList<InsightCard> cards = insightsDAODynamoDB.getInsightsByDate(accessToken.accountId,
                 queryDate, chronological, MAX_INSIGHTS_NUM);
 
-        if (cards.size() > 0) {
+        if (cards.size() == 0) {
             // no insights generated yet, probably a new user, send introduction card
             final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
             int userAgeInYears = 0;
