@@ -23,7 +23,7 @@ public abstract class PillHeartBeatDAO {
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
     @SqlQuery("SELECT id, pill_id, fw_version AS firmware_version, battery_level, last_updated as last_seen, uptime " +
-            "FROM pill_status WHERE pill_id = :pill_id ORDER BY id DESC LIMIT 1")
+            "FROM pill_status WHERE pill_id = :pill_id and last_updated > now() - interval '24 hours' ORDER BY last_updated DESC LIMIT 1")
     public abstract Optional<DeviceStatus> getPillStatus(@Bind("pill_id") final Long pillId);
 
     public void silentInsert(final Long internalPillId, final Integer batteryLevel, final Integer uptime, final Integer firmwareVersion, final DateTime lastUpdated) {
