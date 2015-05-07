@@ -10,6 +10,7 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
+import com.hello.suripu.core.db.AccountDAOAdmin;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
@@ -120,6 +121,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
+        final AccountDAOAdmin accountDAOAdmin = commonDB.onDemand(AccountDAOAdmin.class);
 
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
@@ -202,7 +204,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, tableNames.get(DynamoDBTableName.FIRMWARE_UPGRADE_PATH));
 
         environment.addResource(new PingResource());
-        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO));
+        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO));
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO));
         environment.addResource(new ApplicationResources(applicationStore));

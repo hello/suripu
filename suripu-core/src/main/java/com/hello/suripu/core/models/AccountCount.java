@@ -1,7 +1,7 @@
 package com.hello.suripu.core.models;
 
-import org.joda.time.DateTime;
 
+import org.joda.time.DateTime;
 
 public class AccountCount {
     public final DateTime createdDate;
