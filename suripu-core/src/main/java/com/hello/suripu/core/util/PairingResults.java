@@ -1,9 +1,9 @@
-package com.hello.suripu.service.utils;
+package com.hello.suripu.core.util;
 
 /**
  * Created by pangwu on 4/29/15.
  */
-public enum RegistrationActionResults {
+public enum PairingResults {
     START,
     IN_PROGRESS,
     FAILED,

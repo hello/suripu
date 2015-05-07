@@ -10,6 +10,7 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
+import com.hello.suripu.admin.resources.v1.OnBoardingLogResource;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
@@ -38,6 +39,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
+import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
@@ -120,6 +122,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
+        final OnBoardingLogDAO onBoardingLogDAO = commonDB.onDemand(OnBoardingLogDAO.class);
 
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
@@ -211,6 +214,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new FirmwareResource(jedisPool, firmwareVersionMappingDAO, otaHistoryDAODynamoDB, respCommandsDAODynamoDB, firmwareUpgradePathDAO));
         environment.addResource(new EventsResources(senseEventsDAO));
         environment.addResource(new InspectionResources(deviceDAOAdmin));
+        environment.addResource(new OnBoardingLogResource(accountDAO, onBoardingLogDAO));
 
     }
 }

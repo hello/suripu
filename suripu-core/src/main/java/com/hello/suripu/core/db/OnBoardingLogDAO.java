@@ -1,6 +1,8 @@
 package com.hello.suripu.core.db;
 
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.db.mappers.OnBoardingLogMapper;
+import com.hello.suripu.core.models.OnBoardingLog;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -8,7 +10,9 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +54,14 @@ public abstract class OnBoardingLogDAO {
                             @Bind("operation") List<String> operation,
                             @Bind("ip") List<String> ip
     );
+
+    @RegisterMapper(OnBoardingLogMapper.class)
+    @SqlQuery("SELECT * FROM onboarding_logs WHERE account_id = :account_id ORDER BY utc_ts DESC LIMIT 1000;")
+    public abstract List<OnBoardingLog> getByAccountId(@Bind("account_id") final long accountId);
+
+    @RegisterMapper(OnBoardingLogMapper.class)
+    @SqlQuery("SELECT * FROM onboarding_logs WHERE sense_id = :sense_id ORDER BY utc_ts DESC LIMIT 1000;")
+    public abstract List<OnBoardingLog> getBySenseId(@Bind("sense_id") final String senseId);
 
 
     @Timed

@@ -6,6 +6,7 @@ import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.util.PairAction;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
