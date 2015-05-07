@@ -96,13 +96,9 @@ public class InsightsResource {
 
             final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId, userAgeInYears);
             this.insightsDAODynamoDB.insertListOfInsights(introCards);
-            return introCards;
+            return insightCardsWithInfoPreview(introCards);
         } else {
-            final List<InsightCard> cardsWithPreview = new ArrayList<>();
-            for (InsightCard card : cards) {
-                cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category)));
-            }
-            return cardsWithPreview;
+            return insightCardsWithInfoPreview(cards);
         }
     }
 
@@ -226,6 +222,19 @@ public class InsightsResource {
         }
 
         return graphs;
+    }
+
+    /**
+     * Convenience method to construct a new list of InsightCards that include info preview titles
+     * @param insightCards: an array of insight card without info preview titles
+     * @return List of InsightCard objects that contain info preview titles
+     */
+    private List<InsightCard> insightCardsWithInfoPreview(final List<InsightCard> insightCards) {
+        final List<InsightCard> cardsWithPreview = new ArrayList<>();
+        for (InsightCard card : insightCards) {
+            cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category)));
+        }
+        return cardsWithPreview;
     }
 
     /**
