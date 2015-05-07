@@ -29,6 +29,7 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
     private final Meter senseLogs;
     private final Meter structuredLogs;
+    private final Meter onboardingLogs;
 
     private LogIndexerProcessor(final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer,
                                 final LogIndexer<LoggingProtos.BatchLogMessage> senseStructuredLogsIndexer,
@@ -39,6 +40,7 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
         this.senseLogs= Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "sense-logs", "sense-processed", TimeUnit.SECONDS);
         this.structuredLogs = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "structured-logs", "structured-processed", TimeUnit.SECONDS);
+        this.onboardingLogs  = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "onboarding-logs", "onboarding-processed", TimeUnit.SECONDS);
     }
 
     public static LogIndexerProcessor create(final IndexTankClient.Index senseIndex,
@@ -88,6 +90,7 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
             senseLogs.mark(senseLogsCount);
             structuredLogs.mark(eventsCount);
+            onboardingLogs.mark(onBoardingLogCount);
 
             iRecordProcessorCheckpointer.checkpoint();
             LOGGER.info("Checkpointing {} records ({} sense logs, {} kv logs and {} onboarding logs.)",
