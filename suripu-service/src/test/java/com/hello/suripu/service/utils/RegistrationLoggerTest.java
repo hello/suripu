@@ -55,7 +55,7 @@ public class RegistrationLoggerTest {
         final DataLogger dataLogger = DataLoggerTestHelper.mockDataLogger();
         final RegistrationLogger logger = RegistrationLogger.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
         writeALog(logger);
-        DataLoggerTestHelper.stubPut(dataLogger, testSenseId, logger.getByteLog(), "");
+        DataLoggerTestHelper.stubPut(dataLogger, testSenseId, logger.toByteArray(), "");
         assertThat(logger.commit(), is(true));
     }
 
@@ -71,7 +71,7 @@ public class RegistrationLoggerTest {
         final DataLogger dataLogger = DataLoggerTestHelper.mockDataLogger();
         final RegistrationLogger logger = RegistrationLogger.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
         writeMoreThan20KToLogger(logger);
-        DataLoggerTestHelper.stubPut(dataLogger, testSenseId, logger.getByteLog(), "");
+        DataLoggerTestHelper.stubPut(dataLogger, testSenseId, logger.toByteArray(), "");
         assertThat(logger.commit(), is(false));
     }
 
@@ -80,7 +80,7 @@ public class RegistrationLoggerTest {
         final DataLogger dataLogger = DataLoggerTestHelper.mockDataLogger();
         final RegistrationLogger logger = RegistrationLogger.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
         writeALog(logger);  // trigger the start write
-        final byte[] bytes = logger.getByteLog();
+        final byte[] bytes = logger.toByteArray();
         try {
             final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(bytes);
             assertThat(batchLogMessage.getLogType(), is(LoggingProtos.BatchLogMessage.LogType.ONBOARDING_LOG));

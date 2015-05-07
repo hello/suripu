@@ -70,7 +70,7 @@ public class RegistrationLogger {
         return builder;
     }
 
-    protected byte[] getByteLog(){
+    protected byte[] toByteArray(){
         final LoggingProtos.BatchLogMessage.Builder builder = LoggingProtos.BatchLogMessage.newBuilder();
         builder.setLogType(LoggingProtos.BatchLogMessage.LogType.ONBOARDING_LOG);
         builder.addAllRegistrationLog(this.logs);
@@ -81,7 +81,7 @@ public class RegistrationLogger {
 
     private boolean postLog(){
         try{
-            final byte[] bytes = getByteLog();
+            final byte[] bytes = toByteArray();
             if(bytes.length >= MAX_LOG_SIZE){
                 LOGGER.warn("Log message too large, size {}", bytes.length);
                 return false;

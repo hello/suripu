@@ -77,7 +77,7 @@ public class LogIndexerProcessor implements IRecordProcessor {
                 final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(record.getData().array());
                 if(batchLogMessage.hasLogType()) {
                     switch (batchLogMessage.getLogType()) {
-                        /*case APPLICATION_LOG:
+                        case APPLICATION_LOG:
                             applicationIndexer.collect(batchLogMessage);
                             break;
                         case SENSE_LOG:
@@ -88,7 +88,7 @@ public class LogIndexerProcessor implements IRecordProcessor {
                             break;
                         case STRUCTURED_SENSE_LOG:
                             senseStructuredLogsIndexer.collect(batchLogMessage);
-                            break;*/
+                            break;
                         case ONBOARDING_LOG:
                             this.onBoardingLogIndexer.collect(batchLogMessage);
                     }
