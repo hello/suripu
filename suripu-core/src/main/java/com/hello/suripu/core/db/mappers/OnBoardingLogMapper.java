@@ -17,7 +17,7 @@ public class OnBoardingLogMapper implements ResultSetMapper<OnBoardingLog> {
     @Override
     public OnBoardingLog map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final OnBoardingLog onBoardingLog = new OnBoardingLog(r.getString("sense_id"),
-                Optional.fromNullable(r.getNString("pill_id")),
+                Optional.fromNullable(r.getString("pill_id")),
                 Optional.fromNullable(r.getLong("account_id")),
                 r.getString("info"),
                 PairingResults.valueOf(r.getString("result")),

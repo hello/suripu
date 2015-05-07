@@ -43,7 +43,7 @@ public class OnBoardingLogResource {
             final List<OnBoardingLog> logs = this.onBoardingLogDAO.getBySenseId(senseId);
             return logs;
         }catch (Exception ex){
-            LOGGER.error("Get pairing log from sense {} failed.", senseId);
+            LOGGER.error("Get pairing log from sense {} failed: {}", senseId, ex.getMessage());
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
     }

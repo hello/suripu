@@ -56,11 +56,11 @@ public abstract class OnBoardingLogDAO {
     );
 
     @RegisterMapper(OnBoardingLogMapper.class)
-    @SqlQuery("SELECT * FROM onboarding_logs WHERE account_id = :account_id ORDER BY utc_ts DESC LIMIT 1000;")
+    @SqlQuery("SELECT * FROM onboarding_logs WHERE account_id = :account_id ORDER BY utc_ts ASC LIMIT 1000;")
     public abstract List<OnBoardingLog> getByAccountId(@Bind("account_id") final long accountId);
 
     @RegisterMapper(OnBoardingLogMapper.class)
-    @SqlQuery("SELECT * FROM onboarding_logs WHERE sense_id = :sense_id ORDER BY utc_ts DESC LIMIT 1000;")
+    @SqlQuery("SELECT * FROM onboarding_logs WHERE sense_id = :sense_id ORDER BY utc_ts ASC LIMIT 1000;")
     public abstract List<OnBoardingLog> getBySenseId(@Bind("sense_id") final String senseId);
 
 
