@@ -23,43 +23,29 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(LogIndexerProcessor.class);
 
-    private final LogIndexer<LoggingProtos.BatchLogMessage> applicationIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer;
-    private final LogIndexer<LoggingProtos.BatchLogMessage> workersIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> senseStructuredLogsIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> onBoardingLogIndexer;
 
-    private final Meter applicationLogs;
     private final Meter senseLogs;
-    private final Meter workersLogs;
     private final Meter structuredLogs;
 
-    private LogIndexerProcessor(final LogIndexer<LoggingProtos.BatchLogMessage> applicationIndexer,
-                                final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer,
-                                final LogIndexer<LoggingProtos.BatchLogMessage> workersIndexer,
+    private LogIndexerProcessor(final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer,
                                 final LogIndexer<LoggingProtos.BatchLogMessage> senseStructuredLogsIndexer,
                                 final LogIndexer<LoggingProtos.BatchLogMessage> onBoardingLogIndexer) {
-        this.applicationIndexer = applicationIndexer;
         this.senseIndexer = senseIndexer;
-        this.workersIndexer = workersIndexer;
         this.senseStructuredLogsIndexer = senseStructuredLogsIndexer;
         this.onBoardingLogIndexer = onBoardingLogIndexer;
 
-        this.applicationLogs = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "application-logs", "application-processed", TimeUnit.SECONDS);
         this.senseLogs= Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "sense-logs", "sense-processed", TimeUnit.SECONDS);
-        this.workersLogs = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "workers-logs", "workers-processed", TimeUnit.SECONDS);
         this.structuredLogs = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "structured-logs", "structured-processed", TimeUnit.SECONDS);
     }
 
-    public static LogIndexerProcessor create(final IndexTankClient.Index applicationIndex,
-                                             final IndexTankClient.Index senseIndex,
-                                             final IndexTankClient.Index workersIndex,
+    public static LogIndexerProcessor create(final IndexTankClient.Index senseIndex,
                                              final SenseEventsDAO senseEventsDAO,
                                              final OnBoardingLogDAO onBoardingLogDAO) {
         return new LogIndexerProcessor(
-                new GenericLogIndexer(applicationIndex),
                 new SenseLogIndexer(senseIndex),
-                new GenericLogIndexer(workersIndex),
                 new SenseStructuredLogIndexer(senseEventsDAO),
                 new OnBoardingLogIndexer(onBoardingLogDAO)
         );
@@ -77,23 +63,17 @@ public class LogIndexerProcessor implements IRecordProcessor {
                 final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(record.getData().array());
                 if(batchLogMessage.hasLogType()) {
                     switch (batchLogMessage.getLogType()) {
-                        case APPLICATION_LOG:
-                            applicationIndexer.collect(batchLogMessage);
-                            break;
+
                         case SENSE_LOG:
                             senseIndexer.collect(batchLogMessage);
                             break;
-                        case WORKERS_LOG:
-                            workersIndexer.collect(batchLogMessage);
-                            break;
+
                         case STRUCTURED_SENSE_LOG:
                             senseStructuredLogsIndexer.collect(batchLogMessage);
                             break;
                         case ONBOARDING_LOG:
                             this.onBoardingLogIndexer.collect(batchLogMessage);
                     }
-                } else { // old protobuf messages don't have a LogType
-                    applicationIndexer.collect(batchLogMessage);
                 }
 
             } catch (InvalidProtocolBufferException e) {
@@ -102,24 +82,17 @@ public class LogIndexerProcessor implements IRecordProcessor {
         }
 
         try {
-
-            final Integer applicationLogsCount = applicationIndexer.index();
             final Integer senseLogsCount = senseIndexer.index();
-            final Integer workersLogsCount = workersIndexer.index();
             final Integer eventsCount = senseStructuredLogsIndexer.index();
             final Integer onBoardingLogCount = this.onBoardingLogIndexer.index();
 
-            applicationLogs.mark(applicationLogsCount);
             senseLogs.mark(senseLogsCount);
-            workersLogs.mark(workersLogsCount);
             structuredLogs.mark(eventsCount);
 
             iRecordProcessorCheckpointer.checkpoint();
-            LOGGER.info("Checkpointing {} records ({} app logs, {} sense logs, {} workers logs, {} kv logs and {} onboarding logs.)",
+            LOGGER.info("Checkpointing {} records ({} sense logs, {} kv logs and {} onboarding logs.)",
                     records.size(),
-                    applicationLogsCount,
                     senseLogsCount,
-                    workersLogsCount,
                     eventsCount,
                     onBoardingLogCount);
         } catch (ShutdownException e) {
