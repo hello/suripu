@@ -36,7 +36,7 @@ public class AccountResources {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResources.class);
     private final Integer DEFAULT_RECENT_USERS_LIMIT = 100;
-    private final Integer MAX_RECENT_USERS_LIMIT = 500;
+    private final Integer MAX_RECENT_USERS_LIMIT = 1000;
 
     private final AccountDAO accountDAO;
     private final PasswordResetDB passwordResetDB;
