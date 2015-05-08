@@ -178,7 +178,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         String version = TimelineLog.NO_VERSION;
 
         try {
-            boolean algorithmWorked = false;
+            boolean algorithmWorked = true;
 
             Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
             List<Event> extraEvents = Collections.EMPTY_LIST;
@@ -193,7 +193,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
                 extraEvents = votingSleepEventsOptional.get().extraEvents;
                 algorithm = ALGORITHM_NAME_VOTING;
-                algorithmWorked = true;
 
             } else {
 
@@ -210,12 +209,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                     //verify that algorithm produced something useable
 
-                    if (timelineSafeguards.checkIfValidTimeline(
+                    if (!timelineSafeguards.checkIfValidTimeline(
                             sleepEventsFromAlgorithmOptional.get(),
                             ImmutableList.copyOf(extraEvents),
                             ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)))) {
 
-                        algorithmWorked = true;
+                        algorithmWorked = false;
+                        extraEvents = Collections.EMPTY_LIST;
                     }
                 }
             }
