@@ -210,7 +210,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                     //verify that algorithm produced something useable
 
-                    if (timelineSafeguards.checkIfValidTimeline(sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents),sensorData.trackerMotions,sensorData.allSensorSampleList)) {
+                    if (timelineSafeguards.checkIfValidTimeline(
+                            sleepEventsFromAlgorithmOptional.get(),
+                            ImmutableList.copyOf(extraEvents),
+                            ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)))) {
+
                         algorithmWorked = true;
                     }
                 }
