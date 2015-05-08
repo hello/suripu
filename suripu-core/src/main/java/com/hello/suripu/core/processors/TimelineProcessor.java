@@ -177,7 +177,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         String version = TimelineLog.NO_VERSION;
 
         try {
-            boolean algorithmWorked = true;
+            boolean algorithmWorked = false;
 
             Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
             List<Event> extraEvents = Collections.EMPTY_LIST;
@@ -192,6 +192,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
                 extraEvents = votingSleepEventsOptional.get().extraEvents;
                 algorithm = ALGORITHM_NAME_VOTING;
+                algorithmWorked = true;
 
             } else {
 
@@ -207,14 +208,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     algorithm = ALGORITHM_NAME_HMM;
 
                     //verify that algorithm produced something useable
-
-                    if (!timelineSafeguards.checkIfValidTimeline(
+                    if (timelineSafeguards.checkIfValidTimeline(
                             sleepEventsFromAlgorithmOptional.get(),
                             ImmutableList.copyOf(extraEvents),
                             ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)))) {
 
-                        algorithmWorked = false;
-                        extraEvents = Collections.EMPTY_LIST;
+                        algorithmWorked = true;
                     }
                 }
             }
@@ -224,12 +223,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             /* TRY THE BACKUP PLAN!  */
             if (!algorithmWorked) {
                 LOGGER.warn("ALGORITHM FAILED, trying regular algorithm instead");
+
+                //reset state
+                extraEvents = Collections.EMPTY_LIST;
+                algorithm = ALGORITHM_NAME_REGULAR;
+                version = VERSION_BACKUP;
+
                 sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
                         sensorData.trackerMotions,
                         sensorData.allSensorSampleList.get(Sensor.LIGHT),
                         sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
-                algorithm = ALGORITHM_NAME_REGULAR;
-                version = VERSION_BACKUP;
+
             }
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
