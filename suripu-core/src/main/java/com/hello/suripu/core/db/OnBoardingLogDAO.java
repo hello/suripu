@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db;
 
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.db.binders.BindOnBoardingLog;
 import com.hello.suripu.core.db.mappers.OnBoardingLogMapper;
 import com.hello.suripu.core.models.OnBoardingLog;
 import com.yammer.metrics.annotation.Timed;
@@ -32,15 +33,7 @@ public abstract class OnBoardingLogDAO {
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO onboarding_logs (sense_id, account_id, pill_id, utc_ts, info, result, operation, ip) " +
             "VALUES (:sense_id, :account_id, :pill_id, :utc_ts, :info, :result, :operation, :ip)")
-    public abstract Long insert(@Bind("sense_id") String senseId,
-                     @Bind("account_id") Long accountId,
-                     @Bind("pill_id") String pillId,
-                     @Bind("utc_ts") DateTime timestamp,
-                     @Bind("info") String info,
-                     @Bind("result") String result,
-                     @Bind("operation") String operation,
-                     @Bind("ip") String ip
-    );
+    public abstract Long insert(@BindOnBoardingLog final OnBoardingLog onBoardingLog);
 
 
     @SqlBatch("INSERT INTO onboarding_logs (sense_id, account_id, pill_id, utc_ts, info, result, operation, ip) " +
@@ -56,12 +49,18 @@ public abstract class OnBoardingLogDAO {
     );
 
     @RegisterMapper(OnBoardingLogMapper.class)
-    @SqlQuery("SELECT * FROM onboarding_logs WHERE account_id = :account_id ORDER BY utc_ts ASC LIMIT 1000;")
-    public abstract List<OnBoardingLog> getByAccountId(@Bind("account_id") final long accountId);
+    @SqlQuery("SELECT * FROM onboarding_logs WHERE account_id = :account_id ORDER BY utc_ts ASC LIMIT :limit;")
+    public abstract List<OnBoardingLog> getByAccountId(@Bind("account_id") final long accountId, @Bind("limit") final int limit);
 
     @RegisterMapper(OnBoardingLogMapper.class)
-    @SqlQuery("SELECT * FROM onboarding_logs WHERE sense_id = :sense_id ORDER BY utc_ts ASC LIMIT 1000;")
-    public abstract List<OnBoardingLog> getBySenseId(@Bind("sense_id") final String senseId);
+    @SqlQuery("SELECT * FROM onboarding_logs WHERE sense_id = :sense_id ORDER BY utc_ts ASC LIMIT :limit;")
+    public abstract List<OnBoardingLog> getBySenseId(@Bind("sense_id") final String senseId, @Bind("limit") final int limit);
+
+    @RegisterMapper(OnBoardingLogMapper.class)
+    @SqlQuery("SELECT * FROM onboarding_logs WHERE result = :result AND utc_ts >= :start_ts AND utc_ts <= :end_ts;")
+    public abstract List<OnBoardingLog> getByResult(@Bind("result") final String results,
+                                                    @Bind("start_ts") final DateTime startTime,
+                                                    @Bind("end_ts") final DateTime endTime);
 
 
     @Timed
@@ -113,15 +112,8 @@ public abstract class OnBoardingLogDAO {
         for (final LoggingProtos.RegistrationLog registrationLog : registrationLogs) {
             try {
                 LOGGER.debug("individual insert {}", registrationLog);
-                final Long id = this.insert(registrationLog.getSenseId(),
-                        registrationLog.getAccountId(),
-                        registrationLog.hasPillId() ? registrationLog.getPillId() : null,
-                        new DateTime(registrationLog.getTimestamp(), DateTimeZone.UTC),
-                        registrationLog.getInfo(),
-                        registrationLog.getResult(),
-                        registrationLog.getAction(),
-                        registrationLog.getIpAddress()
-                );
+                final OnBoardingLog onBoardingLog = OnBoardingLog.fromProtobuf(registrationLog);
+                final Long id = this.insert(onBoardingLog);
 
                 inserted++;
 

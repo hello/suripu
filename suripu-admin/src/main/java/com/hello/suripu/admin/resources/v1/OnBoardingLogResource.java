@@ -6,6 +6,9 @@ import com.hello.suripu.core.models.OnBoardingLog;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.util.PairingResults;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +16,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -35,15 +39,39 @@ public class OnBoardingLogResource {
 
 
     @GET
-    @Path("/sense/{sense_id}")
+    @Path("/sense/{sense_id}/{count}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<OnBoardingLog> getLogs(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                       @PathParam("sense_id") final String senseId){
+                                       @PathParam("sense_id") final String senseId,
+                                       @PathParam("count") final int count){
         try{
-            final List<OnBoardingLog> logs = this.onBoardingLogDAO.getBySenseId(senseId);
+            final List<OnBoardingLog> logs = this.onBoardingLogDAO.getBySenseId(senseId, count);
             return logs;
         }catch (Exception ex){
             LOGGER.error("Get pairing log from sense {} failed: {}", senseId, ex.getMessage());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+    }
+
+
+    @GET
+    @Path("/result")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<OnBoardingLog> getLogsByResult(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                       @QueryParam("result") final PairingResults results,
+                                       @QueryParam("start_millis") final long startMillis,
+                                       @QueryParam("end_millis") final long endMillis){
+        try{
+            final List<OnBoardingLog> logs = this.onBoardingLogDAO.getByResult(results.toString(),
+                    new DateTime(startMillis, DateTimeZone.UTC),
+                    new DateTime(endMillis, DateTimeZone.UTC));
+            return logs;
+        }catch (Exception ex){
+            LOGGER.error("Get pairing log for result {} from {} to {} failed: {}",
+                    results,
+                    startMillis,
+                    endMillis,
+                    ex.getMessage());
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
     }

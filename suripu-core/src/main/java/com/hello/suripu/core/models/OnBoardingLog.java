@@ -2,6 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.util.PairAction;
 import com.hello.suripu.core.util.PairingResults;
 
@@ -51,5 +52,16 @@ public class OnBoardingLog {
         this.pairAction = pairAction;
         this.timestampMillis = timestampMillis;
         this.ip = ip;
+    }
+
+    public static OnBoardingLog fromProtobuf(final LoggingProtos.RegistrationLog registrationLog){
+        return new OnBoardingLog(registrationLog.getSenseId(),
+                Optional.fromNullable(registrationLog.hasPillId() ? registrationLog.getPillId() : null),
+                Optional.fromNullable(registrationLog.hasAccountId() ? registrationLog.getAccountId() : null),
+                registrationLog.getInfo(),
+                PairingResults.valueOf(registrationLog.getResult()),
+                PairAction.valueOf(registrationLog.getAction()),
+                registrationLog.getIpAddress(),
+                registrationLog.getTimestamp());
     }
 }
