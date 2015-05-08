@@ -98,27 +98,33 @@ public class TimelineSafeguardTest {
         final List<Event> extraEventsThatShortenTheDuration = new ArrayList<>();
 
 
-        goodExtraEvents.add(getEvent(Event.Type.WAKE_UP, t0 + (long) 1.5 * hourInMillis));
-        goodExtraEvents.add(getEvent(Event.Type.SLEEP, t0 + (long) 2.5 * hourInMillis));
+        goodExtraEvents.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (1.5 * hourInMillis)));
+        goodExtraEvents.add(getEvent(Event.Type.SLEEP, t0 + (long) (2.5 * hourInMillis)));
 
         //has no matching sleep
-        badExtraEvents1.add(getEvent(Event.Type.WAKE_UP, t0 + (long) 1.5 * hourInMillis));
+        badExtraEvents1.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (1.5 * hourInMillis)));
 
         //has no matching wakeup
-        badExtraEvents2.add(getEvent(Event.Type.SLEEP, t0 + (long) 1.5 * hourInMillis));
+        badExtraEvents2.add(getEvent(Event.Type.SLEEP, t0 + (long) (1.5 * hourInMillis)));
 
         //sleep comes before wakeup
-        badExtraEvents3.add(getEvent(Event.Type.SLEEP, t0 + (long) 1.5 * hourInMillis));
-        badExtraEvents3.add(getEvent(Event.Type.WAKE_UP, t0 + (long) 2.5 * hourInMillis));
+        badExtraEvents3.add(getEvent(Event.Type.SLEEP, t0 + (long) (1.5 * hourInMillis)));
+        badExtraEvents3.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (2.5 * hourInMillis)));
 
         //has an in-bed
-        badExtraEvents4.add(getEvent(Event.Type.WAKE_UP, t0 + (long) 1.5 * hourInMillis));
-        badExtraEvents4.add(getEvent(Event.Type.SLEEP, t0 + (long) 2.5 * hourInMillis));
-        badExtraEvents4.add(getEvent(Event.Type.IN_BED, t0 + (long) 3.5 * hourInMillis));
+        badExtraEvents4.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (1.5 * hourInMillis)));
+        badExtraEvents4.add(getEvent(Event.Type.SLEEP, t0 + (long) (2.5 * hourInMillis)));
+        badExtraEvents4.add(getEvent(Event.Type.IN_BED, t0 + (long) (3.5 * hourInMillis)));
 
         //time is out of order in list
-        badExtraEvents5.add(getEvent(Event.Type.WAKE_UP, t0 + (long) 2.5 * hourInMillis));
-        badExtraEvents5.add(getEvent(Event.Type.SLEEP, t0 + (long) 1.5 * hourInMillis));
+        badExtraEvents5.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (2.5 * hourInMillis)));
+        badExtraEvents5.add(getEvent(Event.Type.SLEEP, t0 + (long) (1.5 * hourInMillis)));
+
+
+        extraEventsThatShortenTheDuration.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (1.5 * hourInMillis)));
+        extraEventsThatShortenTheDuration.add(getEvent(Event.Type.SLEEP, t0 + (long) (2.5 * hourInMillis)));
+        extraEventsThatShortenTheDuration.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (3.5 * hourInMillis)));
+        extraEventsThatShortenTheDuration.add(getEvent(Event.Type.SLEEP, t0 + (long) (4.5 * hourInMillis)));
 
         TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
         TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents1)));
@@ -127,6 +133,10 @@ public class TimelineSafeguardTest {
         TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents4)));
         TestCase.assertFalse(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(badExtraEvents5)));
 
+
+        final int duration1 = safeguards.getTotalSleepDurationInMinutes(mainEventsSucceed.fallAsleep.get(), mainEventsSucceed.wakeUp.get(), ImmutableList.copyOf(extraEventsThatShortenTheDuration));
+
+        TestCase.assertEquals(duration1,5*hourInMinutes);
 
     }
 
