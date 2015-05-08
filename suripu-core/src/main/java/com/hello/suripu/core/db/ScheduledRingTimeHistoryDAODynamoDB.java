@@ -1,5 +1,7 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -147,6 +149,12 @@ public class ScheduledRingTimeHistoryDAODynamoDB {
 
         } catch (JsonProcessingException ex) {
             LOGGER.error("Set ring time for device {} failed, error: {}", deviceId, ex.getMessage());
+        } catch (AmazonServiceException awsServiceExp){
+            LOGGER.error("Set ring time for device {} failed due to service error: {}", deviceId, awsServiceExp.getMessage());
+        } catch (AmazonClientException awsClientExp){
+            LOGGER.error("Set ring time for device {} failed due to client error: {}", deviceId, awsClientExp.getMessage());
+        } catch (Exception ex){
+            LOGGER.error("Set ring time for device {} failed, general error: {}", deviceId, ex.getMessage());
         }
 
 
