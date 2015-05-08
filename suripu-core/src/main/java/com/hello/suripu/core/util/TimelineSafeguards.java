@@ -71,6 +71,7 @@ public class TimelineSafeguards {
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
             final long sleepTime = sleepEvents.fallAsleep.get().getStartTimestamp();
             final long wakeTime = sleepEvents.wakeUp.get().getStartTimestamp();
+            long lastTimeStamp = sleepTime;
 
             boolean foundWake = false;
             for (final Event event : extraEvents) {
@@ -86,7 +87,13 @@ public class TimelineSafeguards {
                         return false;
                     }
 
+                    if (event.getStartTimestamp() < lastTimeStamp) {
+                        LOGGER.warn("found wake event that happened before a sleep event");
+                        return false;
+                    }
+
                     foundWake = true;
+                    lastTimeStamp = event.getStartTimestamp();
 
 
                 }
@@ -101,7 +108,13 @@ public class TimelineSafeguards {
                         return false;
                     }
 
+                    if (event.getStartTimestamp() < lastTimeStamp) {
+                        LOGGER.warn("found sleep event that happened before a wake event");
+                        return false;
+                    }
+
                     foundWake = false;
+                    lastTimeStamp = event.getStartTimestamp();
                 }
                 else if (event.getType() == Event.Type.IN_BED) {
                     LOGGER.warn("found an in-bed within bounds of primary sleep times");
@@ -110,6 +123,11 @@ public class TimelineSafeguards {
                 else if (event.getType() == Event.Type.OUT_OF_BED) {
                     LOGGER.warn("found an out-of-bed within bounds of primary sleep times");
                 }
+            }
+
+            if (foundWake) {
+                LOGGER.warn("found a wake with an unmatched sleep");
+                return false;
             }
         }
 
@@ -148,7 +166,7 @@ public class TimelineSafeguards {
                 first = false;
             }
             else {
-                final int gapInMinutes = (int) ((sample.dateTime - lastTime) / NUM_MILLIS_IN_A_MINUTE);
+                final int gapInMinutes = (int) ((sample.dateTime - lastTime - NUM_MILLIS_IN_A_MINUTE) / NUM_MILLIS_IN_A_MINUTE);
 
                 if (gapInMinutes > maxGapInMinutes) {
                     maxGapInMinutes = gapInMinutes;
@@ -164,7 +182,7 @@ public class TimelineSafeguards {
     }
 
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public boolean checkIfValidTimeline (SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents,final ImmutableList<TrackerMotion> pillData, final AllSensorSampleList sensorData) {
+    public boolean checkIfValidTimeline (SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
 
         if (!checkEventOrdering(sleepEvents,extraEvents)) {
             return false;
@@ -179,7 +197,7 @@ public class TimelineSafeguards {
             }
         }
 
-        final int maxDataGapInMinutes = getMaximumDataGapInMinutes(ImmutableList.copyOf(sensorData.get(Sensor.LIGHT)));
+        final int maxDataGapInMinutes = getMaximumDataGapInMinutes(lightData);
 
         if (maxDataGapInMinutes > MAXIMUM_ALLOWABLE_DATAGAP) {
             LOGGER.warn("max data gap {} minutes is greaten than limit {} minutes -- invalidating timeline",maxDataGapInMinutes,MAXIMUM_ALLOWABLE_DATAGAP);
