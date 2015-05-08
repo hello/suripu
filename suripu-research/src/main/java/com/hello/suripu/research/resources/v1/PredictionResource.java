@@ -19,6 +19,8 @@ import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -258,6 +260,38 @@ public class PredictionResource extends BaseResource {
             return hmm;
         }
     }
+
+
+    @GET
+    @Path("/timeline/{account_id}/{query_date_local_utc}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public  ImmutableList<Timeline> getSleepPredictionByUser(  @Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+
+                                                   @PathParam("account_id") final  Long accountId,
+
+                                                   @PathParam("query_date_local_utc") final String strTargetDate) {
+
+
+        final DateTime targetDate = DateTime.parse(strTargetDate, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+
+
+        Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+
+        if (!result.isPresent()) {
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        }
+
+        if (result.get().timelines.isEmpty()) {
+            return ImmutableList.copyOf(Collections.EMPTY_LIST);
+        }
+
+        return result.get().timelines;
+    }
+
+
 
     @GET
     @Path("/sleep_events/{account_id}/{query_date_local_utc}")
