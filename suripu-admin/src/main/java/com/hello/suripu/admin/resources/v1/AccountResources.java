@@ -114,6 +114,18 @@ public class AccountResources {
         return accountDAO.getRecent(Math.min(limit, MAX_RECENT_USERS_LIMIT));
     }
 
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/paginate")
+    public List<Account> retrievePaginatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                                         @QueryParam("limit") final Integer limit,
+                                                         @QueryParam("max_id") final Integer maxId){
+        if (limit == null || maxId == null) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "limit and max_id required")).build());
+        }
+        return accountDAOAdmin.getRecentBeforeId(Math.min(limit, MAX_RECENT_USERS_LIMIT), maxId);
+    }
 
     @POST
     @Timed
