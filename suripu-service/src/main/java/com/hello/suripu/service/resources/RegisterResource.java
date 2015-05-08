@@ -24,7 +24,7 @@ import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
-import com.hello.suripu.service.utils.PairAction;
+import com.hello.suripu.core.util.PairAction;
 import com.hello.suripu.service.utils.RegistrationLogger;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;

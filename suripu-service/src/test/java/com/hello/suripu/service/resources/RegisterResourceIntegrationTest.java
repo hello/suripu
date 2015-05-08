@@ -11,7 +11,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
-import com.hello.suripu.service.utils.PairAction;
+import com.hello.suripu.core.util.PairAction;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;

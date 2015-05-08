@@ -5,6 +5,8 @@ import com.amazonaws.services.kinesis.model.ProvisionedThroughputExceededExcepti
 import com.google.common.base.Optional;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.util.PairAction;
+import com.hello.suripu.core.util.PairingResults;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +53,7 @@ public class RegistrationLogger {
 
     private LoggingProtos.RegistrationLog.Builder getRegistrationLogBuilder(final Optional<String> pillId,
                                                                             final String info,
-                                                                            final RegistrationActionResults result,
+                                                                            final PairingResults result,
                                                                             final DateTime currentTime){
         final LoggingProtos.RegistrationLog.Builder builder = LoggingProtos.RegistrationLog.newBuilder().setSenseId(this.senseId)
                 .setAction(this.action.toString())
@@ -102,11 +104,11 @@ public class RegistrationLogger {
     private void logImpl(final Optional<String> pillId,
                              final String info,
                              final DateTime now,
-                             final RegistrationActionResults result){
+                             final PairingResults result){
         if(this.logs.size() == 0){
             final LoggingProtos.RegistrationLog log = getRegistrationLogBuilder(pillId,
                     "enter function call",
-                    RegistrationActionResults.START,
+                    PairingResults.START,
                     now)
                     .build();
             this.logs.add(log);
@@ -122,22 +124,22 @@ public class RegistrationLogger {
 
     public void logFailure(final Optional<String> pillId,
                                   final String info){
-        logImpl(pillId, info, DateTime.now(), RegistrationActionResults.FAILED);
+        logImpl(pillId, info, DateTime.now(), PairingResults.FAILED);
     }
 
     public void logProgress(final Optional<String> pillId,
                                final String info){
-        logImpl(pillId, info, DateTime.now(), RegistrationActionResults.IN_PROGRESS);
+        logImpl(pillId, info, DateTime.now(), PairingResults.IN_PROGRESS);
     }
 
     public void logSuccess(final Optional<String> pillId,
                                       final String info){
-        logImpl(pillId, info, DateTime.now(), RegistrationActionResults.SUCCESS);
+        logImpl(pillId, info, DateTime.now(), PairingResults.SUCCESS);
     }
 
     public boolean commit(){
         LOGGER.info("Committing onboarding log...");
-        logImpl(Optional.<String>absent(), "exit function call", DateTime.now().plusMillis(1), RegistrationActionResults.EXIT);
+        logImpl(Optional.<String>absent(), "exit function call", DateTime.now().plusMillis(1), PairingResults.EXIT);
         final boolean result = this.postLog();
         this.logs.clear();
         LOGGER.info("Onboarding log comitted.");
