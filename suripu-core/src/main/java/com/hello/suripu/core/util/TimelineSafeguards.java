@@ -74,6 +74,8 @@ public class TimelineSafeguards {
             long lastTimeStamp = sleepTime;
 
             boolean foundWake = false;
+            boolean foundOutOfBed = false;
+
             for (final Event event : extraEvents) {
                 if (event.getType() == Event.Type.WAKE_UP) {
 
@@ -117,17 +119,34 @@ public class TimelineSafeguards {
                     lastTimeStamp = event.getStartTimestamp();
                 }
                 else if (event.getType() == Event.Type.IN_BED) {
-                    LOGGER.warn("found an in-bed within bounds of primary sleep times");
-                    return false;
+
+                    if (!foundOutOfBed) {
+                        LOGGER.warn("found an in-bed but it was not after an out-of-bed");
+                        return false;
+                    }
+
+                    foundOutOfBed = false;
                 }
                 else if (event.getType() == Event.Type.OUT_OF_BED) {
-                    LOGGER.warn("found an out-of-bed within bounds of primary sleep times");
+
+                    if (foundOutOfBed) {
+                        LOGGER.warn("found two  consecutive out of beds");
+                        return false;
+                    }
+
+                    foundOutOfBed = true;
                 }
             }
 
             if (foundWake) {
                 LOGGER.warn("found a wake with an unmatched sleep");
                 return false;
+            }
+
+            if (foundOutOfBed) {
+                LOGGER.warn("found an out-of-bed with an unmatched in-bed");
+                return false;
+
             }
         }
 

@@ -79,6 +79,28 @@ public class TimelineSafeguardTest {
 
     }
 
+
+    @Test
+    public void testMultipleInBedOutOfBeds() {
+
+        final TimelineSafeguards safeguards = new TimelineSafeguards();
+
+        final SleepEvents<Optional<Event>> mainEventsSucceed = getMainEvents(t0 + 0 * hourInMillis, t0 + 1 * hourInMillis, t0 + 8 * hourInMillis, t0 + 9 * hourInMillis);
+
+        final List<Event> goodExtraEvents = new ArrayList<>();
+
+        goodExtraEvents.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (1.5 * hourInMillis)));
+        goodExtraEvents.add(getEvent(Event.Type.SLEEP, t0 + (long) (2.5 * hourInMillis)));
+
+        goodExtraEvents.add(getEvent(Event.Type.WAKE_UP, t0 + (long) (3.5 * hourInMillis)));
+        goodExtraEvents.add(getEvent(Event.Type.OUT_OF_BED, t0 + (long) (4.5 * hourInMillis)));
+        goodExtraEvents.add(getEvent(Event.Type.IN_BED, t0 + (long) (5.5 * hourInMillis)));
+        goodExtraEvents.add(getEvent(Event.Type.SLEEP, t0 + (long) (6.5 * hourInMillis)));
+
+        TestCase.assertTrue(safeguards.checkEventOrdering(mainEventsSucceed, ImmutableList.copyOf(goodExtraEvents)));
+
+    }
+
     @Test
     public void testExtraEventsTimeline() {
         final TimelineSafeguards safeguards = new TimelineSafeguards();
