@@ -22,7 +22,7 @@ public class TimelineSafeguards {
 
     private static final long NUM_MILLIS_IN_A_MINUTE = 60000L;
 
-    private static final int MINIMUM_SLEEP_DURATION_MINUTES = 180; //three hours
+    public static final int MINIMUM_SLEEP_DURATION_MINUTES = 180; //three hours
     private static final int MAXIMUM_ALLOWABLE_DATAGAP = 60; //one hour
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineSafeguards.class);
