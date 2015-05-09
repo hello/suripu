@@ -70,10 +70,12 @@ public class OTAHistoryDAODynamoDB {
         try {
             final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
             return Optional.of(historyEntry);
-        }catch (AmazonServiceException awsEx){
+        } catch (AmazonServiceException awsEx){
             LOGGER.error("OTA Event insert failed. AWS service error {}", awsEx.getMessage());
-        }catch (AmazonClientException awcEx){
+        } catch (AmazonClientException awcEx) {
             LOGGER.error("OTA Event insert failed. Client error.", awcEx.getMessage());
+        } catch (Exception ex) {
+            LOGGER.error("OTA Event insert failed. {}", ex.getMessage());
         }
 
         return Optional.absent();
