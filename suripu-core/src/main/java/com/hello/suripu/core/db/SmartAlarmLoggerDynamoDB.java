@@ -19,6 +19,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.util.concurrent.RateLimiter;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
@@ -109,8 +110,14 @@ public class SmartAlarmLoggerDynamoDB {
                 LOGGER.error("invalid row, missing smart ring time or expected ring time");
                 continue;
             }
-            final DateTime expectedRingTime = DateTime.parse(expectedRingTimeString, DateTimeFormat.forPattern(DATETIME_FORMAT));
-            final DateTime smartRingTime = DateTime.parse(smartRingTimeString, DateTimeFormat.forPattern(DATETIME_FORMAT));
+            final DateTime expectedRingTime = expectedRingTimeString.split(" ").length == 3 ?
+                    DateTime.parse(expectedRingTimeString, DateTimeFormat.forPattern(DATETIME_FORMAT)) :
+                    DateTime.parse(expectedRingTimeString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT));
+
+            final DateTime smartRingTime = smartRingTimeString.split(" ").length == 3 ?
+                    DateTime.parse(smartRingTimeString, DateTimeFormat.forPattern(DATETIME_FORMAT)) :
+                    DateTime.parse(smartRingTimeString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT));
+
             final Long accountId = Long.valueOf(row.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
             if(expectedRingTime.minusMinutes(5).isBefore(smartRingTime)){
                 // TODO: We still need to save the timezone id, parsing the string will give us
