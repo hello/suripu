@@ -1,5 +1,7 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -78,12 +80,22 @@ public class RingTimeHistoryDAODynamoDB {
         try {
             final String ringTimeJSON = this.mapper.writeValueAsString(ringTime);
             items.put(RINGTIME_OBJECT_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
+            final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
+            final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
         } catch (JsonProcessingException e) {
             LOGGER.error("set next ringtime for device {} failed: {}", deviceId, e.getMessage());
+        }catch (AmazonServiceException awsServiceExp){
+            LOGGER.error("set next ringtime for device {} failed due to service exception: {}",
+                    deviceId, awsServiceExp.getMessage());
+        } catch (AmazonClientException awsClientExp){
+            LOGGER.error("set next ringtime for device {} failed due to client exception: {}",
+                    deviceId, awsClientExp.getMessage());
+        } catch (Exception ex){
+            LOGGER.error("set next ringtime for device {} failed due to general exception: {}",
+                    deviceId, ex.getMessage());
         }
 
-        final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
-        final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);
+
     }
 
     public List<RingTime> getRingTimesBetween(final String senseId, final DateTime startTime, final DateTime endTime) {
