@@ -75,4 +75,12 @@ public class SuripuResearchConfiguration extends Configuration {
     public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
         return kinesisLoggerConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleephmm_db")
+    private DynamoDBConfiguration sleepHmmDBConfiguration;
+    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
+        return this.sleepHmmDBConfiguration;
+    }
 }

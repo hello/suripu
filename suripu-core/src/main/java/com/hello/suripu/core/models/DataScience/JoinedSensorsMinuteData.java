@@ -31,6 +31,9 @@ public class JoinedSensorsMinuteData {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationSeconds;
 
+    @JsonProperty("wave_count")
+    public final Integer waveCount;
+
     @JsonProperty("offset_millis")
     public final Integer offsetMillis;
 
@@ -41,6 +44,7 @@ public class JoinedSensorsMinuteData {
                                    final Long kickoffCounts,
                                    final Long motionRange,
                                    final Long onDurationSeconds,
+                                   final Integer waveCount,
                                    final Integer offsetMillis) {
         this.ts = ts;
         this.accountId = accountId;
@@ -51,6 +55,7 @@ public class JoinedSensorsMinuteData {
         this.kickoffCounts = kickoffCounts;
         this.motionRange = motionRange;
         this.onDurationSeconds = onDurationSeconds;
+        this.waveCount = waveCount;
         this.offsetMillis = offsetMillis;
     }
 

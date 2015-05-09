@@ -29,4 +29,7 @@ public abstract class FeedbackDAO {
 
     @SqlQuery("SELECT * FROM timeline_feedback where account_id = :account_id AND date_of_night = :date_of_night")
     public abstract ImmutableList<TimelineFeedback> getForNight(@Bind("account_id") final Long accountId, @Bind("date_of_night") final DateTime dateOfNight);
+
+    @SqlQuery("SELECT * FROM timeline_feedback where account_id = :account_id")
+    public abstract ImmutableList<TimelineFeedback> getForAccount(@Bind("account_id") final Long accountId);
 }
