@@ -18,6 +18,7 @@ import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
 import com.hello.suripu.admin.resources.v1.FirmwareResource;
 import com.hello.suripu.admin.resources.v1.InspectionResources;
+import com.hello.suripu.admin.resources.v1.PCHResources;
 import com.hello.suripu.admin.resources.v1.OnBoardingLogResource;
 import com.hello.suripu.admin.resources.v1.TeamsResources;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
@@ -219,5 +220,12 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new InspectionResources(deviceDAOAdmin));
         environment.addResource(new OnBoardingLogResource(accountDAO, onBoardingLogDAO));
 
+        environment.addResource(
+                new PCHResources(
+                        senseKeyStoreDynamoDBClient, // we use the same endpoint for Sense and Pill keystore
+                        tableNames.get(DynamoDBTableName.SENSE_KEY_STORE),
+                        tableNames.get(DynamoDBTableName.PILL_KEY_STORE)
+                )
+        );
     }
 }
