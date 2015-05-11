@@ -66,10 +66,9 @@ public class TimelineResource extends BaseResource {
                 return false;
             }
 
-            //only cache if not the HMM
-            if (!this.hasHmmEnabled(accountId)) {
-                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
-            }
+
+            this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
+
 
             return true;
         }catch (AmazonServiceException awsExp){

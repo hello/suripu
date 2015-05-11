@@ -1,7 +1,6 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -33,8 +32,9 @@ import com.hello.suripu.service.configuration.OTAConfiguration;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import com.hello.suripu.service.models.UploadSettings;
 import com.librato.rollout.RolloutClient;
+import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
-import java.util.Map;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -54,7 +54,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 
 @Path("/in")
@@ -67,6 +69,7 @@ public class ReceiveResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
+    private final int ringDurationSec;
 
     private final KeyStore keyStore;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
@@ -81,6 +84,9 @@ public class ReceiveResource extends BaseResource {
     private final OTAConfiguration otaConfiguration;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
 
+    private final Meter senseClockOutOfSync;
+    private final Meter pillClockOutOfSync;
+
     @Context
     HttpServletRequest request;
 
@@ -93,7 +99,8 @@ public class ReceiveResource extends BaseResource {
                            final GroupFlipper groupFlipper,
                            final SenseUploadConfiguration senseUploadConfiguration,
                            final OTAConfiguration otaConfiguration,
-                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
+                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
+                           final int ringDurationSec) {
 
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
@@ -108,6 +115,9 @@ public class ReceiveResource extends BaseResource {
         this.senseUploadConfiguration = senseUploadConfiguration;
         this.otaConfiguration = otaConfiguration;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
+        this.senseClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "sense-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.pillClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "pill-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.ringDurationSec = ringDurationSec;
     }
 
 
@@ -237,6 +247,7 @@ public class ReceiveResource extends BaseResource {
 
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
+        final List<String> groups = groupFlipper.getGroups(deviceName);
 
         for(int i = 0; i < batch.getDataCount(); i ++) {
             final DataInputProtos.periodic_data data = batch.getData(i);
@@ -244,12 +255,17 @@ public class ReceiveResource extends BaseResource {
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
             if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                 LOGGER.error("The clock for device {} is not within reasonable bounds (2h), current time = {}, received time = {}",
-                        data.getDeviceId(),
+                        deviceName,
                         DateTime.now(),
                         roundedDateTime
-                        );
+                );
                 // TODO: throw exception?
-                continue;
+                senseClockOutOfSync.mark(1);
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.REBOOT_CLOCK_OUT_OF_SYNC_DEVICES, deviceName, groups)) {
+                    responseBuilder.setResetDevice(true);
+                } else {
+                    continue;
+                }
             }
 
             // only compute the sate for the most recent conditions
@@ -269,7 +285,7 @@ public class ReceiveResource extends BaseResource {
         }
 
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
-        final List<String> groups = groupFlipper.getGroups(deviceName);
+
 
         if(userTimeZone.isPresent()) {
             final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now());
@@ -279,7 +295,11 @@ public class ReceiveResource extends BaseResource {
 
             // Start generate protobuf for alarm
             int ringOffsetFromNowInSecond = -1;
-            int ringDurationInMS = 2 * DateTimeConstants.MILLIS_PER_MINUTE;
+            int ringDurationInMS = 120 * DateTimeConstants.MILLIS_PER_SECOND;
+            if(this.featureFlipper.deviceFeatureActive(FeatureFlipper.RING_DURATION_FROM_CONFIG, deviceName, Collections.EMPTY_LIST)){
+                ringDurationInMS = this.ringDurationSec * DateTimeConstants.MILLIS_PER_SECOND;
+            }
+            
             if (!nextRingTime.isEmpty()) {
                 ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - now.getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
                 if(ringOffsetFromNowInSecond < 0){
@@ -451,6 +471,7 @@ public class ReceiveResource extends BaseResource {
                         pill.getDeviceId(),
                         now,
                         new DateTime(pillTimestamp, DateTimeZone.UTC));
+                pillClockOutOfSync.mark(1);
                 continue;
             }
             cleanBatch.addPills(pill);
@@ -513,9 +534,7 @@ public class ReceiveResource extends BaseResource {
 
         if(pchOTA) {
             LOGGER.debug("PCH Special OTA for device: {}", deviceID);
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
-            LOGGER.info("{} files added to syncResponse for PCH Special OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
-            return fileDownloadList;
+            return firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
         }
 
         final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
@@ -523,10 +542,8 @@ public class ReceiveResource extends BaseResource {
         if (isOfficeDeviceWithOverride) {
             if (!deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
-                LOGGER.info("Office OTA Override for DeviceId {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
-                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
-                return fileDownloadList;
+                LOGGER.info("Office OTA Override for DeviceId {}", deviceID);
+                return firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
             } else {
                 return Collections.emptyList();
             }
@@ -540,15 +557,11 @@ public class ReceiveResource extends BaseResource {
             if (!deviceGroups.isEmpty()) {
                 final String updateGroup = deviceGroups.get(0);
                 LOGGER.debug("DeviceId {} belongs to groups: {}", deviceID, deviceGroups);
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);//TODO: Create a better way of knowing which group the device will belong to
-                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fileDownloadList.size(), updateGroup, deviceID);
-                return fileDownloadList;
+                return firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
             } else {
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
                     LOGGER.debug("Feature 'release' is active for device: {}", deviceID);
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, false);
-                    LOGGER.info("{} files added to syncResponse for OTA of 'release' to DeviceId {}", fileDownloadList.size(), deviceID);
-                    return fileDownloadList;
+                    return firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, false);
                 }
             }
         }

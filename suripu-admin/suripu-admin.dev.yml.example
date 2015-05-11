@@ -35,11 +35,6 @@ kinesis:
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
 
-features_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: features
-
 kinesis_logger:
   stream_name: logs
   enabled : false
@@ -50,47 +45,30 @@ redis:
   host: localhost
   port: 6379
 
-alarm_info_db:
-  endpoint : http://localhost:7777
+dynamodb:
   region: us-east-1
-  table_name: alarm_info
+  tables:
+    features : features
+    alarm_info : alarm_info
+    sense_key_store : key_store
+    pill_key_store : pill_key_store
+    password_reset : password_reset
+    sense_events : sense_events
+    teams : teams
+    firmware_versions : firmware_versions_mapping
+    sync_response_commands : response_commands
+    ota_history : ota_history
+    firmware_upgrade_path : fw_upgrade_path
 
-sense_key_store_dynamo_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: key_store
-
-pill_key_store_dynamo_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: pill_key_store
-
-password_reset_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: password_reset
-
-sense_events:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: sense_events
-
-teams_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: teams
-
-firmware_versions:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: firmware_versions_mapping
-
-ota_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: ota_history
-
-resp_commands_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: response_commands
+  endpoints:
+      features : http://dynamodb.us-east-1.amazonaws.com
+      alarm_info : http://localhost:7777
+      sense_key_store : http://localhost:7777
+      pill_key_store : http://localhost:7777
+      password_reset : http://localhost:7777
+      sense_events : http://localhost:7777
+      teams : http://dynamodb.us-east-1.amazonaws.com
+      firmware_versions : http://dynamodb.us-east-1.amazonaws.com
+      sync_response_commands : http://localhost:7777
+      ota_history : http://localhost:7777
+      firmware_upgrade_path : http://localhost:7777

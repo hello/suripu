@@ -68,7 +68,7 @@ public class RoomConditionsResource extends BaseResource {
             return CurrentRoomState.empty();
         }
 
-        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get(), DateTime.now(DateTimeZone.UTC).plusMinutes(2));
+        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get(), DateTime.now(DateTimeZone.UTC).plusMinutes(2), DateTime.now(DateTimeZone.UTC).minusMinutes(30));
         if(!data.isPresent()) {
             return CurrentRoomState.empty();
         }

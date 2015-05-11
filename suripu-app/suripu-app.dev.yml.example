@@ -248,3 +248,8 @@ resp_commands_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: response_commands
+
+fw_path_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: fw_upgrade_path

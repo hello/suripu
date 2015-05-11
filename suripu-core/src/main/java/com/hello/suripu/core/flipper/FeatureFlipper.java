@@ -29,4 +29,7 @@ public class FeatureFlipper {
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
     public final static String SENSORS_DB_UNAVAILABLE = "sensors_db_unavailable";
     public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
+    public final static String RING_DURATION_FROM_CONFIG = "ring_duration_from_config";
+
+    public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
 }

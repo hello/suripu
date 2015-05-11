@@ -529,7 +529,10 @@ public class DeviceResources {
         final List<DeviceAdmin> senses = new ArrayList<>();
 
         for (final DeviceAccountPair senseAccountPair: senseAccountPairs) {
-            final Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatus(senseAccountPair.internalDeviceId);
+            Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatusLastHour(senseAccountPair.internalDeviceId);
+            if (!senseStatusOptional.isPresent()) {
+                senseStatusOptional = this.deviceDataDAO.senseStatus(senseAccountPair.internalDeviceId);
+            }
             senses.add(new DeviceAdmin(senseAccountPair, senseStatusOptional.orNull()));
         }
         return senses;

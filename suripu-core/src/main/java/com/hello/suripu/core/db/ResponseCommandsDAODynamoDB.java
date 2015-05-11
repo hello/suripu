@@ -43,7 +43,7 @@ public class ResponseCommandsDAODynamoDB {
     public static final String TIMESTAMP_ATTRIBUTE_NAME = "request_time";
     public final static String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ssZ";
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(OTAHistoryDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(ResponseCommandsDAODynamoDB.class);
 
     public ResponseCommandsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
@@ -143,7 +143,7 @@ public class ResponseCommandsDAODynamoDB {
             return respCommandMap;
 
         }   catch (Exception e) {
-            LOGGER.debug(e.toString());
+            LOGGER.debug("Failed to retrieve Response Command for Device: {}", deviceId);
         }
         return Collections.EMPTY_MAP;
     }

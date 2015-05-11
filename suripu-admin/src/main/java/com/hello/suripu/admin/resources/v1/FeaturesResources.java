@@ -15,6 +15,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
 import java.util.List;
 
 @Path("/v1/features")
@@ -37,6 +38,8 @@ public class FeaturesResources {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Feature> listFeatures(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
-        return featureStore.getAllFeatures();
+        final List<Feature> features = featureStore.getAllFeatures();
+        Collections.sort(features);
+        return features;
     }
 }

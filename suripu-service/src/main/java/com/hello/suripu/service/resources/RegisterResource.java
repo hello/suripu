@@ -24,6 +24,8 @@ import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.service.SignedMessage;
+import com.hello.suripu.core.util.PairAction;
+import com.hello.suripu.service.utils.RegistrationLogger;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.commons.codec.binary.Hex;
@@ -64,7 +66,7 @@ public class RegisterResource extends BaseResource {
 
     private final Boolean debug;
 
-    private enum PairState{
+    protected enum PairState{
         NOT_PAIRED,
         PAIRED_WITH_CURRENT_ACCOUNT,
         PAIRING_VIOLATION;
@@ -78,11 +80,6 @@ public class RegisterResource extends BaseResource {
 
     private final GroupFlipper groupFlipper;
 
-    private static enum PairAction{
-        PAIR_MORPHEUS,
-        PAIR_PILL
-    }
-
     public RegisterResource(final DeviceDAO deviceDAO,
                             final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore,
                             final KinesisLoggerFactory kinesisLoggerFactory,
@@ -90,6 +87,7 @@ public class RegisterResource extends BaseResource {
                             final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final GroupFlipper groupFlipper,
                             final Boolean debug){
+
         this.deviceDAO = deviceDAO;
         this.tokenStore = tokenStore;
         this.debug = debug;
@@ -99,7 +97,7 @@ public class RegisterResource extends BaseResource {
         this.groupFlipper = groupFlipper;
     }
 
-    private boolean checkCommandType(final MorpheusCommand morpheusCommand, final PairAction action){
+    protected final boolean checkCommandType(final MorpheusCommand morpheusCommand, final PairAction action){
         switch (action){
             case PAIR_PILL:
                 return morpheusCommand.getType() == MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_PILL;
@@ -110,7 +108,7 @@ public class RegisterResource extends BaseResource {
         }
     }
 
-    private void setPillColor(final String senseId, final long accountId, final String pillId){
+    protected final void setPillColor(final String senseId, final long accountId, final String pillId){
 
         try {
             // WARNING: potential race condition here.
@@ -121,7 +119,7 @@ public class RegisterResource extends BaseResource {
         }
     }
 
-    private PairState getSensePairingState(final String senseId, final long accountId){
+    protected PairState getSensePairingState(final String senseId, final long accountId){
         final List<DeviceAccountPair> pairedSense = this.deviceDAO.getSensesForAccountId(accountId);
         if(pairedSense.size() > 1){  // This account already paired with multiple senses
             return PairState.PAIRING_VIOLATION;
@@ -138,7 +136,7 @@ public class RegisterResource extends BaseResource {
         }
     }
 
-    private PairState getPillPairingState(final String senseId, final String pillId, final long accountId){
+    protected final PairState getPillPairingState(final String senseId, final String pillId, final long accountId, final RegistrationLogger onboardingLogger){
         final List<DeviceAccountPair> pillsPairedToCurrentAccount = this.deviceDAO.getPillsForAccountId(accountId);
         final List<DeviceAccountPair> accountsPairedToCurrentPill = this.deviceDAO.getLinkedAccountFromPillId(pillId);
         if(pillsPairedToCurrentAccount.size() > 1){  // This account already paired with multiple pills
@@ -169,50 +167,81 @@ public class RegisterResource extends BaseResource {
                         return PairState.PAIRED_WITH_CURRENT_ACCOUNT;
                     }
                 }
-                LOGGER.error("Debug mode: account {} already paired with {} pills.", accountId, pillsPairedToCurrentAccount.size());
+                final String errorMessage = String.format("Account %d already paired with %d pills.", accountId, pillsPairedToCurrentAccount.size());
+                LOGGER.error(errorMessage);
+                onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
                 return PairState.PAIRING_VIOLATION;
             }
         }
 
         if(accountsPairedToCurrentPill.size() > 1){
-            LOGGER.warn("Account {} already paired with multiple pills. pills paired {}, accounts paired {}",
+            final String errorMessage = String.format("Account %d already paired with multiple pills. pills paired %d, accounts paired %d",
                     accountId,
                     pillsPairedToCurrentAccount.size(),
                     accountsPairedToCurrentPill.size());
+            LOGGER.warn(errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
             return PairState.PAIRING_VIOLATION;
         }
 
         // else:
         if(accountsPairedToCurrentPill.size() == 1 && pillsPairedToCurrentAccount.size() == 0){
             // pill already paired with an account, but this account is new, stolen pill?
-            LOGGER.error("Pill {} might got stolen, account {} is a theft!", pillId, accountId);
+            final String errorMessage  = String.format("Pill %s might got stolen, account %d is a theft!", pillId, accountId);
+            LOGGER.error(errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
         }
         if(pillsPairedToCurrentAccount.size() == 1 && accountsPairedToCurrentPill.size() == 0){
             // account already paired with a pill, only one pill is allowed
-            LOGGER.error("Account {} already paired with pill {}", accountId, pillsPairedToCurrentAccount.get(0).externalDeviceId);
+            final String errorMessage = String.format("Account %d already paired with pill %s. Pill %s cannot pair to this account",
+                    accountId,
+                    pillsPairedToCurrentAccount.get(0).externalDeviceId,
+                    pillId);
+            LOGGER.error(errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+
         }
 
-        LOGGER.warn("Paired failed for account {}. pills paired {}, accounts paired {}",
+        final String errorMessage = String.format("Paired failed for account %d. pills paired %d, accounts paired %d",
                 accountId,
                 pillsPairedToCurrentAccount.size(),
                 accountsPairedToCurrentPill.size());
+        LOGGER.warn(errorMessage);
+        onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+
         return PairState.PAIRING_VIOLATION;
 
     }
 
-    private MorpheusCommand.Builder pair(final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
-
+    protected final MorpheusCommand.Builder pair(final String senseIdFromHeader, final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
         final MorpheusCommand.Builder builder = MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
+        final DataLogger registrationLogger = kinesisLoggerFactory.get(QueueName.LOGS);
+        final RegistrationLogger onboardingLogger = RegistrationLogger.create(senseIdFromHeader,
+                action,
+                request.getHeader("X-Forwarded-For"),
+                registrationLogger);
 
-        final SignedMessage signedMessage = SignedMessage.parse(encryptedRequest);
         MorpheusCommand morpheusCommand = MorpheusCommand.getDefaultInstance();
-        try {
-            morpheusCommand = MorpheusCommand.parseFrom(signedMessage.body);
+        SignedMessage signedMessage = null;
 
+        try {
+            signedMessage = SignedMessage.parse(encryptedRequest);  // This call will throw
+            morpheusCommand = MorpheusCommand.parseFrom(signedMessage.body);
         } catch (IOException exception) {
             final String errorMessage = String.format("Failed parsing protobuf: %s", exception.getMessage());
             LOGGER.error(errorMessage);
+
+            onboardingLogger.logFailure(Optional.<String>absent(), errorMessage);
+
+            // We can't return a proper error because we can't decode the protobuf
+            throwPlainTextError(Response.Status.BAD_REQUEST, "");
+        } catch (RuntimeException rtEx){
+            final String errorMessage = String.format("Failed parsing input: %s", rtEx.getMessage());
+            LOGGER.error(errorMessage);
+
+            onboardingLogger.logFailure(Optional.<String>absent(), errorMessage);
+
             // We can't return a proper error because we can't decode the protobuf
             throwPlainTextError(Response.Status.BAD_REQUEST, "");
         }
@@ -224,6 +253,7 @@ public class RegisterResource extends BaseResource {
         String pillId = "";
 
         final String token = morpheusCommand.getAccountId();
+
         LOGGER.debug("deviceId = {}", deviceId);
         LOGGER.debug("token = {}", token);
 
@@ -234,12 +264,21 @@ public class RegisterResource extends BaseResource {
         if(!accessTokenOptional.isPresent()) {
             builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
-            LOGGER.error("Token not found {} for device Id {}", token, deviceId);
+            final String logMessage = String.format("Token not found %s for device Id %s", token, deviceId);
+            LOGGER.error(logMessage);
+
+            onboardingLogger.logFailure(Optional.<String>absent(), logMessage);
+            onboardingLogger.commit();
             return builder;
         }
 
         final Long accountId = accessTokenOptional.get().accountId;
-        LOGGER.debug("accountId = {}", accountId);
+        onboardingLogger.setAccountId(accountId);
+
+        final String logMessage = String.format("AccountId from protobuf = %d", accountId);
+        LOGGER.debug(logMessage);
+
+        onboardingLogger.logProgress(Optional.<String>absent(), logMessage);
 
         // this is only needed for devices with 000... in the header
         // MUST BE CLEARED when the buffer is returned to Sense
@@ -248,14 +287,21 @@ public class RegisterResource extends BaseResource {
         switch (action) {
             case PAIR_MORPHEUS:
                 senseId = deviceId;
+                onboardingLogger.setSenseId(senseId);  // We need this until the provision problem got fixed.
                 break;
             case PAIR_PILL:
                 pillId = deviceId;
                 final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
                 if(deviceAccountPairs.size() == 0){
-                    LOGGER.error("No sense paired with account {} when pill {} tries to register", accountId, pillId);
+                    final String errorMessage = String.format("No sense paired with account %d when pill %s tries to register",
+                            accountId, pillId);
+                    LOGGER.error(errorMessage);
+                    onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+
                     builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                     builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
+
+                    onboardingLogger.commit();
                     return builder;
                 }
                 senseId = deviceAccountPairs.get(0).externalDeviceId;
@@ -264,21 +310,32 @@ public class RegisterResource extends BaseResource {
 
         final Optional<byte[]> keyBytesOptional = keyStore.get(senseId);
         if(!keyBytesOptional.isPresent()) {
-            LOGGER.error("Missing AES key for device = {}", senseId);
-            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
+            final String errorMessage = String.format("Missing AES key for device = %s", senseId);
+            LOGGER.error(errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "no key");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(keyBytesOptional.get());
 
         if(error.isPresent()) {
-            LOGGER.error("Fail to validate signature {}", error.get().message);
-            throwPlainTextError(Response.Status.UNAUTHORIZED, "");
+            final String errorMessage = String.format("Fail to validate signature %s", error.get().message);
+            LOGGER.error(errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+
+            throwPlainTextError(Response.Status.UNAUTHORIZED, "invalid signature");
         }
 
         if(!checkCommandType(morpheusCommand, action)){
             builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
             builder.setError(SenseCommandProtos.ErrorType.INTERNAL_DATA_ERROR);
-            LOGGER.error("Wrong request command type {}", morpheusCommand.getType());
+
+            final String errorMessage = String.format("Wrong request command type %s", morpheusCommand.getType().toString());
+            LOGGER.error(errorMessage);
+            onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+            onboardingLogger.commit();
+
             return builder;
         }
 
@@ -288,12 +345,22 @@ public class RegisterResource extends BaseResource {
                     final PairState pairState = getSensePairingState(senseId, accountId);
                     if (pairState == PairState.NOT_PAIRED) {
                         this.deviceDAO.registerSense(accountId, senseId);
+                        onboardingLogger.logSuccess(Optional.<String>absent(),
+                                String.format("Account id %d linked to senseId %s in DB.", accountId, senseId));
+                    }
+
+                    if(pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT){
+                        onboardingLogger.logProgress(Optional.<String>absent(),
+                                String.format("Account id %d already linked to senseId %s in DB.", accountId, senseId));
                     }
 
                     if (pairState == PairState.NOT_PAIRED || pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT) {
                         builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_PAIR_SENSE);
                     } else {
-                        LOGGER.error("Account {} tries to pair multiple senses", accountId);
+                        final String errorMessage = String.format("Account %d tries to pair multiple senses", accountId);
+                        LOGGER.error(errorMessage);
+                        onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+
                         builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                         builder.setError(SenseCommandProtos.ErrorType.DEVICE_ALREADY_PAIRED);
                     }
@@ -301,11 +368,19 @@ public class RegisterResource extends BaseResource {
                 break;
                 case PAIR_PILL: {
                     LOGGER.warn("Attempting to pair pill {} to account {}", pillId, accountId);
-                    final PairState pairState = getPillPairingState(senseId, pillId, accountId);
+                    final PairState pairState = getPillPairingState(senseId, pillId, accountId, onboardingLogger);
                     if (pairState == PairState.NOT_PAIRED) {
                         this.deviceDAO.registerPill(accountId, deviceId);
-                        LOGGER.warn("Registered pill {} to account {}", pillId, accountId);
+                        final String message = String.format("Linked pill %s to account %d in DB", pillId, accountId);
+                        LOGGER.warn(message);
+                        onboardingLogger.logSuccess(Optional.fromNullable(pillId), message);
+
                         this.setPillColor(senseId, accountId, deviceId);
+                    }
+
+                    if(pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT){
+                        onboardingLogger.logProgress(Optional.fromNullable(pillId),
+                                String.format("Account id %d already linked to pill %s in DB.", accountId, pillId));
                     }
 
                     if (pairState == PairState.NOT_PAIRED || pairState == PairState.PAIRED_WITH_CURRENT_ACCOUNT) {
@@ -323,11 +398,17 @@ public class RegisterResource extends BaseResource {
         } catch (UnableToExecuteStatementException sqlExp){
             final Matcher matcher = PG_UNIQ_PATTERN.matcher(sqlExp.getMessage());
             if (!matcher.find()) {
-                LOGGER.error("SQL error {}", sqlExp.getMessage());
+                final String errorMessage = String.format("SQL error %s", sqlExp.getMessage());
+                LOGGER.error(errorMessage);
+
+                onboardingLogger.logFailure(Optional.fromNullable(pillId), errorMessage);
+
                 builder.setType(MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR);
                 builder.setError(SenseCommandProtos.ErrorType.INTERNAL_OPERATION_FAILED);
             }else {
                 LOGGER.error(sqlExp.getMessage());
+                onboardingLogger.logFailure(Optional.fromNullable(pillId), sqlExp.getMessage());
+
                 //TODO: enforce the constraint
                 LOGGER.warn("Account {} tries to pair a paired device {} ",
                         accountId, deviceId);
@@ -338,8 +419,8 @@ public class RegisterResource extends BaseResource {
 
         try {
             final String ip = request.getHeader("X-Forwarded-For");
-            LoggingProtos.Registration.Builder registration = LoggingProtos.Registration.newBuilder()
-                    .setAccountId(accountId)
+            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
+            final LoggingProtos.Registration.Builder registration = LoggingProtos.Registration.newBuilder().setAccountId(accountId)
                     .setDeviceId(deviceId)
                     .setTimestamp(DateTime.now().getMillis());
 
@@ -347,12 +428,13 @@ public class RegisterResource extends BaseResource {
                 registration.setIpAddress(ip);
             }
 
-            final DataLogger dataLogger = kinesisLoggerFactory.get(QueueName.REGISTRATIONS);
+
             dataLogger.put(accountId.toString(), registration.build().toByteArray());
         } catch (Exception e) {
             LOGGER.error("Failed inserting registration into kinesis stream: {}", e.getMessage());
         }
 
+        onboardingLogger.commit();
         return builder;
     }
 
@@ -383,7 +465,7 @@ public class RegisterResource extends BaseResource {
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
         }
-        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
+        final MorpheusCommand.Builder builder = pair(senseIdFromHeader, body, senseKeyStore, PairAction.PAIR_MORPHEUS);
         builder.clearAccountId();
         if(senseIdFromHeader != null && senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
             senseKeyStore.put(builder.getDeviceId(), Hex.encodeHexString(KeyStoreDynamoDB.DEFAULT_AES_KEY));
@@ -403,7 +485,7 @@ public class RegisterResource extends BaseResource {
         if(senseIdFromHeader != null){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
         }
-        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_MORPHEUS);
+        final MorpheusCommand.Builder builder = pair(senseIdFromHeader, body, senseKeyStore, PairAction.PAIR_MORPHEUS);
         if(senseIdFromHeader != null){
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);
         }
@@ -416,14 +498,15 @@ public class RegisterResource extends BaseResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Timed
     public byte[] registerPill(final byte[] body) {
-        final MorpheusCommand.Builder builder = pair(body, senseKeyStore, PairAction.PAIR_PILL);
+        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+        final MorpheusCommand.Builder builder = pair(senseIdFromHeader, body, senseKeyStore, PairAction.PAIR_PILL);
         final String token = builder.getAccountId();
 
 
         // WARNING: never return the account id, it will overflow buffer for old versions
         builder.clearAccountId();
 
-        final String senseIdFromHeader = this.request.getHeader(HelloHttpHeader.SENSE_ID);
+
         if(senseIdFromHeader != null && !senseIdFromHeader.equals(KeyStoreDynamoDB.DEFAULT_FACTORY_DEVICE_ID)){
             LOGGER.info("Sense Id from http header {}", senseIdFromHeader);
             return signAndSend(senseIdFromHeader, builder, senseKeyStore);

@@ -60,7 +60,7 @@ public class BaseResource {
         );
     }
 
-    protected void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
+    public void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
         plainTextError(status, message);
     }
 

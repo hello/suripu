@@ -85,11 +85,6 @@ max_records: 50
 # batch save to DB size
 batch_size: 80
 
-key_store:
-    endpoint: http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name : pill_key_store
-
 # Logging settings.
 logging:
 
@@ -102,15 +97,17 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
 
-features_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: features
+dynamodb:
+  region: us-east-1
+  tables:
+    alarm_info: alarm_info
+    features: features
+    pill_key_store : pill_key_store
+  endpoints:
+    alarm_info: http://dynamodb.us-east-1.amazonaws.com
+    features : http://dynamodb.us-east-1.amazonaws.com
+    pill_key_store : http://dynamodb.us-east-1.amazonaws.com
 
-user_info:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: alarm_info
 
 kinesis_logger:
   stream_name: dev-logs

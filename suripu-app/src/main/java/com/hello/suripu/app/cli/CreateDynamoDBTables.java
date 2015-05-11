@@ -12,6 +12,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -63,6 +64,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createSmartAlarmLogTable(configuration, awsCredentialsProvider);
         createOTAHistoryTable(configuration, awsCredentialsProvider);
         createResponseCommandsTable(configuration, awsCredentialsProvider);
+        createFWUpgradePathTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -350,6 +352,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
         final String tableName = configuration.getTimelineLogDBConfiguration().getTableName();
+        client.setEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
 
         try {
             client.describeTable(tableName);
@@ -388,6 +391,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = ResponseCommandsDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createFWUpgradePathTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getFWUpgradePathDBConfiguration();
+        final String tableName = configuration.getFWUpgradePathDBConfiguration().getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = FirmwareUpgradePathDAO.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }
