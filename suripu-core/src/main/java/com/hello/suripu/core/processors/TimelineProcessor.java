@@ -40,6 +40,7 @@ import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimelineRefactored;
+import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.VotingSleepEvents;
 import org.joda.time.DateTime;
@@ -61,7 +62,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
-    private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
@@ -72,6 +72,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
+    private final TimelineSafeguards timelineSafeguards;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -123,11 +124,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
             timelineUtils = new TimelineUtils(uuid.get());
+            timelineSafeguards = new TimelineSafeguards(uuid.get());
 
         }
         else {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
             timelineUtils = new TimelineUtils();
+            timelineSafeguards = new TimelineSafeguards();
         }
     }
 
@@ -174,9 +177,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         String version = TimelineLog.NO_VERSION;
 
         try {
+            boolean algorithmWorked = false;
 
             Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
-            List<Event> extraEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
+            List<Event> extraEvents = Collections.EMPTY_LIST;
+
 
             if(this.hasVotingEnabled(accountId)){
                 // Voting algorithm feature
@@ -187,6 +192,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
                 extraEvents = votingSleepEventsOptional.get().extraEvents;
                 algorithm = ALGORITHM_NAME_VOTING;
+                algorithmWorked = true;
 
             } else {
 
@@ -198,17 +204,36 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 if (results.isPresent()) {
                     LOGGER.debug("HMM Suceeded.");
                     sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
-                    extraEvents = results.get().allTheOtherWakesAndSleeps;
+                    extraEvents = results.get().allTheOtherWakesAndSleeps.asList();
                     algorithm = ALGORITHM_NAME_HMM;
-                } else {
-                    LOGGER.debug("HMM Failed, trying regular algorithm instead");
-                    sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
-                            sensorData.trackerMotions,
-                            sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                            sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
-                    algorithm = ALGORITHM_NAME_REGULAR;
-                    version = VERSION_BACKUP;
+
+                    //verify that algorithm produced something useable
+                    if (timelineSafeguards.checkIfValidTimeline(
+                            sleepEventsFromAlgorithmOptional.get(),
+                            ImmutableList.copyOf(extraEvents),
+                            ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)))) {
+
+                        algorithmWorked = true;
+                    }
                 }
+            }
+
+
+
+            /* TRY THE BACKUP PLAN!  */
+            if (!algorithmWorked) {
+                LOGGER.warn("ALGORITHM FAILED, trying regular algorithm instead");
+
+                //reset state
+                extraEvents = Collections.EMPTY_LIST;
+                algorithm = ALGORITHM_NAME_REGULAR;
+                version = VERSION_BACKUP;
+
+                sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
+                        sensorData.trackerMotions,
+                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
+
             }
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
@@ -473,7 +498,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, sleepStats);
 
-        if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
+        if(sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
             sleepScore = 0;
         }
