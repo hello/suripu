@@ -224,7 +224,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 new PCHResources(
                         senseKeyStoreDynamoDBClient, // we use the same endpoint for Sense and Pill keystore
                         tableNames.get(DynamoDBTableName.SENSE_KEY_STORE),
-                        tableNames.get(DynamoDBTableName.SENSE_KEY_STORE)
+                        tableNames.get(DynamoDBTableName.PILL_KEY_STORE)
                 )
         );
     }
