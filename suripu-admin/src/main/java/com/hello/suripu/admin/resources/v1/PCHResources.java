@@ -41,7 +41,7 @@ public class PCHResources {
     @Path("/check/sense")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Set<String> checkIfSerialNumbersExists(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, @Valid @NotNull Set<String> snToChecks) {
+    public Set<String> checkIfSerialNumbersExists(@Scope(OAuthScope.PCH_READ) final AccessToken accessToken, @Valid @NotNull Set<String> snToChecks) {
 
         LOGGER.warn("Checking {} Sense SNs", snToChecks.size());
 
@@ -91,7 +91,7 @@ public class PCHResources {
     @Path("/check/pill")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
-    public String checkIfPillDeviceIdExists(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, final String body) {
+    public String checkIfPillDeviceIdExists(@Scope(OAuthScope.PCH_READ) final AccessToken accessToken, final String body) {
 
         final String[] pillDeviceIds = body.split("\n");
         final Set<String> pills = Sets.newHashSet();
