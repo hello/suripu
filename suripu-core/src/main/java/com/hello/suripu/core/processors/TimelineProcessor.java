@@ -243,6 +243,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             /* FEATURE FLIP EXTRA EVENTS */
             if (!this.hasExtraEventsEnabled(accountId)) {
+                LOGGER.info("not using {} extra events",extraEvents.size());
                 extraEvents = Collections.EMPTY_LIST;
             }
 
