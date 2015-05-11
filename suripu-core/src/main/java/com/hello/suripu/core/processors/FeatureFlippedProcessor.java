@@ -39,6 +39,10 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasExtraEventsEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.EXTRA_EVENTS, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasVotingEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.VOTING_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }

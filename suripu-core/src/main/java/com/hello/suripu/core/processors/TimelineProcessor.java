@@ -241,6 +241,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 return Optional.absent();
             }
 
+            /* FEATURE FLIP EXTRA EVENTS */
+            if (!this.hasExtraEventsEnabled(accountId)) {
+                extraEvents = Collections.EMPTY_LIST;
+            }
+
             final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
 
             final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
