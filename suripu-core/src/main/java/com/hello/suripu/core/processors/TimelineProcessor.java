@@ -726,7 +726,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
      * @param waves
      * @return
      */
-    private SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
+    public SleepEvents<Optional<Event>> fromAlgorithm(final DateTime targetDate,
                                                        final List<TrackerMotion> trackerMotions,
                                                        final List<Sample> rawLight,
                                                        final List<Sample> waves) {
@@ -737,12 +737,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 Optional.<Event>absent(),
                 Optional.<Event>absent());
 
+        final TimelineUtils timelineUtils = new TimelineUtils();
+
         final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(rawLight);
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
-
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
 
@@ -815,7 +816,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         return  votingSleepEventsOptional;
     }
-
+    
 
     /**
      * Sleep score - always compute and update dynamo

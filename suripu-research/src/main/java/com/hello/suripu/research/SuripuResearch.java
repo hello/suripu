@@ -5,6 +5,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
@@ -18,6 +19,13 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAO;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimelineLogDAO;
+import com.hello.suripu.core.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -29,12 +37,15 @@ import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.research.cli.PortDataCommand;
 import com.hello.suripu.research.configuration.SuripuResearchConfiguration;
 import com.hello.suripu.research.modules.RolloutResearchModule;
+import com.hello.suripu.research.resources.v1.AccountInfoResource;
 import com.hello.suripu.research.resources.v1.DataScienceResource;
+import com.hello.suripu.research.resources.v1.PredictionResource;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -50,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.TimeZone;
+import java.util.UUID;
 
 /**
  * Created by pangwu on 3/2/15.
@@ -81,6 +93,8 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final DBIFactory factory = new DBIFactory();
         final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
+        final DBI researchDB = factory.build(environment, configuration.getResearchDB(), "postgresql");
+
 
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
@@ -93,6 +107,12 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         commonDB.registerContainerFactory(new ImmutableListContainerFactory());
         commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
+        researchDB.registerArgumentFactory(new JodaArgumentFactory());
+        researchDB.registerContainerFactory(new OptionalContainerFactory());
+        researchDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
+        researchDB.registerContainerFactory(new ImmutableListContainerFactory());
+        researchDB.registerContainerFactory(new ImmutableSetContainerFactory());
+
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -100,6 +120,10 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
+        final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
+
+        // TODO: create research DB DAOs here
+
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -111,6 +135,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
+        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
@@ -121,6 +146,26 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
+        //sleep HMM protobufs in teh cloud
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
+        final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
+
+        //ring time history
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient,
+                configuration.getRingTimeHistoryDBConfiguration().getTableName());
+
+        //sleep stats
+        final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
+        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBStatsClient,
+                configuration.getSleepStatsDynamoConfiguration().getTableName(),
+                configuration.getSleepStatsVersion());
+
+        /*  Timeline Log dynamo dB stuff */
+        final String timelineLogTableName =   configuration.getTimelineLogDBConfiguration().getTableName();
+        final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
+        final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
         final RolloutResearchModule module = new RolloutResearchModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
@@ -135,8 +180,14 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         environment.getJerseyResourceConfig()
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
-                deviceDataDAO, deviceDAO, userLabelDAO));
+                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO,timelineLogDAO));
 
+
+
+        final TimelineProcessor timelineProcessor =  TimelineProcessor.createTimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAODynamoDB,accountDAO,sleepStatsDAODynamoDB);
+
+        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,timelineProcessor));
+        environment.addResource(new AccountInfoResource(accountDAO, deviceDAO));
 
     }
 }

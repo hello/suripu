@@ -2,7 +2,9 @@ package com.hello.suripu.research.modules;
 
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.research.resources.v1.DataScienceResource;
+import com.hello.suripu.research.resources.v1.PredictionResource;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
 import dagger.Module;
@@ -11,7 +13,9 @@ import dagger.Provides;
 import javax.inject.Singleton;
 
 @Module(injects = {
-        DataScienceResource.class
+        DataScienceResource.class,
+        PredictionResource.class,
+        TimelineProcessor.class
 })
 public class RolloutResearchModule {
     private final FeatureStore featureStore;
