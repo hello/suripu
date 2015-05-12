@@ -18,8 +18,8 @@ import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -31,6 +31,7 @@ import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
+import com.hello.suripu.research.cli.PortDataCommand;
 import com.hello.suripu.research.configuration.SuripuResearchConfiguration;
 import com.hello.suripu.research.modules.RolloutResearchModule;
 import com.hello.suripu.research.resources.v1.DataScienceResource;
@@ -43,6 +44,7 @@ import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
 import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
 
     public static void main(final String[] args) throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateTimeZone.setDefault(DateTimeZone.UTC);
         new SuripuResearch().run(args);
     }
 
@@ -69,6 +72,8 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
                 return configuration.getKinesisLoggerConfiguration();
             }
         });
+
+        bootstrap.addCommand(new PortDataCommand());
     }
 
     @Override
