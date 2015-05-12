@@ -80,14 +80,14 @@ public class RingTimeHistoryDAODynamoDBIT {
         final DateTime actualTime2 = new DateTime(2014, 9, 24, 9, 0, 0, localTimeZone);
         final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
-        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime1);
-        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime2);
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime2);
 
-        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, alarmTime1.minusDays(1), alarmTime1);
+        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 1L, alarmTime1.minusDays(1), alarmTime1);
         assertThat(nextRingTime.size(), is(1));
         assertThat(nextRingTime.get(0), is(ringTime1));
 
-        nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, alarmTime1, alarmTime2);
+        nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 1L, alarmTime1, alarmTime2);
         assertThat(nextRingTime.size(), is(2));
         assertThat(nextRingTime.get(0), is(ringTime1));
         assertThat(nextRingTime.get(1), is(ringTime2));
@@ -107,19 +107,22 @@ public class RingTimeHistoryDAODynamoDBIT {
         final DateTime actualTime2 = new DateTime(2014, 9, 23, 8, 9, 0, localTimeZone);
         final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
 
-        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime1);
-        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, ringTime2);
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime2);
 
-        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, alarmTime1.minusDays(1), alarmTime1);
+        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 1L, alarmTime1.minusDays(1), alarmTime1);
         assertThat(nextRingTime.size(), is(1));
         assertThat(nextRingTime.get(0).actualRingTimeUTC, is(ringTime2.actualRingTimeUTC));
+
+        nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 100L, alarmTime1.minusDays(1), alarmTime1);
+        assertThat(nextRingTime.size(), is(0));
 
     }
 
 
     @Test
     public void testGetEmptyRingTime(){
-        final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween("test morpheus", DateTime.now(), DateTime.now().plusDays(1));
+        final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween("test morpheus", 1L, DateTime.now(), DateTime.now().plusDays(1));
         assertThat(ringTimes.size(), is(0));
     }
 

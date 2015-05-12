@@ -351,7 +351,7 @@ public class ReceiveResource extends BaseResource {
             }
 
             if(shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())){
-                this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, nextRingTime, now);
+                this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, userInfoList, nextRingTime);
             }
 
             LOGGER.info("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
