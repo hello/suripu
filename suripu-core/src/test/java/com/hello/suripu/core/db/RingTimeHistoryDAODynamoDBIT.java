@@ -95,6 +95,56 @@ public class RingTimeHistoryDAODynamoDBIT {
     }
 
     @Test
+    public void testSetTwoIdenticalSmartAlarmWithTwoUsers(){
+        final String deviceId = "test morpheus";
+        final DateTimeZone localTimeZone = DateTimeZone.forID("America/Los_Angeles");
+
+        final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
+        final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
+
+        final DateTime alarmTime2 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
+        final DateTime actualTime2 = new DateTime(2014, 9, 23, 8, 9, 0, localTimeZone);
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, true);
+
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 2L, ringTime2);
+
+        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 1L, alarmTime1.minusDays(1), alarmTime1);
+        assertThat(nextRingTime.size(), is(1));
+        assertThat(nextRingTime.get(0).actualRingTimeUTC, is(ringTime1.actualRingTimeUTC));
+
+        nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 2L, alarmTime2.minusDays(1), alarmTime2);
+        assertThat(nextRingTime.size(), is(1));
+        assertThat(nextRingTime.get(0).actualRingTimeUTC, is(ringTime2.actualRingTimeUTC));
+    }
+
+    @Test
+    public void testSetTwoIdenticalRegularAlarmWithTwoUsers(){
+        final String deviceId = "test morpheus";
+        final DateTimeZone localTimeZone = DateTimeZone.forID("America/Los_Angeles");
+
+        final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
+        final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, false);
+
+        final DateTime alarmTime2 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
+        final DateTime actualTime2 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
+        final RingTime ringTime2 = new RingTime(actualTime2.getMillis(), alarmTime2.getMillis(), 0, false);
+
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 2L, ringTime2);
+
+        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 1L, alarmTime1.minusDays(1), alarmTime1);
+        assertThat(nextRingTime.size(), is(1));
+        assertThat(nextRingTime.get(0).actualRingTimeUTC, is(ringTime1.actualRingTimeUTC));
+
+        nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 2L, alarmTime2.minusDays(1), alarmTime2);
+        assertThat(nextRingTime.size(), is(1));
+        assertThat(nextRingTime.get(0).actualRingTimeUTC, is(ringTime2.actualRingTimeUTC));
+    }
+
+    @Test
     public void testSetTwoIdenticalRingTime(){
         final String deviceId = "test morpheus";
         final DateTimeZone localTimeZone = DateTimeZone.forID("America/Los_Angeles");

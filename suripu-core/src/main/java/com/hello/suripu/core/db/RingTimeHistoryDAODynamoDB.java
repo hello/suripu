@@ -51,7 +51,6 @@ public class RingTimeHistoryDAODynamoDB {
     private ObjectMapper mapper = new ObjectMapper();
 
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
-    public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
 
     public static final String ACTUAL_RING_TIME_ATTRIBUTE_NAME = "actual_ring_time";
     public static final String EXPECTED_RING_TIME_ATTRIBUTE_NAME = "expected_ring_time";
@@ -107,8 +106,7 @@ public class RingTimeHistoryDAODynamoDB {
 
 
         final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
-        items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-        items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+        items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId + ":" + accountId.toString()));
 
         items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(currentTime.getMillis())));
         items.put(ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC)));
@@ -136,7 +134,7 @@ public class RingTimeHistoryDAODynamoDB {
 
     }
 
-    public List<RingTime> getRingTimesBetween(final String senseId, final long accountId, final DateTime startTime, final DateTime endTime) {
+    public List<RingTime> getRingTimesBetween(final String senseId, final Long accountId, final DateTime startTime, final DateTime endTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
 
@@ -149,13 +147,17 @@ public class RingTimeHistoryDAODynamoDB {
         queryConditions.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, selectDateCondition);
 
 
-        final Condition selectAccountIdCondition = new Condition()
+        final Condition selectSenseIdCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withS(senseId));
-        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdCondition);
+
+        final Condition selectSenseIdAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withS(senseId + ":" + accountId.toString()));
+        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdAccountIdCondition);
 
         final Set<String> targetAttributeSet = Sets.newHashSet(MORPHEUS_ID_ATTRIBUTE_NAME,
-                ACCOUNT_ID_ATTRIBUTE_NAME,
                 EXPECTED_RING_TIME_ATTRIBUTE_NAME,
                 ACTUAL_RING_TIME_ATTRIBUTE_NAME,
                 RINGTIME_OBJECT_ATTRIBUTE_NAME,
@@ -177,14 +179,14 @@ public class RingTimeHistoryDAODynamoDB {
         for(final Map<String, AttributeValue> item: items){
             final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
 
-            // Backward compatibility
-            if(ringTime.isPresent() && !item.containsKey(ACCOUNT_ID_ATTRIBUTE_NAME)) {
+            final String deviceId = item.get(MORPHEUS_ID_ATTRIBUTE_NAME).getS().toString();
+            if(!deviceId.contains(":") && ringTime.isPresent()){
                 ringTimes.add(ringTime.get());
             }
 
             // The new ring history with account id item
-            if(ringTime.isPresent() && item.containsKey(ACCOUNT_ID_ATTRIBUTE_NAME)){
-                final Long ringOwnerAccountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
+            if(deviceId.contains(":") && ringTime.isPresent()){
+                final Long ringOwnerAccountId = Long.valueOf(deviceId.split(":")[1]);
                 if(ringOwnerAccountId == accountId || ringOwnerAccountId == -1){
                     ringTimes.add(ringTime.get());
                 }
