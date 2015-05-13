@@ -182,6 +182,10 @@ public class RingTimeHistoryDAODynamoDB {
         final List<RingTime> ringTimes = Lists.newArrayList();
         for(final Map<String, AttributeValue> item: items){
             final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
+            if(!ringTime.isPresent()){
+                continue;
+            }
+
             ringTimes.add(ringTime.get());
         }
 
