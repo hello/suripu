@@ -112,7 +112,7 @@ public class DynamoDBAdapter implements RolloutAdapter{
         }
 
         // Next, check percentage
-        if (hashId % 10 < f.percentage / 10) {
+        if (Math.abs(hashId) % 100 < f.percentage) {
             LOGGER.trace("Included in percentage");
             return true;
         }
