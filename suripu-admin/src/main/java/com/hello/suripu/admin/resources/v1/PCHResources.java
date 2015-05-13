@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -30,6 +29,7 @@ public class PCHResources {
     private final AmazonDynamoDB amazonDynamoDB;
     private final String senseKeyStoreTableName;
     private final String pillKeyStoreTableName;
+    private final static Integer SCAN_QUERY_LIMIT = 5000;
 
     public PCHResources(final AmazonDynamoDB amazonDynamoDB, final String senseKeyStoreTableName, final String pillKeyStoreTableName) {
         this.amazonDynamoDB = amazonDynamoDB;
@@ -45,24 +45,24 @@ public class PCHResources {
 
         LOGGER.warn("Checking {} Sense SNs", snToChecks.size());
 
-        final Map<String, String> store = Maps.newHashMap();
         Map<String, AttributeValue> lastKeyEvaluated = null;
+        final Set<String> store = Sets.newHashSet();
         int i = 0;
         do {
             LOGGER.info("Scanning table: {}. Iteration # {}. Store size: {}", senseKeyStoreTableName, i, store.size());
             final ScanRequest scanRequest = new ScanRequest()
                     .withTableName(senseKeyStoreTableName)
-                    .withAttributesToGet("device_id", "aes_key", "metadata")
-                    .withExclusiveStartKey(lastKeyEvaluated);
+                    .withAttributesToGet("metadata")
+                    .withExclusiveStartKey(lastKeyEvaluated)
+                    .withLimit(SCAN_QUERY_LIMIT);
 
             final ScanResult scanResult = amazonDynamoDB.scan(scanRequest);
             lastKeyEvaluated = scanResult.getLastEvaluatedKey();
             LOGGER.info("Last key: {}", lastKeyEvaluated);
             for (final Map<String, AttributeValue> map : scanResult.getItems()) {
-                String deviceID = map.get("device_id").getS().trim();
-                String metadata = (map.containsKey("metadata")) ? map.get("metadata").getS() : "";
+                final String metadata = (map.containsKey("metadata")) ? map.get("metadata").getS() : "";
                 if(metadata.startsWith("9")) {
-                    store.put(metadata.toUpperCase(), deviceID);
+                    store.add(metadata.toUpperCase());
                 }
             }
             try {
@@ -70,19 +70,15 @@ public class PCHResources {
             } catch (InterruptedException e) {
                 // Fail silently if exception on Thread.Sleep
             }
-
+            i++;
         } while(lastKeyEvaluated != null);
 
-        final Set<String> missingSerialNumbers = snToChecks;
-        for(final String sn: snToChecks) {
-            if(!store.containsKey(sn.trim())) {
-                missingSerialNumbers.add(sn);
-            }
-        }
 
-        LOGGER.warn("{} SNs were not found", missingSerialNumbers.size());
-        LOGGER.warn("{}", missingSerialNumbers);
-        return missingSerialNumbers;
+        final Set<String> missingSN = Sets.difference(snToChecks, store);
+
+        LOGGER.warn("{} SNs were not found", missingSN.size());
+        LOGGER.warn("{}", missingSN);
+        return missingSN;
     }
 
 
@@ -108,7 +104,8 @@ public class PCHResources {
             final ScanRequest scanRequest = new ScanRequest()
                     .withTableName(pillKeyStoreTableName)
                     .withAttributesToGet("device_id", "aes_key")
-                    .withExclusiveStartKey(lastKeyEvaluated);
+                    .withExclusiveStartKey(lastKeyEvaluated)
+                    .withLimit(SCAN_QUERY_LIMIT);
 
             final ScanResult scanResult = amazonDynamoDB.scan(scanRequest);
             lastKeyEvaluated = scanResult.getLastEvaluatedKey();
