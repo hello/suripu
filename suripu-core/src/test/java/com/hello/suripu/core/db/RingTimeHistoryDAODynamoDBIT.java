@@ -1,11 +1,18 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hello.suripu.core.models.RingTime;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -15,6 +22,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -92,6 +100,56 @@ public class RingTimeHistoryDAODynamoDBIT {
         assertThat(nextRingTime.get(0), is(ringTime1));
         assertThat(nextRingTime.get(1), is(ringTime2));
 
+    }
+
+    protected void setNextRingTime(final String deviceId, final RingTime ringTime, final DateTime currentTime){
+
+
+        final HashMap<String, AttributeValue> items = new HashMap<>();
+        items.put(RingTimeHistoryDAODynamoDB.MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+
+        items.put(RingTimeHistoryDAODynamoDB.CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(currentTime.getMillis())));
+        items.put(RingTimeHistoryDAODynamoDB.ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC)));
+        items.put(RingTimeHistoryDAODynamoDB.EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.expectedRingTimeUTC)));
+
+
+        try {
+            final ObjectMapper mapper = new ObjectMapper();
+            final String ringTimeJSON = mapper.writeValueAsString(ringTime);
+            items.put(RingTimeHistoryDAODynamoDB.RINGTIME_OBJECT_ATTRIBUTE_NAME, new AttributeValue().withS(ringTimeJSON));
+            final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
+            final PutItemResult result = this.amazonDynamoDBClient.putItem(putItemRequest);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("set next ringtime for device {} failed: {}", deviceId, e.getMessage());
+        }catch (AmazonServiceException awsServiceExp){
+            LOGGER.error("set next ringtime for device {} failed due to service exception: {}",
+                    deviceId, awsServiceExp.getMessage());
+        } catch (AmazonClientException awsClientExp){
+            LOGGER.error("set next ringtime for device {} failed due to client exception: {}",
+                    deviceId, awsClientExp.getMessage());
+        } catch (Exception ex){
+            LOGGER.error("set next ringtime for device {} failed due to general exception: {}",
+                    deviceId, ex.getMessage());
+        }
+
+
+    }
+
+    @Test
+    public void testBackwardCompatibility(){
+        final String deviceId = "test morpheus";
+        final DateTimeZone localTimeZone = DateTimeZone.forID("America/Los_Angeles");
+
+        final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
+        final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
+        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
+
+        this.setNextRingTime(deviceId, ringTime1, DateTime.now());
+        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
+
+        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 1L, actualTime1, alarmTime1);
+        assertThat(nextRingTime.size(), is(1));
+        assertThat(nextRingTime.get(0).actualRingTimeUTC, is(ringTime1.actualRingTimeUTC));
     }
 
     @Test

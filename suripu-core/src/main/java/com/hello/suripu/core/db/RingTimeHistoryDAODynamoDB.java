@@ -135,6 +135,14 @@ public class RingTimeHistoryDAODynamoDB {
     }
 
     public List<RingTime> getRingTimesBetween(final String senseId, final Long accountId, final DateTime startTime, final DateTime endTime) {
+        List<RingTime> result = getRingTimesBetweenImpl(senseId, Optional.of(accountId), startTime, endTime);
+        if(result.size() == 0){
+            result = getRingTimesBetweenImpl(senseId, Optional.<Long>absent(), startTime, endTime);
+        }
+        return result;
+    }
+
+    protected List<RingTime> getRingTimesBetweenImpl(final String senseId, final Optional<Long> accountId, final DateTime startTime, final DateTime endTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
 
@@ -146,15 +154,11 @@ public class RingTimeHistoryDAODynamoDB {
                 .withAttributeValueList(values);
         queryConditions.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, selectDateCondition);
 
-
-        final Condition selectSenseIdCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withS(senseId));
-        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdCondition);
-
         final Condition selectSenseIdAccountIdCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withS(senseId + ":" + accountId.toString()));
+                .withAttributeValueList(new AttributeValue().withS(
+                        accountId.isPresent() ? senseId + ":" + accountId.get().toString() : senseId));
+
         queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdAccountIdCondition);
 
         final Set<String> targetAttributeSet = Sets.newHashSet(MORPHEUS_ID_ATTRIBUTE_NAME,
@@ -187,7 +191,7 @@ public class RingTimeHistoryDAODynamoDB {
             // The new ring history with account id item
             if(deviceId.contains(":") && ringTime.isPresent()){
                 final Long ringOwnerAccountId = Long.valueOf(deviceId.split(":")[1]);
-                if(ringOwnerAccountId == accountId || ringOwnerAccountId == -1){
+                if(ringOwnerAccountId == accountId.get() || ringOwnerAccountId == -1){
                     ringTimes.add(ringTime.get());
                 }
             }
