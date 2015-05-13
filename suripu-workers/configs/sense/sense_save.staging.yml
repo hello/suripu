@@ -101,9 +101,13 @@ dynamodb:
   tables:
     alarm_info: alarm_info
     features: features
+    sense_prefix: sense
+    sense_last_seen : sense_last_seen
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
+    sense_prefix: http://dynamodb.us-east-1.amazonaws.com
+    sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
 
 redis:
   host: localhost

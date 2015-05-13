@@ -37,4 +37,8 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         return flipper.userFeatureActive(FeatureFlipper.SMART_ALARM_LOGGING, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasLastSeenViewDynamoDBEnabled(final String senseId){
+        return flipper.deviceFeatureActive(FeatureFlipper.SENSE_LAST_SEEN_VIEW_DYNAMODB, senseId, Collections.EMPTY_LIST);
+    }
+
 }
