@@ -51,7 +51,7 @@ public class RingTimeHistoryDAODynamoDB {
     private ObjectMapper mapper = new ObjectMapper();
 
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
-
+    public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     public static final String ACTUAL_RING_TIME_ATTRIBUTE_NAME = "actual_ring_time";
     public static final String EXPECTED_RING_TIME_ATTRIBUTE_NAME = "expected_ring_time";
     public static final String RINGTIME_OBJECT_ATTRIBUTE_NAME = "ring_time_object";
@@ -83,11 +83,10 @@ public class RingTimeHistoryDAODynamoDB {
         final DateTime now = DateTime.now();
 
         if(owners.size() == 0){
-            LOGGER.warn("Cannot retrieve ring time owner for device {}, actual ring {}, expected ring {}",
+            LOGGER.error("Cannot retrieve ring time owner for device {}, actual ring {}, expected ring {}",
                     deviceId,
                     ringTime.actualRingTimeUTC,
                     ringTime.expectedRingTimeUTC);
-            this.setNextRingTime(deviceId, -1L, ringTime, now);
         }
 
 
@@ -106,7 +105,8 @@ public class RingTimeHistoryDAODynamoDB {
 
 
         final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
-        items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId + ":" + accountId.toString()));
+        items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+        items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
 
         items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(currentTime.getMillis())));
         items.put(ACTUAL_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(ringTime.actualRingTimeUTC)));
@@ -135,14 +135,6 @@ public class RingTimeHistoryDAODynamoDB {
     }
 
     public List<RingTime> getRingTimesBetween(final String senseId, final Long accountId, final DateTime startTime, final DateTime endTime) {
-        List<RingTime> result = getRingTimesBetweenImpl(senseId, Optional.of(accountId), startTime, endTime);
-        if(result.size() == 0){
-            result = getRingTimesBetweenImpl(senseId, Optional.<Long>absent(), startTime, endTime);
-        }
-        return result;
-    }
-
-    protected List<RingTime> getRingTimesBetweenImpl(final String senseId, final Optional<Long> accountId, final DateTime startTime, final DateTime endTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
 
@@ -154,20 +146,28 @@ public class RingTimeHistoryDAODynamoDB {
                 .withAttributeValueList(values);
         queryConditions.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, selectDateCondition);
 
-        final Condition selectSenseIdAccountIdCondition = new Condition()
+        final Condition selectAccountIdCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withS(
-                        accountId.isPresent() ? senseId + ":" + accountId.get().toString() : senseId));
+                .withAttributeValueList(new AttributeValue().withN(accountId.toString()));
 
-        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdAccountIdCondition);
+        final Condition selectSenseIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withS(senseId));
 
-        final Set<String> targetAttributeSet = Sets.newHashSet(MORPHEUS_ID_ATTRIBUTE_NAME,
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+        //queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdCondition);
+        final Map<String, Condition> filterConditions = Maps.newHashMap();
+        filterConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdCondition);
+
+        final Set<String> targetAttributeSet = Sets.newHashSet(ACCOUNT_ID_ATTRIBUTE_NAME,
+                MORPHEUS_ID_ATTRIBUTE_NAME,
                 EXPECTED_RING_TIME_ATTRIBUTE_NAME,
                 ACTUAL_RING_TIME_ATTRIBUTE_NAME,
                 RINGTIME_OBJECT_ATTRIBUTE_NAME,
                 CREATED_AT_ATTRIBUTE_NAME);
 
         final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
+                .withQueryFilter(filterConditions)
                 .withAttributesToGet(targetAttributeSet)
                 .withLimit(50)
                 .withScanIndexForward(false);
@@ -182,19 +182,7 @@ public class RingTimeHistoryDAODynamoDB {
         final List<RingTime> ringTimes = Lists.newArrayList();
         for(final Map<String, AttributeValue> item: items){
             final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
-
-            final String deviceId = item.get(MORPHEUS_ID_ATTRIBUTE_NAME).getS().toString();
-            if(!deviceId.contains(":") && ringTime.isPresent()){
-                ringTimes.add(ringTime.get());
-            }
-
-            // The new ring history with account id item
-            if(deviceId.contains(":") && ringTime.isPresent()){
-                final Long ringOwnerAccountId = Long.valueOf(deviceId.split(":")[1]);
-                if(ringOwnerAccountId == accountId.get() || ringOwnerAccountId == -1){
-                    ringTimes.add(ringTime.get());
-                }
-            }
+            ringTimes.add(ringTime.get());
         }
 
         Collections.sort(ringTimes, new Comparator<RingTime>() {
@@ -233,12 +221,12 @@ public class RingTimeHistoryDAODynamoDB {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
                 new KeySchemaElement().withAttributeName(EXPECTED_RING_TIME_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S),
+                new AttributeDefinition().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
                 new AttributeDefinition().withAttributeName(EXPECTED_RING_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
 
         );

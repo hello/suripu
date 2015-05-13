@@ -136,23 +136,6 @@ public class RingTimeHistoryDAODynamoDBIT {
     }
 
     @Test
-    public void testBackwardCompatibility(){
-        final String deviceId = "test morpheus";
-        final DateTimeZone localTimeZone = DateTimeZone.forID("America/Los_Angeles");
-
-        final DateTime alarmTime1 = new DateTime(2014, 9, 23, 8, 20, 0, localTimeZone);
-        final DateTime actualTime1 = new DateTime(2014, 9, 23, 8, 10, 0, localTimeZone);
-        final RingTime ringTime1 = new RingTime(actualTime1.getMillis(), alarmTime1.getMillis(), 0, true);
-
-        this.setNextRingTime(deviceId, ringTime1, DateTime.now());
-        this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceId, 1L, ringTime1);
-
-        List<RingTime> nextRingTime = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceId, 1L, actualTime1, alarmTime1);
-        assertThat(nextRingTime.size(), is(1));
-        assertThat(nextRingTime.get(0).actualRingTimeUTC, is(ringTime1.actualRingTimeUTC));
-    }
-
-    @Test
     public void testSetTwoIdenticalSmartAlarmWithTwoUsers(){
         final String deviceId = "test morpheus";
         final DateTimeZone localTimeZone = DateTimeZone.forID("America/Los_Angeles");
