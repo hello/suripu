@@ -34,6 +34,9 @@ public class ApplicationRegistration {
     @JsonProperty("created")
     public final DateTime created;
 
+    @JsonProperty("grant_type")
+    public final GrantTypeParam.GrantType grantType;
+
     @JsonCreator
     public ApplicationRegistration(
             @JsonProperty("name") final String name,
@@ -41,9 +44,10 @@ public class ApplicationRegistration {
             @JsonProperty("client_secret") final String clientSecret,
             @JsonProperty("redirect_uri") final String redirectURI,
             @JsonProperty("scopes") final OAuthScope[] scopes,
-            @JsonProperty("description") final String description
+            @JsonProperty("description") final String description,
+            @JsonProperty("grant_type") final GrantTypeParam.GrantType grantType
     ) {
-        this(name, clientId, clientSecret, redirectURI, scopes, null, description, DateTime.now(DateTimeZone.UTC));
+        this(name, clientId, clientSecret, redirectURI, scopes, null, description, DateTime.now(DateTimeZone.UTC), grantType);
     }
 
     /**
@@ -58,6 +62,7 @@ public class ApplicationRegistration {
      * @param developerAccountId
      * @param description
      * @param created
+     * @param grantType
      */
     private ApplicationRegistration(
         final String name,
@@ -67,7 +72,8 @@ public class ApplicationRegistration {
         final OAuthScope[] scopes,
         final Long developerAccountId,
         final String description,
-        final DateTime created
+        final DateTime created,
+        final GrantTypeParam.GrantType grantType
     ) {
         this.name = name;
         this.clientId = clientId;
@@ -77,6 +83,7 @@ public class ApplicationRegistration {
         this.developerAccountId = Optional.fromNullable(developerAccountId);
         this.description = description;
         this.created = created;
+        this.grantType = grantType == null ? GrantTypeParam.GrantType.PASSWORD : grantType;
     }
     public static ApplicationRegistration addDevAccountId(final ApplicationRegistration applicationRegistration, final Long devAccountId) {
         return new ApplicationRegistration(
@@ -87,7 +94,8 @@ public class ApplicationRegistration {
                 applicationRegistration.scopes,
                 devAccountId,
                 applicationRegistration.description,
-                applicationRegistration.created
+                applicationRegistration.created,
+                applicationRegistration.grantType
             );
     }
 }
