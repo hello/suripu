@@ -20,8 +20,8 @@ import java.util.List;
 public interface ApplicationsDAO {
 
     @GetGeneratedKeys
-    @SqlUpdate("INSERT INTO oauth_applications (name, client_id, client_secret, redirect_uri, scopes, dev_account_id, description) " +
-            "VALUES(:name, :client_id, :client_secret, :redirect_uri, :scopes, :dev_account_id, :description);")
+    @SqlUpdate("INSERT INTO oauth_applications (name, client_id, client_secret, redirect_uri, scopes, dev_account_id, description, grant_type) " +
+            "VALUES(:name, :client_id, :client_secret, :redirect_uri, :scopes, :dev_account_id, :description, :grant_type);")
     Long insertRegistration(@BindApplicationRegistration ApplicationRegistration applicationRegistration);
 
     @SqlQuery("SELECT * FROM oauth_applications WHERE id = :id")
