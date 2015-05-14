@@ -313,6 +313,7 @@ public class DataResources {
     @Timed
     @GET
     @Path("/current_room_conditions/{sense_id}")
+    @Produces(MediaType.APPLICATION_JSON)
     public CurrentRoomState currentRoomState(
             @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
             @PathParam("sense_id") final String senseId) {

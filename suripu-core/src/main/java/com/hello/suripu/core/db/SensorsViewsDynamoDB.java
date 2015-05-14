@@ -31,6 +31,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -225,12 +226,18 @@ public class SensorsViewsDynamoDB {
                 .withKey(key)
                 .withTableName(lastSeenTableName);
         final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
-        return fromDynamoDB(result.getItem(), accountId, internalSenseId);
+        return fromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
     }
 
 
-    private Optional<DeviceData> fromDynamoDB(final Map<String, AttributeValue> item, final Long accountId, final Long internalSenseId) {
+    private Optional<DeviceData> fromDynamoDB(final Map<String, AttributeValue> item, final String senseId, final Long accountId, final Long internalSenseId) {
         if(item == null || item.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final String dateTimeUTC = (item.containsKey(UPDATED_AT_UTC_ATTRIBUTE_NAME) ? item.get(UPDATED_AT_UTC_ATTRIBUTE_NAME).getS() : "");
+        if(dateTimeUTC.isEmpty()) {
+            LOGGER.error("Malformed data stored in last seen for device_id={}.", senseId);
             return Optional.absent();
         }
 
@@ -238,11 +245,12 @@ public class SensorsViewsDynamoDB {
         final Integer ambientHumidity = (item.containsKey(HUMIDITY_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(HUMIDITY_ATTRIBUTE_NAME).getN()) : 0);
         final Integer ambientLight = (item.containsKey(LIGHT_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(LIGHT_ATTRIBUTE_NAME).getN()) : 0);
         final Integer maxDust = (item.containsKey(DUST_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(DUST_ATTRIBUTE_NAME).getN()) : 0);
-        final String dateTimeUTC = (item.containsKey(UTC_TIMESTAMP_ATTRIBUTE_NAME) ? item.get(LIGHT_ATTRIBUTE_NAME).getS() : DateTime.now().toString(DATETIME_FORMAT));
+
+
         final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
         final Integer sound = (item.containsKey(SOUND_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(SOUND_ATTRIBUTE_NAME).getN()) : 0);
         final Integer offsetMillis = (item.containsKey(OFFSET_MILLIS_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN()) : 0);
-        final DateTime dateTime = DateTime.parse(dateTimeUTC);
+        final DateTime dateTime = DateTime.parse(dateTimeUTC, DateTimeFormat.forPattern(DATETIME_FORMAT));
 
         final DeviceData deviceData = new DeviceData.Builder()
                 .withDeviceId(internalSenseId)
