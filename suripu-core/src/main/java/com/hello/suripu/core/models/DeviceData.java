@@ -202,8 +202,13 @@ public class DeviceData {
             return this;
         }
 
-        public Builder withAmbientLightFloat(final float ambientLightFloat){
-            this.ambientLightFloat = ambientLightFloat;
+        public Builder calibrateAmbientLight(final int ambientLight){
+            int lux = ambientLight;
+            float fLux =DataUtils.convertLightCountsToLux(lux);
+            lux = (int)fLux;
+
+            this.ambientLight = lux;
+            this.ambientLightFloat = fLux;
             return this;
         }
 
@@ -256,6 +261,11 @@ public class DeviceData {
         public Builder withAudioPeakBackgroundDB(final Integer audioPeakBackgroundDB) {
             final float decibelValue = DataUtils.convertAudioRawToDB(audioPeakBackgroundDB);
             this.audioPeakBackgroundDB = DataUtils.floatToDbIntAudioDecibels(decibelValue);
+            return this;
+        }
+
+        public Builder withAlreadyCalibratedAudioPeakBackgroundDB(final Integer audioPeakBackgroundDB) {
+            this.audioPeakBackgroundDB = audioPeakBackgroundDB;
             return this;
         }
 
