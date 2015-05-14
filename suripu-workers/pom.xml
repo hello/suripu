@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.3.97</version>
+        <version>0.3.98-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,12 +18,12 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-api</artifactId>
-            <version>0.3.97</version>
+            <version>0.3.98-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-core</artifactId>
-            <version>0.3.97</version>
+            <version>0.3.98-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
