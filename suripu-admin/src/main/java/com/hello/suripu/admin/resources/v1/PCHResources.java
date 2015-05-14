@@ -103,7 +103,7 @@ public class PCHResources {
 
             final ScanRequest scanRequest = new ScanRequest()
                     .withTableName(pillKeyStoreTableName)
-                    .withAttributesToGet("device_id", "aes_key")
+                    .withAttributesToGet("metadata")
                     .withExclusiveStartKey(lastKeyEvaluated)
                     .withLimit(SCAN_QUERY_LIMIT);
 
@@ -111,9 +111,8 @@ public class PCHResources {
             lastKeyEvaluated = scanResult.getLastEvaluatedKey();
             LOGGER.info("Last key: {}", lastKeyEvaluated);
             for (final Map<String, AttributeValue> map : scanResult.getItems()) {
-                final String deviceID = map.get("device_id").getS().trim();
-                if(map.containsKey("aes_key")) {
-                    store.add(deviceID);
+                if(map.containsKey("metadata")) {
+                    store.add(map.get("metadata").getS().trim());
                 }
             }
 
