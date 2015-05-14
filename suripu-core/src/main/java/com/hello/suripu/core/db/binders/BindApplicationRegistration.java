@@ -38,6 +38,7 @@ public @interface BindApplicationRegistration {
                     q.bind("dev_account_id", arg.developerAccountId);
                     q.bind("description", arg.description);
                     q.bind("created", arg.created);
+                    q.bind("grant_type", arg.grantType.ordinal());
                 }
             };
         }
