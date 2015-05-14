@@ -18,8 +18,8 @@ import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
 import com.hello.suripu.admin.resources.v1.FirmwareResource;
 import com.hello.suripu.admin.resources.v1.InspectionResources;
-import com.hello.suripu.admin.resources.v1.PCHResources;
 import com.hello.suripu.admin.resources.v1.OnBoardingLogResource;
+import com.hello.suripu.admin.resources.v1.PCHResources;
 import com.hello.suripu.admin.resources.v1.TeamsResources;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -45,6 +45,7 @@ import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
@@ -208,10 +209,17 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBClientFactory.getForTable(DynamoDBTableName.FIRMWARE_UPGRADE_PATH);
         final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, tableNames.get(DynamoDBTableName.FIRMWARE_UPGRADE_PATH));
 
+        final AmazonDynamoDB sensorsViewsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
+                sensorsViewsDynamoDBClient,
+                tableNames.get(DynamoDBTableName.SENSE_PREFIX),
+                tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
+        );
+
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin));
         environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO));
-        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO));
+        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO, sensorsViewsDynamoDB));
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));

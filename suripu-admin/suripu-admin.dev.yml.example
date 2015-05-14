@@ -59,6 +59,8 @@ dynamodb:
     sync_response_commands : response_commands
     ota_history : ota_history
     firmware_upgrade_path : fw_upgrade_path
+    sense_prefix : sense
+    sense_last_seen : sense_last_seen
 
   endpoints:
       features : http://dynamodb.us-east-1.amazonaws.com
@@ -72,3 +74,5 @@ dynamodb:
       sync_response_commands : http://localhost:7777
       ota_history : http://localhost:7777
       firmware_upgrade_path : http://localhost:7777
+      sense_prefix : http://dynamodb.us-east-1.amazonaws.com
+      sense_last_seen : http://dynamodb.us-east-1.amazonaws.com

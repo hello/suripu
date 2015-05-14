@@ -77,7 +77,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
         final Map<String, Integer> seenFirmwares = new HashMap<>(records.size());
-        final Map<String, DataInputProtos.periodic_data> lastSeenDeviceData = Maps.newHashMap();
+        final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
 
         for(final Record record : records) {
             DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker;
@@ -157,11 +157,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         ? batchPeriodicDataWorker.getData().getFirmwareVersion()
                         : periodicData.getFirmwareVersion();
 
-                if(hasLastSeenViewDynamoDBEnabled(deviceName)) {
-                    final DataInputProtos.periodic_data updated = DataInputProtos.periodic_data.newBuilder(periodicData)
-                            .setFirmwareVersion(firmwareVersion).build();
-                    lastSeenDeviceData.put(deviceName, updated);
-                }
+
 
 
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
@@ -210,6 +206,10 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0);
 
                     final DeviceData deviceData = builder.build();
+
+                    if(hasLastSeenViewDynamoDBEnabled(deviceName)) {
+                        lastSeenDeviceData.put(deviceName, deviceData);
+                    }
 
                     dataForDevice.add(deviceData);
                 }
