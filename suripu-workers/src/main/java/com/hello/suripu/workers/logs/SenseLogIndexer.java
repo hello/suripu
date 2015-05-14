@@ -6,6 +6,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.logging.LoggingProtos;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +42,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("device_id", log.getDeviceId());
             fields.put("text", log.getMessage());
             fields.put("ts", String.valueOf(log.getTs()));
-            fields.put("all", "1");
+            fields.put("date",  new DateTime(millis, DateTimeZone.UTC).toString(DateTimeFormat.forPattern("yyyyMMdda")));
 
             final Long hello_ts = millis;
 
