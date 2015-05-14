@@ -45,7 +45,7 @@ public class HmmDataConstants {
     final static protected int SLEEP_DEPTH_DISTURBED = 33;
 
 
-    /*  some defaults in case of protobuf fail  */
+    /*  some defaults in case of protobuf fail, or a constant is not included  */
     final static int NUM_MODEL_PARAMS = 50; //probably on the low side now, but oh well.  size of A matrix + num free observation params
     final static double AUDIO_DISTURBANCE_THRESHOLD_DB = 60.0;
     final static double PILL_MAGNITUDE_DISTURBANCE_THRESHOLD = 12000;
@@ -53,10 +53,7 @@ public class HmmDataConstants {
     final static double NATURAL_LIGHT_FILTER_STOP_HOUR = 4.0; //4am
     final static int NUM_MINUTES_IN_MEAS_PERIOD = 15;
     final static boolean DEFAULT_IS_USING_INTERVAL_SEARCH = true;
-
-    /* don't change this  */
-    final static public double LIGHT_PREMULTIPLIER = 4.0;
-
-
+    final static double DEFAULT_LIGHT_PRE_MULTIPLIER = 4.0;
+    final static double DEFAULT_LIGHT_FLOOR_LUX = 0.4; //lux
 
 }

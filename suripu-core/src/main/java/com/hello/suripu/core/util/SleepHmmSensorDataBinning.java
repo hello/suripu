@@ -104,7 +104,7 @@ public class SleepHmmSensorDataBinning {
         final Iterator<Sample> it1 = light.iterator();
         while (it1.hasNext()) {
             final Sample sample = it1.next();
-            double value = sample.value;
+            double value = sample.value - model.lightFloorLux;
             if (value < 0) {
                 value = 0.0;
             }
@@ -117,7 +117,7 @@ public class SleepHmmSensorDataBinning {
             data[HmmDataConstants.LIGHT_INDEX][i] /= numMinutesInWindow; //average
 
             //transform via log2(4.0 * x + 1.0)
-            data[HmmDataConstants.LIGHT_INDEX][i] =  Math.log(data[HmmDataConstants.LIGHT_INDEX][i] * HmmDataConstants.LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
+            data[HmmDataConstants.LIGHT_INDEX][i] =  Math.log(data[HmmDataConstants.LIGHT_INDEX][i] * model.lightPreMultiplier + 1.0) / Math.log(2);
         }
 
         ///////////////////////////
