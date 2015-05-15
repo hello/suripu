@@ -226,3 +226,21 @@ CREATE INDEX user_labels_account_id_night ON user_labels(account_id, night_date)
 
 ALTER TABLE user_labels ADD COLUMN duration INT DEFAULT 0;
 ALTER TABLE user_labels ADD COLUMN note VARCHAR(255) DEFAULT '';
+
+
+CREATE TABLE onboarding_logs (
+    id SERIAL PRIMARY KEY,
+    sense_id VARCHAR (24),
+    utc_ts TIMESTAMP,
+    pill_id VARCHAR (24),
+    account_id BIGINT,
+    info TEXT,
+    result VARCHAR(255),
+    operation VARCHAR(20),
+    created_at TIMESTAMP default current_timestamp,
+    ip VARCHAR(25)
+);
+
+GRANT ALL PRIVILEGES ON onboarding_logs TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE onboarding_logs_id_seq TO ingress_user;
+CREATE UNIQUE INDEX unique_sense_id_time ON onboarding_logs(sense_id, account_id, utc_ts);

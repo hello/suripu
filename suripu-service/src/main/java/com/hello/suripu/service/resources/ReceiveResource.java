@@ -69,6 +69,7 @@ public class ReceiveResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
+    private final int ringDurationSec;
 
     private final KeyStore keyStore;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
@@ -98,7 +99,8 @@ public class ReceiveResource extends BaseResource {
                            final GroupFlipper groupFlipper,
                            final SenseUploadConfiguration senseUploadConfiguration,
                            final OTAConfiguration otaConfiguration,
-                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
+                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
+                           final int ringDurationSec) {
 
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
@@ -115,6 +117,7 @@ public class ReceiveResource extends BaseResource {
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
         this.senseClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "sense-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
         this.pillClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "pill-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.ringDurationSec = ringDurationSec;
     }
 
 
@@ -292,7 +295,11 @@ public class ReceiveResource extends BaseResource {
 
             // Start generate protobuf for alarm
             int ringOffsetFromNowInSecond = -1;
-            int ringDurationInMS = 2 * DateTimeConstants.MILLIS_PER_MINUTE;
+            int ringDurationInMS = 120 * DateTimeConstants.MILLIS_PER_SECOND;
+            if(this.featureFlipper.deviceFeatureActive(FeatureFlipper.RING_DURATION_FROM_CONFIG, deviceName, Collections.EMPTY_LIST)){
+                ringDurationInMS = this.ringDurationSec * DateTimeConstants.MILLIS_PER_SECOND;
+            }
+            
             if (!nextRingTime.isEmpty()) {
                 ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - now.getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
                 if(ringOffsetFromNowInSecond < 0){

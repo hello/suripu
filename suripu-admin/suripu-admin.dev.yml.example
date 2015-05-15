@@ -35,11 +35,6 @@ kinesis:
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
 
-features_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: features
-
 kinesis_logger:
   stream_name: logs
   enabled : false
@@ -63,6 +58,7 @@ dynamodb:
     firmware_versions : firmware_versions_mapping
     sync_response_commands : response_commands
     ota_history : ota_history
+    firmware_upgrade_path : fw_upgrade_path
 
   endpoints:
       features : http://dynamodb.us-east-1.amazonaws.com
@@ -75,3 +71,4 @@ dynamodb:
       firmware_versions : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://localhost:7777
       ota_history : http://localhost:7777
+      firmware_upgrade_path : http://localhost:7777

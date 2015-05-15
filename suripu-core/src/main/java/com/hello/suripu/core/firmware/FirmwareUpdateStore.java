@@ -167,6 +167,28 @@ public class FirmwareUpdateStore {
                     .setUrl(s.getPath() + "?" + s.getQuery())
                     .setHost(s.getHost()); // TODO: replace with hello s3 proxy
 
+            if(f.contains("ca0515.der")) {
+
+                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
+                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
+
+                final boolean copyToSerialFlash = true;
+                final boolean resetApplicationProcessor = false;
+                final String serialFlashFilename = "ca0515.der";
+                final String serialFlashPath = "/cert/";
+                final String sdCardFilename = "ca0515.der";
+                final String sdCardPath = "/";
+
+                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
+                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
+                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
+                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
+                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
+                fileDownloadBuilder.setSdCardPath(sdCardPath);
+
+                fileDownloadList.add(fileDownloadBuilder.build());
+            }
+
             if(f.contains("kitsune.bin")) {
 
                 final byte[] sha1 = computeSha1ForS3File(bucketName, f);
@@ -189,7 +211,6 @@ public class FirmwareUpdateStore {
 
                 fileDownloadList.add(fileDownloadBuilder.build());
             }
-
 
             if(f.contains("top.bin")) {
 

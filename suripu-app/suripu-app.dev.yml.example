@@ -252,4 +252,4 @@ resp_commands_db:
 fw_path_db:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: dev_fw_upgrade_path
+  table_name: fw_upgrade_path

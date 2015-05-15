@@ -102,11 +102,6 @@ http:
     port: 5555
     adminPort: 5556
 
-dynamodb:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: key_store
-
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
@@ -120,32 +115,6 @@ kinesis:
     logs: logs
 
 audio_bucket_name : hello-data
-
-timezone_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: timezone_history
-
-
-alarm_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: alarm
-
-
-ring_time_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: ring_time
-
-alarm_info_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: alarm_info
-
-sense_logs:
-    private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com
-    index_name : sense-logs
 
 room_conditions: 1
 
@@ -172,22 +141,31 @@ kinesis_logger:
 aws_access_key_s3: AKIAJVQV7XJU23UWILSQ
 aws_access_secret_s3: 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
 
-ring_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: ring_history
+ring_duration_sec: 240
 
-ota_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: ota_history
 
-resp_commands_db:
-  endpoint : http://localhost:7777
+dynamodb:
   region: us-east-1
-  table_name: response_commands
+  tables:
+    alarm_info : alarm_info
+    features : features
+    firmware_upgrade_path : fw_upgrade_path
+    firmware_versions : firmware_versions_mapping
+    ota_history : ota_history
+    pill_key_store : pill_key_store
+    ring_time_history: ring_time_history
+    sense_key_store : key_store
+    sync_response_commands : response_commands
+    teams : teams
 
-firmware_versions:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: firmware_versions_mapping
+  endpoints:
+      alarm_info : http://localhost:7777
+      features : http://localhost:7777
+      firmware_upgrade_path : http://localhost:7777
+      firmware_versions : http://localhost:7777
+      ota_history : http://localhost:7777
+      pill_key_store : http://localhost:7777
+      ring_time_history: http://localhost:7777
+      sense_key_store : http://localhost:7777
+      sync_response_commands : http://localhost:7777
+      teams : http://localhost:7777

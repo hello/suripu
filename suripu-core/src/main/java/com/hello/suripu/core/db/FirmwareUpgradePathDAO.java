@@ -94,6 +94,9 @@ public class FirmwareUpgradePathDAO {
         } catch (AmazonServiceException ase){
             LOGGER.error("getNextFirmwareVersion query failed. {}", ase.getErrorMessage());
             return Optional.absent();
+        } catch (Exception e) {
+            LOGGER.error("Exception thrown while querying next firmware version. {}", e.getMessage());
+            return Optional.absent();
         }
 
         final List<Map<String, AttributeValue>> items = queryResult.getItems();

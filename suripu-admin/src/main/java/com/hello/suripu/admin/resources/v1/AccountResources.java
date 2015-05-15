@@ -4,8 +4,10 @@ import com.google.common.base.Optional;
 import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.PasswordResetAdmin;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountDAOAdmin;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AccountCount;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -38,12 +40,14 @@ public class AccountResources {
 
     private final AccountDAO accountDAO;
     private final PasswordResetDB passwordResetDB;
-    final DeviceDAO deviceDAO;
+    private final DeviceDAO deviceDAO;
+    private final AccountDAOAdmin accountDAOAdmin;
 
-    public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB, final DeviceDAO deviceDAO) {
+    public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB, final DeviceDAO deviceDAO, final AccountDAOAdmin accountDAOAdmin) {
         this.accountDAO = accountDAO;
         this.passwordResetDB = passwordResetDB;
         this.deviceDAO = deviceDAO;
+        this.accountDAOAdmin = accountDAOAdmin;
     }
 
 
@@ -110,6 +114,18 @@ public class AccountResources {
         return accountDAO.getRecent(Math.min(limit, MAX_RECENT_USERS_LIMIT));
     }
 
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/paginate")
+    public List<Account> retrievePaginatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                                         @QueryParam("limit") final Integer limit,
+                                                         @QueryParam("max_id") final Integer maxId){
+        if (limit == null || maxId == null) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "limit and max_id required")).build());
+        }
+        return accountDAOAdmin.getRecentBeforeId(Math.min(limit, MAX_RECENT_USERS_LIMIT), maxId);
+    }
 
     @POST
     @Timed
@@ -163,5 +179,15 @@ public class AccountResources {
         }
 
         return accountDAO.getById(partnerAccountIdOptional.get()).get();
+    }
+
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/count_by_created")
+    public List<AccountCount> retrieveCountsByCreated(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken) {
+        return accountDAOAdmin.countByDate();
+
     }
 }

@@ -8,13 +8,13 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
-import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
@@ -32,7 +32,6 @@ import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
-import com.hello.suripu.core.firmware.FirmwareUpdateDAO;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
@@ -50,8 +49,7 @@ import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
-import com.hello.suripu.service.cli.CreateKeyStoreDynamoDBTable;
-import com.hello.suripu.service.cli.CreatePillKeyStoreDynamoDBTable;
+import com.hello.suripu.service.cli.CreateDynamoDBTables;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.modules.RolloutModule;
 import com.hello.suripu.service.resources.AudioResource;
@@ -89,14 +87,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
     @Override
     public void initialize(Bootstrap<SuripuConfiguration> bootstrap) {
         bootstrap.addBundle(new DBIExceptionsBundle());
-        bootstrap.addCommand(new CreateKeyStoreDynamoDBTable());
-        bootstrap.addCommand(new CreatePillKeyStoreDynamoDBTable());
-        bootstrap.addBundle(new KinesisLoggerBundle<SuripuConfiguration>() {
-            @Override
-            public KinesisLoggerConfiguration getConfiguration(final SuripuConfiguration configuration) {
-                return configuration.kinesisLoggerConfiguration();
-            }
-        });
+        bootstrap.addCommand(new CreateDynamoDBTables());
     }
 
     @Override
@@ -116,41 +107,36 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
 
-        final FirmwareUpdateDAO firmwareUpdateDAO = commonDB.onDemand(FirmwareUpdateDAO.class);
-
         // Checks Environment first and then instance profile.
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
-        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB dynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
+        final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
+        final AmazonDynamoDBClientFactory dynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
+
+
+        final AmazonDynamoDB senseKeyStoreDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.SENSE_KEY_STORE);
+
         final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
         final String bucketName = configuration.getAudioBucketName();
 
-        final AmazonDynamoDBClientFactory dynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB mergedInfoDynamoDBClient = dynamoDBFactory.getForEndpoint(configuration.getAlarmInfoDynamoDBConfiguration().getEndpoint());
+        final AmazonDynamoDB mergedInfoDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.ALARM_INFO);
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedInfoDynamoDBClient, tableNames.get(DynamoDBTableName.ALARM_INFO));
 
-        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedInfoDynamoDBClient,
-                configuration.getAlarmInfoDynamoDBConfiguration().getTableName());
 
-        final AmazonDynamoDBClientFactory ringTimeHistoryDynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = ringTimeHistoryDynamoDBFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.RING_TIME_HISTORY);
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient, tableNames.get(DynamoDBTableName.RING_TIME_HISTORY));
 
-        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient,
-                configuration.getRingTimeHistoryDBConfiguration().getTableName());
+        final AmazonDynamoDB otaHistoryDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.OTA_HISTORY);
+        final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB = new OTAHistoryDAODynamoDB(otaHistoryDynamoDBClient, tableNames.get(DynamoDBTableName.OTA_HISTORY));
 
-        final AmazonDynamoDBClientFactory otaHistoryDynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB otaHistoryDynamoDBClient = otaHistoryDynamoDBFactory.getForEndpoint(configuration.getOTAHistoryDBConfiguration().getEndpoint());
-        final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB = new OTAHistoryDAODynamoDB(otaHistoryDynamoDBClient, configuration.getOTAHistoryDBConfiguration().getTableName());
+        final AmazonDynamoDB respCommandsDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.SYNC_RESPONSE_COMMANDS);
+        final ResponseCommandsDAODynamoDB respCommandsDAODynamoDB = new ResponseCommandsDAODynamoDB(respCommandsDynamoDBClient, tableNames.get(DynamoDBTableName.SYNC_RESPONSE_COMMANDS));
 
-        final AmazonDynamoDBClientFactory respCommandsDynamoDBFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB respCommandsDynamoDBClient = respCommandsDynamoDBFactory.getForEndpoint(configuration.getResponseCommandsDBConfiguration().getEndpoint());
-        final ResponseCommandsDAODynamoDB respCommandsDAODynamoDB = new ResponseCommandsDAODynamoDB(respCommandsDynamoDBClient, configuration.getResponseCommandsDBConfiguration().getTableName());
+        final AmazonDynamoDB fwVersionMapping = dynamoDBFactory.getForTable(DynamoDBTableName.FIRMWARE_VERSIONS);
+        final FirmwareVersionMappingDAO firmwareVersionMappingDAO = new FirmwareVersionMappingDAO(fwVersionMapping, tableNames.get(DynamoDBTableName.FIRMWARE_VERSIONS));
 
-        final AmazonDynamoDB fwVersionMapping = dynamoDBFactory.getForEndpoint(configuration.getFirmwareVersionsDynamoDBConfiguration().getEndpoint());
-        final FirmwareVersionMappingDAO firmwareVersionMappingDAO = new FirmwareVersionMappingDAO(fwVersionMapping, configuration.getFirmwareVersionsDynamoDBConfiguration().getTableName());
-
-        final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBFactory.getForEndpoint(configuration.getFWUpgradePathDBConfiguration().getEndpoint());
-        final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, configuration.getFWUpgradePathDBConfiguration().getTableName());
+        final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBFactory.getForTable(DynamoDBTableName.FIRMWARE_UPGRADE_PATH);
+        final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, tableNames.get(DynamoDBTableName.FIRMWARE_UPGRADE_PATH));
 
         // This is used to sign S3 urls with a shorter signature
         final AWSCredentials s3credentials = new AWSCredentials() {
@@ -175,12 +161,10 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 configuration.getKinesisConfiguration().getStreams()
         );
 
-        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
-        // TODO; set region here?
 
         final KeyStore senseKeyStore = new KeyStoreDynamoDB(
-                dynamoDBClient,
-                configuration.getDynamoDBConfiguration().getTableName(),
+                senseKeyStoreDynamoDBClient,
+                tableNames.get(DynamoDBTableName.SENSE_KEY_STORE),
                 "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
                 120 // 2 minutes for cache
         );
@@ -220,12 +204,15 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
         environment.addProvider(new OAuthProvider(new OAuthAuthenticator(tokenStore), "protected-resources", activityLogger));
-        dynamoDBClient.setEndpoint(configuration.getDynamoDBConfiguration().getEndpoint());
-        final TeamStore teamStore = new TeamStore(dynamoDBClient, "teams");
+
+        final AmazonDynamoDB teamStoreDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.TEAMS);
+        final TeamStore teamStore = new TeamStore(teamStoreDynamoDBClient, tableNames.get(DynamoDBTableName.TEAMS));
+
         final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 30);
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
-        final FeatureStore featureStore = new FeatureStore(dynamoDBClient, "features", namespace);
+        final AmazonDynamoDB featuresDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.FEATURES);
+        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, tableNames.get(DynamoDBTableName.FEATURES), namespace);
 
         final RolloutModule module = new RolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
@@ -236,16 +223,13 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 mergedUserInfoDynamoDB,
                 ringTimeHistoryDAODynamoDB,
                 configuration.getDebug(),
-                // the room condition in config file is intentionally left there, just in case we figure out it is still useful.
-                // Let's remove it in the next next deploy.
                 firmwareUpdateStore,
                 groupFlipper,
                 configuration.getSenseUploadConfiguration(),
                 configuration.getOTAConfiguration(),
-                respCommandsDAODynamoDB
+                respCommandsDAODynamoDB,
+                configuration.getRingDuration()
         );
-
-
 
 
         environment.addResource(receiveResource);
@@ -284,12 +268,18 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
         environment.addResource(new ProvisionResource(senseKeyStore, groupFlipper));
+
         // Manage the lifecycle of our clients
-        environment.manage(new DynamoDBClientManaged(dynamoDBClient));
+        environment.manage(new DynamoDBClientManaged(senseKeyStoreDynamoDBClient));
+        environment.manage(new DynamoDBClientManaged(teamStoreDynamoDBClient));
+        environment.manage(new DynamoDBClientManaged(featuresDynamoDBClient));
+        environment.manage(new DynamoDBClientManaged(senseKeyStoreDynamoDBClient));
         environment.manage(new KinesisClientManaged(kinesisClient));
 
         // Make sure we can connect
-        environment.addHealthCheck(new DynamoDbHealthCheck(dynamoDBClient));
+        environment.addHealthCheck(new DynamoDbHealthCheck(senseKeyStoreDynamoDBClient));
+        environment.addHealthCheck(new DynamoDbHealthCheck(teamStoreDynamoDBClient));
+        environment.addHealthCheck(new DynamoDbHealthCheck(featuresDynamoDBClient));
         environment.addHealthCheck(new KinesisHealthCheck(kinesisClient));
     }
 

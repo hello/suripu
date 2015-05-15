@@ -14,7 +14,8 @@ public enum DynamoDBTableName {
     FIRMWARE_VERSIONS("firmware_versions"),
     SYNC_RESPONSE_COMMANDS("sync_response_commands"),
     OTA_HISTORY("ota_history"),
-    FIRMWARE_UPGRADE_PATH("firmware_upgrade_path");
+    FIRMWARE_UPGRADE_PATH("firmware_upgrade_path"),
+    RING_TIME_HISTORY("ring_time_history");
 
     private String value;
 

@@ -12,15 +12,14 @@ import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
-import java.util.Set;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -123,7 +122,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             if(deviceAccountInfoFromMergeTable.isEmpty()) {
-                LOGGER.error("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
+                LOGGER.warn("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
+            } else { // track only for sense paired to accounts
+                activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
             }
 
             //LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
@@ -202,7 +203,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 //TODO: Eventually break out metrics to their own worker
                 seenFirmwares.put(deviceName, firmwareVersion);
             }
-            activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
+
 
         }
 
