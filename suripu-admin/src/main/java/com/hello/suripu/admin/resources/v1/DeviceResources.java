@@ -16,8 +16,10 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
@@ -45,6 +47,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -71,6 +74,7 @@ public class DeviceResources {
     private final KeyStore pillKeyStore;
     private final JedisPool jedisPool;
     private final PillHeartBeatDAO pillHeartBeatDAO;
+    private final SenseColorDAO senseColorDAO;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDAOAdmin deviceDAOAdmin,
@@ -81,7 +85,8 @@ public class DeviceResources {
                            final KeyStore senseKeyStore,
                            final KeyStore pillKeyStore,
                            final JedisPool jedisPool,
-                           final PillHeartBeatDAO pillHeartBeatDAO) {
+                           final PillHeartBeatDAO pillHeartBeatDAO,
+                           final SenseColorDAO senseColorDAO) {
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
@@ -92,6 +97,7 @@ public class DeviceResources {
         this.trackerMotionDAO = trackerMotionDAO;
         this.jedisPool = jedisPool;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
+        this.senseColorDAO = senseColorDAO;
     }
 
     @GET
@@ -522,6 +528,36 @@ public class DeviceResources {
         return timeZoneHistoryOptional.get();
     }
 
+
+    @GET
+    @Path("/color/{sense_id}")
+    public String getColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                           @PathParam("sense_id") final String senseId){
+
+        final Optional<Device.Color> colorOptional = senseColorDAO.getColorForSense(senseId);
+        if(colorOptional.isPresent()) {
+            return colorOptional.get().name();
+        }
+
+        return Device.Color.valueOf("BLACK").name();
+    }
+
+
+    @PUT
+    @Path("/color/{sense_id}/{color}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                           @PathParam("sense_id") final String senseId,
+                           @PathParam("color") final String color){
+        final Device.Color senseColor = Device.Color.valueOf(color);
+        if(senseColor.equals(Device.Color.BLACK) || senseColor.equals(Device.Color.WHITE)) {
+            senseColorDAO.update(senseId, senseColor.name());
+            return Response.ok().build();
+        }
+
+        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
+
+    }
 
     // Helpers
     private List<DeviceAdmin> getSensesByAccountId(final Long accountId) {

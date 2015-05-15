@@ -11,6 +11,8 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
@@ -19,15 +21,17 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hello.suripu.api.input.DataInputProtos;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +58,8 @@ public class SensorsViewsDynamoDB {
     protected static final String DUST_ATTRIBUTE_NAME = "dust";
     protected static final String FIRMWARE_VERSION_ATTRIBUTE_NAME = "fw_version";
     protected static final String OFFSET_MILLIS_ATTRIBUTE_NAME = "offset";
-    protected static final String UPDATED_AT_UTC_ATTRIBUTE_NAME = "updated_at_utc"; // local time at time of event?
+    protected static final String UPDATED_AT_UTC_ATTRIBUTE_NAME = "updated_at_utc";
+    protected static final String TZ_OFFSET_ATTRIBUTE_NAME = "offset";
 
     private static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";  // Due to Joda Time's behavior, it is not a good idea to store timezone as offset in the string
     private final String DYNAMO_DB_TABLE_FORMAT = "yyyy_MM_dd";
@@ -70,39 +75,20 @@ public class SensorsViewsDynamoDB {
         this.lastSeenTableName = lastSeenTableName;
     }
 
-    public WriteRequest transform(final String senseId, final Integer temp, final Integer humidity,
-                     final Integer light, final Integer sound, final Integer dust, final DateTime utcDateTime, final Integer fwVersion){
-        final Map<String, AttributeValue> items = Maps.newHashMap();
-        items.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
-        items.put(UTC_TIMESTAMP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(utcDateTime.getMillis())));
 
-        items.put(TEMP_ATTRIBUTE_NAME, new AttributeValue().withN(temp.toString()));
-        items.put(HUMIDITY_ATTRIBUTE_NAME, new AttributeValue().withN(humidity.toString()));
-        items.put(LIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(light.toString()));
-        items.put(SOUND_ATTRIBUTE_NAME, new AttributeValue().withN(sound.toString()));
-        items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(dust.toString()));
-
-        items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(fwVersion.toString()));
-        items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(utcDateTime.toString(DATETIME_FORMAT)));
-
-        final PutRequest putRequest = new PutRequest(items);
-        return new WriteRequest(putRequest);
-    }
-
-
-
-    public WriteRequest transform(final String deviceName, final DataInputProtos.periodic_data periodic_data) {
+    public WriteRequest transform(final String deviceName, final DeviceData deviceData) {
         final Map<String, AttributeValue> items = Maps.newHashMap();
         items.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceName));
 
-        items.put(TEMP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodic_data.getTemperature())));
-        items.put(HUMIDITY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodic_data.getHumidity())));
-        items.put(LIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodic_data.getLight())));
-        items.put(SOUND_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodic_data.getAudioPeakBackgroundEnergyDb())));
-        items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodic_data.getDustMax())));
+        items.put(TEMP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientTemperature)));
+        items.put(HUMIDITY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientHumidity)));
+        items.put(LIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientLight)));
+        items.put(SOUND_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.audioPeakDisturbancesDB)));
+        items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientDustMax)));
 
-        items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodic_data.getFirmwareVersion())));
-        items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(new DateTime(periodic_data.getUnixTime() * 1000L, DateTimeZone.UTC).toString(DATETIME_FORMAT)));
+        items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.firmwareVersion)));
+        items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(deviceData.dateTimeUTC.toString(DATETIME_FORMAT)));
+        items.put(TZ_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.offsetMillis)));
 
         final PutRequest putRequest = new PutRequest(items);
         return new WriteRequest(putRequest);
@@ -175,7 +161,7 @@ public class SensorsViewsDynamoDB {
     }
 
 
-    public void saveLastSeenDeviceData(final Map<String, DataInputProtos.periodic_data> lastSeenDeviceData) {
+    public void saveLastSeenDeviceData(final Map<String, DeviceData> lastSeenDeviceData) {
         final List<WriteRequest> writeRequests = Lists.newArrayList();
         for(final String deviceName: lastSeenDeviceData.keySet()) {
             writeRequests.add(transform(deviceName, lastSeenDeviceData.get(deviceName)));
@@ -225,6 +211,62 @@ public class SensorsViewsDynamoDB {
         return samples;
     }
 
+    /**
+     * Retrieves last data upload from Sense and associates it to account id and internal sense id
+     * @param senseId
+     * @param accountId
+     * @param internalSenseId
+     * @return
+     */
+    public Optional<DeviceData> lastSeen(final String senseId, final Long accountId, final Long internalSenseId) {
+
+        final Map<String, AttributeValue> key = Maps.newHashMap();
+        key.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
+        final GetItemRequest getItemRequest = new GetItemRequest()
+                .withKey(key)
+                .withTableName(lastSeenTableName);
+        final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
+        return fromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
+    }
+
+
+    private Optional<DeviceData> fromDynamoDB(final Map<String, AttributeValue> item, final String senseId, final Long accountId, final Long internalSenseId) {
+        if(item == null || item.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final String dateTimeUTC = (item.containsKey(UPDATED_AT_UTC_ATTRIBUTE_NAME) ? item.get(UPDATED_AT_UTC_ATTRIBUTE_NAME).getS() : "");
+        if(dateTimeUTC.isEmpty()) {
+            LOGGER.error("Malformed data stored in last seen for device_id={}.", senseId);
+            return Optional.absent();
+        }
+
+        final Integer ambientTemp = (item.containsKey(TEMP_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(TEMP_ATTRIBUTE_NAME).getN()) : 0);
+        final Integer ambientHumidity = (item.containsKey(HUMIDITY_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(HUMIDITY_ATTRIBUTE_NAME).getN()) : 0);
+        final Integer ambientLight = (item.containsKey(LIGHT_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(LIGHT_ATTRIBUTE_NAME).getN()) : 0);
+        final Integer maxDust = (item.containsKey(DUST_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(DUST_ATTRIBUTE_NAME).getN()) : 0);
+
+
+        final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
+        final Integer sound = (item.containsKey(SOUND_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(SOUND_ATTRIBUTE_NAME).getN()) : 0);
+        final Integer offsetMillis = (item.containsKey(OFFSET_MILLIS_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN()) : 0);
+        final DateTime dateTime = DateTime.parse(dateTimeUTC, DateTimeFormat.forPattern(DATETIME_FORMAT));
+
+        final DeviceData deviceData = new DeviceData.Builder()
+                .withDeviceId(internalSenseId)
+                .withAccountId(accountId)
+                .withAmbientTemperature(ambientTemp)
+                .withAmbientHumidity(ambientHumidity)
+                .calibrateAmbientLight(ambientLight)
+                .withAmbientDustMax(maxDust)
+                .withAlreadyCalibratedAudioPeakBackgroundDB(sound)
+                .withDateTimeUTC(dateTime)
+                .withOffsetMillis(offsetMillis)
+                .withFirmwareVersion(firmwareVersion)
+                .build();
+
+        return Optional.of(deviceData);
+    }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         // TODO make this work for creating the daily/monthly shards

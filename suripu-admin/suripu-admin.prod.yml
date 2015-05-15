@@ -57,6 +57,8 @@ dynamodb:
     pill_key_store : pill_key_store
     sense_events : prod_sense_events
     sense_key_store : key_store
+    sense_last_seen : prod_sense_last_seen
+    sense_prefix : prod_sense
     sync_response_commands : prod_response_commands
     teams : teams
 
@@ -70,5 +72,8 @@ dynamodb:
       pill_key_store : http://dynamodb.us-east-1.amazonaws.com
       sense_events : http://dynamodb.us-east-1.amazonaws.com
       sense_key_store : http://dynamodb.us-east-1.amazonaws.com
+      sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
+      sense_prefix : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
+

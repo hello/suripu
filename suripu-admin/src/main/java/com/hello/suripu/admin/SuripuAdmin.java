@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
+import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
 import com.hello.suripu.admin.resources.v1.AccountResources;
@@ -18,8 +19,8 @@ import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
 import com.hello.suripu.admin.resources.v1.FirmwareResource;
 import com.hello.suripu.admin.resources.v1.InspectionResources;
-import com.hello.suripu.admin.resources.v1.PCHResources;
 import com.hello.suripu.admin.resources.v1.OnBoardingLogResource;
+import com.hello.suripu.admin.resources.v1.PCHResources;
 import com.hello.suripu.admin.resources.v1.TeamsResources;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -45,9 +46,12 @@ import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.logging.DataLogger;
@@ -91,6 +95,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new ScanSerialNumbers());
+        bootstrap.addCommand(new ScanFWVersion());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAdminConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAdminConfiguration configuration) {
@@ -127,6 +132,8 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final OnBoardingLogDAO onBoardingLogDAO = commonDB.onDemand(OnBoardingLogDAO.class);
         final AccountDAOAdmin accountDAOAdmin = commonDB.onDemand(AccountDAOAdmin.class);
+
+        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
 
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
@@ -208,10 +215,18 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBClientFactory.getForTable(DynamoDBTableName.FIRMWARE_UPGRADE_PATH);
         final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, tableNames.get(DynamoDBTableName.FIRMWARE_UPGRADE_PATH));
 
+        final AmazonDynamoDB sensorsViewsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
+                sensorsViewsDynamoDBClient,
+                tableNames.get(DynamoDBTableName.SENSE_PREFIX),
+                tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
+        );
+
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO, mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO));
-        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO,
+                mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO, senseColorDAO));
+        environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO, sensorsViewsDynamoDB));
         environment.addResource(new ApplicationResources(applicationStore));
         environment.addResource(new FeaturesResources(featureStore));
         environment.addResource(new TeamsResources(teamStore));
@@ -224,7 +239,8 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 new PCHResources(
                         senseKeyStoreDynamoDBClient, // we use the same endpoint for Sense and Pill keystore
                         tableNames.get(DynamoDBTableName.SENSE_KEY_STORE),
-                        tableNames.get(DynamoDBTableName.PILL_KEY_STORE)
+                        tableNames.get(DynamoDBTableName.PILL_KEY_STORE),
+                        senseColorDAO
                 )
         );
     }
