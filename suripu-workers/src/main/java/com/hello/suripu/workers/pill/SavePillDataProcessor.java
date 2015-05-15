@@ -130,6 +130,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         final Long ts = data.getTimestamp() * 1000L;
                         final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
                         pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
+                        LOGGER.info("Finished adding heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
                     }
                 }
             } catch (InvalidProtocolBufferException e) {
