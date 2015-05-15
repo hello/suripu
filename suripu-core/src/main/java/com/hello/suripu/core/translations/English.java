@@ -186,5 +186,5 @@ public class English {
 
     public final static String TIMELINE_UNAVAILABLE = "Your timeline is currently unavailable. Please try again later.";
 
-    public final static String ERROR_CLOCK_OUT_OF_SYNC = "Your device's time is significantly different from our reference time. From your device's Settings app, please enable automatic date & time, or enter the correct time manually.";
+    public final static String ERROR_CLOCK_OUT_OF_SYNC = "Your device's time is significantly different from our reference time. From your device's Settings app, please enable automatic Date & Time, or enter the correct time manually.";
 }
