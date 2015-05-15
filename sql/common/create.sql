@@ -244,3 +244,4 @@ CREATE TABLE onboarding_logs (
 GRANT ALL PRIVILEGES ON onboarding_logs TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE onboarding_logs_id_seq TO ingress_user;
 CREATE UNIQUE INDEX unique_sense_id_time ON onboarding_logs(sense_id, account_id, utc_ts);
+CREATE INDEX onboarding_logs_result_time ON onboarding_logs(result, utc_ts);
