@@ -54,7 +54,8 @@ public class ScanSerialNumbers extends ConfiguredCommand<SuripuAdminConfiguratio
         do {
             ScanRequest scanRequest = new ScanRequest()
                     .withTableName(configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.SENSE_KEY_STORE))
-                    .withExclusiveStartKey(lastKeyEvaluated);
+                    .withExclusiveStartKey(lastKeyEvaluated)
+                    .withLimit(5000);
 
             ScanResult result = amazonDynamoDBClient.scan(scanRequest);
             for (Map<String, AttributeValue> item : result.getItems()){
@@ -69,6 +70,7 @@ public class ScanSerialNumbers extends ConfiguredCommand<SuripuAdminConfiguratio
 
 
 
+        System.out.println("To check = " + snToCheck.size());
         System.out.println("Total = " + total);
         System.out.println("with correct metadata = " + store.size());
         System.out.println("with incorrect metadata = " + incorrectMetadata);
