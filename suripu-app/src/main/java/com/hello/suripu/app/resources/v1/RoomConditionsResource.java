@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DeviceData;
@@ -29,6 +28,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,13 +57,18 @@ public class RoomConditionsResource extends BaseResource {
     public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
                                     @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
+        if(isSensorsDBUnavailable(token.accountId)) {
+            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", token.accountId);
+            return CurrentRoomState.empty();
+        }
+
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
         if(!deviceId.isPresent()) {
             LOGGER.warn("Did not find any device_id for account_id = {}", token.accountId);
             return CurrentRoomState.empty();
         }
 
-        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get(), DateTime.now(DateTimeZone.UTC).plusMinutes(2));
+        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get(), DateTime.now(DateTimeZone.UTC).plusMinutes(2), DateTime.now(DateTimeZone.UTC).minusMinutes(30));
         if(!data.isPresent()) {
             return CurrentRoomState.empty();
         }
@@ -83,7 +88,6 @@ public class RoomConditionsResource extends BaseResource {
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("sensor") final String sensor,
             @QueryParam("from") Long queryEndTimestampUTC) { // utc or local???
-
         return retrieveWeekData(accessToken.accountId, sensor, queryEndTimestampUTC);
     }
 
@@ -95,7 +99,6 @@ public class RoomConditionsResource extends BaseResource {
     public Map<Sensor, List<Sample>> getAllSensorsLastWeek(
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
-
         return retrieveAllSensorsWeekData(accessToken.accountId, queryEndTimestampUTC);
     }
 
@@ -137,6 +140,11 @@ public class RoomConditionsResource extends BaseResource {
             @PathParam("sensor") String sensor,
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
 
+
+        if(isSensorsDBUnavailable(accessToken.accountId)) {
+            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+            return AllSensorSampleList.getEmptyData();
+        }
         validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
         final int slotDurationInMinutes = 5;
@@ -169,6 +177,13 @@ public class RoomConditionsResource extends BaseResource {
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
 
         validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
+
+
+        if(isSensorsDBUnavailable(accessToken.accountId)) {
+            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+            return AllSensorSampleList.getEmptyData();
+        }
+
 
         final int slotDurationInMinutes = 5;
         final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(quantity).getMillis();
@@ -249,82 +264,6 @@ public class RoomConditionsResource extends BaseResource {
                 sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
-
-    @Timed
-    @GET
-    @Path("/admin/{email}/{sensor}/day")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getAdminLastDay(
-            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
-            @PathParam("email") final String email,
-            @PathParam("sensor") final String sensor,
-            @QueryParam("from") Long queryEndTimestampInUTC) {
-
-        final Optional<Long> accountId = getAccountIdByEmail(email);
-        if (!accountId.isPresent()) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-
-        return retrieveDayData(accountId.get(), sensor, queryEndTimestampInUTC);
-    }
-
-    /*
-    * WARNING: This implementation will not giving out the data of last 24 hours.
-    * It gives the data of last DAY, which is from a certain local timestamp
-    * to that timestamp plus one DAY, keep in mind that one day can be more than 24 hours
-     */
-    @Timed
-    @GET
-    @Path("/admin/{sensor}/day")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getLastDayAdmin(
-            @Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
-            @PathParam("sensor") String sensor,
-            @QueryParam("account") Long accountId,
-
-            // The @QueryParam("from") should be named as @QueryParam("from_local_utc")
-            // to make it explicit that the API is expecting a local time and not confuse
-            // the user.
-            @QueryParam("from") Long queryEndTimestampInUTC) {
-
-        final int slotDurationInMinutes = 1;
-         /*
-        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
-        * data, instead of 24 hours.
-         */
-        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
-
-        validateQueryRange(queryEndTimestampInUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
-
-        // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
-
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accountId));
-    }
-
-    @Timed
-    @GET
-    @Path("/admin/{email}/{sensor}/week")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getAdminLastWeek(
-            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
-            @PathParam("email") final String email,
-            @PathParam("sensor") final String sensor,
-            @QueryParam("from") Long queryEndTimestampInLocalUTC) {
-
-        final Optional<Long> accountId = getAccountIdByEmail(email);
-        if (!accountId.isPresent()) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-
-        return retrieveWeekData(accountId.get(), sensor, queryEndTimestampInLocalUTC);
-    }
-
     /*
     * This is the correct implementation of get the last 24 hours' data
     * from the timestamp provided by the client.
@@ -355,52 +294,6 @@ public class RoomConditionsResource extends BaseResource {
                 sensor, missingDataDefaultValue(accessToken.accountId));
     }
 
-    /*
-    * This is the correct implementation of get the last 24 hours' data
-    * from the timestamp provided by the client.
-     */
-    @Timed
-    @GET
-    @Path("/admin/{sensor}/24hours")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Sample> getLast24hoursAdmin(
-            @Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
-            @PathParam("sensor") String sensor,
-            @QueryParam("account") Long accountId,
-            @QueryParam("from_utc") Long queryEndTimestampUTC) {
-
-        final int slotDurationInMinutes = 1;
-         /*
-        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
-        * data, instead of 24 hours.
-         */
-        final long queryStartTimeUTC = new DateTime(queryEndTimestampUTC, DateTimeZone.UTC).minusHours(24).getMillis();
-
-        // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
-
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accountId));
-    }
-
-    private Optional<Long> getAccountIdByEmail(final String email) {
-        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
-
-        if (!accountOptional.isPresent()) {
-            LOGGER.debug("Account {} not found", email);
-            return Optional.absent();
-        }
-        final Account account = accountOptional.get();
-        if (!account.id.isPresent()) {
-            LOGGER.debug("ID not found for account {}", email);
-            return Optional.absent();
-        }
-        return account.id;
-    }
 
     /**
      * Validates that the current request start range is within reasonable bounds
@@ -420,6 +313,11 @@ public class RoomConditionsResource extends BaseResource {
     }
 
     private List<Sample> retrieveDayData(final Long accountId, final String sensor, final Long queryEndTimestampInUTC) {
+
+        if(isSensorsDBUnavailable(accountId)) {
+            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
+            return Collections.EMPTY_LIST;
+        }
 
         final int slotDurationInMinutes = 5;
         /*
@@ -447,6 +345,11 @@ public class RoomConditionsResource extends BaseResource {
 
     private List<Sample> retrieveWeekData(final Long accountId, final String sensor, final Long queryEndTimestampInUTC) {
 
+        if(isSensorsDBUnavailable(accountId)) {
+            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
+            return Collections.EMPTY_LIST;
+        }
+
         final int slotDurationInMinutes = 60;
         //final int  queryDurationInHours = 24 * 7; // 7 days
 
@@ -472,6 +375,11 @@ public class RoomConditionsResource extends BaseResource {
     }
 
     private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
+
+        if(isSensorsDBUnavailable(accountId)) {
+            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
+            return AllSensorSampleList.getEmptyData();
+        }
 
         final int slotDurationInMinutes = 60;
         //final int  queryDurationInHours = 24 * 7; // 7 days

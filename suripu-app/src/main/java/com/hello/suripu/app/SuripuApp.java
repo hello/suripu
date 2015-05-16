@@ -15,6 +15,7 @@ import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
 import com.hello.suripu.app.cli.PopulateSleepScoreTable;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
+import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
@@ -124,6 +125,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new RecreatePillColorCommand());
         bootstrap.addCommand(new PopulateSleepScoreTable());
+        bootstrap.addCommand(new ScanInvalidNightsCommand());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
@@ -143,8 +145,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
-
-
+        
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
@@ -248,7 +249,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, notificationSubscriptionsDAO);
 
         /*  Timeline Log dynamo dB stuff */
-        final String timelineLogTableName =   configuration.getTimelineLogDBConfiguration().getTableName();
+        final String timelineLogTableName = configuration.getTimelineLogDBConfiguration().getTableName();
         final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
@@ -322,7 +323,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
-        final TimelineProcessor timelineProcessor = new TimelineProcessor(
+        final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 trackerMotionDAO,
                 deviceDAO,
                 deviceDataDAO,

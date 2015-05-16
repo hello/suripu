@@ -5,6 +5,8 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 
 import java.util.Map;
 
@@ -13,25 +15,51 @@ public class AmazonDynamoDBClientFactory {
     private final AWSCredentialsProvider awsCredentialsProvider;
     private final ClientConfiguration clientConfiguration;
     private final Map<String, AmazonDynamoDB> clients = Maps.newHashMap();
+    private final NewDynamoDBConfiguration dynamoDBConfiguration;
 
+    private final static ClientConfiguration DEFAULT_CLIENT_CONFIGURATION = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
 
+    @Deprecated
     public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider) {
-        final ClientConfiguration defaultClientConfiguration = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
-        return new AmazonDynamoDBClientFactory(awsCredentialsProvider, defaultClientConfiguration);
+
+        final NewDynamoDBConfiguration dynamoDBConfiguration = new NewDynamoDBConfiguration();
+        return new AmazonDynamoDBClientFactory(awsCredentialsProvider, DEFAULT_CLIENT_CONFIGURATION, dynamoDBConfiguration);
     }
 
-    public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider, final ClientConfiguration clientConfiguration) {
-        return new AmazonDynamoDBClientFactory(awsCredentialsProvider, clientConfiguration);
+    public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider, final ClientConfiguration clientConfiguration, final NewDynamoDBConfiguration dynamoDBConfiguration) {
+        return new AmazonDynamoDBClientFactory(awsCredentialsProvider, clientConfiguration, dynamoDBConfiguration);
     }
 
-    private AmazonDynamoDBClientFactory(final AWSCredentialsProvider awsCredentialsProvider, final ClientConfiguration clientConfiguration) {
+    public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider, final NewDynamoDBConfiguration dynamoDBConfiguration) {
+        return new AmazonDynamoDBClientFactory(awsCredentialsProvider, DEFAULT_CLIENT_CONFIGURATION, dynamoDBConfiguration);
+    }
+
+    private AmazonDynamoDBClientFactory(final AWSCredentialsProvider awsCredentialsProvider, final ClientConfiguration clientConfiguration, final NewDynamoDBConfiguration dynamoDBConfiguration) {
         this.awsCredentialsProvider = awsCredentialsProvider;
         this.clientConfiguration = clientConfiguration;
+        this.dynamoDBConfiguration = dynamoDBConfiguration;
     }
 
 
-
+    @Deprecated
     public synchronized AmazonDynamoDB getForEndpoint(final String endpoint) {
+        if(clients.containsKey(endpoint)) {
+            return clients.get(endpoint);
+        }
+
+        final AmazonDynamoDB client = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
+        client.setEndpoint(endpoint);
+        clients.put(endpoint, client);
+        return client;
+    }
+
+
+    public synchronized AmazonDynamoDB getForTable(final DynamoDBTableName tableName) {
+        if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
+            throw new IllegalArgumentException("Check configuration. Invalid tableName: " + tableName.toString());
+        }
+
+        final String endpoint = dynamoDBConfiguration.endpoints().get(tableName);
         if(clients.containsKey(endpoint)) {
             return clients.get(endpoint);
         }

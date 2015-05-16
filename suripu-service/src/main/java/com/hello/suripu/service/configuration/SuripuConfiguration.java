@@ -1,14 +1,15 @@
 package com.hello.suripu.service.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class SuripuConfiguration extends Configuration {
@@ -60,65 +61,11 @@ public class SuripuConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("dynamodb")
-    private DynamoDBConfiguration dynamoDBConfiguration;
-
-    public DynamoDBConfiguration getDynamoDBConfiguration() {
-        return dynamoDBConfiguration;
-    }
-
-
-    @Valid
-    @NotNull
     @JsonProperty("audio_bucket_name")
     private String audioBucketName;
 
     public String getAudioBucketName() {
         return audioBucketName;
-    }
-    /*
-    @Valid
-    @NotNull
-    @JsonProperty("motion_db")
-    private DynamoDBConfiguration motionDBConfiguration;
-
-    public DynamoDBConfiguration getMotionDBConfiguration() {
-        return this.motionDBConfiguration;
-    }
-    */
-
-
-    @Valid
-    @NotNull
-    @JsonProperty("timezone_history_db")
-    private DynamoDBConfiguration timeZoneHistoryDBConfiguration;
-    public DynamoDBConfiguration getTimeZoneHistoryDBConfiguration(){
-        return this.timeZoneHistoryDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("alarm_db")
-    private DynamoDBConfiguration alarmDBConfiguration;
-    public DynamoDBConfiguration getAlarmDBConfiguration(){
-        return this.alarmDBConfiguration;
-    }
-
-
-    @Valid
-    @NotNull
-    @JsonProperty("ring_time_db")
-    private DynamoDBConfiguration scheduledRingTimeHistoryDBConfiguration;
-    public DynamoDBConfiguration getScheduledRingTimeHistoryDBConfiguration(){
-        return this.scheduledRingTimeHistoryDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("ring_history_db")
-    private DynamoDBConfiguration ringTimeHistoryDBConfiguration;
-    public DynamoDBConfiguration getRingTimeHistoryDBConfiguration(){
-        return this.ringTimeHistoryDBConfiguration;
     }
 
     @Valid
@@ -128,22 +75,6 @@ public class SuripuConfiguration extends Configuration {
 
     public KinesisConfiguration getKinesisConfiguration() {
         return kinesisConfiguration;
-    }
-
-
-    @Valid
-    @NotNull
-    @JsonProperty("alarm_info_db")
-    private DynamoDBConfiguration alarmInfoDynamoDBConfiguration;
-    public DynamoDBConfiguration getAlarmInfoDynamoDBConfiguration(){
-        return this.alarmInfoDynamoDBConfiguration;
-    }
-
-    @Valid
-    @JsonProperty("sense_logs")
-    private IndexLogConfiguration indexLogConfiguration;
-    public IndexLogConfiguration getIndexLogConfiguration() {
-        return this.indexLogConfiguration;
     }
 
     @JsonProperty("room_conditions")
@@ -178,4 +109,21 @@ public class SuripuConfiguration extends Configuration {
         return awsAccessSecretS3;
     }
 
+    @Valid
+    @NotNull
+    @Min(60)
+    @JsonProperty("ring_duration_sec")
+    private Integer ringDuration;
+    public Integer getRingDuration(){
+        return this.ringDuration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("dynamodb")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+
+    public NewDynamoDBConfiguration dynamoDBConfiguration(){
+        return dynamoDBConfiguration;
+    }
 }

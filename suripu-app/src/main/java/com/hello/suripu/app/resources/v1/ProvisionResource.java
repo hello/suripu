@@ -6,10 +6,6 @@ import com.google.common.base.Optional;
 import com.google.protobuf.ByteString;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.KeyStore;
-import com.hello.suripu.core.models.ProvisionRequest;
-import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.OAuthScope;
-import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.provision.PillBlobProvision;
 import com.hello.suripu.core.provision.PillProvision;
 import com.hello.suripu.core.provision.PillProvisionDAO;
@@ -21,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -32,7 +27,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -59,35 +53,6 @@ public class ProvisionResource {
         this.keyStoreUtils = keyStoreUtils;
         this.pillProvisionDAO = pillProvisionDAO;
         this.s3 = s3;
-    }
-
-    @POST
-    @Path("/sense")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-
-    public void senseProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final ProvisionRequest provisionRequest) {
-        senseKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
-    }
-
-    @POST
-    @Path("/pill")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-
-    public void pillProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final ProvisionRequest provisionRequest) {
-        pillKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
-    }
-
-    @POST
-    @Path("/batch_pills")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-
-    public void batchPillsProvision(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final List<ProvisionRequest> provisionRequests) {
-        for (final ProvisionRequest provisionRequest : provisionRequests) {
-            pillKeyStore.put(provisionRequest.deviceId, provisionRequest.publicKey, provisionRequest.metadata);
-        }
     }
 
 

@@ -7,6 +7,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorF
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -17,6 +18,7 @@ import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
+import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -26,13 +28,17 @@ import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
 import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by pangwu on 9/23/14.
@@ -89,6 +95,25 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         final String queueName = queueNames.get(QueueName.SENSE_SENSORS_DATA);
         LOGGER.info("\n\n\n!!! This worker is using the following queue: {} !!!\n\n\n", queueName);
 
+
+        if(configuration.getMetricsEnabled()) {
+            final String graphiteHostName = configuration.getGraphite().getHost();
+            final String apiKey = configuration.getGraphite().getApiKey();
+            final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
+
+            final String env = (configuration.getDebug()) ? "dev" : "prod";
+            final String prefix = String.format("%s.%s.suripu-workers", apiKey, env);
+
+            final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
+            final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
+            final Joiner joiner = Joiner.on(", ");
+            LOGGER.info("Logging the following metrics: {}", joiner.join(metrics));
+            GraphiteReporter.enable(Metrics.defaultRegistry(), interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix, predicate);
+
+            LOGGER.info("Metrics enabled.");
+        } else {
+            LOGGER.warn("Metrics not enabled.");
+        }
 
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName() + ":" + UUID.randomUUID();
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(

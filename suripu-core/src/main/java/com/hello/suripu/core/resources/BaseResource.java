@@ -60,7 +60,7 @@ public class BaseResource {
         );
     }
 
-    protected void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
+    public void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
         plainTextError(status, message);
     }
 
@@ -79,6 +79,11 @@ public class BaseResource {
 
         final String[] ipAddresses = ipAddress.split(",");
         return ipAddresses[0]; // always return first one?
+    }
+
+
+    protected Boolean isSensorsDBUnavailable(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSORS_DB_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
 
 }

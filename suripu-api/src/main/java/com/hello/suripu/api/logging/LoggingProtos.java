@@ -19,7 +19,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string origin = 1;</code>
      */
-    java.lang.String getOrigin();
+    String getOrigin();
     /**
      * <code>optional string origin = 1;</code>
      */
@@ -34,7 +34,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string message = 2;</code>
      */
-    java.lang.String getMessage();
+    String getMessage();
     /**
      * <code>optional string message = 2;</code>
      */
@@ -79,7 +79,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string device_id = 6;</code>
      */
-    java.lang.String getDeviceId();
+    String getDeviceId();
     /**
      * <code>optional string device_id = 6;</code>
      */
@@ -109,7 +109,7 @@ public final class LoggingProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -181,14 +181,14 @@ public final class LoggingProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_LogMessage_descriptor;
+      return LoggingProtos.internal_static_LogMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_LogMessage_fieldAccessorTable
+      return LoggingProtos.internal_static_LogMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.logging.LoggingProtos.LogMessage.class, com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder.class);
+              LogMessage.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<LogMessage> PARSER =
@@ -201,7 +201,7 @@ public final class LoggingProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<LogMessage> getParserForType() {
       return PARSER;
     }
@@ -209,7 +209,7 @@ public final class LoggingProtos {
     private int bitField0_;
     // optional string origin = 1;
     public static final int ORIGIN_FIELD_NUMBER = 1;
-    private java.lang.Object origin_;
+    private Object origin_;
     /**
      * <code>optional string origin = 1;</code>
      */
@@ -219,14 +219,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string origin = 1;</code>
      */
-    public java.lang.String getOrigin() {
-      java.lang.Object ref = origin_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getOrigin() {
+      Object ref = origin_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           origin_ = s;
         }
@@ -238,11 +238,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getOriginBytes() {
-      java.lang.Object ref = origin_;
-      if (ref instanceof java.lang.String) {
+      Object ref = origin_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         origin_ = b;
         return b;
       } else {
@@ -252,7 +252,7 @@ public final class LoggingProtos {
 
     // optional string message = 2;
     public static final int MESSAGE_FIELD_NUMBER = 2;
-    private java.lang.Object message_;
+    private Object message_;
     /**
      * <code>optional string message = 2;</code>
      */
@@ -262,14 +262,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string message = 2;</code>
      */
-    public java.lang.String getMessage() {
-      java.lang.Object ref = message_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getMessage() {
+      Object ref = message_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           message_ = s;
         }
@@ -281,11 +281,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getMessageBytes() {
-      java.lang.Object ref = message_;
-      if (ref instanceof java.lang.String) {
+      Object ref = message_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         message_ = b;
         return b;
       } else {
@@ -343,7 +343,7 @@ public final class LoggingProtos {
 
     // optional string device_id = 6;
     public static final int DEVICE_ID_FIELD_NUMBER = 6;
-    private java.lang.Object deviceId_;
+    private Object deviceId_;
     /**
      * <code>optional string device_id = 6;</code>
      */
@@ -353,14 +353,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string device_id = 6;</code>
      */
-    public java.lang.String getDeviceId() {
-      java.lang.Object ref = deviceId_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getDeviceId() {
+      Object ref = deviceId_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           deviceId_ = s;
         }
@@ -372,11 +372,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
-      java.lang.Object ref = deviceId_;
-      if (ref instanceof java.lang.String) {
+      Object ref = deviceId_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         deviceId_ = b;
         return b;
       } else {
@@ -461,59 +461,59 @@ public final class LoggingProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(
+    public static LogMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(
+    public static LogMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(byte[] data)
+    public static LogMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(
+    public static LogMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(java.io.InputStream input)
+    public static LogMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(
+    public static LogMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseDelimitedFrom(java.io.InputStream input)
+    public static LogMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseDelimitedFrom(
+    public static LogMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(
+    public static LogMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.LogMessage parseFrom(
+    public static LogMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -522,14 +522,14 @@ public final class LoggingProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.LogMessage prototype) {
+    public static Builder newBuilder(LogMessage prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -538,17 +538,17 @@ public final class LoggingProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder {
+       implements LogMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_LogMessage_descriptor;
+        return LoggingProtos.internal_static_LogMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_LogMessage_fieldAccessorTable
+        return LoggingProtos.internal_static_LogMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.logging.LoggingProtos.LogMessage.class, com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder.class);
+                LogMessage.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.logging.LoggingProtos.LogMessage.newBuilder()
@@ -557,7 +557,7 @@ public final class LoggingProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -592,23 +592,23 @@ public final class LoggingProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_LogMessage_descriptor;
+        return LoggingProtos.internal_static_LogMessage_descriptor;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessage getDefaultInstanceForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.LogMessage.getDefaultInstance();
+      public LogMessage getDefaultInstanceForType() {
+        return LogMessage.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessage build() {
-        com.hello.suripu.api.logging.LoggingProtos.LogMessage result = buildPartial();
+      public LogMessage build() {
+        LogMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessage buildPartial() {
-        com.hello.suripu.api.logging.LoggingProtos.LogMessage result = new com.hello.suripu.api.logging.LoggingProtos.LogMessage(this);
+      public LogMessage buildPartial() {
+        LogMessage result = new LogMessage(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -641,16 +641,16 @@ public final class LoggingProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.LogMessage) {
-          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.LogMessage)other);
+        if (other instanceof LogMessage) {
+          return mergeFrom((LogMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.LogMessage other) {
-        if (other == com.hello.suripu.api.logging.LoggingProtos.LogMessage.getDefaultInstance()) return this;
+      public Builder mergeFrom(LogMessage other) {
+        if (other == LogMessage.getDefaultInstance()) return this;
         if (other.hasOrigin()) {
           bitField0_ |= 0x00000001;
           origin_ = other.origin_;
@@ -687,11 +687,11 @@ public final class LoggingProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.logging.LoggingProtos.LogMessage parsedMessage = null;
+        LogMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.LogMessage) e.getUnfinishedMessage();
+          parsedMessage = (LogMessage) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -703,7 +703,7 @@ public final class LoggingProtos {
       private int bitField0_;
 
       // optional string origin = 1;
-      private java.lang.Object origin_ = "";
+      private Object origin_ = "";
       /**
        * <code>optional string origin = 1;</code>
        */
@@ -713,15 +713,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string origin = 1;</code>
        */
-      public java.lang.String getOrigin() {
-        java.lang.Object ref = origin_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getOrigin() {
+        Object ref = origin_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           origin_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -729,11 +729,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getOriginBytes() {
-        java.lang.Object ref = origin_;
+        Object ref = origin_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           origin_ = b;
           return b;
         } else {
@@ -744,7 +744,7 @@ public final class LoggingProtos {
        * <code>optional string origin = 1;</code>
        */
       public Builder setOrigin(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -777,7 +777,7 @@ public final class LoggingProtos {
       }
 
       // optional string message = 2;
-      private java.lang.Object message_ = "";
+      private Object message_ = "";
       /**
        * <code>optional string message = 2;</code>
        */
@@ -787,15 +787,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string message = 2;</code>
        */
-      public java.lang.String getMessage() {
-        java.lang.Object ref = message_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getMessage() {
+        Object ref = message_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           message_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -803,11 +803,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getMessageBytes() {
-        java.lang.Object ref = message_;
+        Object ref = message_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           message_ = b;
           return b;
         } else {
@@ -818,7 +818,7 @@ public final class LoggingProtos {
        * <code>optional string message = 2;</code>
        */
       public Builder setMessage(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -950,7 +950,7 @@ public final class LoggingProtos {
       }
 
       // optional string device_id = 6;
-      private java.lang.Object deviceId_ = "";
+      private Object deviceId_ = "";
       /**
        * <code>optional string device_id = 6;</code>
        */
@@ -960,15 +960,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string device_id = 6;</code>
        */
-      public java.lang.String getDeviceId() {
-        java.lang.Object ref = deviceId_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getDeviceId() {
+        Object ref = deviceId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           deviceId_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -976,11 +976,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
-        java.lang.Object ref = deviceId_;
+        Object ref = deviceId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           deviceId_ = b;
           return b;
         } else {
@@ -991,7 +991,7 @@ public final class LoggingProtos {
        * <code>optional string device_id = 6;</code>
        */
       public Builder setDeviceId(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1041,12 +1041,12 @@ public final class LoggingProtos {
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    java.util.List<com.hello.suripu.api.logging.LoggingProtos.LogMessage> 
+    java.util.List<LogMessage>
         getMessagesList();
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    com.hello.suripu.api.logging.LoggingProtos.LogMessage getMessages(int index);
+    LogMessage getMessages(int index);
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
@@ -1054,13 +1054,13 @@ public final class LoggingProtos {
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder> 
+    java.util.List<? extends LogMessageOrBuilder>
         getMessagesOrBuilderList();
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder getMessagesOrBuilder(
-        int index);
+    LogMessageOrBuilder getMessagesOrBuilder(
+            int index);
 
     // optional string app_version = 2;
     /**
@@ -1070,7 +1070,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string app_version = 2;</code>
      */
-    java.lang.String getAppVersion();
+    String getAppVersion();
     /**
      * <code>optional string app_version = 2;</code>
      */
@@ -1085,7 +1085,7 @@ public final class LoggingProtos {
     /**
      * <code>optional .BatchLogMessage.LogType log_type = 3;</code>
      */
-    com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType getLogType();
+    BatchLogMessage.LogType getLogType();
 
     // optional int64 received_at = 4;
     /**
@@ -1096,6 +1096,31 @@ public final class LoggingProtos {
      * <code>optional int64 received_at = 4;</code>
      */
     long getReceivedAt();
+
+    // repeated .RegistrationLog registration_log = 5;
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    java.util.List<RegistrationLog>
+        getRegistrationLogList();
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    RegistrationLog getRegistrationLog(int index);
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    int getRegistrationLogCount();
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    java.util.List<? extends RegistrationLogOrBuilder>
+        getRegistrationLogOrBuilderList();
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    RegistrationLogOrBuilder getRegistrationLogOrBuilder(
+            int index);
   }
   /**
    * Protobuf type {@code BatchLogMessage}
@@ -1120,7 +1145,7 @@ public final class LoggingProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -1150,10 +1175,10 @@ public final class LoggingProtos {
             }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                messages_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.LogMessage>();
+                messages_ = new java.util.ArrayList<LogMessage>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              messages_.add(input.readMessage(com.hello.suripu.api.logging.LoggingProtos.LogMessage.PARSER, extensionRegistry));
+              messages_.add(input.readMessage(LogMessage.PARSER, extensionRegistry));
               break;
             }
             case 18: {
@@ -1163,7 +1188,7 @@ public final class LoggingProtos {
             }
             case 24: {
               int rawValue = input.readEnum();
-              com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType value = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.valueOf(rawValue);
+              LogType value = LogType.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(3, rawValue);
               } else {
@@ -1177,6 +1202,14 @@ public final class LoggingProtos {
               receivedAt_ = input.readInt64();
               break;
             }
+            case 42: {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                registrationLog_ = new java.util.ArrayList<RegistrationLog>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              registrationLog_.add(input.readMessage(RegistrationLog.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1188,20 +1221,23 @@ public final class LoggingProtos {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           messages_ = java.util.Collections.unmodifiableList(messages_);
         }
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          registrationLog_ = java.util.Collections.unmodifiableList(registrationLog_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_BatchLogMessage_descriptor;
+      return LoggingProtos.internal_static_BatchLogMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_BatchLogMessage_fieldAccessorTable
+      return LoggingProtos.internal_static_BatchLogMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.class, com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.Builder.class);
+              BatchLogMessage.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<BatchLogMessage> PARSER =
@@ -1214,7 +1250,7 @@ public final class LoggingProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<BatchLogMessage> getParserForType() {
       return PARSER;
     }
@@ -1240,6 +1276,10 @@ public final class LoggingProtos {
        * <code>STRUCTURED_SENSE_LOG = 3;</code>
        */
       STRUCTURED_SENSE_LOG(3, 3),
+      /**
+       * <code>ONBOARDING_LOG = 4;</code>
+       */
+      ONBOARDING_LOG(4, 4),
       ;
 
       /**
@@ -1258,6 +1298,10 @@ public final class LoggingProtos {
        * <code>STRUCTURED_SENSE_LOG = 3;</code>
        */
       public static final int STRUCTURED_SENSE_LOG_VALUE = 3;
+      /**
+       * <code>ONBOARDING_LOG = 4;</code>
+       */
+      public static final int ONBOARDING_LOG_VALUE = 4;
 
 
       public final int getNumber() { return value; }
@@ -1268,6 +1312,7 @@ public final class LoggingProtos {
           case 1: return SENSE_LOG;
           case 2: return WORKERS_LOG;
           case 3: return STRUCTURED_SENSE_LOG;
+          case 4: return ONBOARDING_LOG;
           default: return null;
         }
       }
@@ -1294,7 +1339,7 @@ public final class LoggingProtos {
       }
       public static final com.google.protobuf.Descriptors.EnumDescriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.getDescriptor().getEnumTypes().get(0);
+        return BatchLogMessage.getDescriptor().getEnumTypes().get(0);
       }
 
       private static final LogType[] VALUES = values();
@@ -1302,7 +1347,7 @@ public final class LoggingProtos {
       public static LogType valueOf(
           com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
         if (desc.getType() != getDescriptor()) {
-          throw new java.lang.IllegalArgumentException(
+          throw new IllegalArgumentException(
             "EnumValueDescriptor is not for this type.");
         }
         return VALUES[desc.getIndex()];
@@ -1322,17 +1367,17 @@ public final class LoggingProtos {
     private int bitField0_;
     // repeated .LogMessage messages = 1;
     public static final int MESSAGES_FIELD_NUMBER = 1;
-    private java.util.List<com.hello.suripu.api.logging.LoggingProtos.LogMessage> messages_;
+    private java.util.List<LogMessage> messages_;
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    public java.util.List<com.hello.suripu.api.logging.LoggingProtos.LogMessage> getMessagesList() {
+    public java.util.List<LogMessage> getMessagesList() {
       return messages_;
     }
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder> 
+    public java.util.List<? extends LogMessageOrBuilder>
         getMessagesOrBuilderList() {
       return messages_;
     }
@@ -1345,20 +1390,20 @@ public final class LoggingProtos {
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    public com.hello.suripu.api.logging.LoggingProtos.LogMessage getMessages(int index) {
+    public LogMessage getMessages(int index) {
       return messages_.get(index);
     }
     /**
      * <code>repeated .LogMessage messages = 1;</code>
      */
-    public com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder getMessagesOrBuilder(
+    public LogMessageOrBuilder getMessagesOrBuilder(
         int index) {
       return messages_.get(index);
     }
 
     // optional string app_version = 2;
     public static final int APP_VERSION_FIELD_NUMBER = 2;
-    private java.lang.Object appVersion_;
+    private Object appVersion_;
     /**
      * <code>optional string app_version = 2;</code>
      */
@@ -1368,14 +1413,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string app_version = 2;</code>
      */
-    public java.lang.String getAppVersion() {
-      java.lang.Object ref = appVersion_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getAppVersion() {
+      Object ref = appVersion_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           appVersion_ = s;
         }
@@ -1387,11 +1432,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getAppVersionBytes() {
-      java.lang.Object ref = appVersion_;
-      if (ref instanceof java.lang.String) {
+      Object ref = appVersion_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         appVersion_ = b;
         return b;
       } else {
@@ -1401,7 +1446,7 @@ public final class LoggingProtos {
 
     // optional .BatchLogMessage.LogType log_type = 3;
     public static final int LOG_TYPE_FIELD_NUMBER = 3;
-    private com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType logType_;
+    private LogType logType_;
     /**
      * <code>optional .BatchLogMessage.LogType log_type = 3;</code>
      */
@@ -1411,7 +1456,7 @@ public final class LoggingProtos {
     /**
      * <code>optional .BatchLogMessage.LogType log_type = 3;</code>
      */
-    public com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType getLogType() {
+    public LogType getLogType() {
       return logType_;
     }
 
@@ -1431,11 +1476,48 @@ public final class LoggingProtos {
       return receivedAt_;
     }
 
+    // repeated .RegistrationLog registration_log = 5;
+    public static final int REGISTRATION_LOG_FIELD_NUMBER = 5;
+    private java.util.List<RegistrationLog> registrationLog_;
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public java.util.List<RegistrationLog> getRegistrationLogList() {
+      return registrationLog_;
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public java.util.List<? extends RegistrationLogOrBuilder>
+        getRegistrationLogOrBuilderList() {
+      return registrationLog_;
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public int getRegistrationLogCount() {
+      return registrationLog_.size();
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public RegistrationLog getRegistrationLog(int index) {
+      return registrationLog_.get(index);
+    }
+    /**
+     * <code>repeated .RegistrationLog registration_log = 5;</code>
+     */
+    public RegistrationLogOrBuilder getRegistrationLogOrBuilder(
+        int index) {
+      return registrationLog_.get(index);
+    }
+
     private void initFields() {
       messages_ = java.util.Collections.emptyList();
       appVersion_ = "";
-      logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
+      logType_ = LogType.APPLICATION_LOG;
       receivedAt_ = 0L;
+      registrationLog_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1460,6 +1542,9 @@ public final class LoggingProtos {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt64(4, receivedAt_);
+      }
+      for (int i = 0; i < registrationLog_.size(); i++) {
+        output.writeMessage(5, registrationLog_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -1486,65 +1571,69 @@ public final class LoggingProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(4, receivedAt_);
       }
+      for (int i = 0; i < registrationLog_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, registrationLog_.get(i));
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
       return size;
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(
+    public static BatchLogMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(
+    public static BatchLogMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(byte[] data)
+    public static BatchLogMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(
+    public static BatchLogMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(java.io.InputStream input)
+    public static BatchLogMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(
+    public static BatchLogMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseDelimitedFrom(java.io.InputStream input)
+    public static BatchLogMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseDelimitedFrom(
+    public static BatchLogMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(
+    public static BatchLogMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parseFrom(
+    public static BatchLogMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -1553,14 +1642,14 @@ public final class LoggingProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage prototype) {
+    public static Builder newBuilder(BatchLogMessage prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -1569,17 +1658,17 @@ public final class LoggingProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.logging.LoggingProtos.BatchLogMessageOrBuilder {
+       implements BatchLogMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_BatchLogMessage_descriptor;
+        return LoggingProtos.internal_static_BatchLogMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_BatchLogMessage_fieldAccessorTable
+        return LoggingProtos.internal_static_BatchLogMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.class, com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.Builder.class);
+                BatchLogMessage.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.newBuilder()
@@ -1588,13 +1677,14 @@ public final class LoggingProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getMessagesFieldBuilder();
+          getRegistrationLogFieldBuilder();
         }
       }
       private static Builder create() {
@@ -1611,10 +1701,16 @@ public final class LoggingProtos {
         }
         appVersion_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
-        logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
+        logType_ = LogType.APPLICATION_LOG;
         bitField0_ = (bitField0_ & ~0x00000004);
         receivedAt_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (registrationLogBuilder_ == null) {
+          registrationLog_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          registrationLogBuilder_.clear();
+        }
         return this;
       }
 
@@ -1624,23 +1720,23 @@ public final class LoggingProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_BatchLogMessage_descriptor;
+        return LoggingProtos.internal_static_BatchLogMessage_descriptor;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage getDefaultInstanceForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.getDefaultInstance();
+      public BatchLogMessage getDefaultInstanceForType() {
+        return BatchLogMessage.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage build() {
-        com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage result = buildPartial();
+      public BatchLogMessage build() {
+        BatchLogMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage buildPartial() {
-        com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage result = new com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage(this);
+      public BatchLogMessage buildPartial() {
+        BatchLogMessage result = new BatchLogMessage(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (messagesBuilder_ == null) {
@@ -1664,22 +1760,31 @@ public final class LoggingProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.receivedAt_ = receivedAt_;
+        if (registrationLogBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+            registrationLog_ = java.util.Collections.unmodifiableList(registrationLog_);
+            bitField0_ = (bitField0_ & ~0x00000010);
+          }
+          result.registrationLog_ = registrationLog_;
+        } else {
+          result.registrationLog_ = registrationLogBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage) {
-          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage)other);
+        if (other instanceof BatchLogMessage) {
+          return mergeFrom((BatchLogMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage other) {
-        if (other == com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.getDefaultInstance()) return this;
+      public Builder mergeFrom(BatchLogMessage other) {
+        if (other == BatchLogMessage.getDefaultInstance()) return this;
         if (messagesBuilder_ == null) {
           if (!other.messages_.isEmpty()) {
             if (messages_.isEmpty()) {
@@ -1717,6 +1822,32 @@ public final class LoggingProtos {
         if (other.hasReceivedAt()) {
           setReceivedAt(other.getReceivedAt());
         }
+        if (registrationLogBuilder_ == null) {
+          if (!other.registrationLog_.isEmpty()) {
+            if (registrationLog_.isEmpty()) {
+              registrationLog_ = other.registrationLog_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+            } else {
+              ensureRegistrationLogIsMutable();
+              registrationLog_.addAll(other.registrationLog_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.registrationLog_.isEmpty()) {
+            if (registrationLogBuilder_.isEmpty()) {
+              registrationLogBuilder_.dispose();
+              registrationLogBuilder_ = null;
+              registrationLog_ = other.registrationLog_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+              registrationLogBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getRegistrationLogFieldBuilder() : null;
+            } else {
+              registrationLogBuilder_.addAllMessages(other.registrationLog_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -1729,11 +1860,11 @@ public final class LoggingProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage parsedMessage = null;
+        BatchLogMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage) e.getUnfinishedMessage();
+          parsedMessage = (BatchLogMessage) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -1745,22 +1876,22 @@ public final class LoggingProtos {
       private int bitField0_;
 
       // repeated .LogMessage messages = 1;
-      private java.util.List<com.hello.suripu.api.logging.LoggingProtos.LogMessage> messages_ =
+      private java.util.List<LogMessage> messages_ =
         java.util.Collections.emptyList();
       private void ensureMessagesIsMutable() {
         if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          messages_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.LogMessage>(messages_);
+          messages_ = new java.util.ArrayList<LogMessage>(messages_);
           bitField0_ |= 0x00000001;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.logging.LoggingProtos.LogMessage, com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder, com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder> messagesBuilder_;
+          LogMessage, LogMessage.Builder, LogMessageOrBuilder> messagesBuilder_;
 
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.LogMessage> getMessagesList() {
+      public java.util.List<LogMessage> getMessagesList() {
         if (messagesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(messages_);
         } else {
@@ -1780,7 +1911,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessage getMessages(int index) {
+      public LogMessage getMessages(int index) {
         if (messagesBuilder_ == null) {
           return messages_.get(index);
         } else {
@@ -1791,7 +1922,7 @@ public final class LoggingProtos {
        * <code>repeated .LogMessage messages = 1;</code>
        */
       public Builder setMessages(
-          int index, com.hello.suripu.api.logging.LoggingProtos.LogMessage value) {
+          int index, LogMessage value) {
         if (messagesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1808,7 +1939,7 @@ public final class LoggingProtos {
        * <code>repeated .LogMessage messages = 1;</code>
        */
       public Builder setMessages(
-          int index, com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder builderForValue) {
+          int index, LogMessage.Builder builderForValue) {
         if (messagesBuilder_ == null) {
           ensureMessagesIsMutable();
           messages_.set(index, builderForValue.build());
@@ -1821,7 +1952,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public Builder addMessages(com.hello.suripu.api.logging.LoggingProtos.LogMessage value) {
+      public Builder addMessages(LogMessage value) {
         if (messagesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1838,7 +1969,7 @@ public final class LoggingProtos {
        * <code>repeated .LogMessage messages = 1;</code>
        */
       public Builder addMessages(
-          int index, com.hello.suripu.api.logging.LoggingProtos.LogMessage value) {
+          int index, LogMessage value) {
         if (messagesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1855,7 +1986,7 @@ public final class LoggingProtos {
        * <code>repeated .LogMessage messages = 1;</code>
        */
       public Builder addMessages(
-          com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder builderForValue) {
+          LogMessage.Builder builderForValue) {
         if (messagesBuilder_ == null) {
           ensureMessagesIsMutable();
           messages_.add(builderForValue.build());
@@ -1869,7 +2000,7 @@ public final class LoggingProtos {
        * <code>repeated .LogMessage messages = 1;</code>
        */
       public Builder addMessages(
-          int index, com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder builderForValue) {
+          int index, LogMessage.Builder builderForValue) {
         if (messagesBuilder_ == null) {
           ensureMessagesIsMutable();
           messages_.add(index, builderForValue.build());
@@ -1883,7 +2014,7 @@ public final class LoggingProtos {
        * <code>repeated .LogMessage messages = 1;</code>
        */
       public Builder addAllMessages(
-          java.lang.Iterable<? extends com.hello.suripu.api.logging.LoggingProtos.LogMessage> values) {
+          Iterable<? extends LogMessage> values) {
         if (messagesBuilder_ == null) {
           ensureMessagesIsMutable();
           super.addAll(values, messages_);
@@ -1922,14 +2053,14 @@ public final class LoggingProtos {
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder getMessagesBuilder(
+      public LogMessage.Builder getMessagesBuilder(
           int index) {
         return getMessagesFieldBuilder().getBuilder(index);
       }
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder getMessagesOrBuilder(
+      public LogMessageOrBuilder getMessagesOrBuilder(
           int index) {
         if (messagesBuilder_ == null) {
           return messages_.get(index);  } else {
@@ -1939,7 +2070,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder> 
+      public java.util.List<? extends LogMessageOrBuilder>
            getMessagesOrBuilderList() {
         if (messagesBuilder_ != null) {
           return messagesBuilder_.getMessageOrBuilderList();
@@ -1950,31 +2081,31 @@ public final class LoggingProtos {
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder addMessagesBuilder() {
+      public LogMessage.Builder addMessagesBuilder() {
         return getMessagesFieldBuilder().addBuilder(
-            com.hello.suripu.api.logging.LoggingProtos.LogMessage.getDefaultInstance());
+            LogMessage.getDefaultInstance());
       }
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder addMessagesBuilder(
+      public LogMessage.Builder addMessagesBuilder(
           int index) {
         return getMessagesFieldBuilder().addBuilder(
-            index, com.hello.suripu.api.logging.LoggingProtos.LogMessage.getDefaultInstance());
+            index, LogMessage.getDefaultInstance());
       }
       /**
        * <code>repeated .LogMessage messages = 1;</code>
        */
-      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder> 
+      public java.util.List<LogMessage.Builder>
            getMessagesBuilderList() {
         return getMessagesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.logging.LoggingProtos.LogMessage, com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder, com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder> 
+          LogMessage, LogMessage.Builder, LogMessageOrBuilder>
           getMessagesFieldBuilder() {
         if (messagesBuilder_ == null) {
           messagesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              com.hello.suripu.api.logging.LoggingProtos.LogMessage, com.hello.suripu.api.logging.LoggingProtos.LogMessage.Builder, com.hello.suripu.api.logging.LoggingProtos.LogMessageOrBuilder>(
+              LogMessage, LogMessage.Builder, LogMessageOrBuilder>(
                   messages_,
                   ((bitField0_ & 0x00000001) == 0x00000001),
                   getParentForChildren(),
@@ -1985,7 +2116,7 @@ public final class LoggingProtos {
       }
 
       // optional string app_version = 2;
-      private java.lang.Object appVersion_ = "";
+      private Object appVersion_ = "";
       /**
        * <code>optional string app_version = 2;</code>
        */
@@ -1995,15 +2126,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string app_version = 2;</code>
        */
-      public java.lang.String getAppVersion() {
-        java.lang.Object ref = appVersion_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getAppVersion() {
+        Object ref = appVersion_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           appVersion_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -2011,11 +2142,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getAppVersionBytes() {
-        java.lang.Object ref = appVersion_;
+        Object ref = appVersion_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           appVersion_ = b;
           return b;
         } else {
@@ -2026,7 +2157,7 @@ public final class LoggingProtos {
        * <code>optional string app_version = 2;</code>
        */
       public Builder setAppVersion(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -2059,7 +2190,7 @@ public final class LoggingProtos {
       }
 
       // optional .BatchLogMessage.LogType log_type = 3;
-      private com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
+      private LogType logType_ = LogType.APPLICATION_LOG;
       /**
        * <code>optional .BatchLogMessage.LogType log_type = 3;</code>
        */
@@ -2069,13 +2200,13 @@ public final class LoggingProtos {
       /**
        * <code>optional .BatchLogMessage.LogType log_type = 3;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType getLogType() {
+      public LogType getLogType() {
         return logType_;
       }
       /**
        * <code>optional .BatchLogMessage.LogType log_type = 3;</code>
        */
-      public Builder setLogType(com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType value) {
+      public Builder setLogType(LogType value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -2089,7 +2220,7 @@ public final class LoggingProtos {
        */
       public Builder clearLogType() {
         bitField0_ = (bitField0_ & ~0x00000004);
-        logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
+        logType_ = LogType.APPLICATION_LOG;
         onChanged();
         return this;
       }
@@ -2127,6 +2258,246 @@ public final class LoggingProtos {
         return this;
       }
 
+      // repeated .RegistrationLog registration_log = 5;
+      private java.util.List<RegistrationLog> registrationLog_ =
+        java.util.Collections.emptyList();
+      private void ensureRegistrationLogIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          registrationLog_ = new java.util.ArrayList<RegistrationLog>(registrationLog_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          RegistrationLog, RegistrationLog.Builder, RegistrationLogOrBuilder> registrationLogBuilder_;
+
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public java.util.List<RegistrationLog> getRegistrationLogList() {
+        if (registrationLogBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(registrationLog_);
+        } else {
+          return registrationLogBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public int getRegistrationLogCount() {
+        if (registrationLogBuilder_ == null) {
+          return registrationLog_.size();
+        } else {
+          return registrationLogBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog getRegistrationLog(int index) {
+        if (registrationLogBuilder_ == null) {
+          return registrationLog_.get(index);
+        } else {
+          return registrationLogBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder setRegistrationLog(
+          int index, RegistrationLog value) {
+        if (registrationLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRegistrationLogIsMutable();
+          registrationLog_.set(index, value);
+          onChanged();
+        } else {
+          registrationLogBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder setRegistrationLog(
+          int index, RegistrationLog.Builder builderForValue) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          registrationLogBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(RegistrationLog value) {
+        if (registrationLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(value);
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(
+          int index, RegistrationLog value) {
+        if (registrationLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(index, value);
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(
+          RegistrationLog.Builder builderForValue) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(builderForValue.build());
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addRegistrationLog(
+          int index, RegistrationLog.Builder builderForValue) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          registrationLogBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder addAllRegistrationLog(
+          Iterable<? extends RegistrationLog> values) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          super.addAll(values, registrationLog_);
+          onChanged();
+        } else {
+          registrationLogBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder clearRegistrationLog() {
+        if (registrationLogBuilder_ == null) {
+          registrationLog_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+          onChanged();
+        } else {
+          registrationLogBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public Builder removeRegistrationLog(int index) {
+        if (registrationLogBuilder_ == null) {
+          ensureRegistrationLogIsMutable();
+          registrationLog_.remove(index);
+          onChanged();
+        } else {
+          registrationLogBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog.Builder getRegistrationLogBuilder(
+          int index) {
+        return getRegistrationLogFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLogOrBuilder getRegistrationLogOrBuilder(
+          int index) {
+        if (registrationLogBuilder_ == null) {
+          return registrationLog_.get(index);  } else {
+          return registrationLogBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public java.util.List<? extends RegistrationLogOrBuilder>
+           getRegistrationLogOrBuilderList() {
+        if (registrationLogBuilder_ != null) {
+          return registrationLogBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(registrationLog_);
+        }
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog.Builder addRegistrationLogBuilder() {
+        return getRegistrationLogFieldBuilder().addBuilder(
+            RegistrationLog.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public RegistrationLog.Builder addRegistrationLogBuilder(
+          int index) {
+        return getRegistrationLogFieldBuilder().addBuilder(
+            index, RegistrationLog.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .RegistrationLog registration_log = 5;</code>
+       */
+      public java.util.List<RegistrationLog.Builder>
+           getRegistrationLogBuilderList() {
+        return getRegistrationLogFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          RegistrationLog, RegistrationLog.Builder, RegistrationLogOrBuilder>
+          getRegistrationLogFieldBuilder() {
+        if (registrationLogBuilder_ == null) {
+          registrationLogBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              RegistrationLog, RegistrationLog.Builder, RegistrationLogOrBuilder>(
+                  registrationLog_,
+                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  getParentForChildren(),
+                  isClean());
+          registrationLog_ = null;
+        }
+        return registrationLogBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:BatchLogMessage)
     }
 
@@ -2149,7 +2520,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string path = 1;</code>
      */
-    java.lang.String getPath();
+    String getPath();
     /**
      * <code>optional string path = 1;</code>
      */
@@ -2164,7 +2535,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string access_token = 2;</code>
      */
-    java.lang.String getAccessToken();
+    String getAccessToken();
     /**
      * <code>optional string access_token = 2;</code>
      */
@@ -2205,7 +2576,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string required_scopes = 6;</code>
      */
-    java.util.List<java.lang.String>
+    java.util.List<String>
     getRequiredScopesList();
     /**
      * <code>repeated string required_scopes = 6;</code>
@@ -2214,7 +2585,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string required_scopes = 6;</code>
      */
-    java.lang.String getRequiredScopes(int index);
+    String getRequiredScopes(int index);
     /**
      * <code>repeated string required_scopes = 6;</code>
      */
@@ -2225,7 +2596,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string provided_scopes = 7;</code>
      */
-    java.util.List<java.lang.String>
+    java.util.List<String>
     getProvidedScopesList();
     /**
      * <code>repeated string provided_scopes = 7;</code>
@@ -2234,7 +2605,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string provided_scopes = 7;</code>
      */
-    java.lang.String getProvidedScopes(int index);
+    String getProvidedScopes(int index);
     /**
      * <code>repeated string provided_scopes = 7;</code>
      */
@@ -2259,7 +2630,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string user_agent = 9;</code>
      */
-    java.lang.String getUserAgent();
+    String getUserAgent();
     /**
      * <code>optional string user_agent = 9;</code>
      */
@@ -2270,12 +2641,12 @@ public final class LoggingProtos {
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> 
+    java.util.List<HttpRequest.Header>
         getHeadersList();
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getHeaders(int index);
+    HttpRequest.Header getHeaders(int index);
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
@@ -2283,13 +2654,13 @@ public final class LoggingProtos {
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+    java.util.List<? extends HttpRequest.HeaderOrBuilder>
         getHeadersOrBuilderList();
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder getHeadersOrBuilder(
-        int index);
+    HttpRequest.HeaderOrBuilder getHeadersOrBuilder(
+            int index);
   }
   /**
    * Protobuf type {@code HttpRequest}
@@ -2314,7 +2685,7 @@ public final class LoggingProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -2395,10 +2766,10 @@ public final class LoggingProtos {
             }
             case 82: {
               if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
-                headers_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header>();
+                headers_ = new java.util.ArrayList<Header>();
                 mutable_bitField0_ |= 0x00000200;
               }
-              headers_.add(input.readMessage(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.PARSER, extensionRegistry));
+              headers_.add(input.readMessage(Header.PARSER, extensionRegistry));
               break;
             }
           }
@@ -2424,14 +2795,14 @@ public final class LoggingProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_descriptor;
+      return LoggingProtos.internal_static_HttpRequest_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_fieldAccessorTable
+      return LoggingProtos.internal_static_HttpRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.logging.LoggingProtos.HttpRequest.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Builder.class);
+              HttpRequest.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<HttpRequest> PARSER =
@@ -2444,7 +2815,7 @@ public final class LoggingProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<HttpRequest> getParserForType() {
       return PARSER;
     }
@@ -2460,7 +2831,7 @@ public final class LoggingProtos {
       /**
        * <code>optional string name = 1;</code>
        */
-      java.lang.String getName();
+      String getName();
       /**
        * <code>optional string name = 1;</code>
        */
@@ -2475,7 +2846,7 @@ public final class LoggingProtos {
       /**
        * <code>optional string value = 2;</code>
        */
-      java.lang.String getValue();
+      String getValue();
       /**
        * <code>optional string value = 2;</code>
        */
@@ -2505,7 +2876,7 @@ public final class LoggingProtos {
       }
 
       private final com.google.protobuf.UnknownFieldSet unknownFields;
-      @java.lang.Override
+      @Override
       public final com.google.protobuf.UnknownFieldSet
           getUnknownFields() {
         return this.unknownFields;
@@ -2557,14 +2928,14 @@ public final class LoggingProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_Header_descriptor;
+        return LoggingProtos.internal_static_HttpRequest_Header_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_Header_fieldAccessorTable
+        return LoggingProtos.internal_static_HttpRequest_Header_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder.class);
+                Header.class, Builder.class);
       }
 
       public static com.google.protobuf.Parser<Header> PARSER =
@@ -2577,7 +2948,7 @@ public final class LoggingProtos {
         }
       };
 
-      @java.lang.Override
+      @Override
       public com.google.protobuf.Parser<Header> getParserForType() {
         return PARSER;
       }
@@ -2585,7 +2956,7 @@ public final class LoggingProtos {
       private int bitField0_;
       // optional string name = 1;
       public static final int NAME_FIELD_NUMBER = 1;
-      private java.lang.Object name_;
+      private Object name_;
       /**
        * <code>optional string name = 1;</code>
        */
@@ -2595,14 +2966,14 @@ public final class LoggingProtos {
       /**
        * <code>optional string name = 1;</code>
        */
-      public java.lang.String getName() {
-        java.lang.Object ref = name_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
+      public String getName() {
+        Object ref = name_;
+        if (ref instanceof String) {
+          return (String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
+          String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             name_ = s;
           }
@@ -2614,11 +2985,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
-        java.lang.Object ref = name_;
-        if (ref instanceof java.lang.String) {
+        Object ref = name_;
+        if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           name_ = b;
           return b;
         } else {
@@ -2628,7 +2999,7 @@ public final class LoggingProtos {
 
       // optional string value = 2;
       public static final int VALUE_FIELD_NUMBER = 2;
-      private java.lang.Object value_;
+      private Object value_;
       /**
        * <code>optional string value = 2;</code>
        */
@@ -2638,14 +3009,14 @@ public final class LoggingProtos {
       /**
        * <code>optional string value = 2;</code>
        */
-      public java.lang.String getValue() {
-        java.lang.Object ref = value_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
+      public String getValue() {
+        Object ref = value_;
+        if (ref instanceof String) {
+          return (String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
+          String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             value_ = s;
           }
@@ -2657,11 +3028,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getValueBytes() {
-        java.lang.Object ref = value_;
-        if (ref instanceof java.lang.String) {
+        Object ref = value_;
+        if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           value_ = b;
           return b;
         } else {
@@ -2714,59 +3085,59 @@ public final class LoggingProtos {
       }
 
       private static final long serialVersionUID = 0L;
-      @java.lang.Override
-      protected java.lang.Object writeReplace()
+      @Override
+      protected Object writeReplace()
           throws java.io.ObjectStreamException {
         return super.writeReplace();
       }
 
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+      public static Header parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+      public static Header parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(byte[] data)
+      public static Header parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+      public static Header parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(java.io.InputStream input)
+      public static Header parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+      public static Header parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseDelimitedFrom(java.io.InputStream input)
+      public static Header parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseDelimitedFrom(
+      public static Header parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+      public static Header parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parseFrom(
+      public static Header parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -2775,14 +3146,14 @@ public final class LoggingProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header prototype) {
+      public static Builder newBuilder(Header prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
 
-      @java.lang.Override
+      @Override
       protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         Builder builder = new Builder(parent);
         return builder;
       }
@@ -2791,17 +3162,17 @@ public final class LoggingProtos {
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder {
+         implements HeaderOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_Header_descriptor;
+          return LoggingProtos.internal_static_HttpRequest_Header_descriptor;
         }
 
-        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        protected FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_Header_fieldAccessorTable
+          return LoggingProtos.internal_static_HttpRequest_Header_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder.class);
+                  Header.class, Builder.class);
         }
 
         // Construct using com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.newBuilder()
@@ -2810,7 +3181,7 @@ public final class LoggingProtos {
         }
 
         private Builder(
-            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+            BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
@@ -2837,23 +3208,23 @@ public final class LoggingProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_Header_descriptor;
+          return LoggingProtos.internal_static_HttpRequest_Header_descriptor;
         }
 
-        public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getDefaultInstanceForType() {
-          return com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance();
+        public Header getDefaultInstanceForType() {
+          return Header.getDefaultInstance();
         }
 
-        public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header build() {
-          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header result = buildPartial();
+        public Header build() {
+          Header result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header buildPartial() {
-          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header result = new com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header(this);
+        public Header buildPartial() {
+          Header result = new Header(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2870,16 +3241,16 @@ public final class LoggingProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header) {
-            return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header)other);
+          if (other instanceof Header) {
+            return mergeFrom((Header)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header other) {
-          if (other == com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance()) return this;
+        public Builder mergeFrom(Header other) {
+          if (other == Header.getDefaultInstance()) return this;
           if (other.hasName()) {
             bitField0_ |= 0x00000001;
             name_ = other.name_;
@@ -2902,11 +3273,11 @@ public final class LoggingProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header parsedMessage = null;
+          Header parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header) e.getUnfinishedMessage();
+            parsedMessage = (Header) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -2918,7 +3289,7 @@ public final class LoggingProtos {
         private int bitField0_;
 
         // optional string name = 1;
-        private java.lang.Object name_ = "";
+        private Object name_ = "";
         /**
          * <code>optional string name = 1;</code>
          */
@@ -2928,15 +3299,15 @@ public final class LoggingProtos {
         /**
          * <code>optional string name = 1;</code>
          */
-        public java.lang.String getName() {
-          java.lang.Object ref = name_;
-          if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+        public String getName() {
+          Object ref = name_;
+          if (!(ref instanceof String)) {
+            String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             name_ = s;
             return s;
           } else {
-            return (java.lang.String) ref;
+            return (String) ref;
           }
         }
         /**
@@ -2944,11 +3315,11 @@ public final class LoggingProtos {
          */
         public com.google.protobuf.ByteString
             getNameBytes() {
-          java.lang.Object ref = name_;
+          Object ref = name_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+                    (String) ref);
             name_ = b;
             return b;
           } else {
@@ -2959,7 +3330,7 @@ public final class LoggingProtos {
          * <code>optional string name = 1;</code>
          */
         public Builder setName(
-            java.lang.String value) {
+            String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -2992,7 +3363,7 @@ public final class LoggingProtos {
         }
 
         // optional string value = 2;
-        private java.lang.Object value_ = "";
+        private Object value_ = "";
         /**
          * <code>optional string value = 2;</code>
          */
@@ -3002,15 +3373,15 @@ public final class LoggingProtos {
         /**
          * <code>optional string value = 2;</code>
          */
-        public java.lang.String getValue() {
-          java.lang.Object ref = value_;
-          if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+        public String getValue() {
+          Object ref = value_;
+          if (!(ref instanceof String)) {
+            String s = ((com.google.protobuf.ByteString) ref)
                 .toStringUtf8();
             value_ = s;
             return s;
           } else {
-            return (java.lang.String) ref;
+            return (String) ref;
           }
         }
         /**
@@ -3018,11 +3389,11 @@ public final class LoggingProtos {
          */
         public com.google.protobuf.ByteString
             getValueBytes() {
-          java.lang.Object ref = value_;
+          Object ref = value_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+                    (String) ref);
             value_ = b;
             return b;
           } else {
@@ -3033,7 +3404,7 @@ public final class LoggingProtos {
          * <code>optional string value = 2;</code>
          */
         public Builder setValue(
-            java.lang.String value) {
+            String value) {
           if (value == null) {
     throw new NullPointerException();
   }
@@ -3079,7 +3450,7 @@ public final class LoggingProtos {
     private int bitField0_;
     // optional string path = 1;
     public static final int PATH_FIELD_NUMBER = 1;
-    private java.lang.Object path_;
+    private Object path_;
     /**
      * <code>optional string path = 1;</code>
      */
@@ -3089,14 +3460,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string path = 1;</code>
      */
-    public java.lang.String getPath() {
-      java.lang.Object ref = path_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getPath() {
+      Object ref = path_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           path_ = s;
         }
@@ -3108,11 +3479,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getPathBytes() {
-      java.lang.Object ref = path_;
-      if (ref instanceof java.lang.String) {
+      Object ref = path_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         path_ = b;
         return b;
       } else {
@@ -3122,7 +3493,7 @@ public final class LoggingProtos {
 
     // optional string access_token = 2;
     public static final int ACCESS_TOKEN_FIELD_NUMBER = 2;
-    private java.lang.Object accessToken_;
+    private Object accessToken_;
     /**
      * <code>optional string access_token = 2;</code>
      */
@@ -3132,14 +3503,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string access_token = 2;</code>
      */
-    public java.lang.String getAccessToken() {
-      java.lang.Object ref = accessToken_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getAccessToken() {
+      Object ref = accessToken_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           accessToken_ = s;
         }
@@ -3151,11 +3522,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getAccessTokenBytes() {
-      java.lang.Object ref = accessToken_;
-      if (ref instanceof java.lang.String) {
+      Object ref = accessToken_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         accessToken_ = b;
         return b;
       } else {
@@ -3217,7 +3588,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string required_scopes = 6;</code>
      */
-    public java.util.List<java.lang.String>
+    public java.util.List<String>
         getRequiredScopesList() {
       return requiredScopes_;
     }
@@ -3230,7 +3601,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string required_scopes = 6;</code>
      */
-    public java.lang.String getRequiredScopes(int index) {
+    public String getRequiredScopes(int index) {
       return requiredScopes_.get(index);
     }
     /**
@@ -3247,7 +3618,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string provided_scopes = 7;</code>
      */
-    public java.util.List<java.lang.String>
+    public java.util.List<String>
         getProvidedScopesList() {
       return providedScopes_;
     }
@@ -3260,7 +3631,7 @@ public final class LoggingProtos {
     /**
      * <code>repeated string provided_scopes = 7;</code>
      */
-    public java.lang.String getProvidedScopes(int index) {
+    public String getProvidedScopes(int index) {
       return providedScopes_.get(index);
     }
     /**
@@ -3289,7 +3660,7 @@ public final class LoggingProtos {
 
     // optional string user_agent = 9;
     public static final int USER_AGENT_FIELD_NUMBER = 9;
-    private java.lang.Object userAgent_;
+    private Object userAgent_;
     /**
      * <code>optional string user_agent = 9;</code>
      */
@@ -3299,14 +3670,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string user_agent = 9;</code>
      */
-    public java.lang.String getUserAgent() {
-      java.lang.Object ref = userAgent_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getUserAgent() {
+      Object ref = userAgent_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           userAgent_ = s;
         }
@@ -3318,11 +3689,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getUserAgentBytes() {
-      java.lang.Object ref = userAgent_;
-      if (ref instanceof java.lang.String) {
+      Object ref = userAgent_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         userAgent_ = b;
         return b;
       } else {
@@ -3332,17 +3703,17 @@ public final class LoggingProtos {
 
     // repeated .HttpRequest.Header headers = 10;
     public static final int HEADERS_FIELD_NUMBER = 10;
-    private java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> headers_;
+    private java.util.List<Header> headers_;
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    public java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> getHeadersList() {
+    public java.util.List<Header> getHeadersList() {
       return headers_;
     }
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+    public java.util.List<? extends HeaderOrBuilder>
         getHeadersOrBuilderList() {
       return headers_;
     }
@@ -3355,13 +3726,13 @@ public final class LoggingProtos {
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getHeaders(int index) {
+    public Header getHeaders(int index) {
       return headers_.get(index);
     }
     /**
      * <code>repeated .HttpRequest.Header headers = 10;</code>
      */
-    public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder getHeadersOrBuilder(
+    public HeaderOrBuilder getHeadersOrBuilder(
         int index) {
       return headers_.get(index);
     }
@@ -3485,59 +3856,59 @@ public final class LoggingProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+    public static HttpRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+    public static HttpRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(byte[] data)
+    public static HttpRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+    public static HttpRequest parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(java.io.InputStream input)
+    public static HttpRequest parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+    public static HttpRequest parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseDelimitedFrom(java.io.InputStream input)
+    public static HttpRequest parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseDelimitedFrom(
+    public static HttpRequest parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+    public static HttpRequest parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.HttpRequest parseFrom(
+    public static HttpRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -3546,14 +3917,14 @@ public final class LoggingProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.HttpRequest prototype) {
+    public static Builder newBuilder(HttpRequest prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -3562,17 +3933,17 @@ public final class LoggingProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.logging.LoggingProtos.HttpRequestOrBuilder {
+       implements HttpRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_descriptor;
+        return LoggingProtos.internal_static_HttpRequest_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_fieldAccessorTable
+        return LoggingProtos.internal_static_HttpRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.logging.LoggingProtos.HttpRequest.class, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Builder.class);
+                HttpRequest.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.logging.LoggingProtos.HttpRequest.newBuilder()
@@ -3581,7 +3952,7 @@ public final class LoggingProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -3629,23 +4000,23 @@ public final class LoggingProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_HttpRequest_descriptor;
+        return LoggingProtos.internal_static_HttpRequest_descriptor;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest getDefaultInstanceForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.HttpRequest.getDefaultInstance();
+      public HttpRequest getDefaultInstanceForType() {
+        return HttpRequest.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest build() {
-        com.hello.suripu.api.logging.LoggingProtos.HttpRequest result = buildPartial();
+      public HttpRequest build() {
+        HttpRequest result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest buildPartial() {
-        com.hello.suripu.api.logging.LoggingProtos.HttpRequest result = new com.hello.suripu.api.logging.LoggingProtos.HttpRequest(this);
+      public HttpRequest buildPartial() {
+        HttpRequest result = new HttpRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3703,16 +4074,16 @@ public final class LoggingProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.HttpRequest) {
-          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.HttpRequest)other);
+        if (other instanceof HttpRequest) {
+          return mergeFrom((HttpRequest)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.HttpRequest other) {
-        if (other == com.hello.suripu.api.logging.LoggingProtos.HttpRequest.getDefaultInstance()) return this;
+      public Builder mergeFrom(HttpRequest other) {
+        if (other == HttpRequest.getDefaultInstance()) return this;
         if (other.hasPath()) {
           bitField0_ |= 0x00000001;
           path_ = other.path_;
@@ -3798,11 +4169,11 @@ public final class LoggingProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.logging.LoggingProtos.HttpRequest parsedMessage = null;
+        HttpRequest parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.HttpRequest) e.getUnfinishedMessage();
+          parsedMessage = (HttpRequest) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -3814,7 +4185,7 @@ public final class LoggingProtos {
       private int bitField0_;
 
       // optional string path = 1;
-      private java.lang.Object path_ = "";
+      private Object path_ = "";
       /**
        * <code>optional string path = 1;</code>
        */
@@ -3824,15 +4195,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string path = 1;</code>
        */
-      public java.lang.String getPath() {
-        java.lang.Object ref = path_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getPath() {
+        Object ref = path_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           path_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -3840,11 +4211,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getPathBytes() {
-        java.lang.Object ref = path_;
+        Object ref = path_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           path_ = b;
           return b;
         } else {
@@ -3855,7 +4226,7 @@ public final class LoggingProtos {
        * <code>optional string path = 1;</code>
        */
       public Builder setPath(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -3888,7 +4259,7 @@ public final class LoggingProtos {
       }
 
       // optional string access_token = 2;
-      private java.lang.Object accessToken_ = "";
+      private Object accessToken_ = "";
       /**
        * <code>optional string access_token = 2;</code>
        */
@@ -3898,15 +4269,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string access_token = 2;</code>
        */
-      public java.lang.String getAccessToken() {
-        java.lang.Object ref = accessToken_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getAccessToken() {
+        Object ref = accessToken_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           accessToken_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -3914,11 +4285,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getAccessTokenBytes() {
-        java.lang.Object ref = accessToken_;
+        Object ref = accessToken_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           accessToken_ = b;
           return b;
         } else {
@@ -3929,7 +4300,7 @@ public final class LoggingProtos {
        * <code>optional string access_token = 2;</code>
        */
       public Builder setAccessToken(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4071,7 +4442,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated string required_scopes = 6;</code>
        */
-      public java.util.List<java.lang.String>
+      public java.util.List<String>
           getRequiredScopesList() {
         return java.util.Collections.unmodifiableList(requiredScopes_);
       }
@@ -4084,7 +4455,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated string required_scopes = 6;</code>
        */
-      public java.lang.String getRequiredScopes(int index) {
+      public String getRequiredScopes(int index) {
         return requiredScopes_.get(index);
       }
       /**
@@ -4098,7 +4469,7 @@ public final class LoggingProtos {
        * <code>repeated string required_scopes = 6;</code>
        */
       public Builder setRequiredScopes(
-          int index, java.lang.String value) {
+          int index, String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4111,7 +4482,7 @@ public final class LoggingProtos {
        * <code>repeated string required_scopes = 6;</code>
        */
       public Builder addRequiredScopes(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4124,7 +4495,7 @@ public final class LoggingProtos {
        * <code>repeated string required_scopes = 6;</code>
        */
       public Builder addAllRequiredScopes(
-          java.lang.Iterable<java.lang.String> values) {
+          Iterable<String> values) {
         ensureRequiredScopesIsMutable();
         super.addAll(values, requiredScopes_);
         onChanged();
@@ -4164,7 +4535,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated string provided_scopes = 7;</code>
        */
-      public java.util.List<java.lang.String>
+      public java.util.List<String>
           getProvidedScopesList() {
         return java.util.Collections.unmodifiableList(providedScopes_);
       }
@@ -4177,7 +4548,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated string provided_scopes = 7;</code>
        */
-      public java.lang.String getProvidedScopes(int index) {
+      public String getProvidedScopes(int index) {
         return providedScopes_.get(index);
       }
       /**
@@ -4191,7 +4562,7 @@ public final class LoggingProtos {
        * <code>repeated string provided_scopes = 7;</code>
        */
       public Builder setProvidedScopes(
-          int index, java.lang.String value) {
+          int index, String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4204,7 +4575,7 @@ public final class LoggingProtos {
        * <code>repeated string provided_scopes = 7;</code>
        */
       public Builder addProvidedScopes(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4217,7 +4588,7 @@ public final class LoggingProtos {
        * <code>repeated string provided_scopes = 7;</code>
        */
       public Builder addAllProvidedScopes(
-          java.lang.Iterable<java.lang.String> values) {
+          Iterable<String> values) {
         ensureProvidedScopesIsMutable();
         super.addAll(values, providedScopes_);
         onChanged();
@@ -4280,7 +4651,7 @@ public final class LoggingProtos {
       }
 
       // optional string user_agent = 9;
-      private java.lang.Object userAgent_ = "";
+      private Object userAgent_ = "";
       /**
        * <code>optional string user_agent = 9;</code>
        */
@@ -4290,15 +4661,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string user_agent = 9;</code>
        */
-      public java.lang.String getUserAgent() {
-        java.lang.Object ref = userAgent_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getUserAgent() {
+        Object ref = userAgent_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           userAgent_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -4306,11 +4677,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getUserAgentBytes() {
-        java.lang.Object ref = userAgent_;
+        Object ref = userAgent_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           userAgent_ = b;
           return b;
         } else {
@@ -4321,7 +4692,7 @@ public final class LoggingProtos {
        * <code>optional string user_agent = 9;</code>
        */
       public Builder setUserAgent(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -4354,22 +4725,22 @@ public final class LoggingProtos {
       }
 
       // repeated .HttpRequest.Header headers = 10;
-      private java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> headers_ =
+      private java.util.List<Header> headers_ =
         java.util.Collections.emptyList();
       private void ensureHeadersIsMutable() {
         if (!((bitField0_ & 0x00000200) == 0x00000200)) {
-          headers_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header>(headers_);
+          headers_ = new java.util.ArrayList<Header>(headers_);
           bitField0_ |= 0x00000200;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> headersBuilder_;
+          Header, Header.Builder, HeaderOrBuilder> headersBuilder_;
 
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> getHeadersList() {
+      public java.util.List<Header> getHeadersList() {
         if (headersBuilder_ == null) {
           return java.util.Collections.unmodifiableList(headers_);
         } else {
@@ -4389,7 +4760,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header getHeaders(int index) {
+      public Header getHeaders(int index) {
         if (headersBuilder_ == null) {
           return headers_.get(index);
         } else {
@@ -4400,7 +4771,7 @@ public final class LoggingProtos {
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
       public Builder setHeaders(
-          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header value) {
+          int index, Header value) {
         if (headersBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4417,7 +4788,7 @@ public final class LoggingProtos {
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
       public Builder setHeaders(
-          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder builderForValue) {
+          int index, Header.Builder builderForValue) {
         if (headersBuilder_ == null) {
           ensureHeadersIsMutable();
           headers_.set(index, builderForValue.build());
@@ -4430,7 +4801,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public Builder addHeaders(com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header value) {
+      public Builder addHeaders(Header value) {
         if (headersBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4447,7 +4818,7 @@ public final class LoggingProtos {
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
       public Builder addHeaders(
-          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header value) {
+          int index, Header value) {
         if (headersBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4464,7 +4835,7 @@ public final class LoggingProtos {
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
       public Builder addHeaders(
-          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder builderForValue) {
+          Header.Builder builderForValue) {
         if (headersBuilder_ == null) {
           ensureHeadersIsMutable();
           headers_.add(builderForValue.build());
@@ -4478,7 +4849,7 @@ public final class LoggingProtos {
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
       public Builder addHeaders(
-          int index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder builderForValue) {
+          int index, Header.Builder builderForValue) {
         if (headersBuilder_ == null) {
           ensureHeadersIsMutable();
           headers_.add(index, builderForValue.build());
@@ -4492,7 +4863,7 @@ public final class LoggingProtos {
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
       public Builder addAllHeaders(
-          java.lang.Iterable<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header> values) {
+          Iterable<? extends Header> values) {
         if (headersBuilder_ == null) {
           ensureHeadersIsMutable();
           super.addAll(values, headers_);
@@ -4531,14 +4902,14 @@ public final class LoggingProtos {
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder getHeadersBuilder(
+      public Header.Builder getHeadersBuilder(
           int index) {
         return getHeadersFieldBuilder().getBuilder(index);
       }
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder getHeadersOrBuilder(
+      public HeaderOrBuilder getHeadersOrBuilder(
           int index) {
         if (headersBuilder_ == null) {
           return headers_.get(index);  } else {
@@ -4548,7 +4919,7 @@ public final class LoggingProtos {
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+      public java.util.List<? extends HeaderOrBuilder>
            getHeadersOrBuilderList() {
         if (headersBuilder_ != null) {
           return headersBuilder_.getMessageOrBuilderList();
@@ -4559,31 +4930,31 @@ public final class LoggingProtos {
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder addHeadersBuilder() {
+      public Header.Builder addHeadersBuilder() {
         return getHeadersFieldBuilder().addBuilder(
-            com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance());
+            Header.getDefaultInstance());
       }
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder addHeadersBuilder(
+      public Header.Builder addHeadersBuilder(
           int index) {
         return getHeadersFieldBuilder().addBuilder(
-            index, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.getDefaultInstance());
+            index, Header.getDefaultInstance());
       }
       /**
        * <code>repeated .HttpRequest.Header headers = 10;</code>
        */
-      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder> 
+      public java.util.List<Header.Builder>
            getHeadersBuilderList() {
         return getHeadersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder> 
+          Header, Header.Builder, HeaderOrBuilder>
           getHeadersFieldBuilder() {
         if (headersBuilder_ == null) {
           headersBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.Header.Builder, com.hello.suripu.api.logging.LoggingProtos.HttpRequest.HeaderOrBuilder>(
+              Header, Header.Builder, HeaderOrBuilder>(
                   headers_,
                   ((bitField0_ & 0x00000200) == 0x00000200),
                   getParentForChildren(),
@@ -4615,7 +4986,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string device_id = 1;</code>
      */
-    java.lang.String getDeviceId();
+    String getDeviceId();
     /**
      * <code>optional string device_id = 1;</code>
      */
@@ -4650,7 +5021,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string ip_address = 4;</code>
      */
-    java.lang.String getIpAddress();
+    String getIpAddress();
     /**
      * <code>optional string ip_address = 4;</code>
      */
@@ -4680,7 +5051,7 @@ public final class LoggingProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -4742,14 +5113,14 @@ public final class LoggingProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_Registration_descriptor;
+      return LoggingProtos.internal_static_Registration_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_Registration_fieldAccessorTable
+      return LoggingProtos.internal_static_Registration_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.logging.LoggingProtos.Registration.class, com.hello.suripu.api.logging.LoggingProtos.Registration.Builder.class);
+              Registration.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<Registration> PARSER =
@@ -4762,7 +5133,7 @@ public final class LoggingProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<Registration> getParserForType() {
       return PARSER;
     }
@@ -4770,7 +5141,7 @@ public final class LoggingProtos {
     private int bitField0_;
     // optional string device_id = 1;
     public static final int DEVICE_ID_FIELD_NUMBER = 1;
-    private java.lang.Object deviceId_;
+    private Object deviceId_;
     /**
      * <code>optional string device_id = 1;</code>
      */
@@ -4780,14 +5151,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string device_id = 1;</code>
      */
-    public java.lang.String getDeviceId() {
-      java.lang.Object ref = deviceId_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getDeviceId() {
+      Object ref = deviceId_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           deviceId_ = s;
         }
@@ -4799,11 +5170,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
-      java.lang.Object ref = deviceId_;
-      if (ref instanceof java.lang.String) {
+      Object ref = deviceId_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         deviceId_ = b;
         return b;
       } else {
@@ -4845,7 +5216,7 @@ public final class LoggingProtos {
 
     // optional string ip_address = 4;
     public static final int IP_ADDRESS_FIELD_NUMBER = 4;
-    private java.lang.Object ipAddress_;
+    private Object ipAddress_;
     /**
      * <code>optional string ip_address = 4;</code>
      */
@@ -4855,14 +5226,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string ip_address = 4;</code>
      */
-    public java.lang.String getIpAddress() {
-      java.lang.Object ref = ipAddress_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getIpAddress() {
+      Object ref = ipAddress_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           ipAddress_ = s;
         }
@@ -4874,11 +5245,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getIpAddressBytes() {
-      java.lang.Object ref = ipAddress_;
-      if (ref instanceof java.lang.String) {
+      Object ref = ipAddress_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         ipAddress_ = b;
         return b;
       } else {
@@ -4947,59 +5318,59 @@ public final class LoggingProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(
+    public static Registration parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(
+    public static Registration parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(byte[] data)
+    public static Registration parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(
+    public static Registration parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(java.io.InputStream input)
+    public static Registration parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(
+    public static Registration parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseDelimitedFrom(java.io.InputStream input)
+    public static Registration parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseDelimitedFrom(
+    public static Registration parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(
+    public static Registration parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.Registration parseFrom(
+    public static Registration parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -5008,14 +5379,14 @@ public final class LoggingProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.Registration prototype) {
+    public static Builder newBuilder(Registration prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -5024,17 +5395,17 @@ public final class LoggingProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.logging.LoggingProtos.RegistrationOrBuilder {
+       implements RegistrationOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_Registration_descriptor;
+        return LoggingProtos.internal_static_Registration_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_Registration_fieldAccessorTable
+        return LoggingProtos.internal_static_Registration_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.logging.LoggingProtos.Registration.class, com.hello.suripu.api.logging.LoggingProtos.Registration.Builder.class);
+                Registration.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.logging.LoggingProtos.Registration.newBuilder()
@@ -5043,7 +5414,7 @@ public final class LoggingProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -5074,23 +5445,23 @@ public final class LoggingProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_Registration_descriptor;
+        return LoggingProtos.internal_static_Registration_descriptor;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.Registration getDefaultInstanceForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.Registration.getDefaultInstance();
+      public Registration getDefaultInstanceForType() {
+        return Registration.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.Registration build() {
-        com.hello.suripu.api.logging.LoggingProtos.Registration result = buildPartial();
+      public Registration build() {
+        Registration result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.Registration buildPartial() {
-        com.hello.suripu.api.logging.LoggingProtos.Registration result = new com.hello.suripu.api.logging.LoggingProtos.Registration(this);
+      public Registration buildPartial() {
+        Registration result = new Registration(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5115,16 +5486,16 @@ public final class LoggingProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.Registration) {
-          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.Registration)other);
+        if (other instanceof Registration) {
+          return mergeFrom((Registration)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.Registration other) {
-        if (other == com.hello.suripu.api.logging.LoggingProtos.Registration.getDefaultInstance()) return this;
+      public Builder mergeFrom(Registration other) {
+        if (other == Registration.getDefaultInstance()) return this;
         if (other.hasDeviceId()) {
           bitField0_ |= 0x00000001;
           deviceId_ = other.deviceId_;
@@ -5153,11 +5524,11 @@ public final class LoggingProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.logging.LoggingProtos.Registration parsedMessage = null;
+        Registration parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.Registration) e.getUnfinishedMessage();
+          parsedMessage = (Registration) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -5169,7 +5540,7 @@ public final class LoggingProtos {
       private int bitField0_;
 
       // optional string device_id = 1;
-      private java.lang.Object deviceId_ = "";
+      private Object deviceId_ = "";
       /**
        * <code>optional string device_id = 1;</code>
        */
@@ -5179,15 +5550,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string device_id = 1;</code>
        */
-      public java.lang.String getDeviceId() {
-        java.lang.Object ref = deviceId_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getDeviceId() {
+        Object ref = deviceId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           deviceId_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -5195,11 +5566,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
-        java.lang.Object ref = deviceId_;
+        Object ref = deviceId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           deviceId_ = b;
           return b;
         } else {
@@ -5210,7 +5581,7 @@ public final class LoggingProtos {
        * <code>optional string device_id = 1;</code>
        */
       public Builder setDeviceId(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -5309,7 +5680,7 @@ public final class LoggingProtos {
       }
 
       // optional string ip_address = 4;
-      private java.lang.Object ipAddress_ = "";
+      private Object ipAddress_ = "";
       /**
        * <code>optional string ip_address = 4;</code>
        */
@@ -5319,15 +5690,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string ip_address = 4;</code>
        */
-      public java.lang.String getIpAddress() {
-        java.lang.Object ref = ipAddress_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getIpAddress() {
+        Object ref = ipAddress_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           ipAddress_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -5335,11 +5706,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getIpAddressBytes() {
-        java.lang.Object ref = ipAddress_;
+        Object ref = ipAddress_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           ipAddress_ = b;
           return b;
         } else {
@@ -5350,7 +5721,7 @@ public final class LoggingProtos {
        * <code>optional string ip_address = 4;</code>
        */
       public Builder setIpAddress(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -5393,6 +5764,1419 @@ public final class LoggingProtos {
     // @@protoc_insertion_point(class_scope:Registration)
   }
 
+  public interface RegistrationLogOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string sense_id = 1;
+    /**
+     * <code>optional string sense_id = 1;</code>
+     */
+    boolean hasSenseId();
+    /**
+     * <code>optional string sense_id = 1;</code>
+     */
+    String getSenseId();
+    /**
+     * <code>optional string sense_id = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getSenseIdBytes();
+
+    // optional int64 timestamp = 2;
+    /**
+     * <code>optional int64 timestamp = 2;</code>
+     */
+    boolean hasTimestamp();
+    /**
+     * <code>optional int64 timestamp = 2;</code>
+     */
+    long getTimestamp();
+
+    // optional int64 account_id = 3;
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    boolean hasAccountId();
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    long getAccountId();
+
+    // optional string ip_address = 4;
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    boolean hasIpAddress();
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    String getIpAddress();
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getIpAddressBytes();
+
+    // optional string action = 5;
+    /**
+     * <code>optional string action = 5;</code>
+     */
+    boolean hasAction();
+    /**
+     * <code>optional string action = 5;</code>
+     */
+    String getAction();
+    /**
+     * <code>optional string action = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getActionBytes();
+
+    // optional string pill_id = 6;
+    /**
+     * <code>optional string pill_id = 6;</code>
+     */
+    boolean hasPillId();
+    /**
+     * <code>optional string pill_id = 6;</code>
+     */
+    String getPillId();
+    /**
+     * <code>optional string pill_id = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getPillIdBytes();
+
+    // optional string result = 7;
+    /**
+     * <code>optional string result = 7;</code>
+     */
+    boolean hasResult();
+    /**
+     * <code>optional string result = 7;</code>
+     */
+    String getResult();
+    /**
+     * <code>optional string result = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getResultBytes();
+
+    // optional string info = 8;
+    /**
+     * <code>optional string info = 8;</code>
+     */
+    boolean hasInfo();
+    /**
+     * <code>optional string info = 8;</code>
+     */
+    String getInfo();
+    /**
+     * <code>optional string info = 8;</code>
+     */
+    com.google.protobuf.ByteString
+        getInfoBytes();
+  }
+  /**
+   * Protobuf type {@code RegistrationLog}
+   */
+  public static final class RegistrationLog extends
+      com.google.protobuf.GeneratedMessage
+      implements RegistrationLogOrBuilder {
+    // Use RegistrationLog.newBuilder() to construct.
+    private RegistrationLog(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private RegistrationLog(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final RegistrationLog defaultInstance;
+    public static RegistrationLog getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public RegistrationLog getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private RegistrationLog(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              senseId_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              timestamp_ = input.readInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              accountId_ = input.readInt64();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              ipAddress_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              action_ = input.readBytes();
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              pillId_ = input.readBytes();
+              break;
+            }
+            case 58: {
+              bitField0_ |= 0x00000040;
+              result_ = input.readBytes();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              info_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return LoggingProtos.internal_static_RegistrationLog_descriptor;
+    }
+
+    protected FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return LoggingProtos.internal_static_RegistrationLog_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              RegistrationLog.class, Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<RegistrationLog> PARSER =
+        new com.google.protobuf.AbstractParser<RegistrationLog>() {
+      public RegistrationLog parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RegistrationLog(input, extensionRegistry);
+      }
+    };
+
+    @Override
+    public com.google.protobuf.Parser<RegistrationLog> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string sense_id = 1;
+    public static final int SENSE_ID_FIELD_NUMBER = 1;
+    private Object senseId_;
+    /**
+     * <code>optional string sense_id = 1;</code>
+     */
+    public boolean hasSenseId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string sense_id = 1;</code>
+     */
+    public String getSenseId() {
+      Object ref = senseId_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          senseId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string sense_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSenseIdBytes() {
+      Object ref = senseId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        senseId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int64 timestamp = 2;
+    public static final int TIMESTAMP_FIELD_NUMBER = 2;
+    private long timestamp_;
+    /**
+     * <code>optional int64 timestamp = 2;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int64 timestamp = 2;</code>
+     */
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
+    // optional int64 account_id = 3;
+    public static final int ACCOUNT_ID_FIELD_NUMBER = 3;
+    private long accountId_;
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    public boolean hasAccountId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int64 account_id = 3;</code>
+     */
+    public long getAccountId() {
+      return accountId_;
+    }
+
+    // optional string ip_address = 4;
+    public static final int IP_ADDRESS_FIELD_NUMBER = 4;
+    private Object ipAddress_;
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    public boolean hasIpAddress() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    public String getIpAddress() {
+      Object ref = ipAddress_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          ipAddress_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string ip_address = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getIpAddressBytes() {
+      Object ref = ipAddress_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        ipAddress_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string action = 5;
+    public static final int ACTION_FIELD_NUMBER = 5;
+    private Object action_;
+    /**
+     * <code>optional string action = 5;</code>
+     */
+    public boolean hasAction() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string action = 5;</code>
+     */
+    public String getAction() {
+      Object ref = action_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          action_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string action = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getActionBytes() {
+      Object ref = action_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        action_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string pill_id = 6;
+    public static final int PILL_ID_FIELD_NUMBER = 6;
+    private Object pillId_;
+    /**
+     * <code>optional string pill_id = 6;</code>
+     */
+    public boolean hasPillId() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string pill_id = 6;</code>
+     */
+    public String getPillId() {
+      Object ref = pillId_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          pillId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string pill_id = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getPillIdBytes() {
+      Object ref = pillId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        pillId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string result = 7;
+    public static final int RESULT_FIELD_NUMBER = 7;
+    private Object result_;
+    /**
+     * <code>optional string result = 7;</code>
+     */
+    public boolean hasResult() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional string result = 7;</code>
+     */
+    public String getResult() {
+      Object ref = result_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          result_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string result = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getResultBytes() {
+      Object ref = result_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        result_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string info = 8;
+    public static final int INFO_FIELD_NUMBER = 8;
+    private Object info_;
+    /**
+     * <code>optional string info = 8;</code>
+     */
+    public boolean hasInfo() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional string info = 8;</code>
+     */
+    public String getInfo() {
+      Object ref = info_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          info_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string info = 8;</code>
+     */
+    public com.google.protobuf.ByteString
+        getInfoBytes() {
+      Object ref = info_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        info_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      senseId_ = "";
+      timestamp_ = 0L;
+      accountId_ = 0L;
+      ipAddress_ = "";
+      action_ = "";
+      pillId_ = "";
+      result_ = "";
+      info_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getSenseIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt64(2, timestamp_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt64(3, accountId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getIpAddressBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getActionBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getPillIdBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(7, getResultBytes());
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, getInfoBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getSenseIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, timestamp_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, accountId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getIpAddressBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getActionBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getPillIdBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(7, getResultBytes());
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, getInfoBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @Override
+    protected Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static RegistrationLog parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static RegistrationLog parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static RegistrationLog parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static RegistrationLog parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static RegistrationLog parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static RegistrationLog parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static RegistrationLog parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static RegistrationLog parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static RegistrationLog parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static RegistrationLog parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(RegistrationLog prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @Override
+    protected Builder newBuilderForType(
+        BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code RegistrationLog}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements RegistrationLogOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return LoggingProtos.internal_static_RegistrationLog_descriptor;
+      }
+
+      protected FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return LoggingProtos.internal_static_RegistrationLog_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                RegistrationLog.class, Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.logging.LoggingProtos.RegistrationLog.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        senseId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        accountId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        ipAddress_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        action_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        pillId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        result_ = "";
+        bitField0_ = (bitField0_ & ~0x00000040);
+        info_ = "";
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return LoggingProtos.internal_static_RegistrationLog_descriptor;
+      }
+
+      public RegistrationLog getDefaultInstanceForType() {
+        return RegistrationLog.getDefaultInstance();
+      }
+
+      public RegistrationLog build() {
+        RegistrationLog result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public RegistrationLog buildPartial() {
+        RegistrationLog result = new RegistrationLog(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.senseId_ = senseId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.timestamp_ = timestamp_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.accountId_ = accountId_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.ipAddress_ = ipAddress_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.action_ = action_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.pillId_ = pillId_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.result_ = result_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.info_ = info_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof RegistrationLog) {
+          return mergeFrom((RegistrationLog)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(RegistrationLog other) {
+        if (other == RegistrationLog.getDefaultInstance()) return this;
+        if (other.hasSenseId()) {
+          bitField0_ |= 0x00000001;
+          senseId_ = other.senseId_;
+          onChanged();
+        }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
+        }
+        if (other.hasAccountId()) {
+          setAccountId(other.getAccountId());
+        }
+        if (other.hasIpAddress()) {
+          bitField0_ |= 0x00000008;
+          ipAddress_ = other.ipAddress_;
+          onChanged();
+        }
+        if (other.hasAction()) {
+          bitField0_ |= 0x00000010;
+          action_ = other.action_;
+          onChanged();
+        }
+        if (other.hasPillId()) {
+          bitField0_ |= 0x00000020;
+          pillId_ = other.pillId_;
+          onChanged();
+        }
+        if (other.hasResult()) {
+          bitField0_ |= 0x00000040;
+          result_ = other.result_;
+          onChanged();
+        }
+        if (other.hasInfo()) {
+          bitField0_ |= 0x00000080;
+          info_ = other.info_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        RegistrationLog parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (RegistrationLog) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string sense_id = 1;
+      private Object senseId_ = "";
+      /**
+       * <code>optional string sense_id = 1;</code>
+       */
+      public boolean hasSenseId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string sense_id = 1;</code>
+       */
+      public String getSenseId() {
+        Object ref = senseId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          senseId_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>optional string sense_id = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSenseIdBytes() {
+        Object ref = senseId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          senseId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string sense_id = 1;</code>
+       */
+      public Builder setSenseId(
+          String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        senseId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string sense_id = 1;</code>
+       */
+      public Builder clearSenseId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        senseId_ = getDefaultInstance().getSenseId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string sense_id = 1;</code>
+       */
+      public Builder setSenseIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        senseId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 timestamp = 2;
+      private long timestamp_ ;
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000002;
+        timestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 timestamp = 2;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 account_id = 3;
+      private long accountId_ ;
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public boolean hasAccountId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public long getAccountId() {
+        return accountId_;
+      }
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public Builder setAccountId(long value) {
+        bitField0_ |= 0x00000004;
+        accountId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 account_id = 3;</code>
+       */
+      public Builder clearAccountId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        accountId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional string ip_address = 4;
+      private Object ipAddress_ = "";
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public boolean hasIpAddress() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public String getIpAddress() {
+        Object ref = ipAddress_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          ipAddress_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getIpAddressBytes() {
+        Object ref = ipAddress_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          ipAddress_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public Builder setIpAddress(
+          String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        ipAddress_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public Builder clearIpAddress() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        ipAddress_ = getDefaultInstance().getIpAddress();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string ip_address = 4;</code>
+       */
+      public Builder setIpAddressBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        ipAddress_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string action = 5;
+      private Object action_ = "";
+      /**
+       * <code>optional string action = 5;</code>
+       */
+      public boolean hasAction() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string action = 5;</code>
+       */
+      public String getAction() {
+        Object ref = action_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          action_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>optional string action = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getActionBytes() {
+        Object ref = action_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          action_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string action = 5;</code>
+       */
+      public Builder setAction(
+          String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        action_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string action = 5;</code>
+       */
+      public Builder clearAction() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        action_ = getDefaultInstance().getAction();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string action = 5;</code>
+       */
+      public Builder setActionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        action_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string pill_id = 6;
+      private Object pillId_ = "";
+      /**
+       * <code>optional string pill_id = 6;</code>
+       */
+      public boolean hasPillId() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string pill_id = 6;</code>
+       */
+      public String getPillId() {
+        Object ref = pillId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          pillId_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>optional string pill_id = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPillIdBytes() {
+        Object ref = pillId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          pillId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string pill_id = 6;</code>
+       */
+      public Builder setPillId(
+          String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        pillId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string pill_id = 6;</code>
+       */
+      public Builder clearPillId() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        pillId_ = getDefaultInstance().getPillId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string pill_id = 6;</code>
+       */
+      public Builder setPillIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        pillId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string result = 7;
+      private Object result_ = "";
+      /**
+       * <code>optional string result = 7;</code>
+       */
+      public boolean hasResult() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional string result = 7;</code>
+       */
+      public String getResult() {
+        Object ref = result_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          result_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>optional string result = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getResultBytes() {
+        Object ref = result_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          result_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string result = 7;</code>
+       */
+      public Builder setResult(
+          String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        result_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string result = 7;</code>
+       */
+      public Builder clearResult() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        result_ = getDefaultInstance().getResult();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string result = 7;</code>
+       */
+      public Builder setResultBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        result_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string info = 8;
+      private Object info_ = "";
+      /**
+       * <code>optional string info = 8;</code>
+       */
+      public boolean hasInfo() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string info = 8;</code>
+       */
+      public String getInfo() {
+        Object ref = info_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          info_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>optional string info = 8;</code>
+       */
+      public com.google.protobuf.ByteString
+          getInfoBytes() {
+        Object ref = info_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          info_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string info = 8;</code>
+       */
+      public Builder setInfo(
+          String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        info_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string info = 8;</code>
+       */
+      public Builder clearInfo() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        info_ = getDefaultInstance().getInfo();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string info = 8;</code>
+       */
+      public Builder setInfoBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        info_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:RegistrationLog)
+    }
+
+    static {
+      defaultInstance = new RegistrationLog(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:RegistrationLog)
+  }
+
   public interface DecryptionErrorOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -5404,7 +7188,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string device_id = 1;</code>
      */
-    java.lang.String getDeviceId();
+    String getDeviceId();
     /**
      * <code>optional string device_id = 1;</code>
      */
@@ -5419,7 +7203,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string keyHex = 2;</code>
      */
-    java.lang.String getKeyHex();
+    String getKeyHex();
     /**
      * <code>optional string keyHex = 2;</code>
      */
@@ -5454,7 +7238,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string other = 5;</code>
      */
-    java.lang.String getOther();
+    String getOther();
     /**
      * <code>optional string other = 5;</code>
      */
@@ -5484,7 +7268,7 @@ public final class LoggingProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -5551,14 +7335,14 @@ public final class LoggingProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_descriptor;
+      return LoggingProtos.internal_static_DecryptionError_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_fieldAccessorTable
+      return LoggingProtos.internal_static_DecryptionError_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.logging.LoggingProtos.DecryptionError.class, com.hello.suripu.api.logging.LoggingProtos.DecryptionError.Builder.class);
+              DecryptionError.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<DecryptionError> PARSER =
@@ -5571,7 +7355,7 @@ public final class LoggingProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<DecryptionError> getParserForType() {
       return PARSER;
     }
@@ -5579,7 +7363,7 @@ public final class LoggingProtos {
     private int bitField0_;
     // optional string device_id = 1;
     public static final int DEVICE_ID_FIELD_NUMBER = 1;
-    private java.lang.Object deviceId_;
+    private Object deviceId_;
     /**
      * <code>optional string device_id = 1;</code>
      */
@@ -5589,14 +7373,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string device_id = 1;</code>
      */
-    public java.lang.String getDeviceId() {
-      java.lang.Object ref = deviceId_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getDeviceId() {
+      Object ref = deviceId_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           deviceId_ = s;
         }
@@ -5608,11 +7392,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getDeviceIdBytes() {
-      java.lang.Object ref = deviceId_;
-      if (ref instanceof java.lang.String) {
+      Object ref = deviceId_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         deviceId_ = b;
         return b;
       } else {
@@ -5622,7 +7406,7 @@ public final class LoggingProtos {
 
     // optional string keyHex = 2;
     public static final int KEYHEX_FIELD_NUMBER = 2;
-    private java.lang.Object keyHex_;
+    private Object keyHex_;
     /**
      * <code>optional string keyHex = 2;</code>
      */
@@ -5632,14 +7416,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string keyHex = 2;</code>
      */
-    public java.lang.String getKeyHex() {
-      java.lang.Object ref = keyHex_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getKeyHex() {
+      Object ref = keyHex_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           keyHex_ = s;
         }
@@ -5651,11 +7435,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getKeyHexBytes() {
-      java.lang.Object ref = keyHex_;
-      if (ref instanceof java.lang.String) {
+      Object ref = keyHex_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         keyHex_ = b;
         return b;
       } else {
@@ -5697,7 +7481,7 @@ public final class LoggingProtos {
 
     // optional string other = 5;
     public static final int OTHER_FIELD_NUMBER = 5;
-    private java.lang.Object other_;
+    private Object other_;
     /**
      * <code>optional string other = 5;</code>
      */
@@ -5707,14 +7491,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string other = 5;</code>
      */
-    public java.lang.String getOther() {
-      java.lang.Object ref = other_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getOther() {
+      Object ref = other_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           other_ = s;
         }
@@ -5726,11 +7510,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getOtherBytes() {
-      java.lang.Object ref = other_;
-      if (ref instanceof java.lang.String) {
+      Object ref = other_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         other_ = b;
         return b;
       } else {
@@ -5807,59 +7591,59 @@ public final class LoggingProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+    public static DecryptionError parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+    public static DecryptionError parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(byte[] data)
+    public static DecryptionError parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+    public static DecryptionError parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(java.io.InputStream input)
+    public static DecryptionError parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+    public static DecryptionError parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseDelimitedFrom(java.io.InputStream input)
+    public static DecryptionError parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseDelimitedFrom(
+    public static DecryptionError parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+    public static DecryptionError parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.DecryptionError parseFrom(
+    public static DecryptionError parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -5868,14 +7652,14 @@ public final class LoggingProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.DecryptionError prototype) {
+    public static Builder newBuilder(DecryptionError prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -5884,17 +7668,17 @@ public final class LoggingProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.logging.LoggingProtos.DecryptionErrorOrBuilder {
+       implements DecryptionErrorOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_descriptor;
+        return LoggingProtos.internal_static_DecryptionError_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_fieldAccessorTable
+        return LoggingProtos.internal_static_DecryptionError_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.logging.LoggingProtos.DecryptionError.class, com.hello.suripu.api.logging.LoggingProtos.DecryptionError.Builder.class);
+                DecryptionError.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.logging.LoggingProtos.DecryptionError.newBuilder()
@@ -5903,7 +7687,7 @@ public final class LoggingProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -5936,23 +7720,23 @@ public final class LoggingProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_DecryptionError_descriptor;
+        return LoggingProtos.internal_static_DecryptionError_descriptor;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.DecryptionError getDefaultInstanceForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.DecryptionError.getDefaultInstance();
+      public DecryptionError getDefaultInstanceForType() {
+        return DecryptionError.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.DecryptionError build() {
-        com.hello.suripu.api.logging.LoggingProtos.DecryptionError result = buildPartial();
+      public DecryptionError build() {
+        DecryptionError result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.DecryptionError buildPartial() {
-        com.hello.suripu.api.logging.LoggingProtos.DecryptionError result = new com.hello.suripu.api.logging.LoggingProtos.DecryptionError(this);
+      public DecryptionError buildPartial() {
+        DecryptionError result = new DecryptionError(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5981,16 +7765,16 @@ public final class LoggingProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.DecryptionError) {
-          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.DecryptionError)other);
+        if (other instanceof DecryptionError) {
+          return mergeFrom((DecryptionError)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.DecryptionError other) {
-        if (other == com.hello.suripu.api.logging.LoggingProtos.DecryptionError.getDefaultInstance()) return this;
+      public Builder mergeFrom(DecryptionError other) {
+        if (other == DecryptionError.getDefaultInstance()) return this;
         if (other.hasDeviceId()) {
           bitField0_ |= 0x00000001;
           deviceId_ = other.deviceId_;
@@ -6024,11 +7808,11 @@ public final class LoggingProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.logging.LoggingProtos.DecryptionError parsedMessage = null;
+        DecryptionError parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.DecryptionError) e.getUnfinishedMessage();
+          parsedMessage = (DecryptionError) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -6040,7 +7824,7 @@ public final class LoggingProtos {
       private int bitField0_;
 
       // optional string device_id = 1;
-      private java.lang.Object deviceId_ = "";
+      private Object deviceId_ = "";
       /**
        * <code>optional string device_id = 1;</code>
        */
@@ -6050,15 +7834,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string device_id = 1;</code>
        */
-      public java.lang.String getDeviceId() {
-        java.lang.Object ref = deviceId_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getDeviceId() {
+        Object ref = deviceId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           deviceId_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -6066,11 +7850,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getDeviceIdBytes() {
-        java.lang.Object ref = deviceId_;
+        Object ref = deviceId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           deviceId_ = b;
           return b;
         } else {
@@ -6081,7 +7865,7 @@ public final class LoggingProtos {
        * <code>optional string device_id = 1;</code>
        */
       public Builder setDeviceId(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -6114,7 +7898,7 @@ public final class LoggingProtos {
       }
 
       // optional string keyHex = 2;
-      private java.lang.Object keyHex_ = "";
+      private Object keyHex_ = "";
       /**
        * <code>optional string keyHex = 2;</code>
        */
@@ -6124,15 +7908,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string keyHex = 2;</code>
        */
-      public java.lang.String getKeyHex() {
-        java.lang.Object ref = keyHex_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getKeyHex() {
+        Object ref = keyHex_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           keyHex_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -6140,11 +7924,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getKeyHexBytes() {
-        java.lang.Object ref = keyHex_;
+        Object ref = keyHex_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           keyHex_ = b;
           return b;
         } else {
@@ -6155,7 +7939,7 @@ public final class LoggingProtos {
        * <code>optional string keyHex = 2;</code>
        */
       public Builder setKeyHex(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -6257,7 +8041,7 @@ public final class LoggingProtos {
       }
 
       // optional string other = 5;
-      private java.lang.Object other_ = "";
+      private Object other_ = "";
       /**
        * <code>optional string other = 5;</code>
        */
@@ -6267,15 +8051,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string other = 5;</code>
        */
-      public java.lang.String getOther() {
-        java.lang.Object ref = other_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getOther() {
+        Object ref = other_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           other_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -6283,11 +8067,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getOtherBytes() {
-        java.lang.Object ref = other_;
+        Object ref = other_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           other_ = b;
           return b;
         } else {
@@ -6298,7 +8082,7 @@ public final class LoggingProtos {
        * <code>optional string other = 5;</code>
        */
       public Builder setOther(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -6362,7 +8146,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string serial_number = 2;</code>
      */
-    java.lang.String getSerialNumber();
+    String getSerialNumber();
     /**
      * <code>optional string serial_number = 2;</code>
      */
@@ -6387,7 +8171,7 @@ public final class LoggingProtos {
     /**
      * <code>optional string ip_address = 4;</code>
      */
-    java.lang.String getIpAddress();
+    String getIpAddress();
     /**
      * <code>optional string ip_address = 4;</code>
      */
@@ -6417,7 +8201,7 @@ public final class LoggingProtos {
     }
 
     private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
         getUnknownFields() {
       return this.unknownFields;
@@ -6479,14 +8263,14 @@ public final class LoggingProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_ProvisionRequest_descriptor;
+      return LoggingProtos.internal_static_ProvisionRequest_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.logging.LoggingProtos.internal_static_ProvisionRequest_fieldAccessorTable
+      return LoggingProtos.internal_static_ProvisionRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest.class, com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest.Builder.class);
+              ProvisionRequest.class, Builder.class);
     }
 
     public static com.google.protobuf.Parser<ProvisionRequest> PARSER =
@@ -6499,7 +8283,7 @@ public final class LoggingProtos {
       }
     };
 
-    @java.lang.Override
+    @Override
     public com.google.protobuf.Parser<ProvisionRequest> getParserForType() {
       return PARSER;
     }
@@ -6523,7 +8307,7 @@ public final class LoggingProtos {
 
     // optional string serial_number = 2;
     public static final int SERIAL_NUMBER_FIELD_NUMBER = 2;
-    private java.lang.Object serialNumber_;
+    private Object serialNumber_;
     /**
      * <code>optional string serial_number = 2;</code>
      */
@@ -6533,14 +8317,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string serial_number = 2;</code>
      */
-    public java.lang.String getSerialNumber() {
-      java.lang.Object ref = serialNumber_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getSerialNumber() {
+      Object ref = serialNumber_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           serialNumber_ = s;
         }
@@ -6552,11 +8336,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getSerialNumberBytes() {
-      java.lang.Object ref = serialNumber_;
-      if (ref instanceof java.lang.String) {
+      Object ref = serialNumber_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         serialNumber_ = b;
         return b;
       } else {
@@ -6582,7 +8366,7 @@ public final class LoggingProtos {
 
     // optional string ip_address = 4;
     public static final int IP_ADDRESS_FIELD_NUMBER = 4;
-    private java.lang.Object ipAddress_;
+    private Object ipAddress_;
     /**
      * <code>optional string ip_address = 4;</code>
      */
@@ -6592,14 +8376,14 @@ public final class LoggingProtos {
     /**
      * <code>optional string ip_address = 4;</code>
      */
-    public java.lang.String getIpAddress() {
-      java.lang.Object ref = ipAddress_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getIpAddress() {
+      Object ref = ipAddress_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           ipAddress_ = s;
         }
@@ -6611,11 +8395,11 @@ public final class LoggingProtos {
      */
     public com.google.protobuf.ByteString
         getIpAddressBytes() {
-      java.lang.Object ref = ipAddress_;
-      if (ref instanceof java.lang.String) {
+      Object ref = ipAddress_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         ipAddress_ = b;
         return b;
       } else {
@@ -6684,59 +8468,59 @@ public final class LoggingProtos {
     }
 
     private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
+    @Override
+    protected Object writeReplace()
         throws java.io.ObjectStreamException {
       return super.writeReplace();
     }
 
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(
+    public static ProvisionRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(
+    public static ProvisionRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(byte[] data)
+    public static ProvisionRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(
+    public static ProvisionRequest parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(java.io.InputStream input)
+    public static ProvisionRequest parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(
+    public static ProvisionRequest parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseDelimitedFrom(java.io.InputStream input)
+    public static ProvisionRequest parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseDelimitedFrom(
+    public static ProvisionRequest parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(
+    public static ProvisionRequest parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parseFrom(
+    public static ProvisionRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -6745,14 +8529,14 @@ public final class LoggingProtos {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest prototype) {
+    public static Builder newBuilder(ProvisionRequest prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -6761,17 +8545,17 @@ public final class LoggingProtos {
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.logging.LoggingProtos.ProvisionRequestOrBuilder {
+       implements ProvisionRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_ProvisionRequest_descriptor;
+        return LoggingProtos.internal_static_ProvisionRequest_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_ProvisionRequest_fieldAccessorTable
+        return LoggingProtos.internal_static_ProvisionRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest.class, com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest.Builder.class);
+                ProvisionRequest.class, Builder.class);
       }
 
       // Construct using com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest.newBuilder()
@@ -6780,7 +8564,7 @@ public final class LoggingProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
@@ -6811,23 +8595,23 @@ public final class LoggingProtos {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.internal_static_ProvisionRequest_descriptor;
+        return LoggingProtos.internal_static_ProvisionRequest_descriptor;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest getDefaultInstanceForType() {
-        return com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest.getDefaultInstance();
+      public ProvisionRequest getDefaultInstanceForType() {
+        return ProvisionRequest.getDefaultInstance();
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest build() {
-        com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest result = buildPartial();
+      public ProvisionRequest build() {
+        ProvisionRequest result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest buildPartial() {
-        com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest result = new com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest(this);
+      public ProvisionRequest buildPartial() {
+        ProvisionRequest result = new ProvisionRequest(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6852,16 +8636,16 @@ public final class LoggingProtos {
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest) {
-          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest)other);
+        if (other instanceof ProvisionRequest) {
+          return mergeFrom((ProvisionRequest)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest other) {
-        if (other == com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest.getDefaultInstance()) return this;
+      public Builder mergeFrom(ProvisionRequest other) {
+        if (other == ProvisionRequest.getDefaultInstance()) return this;
         if (other.hasBody()) {
           setBody(other.getBody());
         }
@@ -6890,11 +8674,11 @@ public final class LoggingProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest parsedMessage = null;
+        ProvisionRequest parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.ProvisionRequest) e.getUnfinishedMessage();
+          parsedMessage = (ProvisionRequest) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -6942,7 +8726,7 @@ public final class LoggingProtos {
       }
 
       // optional string serial_number = 2;
-      private java.lang.Object serialNumber_ = "";
+      private Object serialNumber_ = "";
       /**
        * <code>optional string serial_number = 2;</code>
        */
@@ -6952,15 +8736,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string serial_number = 2;</code>
        */
-      public java.lang.String getSerialNumber() {
-        java.lang.Object ref = serialNumber_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getSerialNumber() {
+        Object ref = serialNumber_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           serialNumber_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -6968,11 +8752,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getSerialNumberBytes() {
-        java.lang.Object ref = serialNumber_;
+        Object ref = serialNumber_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           serialNumber_ = b;
           return b;
         } else {
@@ -6983,7 +8767,7 @@ public final class LoggingProtos {
        * <code>optional string serial_number = 2;</code>
        */
       public Builder setSerialNumber(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -7049,7 +8833,7 @@ public final class LoggingProtos {
       }
 
       // optional string ip_address = 4;
-      private java.lang.Object ipAddress_ = "";
+      private Object ipAddress_ = "";
       /**
        * <code>optional string ip_address = 4;</code>
        */
@@ -7059,15 +8843,15 @@ public final class LoggingProtos {
       /**
        * <code>optional string ip_address = 4;</code>
        */
-      public java.lang.String getIpAddress() {
-        java.lang.Object ref = ipAddress_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+      public String getIpAddress() {
+        Object ref = ipAddress_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
           ipAddress_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
@@ -7075,11 +8859,11 @@ public final class LoggingProtos {
        */
       public com.google.protobuf.ByteString
           getIpAddressBytes() {
-        java.lang.Object ref = ipAddress_;
+        Object ref = ipAddress_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           ipAddress_ = b;
           return b;
         } else {
@@ -7090,7 +8874,7 @@ public final class LoggingProtos {
        * <code>optional string ip_address = 4;</code>
        */
       public Builder setIpAddress(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -7159,6 +8943,11 @@ public final class LoggingProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_Registration_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_RegistrationLog_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_RegistrationLog_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_DecryptionError_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -7176,33 +8965,38 @@ public final class LoggingProtos {
   private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
-    java.lang.String[] descriptorData = {
+    String[] descriptorData = {
       "\n\024suripu_logging.proto\"v\n\nLogMessage\022\016\n\006" +
       "origin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001(" +
       "\003\022\031\n\nproduction\030\004 \001(\010:\005false\022\r\n\005level\030\005 " +
-      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\340\001\n\017BatchLogMessa" +
+      "\001(\005\022\021\n\tdevice_id\030\006 \001(\t\"\240\002\n\017BatchLogMessa" +
       "ge\022\035\n\010messages\030\001 \003(\0132\013.LogMessage\022\023\n\013app" +
       "_version\030\002 \001(\t\022*\n\010log_type\030\003 \001(\0162\030.Batch" +
-      "LogMessage.LogType\022\023\n\013received_at\030\004 \001(\003\"" +
-      "X\n\007LogType\022\023\n\017APPLICATION_LOG\020\000\022\r\n\tSENSE" +
-      "_LOG\020\001\022\017\n\013WORKERS_LOG\020\002\022\030\n\024STRUCTURED_SE" +
-      "NSE_LOG\020\003\"\250\002\n\013HttpRequest\022\014\n\004path\030\001 \001(\t\022",
-      "\024\n\014access_token\030\002 \001(\t\022\022\n\naccount_id\030\003 \001(" +
-      "\003\022\026\n\016application_id\030\004 \001(\003\022\025\n\rtimestamp_u" +
-      "tc\030\005 \001(\003\022\027\n\017required_scopes\030\006 \003(\t\022\027\n\017pro" +
-      "vided_scopes\030\007 \003(\t\022\037\n\027access_token_creat" +
-      "ed_at\030\010 \001(\003\022\022\n\nuser_agent\030\t \001(\t\022$\n\007heade" +
-      "rs\030\n \003(\0132\023.HttpRequest.Header\032%\n\006Header\022" +
-      "\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\\n\014Registra" +
-      "tion\022\021\n\tdevice_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001" +
-      "(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_address\030\004 \001" +
-      "(\t\"e\n\017DecryptionError\022\021\n\tdevice_id\030\001 \001(\t",
-      "\022\016\n\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_" +
-      "body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020ProvisionRe" +
-      "quest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_number\030\002 \001" +
-      "(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\tB-\n\034co" +
-      "m.hello.suripu.api.loggingB\rLoggingProto" +
-      "s"
+      "LogMessage.LogType\022\023\n\013received_at\030\004 \001(\003\022" +
+      "*\n\020registration_log\030\005 \003(\0132\020.Registration" +
+      "Log\"l\n\007LogType\022\023\n\017APPLICATION_LOG\020\000\022\r\n\tS" +
+      "ENSE_LOG\020\001\022\017\n\013WORKERS_LOG\020\002\022\030\n\024STRUCTURE",
+      "D_SENSE_LOG\020\003\022\022\n\016ONBOARDING_LOG\020\004\"\250\002\n\013Ht" +
+      "tpRequest\022\014\n\004path\030\001 \001(\t\022\024\n\014access_token\030" +
+      "\002 \001(\t\022\022\n\naccount_id\030\003 \001(\003\022\026\n\016application" +
+      "_id\030\004 \001(\003\022\025\n\rtimestamp_utc\030\005 \001(\003\022\027\n\017requ" +
+      "ired_scopes\030\006 \003(\t\022\027\n\017provided_scopes\030\007 \003" +
+      "(\t\022\037\n\027access_token_created_at\030\010 \001(\003\022\022\n\nu" +
+      "ser_agent\030\t \001(\t\022$\n\007headers\030\n \003(\0132\023.HttpR" +
+      "equest.Header\032%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n" +
+      "\005value\030\002 \001(\t\"\\\n\014Registration\022\021\n\tdevice_i" +
+      "d\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount_id",
+      "\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\"\235\001\n\017Registrat" +
+      "ionLog\022\020\n\010sense_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 " +
+      "\001(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_address\030\004 " +
+      "\001(\t\022\016\n\006action\030\005 \001(\t\022\017\n\007pill_id\030\006 \001(\t\022\016\n\006" +
+      "result\030\007 \001(\t\022\014\n\004info\030\010 \001(\t\"e\n\017Decryption" +
+      "Error\022\021\n\tdevice_id\030\001 \001(\t\022\016\n\006keyHex\030\002 \001(\t" +
+      "\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_body\030\004 \001(\014\022\r\n\005ot" +
+      "her\030\005 \001(\t\"W\n\020ProvisionRequest\022\014\n\004body\030\001 " +
+      "\001(\014\022\025\n\rserial_number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022" +
+      "\n\nip_address\030\004 \001(\tB-\n\034com.hello.suripu.a",
+      "pi.loggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7214,43 +9008,49 @@ public final class LoggingProtos {
           internal_static_LogMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_LogMessage_descriptor,
-              new java.lang.String[] { "Origin", "Message", "Ts", "Production", "Level", "DeviceId", });
+              new String[] { "Origin", "Message", "Ts", "Production", "Level", "DeviceId", });
           internal_static_BatchLogMessage_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_BatchLogMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_BatchLogMessage_descriptor,
-              new java.lang.String[] { "Messages", "AppVersion", "LogType", "ReceivedAt", });
+              new String[] { "Messages", "AppVersion", "LogType", "ReceivedAt", "RegistrationLog", });
           internal_static_HttpRequest_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_HttpRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_HttpRequest_descriptor,
-              new java.lang.String[] { "Path", "AccessToken", "AccountId", "ApplicationId", "TimestampUtc", "RequiredScopes", "ProvidedScopes", "AccessTokenCreatedAt", "UserAgent", "Headers", });
+              new String[] { "Path", "AccessToken", "AccountId", "ApplicationId", "TimestampUtc", "RequiredScopes", "ProvidedScopes", "AccessTokenCreatedAt", "UserAgent", "Headers", });
           internal_static_HttpRequest_Header_descriptor =
             internal_static_HttpRequest_descriptor.getNestedTypes().get(0);
           internal_static_HttpRequest_Header_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_HttpRequest_Header_descriptor,
-              new java.lang.String[] { "Name", "Value", });
+              new String[] { "Name", "Value", });
           internal_static_Registration_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_Registration_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Registration_descriptor,
-              new java.lang.String[] { "DeviceId", "Timestamp", "AccountId", "IpAddress", });
-          internal_static_DecryptionError_descriptor =
+              new String[] { "DeviceId", "Timestamp", "AccountId", "IpAddress", });
+          internal_static_RegistrationLog_descriptor =
             getDescriptor().getMessageTypes().get(4);
+          internal_static_RegistrationLog_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_RegistrationLog_descriptor,
+              new String[] { "SenseId", "Timestamp", "AccountId", "IpAddress", "Action", "PillId", "Result", "Info", });
+          internal_static_DecryptionError_descriptor =
+            getDescriptor().getMessageTypes().get(5);
           internal_static_DecryptionError_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_DecryptionError_descriptor,
-              new java.lang.String[] { "DeviceId", "KeyHex", "Ts", "RequestBody", "Other", });
+              new String[] { "DeviceId", "KeyHex", "Ts", "RequestBody", "Other", });
           internal_static_ProvisionRequest_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_ProvisionRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_ProvisionRequest_descriptor,
-              new java.lang.String[] { "Body", "SerialNumber", "Ts", "IpAddress", });
+              new String[] { "Body", "SerialNumber", "Ts", "IpAddress", });
           return null;
         }
       };

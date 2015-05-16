@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Events.MotionEvent;
 import com.hello.suripu.core.models.Events.PartnerMotionEvent;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -29,9 +30,8 @@ public class PartnerMotion {
     final private static int CHECK_PRECEDING_MINS = 2; // make sure user has no movement in the previous 2 mins
 
     @Timed
-    public static List<PartnerMotionEvent> getPartnerData(final List<MotionEvent> myMotionEvents, final List<TrackerMotion> partnerMotionsData, int threshold) {
+    public static List<PartnerMotionEvent> getPartnerData(final List<MotionEvent> partnerMotionEvents,final List<MotionEvent> myMotionEvents, int threshold) {
 
-        final List<MotionEvent> partnerMotionEvents = TimelineUtils.generateMotionEvents(partnerMotionsData);
 
         // convert list of TrackerMotion to hash map for easy lookup
         final Map<Long, MotionEvent> myMotionEventsMap = new HashMap<>();

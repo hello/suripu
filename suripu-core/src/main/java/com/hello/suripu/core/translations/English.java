@@ -182,4 +182,7 @@ public class English {
             "</html>";
 
     public final static String EMAIL_PASSWORD_RESET_SUBJECT = "Reset your account password";
+
+
+    public final static String TIMELINE_UNAVAILABLE = "Your timeline is currently unavailable. Please try again later.";
 }

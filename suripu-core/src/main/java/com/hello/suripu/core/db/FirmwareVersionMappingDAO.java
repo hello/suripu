@@ -1,5 +1,6 @@
-package com.hello.suripu.admin.db;
+package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -16,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +70,15 @@ public class FirmwareVersionMappingDAO {
                 .withKeyConditions(queryConditions)
                 .withLimit(10);
 
-        final QueryResult queryResult = amazonDynamoDB.query(queryRequest);
+        final QueryResult queryResult;
+
+        try {
+            queryResult = amazonDynamoDB.query(queryRequest);
+        } catch (AmazonServiceException ase){
+            LOGGER.error("Firmware Version map query failed.");
+            return Collections.EMPTY_LIST;
+        }
+
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
         final List<String> humanVersions = Lists.newArrayList();

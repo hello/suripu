@@ -22,14 +22,14 @@ public class InactiveDevicesPaginator {
     public final Optional<Long> afterTimestamp;
     public final Optional<Long> beforeTimestamp;
     public final String deviceType;
-    public final Integer maxItemsPerPage;
+    public final Optional<Integer> maxItemsPerPageOptional;
 
     public InactiveDevicesPaginator(final JedisPool jedisPool, final Long afterTimestamp, final Long beforeTimestamp, final String deviceType, final Integer maxItemsPerPage) {
         this.jedisPool = jedisPool;
         this.afterTimestamp = Optional.fromNullable(afterTimestamp);
         this.beforeTimestamp = Optional.fromNullable(beforeTimestamp);
         this.deviceType = deviceType;
-        this.maxItemsPerPage = maxItemsPerPage;
+        this.maxItemsPerPageOptional = Optional.fromNullable(maxItemsPerPage);
     }
 
     public InactiveDevicesPaginator(final JedisPool jedisPool, final Long afterTimestamp, final Long beforeTimestamp, final String deviceType) {
@@ -45,6 +45,9 @@ public class InactiveDevicesPaginator {
 
         // if beforeTimestamp is not set, assume maximum timestamp
         final Long beforeCursor = (beforeTimestamp.isPresent()) ? beforeTimestamp.get() : Long.MAX_VALUE;
+
+        // if no limit is specified, use default limit
+        final Integer maxItemsPerPage = (maxItemsPerPageOptional.isPresent()) ? maxItemsPerPageOptional.get() : DEFAULT_MAX_ITEMS_PER_PAGE;
 
         // Get data from redis
         try {
@@ -77,6 +80,7 @@ public class InactiveDevicesPaginator {
             previousCursorTimestamp = inactiveDevices.get(0).lastSeenTimestamp - 1;
             nextCursorTimestamp = inactiveDevices.get(inactiveDevices.size() - 1).lastSeenTimestamp + 1;
         }
+        final Integer maxItemsPerPage = (maxItemsPerPageOptional.isPresent()) ? maxItemsPerPageOptional.get() : DEFAULT_MAX_ITEMS_PER_PAGE;
         return new DeviceInactivePage(previousCursorTimestamp, nextCursorTimestamp, maxItemsPerPage, inactiveDevices);
     }
 

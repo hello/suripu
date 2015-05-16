@@ -91,11 +91,6 @@ http:
     adminPort: 5556
     minThreads: 2
 
-dynamodb:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: key_store
-
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
@@ -105,30 +100,9 @@ kinesis:
     encode_audio: encode_audio
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
-    logs: logs
+    logs: dev-logs
 
 audio_bucket_name : hello-data
-
-timezone_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: timezone_history
-
-
-alarm_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: alarm
-
-ring_time_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: ring_time
-
-alarm_info_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: alarm_info
 
 sense_logs:
     private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com
@@ -152,14 +126,37 @@ ota_configuration:
   
 kinesis_logger:
   stream_name: logs
-  enabled : true
+  enabled : false
   buffer_size: 100
   origin: suripu-service
 
 aws_access_key_s3: AKIAJVQV7XJU23UWILSQ
 aws_access_secret_s3: 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
 
-ring_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+ring_duration_sec: 240
+
+dynamodb:
   region: us-east-1
-  table_name: ring_history
+  tables:
+    alarm_info : alarm_info
+    features : features
+    firmware_upgrade_path : fw_upgrade_path
+    firmware_versions : firmware_versions_mapping
+    ota_history : ota_history
+    pill_key_store : pill_key_store
+    ring_time_history: ring_time_history
+    sense_key_store : key_store
+    sync_response_commands : response_commands
+    teams : teams
+
+  endpoints:
+      alarm_info : http://dynamodb.us-east-1.amazonaws.com
+      features : http://dynamodb.us-east-1.amazonaws.com
+      firmware_upgrade_path : http://dynamodb.us-east-1.amazonaws.com
+      firmware_versions : http://dynamodb.us-east-1.amazonaws.com
+      ota_history : http://dynamodb.us-east-1.amazonaws.com
+      pill_key_store : http://dynamodb.us-east-1.amazonaws.com
+      ring_time_history: http://dynamodb.us-east-1.amazonaws.com
+      sense_key_store : http://dynamodb.us-east-1.amazonaws.com
+      sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
+      teams : http://dynamodb.us-east-1.amazonaws.com

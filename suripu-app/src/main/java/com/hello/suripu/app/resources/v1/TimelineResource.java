@@ -2,7 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
@@ -14,6 +14,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
@@ -29,8 +30,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Path("/v1/timeline")
 public class TimelineResource extends BaseResource {
@@ -65,10 +66,9 @@ public class TimelineResource extends BaseResource {
                 return false;
             }
 
-            //only cache if not the HMM
-            if (!this.hasHmmEnabled(accountId)) {
-                this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
-            }
+
+            this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC.withTimeAtStartOfDay(), result);
+
 
             return true;
         }catch (AmazonServiceException awsExp){
@@ -88,15 +88,17 @@ public class TimelineResource extends BaseResource {
 
 
 
-    private TimelineResult getTimelinesFromCacheOrReprocess(final Long accountId, final String targetDateString){
+    private TimelineResult getTimelinesFromCacheOrReprocess(final UUID sessionUUID, final Long accountId, final String targetDateString){
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(targetDateString);
-
+        final TimelineProcessor timelineProcessor = this.timelineProcessor.copyMeWithNewUUID(sessionUUID);
         //if no update forced (i.e. no HMM)
 
         //first try to get a cached result
         final Optional<TimelineResult> cachedResult = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
 
         if (cachedResult.isPresent() && !this.hasVotingEnabled(accountId)) {
+
+            LOGGER.info("{} Found cached timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
             timelineLogDAO.putTimelineLog(accountId,cachedResult.get().log);
@@ -105,7 +107,7 @@ public class TimelineResource extends BaseResource {
         }
         else {
 
-            LOGGER.info("No cached timeline, reprocess timeline for account {}, date {}", accountId, targetDate);
+            LOGGER.info("{} No cached timeline, reprocess timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //generate timeline from one of our many algorithms
             final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
@@ -138,9 +140,16 @@ public class TimelineResource extends BaseResource {
     public List<Timeline> getTimelines(
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
-        
 
-        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(accessToken.accountId, date);
+        if(isSensorsDBUnavailable(accessToken.accountId)) {
+            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+            final List<Timeline> timelines = Lists.newArrayList(
+                    Timeline.createEmpty(English.TIMELINE_UNAVAILABLE)
+            );
+            return timelines;
+        }
+
+        final  TimelineResult result =  getTimelinesFromCacheOrReprocess(UUID.randomUUID(), accessToken.accountId, date);
 
         return result.timelines;
 
@@ -159,7 +168,7 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final TimelineResult result = getTimelinesFromCacheOrReprocess(accountId.get(), date);
+        final TimelineResult result = getTimelinesFromCacheOrReprocess(UUID.randomUUID(), accountId.get(), date);
 
         return result.timelines;
     }

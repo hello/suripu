@@ -36,7 +36,7 @@ public class InMemoryAccountDAOImpl implements AccountDAO{
     }
 
     @Override
-    public List<Account> getRecent() {
+    public List<Account> getRecent(final Integer limit) {
         return Collections.emptyList();
     }
 

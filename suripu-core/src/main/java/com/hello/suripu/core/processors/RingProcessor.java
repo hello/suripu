@@ -240,7 +240,8 @@ public class RingProcessor {
                             currentTimeAlignedToStartOfMinute.withZone(userInfo.timeZone.get()),
                             new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                             new DateTime(progressiveRingTimeOptional.get().expectedRingTimeUTC, userInfo.timeZone.get()),
-                            Optional.of(new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get())));
+                            Optional.of(new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get())),
+                            userInfo.timeZone.get());
                     LOGGER.info("Reset smart alarm with updated progressive smart alarm, original ring time {}, updated ring time {}",
                             new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                             new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get()));
@@ -446,7 +447,8 @@ public class RingProcessor {
                 smartAlarmLoggerDynamoDB.log(accountId, lastCycleEnds, DateTime.now().withZone(timeZone),
                         smartAlarmRingTimeUTC.withZone(timeZone),
                         new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone),
-                        Optional.<DateTime>absent());
+                        Optional.<DateTime>absent(),
+                        timeZone);
             }
             LOGGER.info("User {} smartAlarm time is {}", accountId, new DateTime(smartAlarmRingTimeUTC, timeZone));
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();

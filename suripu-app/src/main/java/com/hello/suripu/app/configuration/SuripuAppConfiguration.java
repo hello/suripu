@@ -340,4 +340,28 @@ public class SuripuAppConfiguration extends Configuration {
     public DynamoDBConfiguration getTimelineLogDBConfiguration(){
         return this.timelineLogDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("ota_history_db")
+    private DynamoDBConfiguration otaHistoryDBConfiguration;
+    public DynamoDBConfiguration getOTAHistoryDBConfiguration(){
+        return this.otaHistoryDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("resp_commands_db")
+    private DynamoDBConfiguration responseCommandsDBConfiguration;
+    public DynamoDBConfiguration getResponseCommandsDBConfiguration(){
+        return this.responseCommandsDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("fw_path_db")
+    private DynamoDBConfiguration fwUpgradePathDBConfiguration;
+    public DynamoDBConfiguration getFWUpgradePathDBConfiguration(){
+        return this.fwUpgradePathDBConfiguration;
+    }
 }

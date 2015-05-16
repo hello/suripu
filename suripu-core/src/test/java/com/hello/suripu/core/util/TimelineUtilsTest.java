@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.FixtureTest;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -18,6 +19,7 @@ import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -40,6 +42,9 @@ import static org.hamcrest.Matchers.is;
  */
 public class TimelineUtilsTest extends FixtureTest {
 
+    final private TimelineUtils timelineUtils = new TimelineUtils();
+
+
 
 
     @Test
@@ -49,7 +54,7 @@ public class TimelineUtilsTest extends FixtureTest {
         events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,5));
         events.add(new MotionEvent(now.getMillis(), now.getMillis() + DateTimeConstants.MILLIS_PER_MINUTE,0,50));
 
-        final List<Event> filteredEvents = TimelineUtils.convertLightMotionToNone(events, 10);
+        final List<Event> filteredEvents = timelineUtils.convertLightMotionToNone(events, 10);
         assertThat(filteredEvents.size(), is(events.size()));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.MOTION));
         assertThat(filteredEvents.get(1).getType(), is(Event.Type.NONE));
@@ -69,7 +74,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.of(events.get(1));
         final Optional<Event> outBedOptional = Optional.of(events.get(3));
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         assertThat(filteredEvents.size(), is(events.size()));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.NONE));
         assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
@@ -91,7 +96,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.of(events.get(1));
         final Optional<Event> outBedOptional = Optional.absent();
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         assertThat(filteredEvents.size(), is(events.size()));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.NONE));
         assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
@@ -113,7 +118,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.absent();
         final Optional<Event> outBedOptional = Optional.of(events.get(3));
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         assertThat(filteredEvents.size(), is(events.size()));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.MOTION));
         assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
@@ -135,7 +140,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.absent();
         final Optional<Event> outBedOptional = Optional.absent();
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
         assertThat(filteredEvents.size(), is(events.size()));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.MOTION));
         assertThat(filteredEvents.get(2).getType(), is(Event.Type.NONE));
@@ -157,8 +162,8 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.of(events.get(1));
         final Optional<Event> outBedOptional = Optional.of(events.get(3));
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
         // motion events outside of first meaningful event is removed
         assertThat(greyEvents.size(), is(events.size()));
@@ -182,8 +187,8 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.of(events.get(1));
         final Optional<Event> outBedOptional = Optional.absent();
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
         assertThat(greyEvents.size(), is(events.size()));
         assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
@@ -207,8 +212,8 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.absent();
         final Optional<Event> outBedOptional = Optional.of(events.get(3));
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
         assertThat(greyEvents.size(), is(events.size()));
         assertThat(greyEvents.get(0).getType(), is(Event.Type.MOTION));
@@ -232,8 +237,8 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.absent();
         final Optional<Event> outBedOptional = Optional.absent();
 
-        final List<Event> filteredEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
 
         for(int i = 0; i < events.size(); i++){
             assertThat(greyEvents.get(i).getType() == Event.Type.NONE, is(false));
@@ -251,7 +256,7 @@ public class TimelineUtilsTest extends FixtureTest {
         sleepSegments.add(new FallingAsleepEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(2).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
         sleepSegments.add(new FallingAsleepEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(3).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0));
 
-        final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments,
+        final List<Event> mergedSegments = timelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments,
                 DateTimeConstants.MILLIS_PER_MINUTE,
                 5, true);
         assertThat(mergedSegments.size(), Is.is(1));
@@ -269,12 +274,12 @@ public class TimelineUtilsTest extends FixtureTest {
         trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0,0L, 0L, 0L));
         trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0,0L, 0L, 0L));
 
-        final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
         final List<Event> segments = new LinkedList<>();
         segments.addAll(motionEvents);
         assertThat(segments.size(), Is.is(trackerMotions.size() - 1));
 
-        final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments,
+        final List<Event> mergedSegments = timelineUtils.generateAlignedSegmentsByTypeWeight(segments,
                 DateTimeConstants.MILLIS_PER_MINUTE,
                 5,
                 true);
@@ -293,10 +298,10 @@ public class TimelineUtilsTest extends FixtureTest {
         trackerMotions.add(new TrackerMotion(8L,99L,123L, now.plusMinutes(2).getMillis(), 0, 0,0L, 0L, 0L));
         trackerMotions.add(new TrackerMotion(9L,99L,123L, now.plusMinutes(2).getMillis(), 100, 0,0L, 0L, 0L));
 
-        final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
         final List<Event> segments = new LinkedList<>();
         segments.addAll(motionEvents);
-        final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments,
+        final List<Event> mergedSegments = timelineUtils.generateAlignedSegmentsByTypeWeight(segments,
                 DateTimeConstants.MILLIS_PER_MINUTE,
                 5, true);
         assertThat(mergedSegments.size(), Is.is(1));
@@ -307,7 +312,7 @@ public class TimelineUtilsTest extends FixtureTest {
     @Test
     public void testEmptySleepSegments() {
         final List<Event> segments = new ArrayList<>();
-        final List<Event> actual = TimelineUtils.generateAlignedSegmentsByTypeWeight(segments, DateTimeConstants.MILLIS_PER_MINUTE, 5, true);
+        final List<Event> actual = timelineUtils.generateAlignedSegmentsByTypeWeight(segments, DateTimeConstants.MILLIS_PER_MINUTE, 5, true);
         assertThat(actual.size(), Is.is(0));
     }
 
@@ -321,7 +326,7 @@ public class TimelineUtilsTest extends FixtureTest {
         sleepSegments.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(5).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 50));
         sleepSegments.add(new MotionEvent(now.plusMinutes(6).getMillis(), now.plusMinutes(6).getMillis() + DateTimeConstants.MILLIS_PER_MINUTE, 0, 0));
 
-        final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 5, true);
+        final List<Event> mergedSegments = timelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 5, true);
         assertThat(mergedSegments.size(), Is.is(2));
     }
 
@@ -348,7 +353,7 @@ public class TimelineUtilsTest extends FixtureTest {
         sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 71));
         sleepSegments.add(new MotionEvent(millis, millis + DateTimeConstants.MILLIS_PER_MINUTE, 0, 50));
 
-        final List<Event> mergedSegments = TimelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 2, true);
+        final List<Event> mergedSegments = timelineUtils.generateAlignedSegmentsByTypeWeight(sleepSegments, DateTimeConstants.MILLIS_PER_MINUTE, 2, true);
         assertThat(mergedSegments.size(), Is.is(1));
     }
 
@@ -359,7 +364,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1421575200000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 17, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.<DateTime>absent(),
@@ -406,7 +411,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422346440000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 26, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 26, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.<DateTime>absent(),
@@ -448,7 +453,7 @@ public class TimelineUtilsTest extends FixtureTest {
         lightOutTimes.addAll(MultiLightOutUtils.getLightOutTimes(lightEventsValid));
 
 
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 3, 9, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 3, 9, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.of(new DateTime(1425985260000L, DateTimeZone.UTC)),
@@ -486,7 +491,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422181740000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 24, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.<DateTime>absent(),
@@ -531,7 +536,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1421913780000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 21, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 21, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.of(new DateTime(1421940660000L, DateTimeZone.UTC)),
@@ -580,7 +585,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1420445760000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 04, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.of(new DateTime(1420473540000L, DateTimeZone.UTC)),
@@ -629,7 +634,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1426218480000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 3, 12, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 3, 12, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.<DateTime>absent(),
@@ -677,7 +682,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422866580000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 1, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 2, 1, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.of(new DateTime(1422891060000L, DateTimeZone.UTC)),
@@ -722,7 +727,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1422775560000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 31, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 31, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.<DateTime>absent(),
@@ -760,7 +765,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1424497800000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 2, 21, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 2, 21, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.<DateTime>absent(),
@@ -801,7 +806,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1421823120000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 20, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 20, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.of(new DateTime(1421849760000L, DateTimeZone.UTC)),
@@ -840,7 +845,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
         final ArrayList<DateTime> lightOutTimes = new ArrayList<>();
         lightOutTimes.add(new DateTime(1423962900000L, DateTimeZone.UTC));
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEvents(new DateTime(2015, 1, 31, 0, 0, DateTimeZone.UTC),
+        final List<Optional<Event>> sleepEvents = timelineUtils.getSleepEvents(new DateTime(2015, 1, 31, 0, 0, DateTimeZone.UTC),
                 trackerMotions,
                 lightOutTimes,
                 Optional.<DateTime>absent(),
@@ -883,10 +888,17 @@ public class TimelineUtilsTest extends FixtureTest {
         final List<DateTime> lightOuts = new ArrayList<>();
         lightOuts.add(new DateTime(1426218480000L, DateTimeZone.forOffsetMillis(trackerMotions.get(0).offsetMillis)));
 
-        final List<Optional<Event>> sleepEvents = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+
+        final Optional<VotingSleepEvents> votingSleepEventsOptional = timelineUtils.getSleepEventsFromVoting(trackerMotions,
                 Collections.EMPTY_LIST,
                 lightOuts,
-                Optional.<DateTime>absent()).get().sleepEvents.toList();
+                Optional.<DateTime>absent());
+
+        assertThat(votingSleepEventsOptional.isPresent(),is(true));
+
+        final SleepEvents<Optional<Event>> sleepEventObj = votingSleepEventsOptional.get().sleepEvents;
+
+        final List<Optional<Event>> sleepEvents = sleepEventObj.toList();
 
         final FallingAsleepEvent sleepSegment = (FallingAsleepEvent) sleepEvents.get(1).get();
         final InBedEvent goToBedSegment = (InBedEvent) sleepEvents.get(0).get();
@@ -922,7 +934,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime now = DateTime.now();
         events.add(new NullEvent(now.getMillis(), now.plusMinutes(2).getMillis(), 0, 0));
 
-        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = timelineUtils.insertOneMinuteDurationEvents(events,
                 new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -937,7 +949,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime now = DateTime.now();
         events.add(new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
 
-        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = timelineUtils.insertOneMinuteDurationEvents(events,
                 new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(1));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -951,7 +963,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
 
-        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = timelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.getMillis(), now.plusMinutes(1).getMillis(), 0, 0));
         assertThat(inserted.size(), is(1));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -966,7 +978,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
 
-        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = timelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.minusMinutes(1).getMillis(), now.getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.NONE));
@@ -983,7 +995,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime now = DateTime.now();
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(3).getMillis(), 0, 0));
 
-        final List<Event> inserted = TimelineUtils.insertOneMinuteDurationEvents(events,
+        final List<Event> inserted = timelineUtils.insertOneMinuteDurationEvents(events,
                 new NullEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(), 0, 0));
         assertThat(inserted.size(), is(2));
         assertThat(inserted.get(0).getType(), is(Event.Type.MOTION));
@@ -995,7 +1007,7 @@ public class TimelineUtilsTest extends FixtureTest {
     @Test
     public void testGeneratePreSleepInsightsMissingSensorData() {
         final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
-        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        final List<Insight> insights = timelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
         assertThat(insights.isEmpty(), is(true));
     }
 
@@ -1004,7 +1016,7 @@ public class TimelineUtilsTest extends FixtureTest {
     public void testGeneratePreSleepInsightsEmptyData() {
         final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
         allSensorSampleList.add(Sensor.LIGHT, Collections.EMPTY_LIST);
-        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
+        final List<Insight> insights = timelineUtils.generatePreSleepInsights(allSensorSampleList, 0L, 999L);
         assertThat(insights.isEmpty(), is(true));
     }
 
@@ -1026,7 +1038,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final RingTime emptyRingTime = RingTime.createEmpty();
         final List<RingTime> ringTimes = Lists.newArrayList(emptyRingTime);
         final DateTime now = DateTime.now();
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
+        final List<Event> events = timelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
         assertThat(events.isEmpty(), is(true));
     }
 
@@ -1036,7 +1048,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime now = DateTime.now();
         final RingTime ringTime = new RingTime(now.minusDays(1).getMillis(), now.minusDays(1).plusMinutes(10).getMillis(), 0L, false);
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.plusDays(1), now.plusDays(5), 0, now);
+        final List<Event> events = timelineUtils.getAlarmEvents(ringTimes, now.plusDays(1), now.plusDays(5), 0, now);
         assertThat(events.isEmpty(), is(true));
     }
 
@@ -1045,7 +1057,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final DateTime now = DateTime.now();
         final RingTime ringTime = new RingTime(now.plusDays(1).getMillis(), now.plusDays(1).getMillis(), 0L, false);
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
+        final List<Event> events = timelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now, 0, now);
         assertThat(events.isEmpty(), is(true));
     }
 
@@ -1057,7 +1069,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final RingTime ringTime = new RingTime(nowMillis, nowMillis, 0L, false);
 
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.plusMinutes(1));
+        final List<Event> events = timelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.plusMinutes(1));
         assertThat(events.isEmpty(), is(false));
     }
 
@@ -1068,13 +1080,13 @@ public class TimelineUtilsTest extends FixtureTest {
         final RingTime ringTime = new RingTime(nowMillis, nowMillis, 0L, false);
 
         final List<RingTime> ringTimes = Lists.newArrayList(ringTime);
-        final List<Event> events = TimelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.minusMinutes(1));
+        final List<Event> events = timelineUtils.getAlarmEvents(ringTimes, now.minusHours(12), now.plusHours(1), 0, now.minusMinutes(1));
         assertThat(events.isEmpty(), is(true));
     }
 
     @Test
     public void testGetFirstSignificantEventInEmptyTimeline(){
-        final Optional<Event> firstSignificantEvent = TimelineUtils.getFirstSignificantEvent(new ArrayList<Event>());
+        final Optional<Event> firstSignificantEvent = timelineUtils.getFirstSignificantEvent(new ArrayList<Event>());
         assertThat(firstSignificantEvent.isPresent(), is(false));
     }
 
@@ -1091,7 +1103,7 @@ public class TimelineUtilsTest extends FixtureTest {
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.of(100)));
 
-        final Optional<Event> firstSignificantEvent = TimelineUtils.getFirstSignificantEvent(events);
+        final Optional<Event> firstSignificantEvent = timelineUtils.getFirstSignificantEvent(events);
         assertThat(firstSignificantEvent.isPresent(), is(false));
     }
 
@@ -1113,7 +1125,7 @@ public class TimelineUtilsTest extends FixtureTest {
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.of(0)));
 
-        final Optional<Event> firstSignificantEvent = TimelineUtils.getFirstSignificantEvent(events);
+        final Optional<Event> firstSignificantEvent = timelineUtils.getFirstSignificantEvent(events);
         assertThat(firstSignificantEvent.isPresent(), is(true));
         assertThat(firstSignificantEvent.get().getType(), is(Event.Type.LIGHTS_OUT));
     }
@@ -1132,7 +1144,7 @@ public class TimelineUtilsTest extends FixtureTest {
                 Optional.of(100)));
 
 
-        final List<Event> filteredEvents = TimelineUtils.removeEventBeforeSignificant(events);
+        final List<Event> filteredEvents = timelineUtils.removeEventBeforeSignificant(events);
         assertThat(filteredEvents, is(events));
     }
 
@@ -1155,7 +1167,7 @@ public class TimelineUtilsTest extends FixtureTest {
                 Optional.of(0)));
 
 
-        final List<Event> filteredEvents = TimelineUtils.removeEventBeforeSignificant(events);
+        final List<Event> filteredEvents = timelineUtils.removeEventBeforeSignificant(events);
         assertThat(filteredEvents, is(events));
     }
 
@@ -1183,7 +1195,7 @@ public class TimelineUtilsTest extends FixtureTest {
                 Optional.of(0)));
 
 
-        final List<Event> filteredEvents = TimelineUtils.removeEventBeforeSignificant(events);
+        final List<Event> filteredEvents = timelineUtils.removeEventBeforeSignificant(events);
         assertThat(filteredEvents.size(), is(2));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.LIGHTS_OUT));
         assertThat(filteredEvents.get(1).getType(), is(Event.Type.WAKE_UP));

@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -39,9 +40,11 @@ import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimelineRefactored;
+import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.VotingSleepEvents;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,12 +56,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
-    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
-    private static final Integer MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES = 3 * 60;
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
@@ -67,22 +70,48 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountDAO accountDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
+    private final Logger LOGGER;
+    private final TimelineUtils timelineUtils;
+    private final TimelineSafeguards timelineSafeguards;
 
     final private static int SLOT_DURATION_MINUTES = 1;
-    final private static int MININIMUM_NUMBER_OF_TRACKER_MOTIIONS = 20;
+    public final static int MIN_TRACKER_MOTION_COUNT = 20;
 
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";
     public final static String ALGORITHM_NAME_HMM = "hmm";
+    public final static String VERSION_BACKUP = "wupang_backup_for_hmm"; //let us know the HMM had some issues
 
-    public TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
+
+    static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
+                                                            final DeviceDAO deviceDAO,
+                                                            final DeviceDataDAO deviceDataDAO,
+                                                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+                                                            final FeedbackDAO feedbackDAO,
+                                                            final SleepHmmDAO sleepHmmDAO,
+                                                            final AccountDAO accountDAO,
+                                                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+
+        final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,Optional.<UUID>absent());
+    }
+
+    public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
+
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,Optional.of(uuid));
+    }
+
+    //private SessionLogDebug(final String)
+
+    private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                             final DeviceDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                             final FeedbackDAO feedbackDAO,
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                              final Optional<UUID> uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -91,6 +120,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+
+        if (uuid.isPresent()) {
+            this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
+            timelineUtils = new TimelineUtils(uuid.get());
+            timelineSafeguards = new TimelineSafeguards(uuid.get());
+
+        }
+        else {
+            this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+            timelineUtils = new TimelineUtils();
+            timelineSafeguards = new TimelineSafeguards();
+        }
     }
 
     public boolean shouldProcessTimelineByWorker(final long accountId,
@@ -107,6 +148,122 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return false;
     }
 
+    public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
+        final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
+        final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
+        final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
+
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+
+
+        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
+
+        if (!sensorDataOptional.isPresent()) {
+            LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
+
+
+        final OneDaysSensorData sensorData = sensorDataOptional.get();
+        if(!isValidNight(accountId, sensorData.trackerMotions)){
+            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
+        String algorithm = TimelineLog.NO_ALGORITHM;
+        String version = TimelineLog.NO_VERSION;
+
+        try {
+            boolean algorithmWorked = false;
+
+            Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
+            List<Event> extraEvents = Collections.EMPTY_LIST;
+
+
+            if(this.hasVotingEnabled(accountId)){
+                // Voting algorithm feature
+                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
+                        sensorData.allSensorSampleList.get(Sensor.SOUND),
+                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
+                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
+                extraEvents = votingSleepEventsOptional.get().extraEvents;
+                algorithm = ALGORITHM_NAME_VOTING;
+                algorithmWorked = true;
+
+            } else {
+
+                // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
+                Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
+                        sensorData.trackerMotions,
+                        sensorData.allSensorSampleList);
+
+                if (results.isPresent()) {
+                    LOGGER.debug("HMM Suceeded.");
+                    sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
+                    extraEvents = results.get().allTheOtherWakesAndSleeps.asList();
+                    algorithm = ALGORITHM_NAME_HMM;
+
+                    //verify that algorithm produced something useable
+                    if (timelineSafeguards.checkIfValidTimeline(
+                            sleepEventsFromAlgorithmOptional.get(),
+                            ImmutableList.copyOf(extraEvents),
+                            ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)))) {
+
+                        algorithmWorked = true;
+                    }
+                }
+            }
+
+
+
+            /* TRY THE BACKUP PLAN!  */
+            if (!algorithmWorked) {
+                LOGGER.warn("ALGORITHM FAILED, trying regular algorithm instead");
+
+                //reset state
+                extraEvents = Collections.EMPTY_LIST;
+                algorithm = ALGORITHM_NAME_REGULAR;
+                version = VERSION_BACKUP;
+
+                sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
+                        sensorData.trackerMotions,
+                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
+
+            }
+
+            if (!sleepEventsFromAlgorithmOptional.isPresent()) {
+                LOGGER.debug("returning empty timeline for account_id = {} and day = {} and algo = {}", accountId, targetDate, algorithm);
+                return Optional.absent();
+            }
+
+            /* FEATURE FLIP EXTRA EVENTS */
+            if (!this.hasExtraEventsEnabled(accountId)) {
+                LOGGER.info("not using {} extra events",extraEvents.size());
+                extraEvents = Collections.EMPTY_LIST;
+            }
+
+            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
+
+            final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
+
+            return Optional.of(TimelineResult.create(timelines, log));
+        }
+        catch (Exception e) {
+            LOGGER.error(e.toString());
+        }
+
+        LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
+        return Optional.absent();
+
+    }
+
+
+
     private List<Event> getAlarmEvents(final Long accountId, final DateTime startQueryTime, final DateTime endQueryTime, final Integer offsetMillis) {
 
         final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountId);
@@ -122,7 +279,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final List<RingTime> ringTimes = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(senseId, startQueryTime, endQueryTime);
 
-        return TimelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
+        return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
     static protected class OneDaysSensorData {
@@ -146,11 +303,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
 
-        if(originalTrackerMotions.size() < MININIMUM_NUMBER_OF_TRACKER_MOTIIONS) {
-            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
-            return Optional.absent();
-        }
-
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
@@ -169,6 +321,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
+        if (trackerMotions.size() == 0) {
+            LOGGER.debug("No tracker motion data ID for account_id = {} and day = {}", accountId, targetDate);
+            return Optional.absent();
+        }
+
         // get all sensor data, used for light and sound disturbances, and presleep-insights
 
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
@@ -179,10 +336,25 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
+        AllSensorSampleList allSensorSampleList;
+        if (hasAllSensorQueryUseUTCTs(accountId)) {
+            // query dates in utc_ts (table has an index for this)
+            LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
 
-        final AllSensorSampleList allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
-                targetDate.getMillis(), endDate.getMillis(),
-                accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
+            final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
+            allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                    endDate.minusMillis(tzOffsetMillis).getMillis(),
+                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
+        } else {
+            // query dates are in local_utc_ts
+            LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
+
+            allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
+                    targetDate.getMillis(),
+                    endDate.getMillis(),
+                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId));
+        }
 
         if (allSensorSampleList.isEmpty()) {
             LOGGER.debug("No sense sensor data ID for account_id = {} and day = {}", accountId, targetDate);
@@ -208,9 +380,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (!allSensorSampleList.isEmpty()) {
 
             // Light
-            lightEvents.addAll(TimelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
+            lightEvents.addAll(timelineUtils.getLightEvents(allSensorSampleList.get(Sensor.LIGHT)));
             if (lightEvents.size() > 0) {
-                lightOutTimeOptional = TimelineUtils.getLightsOutTime(lightEvents);
+                lightOutTimeOptional = timelineUtils.getLightsOutTime(lightEvents);
             }
 
         }
@@ -223,7 +395,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         // create sleep-motion segments
-        final List<MotionEvent> motionEvents = TimelineUtils.generateMotionEvents(trackerMotions);
+        final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
 
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
 
@@ -312,37 +484,37 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
-        final List<Event> smoothedEvents = TimelineUtils.smoothEvents(eventsWithSleepEvents);
+        final List<Event> smoothedEvents = timelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final List<Event> cleanedUpEvents = TimelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
+        final List<Event> cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
                 sleepEventsFromAlgorithm.goToBed,
                 sleepEventsFromAlgorithm.outOfBed);
 
-        final List<Event> greyEvents = TimelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
                 sleepEventsFromAlgorithm.goToBed,
                 sleepEventsFromAlgorithm.outOfBed);
-        final List<Event> nonSignificantFilteredEvents = TimelineUtils.removeEventBeforeSignificant(greyEvents);
+        final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
 
-        final List<SleepSegment> sleepSegments = TimelineUtils.eventsToSegments(nonSignificantFilteredEvents);
+        final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
 
         final int lightSleepThreshold = 70; // TODO: Generate dynamically instead of hard threshold
-        final SleepStats sleepStats = TimelineUtils.computeStats(sleepSegments, lightSleepThreshold);
+        final SleepStats sleepStats = timelineUtils.computeStats(sleepSegments, lightSleepThreshold);
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
         Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, sleepStats);
 
-        if(sleepStats.sleepDurationInMinutes < MIN_SLEEP_DURATION_FOR_SLEEP_SCORE_IN_MINUTES) {
+        if(sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
             sleepScore = 0;
         }
 
-        final String timeLineMessage = TimelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
+        final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
 
 
-        final List<Insight> insights = TimelineUtils.generatePreSleepInsights(allSensorSampleList, sleepStats.sleepTime, accountId);
+        final List<Insight> insights = timelineUtils.generatePreSleepInsights(allSensorSampleList, sleepStats.sleepTime, accountId);
         final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
@@ -350,90 +522,23 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return timelines;
     }
 
-
-
-    public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
-        final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
-        final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
-        final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
-
-        LOGGER.debug("Target date: {}", targetDate);
-        LOGGER.debug("End date: {}", endDate);
-
-
-
-        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
-
-        if (!sensorDataOptional.isPresent()) {
-            LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-            return Optional.absent();
+    /*
+    * Check if the motion span in a large enough time.
+     */
+    private boolean isValidNight(final Long accountId, final List<TrackerMotion> motionData){
+        if(!hasNewInvalidNightFilterEnabled(accountId)){
+            return motionData.size() >= MIN_TRACKER_MOTION_COUNT;
         }
 
-
-
-        final OneDaysSensorData sensorData = sensorDataOptional.get();
-        String algorithm = TimelineLog.NO_ALGORITHM;
-        String version = TimelineLog.NO_VERSION;
-
-        try {
-
-        /*  This can get overided by the HMM if the feature is enabled */
-            Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
-            List<Event> extraEvents = ImmutableList.copyOf(Collections.EMPTY_LIST);
-
-
-            if (this.hasHmmEnabled(accountId)) {
-                /* DO HMM */
-                Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate, sensorData.trackerMotions, sensorData.allSensorSampleList);
-
-                if (!results.isPresent()) {
-                    return Optional.absent();
-                }
-
-                sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
-                extraEvents = results.get().allTheOtherWakesAndSleeps;
-                algorithm = ALGORITHM_NAME_HMM;
-
-            } else if(this.hasVotingEnabled(accountId)){
-                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
-                        sensorData.allSensorSampleList.get(Sensor.SOUND),
-                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
-                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
-                extraEvents = votingSleepEventsOptional.get().extraEvents;
-                algorithm = ALGORITHM_NAME_VOTING;
-            } else {
-
-                /* regular algorithm */
-                sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
-                        sensorData.trackerMotions,
-                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
-                algorithm = ALGORITHM_NAME_REGULAR;
-
-            }
-
-            if (!sleepEventsFromAlgorithmOptional.isPresent()) {
-                LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.absent();
-            }
-
-            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
-
-            final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
-
-            return Optional.of(TimelineResult.create(timelines,log));
+        if(motionData.size() == 0){
+            return false;
         }
-        catch (Exception e) {
-            LOGGER.error(e.toString());
+        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
+            return false;
         }
 
-        LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-        return Optional.absent();
-
+        return true;
     }
-
-
 
 
     private List<TrackerMotion> getPartnerTrackerMotion(final Long accountId, final DateTime startTime, final DateTime endTime) {
@@ -472,7 +577,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         if (partnerMotionsWithinSleepBounds.size() > 0) {
             // use un-normalized data segments for comparison
-            return PartnerMotion.getPartnerData(motionEvents, partnerMotionsWithinSleepBounds, 0);
+            final List<MotionEvent> partnerMotionEvents = timelineUtils.generateMotionEvents(partnerMotionsWithinSleepBounds);
+
+            return PartnerMotion.getPartnerData(partnerMotionEvents,motionEvents, 0);
         }
 
         return Collections.EMPTY_LIST;
@@ -521,7 +628,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        return TimelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
+        return timelineUtils.getSoundEvents(soundSamples, sleepDepths, lightOutTimeOptional, optionalSleepTime, optionalAwakeTime);
     }
 
     static private class HmmAlgorithmResults {
@@ -630,7 +737,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 Optional.<Event>absent(),
                 Optional.<Event>absent());
 
-        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(rawLight);
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
@@ -639,11 +746,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
 
-            Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+            Optional<DateTime> wakeUpWaveTimeOptional = timelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
                     trackerMotions.get(trackerMotions.size() - 1).timestamp,
                     waves );
 
-            sleepEventsFromAlgorithm = TimelineUtils.getSleepEvents(targetDate,
+            sleepEventsFromAlgorithm = timelineUtils.getSleepEvents(targetDate,
                     trackerMotions,
                     lightOutTimes,
                     wakeUpWaveTimeOptional,
@@ -687,7 +794,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                              final List<Sample> rawWave) {
         Optional<VotingSleepEvents> votingSleepEventsOptional = Optional.absent();
 
-        final List<Event> rawLightEvents = TimelineUtils.getLightEventsWithMultipleLightOut(rawLight);
+        final List<Event> rawLightEvents = timelineUtils.getLightEventsWithMultipleLightOut(rawLight);
         final List<Event> smoothedLightEvents = MultiLightOutUtils.smoothLight(rawLightEvents, MultiLightOutUtils.DEFAULT_SMOOTH_GAP_MIN);
         final List<Event> lightOuts = MultiLightOutUtils.getValidLightOuts(smoothedLightEvents, trackerMotions, MultiLightOutUtils.DEFAULT_LIGHT_DELTA_WINDOW_MIN);
 
@@ -695,10 +802,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         // A day starts with 8pm local time and ends with 4pm local time next day
         try {
-            Optional<DateTime> wakeUpWaveTimeOptional = TimelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+            Optional<DateTime> wakeUpWaveTimeOptional = timelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
                     trackerMotions.get(trackerMotions.size() - 1).timestamp,
                     rawWave);
-            votingSleepEventsOptional = TimelineUtils.getSleepEventsFromVoting(trackerMotions,
+            votingSleepEventsOptional = timelineUtils.getSleepEventsFromVoting(trackerMotions,
                     rawSound,
                     lightOutTimes,
                     wakeUpWaveTimeOptional);

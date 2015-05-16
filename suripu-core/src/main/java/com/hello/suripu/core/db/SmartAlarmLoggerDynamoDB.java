@@ -16,6 +16,7 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +39,11 @@ public class SmartAlarmLoggerDynamoDB {
     public static final String PROGRESSIVE_SMART_RING_TIME_ATTRIBUTE_NAME = "progressive_smart_ring_time";
     public static final String LAST_SLEEP_CYCLE_ATTRIBUTE_NAME = "last_sleep_cycle_time";
     public static final String CURRENT_TIME_ATTRIBUTE_NAME = "current_time";
+    public static final String TIMEZONE_ID_ATTRIBUTE_NAME = "timezone_id";
 
     public static final String CREATED_AT_ATTRIBUTE_NAME = "created_at_utc";
 
-    private static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss Z";
+    private static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";  // Due to Joda Time's behavior, it is not a good idea to store timezone as offset in the string
 
 
 
@@ -53,7 +55,8 @@ public class SmartAlarmLoggerDynamoDB {
     public void log(final Long accountId, final DateTime lastSleepCycleEnd, final DateTime now,
                     final DateTime nextRingTimeWithLocalTimeZone,
                     final DateTime nextRegularRingTimeWithLocalTimeZone,
-                    final Optional<DateTime> progressiveRingTimeOptional){
+                    final Optional<DateTime> progressiveRingTimeOptional,
+                    final DateTimeZone userTimeZone){
         final Map<String, AttributeValue> items = new HashMap<>();
         items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
         items.put(CURRENT_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(now.toString(DATETIME_FORMAT)));
@@ -64,6 +67,7 @@ public class SmartAlarmLoggerDynamoDB {
             items.put(PROGRESSIVE_SMART_RING_TIME_ATTRIBUTE_NAME,
                     new AttributeValue().withS(progressiveRingTimeOptional.get().toString(DATETIME_FORMAT)));
         }
+        items.put(TIMEZONE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(userTimeZone.getID()));
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
         try {
             final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);

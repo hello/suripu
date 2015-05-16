@@ -1,9 +1,13 @@
 package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.models.Account;
+import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.PasswordResetAdmin;
+import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountDAOAdmin;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AccountCount;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -19,6 +23,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -30,12 +35,19 @@ import java.util.List;
 public class AccountResources {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResources.class);
+    private final Integer DEFAULT_RECENT_USERS_LIMIT = 100;
+    private final Integer MAX_RECENT_USERS_LIMIT = 500;
+
     private final AccountDAO accountDAO;
     private final PasswordResetDB passwordResetDB;
+    private final DeviceDAO deviceDAO;
+    private final AccountDAOAdmin accountDAOAdmin;
 
-    public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB) {
+    public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB, final DeviceDAO deviceDAO, final AccountDAOAdmin accountDAOAdmin) {
         this.accountDAO = accountDAO;
         this.passwordResetDB = passwordResetDB;
+        this.deviceDAO = deviceDAO;
+        this.accountDAOAdmin = accountDAOAdmin;
     }
 
 
@@ -94,11 +106,26 @@ public class AccountResources {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/recent")
-    public List<Account> retrieveRecentlyCreatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken){
-        final List<Account> accounts = accountDAO.getRecent();
-        return accounts;
+    public List<Account> retrieveRecentlyCreatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                                         @QueryParam("limit") final Integer limit){
+        if (limit == null) {
+            return accountDAO.getRecent(DEFAULT_RECENT_USERS_LIMIT);
+        }
+        return accountDAO.getRecent(Math.min(limit, MAX_RECENT_USERS_LIMIT));
     }
 
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/paginate")
+    public List<Account> retrievePaginatedAccounts(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                                         @QueryParam("limit") final Integer limit,
+                                                         @QueryParam("max_id") final Integer maxId){
+        if (limit == null || maxId == null) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "limit and max_id required")).build());
+        }
+        return accountDAOAdmin.getRecentBeforeId(Math.min(limit, MAX_RECENT_USERS_LIMIT), maxId);
+    }
 
     @POST
     @Timed
@@ -127,5 +154,40 @@ public class AccountResources {
         }
 
         return Response.serverError().build();
+    }
+
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{email}/partner")
+    public Account retrievePartnerAccount(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                          @PathParam("email") final String email){
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Account not found")).build());
+        }
+
+        final Optional<Long> partnerAccountIdOptional = deviceDAO.getPartnerAccountId(accountIdOptional.get());
+
+        if (!partnerAccountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Partner account not found")).build());
+        }
+
+        return accountDAO.getById(partnerAccountIdOptional.get()).get();
+    }
+
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/count_by_created")
+    public List<AccountCount> retrieveCountsByCreated(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken) {
+        return accountDAOAdmin.countByDate();
+
     }
 }

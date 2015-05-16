@@ -202,7 +202,14 @@ public class DeviceResources {
         // TODO: device state will always be normal for now until more information is provided by the device
 
         for (final DeviceAccountPair sense : senses) {
-            final Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatus(sense.internalDeviceId);
+            // Try to limit the search to the last 1h first, to guarantee table index scan lower bound
+            // !!! we mutate senseStatusOptional
+            Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatusLastHour(sense.internalDeviceId);
+            if(!senseStatusOptional.isPresent()) {
+                LOGGER.warn("No data in the last hour for device id = {} (external id = {}) for account_id = {}", sense.internalDeviceId, sense.externalDeviceId, sense.accountId);
+                senseStatusOptional = this.deviceDataDAO.senseStatus(sense.internalDeviceId);
+            }
+
             if(senseStatusOptional.isPresent()) {
                 devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen, Device.Color.BLACK)); // TODO: grab Sense color from Serial Number
             } else {
@@ -215,6 +222,7 @@ public class DeviceResources {
             Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pill.internalDeviceId);
             if (!pillStatusOptional.isPresent()) {
                 // no heartbeat yet, pull from tracker-motion
+                LOGGER.warn("No heartbeat yet for pill id = {} (external id = {}) for account_id = {}", pill.internalDeviceId, pill.externalDeviceId, pill.accountId);
                 pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId);
             }
 

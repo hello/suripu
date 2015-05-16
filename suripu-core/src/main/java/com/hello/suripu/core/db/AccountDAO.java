@@ -11,7 +11,7 @@ public interface AccountDAO {
 
     Optional<Account> getById(final Long id);
     Optional<Account> getByEmail(final String email);
-    List<Account> getRecent();
+    List<Account> getRecent(final Integer limit);
     Account register(Registration registration);
     Optional<Account> exists(final String email, final String password);
     Optional<Account> update(final Account account, Long accountId);

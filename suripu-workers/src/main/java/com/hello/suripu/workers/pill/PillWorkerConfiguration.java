@@ -1,7 +1,7 @@
 package com.hello.suripu.workers.pill;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.core.configuration.RedisConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -53,28 +53,18 @@ public class PillWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("key_store")
-    private DynamoDBConfiguration keyStore;
-
-    public DynamoDBConfiguration getKeyStore() {
-        return keyStore;
-    }
-
-
-    @Valid
-    @NotNull
-    @JsonProperty("user_info")
-    private DynamoDBConfiguration userInfo;
-
-    public DynamoDBConfiguration getUserInfo() {
-        return userInfo;
-    }
-
-    @Valid
-    @NotNull
     @JsonProperty("redis")
     private RedisConfiguration redisConfiguration;
     public RedisConfiguration getRedisConfiguration() {
         return redisConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("dynamodb")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+
+    public NewDynamoDBConfiguration dynamoDBConfiguration(){
+        return dynamoDBConfiguration;
     }
 }

@@ -6,12 +6,15 @@ import com.hello.suripu.admin.models.UserInteraction;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -52,13 +55,20 @@ public class DataResources {
     private final AccountDAO accountDAO;
     private final UserLabelDAO userLabelDAO;
     private final TrackerMotionDAO trackerMotionDAO;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
 
-    public DataResources(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final AccountDAO accountDAO, final UserLabelDAO userLabelDAO, final TrackerMotionDAO trackerMotionDAO) {
+    public DataResources(final DeviceDataDAO deviceDataDAO,
+                         final DeviceDAO deviceDAO,
+                         final AccountDAO accountDAO,
+                         final UserLabelDAO userLabelDAO,
+                         final TrackerMotionDAO trackerMotionDAO,
+                         final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.userLabelDAO = userLabelDAO;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
     }
 
     @GET
@@ -296,5 +306,30 @@ public class DataResources {
         }
 
         return userInteractions;
+    }
+
+
+
+    @Timed
+    @GET
+    @Path("/current_room_conditions/{sense_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CurrentRoomState currentRoomState(
+            @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+            @PathParam("sense_id") final String senseId) {
+
+        final List<DeviceAccountPair> pairs = deviceDAO.getAccountIdsForDeviceId(senseId);
+        if(pairs.isEmpty()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final DeviceAccountPair pair = pairs.get(0);
+
+        final Optional<DeviceData> deviceDataOptional = sensorsViewsDynamoDB.lastSeen(senseId, pair.accountId, pair.internalDeviceId);
+        if(!deviceDataOptional.isPresent()) {
+            return CurrentRoomState.empty();
+        }
+
+        return CurrentRoomState.fromDeviceData(deviceDataOptional.get(), DateTime.now(), 15, "c");
     }
 }
