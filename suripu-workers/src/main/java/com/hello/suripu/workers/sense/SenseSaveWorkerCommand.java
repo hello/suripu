@@ -11,22 +11,19 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.db.ManagedDataSource;
-import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
-import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
+import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -50,26 +47,14 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
     @Override
     protected void run(Environment environment, Namespace namespace, SenseSaveWorkerConfiguration configuration) throws Exception {
 
-        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
+        final DBIFactory dbiFactory = new DBIFactory();
+        final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
+        final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorsDB(), "postgresql");
 
-        final ManagedDataSource sensorsDataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
-
-        final DBI commonDBI = new DBI(commonDataSource);
-        commonDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        commonDBI.registerContainerFactory(new ImmutableListContainerFactory());
-        commonDBI.registerContainerFactory(new ImmutableSetContainerFactory());
-        commonDBI.registerContainerFactory(new OptionalContainerFactory());
-        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
-        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
-
-
-        final DBI sensorsDBI = new DBI(sensorsDataSource);
-        sensorsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        sensorsDBI.registerContainerFactory(new ImmutableListContainerFactory());
-        sensorsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
-        sensorsDBI.registerContainerFactory(new OptionalContainerFactory());
         sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
+
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
         final DeviceDataDAO deviceDataDAO = sensorsDBI.onDemand(DeviceDataDAO.class);
 
 
@@ -109,25 +94,41 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
+
+
+        final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
+        final AmazonDynamoDB sensorViewsDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+        final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
+
+        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
-        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
+        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, tableNames.get(DynamoDBTableName.FEATURES), featureNamespace);
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final AmazonDynamoDB dynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getMergedInfoDB().getEndpoint());
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(alarmInfoDynamoDBClient , tableNames.get(DynamoDBTableName.ALARM_INFO));
 
-
-        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(dynamoDBClient, configuration.getMergedInfoDB().getTableName());
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
+                sensorViewsDynamoDBClient,
+                tableNames.get(DynamoDBTableName.SENSE_PREFIX),
+                tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
+        );
 
         final JedisPool jedisPool = new JedisPool(
                 configuration.getRedisConfiguration().getHost(),
                 configuration.getRedisConfiguration().getPort()
         );
 
-        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(deviceDAO, mergedUserInfoDynamoDB, deviceDataDAO, jedisPool);
+        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(
+                deviceDAO,
+                mergedUserInfoDynamoDB,
+                sensorsViewsDynamoDB,
+                deviceDataDAO,
+                jedisPool
+        );
+
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }

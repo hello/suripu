@@ -96,15 +96,18 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
 
-merged_info_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+dynamodb:
   region: us-east-1
-  table_name: prod_alarm_info
-
-features_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: features
+  tables:
+    alarm_info: prod_alarm_info
+    features: features
+    sense_prefix : prod_sense #not used at the moment but we need it here
+    sense_last_seen : prod_sense_last_seen
+  endpoints:
+    alarm_info: http://dynamodb.us-east-1.amazonaws.com
+    features : http://dynamodb.us-east-1.amazonaws.com
+    sense_prefix: http://dynamodb.us-east-1.amazonaws.com
+    sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
 
 redis:
   host: stats.xoe7je.0001.use1.cache.amazonaws.com

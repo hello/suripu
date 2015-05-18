@@ -7,8 +7,10 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
-import com.hello.suripu.admin.db.FirmwareVersionMappingDAO;
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
+
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -29,11 +31,11 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAdminConfigura
     }
 
     private void createSenseEventsTable(final SuripuAdminConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
-        final DynamoDBConfiguration config = configuration.getSenseEventsDBConfiguration();
+        final NewDynamoDBConfiguration config = configuration.dynamoDBConfiguration();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(config.getEndpoint());
-        final String tableName = config.getTableName();
+        client.setEndpoint(config.endpoints().get(DynamoDBTableName.SENSE_EVENTS));
+        final String tableName = config.tables().get(DynamoDBTableName.SENSE_EVENTS);
         try {
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));
@@ -45,11 +47,11 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAdminConfigura
     }
 
     private void createFirmwareVersionsMappingTable(final SuripuAdminConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
-        final DynamoDBConfiguration config = configuration.getFirmwareVersionsDynamoDBConfiguration();
+        final NewDynamoDBConfiguration config = configuration.dynamoDBConfiguration();
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
 
-        client.setEndpoint(config.getEndpoint());
-        final String tableName = config.getTableName();
+        client.setEndpoint(config.endpoints().get(DynamoDBTableName.FIRMWARE_VERSIONS));
+        final String tableName = config.tables().get(DynamoDBTableName.FIRMWARE_VERSIONS);
         try {
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));

@@ -11,6 +11,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -27,10 +28,7 @@ import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSource;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
-import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
+import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -56,28 +54,18 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final ManagedDataSource sensorDataSource = managedDataSourceFactory.build(configuration.getSensorDB());
 
-        final DBI jdbiSensor = new DBI(sensorDataSource);
-        jdbiSensor.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorDB().getDriverClass()));
-        jdbiSensor.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbiSensor.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbiSensor.registerContainerFactory(new OptionalContainerFactory());
-        jdbiSensor.registerArgumentFactory(new JodaArgumentFactory());
 
-        final TrackerMotionDAO trackerMotionDAO = jdbiSensor.onDemand(TrackerMotionDAO.class);
+        final DBIFactory dbiFactory = new DBIFactory();
+        final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
+        final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
 
+        // Joda Argument factory is not supported by default by DW, needs to be added manually
+        sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final ManagedDataSource commonDataSource = managedDataSourceFactory.build(configuration.getCommonDB());
-
-        final DBI jdbiCommon = new DBI(commonDataSource);
-        jdbiCommon.registerArgumentFactory(new OptionalArgumentFactory(configuration.getCommonDB().getDriverClass()));
-        jdbiCommon.registerContainerFactory(new ImmutableListContainerFactory());
-        jdbiCommon.registerContainerFactory(new ImmutableSetContainerFactory());
-        jdbiCommon.registerContainerFactory(new OptionalContainerFactory());
-        jdbiCommon.registerArgumentFactory(new JodaArgumentFactory());
-
-
-        final DeviceDAO deviceDAO = jdbiCommon.onDemand(DeviceDAO.class);
-        final PillHeartBeatDAO heartBeatDAO = jdbiCommon.onDemand(PillHeartBeatDAO.class);
+        final TrackerMotionDAO trackerMotionDAO = sensorsDBI.onDemand(TrackerMotionDAO.class);
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
+        final PillHeartBeatDAO heartBeatDAO = commonDBI.onDemand(PillHeartBeatDAO.class);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
@@ -117,19 +105,21 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
+        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
+        final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
-        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
+        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, tableNames.get(DynamoDBTableName.FEATURES), featureNamespace);
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final AmazonDynamoDB mergedUserInfoDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getUserInfo().getEndpoint());
-        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient, configuration.getUserInfo().getTableName());
+        final AmazonDynamoDB mergedUserInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient, tableNames.get(DynamoDBTableName.ALARM_INFO));
 
-        final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getKeyStore().getEndpoint());
-        final KeyStore pillKeyStore = new KeyStoreDynamoDB(pillKeyStoreDynamoDB,configuration.getKeyStore().getTableName(), new byte[16], 120);
+        final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_KEY_STORE);
+        final KeyStore pillKeyStore = new KeyStoreDynamoDB(pillKeyStoreDynamoDB,tableNames.get(DynamoDBTableName.PILL_KEY_STORE), new byte[16], 120);
+
         final JedisPool jedisPool = new JedisPool(configuration.getRedisConfiguration().getHost(), configuration.getRedisConfiguration().getPort());
         final ActiveDevicesTracker activeDevicesTracker = new ActiveDevicesTracker(jedisPool);
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(trackerMotionDAO, configuration.getBatchSize(), mergedUserInfoDynamoDB, heartBeatDAO, pillKeyStore, deviceDAO, activeDevicesTracker);

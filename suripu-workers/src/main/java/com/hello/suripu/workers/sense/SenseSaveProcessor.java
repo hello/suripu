@@ -7,20 +7,21 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
-import java.util.Set;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final ActiveDevicesTracker activeDevicesTracker;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
@@ -51,11 +53,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final Meter emptyDynamoDB;
 
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.activeDevicesTracker = activeDevicesTracker;
+        this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
@@ -74,6 +77,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
         final Map<String, Integer> seenFirmwares = new HashMap<>(records.size());
+        final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
 
         for(final Record record : records) {
             DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker;
@@ -123,7 +127,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             if(deviceAccountInfoFromMergeTable.isEmpty()) {
-                LOGGER.error("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
+                LOGGER.warn("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
+            } else { // track only for sense paired to accounts
+                activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
             }
 
             //LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
@@ -150,6 +156,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 final Integer firmwareVersion = (batchPeriodicDataWorker.getData().hasFirmwareVersion())
                         ? batchPeriodicDataWorker.getData().getFirmwareVersion()
                         : periodicData.getFirmwareVersion();
+
+
+
 
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     Optional<DateTimeZone> timeZoneOptional = Optional.absent();
@@ -178,7 +187,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
-                            .withAmbientAirQuality(periodicData.getDust(), periodicData.getFirmwareVersion())
+                            .withAmbientAirQuality(periodicData.getDust(), firmwareVersion)
                             .withAmbientAirQualityRaw(periodicData.getDust())
                             .withAmbientDustVariance(periodicData.getDustVariability())
                             .withAmbientDustMin(periodicData.getDustMin())
@@ -197,12 +206,17 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0);
 
                     final DeviceData deviceData = builder.build();
+
+                    if(hasLastSeenViewDynamoDBEnabled(deviceName)) {
+                        lastSeenDeviceData.put(deviceName, deviceData);
+                    }
+
                     dataForDevice.add(deviceData);
                 }
                 //TODO: Eventually break out metrics to their own worker
                 seenFirmwares.put(deviceName, firmwareVersion);
             }
-            activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
+
 
         }
 
@@ -241,6 +255,11 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         } catch (ShutdownException e) {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
+
+        if(!lastSeenDeviceData.isEmpty()) {
+            sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
+        }
+
 
         activeDevicesTracker.trackSenses(activeSenses);
         activeDevicesTracker.trackFirmwares(seenFirmwares);

@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -42,7 +43,7 @@ public class ScanSerialNumbers extends ConfiguredCommand<SuripuAdminConfiguratio
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient amazonDynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider);
-        amazonDynamoDBClient.setEndpoint(configuration.getSenseKeyStoreDynamoDBConfiguration().getEndpoint());
+        amazonDynamoDBClient.setEndpoint(configuration.dynamoDBConfiguration().endpoints().get(DynamoDBTableName.SENSE_KEY_STORE));
         int emptyMetadata = 0;
         int total = 0;
         int incorrectMetadata = 0;
@@ -52,8 +53,9 @@ public class ScanSerialNumbers extends ConfiguredCommand<SuripuAdminConfiguratio
         Map<String, AttributeValue> lastKeyEvaluated = null;
         do {
             ScanRequest scanRequest = new ScanRequest()
-                    .withTableName(configuration.getSenseKeyStoreDynamoDBConfiguration().getTableName())
-                    .withExclusiveStartKey(lastKeyEvaluated);
+                    .withTableName(configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.SENSE_KEY_STORE))
+                    .withExclusiveStartKey(lastKeyEvaluated)
+                    .withLimit(5000);
 
             ScanResult result = amazonDynamoDBClient.scan(scanRequest);
             for (Map<String, AttributeValue> item : result.getItems()){
@@ -68,6 +70,7 @@ public class ScanSerialNumbers extends ConfiguredCommand<SuripuAdminConfiguratio
 
 
 
+        System.out.println("To check = " + snToCheck.size());
         System.out.println("Total = " + total);
         System.out.println("with correct metadata = " + store.size());
         System.out.println("with incorrect metadata = " + incorrectMetadata);
