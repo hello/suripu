@@ -76,6 +76,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
+    public final static int MIN_MOTION_AMPLITUDE = 1000;
 
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";
@@ -534,6 +535,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return false;
         }
         if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
+            return false;
+        }
+
+        boolean allLowMotionAmplitude = true;
+        for(final TrackerMotion trackerMotion:motionData){
+            if(trackerMotion.value > MIN_MOTION_AMPLITUDE){
+                allLowMotionAmplitude = false;
+                break;
+            }
+        }
+
+        if(allLowMotionAmplitude){
             return false;
         }
 
