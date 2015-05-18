@@ -104,10 +104,6 @@ kinesis:
 
 audio_bucket_name : hello-data
 
-sense_logs:
-    private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com
-    index_name : sense-logs
-
 room_conditions: 1
 
 sense_upload_configuration:
