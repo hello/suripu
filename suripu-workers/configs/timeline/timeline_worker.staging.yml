@@ -132,7 +132,7 @@ logging:
 ring_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: ring_history
+  table_name: ring_history_by_account
 
 timezone_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com

@@ -153,7 +153,7 @@ dynamodb:
     firmware_versions : firmware_versions_mapping
     ota_history : ota_history
     pill_key_store : pill_key_store
-    ring_time_history: ring_time_history
+    ring_time_history: ring_time_history_by_account
     sense_key_store : key_store
     sync_response_commands : response_commands
     teams : teams

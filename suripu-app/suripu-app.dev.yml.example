@@ -202,7 +202,7 @@ email:
 ring_history_db:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: ring_history
+  table_name: ring_history_by_account
 
 sleephmm_db:
   endpoint : http://localhost:7777

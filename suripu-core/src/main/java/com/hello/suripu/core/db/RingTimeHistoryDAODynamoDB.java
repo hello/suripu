@@ -25,11 +25,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.UserInfo;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,7 +51,7 @@ public class RingTimeHistoryDAODynamoDB {
     private ObjectMapper mapper = new ObjectMapper();
 
     public static final String MORPHEUS_ID_ATTRIBUTE_NAME = "device_id";
-
+    public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     public static final String ACTUAL_RING_TIME_ATTRIBUTE_NAME = "actual_ring_time";
     public static final String EXPECTED_RING_TIME_ATTRIBUTE_NAME = "expected_ring_time";
     public static final String RINGTIME_OBJECT_ATTRIBUTE_NAME = "ring_time_object";
@@ -60,16 +62,50 @@ public class RingTimeHistoryDAODynamoDB {
         this.tableName = tableName;
     }
 
-    @Timed
-    public void setNextRingTime(final String deviceId, final RingTime ringTime){
-        this.setNextRingTime(deviceId, ringTime, DateTime.now());
+    private static List<UserInfo> retrieveRingTimeOwner(final List<UserInfo> userInfo, final RingTime ringTime){
+        final List<UserInfo> owners = new ArrayList<>();
+        for(final UserInfo info:userInfo){
+            if(info.ringTime.isPresent() && !ringTime.isEmpty()){
+                if(!info.ringTime.get().equals(ringTime)){
+                    continue;
+                }
+
+                owners.add(info);
+            }
+        }
+
+        return owners;
     }
 
     @Timed
-    public void setNextRingTime(final String deviceId, final RingTime ringTime, final DateTime currentTime){
+    public void setNextRingTime(final String deviceId, final List<UserInfo> userInfo, final RingTime ringTime){
+        final List<UserInfo> owners = retrieveRingTimeOwner(userInfo, ringTime);
+        final DateTime now = DateTime.now();
+
+        if(owners.size() == 0){
+            LOGGER.error("Cannot retrieve ring time owner for device {}, actual ring {}, expected ring {}",
+                    deviceId,
+                    ringTime.actualRingTimeUTC,
+                    ringTime.expectedRingTimeUTC);
+        }
+
+
+        for(final UserInfo owner:owners) {
+            this.setNextRingTime(deviceId, owner.accountId, ringTime, now);
+        }
+    }
+
+    @Timed
+    protected void setNextRingTime(final String deviceId, final Long accountId, final RingTime ringTime){
+        setNextRingTime(deviceId, accountId, ringTime, DateTime.now());
+    }
+
+    @Timed
+    protected void setNextRingTime(final String deviceId, final Long accountId, final RingTime ringTime, final DateTime currentTime){
 
 
         final HashMap<String, AttributeValue> items = new HashMap<String, AttributeValue>();
+        items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
         items.put(MORPHEUS_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
 
         items.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(currentTime.getMillis())));
@@ -98,7 +134,7 @@ public class RingTimeHistoryDAODynamoDB {
 
     }
 
-    public List<RingTime> getRingTimesBetween(final String senseId, final DateTime startTime, final DateTime endTime) {
+    public List<RingTime> getRingTimesBetween(final String senseId, final Long accountId, final DateTime startTime, final DateTime endTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
 
@@ -110,19 +146,28 @@ public class RingTimeHistoryDAODynamoDB {
                 .withAttributeValueList(values);
         queryConditions.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, selectDateCondition);
 
-
         final Condition selectAccountIdCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withS(senseId));
-        queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+                .withAttributeValueList(new AttributeValue().withN(accountId.toString()));
 
-        final Set<String> targetAttributeSet = Sets.newHashSet(MORPHEUS_ID_ATTRIBUTE_NAME,
+        final Condition selectSenseIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withS(senseId));
+
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+        //queryConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdCondition);
+        final Map<String, Condition> filterConditions = Maps.newHashMap();
+        filterConditions.put(MORPHEUS_ID_ATTRIBUTE_NAME, selectSenseIdCondition);
+
+        final Set<String> targetAttributeSet = Sets.newHashSet(ACCOUNT_ID_ATTRIBUTE_NAME,
+                MORPHEUS_ID_ATTRIBUTE_NAME,
                 EXPECTED_RING_TIME_ATTRIBUTE_NAME,
                 ACTUAL_RING_TIME_ATTRIBUTE_NAME,
                 RINGTIME_OBJECT_ATTRIBUTE_NAME,
                 CREATED_AT_ATTRIBUTE_NAME);
 
         final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
+                .withQueryFilter(filterConditions)
                 .withAttributesToGet(targetAttributeSet)
                 .withLimit(50)
                 .withScanIndexForward(false);
@@ -137,9 +182,11 @@ public class RingTimeHistoryDAODynamoDB {
         final List<RingTime> ringTimes = Lists.newArrayList();
         for(final Map<String, AttributeValue> item: items){
             final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
-            if(ringTime.isPresent()) {
-                ringTimes.add(ringTime.get());
+            if(!ringTime.isPresent()){
+                continue;
             }
+
+            ringTimes.add(ringTime.get());
         }
 
         Collections.sort(ringTimes, new Comparator<RingTime>() {
@@ -178,12 +225,12 @@ public class RingTimeHistoryDAODynamoDB {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withKeyType(KeyType.HASH),
                 new KeySchemaElement().withAttributeName(EXPECTED_RING_TIME_ATTRIBUTE_NAME).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(MORPHEUS_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S),
+                new AttributeDefinition().withAttributeName(ACCOUNT_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N),
                 new AttributeDefinition().withAttributeName(EXPECTED_RING_TIME_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.N)
 
         );
