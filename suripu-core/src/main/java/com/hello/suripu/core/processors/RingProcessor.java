@@ -379,11 +379,52 @@ public class RingProcessor {
         return new RingTime(nextRingTimeMillis, nextRegularRingTime.expectedRingTimeUTC, nextRegularRingTime.soundIds, nextRegularRingTime.fromSmartAlarm);
     }
 
+    private static boolean smartAlarmAlreadyTookOff(final DateTime now, final RingTime nextRingTimeFromWorker){
+        return now.isAfter(nextRingTimeFromWorker.actualRingTimeUTC);
+    }
+
+    private RingTime selectNextRingTime(final String senseId,
+                                        final DateTime nowAlignedToMinute,
+                                        final Optional<DateTime> ackRingTime,
+                                        final RingTime nextRingTimeFromTemplate,
+                                        final RingTime nextRingTimeFromWorker){
+
+        if(ackRingTime.isPresent() && nowAlignedToMinute.isBefore(nextRingTimeFromTemplate.actualRingTimeUTC)){
+            if(ackRingTime.get().getMillis() >= nextRingTimeFromTemplate.actualRingTimeUTC - 30 * DateTimeConstants.MILLIS_PER_MINUTE &&
+                    ackRingTime.get().getMillis() <= nextRingTimeFromTemplate.actualRingTimeUTC &&
+                    nextRingTimeFromTemplate.expectedRingTimeUTC == nextRingTimeFromWorker.expectedRingTimeUTC) {
+
+                if(!nowAlignedToMinute.isBefore(nextRingTimeFromWorker.actualRingTimeUTC)) {
+                    return new RingTime(nextRingTimeFromWorker.actualRingTimeUTC, nextRingTimeFromWorker.expectedRingTimeUTC, nextRingTimeFromTemplate.soundIds, true);
+                }else{
+                    // smart alarm already took off.
+                    return new RingTime(ackRingTime.get().getMillis(), nextRingTimeFromWorker.expectedRingTimeUTC, nextRingTimeFromTemplate.soundIds, true);
+                }
+            }
+
+            if(ackRingTime.get().getMillis() < nextRingTimeFromTemplate.actualRingTimeUTC - 30 * DateTimeConstants.MILLIS_PER_MINUTE &&
+                    nextRingTimeFromTemplate.expectedRingTimeUTC == nextRingTimeFromWorker.expectedRingTimeUTC &&
+                    nextRingTimeFromTemplate.fromSmartAlarm){
+                return nextRingTimeFromWorker;
+            }
+        }
+
+        if(!ackRingTime.isPresent() && nowAlignedToMinute.isBefore(nextRingTimeFromTemplate.actualRingTimeUTC)){
+            // reboot before able to ring
+            LOGGER.info("Initial ring time to {} for sense {}", nextRingTimeFromTemplate.actualRingTimeUTC, senseId);
+            return nextRingTimeFromTemplate;
+        }
+
+        return nextRingTimeFromTemplate;
+
+    }
 
     @Timed
     public static RingTime getNextRingTimeForSense(final String deviceId,
                                                    final List<UserInfo> userInfoFromThatDevice,
-                                                   final DateTime nowUnalignedByMinute){
+                                                   final DateTime nowUnalignedByMinute,
+                                                   final Optional<DateTime> acknowledgeRingTime,
+                                                   final boolean hasRingAck){
         RingTime nextRingTimeFromWorker = RingTime.createEmpty();
         RingTime nextRingTime = RingTime.createEmpty();
         Optional<DateTimeZone> userTimeZoneOptional = Optional.absent();
@@ -451,7 +492,7 @@ public class RingProcessor {
                 if (nextRingTimeFromTemplate.expectedRingTimeUTC == nextRingTimeFromWorker.expectedRingTimeUTC) {
                     // on-the-fly and ring from worker are from the same alarm, use the one from worker
                     // since it is "smart"
-                    if(now.isAfter(nextRingTimeFromWorker.actualRingTimeUTC)){
+                    if(smartAlarmAlreadyTookOff(now, nextRingTimeFromWorker)){
                         // The smart alarm already took off, do not ring twice!
                         nextRingTime = RingTime.createEmpty();
                     }else {
@@ -503,35 +544,28 @@ public class RingProcessor {
         final ArrayList<RingTime> ringTimes = new ArrayList<RingTime>();
         final HashMap<Long, ArrayList<RingTime>> groupedRingTime = new HashMap<>();
 
-        try {
+        for (final UserInfo userInfo : userInfoList){
+            if(!userInfo.timeZone.isPresent()){
+                LOGGER.error("No timezone set for device {} account {}, get regular ring time failed.", userInfo.deviceId, userInfo.accountId);
+                continue;
+            }
+            if(!userInfo.alarmList.isEmpty()){
+                final List<Alarm> alarms = userInfo.alarmList;
+                final RingTime nextRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarms, currentTime.getMillis(), userInfo.timeZone.get());
 
-            for (final UserInfo userInfo : userInfoList){
-                if(!userInfo.timeZone.isPresent()){
-                    LOGGER.error("No timezone set for device {} account {}, get regular ring time failed.", userInfo.deviceId, userInfo.accountId);
-                    continue;
-                }
-                if(!userInfo.alarmList.isEmpty()){
-                    final List<Alarm> alarms = userInfo.alarmList;
-                    final RingTime nextRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarms, currentTime.getMillis(), userInfo.timeZone.get());
-
-                    if (!nextRingTime.isEmpty()) {
-                        ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
-                        if(!groupedRingTime.containsKey(nextRingTime.expectedRingTimeUTC)){
-                            groupedRingTime.put(nextRingTime.expectedRingTimeUTC, new ArrayList<RingTime>());
-                        }
-
-                        // Group alarms based on their alarm deadlines
-                        // So we can know if users had set same alarms.
-                        groupedRingTime.get(nextRingTime.expectedRingTimeUTC).add(nextRingTime);
-                    } else {
-                        LOGGER.debug("Alarm worker: No alarm set for account {}", userInfo.accountId);
+                if (!nextRingTime.isEmpty()) {
+                    ringTimes.add(nextRingTime);  // Add the alarm of this user to the list.
+                    if(!groupedRingTime.containsKey(nextRingTime.expectedRingTimeUTC)){
+                        groupedRingTime.put(nextRingTime.expectedRingTimeUTC, new ArrayList<RingTime>());
                     }
+
+                    // Group alarms based on their alarm deadlines
+                    // So we can know if users had set same alarms.
+                    groupedRingTime.get(nextRingTime.expectedRingTimeUTC).add(nextRingTime);
+                } else {
+                    LOGGER.debug("Alarm worker: No alarm set for account {}", userInfo.accountId);
                 }
             }
-
-
-        } catch (AmazonServiceException awsException) {
-            LOGGER.error("AWS error when retrieving alarm for device {}.", senseId);
         }
 
 

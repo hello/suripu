@@ -25,6 +25,7 @@ import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.OTAProcessor;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
@@ -38,6 +39,7 @@ import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -288,7 +290,13 @@ public class ReceiveResource extends BaseResource {
 
 
         if(userTimeZone.isPresent()) {
-            final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now());
+            final boolean ringTimeAcknowledge = this.featureFlipper.deviceFeatureActive(FeatureFlipper.RING_TIME_ACK, deviceName, Collections.EMPTY_LIST);
+            final Optional<DateTime> acknowledgeTime = batch.hasRingTimeAck() ?
+                    Optional.of(DateTime.parse(batch.getRingTimeAck(), DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))) :
+                    Optional.<DateTime>absent();
+            final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now(), acknowledgeTime, ringTimeAcknowledge);
+            final String ringTimeAckString = new DateTime(nextRingTime.actualRingTimeUTC, DateTimeZone.UTC)
+                    .toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT));
 
             // WARNING: now must generated after getNextRingTimeForSense, because that function can take a long time.
             final DateTime now = Alarm.Utils.alignToMinuteGranularity(DateTime.now().withZone(userTimeZone.get()));
@@ -320,6 +328,10 @@ public class ReceiveResource extends BaseResource {
                     .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
                     .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
             responseBuilder.setAlarm(alarmBuilder.build());
+            if(ringTimeAcknowledge){
+                responseBuilder.setRingTimeAck(ringTimeAckString);
+                LOGGER.info("Ring time ack set to {} for device {}", ringTimeAckString, deviceName);
+            }
             // End generate protobuf for alarm
             
             //Perform all OTA checks and compute the update file list (if necessary)
