@@ -291,6 +291,20 @@ public class DataScienceResource extends BaseResource {
         return timelineLogDAO.getLogsForUserAndDay(accountId,startTs,Optional.of(numDays));
     }
 
+    @GET
+    @Path("/activeusers")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ImmutableList<Long> getUserIdsFromTimelineLogByDateRange(@Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                                           @QueryParam("from_ts_utc")final Long fromTimestamp,
+                                                           @DefaultValue("3") @QueryParam("num_days")final  Integer numDays
+    ) {
+        //day--should be something like 00:00 of evening of interest in UTC
+        final DateTime startTs = new DateTime(fromTimestamp, DateTimeZone.UTC);
+
+        return timelineLogDAO.getActiveUers(startTs,Optional.of(numDays));
+    }
+
 
     @GET
     @Path("/matchedfeedback")
