@@ -3518,6 +3518,26 @@ public final class SleepHmmProtos {
      * <code>optional bool enable_interval_search = 14;</code>
      */
     boolean getEnableIntervalSearch();
+
+    // optional double light_pre_multiplier = 15;
+    /**
+     * <code>optional double light_pre_multiplier = 15;</code>
+     */
+    boolean hasLightPreMultiplier();
+    /**
+     * <code>optional double light_pre_multiplier = 15;</code>
+     */
+    double getLightPreMultiplier();
+
+    // optional double light_floor_lux = 16;
+    /**
+     * <code>optional double light_floor_lux = 16;</code>
+     */
+    boolean hasLightFloorLux();
+    /**
+     * <code>optional double light_floor_lux = 16;</code>
+     */
+    double getLightFloorLux();
   }
   /**
    * Protobuf type {@code SleepHmm}
@@ -3673,6 +3693,16 @@ public final class SleepHmmProtos {
             case 112: {
               bitField0_ |= 0x00000400;
               enableIntervalSearch_ = input.readBool();
+              break;
+            }
+            case 121: {
+              bitField0_ |= 0x00000800;
+              lightPreMultiplier_ = input.readDouble();
+              break;
+            }
+            case 129: {
+              bitField0_ |= 0x00001000;
+              lightFloorLux_ = input.readDouble();
               break;
             }
           }
@@ -4087,6 +4117,38 @@ public final class SleepHmmProtos {
       return enableIntervalSearch_;
     }
 
+    // optional double light_pre_multiplier = 15;
+    public static final int LIGHT_PRE_MULTIPLIER_FIELD_NUMBER = 15;
+    private double lightPreMultiplier_;
+    /**
+     * <code>optional double light_pre_multiplier = 15;</code>
+     */
+    public boolean hasLightPreMultiplier() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional double light_pre_multiplier = 15;</code>
+     */
+    public double getLightPreMultiplier() {
+      return lightPreMultiplier_;
+    }
+
+    // optional double light_floor_lux = 16;
+    public static final int LIGHT_FLOOR_LUX_FIELD_NUMBER = 16;
+    private double lightFloorLux_;
+    /**
+     * <code>optional double light_floor_lux = 16;</code>
+     */
+    public boolean hasLightFloorLux() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional double light_floor_lux = 16;</code>
+     */
+    public double getLightFloorLux() {
+      return lightFloorLux_;
+    }
+
     private void initFields() {
       userId_ = "";
       source_ = "";
@@ -4102,6 +4164,8 @@ public final class SleepHmmProtos {
       modelName_ = "";
       numMinutesInMeasPeriod_ = 0;
       enableIntervalSearch_ = false;
+      lightPreMultiplier_ = 0D;
+      lightFloorLux_ = 0D;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4162,6 +4226,12 @@ public final class SleepHmmProtos {
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeBool(14, enableIntervalSearch_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeDouble(15, lightPreMultiplier_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeDouble(16, lightFloorLux_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -4231,6 +4301,14 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(14, enableIntervalSearch_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(15, lightPreMultiplier_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(16, lightFloorLux_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4381,6 +4459,10 @@ public final class SleepHmmProtos {
         bitField0_ = (bitField0_ & ~0x00001000);
         enableIntervalSearch_ = false;
         bitField0_ = (bitField0_ & ~0x00002000);
+        lightPreMultiplier_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00004000);
+        lightFloorLux_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00008000);
         return this;
       }
 
@@ -4472,6 +4554,14 @@ public final class SleepHmmProtos {
           to_bitField0_ |= 0x00000400;
         }
         result.enableIntervalSearch_ = enableIntervalSearch_;
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.lightPreMultiplier_ = lightPreMultiplier_;
+        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        result.lightFloorLux_ = lightFloorLux_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4572,6 +4662,12 @@ public final class SleepHmmProtos {
         }
         if (other.hasEnableIntervalSearch()) {
           setEnableIntervalSearch(other.getEnableIntervalSearch());
+        }
+        if (other.hasLightPreMultiplier()) {
+          setLightPreMultiplier(other.getLightPreMultiplier());
+        }
+        if (other.hasLightFloorLux()) {
+          setLightFloorLux(other.getLightFloorLux());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5512,6 +5608,72 @@ public final class SleepHmmProtos {
         return this;
       }
 
+      // optional double light_pre_multiplier = 15;
+      private double lightPreMultiplier_ ;
+      /**
+       * <code>optional double light_pre_multiplier = 15;</code>
+       */
+      public boolean hasLightPreMultiplier() {
+        return ((bitField0_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional double light_pre_multiplier = 15;</code>
+       */
+      public double getLightPreMultiplier() {
+        return lightPreMultiplier_;
+      }
+      /**
+       * <code>optional double light_pre_multiplier = 15;</code>
+       */
+      public Builder setLightPreMultiplier(double value) {
+        bitField0_ |= 0x00004000;
+        lightPreMultiplier_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double light_pre_multiplier = 15;</code>
+       */
+      public Builder clearLightPreMultiplier() {
+        bitField0_ = (bitField0_ & ~0x00004000);
+        lightPreMultiplier_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional double light_floor_lux = 16;
+      private double lightFloorLux_ ;
+      /**
+       * <code>optional double light_floor_lux = 16;</code>
+       */
+      public boolean hasLightFloorLux() {
+        return ((bitField0_ & 0x00008000) == 0x00008000);
+      }
+      /**
+       * <code>optional double light_floor_lux = 16;</code>
+       */
+      public double getLightFloorLux() {
+        return lightFloorLux_;
+      }
+      /**
+       * <code>optional double light_floor_lux = 16;</code>
+       */
+      public Builder setLightFloorLux(double value) {
+        bitField0_ |= 0x00008000;
+        lightFloorLux_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double light_floor_lux = 16;</code>
+       */
+      public Builder clearLightFloorLux() {
+        bitField0_ = (bitField0_ & ~0x00008000);
+        lightFloorLux_ = 0D;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SleepHmm)
     }
 
@@ -6259,7 +6421,7 @@ public final class SleepHmmProtos {
       "turbances\030\r \001(\0132\026.DiscreteAlphabetModel\022" +
       "$\n\017log_sound_count\030\016 \001(\0132\013.GammaModel\0224\n",
       "\024natural_light_filter\030\017 \001(\0132\026.DiscreteAl" +
-      "phabetModel\"\277\003\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
+      "phabetModel\"\366\003\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
       "\t\022\016\n\006source\030\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013.Stat" +
       "eModel\022\022\n\nnum_states\030\004 \001(\005\022\037\n\027state_tran" +
       "sition_matrix\030\005 \003(\001\022#\n\033initial_state_pro" +
@@ -6270,13 +6432,14 @@ public final class SleepHmmProtos {
       "ight_filter_stop_hour\030\n \001(\001\022\030\n\020num_model",
       "_params\030\013 \001(\005\022\022\n\nmodel_name\030\014 \001(\t\022\"\n\032num" +
       "_minutes_in_meas_period\030\r \001(\005\022\036\n\026enable_" +
-      "interval_search\030\016 \001(\010\"-\n\020SleepHmmModelSe" +
-      "t\022\031\n\006models\030\001 \003(\0132\t.SleepHmm* \n\tSleepMod" +
-      "e\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"\n\007BedMode\022\n\n\006ON_" +
-      "BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSleepDepth\022\022\n\016NOT_" +
-      "APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REGULAR\020\002\022\r\n\t" +
-      "DISTURBED\020\003B2\n com.hello.suripu.api.data" +
-      "scienceB\016SleepHmmProtos"
+      "interval_search\030\016 \001(\010\022\034\n\024light_pre_multi" +
+      "plier\030\017 \001(\001\022\027\n\017light_floor_lux\030\020 \001(\001\"-\n\020" +
+      "SleepHmmModelSet\022\031\n\006models\030\001 \003(\0132\t.Sleep" +
+      "Hmm* \n\tSleepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"\n" +
+      "\007BedMode\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSle" +
+      "epDepth\022\022\n\016NOT_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013" +
+      "\n\007REGULAR\020\002\022\r\n\tDISTURBED\020\003B2\n com.hello." +
+      "suripu.api.datascienceB\016SleepHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -6312,7 +6475,7 @@ public final class SleepHmmProtos {
           internal_static_SleepHmm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SleepHmm_descriptor,
-              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", });
+              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", "LightPreMultiplier", "LightFloorLux", });
           internal_static_SleepHmmModelSet_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_SleepHmmModelSet_fieldAccessorTable = new

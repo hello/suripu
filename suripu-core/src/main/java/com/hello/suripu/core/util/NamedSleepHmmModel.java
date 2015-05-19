@@ -20,7 +20,8 @@ public class NamedSleepHmmModel {
     public final double naturalLightFilterStopHour;
     public final int numMinutesInMeasPeriod;
     public final boolean isUsingIntervalSearch;
-
+    public final double lightPreMultiplier;
+    public final double lightFloorLux;
 
     public NamedSleepHmmModel(HiddenMarkovModel hmm,
                               String modelName,
@@ -33,7 +34,9 @@ public class NamedSleepHmmModel {
                               double naturalLightFilterStartHour,
                               double naturalLightFilterStopHour,
                               int numMinutesInMeasPeriod,
-                              boolean isUsingIntervalSearch) {
+                              boolean isUsingIntervalSearch,
+                              double lightPreMultiplier,
+                              double lightFloorLux) {
         this.hmm = hmm;
         this.modelName = modelName;
         this.sleepStates = sleepStates;
@@ -46,5 +49,7 @@ public class NamedSleepHmmModel {
         this.naturalLightFilterStopHour = naturalLightFilterStopHour;
         this.numMinutesInMeasPeriod = numMinutesInMeasPeriod;
         this.isUsingIntervalSearch = isUsingIntervalSearch;
+        this.lightPreMultiplier = lightPreMultiplier;
+        this.lightFloorLux = lightFloorLux;
     }
 }
