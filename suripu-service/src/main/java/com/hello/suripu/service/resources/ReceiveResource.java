@@ -588,6 +588,7 @@ public class ReceiveResource extends BaseResource {
         //Create a list of SyncResponse commands to be fetched from DynamoDB for a given device & firmware
         final List<String> respCommandsToFetch = new ArrayList<>();
         respCommandsToFetch.add("reset_to_factory_fw");
+        respCommandsToFetch.add("reset_mcu");
 
         Map<String,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
 
@@ -599,6 +600,9 @@ public class ReceiveResource extends BaseResource {
                     switch(cmdName) {
                         case "reset_to_factory_fw":
                             responseBuilder.setResetToFactoryFw(Boolean.parseBoolean(cmdValue));
+                            break;
+                        case "reset_mcu":
+                            responseBuilder.setResetMcu(Boolean.parseBoolean(cmdValue));
                             break;
                     }
                 }

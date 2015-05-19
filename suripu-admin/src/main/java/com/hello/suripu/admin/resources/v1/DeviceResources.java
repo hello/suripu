@@ -15,6 +15,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
@@ -34,6 +35,8 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
+import java.util.HashMap;
+import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -75,6 +78,7 @@ public class DeviceResources {
     private final JedisPool jedisPool;
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final SenseColorDAO senseColorDAO;
+    private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDAOAdmin deviceDAOAdmin,
@@ -86,7 +90,8 @@ public class DeviceResources {
                            final KeyStore pillKeyStore,
                            final JedisPool jedisPool,
                            final PillHeartBeatDAO pillHeartBeatDAO,
-                           final SenseColorDAO senseColorDAO) {
+                           final SenseColorDAO senseColorDAO,
+                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
@@ -98,6 +103,7 @@ public class DeviceResources {
         this.jedisPool = jedisPool;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.senseColorDAO = senseColorDAO;
+        this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
     }
 
     @GET
@@ -557,6 +563,28 @@ public class DeviceResources {
 
         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
 
+    }
+
+    @PUT
+    @Timed
+    @Path("/{device_id}/reset_mcu")
+    public void resetDeviceToFactoryFW(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                       @PathParam("device_id") final String deviceId,
+                                       @QueryParam("fw_version") final Integer fwVersion) {
+        if(deviceId == null) {
+            LOGGER.error("Missing device_id parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(fwVersion == null) {
+            LOGGER.error("Missing fw_version parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        LOGGER.info("Resetting device: {} on FW Version: {}", deviceId, fwVersion);
+        final Map<String, Object> issuedCommands = new HashMap<>();
+        issuedCommands.put("reset_mcu", true);
+        responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
     }
 
     // Helpers
