@@ -99,23 +99,32 @@ public class TimelineLogDAODynamoDB implements  TimelineLogDAO{
 
         scanConditions.put(DATEALG_ATTRIBUTE_NAME, selectDateCondition);
 
-
-        final ScanRequest scanRequest = new ScanRequest()
-                .withTableName(this.tableName)
-                .withScanFilter(scanConditions)
-                .withLimit(MAX_LIMIT_OF_SCAN_RESULTS);
-
-
-        final ScanResult scanResult = this.dynamoDBClient.scan(scanRequest);
-
-        final List<Map<String, AttributeValue>> items = scanResult.getItems();
-
+        
+        ScanResult scanResult = null;
         final Set<Long> ids = new HashSet<>();
 
-        for (final Map<String, AttributeValue> item : items) {
-            final Long resultAccountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
-            ids.add(resultAccountId);
+        do {
+
+            final ScanRequest scanRequest = new ScanRequest()
+                    .withTableName(this.tableName)
+                    .withScanFilter(scanConditions)
+                    .withLimit(MAX_LIMIT_OF_SCAN_RESULTS);
+
+            if (scanResult != null) {
+                scanRequest.setExclusiveStartKey(scanResult.getLastEvaluatedKey());
+            }
+
+            scanResult = this.dynamoDBClient.scan(scanRequest);
+
+            final List<Map<String, AttributeValue>> items = scanResult.getItems();
+
+
+            for (final Map<String, AttributeValue> item : items) {
+                final Long resultAccountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
+                ids.add(resultAccountId);
+            }
         }
+        while(scanResult.getLastEvaluatedKey() != null);
 
         final List<Long> idsAsList = new ArrayList<>();
 
