@@ -12,6 +12,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.FeatureFlipper;
@@ -586,22 +587,22 @@ public class ReceiveResource extends BaseResource {
 
         LOGGER.info("Response commands allowed for DeviceId: {}", deviceName);
         //Create a list of SyncResponse commands to be fetched from DynamoDB for a given device & firmware
-        final List<String> respCommandsToFetch = new ArrayList<>();
-        respCommandsToFetch.add("reset_to_factory_fw");
-        respCommandsToFetch.add("reset_mcu");
+        final List<ResponseCommand> respCommandsToFetch = new ArrayList<>();
+        respCommandsToFetch.add(ResponseCommand.RESET_TO_FACTORY_FW);
+        respCommandsToFetch.add(ResponseCommand.RESET_MCU);
 
-        Map<String,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
+        Map<ResponseCommand,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
 
         if (!commandMap.isEmpty()) {
             //Process and inject commands
-            for (final String cmdName : respCommandsToFetch) {
-                if (commandMap.containsKey(cmdName)) {
-                    final String cmdValue = commandMap.get(cmdName);
-                    switch(cmdName) {
-                        case "reset_to_factory_fw":
+            for (final ResponseCommand cmd : respCommandsToFetch) {
+                if (commandMap.containsKey(cmd)) {
+                    final String cmdValue = commandMap.get(cmd);
+                    switch(cmd) {
+                        case RESET_TO_FACTORY_FW:
                             responseBuilder.setResetToFactoryFw(Boolean.parseBoolean(cmdValue));
                             break;
-                        case "reset_mcu":
+                        case RESET_MCU:
                             responseBuilder.setResetMcu(Boolean.parseBoolean(cmdValue));
                             break;
                     }
