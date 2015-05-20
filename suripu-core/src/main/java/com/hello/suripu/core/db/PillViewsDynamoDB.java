@@ -1,14 +1,11 @@
 package com.hello.suripu.core.db;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
@@ -22,8 +19,6 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -33,7 +28,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
 
 public class PillViewsDynamoDB {
@@ -117,71 +111,6 @@ public class PillViewsDynamoDB {
             LOGGER.error("Failed updating heartbeat info for pill {}, Reason: {}", pillId, e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Unknown error. Failed updating heartbeat info for pill {}, Reason: {}", pillId, e.getMessage());
-        }
-    }
-
-    public ArrayListMultimap<String, WriteRequest> batch(final ArrayListMultimap<String, WriteRequest> writeRequests) {
-        final ArrayListMultimap<String, WriteRequest> remaining = ArrayListMultimap.create();
-
-        // we partition writes per table.
-        // this is sub optimal for when inserts span two tables
-        // but this happens only a couple minutes per day, so eh.
-        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
-        try {
-            for (final String table : writeRequests.keySet()) {
-                for (final List<WriteRequest> partition : Lists.partition(writeRequests.get(table), DYNAMO_BATCH_WRITE_LIMIT)) {
-
-                    final Map<String, List<WriteRequest>> map = Maps.newHashMap();
-                    map.put(table, partition);
-                    batchWriteItemRequest.withRequestItems(map);
-
-                    final BatchWriteItemResult result = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-                    final Map<String, List<WriteRequest>> unprocessed = result.getUnprocessedItems();
-                    if (unprocessed == null || unprocessed.isEmpty()) {
-                        continue;
-                    }
-
-                    final float ratio = unprocessed.size() / (float) partition.size() * 100.0f;
-                    LOGGER.info("Table {} : {}%  ({} attempted, {} unprocessed)", table, Math.round(ratio), partition.size(), unprocessed.size());
-                    remaining.putAll(table, unprocessed.get(table));
-                }
-            }
-        } catch (final AmazonServiceException exception) {
-            LOGGER.error("Failed when trying to save {} items: {}", writeRequests.values().size(), exception.getMessage());
-            return writeRequests;
-
-        } catch (final AmazonClientException exception) {
-            LOGGER.error("Failed when trying to save {} items: {}", writeRequests.values().size(), exception.getMessage());
-            return writeRequests;
-        }
-
-        // we want to blow up on any other exception
-
-        // return what needs to be re-inserted
-        return remaining;
-    }
-
-
-
-    private void saveLastSeen(final List<WriteRequest> lastSeenWriteRequests) {
-        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
-        for (final List<WriteRequest> partition : Lists.partition(lastSeenWriteRequests, DYNAMO_BATCH_WRITE_LIMIT)) {
-
-            final Map<String, List<WriteRequest>> map = Maps.newHashMap();
-            map.put(lastSeenTableName, partition);
-            batchWriteItemRequest.withRequestItems(map);
-            try {
-                final BatchWriteItemResult result = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-                final Map<String, List<WriteRequest>> unprocessed = result.getUnprocessedItems();
-                if (unprocessed == null || unprocessed.isEmpty()) {
-                    continue;
-                }
-
-                final float ratio = unprocessed.size() / (float) partition.size() * 100.0f;
-                LOGGER.info("Table {} : {}%  ({} attempted, {} unprocessed)", lastSeenTableName, Math.round(ratio), partition.size(), unprocessed.size());
-            }catch (AmazonClientException e) {
-                LOGGER.error("Error persisting last seen device data: {}", e.getMessage());
-            }
         }
     }
 
