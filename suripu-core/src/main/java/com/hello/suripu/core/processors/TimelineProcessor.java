@@ -243,7 +243,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             /* FEATURE FLIP EXTRA EVENTS */
             if (!this.hasExtraEventsEnabled(accountId)) {
-                LOGGER.info("not using {} extra events",extraEvents.size());
+                LOGGER.info("not using {} extra events", extraEvents.size());
                 extraEvents = Collections.EMPTY_LIST;
             }
 
@@ -486,9 +486,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = timelineUtils.smoothEvents(eventsWithSleepEvents);
 
-        final List<Event> cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                sleepEventsFromAlgorithm.goToBed,
-                sleepEventsFromAlgorithm.outOfBed);
+        List<Event> cleanedUpEvents;
+        if (this.hasRemoveMotionEventsOutsideSleep(accountId)) {
+            // remove motion events outside of sleep and awake
+            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents,
+                    sleepEventsFromAlgorithm.fallAsleep,
+                    sleepEventsFromAlgorithm.wakeUp);
+        } else {
+            // remove motion events outside of in-bed and out-bed
+            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
+                    sleepEventsFromAlgorithm.goToBed,
+                    sleepEventsFromAlgorithm.outOfBed);
+        }
 
         final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
                 sleepEventsFromAlgorithm.goToBed,

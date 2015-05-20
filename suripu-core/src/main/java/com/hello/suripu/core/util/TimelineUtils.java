@@ -251,6 +251,31 @@ public class TimelineUtils {
         return newEventList;
     }
 
+    public List<Event> removeMotionEventsOutsideSleep(final List<Event> events,
+                                                          final Optional<Event> sleepEventOptional,
+                                                          final Optional<Event> awakeEventOptional){
+        final LinkedList<Event> newEventList = new LinkedList<>();
+        for(final Event event:events) {
+
+            final Event.Type etype = event.getType();
+            if (etype != Event.Type.MOTION && etype != Event.Type.NONE) {
+                newEventList.add(event);
+                continue;
+            }
+
+            if(sleepEventOptional.isPresent() && event.getEndTimestamp() <= sleepEventOptional.get().getStartTimestamp()) {
+                continue;
+            }
+
+            if(awakeEventOptional.isPresent() && event.getStartTimestamp() >= awakeEventOptional.get().getEndTimestamp()){
+                continue;
+            }
+
+            newEventList.add(event);
+        }
+
+        return newEventList;
+    }
     public Optional<Event> getFirstSignificantEvent(final List<Event> events){
         for(final Event event:events){
             if(event.getType() != Event.Type.NONE && event.getType() != Event.Type.MOTION){
