@@ -61,7 +61,6 @@ public class AlarmResources {
 
         final Long accountId = accountIdOptional.get();
 
-        LOGGER.debug("Before getting device account map from account_id");
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(accountId);
         if(deviceAccountMap.size() == 0){
             LOGGER.error("User {} tries to retrieve alarm without paired with a Morpheus.", accountId);
@@ -70,12 +69,9 @@ public class AlarmResources {
         }
 
         try {
-            LOGGER.debug("Before getting device account map from account_id");
             final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.getInfo(deviceAccountMap.get(0).externalDeviceId, accountId);
-            LOGGER.debug("Fetched alarm info optional");
 
             if(!alarmInfoOptional.isPresent()){
-                LOGGER.warn("Merge alarm info table doesn't have record for device {}, account {}.", deviceAccountMap.get(0).externalDeviceId, accountId);
                 return Collections.emptyList();
             }
 
