@@ -84,19 +84,13 @@ public class AlarmResources {
             }
 
             final DateTimeZone userTimeZone = userInfo.timeZone.get();
-            final List<Alarm> smartAlarms = Alarm.Utils.disableExpiredNoneRepeatedAlarms(userInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
-            final Alarm.Utils.AlarmStatus status = Alarm.Utils.isValidAlarms(smartAlarms, DateTime.now(), userTimeZone);
-            if(!status.equals(Alarm.Utils.AlarmStatus.OK)){
-                LOGGER.error("Invalid alarm for user {} device {}", accountId, userInfo.deviceId);
-                throw new WebApplicationException(Response.status(Response.Status.CONFLICT).entity(
-                        new JsonError(Response.Status.CONFLICT.getStatusCode(), "We could not save your changes, please try again.")).build());
-            }
 
-            return smartAlarms;
+            return Alarm.Utils.disableExpiredNoneRepeatedAlarms(userInfo.alarmList, DateTime.now().getMillis(), userTimeZone);
+
         }catch (AmazonServiceException awsException){
             LOGGER.error("Aws failed when user {} tries to get alarms.", accountId);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
-                    new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Please try again.")).build());
+                    new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), awsException.getMessage())).build());
         }
     }
 }
