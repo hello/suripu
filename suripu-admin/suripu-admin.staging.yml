@@ -101,6 +101,7 @@ dynamodb:
     alarm_info : alarm_info
     sense_key_store : key_store
     pill_key_store : pill_key_store
+    pill_last_seen: pill_last_seen
     password_reset : password_reset
     sense_events : sense_events
     teams : teams
@@ -116,6 +117,7 @@ dynamodb:
       alarm_info : http://dynamodb.us-east-1.amazonaws.com
       sense_key_store : http://dynamodb.us-east-1.amazonaws.com
       pill_key_store : http://dynamodb.us-east-1.amazonaws.com
+      pill_last_seen : http://dynamodb.us-east-1.amazonaws.com
       password_reset : http://dynamodb.us-east-1.amazonaws.com
       sense_events : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
