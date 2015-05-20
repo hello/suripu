@@ -191,6 +191,14 @@ public class HmmDeserialization {
                 pdf.addPdf(new DiscreteAlphabetPdf(model.getNaturalLightFilter().getProbabilitiesList(), HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX));
             }
 
+            if (model.hasPartnerMotionCount()) {
+                pdf.addPdf(new PoissonPdf(model.getPartnerMotionCount().getMean(),HmmDataConstants.PARTNER_MOT_COUNT_INDEX));
+            }
+
+            if (model.hasPartnerDisturbances()) {
+                pdf.addPdf(new DiscreteAlphabetPdf(model.getPartnerDisturbances().getProbabilitiesList(), HmmDataConstants.PARTNER_DISTURBANCE_INDEX));
+            }
+
             //assign states of onbed, sleeping
             if (model.hasBedMode() && model.getBedMode() == SleepHmmProtos.BedMode.ON_BED) {
                 onBedStates.add(iState);

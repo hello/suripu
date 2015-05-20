@@ -197,7 +197,7 @@ public class SleepHmmSensorDataBinning {
 
         }
 
-        
+
         //transform via log2 (1.0 + x)
         for (int i = 0; i < data[HmmDataConstants.LOG_SOUND_COUNT_INDEX].length; i++) {
             double value = data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i];

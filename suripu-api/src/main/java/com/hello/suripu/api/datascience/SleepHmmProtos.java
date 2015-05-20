@@ -1861,6 +1861,34 @@ public final class SleepHmmProtos {
      * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getNaturalLightFilterOrBuilder();
+
+    // optional .PoissonModel partner_motion_count = 16;
+    /**
+     * <code>optional .PoissonModel partner_motion_count = 16;</code>
+     */
+    boolean hasPartnerMotionCount();
+    /**
+     * <code>optional .PoissonModel partner_motion_count = 16;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel getPartnerMotionCount();
+    /**
+     * <code>optional .PoissonModel partner_motion_count = 16;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder getPartnerMotionCountOrBuilder();
+
+    // optional .DiscreteAlphabetModel partner_disturbances = 17;
+    /**
+     * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+     */
+    boolean hasPartnerDisturbances();
+    /**
+     * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel getPartnerDisturbances();
+    /**
+     * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getPartnerDisturbancesOrBuilder();
   }
   /**
    * Protobuf type {@code StateModel}
@@ -2013,6 +2041,32 @@ public final class SleepHmmProtos {
                 naturalLightFilter_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000080;
+              break;
+            }
+            case 130: {
+              com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                subBuilder = partnerMotionCount_.toBuilder();
+              }
+              partnerMotionCount_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(partnerMotionCount_);
+                partnerMotionCount_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000100;
+              break;
+            }
+            case 138: {
+              com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000200) == 0x00000200)) {
+                subBuilder = partnerDisturbances_.toBuilder();
+              }
+              partnerDisturbances_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(partnerDisturbances_);
+                partnerDisturbances_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000200;
               break;
             }
           }
@@ -2213,6 +2267,50 @@ public final class SleepHmmProtos {
       return naturalLightFilter_;
     }
 
+    // optional .PoissonModel partner_motion_count = 16;
+    public static final int PARTNER_MOTION_COUNT_FIELD_NUMBER = 16;
+    private com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel partnerMotionCount_;
+    /**
+     * <code>optional .PoissonModel partner_motion_count = 16;</code>
+     */
+    public boolean hasPartnerMotionCount() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional .PoissonModel partner_motion_count = 16;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel getPartnerMotionCount() {
+      return partnerMotionCount_;
+    }
+    /**
+     * <code>optional .PoissonModel partner_motion_count = 16;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder getPartnerMotionCountOrBuilder() {
+      return partnerMotionCount_;
+    }
+
+    // optional .DiscreteAlphabetModel partner_disturbances = 17;
+    public static final int PARTNER_DISTURBANCES_FIELD_NUMBER = 17;
+    private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel partnerDisturbances_;
+    /**
+     * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+     */
+    public boolean hasPartnerDisturbances() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel getPartnerDisturbances() {
+      return partnerDisturbances_;
+    }
+    /**
+     * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getPartnerDisturbancesOrBuilder() {
+      return partnerDisturbances_;
+    }
+
     private void initFields() {
       sleepMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.SLEEP;
       bedMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.ON_BED;
@@ -2222,6 +2320,8 @@ public final class SleepHmmProtos {
       disturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
       logSoundCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
       naturalLightFilter_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+      partnerMotionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
+      partnerDisturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2242,6 +2342,12 @@ public final class SleepHmmProtos {
       }
       if (hasLogSoundCount()) {
         if (!getLogSoundCount().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasPartnerMotionCount()) {
+        if (!getPartnerMotionCount().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -2276,6 +2382,12 @@ public final class SleepHmmProtos {
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeMessage(15, naturalLightFilter_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeMessage(16, partnerMotionCount_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeMessage(17, partnerDisturbances_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2317,6 +2429,14 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(15, naturalLightFilter_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(16, partnerMotionCount_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(17, partnerDisturbances_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2435,6 +2555,8 @@ public final class SleepHmmProtos {
           getDisturbancesFieldBuilder();
           getLogSoundCountFieldBuilder();
           getNaturalLightFilterFieldBuilder();
+          getPartnerMotionCountFieldBuilder();
+          getPartnerDisturbancesFieldBuilder();
         }
       }
       private static Builder create() {
@@ -2479,6 +2601,18 @@ public final class SleepHmmProtos {
           naturalLightFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000080);
+        if (partnerMotionCountBuilder_ == null) {
+          partnerMotionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
+        } else {
+          partnerMotionCountBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        if (partnerDisturbancesBuilder_ == null) {
+          partnerDisturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+        } else {
+          partnerDisturbancesBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -2559,6 +2693,22 @@ public final class SleepHmmProtos {
         } else {
           result.naturalLightFilter_ = naturalLightFilterBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        if (partnerMotionCountBuilder_ == null) {
+          result.partnerMotionCount_ = partnerMotionCount_;
+        } else {
+          result.partnerMotionCount_ = partnerMotionCountBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        if (partnerDisturbancesBuilder_ == null) {
+          result.partnerDisturbances_ = partnerDisturbances_;
+        } else {
+          result.partnerDisturbances_ = partnerDisturbancesBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2599,6 +2749,12 @@ public final class SleepHmmProtos {
         if (other.hasNaturalLightFilter()) {
           mergeNaturalLightFilter(other.getNaturalLightFilter());
         }
+        if (other.hasPartnerMotionCount()) {
+          mergePartnerMotionCount(other.getPartnerMotionCount());
+        }
+        if (other.hasPartnerDisturbances()) {
+          mergePartnerDisturbances(other.getPartnerDisturbances());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -2618,6 +2774,12 @@ public final class SleepHmmProtos {
         }
         if (hasLogSoundCount()) {
           if (!getLogSoundCount().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasPartnerMotionCount()) {
+          if (!getPartnerMotionCount().isInitialized()) {
             
             return false;
           }
@@ -3335,6 +3497,240 @@ public final class SleepHmmProtos {
           naturalLightFilter_ = null;
         }
         return naturalLightFilterBuilder_;
+      }
+
+      // optional .PoissonModel partner_motion_count = 16;
+      private com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel partnerMotionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder> partnerMotionCountBuilder_;
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public boolean hasPartnerMotionCount() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel getPartnerMotionCount() {
+        if (partnerMotionCountBuilder_ == null) {
+          return partnerMotionCount_;
+        } else {
+          return partnerMotionCountBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public Builder setPartnerMotionCount(com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel value) {
+        if (partnerMotionCountBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          partnerMotionCount_ = value;
+          onChanged();
+        } else {
+          partnerMotionCountBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public Builder setPartnerMotionCount(
+          com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder builderForValue) {
+        if (partnerMotionCountBuilder_ == null) {
+          partnerMotionCount_ = builderForValue.build();
+          onChanged();
+        } else {
+          partnerMotionCountBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public Builder mergePartnerMotionCount(com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel value) {
+        if (partnerMotionCountBuilder_ == null) {
+          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+              partnerMotionCount_ != com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance()) {
+            partnerMotionCount_ =
+              com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.newBuilder(partnerMotionCount_).mergeFrom(value).buildPartial();
+          } else {
+            partnerMotionCount_ = value;
+          }
+          onChanged();
+        } else {
+          partnerMotionCountBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public Builder clearPartnerMotionCount() {
+        if (partnerMotionCountBuilder_ == null) {
+          partnerMotionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
+          onChanged();
+        } else {
+          partnerMotionCountBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        return this;
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder getPartnerMotionCountBuilder() {
+        bitField0_ |= 0x00000100;
+        onChanged();
+        return getPartnerMotionCountFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder getPartnerMotionCountOrBuilder() {
+        if (partnerMotionCountBuilder_ != null) {
+          return partnerMotionCountBuilder_.getMessageOrBuilder();
+        } else {
+          return partnerMotionCount_;
+        }
+      }
+      /**
+       * <code>optional .PoissonModel partner_motion_count = 16;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder> 
+          getPartnerMotionCountFieldBuilder() {
+        if (partnerMotionCountBuilder_ == null) {
+          partnerMotionCountBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder>(
+                  partnerMotionCount_,
+                  getParentForChildren(),
+                  isClean());
+          partnerMotionCount_ = null;
+        }
+        return partnerMotionCountBuilder_;
+      }
+
+      // optional .DiscreteAlphabetModel partner_disturbances = 17;
+      private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel partnerDisturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder> partnerDisturbancesBuilder_;
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public boolean hasPartnerDisturbances() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel getPartnerDisturbances() {
+        if (partnerDisturbancesBuilder_ == null) {
+          return partnerDisturbances_;
+        } else {
+          return partnerDisturbancesBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public Builder setPartnerDisturbances(com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel value) {
+        if (partnerDisturbancesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          partnerDisturbances_ = value;
+          onChanged();
+        } else {
+          partnerDisturbancesBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public Builder setPartnerDisturbances(
+          com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder builderForValue) {
+        if (partnerDisturbancesBuilder_ == null) {
+          partnerDisturbances_ = builderForValue.build();
+          onChanged();
+        } else {
+          partnerDisturbancesBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public Builder mergePartnerDisturbances(com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel value) {
+        if (partnerDisturbancesBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) == 0x00000200) &&
+              partnerDisturbances_ != com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance()) {
+            partnerDisturbances_ =
+              com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.newBuilder(partnerDisturbances_).mergeFrom(value).buildPartial();
+          } else {
+            partnerDisturbances_ = value;
+          }
+          onChanged();
+        } else {
+          partnerDisturbancesBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public Builder clearPartnerDisturbances() {
+        if (partnerDisturbancesBuilder_ == null) {
+          partnerDisturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
+          onChanged();
+        } else {
+          partnerDisturbancesBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
+        return this;
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder getPartnerDisturbancesBuilder() {
+        bitField0_ |= 0x00000200;
+        onChanged();
+        return getPartnerDisturbancesFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getPartnerDisturbancesOrBuilder() {
+        if (partnerDisturbancesBuilder_ != null) {
+          return partnerDisturbancesBuilder_.getMessageOrBuilder();
+        } else {
+          return partnerDisturbances_;
+        }
+      }
+      /**
+       * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder> 
+          getPartnerDisturbancesFieldBuilder() {
+        if (partnerDisturbancesBuilder_ == null) {
+          partnerDisturbancesBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder>(
+                  partnerDisturbances_,
+                  getParentForChildren(),
+                  isClean());
+          partnerDisturbances_ = null;
+        }
+        return partnerDisturbancesBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:StateModel)
@@ -6609,7 +7005,7 @@ public final class SleepHmmProtos {
       "\n\017sleep_hmm.proto\"\034\n\014PoissonModel\022\014\n\004mea" +
       "n\030\001 \002(\001\".\n\025DiscreteAlphabetModel\022\025\n\rprob" +
       "abilities\030\001 \003(\001\"*\n\nGammaModel\022\014\n\004mean\030\001 " +
-      "\002(\001\022\016\n\006stddev\030\002 \002(\001\"\265\002\n\nStateModel\022\036\n\nsl" +
+      "\002(\001\022\016\n\006stddev\030\002 \002(\001\"\230\003\n\nStateModel\022\036\n\nsl" +
       "eep_mode\030\004 \001(\0162\n.SleepMode\022\032\n\010bed_mode\030\005" +
       " \001(\0162\010.BedMode\022 \n\013sleep_depth\030\006 \001(\0162\013.Sl" +
       "eepDepth\022\032\n\005light\030\013 \001(\0132\013.GammaModel\022#\n\014" +
@@ -6617,29 +7013,31 @@ public final class SleepHmmProtos {
       "turbances\030\r \001(\0132\026.DiscreteAlphabetModel\022" +
       "$\n\017log_sound_count\030\016 \001(\0132\013.GammaModel\0224\n",
       "\024natural_light_filter\030\017 \001(\0132\026.DiscreteAl" +
-      "phabetModel\"\312\004\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
-      "\t\022\016\n\006source\030\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013.Stat" +
-      "eModel\022\022\n\nnum_states\030\004 \001(\005\022\037\n\027state_tran" +
-      "sition_matrix\030\005 \003(\001\022#\n\033initial_state_pro" +
-      "babilities\030\006 \003(\001\022&\n\036audio_disturbance_th" +
-      "reshold_db\030\007 \001(\001\0220\n(pill_magnitude_distu" +
-      "rbance_threshold_lsb\030\010 \001(\001\022\'\n\037natural_li" +
-      "ght_filter_start_hour\030\t \001(\001\022&\n\036natural_l" +
-      "ight_filter_stop_hour\030\n \001(\001\022\030\n\020num_model",
-      "_params\030\013 \001(\005\022\022\n\nmodel_name\030\014 \001(\t\022\"\n\032num" +
-      "_minutes_in_meas_period\030\r \001(\005\022\036\n\026enable_" +
-      "interval_search\030\016 \001(\010\022\034\n\024light_pre_multi" +
-      "plier\030\017 \001(\001\022\027\n\017light_floor_lux\030\020 \001(\001\022\037\n\027" +
-      "use_wave_as_disturbance\030\021 \001(\010\0221\n)audio_l" +
-      "evel_above_background_threshold_db\030\022 \001(\001" +
-      "\"-\n\020SleepHmmModelSet\022\031\n\006models\030\001 \003(\0132\t.S" +
-      "leepHmm*7\n\tSleepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020" +
-      "\001\022\025\n\021CONDITIONAL_SLEEP\020\002*7\n\007BedMode\022\n\n\006O" +
-      "N_BED\020\000\022\013\n\007OFF_BED\020\001\022\023\n\017CONDITIONAL_BED\020",
-      "\002*G\n\nSleepDepth\022\022\n\016NOT_APPLICABLE\020\000\022\t\n\005L" +
-      "IGHT\020\001\022\013\n\007REGULAR\020\002\022\r\n\tDISTURBED\020\003B2\n co" +
-      "m.hello.suripu.api.datascienceB\016SleepHmm" +
-      "Protos"
+      "phabetModel\022+\n\024partner_motion_count\030\020 \001(" +
+      "\0132\r.PoissonModel\0224\n\024partner_disturbances" +
+      "\030\021 \001(\0132\026.DiscreteAlphabetModel\"\312\004\n\010Sleep" +
+      "Hmm\022\017\n\007user_id\030\001 \001(\t\022\016\n\006source\030\002 \001(\t\022\033\n\006" +
+      "states\030\003 \003(\0132\013.StateModel\022\022\n\nnum_states\030" +
+      "\004 \001(\005\022\037\n\027state_transition_matrix\030\005 \003(\001\022#" +
+      "\n\033initial_state_probabilities\030\006 \003(\001\022&\n\036a" +
+      "udio_disturbance_threshold_db\030\007 \001(\001\0220\n(p" +
+      "ill_magnitude_disturbance_threshold_lsb\030",
+      "\010 \001(\001\022\'\n\037natural_light_filter_start_hour" +
+      "\030\t \001(\001\022&\n\036natural_light_filter_stop_hour" +
+      "\030\n \001(\001\022\030\n\020num_model_params\030\013 \001(\005\022\022\n\nmode" +
+      "l_name\030\014 \001(\t\022\"\n\032num_minutes_in_meas_peri" +
+      "od\030\r \001(\005\022\036\n\026enable_interval_search\030\016 \001(\010" +
+      "\022\034\n\024light_pre_multiplier\030\017 \001(\001\022\027\n\017light_" +
+      "floor_lux\030\020 \001(\001\022\037\n\027use_wave_as_disturban" +
+      "ce\030\021 \001(\010\0221\n)audio_level_above_background" +
+      "_threshold_db\030\022 \001(\001\"-\n\020SleepHmmModelSet\022" +
+      "\031\n\006models\030\001 \003(\0132\t.SleepHmm*7\n\tSleepMode\022",
+      "\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001\022\025\n\021CONDITIONAL_SLEE" +
+      "P\020\002*7\n\007BedMode\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001\022" +
+      "\023\n\017CONDITIONAL_BED\020\002*G\n\nSleepDepth\022\022\n\016NO" +
+      "T_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REGULAR\020\002\022\r" +
+      "\n\tDISTURBED\020\003B2\n com.hello.suripu.api.da" +
+      "tascienceB\016SleepHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -6669,7 +7067,7 @@ public final class SleepHmmProtos {
           internal_static_StateModel_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_StateModel_descriptor,
-              new java.lang.String[] { "SleepMode", "BedMode", "SleepDepth", "Light", "MotionCount", "Disturbances", "LogSoundCount", "NaturalLightFilter", });
+              new java.lang.String[] { "SleepMode", "BedMode", "SleepDepth", "Light", "MotionCount", "Disturbances", "LogSoundCount", "NaturalLightFilter", "PartnerMotionCount", "PartnerDisturbances", });
           internal_static_SleepHmm_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_SleepHmm_fieldAccessorTable = new
