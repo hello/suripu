@@ -17,7 +17,8 @@ public enum DynamoDBTableName {
     FIRMWARE_UPGRADE_PATH("firmware_upgrade_path"),
     RING_TIME_HISTORY("ring_time_history"),
     SENSE_PREFIX("sense_prefix"),
-    SENSE_LAST_SEEN("sense_last_seen");
+    SENSE_LAST_SEEN("sense_last_seen"),
+    ALARM("alarm");
 
     private String value;
 

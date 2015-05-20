@@ -110,6 +110,7 @@ dynamodb:
     firmware_upgrade_path: fw_upgrade_path
     sense_prefix : sense
     sense_last_seen : sense_last_seen
+    alarm: alarm
 
   endpoints:
       features : http://dynamodb.us-east-1.amazonaws.com
@@ -125,3 +126,4 @@ dynamodb:
       firmware_upgrade_path : http://dynamodb.us-east-1.amazonaws.com
       sense_prefix : http://dynamodb.us-east-1.amazonaws.com
       sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
+      alarm: http://localhost:7777
