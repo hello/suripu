@@ -12,7 +12,8 @@ public enum Sensor {
     WAVE_COUNT("wave_count"),
     HOLD_COUNT("hold_count"),
     SOUND_NUM_DISTURBANCES("num_disturbances"),
-    SOUND_PEAK_DISTURBANCE("peak_disturbance");
+    SOUND_PEAK_DISTURBANCE("peak_disturbance"),
+    SOUND_PEAK_OVER_BACKGROUND_DISTURBANCE("peak_over_background_disturbance");
 
 
     private String value;

@@ -25,6 +25,14 @@ public final class SleepHmmProtos {
      * <code>WAKE = 1;</code>
      */
     WAKE(1, 1),
+    /**
+     * <code>CONDITIONAL_SLEEP = 2;</code>
+     *
+     * <pre>
+     *if there is SLEEP before and after, this state becomes SLEEP
+     * </pre>
+     */
+    CONDITIONAL_SLEEP(2, 2),
     ;
 
     /**
@@ -35,6 +43,14 @@ public final class SleepHmmProtos {
      * <code>WAKE = 1;</code>
      */
     public static final int WAKE_VALUE = 1;
+    /**
+     * <code>CONDITIONAL_SLEEP = 2;</code>
+     *
+     * <pre>
+     *if there is SLEEP before and after, this state becomes SLEEP
+     * </pre>
+     */
+    public static final int CONDITIONAL_SLEEP_VALUE = 2;
 
 
     public final int getNumber() { return value; }
@@ -43,6 +59,7 @@ public final class SleepHmmProtos {
       switch (value) {
         case 0: return SLEEP;
         case 1: return WAKE;
+        case 2: return CONDITIONAL_SLEEP;
         default: return null;
       }
     }
@@ -107,6 +124,14 @@ public final class SleepHmmProtos {
      * <code>OFF_BED = 1;</code>
      */
     OFF_BED(1, 1),
+    /**
+     * <code>CONDITIONAL_BED = 2;</code>
+     *
+     * <pre>
+     *if there is ON_BED before and after, this state becomes ON_BED
+     * </pre>
+     */
+    CONDITIONAL_BED(2, 2),
     ;
 
     /**
@@ -117,6 +142,14 @@ public final class SleepHmmProtos {
      * <code>OFF_BED = 1;</code>
      */
     public static final int OFF_BED_VALUE = 1;
+    /**
+     * <code>CONDITIONAL_BED = 2;</code>
+     *
+     * <pre>
+     *if there is ON_BED before and after, this state becomes ON_BED
+     * </pre>
+     */
+    public static final int CONDITIONAL_BED_VALUE = 2;
 
 
     public final int getNumber() { return value; }
@@ -125,6 +158,7 @@ public final class SleepHmmProtos {
       switch (value) {
         case 0: return ON_BED;
         case 1: return OFF_BED;
+        case 2: return CONDITIONAL_BED;
         default: return null;
       }
     }
@@ -3538,6 +3572,26 @@ public final class SleepHmmProtos {
      * <code>optional double light_floor_lux = 16;</code>
      */
     double getLightFloorLux();
+
+    // optional bool use_wave_as_disturbance = 17;
+    /**
+     * <code>optional bool use_wave_as_disturbance = 17;</code>
+     */
+    boolean hasUseWaveAsDisturbance();
+    /**
+     * <code>optional bool use_wave_as_disturbance = 17;</code>
+     */
+    boolean getUseWaveAsDisturbance();
+
+    // optional double audio_level_above_background_threshold_db = 18;
+    /**
+     * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+     */
+    boolean hasAudioLevelAboveBackgroundThresholdDb();
+    /**
+     * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+     */
+    double getAudioLevelAboveBackgroundThresholdDb();
   }
   /**
    * Protobuf type {@code SleepHmm}
@@ -3703,6 +3757,16 @@ public final class SleepHmmProtos {
             case 129: {
               bitField0_ |= 0x00001000;
               lightFloorLux_ = input.readDouble();
+              break;
+            }
+            case 136: {
+              bitField0_ |= 0x00002000;
+              useWaveAsDisturbance_ = input.readBool();
+              break;
+            }
+            case 145: {
+              bitField0_ |= 0x00004000;
+              audioLevelAboveBackgroundThresholdDb_ = input.readDouble();
               break;
             }
           }
@@ -4149,6 +4213,38 @@ public final class SleepHmmProtos {
       return lightFloorLux_;
     }
 
+    // optional bool use_wave_as_disturbance = 17;
+    public static final int USE_WAVE_AS_DISTURBANCE_FIELD_NUMBER = 17;
+    private boolean useWaveAsDisturbance_;
+    /**
+     * <code>optional bool use_wave_as_disturbance = 17;</code>
+     */
+    public boolean hasUseWaveAsDisturbance() {
+      return ((bitField0_ & 0x00002000) == 0x00002000);
+    }
+    /**
+     * <code>optional bool use_wave_as_disturbance = 17;</code>
+     */
+    public boolean getUseWaveAsDisturbance() {
+      return useWaveAsDisturbance_;
+    }
+
+    // optional double audio_level_above_background_threshold_db = 18;
+    public static final int AUDIO_LEVEL_ABOVE_BACKGROUND_THRESHOLD_DB_FIELD_NUMBER = 18;
+    private double audioLevelAboveBackgroundThresholdDb_;
+    /**
+     * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+     */
+    public boolean hasAudioLevelAboveBackgroundThresholdDb() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    /**
+     * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+     */
+    public double getAudioLevelAboveBackgroundThresholdDb() {
+      return audioLevelAboveBackgroundThresholdDb_;
+    }
+
     private void initFields() {
       userId_ = "";
       source_ = "";
@@ -4166,6 +4262,8 @@ public final class SleepHmmProtos {
       enableIntervalSearch_ = false;
       lightPreMultiplier_ = 0D;
       lightFloorLux_ = 0D;
+      useWaveAsDisturbance_ = false;
+      audioLevelAboveBackgroundThresholdDb_ = 0D;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4232,6 +4330,12 @@ public final class SleepHmmProtos {
       }
       if (((bitField0_ & 0x00001000) == 0x00001000)) {
         output.writeDouble(16, lightFloorLux_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        output.writeBool(17, useWaveAsDisturbance_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeDouble(18, audioLevelAboveBackgroundThresholdDb_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -4309,6 +4413,14 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00001000) == 0x00001000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(16, lightFloorLux_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(17, useWaveAsDisturbance_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(18, audioLevelAboveBackgroundThresholdDb_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4463,6 +4575,10 @@ public final class SleepHmmProtos {
         bitField0_ = (bitField0_ & ~0x00004000);
         lightFloorLux_ = 0D;
         bitField0_ = (bitField0_ & ~0x00008000);
+        useWaveAsDisturbance_ = false;
+        bitField0_ = (bitField0_ & ~0x00010000);
+        audioLevelAboveBackgroundThresholdDb_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00020000);
         return this;
       }
 
@@ -4562,6 +4678,14 @@ public final class SleepHmmProtos {
           to_bitField0_ |= 0x00001000;
         }
         result.lightFloorLux_ = lightFloorLux_;
+        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+          to_bitField0_ |= 0x00002000;
+        }
+        result.useWaveAsDisturbance_ = useWaveAsDisturbance_;
+        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        result.audioLevelAboveBackgroundThresholdDb_ = audioLevelAboveBackgroundThresholdDb_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4668,6 +4792,12 @@ public final class SleepHmmProtos {
         }
         if (other.hasLightFloorLux()) {
           setLightFloorLux(other.getLightFloorLux());
+        }
+        if (other.hasUseWaveAsDisturbance()) {
+          setUseWaveAsDisturbance(other.getUseWaveAsDisturbance());
+        }
+        if (other.hasAudioLevelAboveBackgroundThresholdDb()) {
+          setAudioLevelAboveBackgroundThresholdDb(other.getAudioLevelAboveBackgroundThresholdDb());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5674,6 +5804,72 @@ public final class SleepHmmProtos {
         return this;
       }
 
+      // optional bool use_wave_as_disturbance = 17;
+      private boolean useWaveAsDisturbance_ ;
+      /**
+       * <code>optional bool use_wave_as_disturbance = 17;</code>
+       */
+      public boolean hasUseWaveAsDisturbance() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      /**
+       * <code>optional bool use_wave_as_disturbance = 17;</code>
+       */
+      public boolean getUseWaveAsDisturbance() {
+        return useWaveAsDisturbance_;
+      }
+      /**
+       * <code>optional bool use_wave_as_disturbance = 17;</code>
+       */
+      public Builder setUseWaveAsDisturbance(boolean value) {
+        bitField0_ |= 0x00010000;
+        useWaveAsDisturbance_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool use_wave_as_disturbance = 17;</code>
+       */
+      public Builder clearUseWaveAsDisturbance() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        useWaveAsDisturbance_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional double audio_level_above_background_threshold_db = 18;
+      private double audioLevelAboveBackgroundThresholdDb_ ;
+      /**
+       * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+       */
+      public boolean hasAudioLevelAboveBackgroundThresholdDb() {
+        return ((bitField0_ & 0x00020000) == 0x00020000);
+      }
+      /**
+       * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+       */
+      public double getAudioLevelAboveBackgroundThresholdDb() {
+        return audioLevelAboveBackgroundThresholdDb_;
+      }
+      /**
+       * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+       */
+      public Builder setAudioLevelAboveBackgroundThresholdDb(double value) {
+        bitField0_ |= 0x00020000;
+        audioLevelAboveBackgroundThresholdDb_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double audio_level_above_background_threshold_db = 18;</code>
+       */
+      public Builder clearAudioLevelAboveBackgroundThresholdDb() {
+        bitField0_ = (bitField0_ & ~0x00020000);
+        audioLevelAboveBackgroundThresholdDb_ = 0D;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:SleepHmm)
     }
 
@@ -6421,7 +6617,7 @@ public final class SleepHmmProtos {
       "turbances\030\r \001(\0132\026.DiscreteAlphabetModel\022" +
       "$\n\017log_sound_count\030\016 \001(\0132\013.GammaModel\0224\n",
       "\024natural_light_filter\030\017 \001(\0132\026.DiscreteAl" +
-      "phabetModel\"\366\003\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
+      "phabetModel\"\312\004\n\010SleepHmm\022\017\n\007user_id\030\001 \001(" +
       "\t\022\016\n\006source\030\002 \001(\t\022\033\n\006states\030\003 \003(\0132\013.Stat" +
       "eModel\022\022\n\nnum_states\030\004 \001(\005\022\037\n\027state_tran" +
       "sition_matrix\030\005 \003(\001\022#\n\033initial_state_pro" +
@@ -6433,13 +6629,17 @@ public final class SleepHmmProtos {
       "_params\030\013 \001(\005\022\022\n\nmodel_name\030\014 \001(\t\022\"\n\032num" +
       "_minutes_in_meas_period\030\r \001(\005\022\036\n\026enable_" +
       "interval_search\030\016 \001(\010\022\034\n\024light_pre_multi" +
-      "plier\030\017 \001(\001\022\027\n\017light_floor_lux\030\020 \001(\001\"-\n\020" +
-      "SleepHmmModelSet\022\031\n\006models\030\001 \003(\0132\t.Sleep" +
-      "Hmm* \n\tSleepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001*\"\n" +
-      "\007BedMode\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001*G\n\nSle" +
-      "epDepth\022\022\n\016NOT_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013" +
-      "\n\007REGULAR\020\002\022\r\n\tDISTURBED\020\003B2\n com.hello." +
-      "suripu.api.datascienceB\016SleepHmmProtos"
+      "plier\030\017 \001(\001\022\027\n\017light_floor_lux\030\020 \001(\001\022\037\n\027" +
+      "use_wave_as_disturbance\030\021 \001(\010\0221\n)audio_l" +
+      "evel_above_background_threshold_db\030\022 \001(\001" +
+      "\"-\n\020SleepHmmModelSet\022\031\n\006models\030\001 \003(\0132\t.S" +
+      "leepHmm*7\n\tSleepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020" +
+      "\001\022\025\n\021CONDITIONAL_SLEEP\020\002*7\n\007BedMode\022\n\n\006O" +
+      "N_BED\020\000\022\013\n\007OFF_BED\020\001\022\023\n\017CONDITIONAL_BED\020",
+      "\002*G\n\nSleepDepth\022\022\n\016NOT_APPLICABLE\020\000\022\t\n\005L" +
+      "IGHT\020\001\022\013\n\007REGULAR\020\002\022\r\n\tDISTURBED\020\003B2\n co" +
+      "m.hello.suripu.api.datascienceB\016SleepHmm" +
+      "Protos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -6475,7 +6675,7 @@ public final class SleepHmmProtos {
           internal_static_SleepHmm_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_SleepHmm_descriptor,
-              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", "LightPreMultiplier", "LightFloorLux", });
+              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", "LightPreMultiplier", "LightFloorLux", "UseWaveAsDisturbance", "AudioLevelAboveBackgroundThresholdDb", });
           internal_static_SleepHmmModelSet_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_SleepHmmModelSet_fieldAccessorTable = new

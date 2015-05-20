@@ -22,6 +22,9 @@ public class NamedSleepHmmModel {
     public final boolean isUsingIntervalSearch;
     public final double lightPreMultiplier;
     public final double lightFloorLux;
+    public final boolean useWaveCountsForDisturbances;
+    public final double audioThresholdAboveBackgroundToCountSound;
+
 
     public NamedSleepHmmModel(HiddenMarkovModel hmm,
                               String modelName,
@@ -36,7 +39,9 @@ public class NamedSleepHmmModel {
                               int numMinutesInMeasPeriod,
                               boolean isUsingIntervalSearch,
                               double lightPreMultiplier,
-                              double lightFloorLux) {
+                              double lightFloorLux,
+                              final boolean useWaveCountsForDisturbances,
+                              final double audioThresholdAboveBackgroundToCountSound) {
         this.hmm = hmm;
         this.modelName = modelName;
         this.sleepStates = sleepStates;
@@ -51,5 +56,7 @@ public class NamedSleepHmmModel {
         this.isUsingIntervalSearch = isUsingIntervalSearch;
         this.lightPreMultiplier = lightPreMultiplier;
         this.lightFloorLux = lightFloorLux;
+        this.useWaveCountsForDisturbances = useWaveCountsForDisturbances;
+        this.audioThresholdAboveBackgroundToCountSound = audioThresholdAboveBackgroundToCountSound;
     }
 }

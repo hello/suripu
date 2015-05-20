@@ -60,5 +60,7 @@ public class HmmDataConstants {
     final static public boolean DEFAULT_IS_USING_INTERVAL_SEARCH = true;
     final static public double DEFAULT_LIGHT_PRE_MULTIPLIER = 4.0;
     final static public double DEFAULT_LIGHT_FLOOR_LUX = 0.0; //lux
+    final static public boolean DEFAULT_USE_WAVE_COUNTS_FOR_DISTURBANCES = true;
+    final static public double DEFAULT_AUDIO_ABOVE_BACKGROUND_THRESHOLD_DB = 0.0;
 
 }

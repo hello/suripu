@@ -72,6 +72,7 @@ public class SleepHmmSensorDataBinning {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
         final List<Sample> sound = sensors.get(Sensor.SOUND_PEAK_DISTURBANCE);
+        final List<Sample> soundOverBackground = sensors.get(Sensor.SOUND_PEAK_OVER_BACKGROUND_DISTURBANCE);
         final List<Sample> soundCounts = sensors.get(Sensor.SOUND_NUM_DISTURBANCES);
 
         if (light == Collections.EMPTY_LIST || light.isEmpty()) {
@@ -150,7 +151,7 @@ public class SleepHmmSensorDataBinning {
             double value = sample.value;
 
             //either wave happened or it didn't.. value can be 1.0 or 0.0
-            if (value > 0.0) {
+            if (value > 0.0 && model.useWaveCountsForDisturbances) {
                 maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
                 maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.PARTNER_DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
@@ -170,17 +171,33 @@ public class SleepHmmSensorDataBinning {
         }
 
         //SOUND COUNTS
-        final Iterator<Sample> it5 = soundCounts.iterator();
-        while (it5.hasNext()) {
-            final Sample sample = it5.next();
+        //if soundcounts and background over threshold don't agree in size, ignore the background over threshold
+        boolean usePeakOverBackgroundThreshold = true;
+        if (soundCounts.size() != soundOverBackground.size()) {
+            usePeakOverBackgroundThreshold = false;
+        }
 
-            //accumulate
-            if (sample.value > 0.0) {
-                addToBin(data, sample.dateTime, sample.value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+        for (int t = 0; t < soundCounts.size(); t++) {
+            final Sample countSample = soundCounts.get(t);
+
+            //if you have the peak over background information
+            //AND if peak over background is less than the specified threshold, ignore this sample
+            if (usePeakOverBackgroundThreshold) {
+                final Sample peakOverBacgrkound = soundOverBackground.get(t);
+
+                if (peakOverBacgrkound.value < model.audioThresholdAboveBackgroundToCountSound) {
+                    continue;
+                }
+            }
+
+            //sanity check... is it over 0? If true, then accumulate it
+            if (countSample.value > 0.0) {
+                addToBin(data, countSample.dateTime, countSample.value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
 
         }
 
+        
         //transform via log2 (1.0 + x)
         for (int i = 0; i < data[HmmDataConstants.LOG_SOUND_COUNT_INDEX].length; i++) {
             double value = data[HmmDataConstants.LOG_SOUND_COUNT_INDEX][i];

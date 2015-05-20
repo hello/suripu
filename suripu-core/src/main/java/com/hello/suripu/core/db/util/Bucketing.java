@@ -135,10 +135,11 @@ public class Bucketing {
             final int holdCount = deviceData.holdCount;
             final float soundNumDisturbances = (float) deviceData.audioNumDisturbances;
             final float soundPeakDisturbance = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
+            final float soundPeakOverBackground = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB - deviceData.audioPeakBackgroundDB);
 
             populatedMap.addSample(newKey, deviceData.offsetMillis,
                     lightValue, soundValue, humidityValue, temperatureValue, particulatesValue, waveCount, holdCount,
-                    soundNumDisturbances, soundPeakDisturbance);
+                    soundNumDisturbances, soundPeakDisturbance,soundPeakOverBackground);
         }
 
         return populatedMap;

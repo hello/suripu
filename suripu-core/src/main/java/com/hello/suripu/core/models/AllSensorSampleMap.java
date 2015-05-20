@@ -15,6 +15,7 @@ public class AllSensorSampleMap {
     private final Map<Long, Sample> holdCounts = Maps.newHashMap();
     private final Map<Long, Sample> soundNumDisturbances = Maps.newHashMap();
     private final Map<Long, Sample> soundPeakDisturbance = Maps.newHashMap();
+    private final Map<Long, Sample> soundPeakOverBackground = Maps.newHashMap();
 
     public AllSensorSampleMap() {
     }
@@ -28,7 +29,8 @@ public class AllSensorSampleMap {
                           final int waveCount,
                           final int holdCount,
                           final float soundNumDisturbance,
-                          final float soundPeakDisturbance) {
+                          final float soundPeakDisturbance,
+                          final float soundPeakOverBackground) {
 
         this.light.put(dateTime, new Sample(dateTime, light, offsetMillis));
         this.sound.put(dateTime, new Sample(dateTime, sound, offsetMillis));
@@ -39,6 +41,7 @@ public class AllSensorSampleMap {
         this.holdCounts.put(dateTime, new Sample(dateTime, holdCount, offsetMillis));
         this.soundNumDisturbances.put(dateTime, new Sample(dateTime, soundNumDisturbance, offsetMillis));
         this.soundPeakDisturbance.put(dateTime, new Sample(dateTime, soundPeakDisturbance, offsetMillis));
+        this.soundPeakOverBackground.put(dateTime,new Sample(dateTime,soundPeakOverBackground,offsetMillis));
     }
 
     public void setSampleMap(final Sensor sensor, final Map<Long, Sample> sampleMap) {
@@ -70,6 +73,8 @@ public class AllSensorSampleMap {
             case SOUND_PEAK_DISTURBANCE:
                 this.soundPeakDisturbance.putAll(sampleMap);
                 break;
+            case SOUND_PEAK_OVER_BACKGROUND_DISTURBANCE:
+                this.soundPeakOverBackground.putAll(sampleMap);
             default:
                 break;
         }
@@ -95,6 +100,8 @@ public class AllSensorSampleMap {
                 return soundNumDisturbances;
             case SOUND_PEAK_DISTURBANCE:
                 return soundPeakDisturbance;
+            case SOUND_PEAK_OVER_BACKGROUND_DISTURBANCE:
+                return soundPeakOverBackground;
         }
         return Maps.newHashMap();
     }
@@ -102,7 +109,7 @@ public class AllSensorSampleMap {
     public Boolean isEmpty() {
         return light.isEmpty() && sound.isEmpty() && humidity.isEmpty() && temperature.isEmpty()
                 && particulates.isEmpty() && waveCounts.isEmpty() && holdCounts.isEmpty()
-                && soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
+                && soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty() && soundPeakOverBackground.isEmpty();
     }
 
 }

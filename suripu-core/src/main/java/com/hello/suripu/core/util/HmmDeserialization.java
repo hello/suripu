@@ -121,6 +121,16 @@ public class HmmDeserialization {
             lightFloorLux = hmmModelData.getLightFloorLux();
         }
 
+        boolean useWaveCountsAsDisturbances = HmmDataConstants.DEFAULT_USE_WAVE_COUNTS_FOR_DISTURBANCES;
+
+        if (hmmModelData.hasUseWaveAsDisturbance()) {
+            useWaveCountsAsDisturbances = hmmModelData.getUseWaveAsDisturbance();
+        }
+
+        double audioLevelAboveBackroundThresholdDb = HmmDataConstants.DEFAULT_AUDIO_ABOVE_BACKGROUND_THRESHOLD_DB;
+        if (hmmModelData.hasAudioLevelAboveBackgroundThresholdDb()) {
+            audioLevelAboveBackroundThresholdDb = hmmModelData.getAudioLevelAboveBackgroundThresholdDb();
+        }
          /*
          * interpretation parameters (which states mean what)
          *
@@ -240,7 +250,8 @@ public class HmmDeserialization {
         final HiddenMarkovModel hmm =  new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel,numFreeParams);
 
         return Optional.of(new NamedSleepHmmModel(hmm,modelName, ImmutableSet.copyOf(sleepStates),ImmutableSet.copyOf(onBedStates),ImmutableSet.copyOf(allowableEndingStates), ImmutableList.copyOf(sleepDepthsByState),
-                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch,lightPreMultiplier,lightFloorLux));
+                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch,lightPreMultiplier,lightFloorLux,
+                useWaveCountsAsDisturbances,audioLevelAboveBackroundThresholdDb));
 
 
 
