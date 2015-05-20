@@ -67,7 +67,7 @@ public class SleepHmmSensorDataBinning {
     *
     *
     * */
-    static public Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final NamedSleepHmmModel model,
+    static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final ImmutableList<TrackerMotion> pillData,final ImmutableList<TrackerMotion> partnerPillData, final NamedSleepHmmModel model,
                                                            final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset) {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
@@ -129,7 +129,7 @@ public class SleepHmmSensorDataBinning {
             double value = m.value;
 
             //heartbeat value
-            if (value == -1) {
+            if (value == HmmDataConstants.HEARTBEAT_VALUE) {
                 continue;
             }
 
@@ -152,6 +152,7 @@ public class SleepHmmSensorDataBinning {
             //either wave happened or it didn't.. value can be 1.0 or 0.0
             if (value > 0.0) {
                 maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.PARTNER_DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
@@ -164,6 +165,7 @@ public class SleepHmmSensorDataBinning {
 
             if (value > model.soundDisturbanceThresholdDB) {
                 maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.PARTNER_DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
@@ -194,10 +196,32 @@ public class SleepHmmSensorDataBinning {
             final Sample sample = it6.next();
 
             if (sample.value > 0.0) {
-                maxInBin(data,sample.dateTime,1.0,HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX,startTimeMillisInUTC,numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
+
+        ///////////////////////////
+        //PARTNER PILL MOTION
+        final Iterator<TrackerMotion> it7 = partnerPillData.iterator();
+        while (it7.hasNext()) {
+            final TrackerMotion m = it7.next();
+
+            double value = m.value;
+
+            //heartbeat value
+            if (value == HmmDataConstants.HEARTBEAT_VALUE) {
+                continue;
+            }
+
+            //if there's a disturbance, register it in the disturbance index
+            if (value > model.pillMagnitudeDisturbanceThresholdLsb) {
+                maxInBin(data, m.timestamp, 1.0, HmmDataConstants.PARTNER_DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            addToBin(data, m.timestamp, 1.0, HmmDataConstants.PARTNER_MOT_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+
+        }
 
 
 
@@ -282,7 +306,7 @@ public class SleepHmmSensorDataBinning {
         return vecString;
     }
 
-    static public List<TrackerMotion> removeDuplicatesAndInvalidValues(final List<TrackerMotion> trackerMotions) {
+    static public ImmutableList<TrackerMotion> removeDuplicatesAndInvalidValues(final ImmutableList<TrackerMotion> trackerMotions) {
         Set<TrackerMotion> trackerMotionSet = new TreeSet<TrackerMotion>(new Comparator<TrackerMotion>() {
             @Override
             public int compare(final TrackerMotion m1, final TrackerMotion m2) {
@@ -316,6 +340,6 @@ public class SleepHmmSensorDataBinning {
 
         uniqueValues.addAll(trackerMotionSet);
 
-        return uniqueValues;
+        return ImmutableList.copyOf(uniqueValues);
     }
 }

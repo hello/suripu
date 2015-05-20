@@ -2,18 +2,15 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
+
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Created by benjo on 2/25/15.
@@ -199,7 +195,8 @@ CREATE CREATE CREATE
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
     /* Use this method to get all the sleep / bed events from ALL the sensor data and ALL the pill data */
     public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,
-                                                           final List<TrackerMotion> pillData,
+                                                           final ImmutableList<TrackerMotion> pillData,
+                                                           final ImmutableList<TrackerMotion> partnerPillData,
                                                            final long sleepPeriodStartTimeLocal,
                                                            final long sleepPeriodEndTimeLocal,
                                                            final long currentTimeInMillisUTC) {
@@ -221,7 +218,8 @@ CREATE CREATE CREATE
         final long endTimeMillisUTC = currentTimeInMillisUTC < endOfThePeriodUTC ? currentTimeInMillisUTC : endOfThePeriodUTC; //find earlier of end of period or current time
 
 
-        final List<TrackerMotion> cleanedUpPillData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(pillData);
+        final ImmutableList<TrackerMotion> cleanedUpPillData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(pillData);
+        final ImmutableList<TrackerMotion> cleanedUpPartnerPillData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(partnerPillData);
 
 
         LOGGER.debug("removed {} duplicate or invalid pill data points",pillData.size() - cleanedUpPillData.size());
@@ -229,7 +227,7 @@ CREATE CREATE CREATE
         /* go through each model, evaluate, find the best  */
         for (final NamedSleepHmmModel model : models) {
             LOGGER.debug("Trying out model \"{}\"",model.modelName);
-            final Optional<SleepHmmSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmSensorDataBinning.getBinnedSensorData(sensors, cleanedUpPillData, model, startTimeMillisInUTC, endTimeMillisUTC, timezoneOffset);
+            final Optional<SleepHmmSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmSensorDataBinning.getBinnedSensorData(sensors, cleanedUpPillData,cleanedUpPartnerPillData, model, startTimeMillisInUTC, endTimeMillisUTC, timezoneOffset);
 
 
             if (!binnedDataOptional.isPresent()) {
