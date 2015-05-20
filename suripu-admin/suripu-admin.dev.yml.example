@@ -52,6 +52,7 @@ dynamodb:
     alarm_info : alarm_info
     sense_key_store : key_store
     pill_key_store : pill_key_store
+    pill_last_seen : pill_last_seen
     password_reset : password_reset
     sense_events : sense_events
     teams : teams
@@ -67,6 +68,7 @@ dynamodb:
       alarm_info : http://localhost:7777
       sense_key_store : http://localhost:7777
       pill_key_store : http://localhost:7777
+      pill_last_seen : http://localhost:7777
       password_reset : http://localhost:7777
       sense_events : http://localhost:7777
       teams : http://dynamodb.us-east-1.amazonaws.com
