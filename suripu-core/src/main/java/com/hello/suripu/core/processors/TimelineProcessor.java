@@ -546,7 +546,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        if(allLowMotionAmplitude){
+        if(allLowMotionAmplitude && motionData.size() < MIN_TRACKER_MOTION_COUNT){
             return false;
         }
 
