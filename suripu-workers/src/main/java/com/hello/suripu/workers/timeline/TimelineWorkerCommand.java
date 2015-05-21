@@ -105,10 +105,10 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
 
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
-                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_HISTORY));
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
         final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
                 ringTimeDynamoDBClient,
-                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.RING_HISTORY));
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.RING_TIME_HISTORY));
 
         final AmazonDynamoDB featureDynamoDB = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.FEATURES));

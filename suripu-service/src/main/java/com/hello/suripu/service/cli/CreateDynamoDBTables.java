@@ -35,8 +35,8 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuConfiguration>
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
         final ImmutableMap<DynamoDBTableName, String> endpoints = configuration.dynamoDBConfiguration().endpoints();
 
-        final String tableName = tableNames.get(DynamoDBTableName.RING_SCHEDULE_HISTORY);
-        final String endpoint = endpoints.get(DynamoDBTableName.RING_SCHEDULE_HISTORY);
+        final String tableName = tableNames.get(DynamoDBTableName.RING_TIME_HISTORY);
+        final String endpoint = endpoints.get(DynamoDBTableName.RING_TIME_HISTORY);
 
         client.setEndpoint(endpoint);
         try {

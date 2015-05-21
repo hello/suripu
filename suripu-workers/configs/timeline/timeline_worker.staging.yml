@@ -139,7 +139,7 @@ dynamodb:
     sleep_hmm: sleephmm
     sleep_stats: sleep_stats
     timeline_log: timeline_log
-    ring_history: ring_history_by_account
+    ring_time_history: ring_history_by_account
     timezone_history: timezone_history
     alarm_log: alarm
   endpoints:
@@ -150,7 +150,7 @@ dynamodb:
     sleep_hmm: http://dynamodb.us-east-1.amazonaws.com
     sleep_stats: http://dynamodb.us-east-1.amazonaws.com
     timeline_log: http://dynamodb.us-east-1.amazonaws.com
-    ring_history: http://dynamodb.us-east-1.amazonaws.com
+    ring_time_history: http://dynamodb.us-east-1.amazonaws.com
     timezone_history: http://dynamodb.us-east-1.amazonaws.com
     alarm_log: http://dynamodb.us-east-1.amazonaws.com
 

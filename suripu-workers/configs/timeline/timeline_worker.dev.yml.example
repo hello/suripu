@@ -112,7 +112,7 @@ dynamodb:
     sleep_hmm: prod_sleephmm
     sleep_stats: prod_sleep_stats
     timeline_log: prod_timeline_log
-    ring_history: prod_ring_history_by_account
+    ring_time_history: prod_ring_history_by_account
     timezone_history: prod_timezone_history
     alarm_log: prod_alarm
   endpoints:
@@ -123,7 +123,7 @@ dynamodb:
     sleep_hmm: http://localhost:7777
     sleep_stats: http://localhost:7777
     timeline_log: http://localhost:7777
-    ring_history: http://localhost:7777
+    ring_time_history: http://localhost:7777
     timezone_history: http://localhost:7777
     alarm_log: http://localhost:7777
 
