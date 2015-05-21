@@ -8,7 +8,7 @@ public class FeatureFlipper {
     public final static String SOUND_INFO_TIMELINE = "sound_info_timeline";
     public final static String SMART_ALARM = "smart_alarm";
     public final static String OTA_RELEASE = "release";
-    public final static String ALWAYS_OTA_RELEASE = "always_ota_release";
+    public final static String BYPASS_OTA_CHECKS = "bypass_ota_checks";
     public final static String FORCE_EVT_OTA_UPDATE = "pang-fire-fighting";
     public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
     public final static String MISSING_DATA_DEFAULT_VALUE = "missing_data_default_value";
@@ -32,6 +32,7 @@ public class FeatureFlipper {
     public final static String RING_DURATION_FROM_CONFIG = "ring_duration_from_config";
     public final static String EXTRA_EVENTS = "extra_events";
     public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB = "sense_last_seen_view_dynamodb";
+    public final static String REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP = "remove_motion_events_outside_sleep";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
 }

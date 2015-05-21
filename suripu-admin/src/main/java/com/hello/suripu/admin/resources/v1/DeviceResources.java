@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
+import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
@@ -80,6 +81,8 @@ public class DeviceResources {
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final SenseColorDAO senseColorDAO;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
+    private final PillViewsDynamoDB pillViewsDynamoDB;
+
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDAOAdmin deviceDAOAdmin,
@@ -92,7 +95,9 @@ public class DeviceResources {
                            final JedisPool jedisPool,
                            final PillHeartBeatDAO pillHeartBeatDAO,
                            final SenseColorDAO senseColorDAO,
-                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB) {
+                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
+                           final PillViewsDynamoDB pillViewsDynamoDB) {
+
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
@@ -105,6 +110,7 @@ public class DeviceResources {
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.senseColorDAO = senseColorDAO;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
+        this.pillViewsDynamoDB = pillViewsDynamoDB;
     }
 
     @GET
@@ -173,6 +179,31 @@ public class DeviceResources {
 
         return pillStatuses;
     }
+
+    @GET
+    @Timed
+    @Path("/pill_heartbeat/{pill_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceStatus getPillHeartBeat(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                            @PathParam("pill_id") final String pillId) {
+
+        final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getInternalPillId(pillId);
+        if(!deviceAccountPairOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("No pill found!").build());
+        }
+
+
+        final Optional<DeviceStatus> deviceStatusOptional = pillViewsDynamoDB.lastHeartBeat(deviceAccountPairOptional.get().externalDeviceId, deviceAccountPairOptional.get().internalDeviceId);
+        if(deviceStatusOptional.isPresent()) {
+            return deviceStatusOptional.get();
+        }
+
+
+        throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                .entity("No heartbeat found!").build());
+    }
+
 
     @Timed
     @GET

@@ -34,7 +34,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.CachedTimelines;
@@ -371,7 +370,7 @@ public class TimelineDAODynamoDB {
                 item.put(TARGET_DATE_OF_NIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(targetDateOfNightLocalUTC)));
                 item.put(UPDATED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(DateTime.now().getMillis())));
                 item.put(VERSION, new AttributeValue().withS(TimelineProcessor.VERSION));
-                item.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(CachedTimelines.NEVER_EXPIRE.toString()));
+                item.put(EXPIRED_AT_MILLIS, new AttributeValue().withN(String.valueOf(DateTime.now().plusMinutes(5).getMillis())));
 
                 final int compressType = Compression.CompressionType.NONE.getValue();
                 item.put(COMPRESS_TYPE_ATTRIBUTE_NAME, new AttributeValue().withN(

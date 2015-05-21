@@ -13,6 +13,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
+import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -41,6 +42,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final ActiveDevicesTracker activeDevicesTracker;
+    private final PillViewsDynamoDB pillViewsDynamoDB;
 
 
     private final Meter messagesProcessed;
@@ -52,7 +54,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                                  final KeyStore pillKeyStore,
                                  final DeviceDAO deviceDAO,
                                  final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                 final ActiveDevicesTracker activeDevicesTracker) {
+                                 final ActiveDevicesTracker activeDevicesTracker,
+                                 final PillViewsDynamoDB pillViewsDynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
@@ -60,6 +63,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.activeDevicesTracker = activeDevicesTracker;
+        this.pillViewsDynamoDB = pillViewsDynamoDB;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
@@ -123,6 +127,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         }
                     }
 
+
                     if(data.hasBatteryLevel()){
                         final int batteryLevel = data.getBatteryLevel();
                         final int upTimeInSeconds = data.getUptime();
@@ -131,6 +136,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
                         LOGGER.info("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
                         pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
+                        // Best effort saving of the last seen HB
+                        pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
                     }
                 }
             } catch (InvalidProtocolBufferException e) {
