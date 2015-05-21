@@ -5,7 +5,6 @@ import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.EmailConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.core.configuration.QuestionConfiguration;
 import com.hello.suripu.core.configuration.RedisConfiguration;
@@ -114,15 +113,6 @@ public class SuripuAppConfiguration extends Configuration {
 
     public Long getAllowedQueryRange() {
         return allowedQueryRange;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("kinesis_logger")
-    private KinesisLoggerConfiguration kinesisLoggerConfiguration;
-
-    public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
-        return kinesisLoggerConfiguration;
     }
 
     @Valid
