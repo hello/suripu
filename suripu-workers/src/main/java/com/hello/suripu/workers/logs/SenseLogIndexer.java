@@ -45,6 +45,8 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             final Long millis = (log.getTs() == 0) ? batchLogMessage.getReceivedAt() : log.getTs() * 1000L;
             final String documentId = String.format("%s-%d", log.getDeviceId(), millis);
             final DateTime createdDateTime = new DateTime(millis, DateTimeZone.UTC);
+            final String halfDateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyyMMdda"));
+            final String dateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyyMMdd"));
 
             final Map<String, String> fields = Maps.newHashMap();
             final Map<String, String> categories = Maps.newHashMap();
@@ -52,15 +54,21 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("device_id", log.getDeviceId());
             fields.put("text", log.getMessage());
             fields.put("ts", String.valueOf(log.getTs()));
-            fields.put("date",  createdDateTime.toString(DateTimeFormat.forPattern("yyyyMMdda")));
+            fields.put("half_date", halfDateString);
+            fields.put("date", dateString);
+            fields.put("all", "1");
+
 
             createdDateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
 
             final Map<Integer, Float> variables = new HashMap<>();
             variables.put(0, new Float(millis / 1000));
+            variables.put(1, new Float(millis));
 
             categories.put("device_id", log.getDeviceId());
             categories.put("origin", log.getOrigin());
+            categories.put("half_date", halfDateString);
+            categories.put("date", dateString);
 
             documents.add(new IndexTankClient.Document(documentId, fields, variables, categories));
 
