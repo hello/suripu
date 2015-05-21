@@ -33,6 +33,7 @@ import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.MultiLightOutUtils;
@@ -170,6 +171,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final OneDaysSensorData sensorData = sensorDataOptional.get();
         if(!isValidNight(accountId, sensorData.trackerMotions)){
             LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+
+            // We want to differentiate between no data, and some data but not enough
+            if(sensorData.trackerMotions.size() > 0) {
+                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
+            }
             return Optional.absent();
         }
 

@@ -115,6 +115,11 @@ public class TimelineResource extends BaseResource {
             //if it was successful,
             if (result.isPresent()) {
 
+                // Timeline result could be present but no timeline if not enough data for the night
+                if(result.get().timelines.isEmpty()) {
+                    return result.get();
+                }
+
                 //place in cache cache, money money, yo.
                 cacheTimeline(accountId, targetDate, result.get());
 
