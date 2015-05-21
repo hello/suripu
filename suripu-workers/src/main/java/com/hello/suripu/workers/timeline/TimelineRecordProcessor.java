@@ -166,12 +166,6 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private void batchProcess(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap){
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
             for(final DateTime targetDateLocalUTC:groupedAccountIdTargetDateLocalUTCMap.get(accountId)) {
-                if (this.timelineProcessor.shouldProcessTimelineByWorker(accountId,
-                        this.configuration.getMaxNoMoitonPeriodInMinutes(),
-                        DateTime.now())) {
-                    continue;
-                }
-
                 try {
                     final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC);
                     if(!result.isPresent()){
