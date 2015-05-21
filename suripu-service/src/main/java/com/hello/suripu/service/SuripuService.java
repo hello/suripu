@@ -123,8 +123,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedInfoDynamoDBClient, tableNames.get(DynamoDBTableName.ALARM_INFO));
 
 
-        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.RING_TIME_HISTORY);
-        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient, tableNames.get(DynamoDBTableName.RING_TIME_HISTORY));
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.RING_SCHEDULE_HISTORY);
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient, tableNames.get(DynamoDBTableName.RING_SCHEDULE_HISTORY));
 
         final AmazonDynamoDB otaHistoryDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.OTA_HISTORY);
         final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB = new OTAHistoryDAODynamoDB(otaHistoryDynamoDBClient, tableNames.get(DynamoDBTableName.OTA_HISTORY));

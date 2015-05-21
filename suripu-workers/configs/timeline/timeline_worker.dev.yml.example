@@ -102,78 +102,49 @@ logging:
     com.hello.suripu.workers: DEBUG
 
 
-ring_history_db:
-  endpoint : http://localhost:7777
+dynamodb:
   region: us-east-1
-  table_name: ring_history_by_account
+  tables:
+    alarm_info: prod_alarm_info
+    features: features
+    sleep_score: prod_sleep_score
+    timeline: prod_timeline
+    sleep_hmm: prod_sleephmm
+    sleep_stats: prod_sleep_stats
+    timeline_log: prod_timeline_log
+    ring_history: prod_ring_history_by_account
+    timezone_history: prod_timezone_history
+    alarm_log: prod_alarm
+  endpoints:
+    alarm_info: http://localhost:7777
+    features : http://localhost:7777
+    sleep_score: http://localhost:7777
+    timeline: http://localhost:7777
+    sleep_hmm: http://localhost:7777
+    sleep_stats: http://localhost:7777
+    timeline_log: http://localhost:7777
+    ring_history: http://localhost:7777
+    timezone_history: http://localhost:7777
+    alarm_log: http://localhost:7777
 
-timezone_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: timezone_history
-
-alarm_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: alarm
-
-user_info_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: alarm_info
-
-features_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: features
-
-# remember to update version when changing score methods
-sleep_score_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: sleep_score
-sleep_score_version: v_0_1
-score_threshold : 15 # minutes bucket for sleep-scores
 
 aggregate_window_size_min: 10
 
-timeline_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: timeline
+sleep_score_version: v_0_1
+score_threshold : 15 # minutes bucket for sleep-scores
 
-sleephmm_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: sleephmm
 
 max_no_motion_period_minutes: 90
 hour_of_day_trigger: 5
 end_process_time: 11
 max_cache_refresh_days: 20
-
-
-# store sleep scores and other stats
-# v0.2: score uses movement and duration
-sleep_stats_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: sleep_stats
 sleep_stats_version: v_0_2
 
 kinesis_logger:
-  stream_name: logs
+  stream_name: dev_logs
   enabled : false
   buffer_size: 100
   origin: suripu-workers
   min_log_level : INFO
 
-algorithm_test_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: algorithm_test
-
-timeline_log_db:
-  endpoint: http://localhost:777
-  region: us-east-1
-  table_name: timeline_log
+user_info_read_capacity_sec: 20

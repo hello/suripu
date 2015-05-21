@@ -129,78 +129,49 @@ logging:
     com.hello.suripu.workers: DEBUG
 
 
-ring_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+dynamodb:
   region: us-east-1
-  table_name: ring_history_by_account
+  tables:
+    alarm_info: alarm_info
+    features: features
+    sleep_score: sleep_score
+    timeline: timeline
+    sleep_hmm: sleephmm
+    sleep_stats: sleep_stats
+    timeline_log: timeline_log
+    ring_history: ring_history_by_account
+    timezone_history: timezone_history
+    alarm_log: alarm
+  endpoints:
+    alarm_info: http://dynamodb.us-east-1.amazonaws.com
+    features : http://dynamodb.us-east-1.amazonaws.com
+    sleep_score: http://dynamodb.us-east-1.amazonaws.com
+    timeline: http://dynamodb.us-east-1.amazonaws.com
+    sleep_hmm: http://dynamodb.us-east-1.amazonaws.com
+    sleep_stats: http://dynamodb.us-east-1.amazonaws.com
+    timeline_log: http://dynamodb.us-east-1.amazonaws.com
+    ring_history: http://dynamodb.us-east-1.amazonaws.com
+    timezone_history: http://dynamodb.us-east-1.amazonaws.com
+    alarm_log: http://dynamodb.us-east-1.amazonaws.com
 
-timezone_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: timezone_history
-
-alarm_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: alarm
-
-features_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: features
 
 aggregate_window_size_min: 10
 
-user_info_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: alarm_info
-
-# remember to update version when changing score methods
-# v0.1: pure movement
-sleep_score_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: sleep_score
 sleep_score_version: v_0_1
 score_threshold : 15 # minutes bucket for sleep-scores
 
-timeline_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: timeline
-
-sleephmm_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: sleephmm
 
 max_no_motion_period_minutes: 90
 hour_of_day_trigger: 5
 end_process_time: 11
 max_cache_refresh_days: 20
-
-# store sleep scores and other stats
-# v0.2: score uses movement and duration
-sleep_stats_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: sleep_stats
 sleep_stats_version: v_0_2
 
 kinesis_logger:
-  stream_name: logs
+  stream_name: dev_logs
   enabled : false
   buffer_size: 100
   origin: suripu-workers
   min_log_level : INFO
 
-algorithm_test_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: prod_algorithm_test
-
-timeline_log_db:
-  endpoint: http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: timeline_log
+user_info_read_capacity_sec: 20

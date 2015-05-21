@@ -14,10 +14,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
-import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -98,26 +98,33 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         clientConfiguration.withMaxErrorRetry(1);
         final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
 
-        final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
+        final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.ALARM_INFO));
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient,
-                configuration.getUserInfoDynamoDBConfiguration().getTableName());
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ALARM_INFO));
 
 
-        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
-        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeDynamoDBClient, configuration.getRingTimeHistoryDBConfiguration().getTableName());
+        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_HISTORY));
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
+                ringTimeDynamoDBClient,
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.RING_HISTORY));
 
-        final AmazonDynamoDB featureDynamoDB = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final AmazonDynamoDB featureDynamoDB = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.FEATURES));
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
 
-        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
-        final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.SLEEP_HMM));
+        final String sleepHmmTableName = configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.SLEEP_HMM);
         final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
 
-        final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDBConfiguration().getEndpoint());
+        final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.SLEEP_STATS));
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(
                 dynamoDBStatsClient,
-                configuration.getSleepStatsDBConfiguration().getTableName(),
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.SLEEP_STATS),
                 configuration.getSleepStatsVersion()
         );
 
@@ -141,15 +148,12 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
             LOGGER.warn("Metrics not enabled.");
         }
 
-        final AmazonDynamoDB dynamoDBTimelineClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
+        final AmazonDynamoDB dynamoDBTimelineClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.TIMELINE));
         final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(
                 dynamoDBTimelineClient,
-                configuration.getTimelineDBConfiguration().getTableName(),
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.TIMELINE),
                 configuration.getMaxCacheRefreshDay());
-
-        final AmazonDynamoDB algorithmTestDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlgorithmTestDBConfiguration().getEndpoint());
-        final AlgorithmResultsDAODynamoDB algorithmResultsDAODynamoDB = new AlgorithmResultsDAODynamoDB(algorithmTestDynamoDbClient,
-                configuration.getAlgorithmTestDBConfiguration().getTableName());
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
@@ -185,7 +189,6 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 deviceDAO,
                 mergedUserInfoDynamoDB,
                 timelineDAODynamoDB,
-                algorithmResultsDAODynamoDB,
                 configuration);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
