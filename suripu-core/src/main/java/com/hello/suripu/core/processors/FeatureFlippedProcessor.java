@@ -62,4 +62,9 @@ public class FeatureFlippedProcessor {
     protected Boolean hasRemoveMotionEventsOutsideSleep(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
+    }
+
 }

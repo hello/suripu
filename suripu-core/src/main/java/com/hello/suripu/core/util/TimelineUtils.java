@@ -324,24 +324,38 @@ public class TimelineUtils {
 
     public List<Event> greyNullEventsOutsideBedPeriod(final List<Event> events,
                                                                  final Optional<Event> inBedEventOptional,
-                                                                 final Optional<Event> outOfBedEventOptional){
+                                                                 final Optional<Event> outOfBedEventOptional,
+                                                                 final Boolean removeGreyOutEvents){
         final LinkedList<Event> newEventList = new LinkedList<>();
 
         // State is harmful, shall avoid it like plague
         for(final Event event:events){
-            if(event.getType() != Event.Type.NONE){
-                newEventList.add(event);
-                continue;
+
+            final Event.Type eventType = event.getType();
+            if (eventType != Event.Type.NONE) {
+                if (removeGreyOutEvents && eventType != Event.Type.MOTION) {
+                    newEventList.add(event);
+                    continue;
+                } else {
+                    // for backward compatibility
+                    newEventList.add(event);
+                    continue;
+                }
             }
+
 
             // This is a null event, shall we keep it as it is?
             if(inBedEventOptional.isPresent() && event.getEndTimestamp() <= inBedEventOptional.get().getStartTimestamp()){
-                newEventList.add(event);  // Null event before in bed, grey
+                if (!removeGreyOutEvents) {
+                    newEventList.add(event);  // Null event before in bed, grey
+                }
                 continue;
             }
 
             if(outOfBedEventOptional.isPresent() && event.getStartTimestamp() >= outOfBedEventOptional.get().getEndTimestamp()){
-                newEventList.add(event);  // Null event after out of bed, grey
+                if (!removeGreyOutEvents) {
+                    newEventList.add(event);  // Null event after out of bed, grey
+                }
                 continue;
             }
 
