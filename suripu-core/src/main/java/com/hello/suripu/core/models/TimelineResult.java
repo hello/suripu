@@ -2,10 +2,8 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.db.TimelineLogDAO;
 
 import java.util.List;
 
@@ -32,6 +30,12 @@ public class TimelineResult {
         final Timeline timeline = Timeline.createEmpty();
         final List<Timeline> timelines = Lists.newArrayList(timeline);
         return new TimelineResult(ImmutableList.copyOf(timelines),TimelineLog.createEmpty());
+    }
+
+    static public TimelineResult createEmpty(String message) {
+        final Timeline timeline = Timeline.createEmpty(message);
+        final List<Timeline> timelines = Lists.newArrayList(timeline);
+        return new TimelineResult(ImmutableList.copyOf(timelines), TimelineLog.createEmpty());
     }
 
 
