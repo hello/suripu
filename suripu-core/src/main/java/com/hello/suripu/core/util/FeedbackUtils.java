@@ -15,7 +15,6 @@ import org.joda.time.DateTimeZone;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class FeedbackUtils {
 
@@ -47,7 +46,7 @@ public class FeedbackUtils {
             case SLEEP:
                 if(hour >= 0 && hour < 16) {
                     nextDay =  true;
-                } else if(hour >= 16 && hour < 20) {
+                } else if(hour >= 16 && hour < 18) {
                     return Optional.absent();
                 }
 
