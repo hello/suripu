@@ -188,7 +188,7 @@ public class InsightsResource {
 
         LOGGER.debug("Returning ALL available default graphs for account id = {}", accessToken.accountId);
 
-        TrendGraph.TimePeriodType scoreOverTimePeriod = TrendGraph.TimePeriodType.OVER_TIME_ALL;
+        TrendGraph.TimePeriodType scoreOverTimePeriod = TrendGraph.TimePeriodType.OVER_TIME_1W;
         if (timePeriodOption != null) {
             scoreOverTimePeriod = TrendGraph.TimePeriodType.fromString(timePeriodOption);
         }
@@ -293,7 +293,10 @@ public class InsightsResource {
                 }
 
                 if (scores.size() < MIN_DATAPOINTS) {
-                    return Optional.absent();
+                    final List<String> timeSeriesOptions = TrendGraph.TimePeriodType.getTimeSeriesOptions(daysActive);
+                    return Optional.of(new TrendGraph(
+                            TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.TIME_SERIES_LINE,
+                            timePeriod, timeSeriesOptions, Collections.EMPTY_LIST));
                 }
 
                 // scores table has no offset, pull timezone offset from tracker-motion
