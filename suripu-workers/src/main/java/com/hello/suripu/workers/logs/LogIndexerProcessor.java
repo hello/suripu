@@ -43,11 +43,13 @@ public class LogIndexerProcessor implements IRecordProcessor {
         this.onboardingLogs  = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "onboarding-logs", "onboarding-processed", TimeUnit.SECONDS);
     }
 
-    public static LogIndexerProcessor create(final IndexTankClient.Index senseIndex,
+    public static LogIndexerProcessor create(final IndexTankClient indexTankClient,
+                                             final String senseLogIndexPrefix,
+                                             final IndexTankClient.Index senseLogBackupIndex,
                                              final SenseEventsDAO senseEventsDAO,
                                              final OnBoardingLogDAO onBoardingLogDAO) {
         return new LogIndexerProcessor(
-                new SenseLogIndexer(senseIndex),
+                new SenseLogIndexer(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex),
                 new SenseStructuredLogIndexer(senseEventsDAO),
                 new OnBoardingLogIndexer(onBoardingLogDAO)
         );

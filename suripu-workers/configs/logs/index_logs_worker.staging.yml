@@ -9,17 +9,10 @@ graphite:
 
 max_records: 50
 
-application_logs:
-  private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_name : dev
-
 sense_logs:
   private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_name : dev
-
-workers_logs:
-  private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_name : dev
+  index_prefix : sense-logs-
+  backup_index_name : sense-logs-backup
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com

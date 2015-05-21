@@ -15,7 +15,8 @@ application_logs:
 
 sense_logs:
   private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_name : sense-logs-2015-05
+  index_prefix : sense-logs-
+  backup_index_name : sense-logs-backup
 
 workers_logs:
   private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/

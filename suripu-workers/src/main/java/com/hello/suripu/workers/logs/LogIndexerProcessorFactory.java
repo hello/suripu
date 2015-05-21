@@ -25,12 +25,13 @@ public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
     @Override
     public IRecordProcessor createProcessor() {
 
-        final IndexTankClient client = new IndexTankClient(config.applicationLogs().privateUrl());
-        final IndexTankClient.Index senseIndex = client.getIndex(config.senseLogs().indexName());
+        final IndexTankClient indexTankClient = new IndexTankClient(config.senseLogs().privateUrl());
+        final String senseLogIndexPrefix = config.senseLogs().indexPrefix();
+        final IndexTankClient.Index senseLogBackupIndex = indexTankClient.getIndex(config.senseLogs().backupIndexName());
 
         final AmazonDynamoDB amazonDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(config.getSenseEventsDynamoDBConfiguration().getEndpoint());
         final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(amazonDynamoDB, config.getSenseEventsDynamoDBConfiguration().getTableName());
 
-        return LogIndexerProcessor.create(senseIndex, senseEventsDAO, this.onBoardingLogDAO);
+        return LogIndexerProcessor.create(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, senseEventsDAO, this.onBoardingLogDAO);
     }
 }
