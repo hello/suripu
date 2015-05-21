@@ -48,7 +48,6 @@ redis:
 dynamodb:
   region: us-east-1
   tables:
-      alarm: alarm
       alarm_info : alarm_info
       features : features
       firmware_upgrade_path: fw_upgrade_path
@@ -65,7 +64,6 @@ dynamodb:
       teams : teams
   
   endpoints:
-      alarm: http://localhost:7777
       alarm_info : http://localhost:7777
       features : http://localhost:7777
       firmware_upgrade_path : http://localhost:7777
