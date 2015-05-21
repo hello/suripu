@@ -493,7 +493,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             } else if (event.getType() == Event.Type.WAKE_UP) {
                 awakeEventOptional = Optional.of(event);
             }
-
+            LOGGER.debug("Adding feedback type {}, time {}", event.getType(), event.getStartTimestamp());
         }
 
         /*  add "additional" events -- which is wake/sleep/get up to pee events */
