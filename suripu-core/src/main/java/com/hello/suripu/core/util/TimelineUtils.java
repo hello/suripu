@@ -258,7 +258,7 @@ public class TimelineUtils {
         for(final Event event:events) {
 
             final Event.Type etype = event.getType();
-            if (etype != Event.Type.MOTION && etype != Event.Type.NONE) {
+            if (etype != Event.Type.MOTION && etype != Event.Type.NONE && etype != Event.Type.PARTNER_MOTION) {
                 newEventList.add(event);
                 continue;
             }
@@ -333,7 +333,7 @@ public class TimelineUtils {
 
             final Event.Type eventType = event.getType();
             if (eventType != Event.Type.NONE) {
-                if (removeGreyOutEvents && eventType != Event.Type.MOTION) {
+                if (removeGreyOutEvents && eventType != Event.Type.MOTION && eventType != Event.Type.PARTNER_MOTION) {
                     newEventList.add(event);
                     continue;
                 } else {
