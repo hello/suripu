@@ -12,6 +12,7 @@ import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
 import com.hello.suripu.admin.resources.v1.AccountResources;
+import com.hello.suripu.admin.resources.v1.AlarmResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
 import com.hello.suripu.admin.resources.v1.DeviceResources;
@@ -255,5 +256,8 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                         senseColorDAO
                 )
         );
+
+        environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
+
     }
 }
