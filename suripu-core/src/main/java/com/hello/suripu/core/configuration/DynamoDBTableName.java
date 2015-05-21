@@ -19,7 +19,13 @@ public enum DynamoDBTableName {
     SENSE_PREFIX("sense_prefix"),
     SENSE_LAST_SEEN("sense_last_seen"),
     PILL_LAST_SEEN("pill_last_seen"),
-    ALARM("alarm");
+    SLEEP_SCORE("sleep_score"),
+    TIMELINE("timeline"),
+    SLEEP_HMM("sleep_hmm"),
+    SLEEP_STATS("sleep_stats"),
+    TIMELINE_LOG("timeline_log"),
+    TIMEZONE_HISTORY("timezone_history"),
+    ALARM_LOG("alarm_log");
 
     private String value;
 

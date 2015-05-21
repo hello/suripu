@@ -2,9 +2,8 @@ package com.hello.suripu.workers.timeline;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.api.ble.SenseCommandProtos;
-import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -61,16 +60,11 @@ public class BatchProcessUtils {
     }
 
     public static Map<Long, Set<DateTime>> groupAccountAndExpireDateLocalUTC(final Map<String, Set<DateTime>> groupedPillIdRequestDateUTC,
-                                                                          final DeviceDAO deviceDAO,
-                                                                          final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
+                                                                             final Map<Long, UserInfo> accountIdUserInfoMap,
+                                                                             final Map<String, List<DeviceAccountPair>> pillIdLinkedAccountsMap){
         final Map<Long, Set<DateTime>> accountIdTargetDatesLocalUTCMap = new HashMap<>();
         for(final String pillId:groupedPillIdRequestDateUTC.keySet()) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            final List<DeviceAccountPair> accountsLinkedWithPill = deviceDAO.getLinkedAccountFromPillId(pillId);
+            final List<DeviceAccountPair> accountsLinkedWithPill = pillIdLinkedAccountsMap.get(pillId);
             if (accountsLinkedWithPill.size() == 0) {
                 LOGGER.warn("No account linked with pill {}", pillId);
                 continue;
@@ -84,21 +78,14 @@ public class BatchProcessUtils {
             }
 
             final long accountId = accountsLinkedWithPill.get(accountsLinkedWithPill.size() - 1).accountId;
-            final List<DeviceAccountPair> sensesLinkedWithAccount = deviceDAO.getSensesForAccountId(accountId);
-            if (sensesLinkedWithAccount.size() == 0) {
+            if (!accountIdUserInfoMap.containsKey(accountId)) {
                 LOGGER.warn("No sense linked with account {} from pill {}", accountId, pillId);
                 continue;
             }
 
-            if (sensesLinkedWithAccount.size() > 1) {
-                LOGGER.warn("{} senses linked with account {}, only sense {} got the timeline.",
-                        sensesLinkedWithAccount.size(),
-                        accountId,
-                        sensesLinkedWithAccount.get(sensesLinkedWithAccount.size() - 1).externalDeviceId);
-            }
-
-            final String senseId = sensesLinkedWithAccount.get(sensesLinkedWithAccount.size() - 1).externalDeviceId;
-            final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(senseId, accountId);
+            final UserInfo userInfo = accountIdUserInfoMap.get(accountId);
+            final String senseId = userInfo.deviceId;
+            final Optional<DateTimeZone> dateTimeZoneOptional = userInfo.timeZone;
 
             if (!dateTimeZoneOptional.isPresent()) {
                 LOGGER.error("No timezone for sense {} account {}", senseId, accountId);
@@ -124,16 +111,11 @@ public class BatchProcessUtils {
                                                                               final int startProcessHourOfDay,
                                                                               final int endProcessHourOfDay,
                                                                               final DateTime now,
-                                                                              final DeviceDAO deviceDAO,
-                                                                              final MergedUserInfoDynamoDB mergedUserInfoDynamoDB){
+                                                                              final Map<Long, UserInfo> accountIdUserInfoMap,
+                                                                              final Map<String, List<DeviceAccountPair>> pillIdsLinkedAccountMap){
         final Map<Long, Set<DateTime>> accountIdTargetDatesLocalUTCMap = new HashMap<>();
         for(final String pillId:groupedPillIdRequestDateUTC.keySet()) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            final List<DeviceAccountPair> accountsLinkedWithPill = deviceDAO.getLinkedAccountFromPillId(pillId);
+            final List<DeviceAccountPair> accountsLinkedWithPill = pillIdsLinkedAccountMap.get(pillId);
             if (accountsLinkedWithPill.size() == 0) {
                 LOGGER.warn("No account linked with pill {}", pillId);
                 continue;
@@ -147,21 +129,14 @@ public class BatchProcessUtils {
             }
 
             final long accountId = accountsLinkedWithPill.get(accountsLinkedWithPill.size() - 1).accountId;
-            final List<DeviceAccountPair> sensesLinkedWithAccount = deviceDAO.getSensesForAccountId(accountId);
-            if (sensesLinkedWithAccount.size() == 0) {
+            if (!accountIdUserInfoMap.containsKey(accountId)) {
                 LOGGER.warn("No sense linked with account {} from pill {}", accountId, pillId);
                 continue;
             }
 
-            if (sensesLinkedWithAccount.size() > 1) {
-                LOGGER.warn("{} senses linked with account {}, only sense {} got the timeline.",
-                        sensesLinkedWithAccount.size(),
-                        accountId,
-                        sensesLinkedWithAccount.get(sensesLinkedWithAccount.size() - 1).externalDeviceId);
-            }
-
-            final String senseId = sensesLinkedWithAccount.get(sensesLinkedWithAccount.size() - 1).externalDeviceId;
-            final Optional<DateTimeZone> dateTimeZoneOptional = mergedUserInfoDynamoDB.getTimezone(senseId, accountId);
+            final UserInfo userInfo = accountIdUserInfoMap.get(accountId);
+            final String senseId = userInfo.deviceId;
+            final Optional<DateTimeZone> dateTimeZoneOptional = userInfo.timeZone;
 
             if (!dateTimeZoneOptional.isPresent()) {
                 LOGGER.error("No timezone for sense {} account {}", senseId, accountId);
