@@ -18,7 +18,8 @@ public enum DynamoDBTableName {
     RING_TIME_HISTORY("ring_time_history"),
     SENSE_PREFIX("sense_prefix"),
     SENSE_LAST_SEEN("sense_last_seen"),
-    PILL_LAST_SEEN("pill_last_seen");
+    PILL_LAST_SEEN("pill_last_seen"),
+    ALARM("alarm");
 
     private String value;
 
