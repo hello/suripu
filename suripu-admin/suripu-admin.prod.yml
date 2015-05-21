@@ -48,6 +48,7 @@ redis:
 dynamodb:
   region: us-east-1
   tables:
+    alarm: prod_alarm
     alarm_info : prod_alarm_info
     features : features
     firmware_upgrade_path : fw_upgrade_path
@@ -64,6 +65,7 @@ dynamodb:
     teams : teams
 
   endpoints:
+      alarm: http://dynamodb.us-east-1.amazonaws.com
       alarm_info : http://dynamodb.us-east-1.amazonaws.com
       features : http://dynamodb.us-east-1.amazonaws.com
       firmware_upgrade_path : http://dynamodb.us-east-1.amazonaws.com
@@ -78,4 +80,5 @@ dynamodb:
       sense_prefix : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
+
 
