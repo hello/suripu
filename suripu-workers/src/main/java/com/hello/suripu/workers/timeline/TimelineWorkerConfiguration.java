@@ -14,6 +14,8 @@ import javax.validation.constraints.NotNull;
  * Created by pangwu on 1/26/15.
  */
 public class TimelineWorkerConfiguration extends WorkerConfiguration {
+    private static int DEFAULT_MAX_READ_CAPACITY = 200;
+
     @Valid
     @NotNull
     @Max(20)
@@ -132,11 +134,11 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
         return dynamoDBConfiguration;
     }
 
-    @Valid
-    @NotNull
-    @JsonProperty("user_info_read_capacity_sec")
-    private Integer mergeUserInfoDynamoDBReadCapacityPerSecond;
-    public Integer getMergeUserInfoDynamoDBReadCapacityPerSecond(){
-        return this.mergeUserInfoDynamoDBReadCapacityPerSecond;
+    @Min(50)
+    @Max(200)
+    @JsonProperty("user_info_max_read_capacity_sec")
+    private Integer mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound = DEFAULT_MAX_READ_CAPACITY;
+    public Integer getMergeUserInfoDynamoDBReadCapacityPerSecondUpperBound(){
+        return this.mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound;
     }
 }

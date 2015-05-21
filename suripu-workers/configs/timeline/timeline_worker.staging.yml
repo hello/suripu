@@ -174,4 +174,4 @@ kinesis_logger:
   origin: suripu-workers
   min_log_level : INFO
 
-user_info_read_capacity_sec: 20
+user_info_max_read_capacity_sec: 200

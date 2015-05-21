@@ -133,7 +133,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
         final Map<Long, UserInfo> accountIdUserInfoMap = getSenseIdAccountsMap(pillIdSenseIdMap.values(),
                 this.mergedUserInfoDynamoDB,
-                this.configuration.getMergeUserInfoDynamoDBReadCapacityPerSecond());  // inverse index
+                this.configuration.getMergeUserInfoDynamoDBReadCapacityPerSecondUpperBound());  // inverse index
         final Map<Long, Set<DateTime>> groupedAccountIdAndRegenerateTimelineTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(
                 pillIdTargetDatesMapByHeartbeat,
                 this.configuration.getEarliestProcessTime(),
