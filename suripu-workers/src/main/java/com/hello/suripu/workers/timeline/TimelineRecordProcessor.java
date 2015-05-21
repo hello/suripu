@@ -23,6 +23,7 @@ import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                     accountIdUserInfoMap.put(userInfo.accountId, userInfo);
                 }
             }catch (AmazonClientException awsException){
-                LOGGER.error("Fail to get user info list for sense {}", senseId);
+                LOGGER.error("Fail to get user info list for sense {}, error {}", senseId, awsException.getMessage());
             }
         }
 
@@ -95,8 +96,12 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private Map<String, List<DeviceAccountPair>> getPillIdAccountsMap(final Set<String> pillIds, final DeviceDAO deviceDAO){
         final Map<String, List<DeviceAccountPair>> map = new HashMap<>();
         for(final String pillId:pillIds){
-            final List<DeviceAccountPair> accountsLinkedToPill = deviceDAO.getLinkedAccountFromPillId(pillId);
-            map.put(pillId, accountsLinkedToPill);
+            try {
+                final List<DeviceAccountPair> accountsLinkedToPill = deviceDAO.getLinkedAccountFromPillId(pillId);
+                map.put(pillId, accountsLinkedToPill);
+            }catch (UnableToExecuteStatementException sqlException){
+                LOGGER.error("Fail to get accounts linked with pill {}", pillId);
+            }
         }
         return map;
     }
