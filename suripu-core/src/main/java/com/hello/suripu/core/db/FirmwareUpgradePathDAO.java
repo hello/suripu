@@ -97,8 +97,13 @@ public class FirmwareUpgradePathDAO {
 
             return attributeValuesToUpgradeNode(result.getAttributes());
 
-        }  catch (AmazonServiceException ase) {
-            LOGGER.error("Failed to delete Upgrade Node for Group: {}, error {}", upgradeNode.groupName, ase.getMessage());
+        } catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to delete Upgrade Node for Group: {}. Service error {}", upgradeNode.groupName, ase.getMessage());
+        } catch (AmazonClientException awcEx){
+            LOGGER.error("Failed to delete Upgrade Node for Group: {}. Client error: {}", awcEx.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Exception thrown while deleting upgrade node. {}", e.getMessage());
+            return Optional.absent();
         }
 
         return Optional.absent();
