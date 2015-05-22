@@ -5,6 +5,8 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
@@ -15,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
@@ -28,7 +31,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.Sample;
+import java.util.ArrayList;
+import java.util.HashMap;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -229,6 +235,57 @@ public class SensorsViewsDynamoDB {
         return fromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
     }
 
+    public Optional<List<FirmwareInfo>> lastSeenFirmwareBatch(Set<String> deviceIds) {
+
+        List<Map<String, AttributeValue>> conditions = new ArrayList<Map<String, AttributeValue>>();
+
+        BatchGetItemRequest request = new BatchGetItemRequest();
+
+        for (String devId : deviceIds) {
+            Map<String, AttributeValue> cond = new HashMap<String, AttributeValue>();
+            cond.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(devId));
+            conditions.add(cond);
+        }
+
+        KeysAndAttributes keys = new KeysAndAttributes().withKeys(conditions);
+        request.addRequestItemsEntry(lastSeenTableName, keys);
+
+        BatchGetItemResult batchResult;
+
+        try {
+            batchResult = dynamoDBClient.batchGetItem(request);
+        }catch (AmazonServiceException awsEx){
+            LOGGER.error("Batch sense data request failed. AWS service error: {}", awsEx.getMessage());
+            return Optional.absent();
+        }catch (AmazonClientException awcEx){
+            LOGGER.error("Batch sense data request failed. Client error: {}", awcEx.getMessage());
+            return Optional.absent();
+        }catch (Exception e) {
+            LOGGER.error("Batch sense data request failed. {}", e.getMessage());
+            return Optional.absent();
+        }
+
+        Map<String,List<Map<String,AttributeValue>>> resultsMap = batchResult.getResponses();
+        List<FirmwareInfo> fwVersions = new ArrayList<>();
+
+        for (Map<String, AttributeValue> item : resultsMap.get(lastSeenTableName)) {
+            if (!item.containsKey(SENSE_ID_ATTRIBUTE_NAME)) {
+                continue;
+            }
+            final String deviceId = item.get(SENSE_ID_ATTRIBUTE_NAME).getS();
+            final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
+            final String updatedAt = (item.containsKey(UPDATED_AT_UTC_ATTRIBUTE_NAME) ? item.get(UPDATED_AT_UTC_ATTRIBUTE_NAME).getS(): "");
+            final DateTime dateTime = DateTime.parse(updatedAt, DateTimeFormat.forPattern(DATETIME_FORMAT));
+            final FirmwareInfo latestFWInfo = new FirmwareInfo(firmwareVersion.toString(), deviceId, dateTime.getMillis());
+            fwVersions.add(latestFWInfo);
+        }
+
+        if (fwVersions.isEmpty()) {
+            return Optional.absent();
+        }
+
+        return Optional.of(fwVersions);
+    }
 
     private Optional<DeviceData> fromDynamoDB(final Map<String, AttributeValue> item, final String senseId, final Long accountId, final Long internalSenseId) {
         if(item == null || item.isEmpty()) {
