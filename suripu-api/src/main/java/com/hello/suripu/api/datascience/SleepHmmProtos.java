@@ -334,10 +334,10 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(enum_scope:SleepDepth)
   }
 
-  public interface PoissonModelOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface PoissonModelOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:PoissonModel)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required double mean = 1;
     /**
      * <code>required double mean = 1;</code>
      */
@@ -346,21 +346,29 @@ public final class SleepHmmProtos {
      * <code>required double mean = 1;</code>
      */
     double getMean();
+
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    boolean hasWeight();
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    double getWeight();
   }
   /**
    * Protobuf type {@code PoissonModel}
    *
    * <pre>
    * Poisson discrete distriubtion
-   *
    *http://en.wikipedia.org/wiki/Poisson_distribution 
-   *
    *valid on range [0,1,2...inf]
    * </pre>
    */
   public static final class PoissonModel extends
-      com.google.protobuf.GeneratedMessage
-      implements PoissonModelOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:PoissonModel)
+      PoissonModelOrBuilder {
     // Use PoissonModel.newBuilder() to construct.
     private PoissonModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -411,6 +419,11 @@ public final class SleepHmmProtos {
               mean_ = input.readDouble();
               break;
             }
+            case 17: {
+              bitField0_ |= 0x00000002;
+              weight_ = input.readDouble();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -451,7 +464,6 @@ public final class SleepHmmProtos {
     }
 
     private int bitField0_;
-    // required double mean = 1;
     public static final int MEAN_FIELD_NUMBER = 1;
     private double mean_;
     /**
@@ -467,13 +479,30 @@ public final class SleepHmmProtos {
       return mean_;
     }
 
+    public static final int WEIGHT_FIELD_NUMBER = 2;
+    private double weight_;
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    public boolean hasWeight() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    public double getWeight() {
+      return weight_;
+    }
+
     private void initFields() {
       mean_ = 0D;
+      weight_ = 0D;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasMean()) {
         memoizedIsInitialized = 0;
@@ -489,6 +518,9 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeDouble(1, mean_);
       }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeDouble(2, weight_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -501,6 +533,10 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(1, mean_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(2, weight_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -585,15 +621,14 @@ public final class SleepHmmProtos {
      *
      * <pre>
      * Poisson discrete distriubtion
-     *
      *http://en.wikipedia.org/wiki/Poisson_distribution 
-     *
      *valid on range [0,1,2...inf]
      * </pre>
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:PoissonModel)
+        com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_PoissonModel_descriptor;
@@ -628,6 +663,8 @@ public final class SleepHmmProtos {
         super.clear();
         mean_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000001);
+        weight_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -660,6 +697,10 @@ public final class SleepHmmProtos {
           to_bitField0_ |= 0x00000001;
         }
         result.mean_ = mean_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.weight_ = weight_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -678,6 +719,9 @@ public final class SleepHmmProtos {
         if (other == com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance()) return this;
         if (other.hasMean()) {
           setMean(other.getMean());
+        }
+        if (other.hasWeight()) {
+          setWeight(other.getWeight());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -710,7 +754,6 @@ public final class SleepHmmProtos {
       }
       private int bitField0_;
 
-      // required double mean = 1;
       private double mean_ ;
       /**
        * <code>required double mean = 1;</code>
@@ -743,6 +786,38 @@ public final class SleepHmmProtos {
         return this;
       }
 
+      private double weight_ ;
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public boolean hasWeight() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public double getWeight() {
+        return weight_;
+      }
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public Builder setWeight(double value) {
+        bitField0_ |= 0x00000002;
+        weight_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public Builder clearWeight() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        weight_ = 0D;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:PoissonModel)
     }
 
@@ -754,10 +829,10 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(class_scope:PoissonModel)
   }
 
-  public interface DiscreteAlphabetModelOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface DiscreteAlphabetModelOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:DiscreteAlphabetModel)
+      com.google.protobuf.MessageOrBuilder {
 
-    // repeated double probabilities = 1;
     /**
      * <code>repeated double probabilities = 1;</code>
      */
@@ -770,6 +845,15 @@ public final class SleepHmmProtos {
      * <code>repeated double probabilities = 1;</code>
      */
     double getProbabilities(int index);
+
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    boolean hasWeight();
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    double getWeight();
   }
   /**
    * Protobuf type {@code DiscreteAlphabetModel}
@@ -780,8 +864,9 @@ public final class SleepHmmProtos {
    * </pre>
    */
   public static final class DiscreteAlphabetModel extends
-      com.google.protobuf.GeneratedMessage
-      implements DiscreteAlphabetModelOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:DiscreteAlphabetModel)
+      DiscreteAlphabetModelOrBuilder {
     // Use DiscreteAlphabetModel.newBuilder() to construct.
     private DiscreteAlphabetModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -848,6 +933,11 @@ public final class SleepHmmProtos {
               input.popLimit(limit);
               break;
             }
+            case 17: {
+              bitField0_ |= 0x00000001;
+              weight_ = input.readDouble();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -890,7 +980,7 @@ public final class SleepHmmProtos {
       return PARSER;
     }
 
-    // repeated double probabilities = 1;
+    private int bitField0_;
     public static final int PROBABILITIES_FIELD_NUMBER = 1;
     private java.util.List<java.lang.Double> probabilities_;
     /**
@@ -913,13 +1003,30 @@ public final class SleepHmmProtos {
       return probabilities_.get(index);
     }
 
+    public static final int WEIGHT_FIELD_NUMBER = 2;
+    private double weight_;
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    public boolean hasWeight() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional double weight = 2;</code>
+     */
+    public double getWeight() {
+      return weight_;
+    }
+
     private void initFields() {
       probabilities_ = java.util.Collections.emptyList();
+      weight_ = 0D;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -930,6 +1037,9 @@ public final class SleepHmmProtos {
       getSerializedSize();
       for (int i = 0; i < probabilities_.size(); i++) {
         output.writeDouble(1, probabilities_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeDouble(2, weight_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -945,6 +1055,10 @@ public final class SleepHmmProtos {
         dataSize = 8 * getProbabilitiesList().size();
         size += dataSize;
         size += 1 * getProbabilitiesList().size();
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(2, weight_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1033,8 +1147,9 @@ public final class SleepHmmProtos {
      * </pre>
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:DiscreteAlphabetModel)
+        com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_DiscreteAlphabetModel_descriptor;
@@ -1069,6 +1184,8 @@ public final class SleepHmmProtos {
         super.clear();
         probabilities_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000001);
+        weight_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -1096,11 +1213,17 @@ public final class SleepHmmProtos {
       public com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel buildPartial() {
         com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel result = new com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel(this);
         int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           probabilities_ = java.util.Collections.unmodifiableList(probabilities_);
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.probabilities_ = probabilities_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.weight_ = weight_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -1125,6 +1248,9 @@ public final class SleepHmmProtos {
             probabilities_.addAll(other.probabilities_);
           }
           onChanged();
+        }
+        if (other.hasWeight()) {
+          setWeight(other.getWeight());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1153,7 +1279,6 @@ public final class SleepHmmProtos {
       }
       private int bitField0_;
 
-      // repeated double probabilities = 1;
       private java.util.List<java.lang.Double> probabilities_ = java.util.Collections.emptyList();
       private void ensureProbabilitiesIsMutable() {
         if (!((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1205,7 +1330,8 @@ public final class SleepHmmProtos {
       public Builder addAllProbabilities(
           java.lang.Iterable<? extends java.lang.Double> values) {
         ensureProbabilitiesIsMutable();
-        super.addAll(values, probabilities_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, probabilities_);
         onChanged();
         return this;
       }
@@ -1215,6 +1341,38 @@ public final class SleepHmmProtos {
       public Builder clearProbabilities() {
         probabilities_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+
+      private double weight_ ;
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public boolean hasWeight() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public double getWeight() {
+        return weight_;
+      }
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public Builder setWeight(double value) {
+        bitField0_ |= 0x00000002;
+        weight_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double weight = 2;</code>
+       */
+      public Builder clearWeight() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        weight_ = 0D;
         onChanged();
         return this;
       }
@@ -1230,10 +1388,10 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(class_scope:DiscreteAlphabetModel)
   }
 
-  public interface GammaModelOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface GammaModelOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:GammaModel)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required double mean = 1;
     /**
      * <code>required double mean = 1;</code>
      */
@@ -1243,7 +1401,6 @@ public final class SleepHmmProtos {
      */
     double getMean();
 
-    // required double stddev = 2;
     /**
      * <code>required double stddev = 2;</code>
      */
@@ -1252,31 +1409,36 @@ public final class SleepHmmProtos {
      * <code>required double stddev = 2;</code>
      */
     double getStddev();
+
+    /**
+     * <code>optional double weight = 3;</code>
+     */
+    boolean hasWeight();
+    /**
+     * <code>optional double weight = 3;</code>
+     */
+    double getWeight();
   }
   /**
    * Protobuf type {@code GammaModel}
    *
    * <pre>
    *  Gamma distribution
-   *
    *http://en.wikipedia.org/wiki/Gamma_distribution
-   *
    *valid on range = [0,inf]
-   *
    *My parameters are different from that of the wiki's
    *here's the conversion:
-   *
    *variance = stddev^2
    *theta = variance / mean
    *k = mean / theta
-   *
    *or alpha = k
    *beta = 1/theta
    * </pre>
    */
   public static final class GammaModel extends
-      com.google.protobuf.GeneratedMessage
-      implements GammaModelOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:GammaModel)
+      GammaModelOrBuilder {
     // Use GammaModel.newBuilder() to construct.
     private GammaModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1332,6 +1494,11 @@ public final class SleepHmmProtos {
               stddev_ = input.readDouble();
               break;
             }
+            case 25: {
+              bitField0_ |= 0x00000004;
+              weight_ = input.readDouble();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1372,7 +1539,6 @@ public final class SleepHmmProtos {
     }
 
     private int bitField0_;
-    // required double mean = 1;
     public static final int MEAN_FIELD_NUMBER = 1;
     private double mean_;
     /**
@@ -1388,7 +1554,6 @@ public final class SleepHmmProtos {
       return mean_;
     }
 
-    // required double stddev = 2;
     public static final int STDDEV_FIELD_NUMBER = 2;
     private double stddev_;
     /**
@@ -1404,14 +1569,31 @@ public final class SleepHmmProtos {
       return stddev_;
     }
 
+    public static final int WEIGHT_FIELD_NUMBER = 3;
+    private double weight_;
+    /**
+     * <code>optional double weight = 3;</code>
+     */
+    public boolean hasWeight() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional double weight = 3;</code>
+     */
+    public double getWeight() {
+      return weight_;
+    }
+
     private void initFields() {
       mean_ = 0D;
       stddev_ = 0D;
+      weight_ = 0D;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasMean()) {
         memoizedIsInitialized = 0;
@@ -1434,6 +1616,9 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeDouble(2, stddev_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeDouble(3, weight_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1450,6 +1635,10 @@ public final class SleepHmmProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(2, stddev_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(3, weight_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1534,25 +1723,21 @@ public final class SleepHmmProtos {
      *
      * <pre>
      *  Gamma distribution
-     *
      *http://en.wikipedia.org/wiki/Gamma_distribution
-     *
      *valid on range = [0,inf]
-     *
      *My parameters are different from that of the wiki's
      *here's the conversion:
-     *
      *variance = stddev^2
      *theta = variance / mean
      *k = mean / theta
-     *
      *or alpha = k
      *beta = 1/theta
      * </pre>
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:GammaModel)
+        com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_GammaModel_descriptor;
@@ -1589,6 +1774,8 @@ public final class SleepHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000001);
         stddev_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000002);
+        weight_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -1625,6 +1812,10 @@ public final class SleepHmmProtos {
           to_bitField0_ |= 0x00000002;
         }
         result.stddev_ = stddev_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.weight_ = weight_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1646,6 +1837,9 @@ public final class SleepHmmProtos {
         }
         if (other.hasStddev()) {
           setStddev(other.getStddev());
+        }
+        if (other.hasWeight()) {
+          setWeight(other.getWeight());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1682,7 +1876,6 @@ public final class SleepHmmProtos {
       }
       private int bitField0_;
 
-      // required double mean = 1;
       private double mean_ ;
       /**
        * <code>required double mean = 1;</code>
@@ -1715,7 +1908,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // required double stddev = 2;
       private double stddev_ ;
       /**
        * <code>required double stddev = 2;</code>
@@ -1748,6 +1940,38 @@ public final class SleepHmmProtos {
         return this;
       }
 
+      private double weight_ ;
+      /**
+       * <code>optional double weight = 3;</code>
+       */
+      public boolean hasWeight() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional double weight = 3;</code>
+       */
+      public double getWeight() {
+        return weight_;
+      }
+      /**
+       * <code>optional double weight = 3;</code>
+       */
+      public Builder setWeight(double value) {
+        bitField0_ |= 0x00000004;
+        weight_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double weight = 3;</code>
+       */
+      public Builder clearWeight() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        weight_ = 0D;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:GammaModel)
     }
 
@@ -1759,10 +1983,10 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(class_scope:GammaModel)
   }
 
-  public interface StateModelOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface StateModelOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:StateModel)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional .SleepMode sleep_mode = 4;
     /**
      * <code>optional .SleepMode sleep_mode = 4;</code>
      */
@@ -1772,7 +1996,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode getSleepMode();
 
-    // optional .BedMode bed_mode = 5;
     /**
      * <code>optional .BedMode bed_mode = 5;</code>
      */
@@ -1782,7 +2005,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.BedMode getBedMode();
 
-    // optional .SleepDepth sleep_depth = 6;
     /**
      * <code>optional .SleepDepth sleep_depth = 6;</code>
      */
@@ -1792,7 +2014,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth getSleepDepth();
 
-    // optional .GammaModel light = 11;
     /**
      * <code>optional .GammaModel light = 11;</code>
      */
@@ -1806,7 +2027,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder getLightOrBuilder();
 
-    // optional .PoissonModel motion_count = 12;
     /**
      * <code>optional .PoissonModel motion_count = 12;</code>
      */
@@ -1820,7 +2040,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder getMotionCountOrBuilder();
 
-    // optional .DiscreteAlphabetModel disturbances = 13;
     /**
      * <code>optional .DiscreteAlphabetModel disturbances = 13;</code>
      */
@@ -1834,7 +2053,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getDisturbancesOrBuilder();
 
-    // optional .GammaModel log_sound_count = 14;
     /**
      * <code>optional .GammaModel log_sound_count = 14;</code>
      */
@@ -1848,7 +2066,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder getLogSoundCountOrBuilder();
 
-    // optional .DiscreteAlphabetModel natural_light_filter = 15;
     /**
      * <code>optional .DiscreteAlphabetModel natural_light_filter = 15;</code>
      */
@@ -1862,7 +2079,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder getNaturalLightFilterOrBuilder();
 
-    // optional .PoissonModel partner_motion_count = 16;
     /**
      * <code>optional .PoissonModel partner_motion_count = 16;</code>
      */
@@ -1876,7 +2092,6 @@ public final class SleepHmmProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder getPartnerMotionCountOrBuilder();
 
-    // optional .DiscreteAlphabetModel partner_disturbances = 17;
     /**
      * <code>optional .DiscreteAlphabetModel partner_disturbances = 17;</code>
      */
@@ -1898,8 +2113,9 @@ public final class SleepHmmProtos {
    * </pre>
    */
   public static final class StateModel extends
-      com.google.protobuf.GeneratedMessage
-      implements StateModelOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:StateModel)
+      StateModelOrBuilder {
     // Use StateModel.newBuilder() to construct.
     private StateModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2109,7 +2325,6 @@ public final class SleepHmmProtos {
     }
 
     private int bitField0_;
-    // optional .SleepMode sleep_mode = 4;
     public static final int SLEEP_MODE_FIELD_NUMBER = 4;
     private com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode sleepMode_;
     /**
@@ -2125,7 +2340,6 @@ public final class SleepHmmProtos {
       return sleepMode_;
     }
 
-    // optional .BedMode bed_mode = 5;
     public static final int BED_MODE_FIELD_NUMBER = 5;
     private com.hello.suripu.api.datascience.SleepHmmProtos.BedMode bedMode_;
     /**
@@ -2141,7 +2355,6 @@ public final class SleepHmmProtos {
       return bedMode_;
     }
 
-    // optional .SleepDepth sleep_depth = 6;
     public static final int SLEEP_DEPTH_FIELD_NUMBER = 6;
     private com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth sleepDepth_;
     /**
@@ -2157,7 +2370,6 @@ public final class SleepHmmProtos {
       return sleepDepth_;
     }
 
-    // optional .GammaModel light = 11;
     public static final int LIGHT_FIELD_NUMBER = 11;
     private com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel light_;
     /**
@@ -2179,7 +2391,6 @@ public final class SleepHmmProtos {
       return light_;
     }
 
-    // optional .PoissonModel motion_count = 12;
     public static final int MOTION_COUNT_FIELD_NUMBER = 12;
     private com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel motionCount_;
     /**
@@ -2201,7 +2412,6 @@ public final class SleepHmmProtos {
       return motionCount_;
     }
 
-    // optional .DiscreteAlphabetModel disturbances = 13;
     public static final int DISTURBANCES_FIELD_NUMBER = 13;
     private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel disturbances_;
     /**
@@ -2223,7 +2433,6 @@ public final class SleepHmmProtos {
       return disturbances_;
     }
 
-    // optional .GammaModel log_sound_count = 14;
     public static final int LOG_SOUND_COUNT_FIELD_NUMBER = 14;
     private com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel logSoundCount_;
     /**
@@ -2245,7 +2454,6 @@ public final class SleepHmmProtos {
       return logSoundCount_;
     }
 
-    // optional .DiscreteAlphabetModel natural_light_filter = 15;
     public static final int NATURAL_LIGHT_FILTER_FIELD_NUMBER = 15;
     private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel naturalLightFilter_;
     /**
@@ -2267,7 +2475,6 @@ public final class SleepHmmProtos {
       return naturalLightFilter_;
     }
 
-    // optional .PoissonModel partner_motion_count = 16;
     public static final int PARTNER_MOTION_COUNT_FIELD_NUMBER = 16;
     private com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel partnerMotionCount_;
     /**
@@ -2289,7 +2496,6 @@ public final class SleepHmmProtos {
       return partnerMotionCount_;
     }
 
-    // optional .DiscreteAlphabetModel partner_disturbances = 17;
     public static final int PARTNER_DISTURBANCES_FIELD_NUMBER = 17;
     private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel partnerDisturbances_;
     /**
@@ -2326,7 +2532,8 @@ public final class SleepHmmProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (hasLight()) {
         if (!getLight().isInitialized()) {
@@ -2524,8 +2731,9 @@ public final class SleepHmmProtos {
      * </pre>
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.datascience.SleepHmmProtos.StateModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:StateModel)
+        com.hello.suripu.api.datascience.SleepHmmProtos.StateModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_StateModel_descriptor;
@@ -2806,7 +3014,6 @@ public final class SleepHmmProtos {
       }
       private int bitField0_;
 
-      // optional .SleepMode sleep_mode = 4;
       private com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode sleepMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepMode.SLEEP;
       /**
        * <code>optional .SleepMode sleep_mode = 4;</code>
@@ -2842,7 +3049,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional .BedMode bed_mode = 5;
       private com.hello.suripu.api.datascience.SleepHmmProtos.BedMode bedMode_ = com.hello.suripu.api.datascience.SleepHmmProtos.BedMode.ON_BED;
       /**
        * <code>optional .BedMode bed_mode = 5;</code>
@@ -2878,7 +3084,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional .SleepDepth sleep_depth = 6;
       private com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth sleepDepth_ = com.hello.suripu.api.datascience.SleepHmmProtos.SleepDepth.NOT_APPLICABLE;
       /**
        * <code>optional .SleepDepth sleep_depth = 6;</code>
@@ -2914,7 +3119,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional .GammaModel light = 11;
       private com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel light_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder> lightBuilder_;
@@ -3023,7 +3227,7 @@ public final class SleepHmmProtos {
         if (lightBuilder_ == null) {
           lightBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder>(
-                  light_,
+                  getLight(),
                   getParentForChildren(),
                   isClean());
           light_ = null;
@@ -3031,7 +3235,6 @@ public final class SleepHmmProtos {
         return lightBuilder_;
       }
 
-      // optional .PoissonModel motion_count = 12;
       private com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel motionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder> motionCountBuilder_;
@@ -3140,7 +3343,7 @@ public final class SleepHmmProtos {
         if (motionCountBuilder_ == null) {
           motionCountBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder>(
-                  motionCount_,
+                  getMotionCount(),
                   getParentForChildren(),
                   isClean());
           motionCount_ = null;
@@ -3148,7 +3351,6 @@ public final class SleepHmmProtos {
         return motionCountBuilder_;
       }
 
-      // optional .DiscreteAlphabetModel disturbances = 13;
       private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel disturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder> disturbancesBuilder_;
@@ -3257,7 +3459,7 @@ public final class SleepHmmProtos {
         if (disturbancesBuilder_ == null) {
           disturbancesBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder>(
-                  disturbances_,
+                  getDisturbances(),
                   getParentForChildren(),
                   isClean());
           disturbances_ = null;
@@ -3265,7 +3467,6 @@ public final class SleepHmmProtos {
         return disturbancesBuilder_;
       }
 
-      // optional .GammaModel log_sound_count = 14;
       private com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel logSoundCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder> logSoundCountBuilder_;
@@ -3374,7 +3575,7 @@ public final class SleepHmmProtos {
         if (logSoundCountBuilder_ == null) {
           logSoundCountBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.GammaModelOrBuilder>(
-                  logSoundCount_,
+                  getLogSoundCount(),
                   getParentForChildren(),
                   isClean());
           logSoundCount_ = null;
@@ -3382,7 +3583,6 @@ public final class SleepHmmProtos {
         return logSoundCountBuilder_;
       }
 
-      // optional .DiscreteAlphabetModel natural_light_filter = 15;
       private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel naturalLightFilter_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder> naturalLightFilterBuilder_;
@@ -3491,7 +3691,7 @@ public final class SleepHmmProtos {
         if (naturalLightFilterBuilder_ == null) {
           naturalLightFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder>(
-                  naturalLightFilter_,
+                  getNaturalLightFilter(),
                   getParentForChildren(),
                   isClean());
           naturalLightFilter_ = null;
@@ -3499,7 +3699,6 @@ public final class SleepHmmProtos {
         return naturalLightFilterBuilder_;
       }
 
-      // optional .PoissonModel partner_motion_count = 16;
       private com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel partnerMotionCount_ = com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder> partnerMotionCountBuilder_;
@@ -3608,7 +3807,7 @@ public final class SleepHmmProtos {
         if (partnerMotionCountBuilder_ == null) {
           partnerMotionCountBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.PoissonModelOrBuilder>(
-                  partnerMotionCount_,
+                  getPartnerMotionCount(),
                   getParentForChildren(),
                   isClean());
           partnerMotionCount_ = null;
@@ -3616,7 +3815,6 @@ public final class SleepHmmProtos {
         return partnerMotionCountBuilder_;
       }
 
-      // optional .DiscreteAlphabetModel partner_disturbances = 17;
       private com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel partnerDisturbances_ = com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder> partnerDisturbancesBuilder_;
@@ -3725,7 +3923,7 @@ public final class SleepHmmProtos {
         if (partnerDisturbancesBuilder_ == null) {
           partnerDisturbancesBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmProtos.DiscreteAlphabetModelOrBuilder>(
-                  partnerDisturbances_,
+                  getPartnerDisturbances(),
                   getParentForChildren(),
                   isClean());
           partnerDisturbances_ = null;
@@ -3744,10 +3942,10 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(class_scope:StateModel)
   }
 
-  public interface SleepHmmOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface SleepHmmOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SleepHmm)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string user_id = 1;
     /**
      * <code>optional string user_id = 1;</code>
      */
@@ -3762,7 +3960,6 @@ public final class SleepHmmProtos {
     com.google.protobuf.ByteString
         getUserIdBytes();
 
-    // optional string source = 2;
     /**
      * <code>optional string source = 2;</code>
      */
@@ -3777,7 +3974,6 @@ public final class SleepHmmProtos {
     com.google.protobuf.ByteString
         getSourceBytes();
 
-    // repeated .StateModel states = 3;
     /**
      * <code>repeated .StateModel states = 3;</code>
      */
@@ -3802,7 +3998,6 @@ public final class SleepHmmProtos {
     com.hello.suripu.api.datascience.SleepHmmProtos.StateModelOrBuilder getStatesOrBuilder(
         int index);
 
-    // optional int32 num_states = 4;
     /**
      * <code>optional int32 num_states = 4;</code>
      */
@@ -3812,7 +4007,6 @@ public final class SleepHmmProtos {
      */
     int getNumStates();
 
-    // repeated double state_transition_matrix = 5;
     /**
      * <code>repeated double state_transition_matrix = 5;</code>
      */
@@ -3826,7 +4020,6 @@ public final class SleepHmmProtos {
      */
     double getStateTransitionMatrix(int index);
 
-    // repeated double initial_state_probabilities = 6;
     /**
      * <code>repeated double initial_state_probabilities = 6;</code>
      */
@@ -3840,7 +4033,6 @@ public final class SleepHmmProtos {
      */
     double getInitialStateProbabilities(int index);
 
-    // optional double audio_disturbance_threshold_db = 7;
     /**
      * <code>optional double audio_disturbance_threshold_db = 7;</code>
      */
@@ -3850,7 +4042,6 @@ public final class SleepHmmProtos {
      */
     double getAudioDisturbanceThresholdDb();
 
-    // optional double pill_magnitude_disturbance_threshold_lsb = 8;
     /**
      * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
      */
@@ -3860,7 +4051,6 @@ public final class SleepHmmProtos {
      */
     double getPillMagnitudeDisturbanceThresholdLsb();
 
-    // optional double natural_light_filter_start_hour = 9;
     /**
      * <code>optional double natural_light_filter_start_hour = 9;</code>
      *
@@ -3878,7 +4068,6 @@ public final class SleepHmmProtos {
      */
     double getNaturalLightFilterStartHour();
 
-    // optional double natural_light_filter_stop_hour = 10;
     /**
      * <code>optional double natural_light_filter_stop_hour = 10;</code>
      *
@@ -3896,7 +4085,6 @@ public final class SleepHmmProtos {
      */
     double getNaturalLightFilterStopHour();
 
-    // optional int32 num_model_params = 11;
     /**
      * <code>optional int32 num_model_params = 11;</code>
      *
@@ -3914,7 +4102,6 @@ public final class SleepHmmProtos {
      */
     int getNumModelParams();
 
-    // optional string model_name = 12;
     /**
      * <code>optional string model_name = 12;</code>
      */
@@ -3929,7 +4116,6 @@ public final class SleepHmmProtos {
     com.google.protobuf.ByteString
         getModelNameBytes();
 
-    // optional int32 num_minutes_in_meas_period = 13;
     /**
      * <code>optional int32 num_minutes_in_meas_period = 13;</code>
      */
@@ -3939,7 +4125,6 @@ public final class SleepHmmProtos {
      */
     int getNumMinutesInMeasPeriod();
 
-    // optional bool enable_interval_search = 14;
     /**
      * <code>optional bool enable_interval_search = 14;</code>
      */
@@ -3949,7 +4134,6 @@ public final class SleepHmmProtos {
      */
     boolean getEnableIntervalSearch();
 
-    // optional double light_pre_multiplier = 15;
     /**
      * <code>optional double light_pre_multiplier = 15;</code>
      */
@@ -3959,7 +4143,6 @@ public final class SleepHmmProtos {
      */
     double getLightPreMultiplier();
 
-    // optional double light_floor_lux = 16;
     /**
      * <code>optional double light_floor_lux = 16;</code>
      */
@@ -3969,7 +4152,6 @@ public final class SleepHmmProtos {
      */
     double getLightFloorLux();
 
-    // optional bool use_wave_as_disturbance = 17;
     /**
      * <code>optional bool use_wave_as_disturbance = 17;</code>
      */
@@ -3979,7 +4161,6 @@ public final class SleepHmmProtos {
      */
     boolean getUseWaveAsDisturbance();
 
-    // optional double audio_level_above_background_threshold_db = 18;
     /**
      * <code>optional double audio_level_above_background_threshold_db = 18;</code>
      */
@@ -3993,8 +4174,9 @@ public final class SleepHmmProtos {
    * Protobuf type {@code SleepHmm}
    */
   public static final class SleepHmm extends
-      com.google.protobuf.GeneratedMessage
-      implements SleepHmmOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:SleepHmm)
+      SleepHmmOrBuilder {
     // Use SleepHmm.newBuilder() to construct.
     private SleepHmm(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -4041,13 +4223,15 @@ public final class SleepHmmProtos {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              userId_ = input.readBytes();
+              userId_ = bs;
               break;
             }
             case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              source_ = input.readBytes();
+              source_ = bs;
               break;
             }
             case 26: {
@@ -4131,8 +4315,9 @@ public final class SleepHmmProtos {
               break;
             }
             case 98: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000100;
-              modelName_ = input.readBytes();
+              modelName_ = bs;
               break;
             }
             case 104: {
@@ -4214,7 +4399,6 @@ public final class SleepHmmProtos {
     }
 
     private int bitField0_;
-    // optional string user_id = 1;
     public static final int USER_ID_FIELD_NUMBER = 1;
     private java.lang.Object userId_;
     /**
@@ -4257,7 +4441,6 @@ public final class SleepHmmProtos {
       }
     }
 
-    // optional string source = 2;
     public static final int SOURCE_FIELD_NUMBER = 2;
     private java.lang.Object source_;
     /**
@@ -4300,7 +4483,6 @@ public final class SleepHmmProtos {
       }
     }
 
-    // repeated .StateModel states = 3;
     public static final int STATES_FIELD_NUMBER = 3;
     private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.StateModel> states_;
     /**
@@ -4336,7 +4518,6 @@ public final class SleepHmmProtos {
       return states_.get(index);
     }
 
-    // optional int32 num_states = 4;
     public static final int NUM_STATES_FIELD_NUMBER = 4;
     private int numStates_;
     /**
@@ -4352,7 +4533,6 @@ public final class SleepHmmProtos {
       return numStates_;
     }
 
-    // repeated double state_transition_matrix = 5;
     public static final int STATE_TRANSITION_MATRIX_FIELD_NUMBER = 5;
     private java.util.List<java.lang.Double> stateTransitionMatrix_;
     /**
@@ -4375,7 +4555,6 @@ public final class SleepHmmProtos {
       return stateTransitionMatrix_.get(index);
     }
 
-    // repeated double initial_state_probabilities = 6;
     public static final int INITIAL_STATE_PROBABILITIES_FIELD_NUMBER = 6;
     private java.util.List<java.lang.Double> initialStateProbabilities_;
     /**
@@ -4398,7 +4577,6 @@ public final class SleepHmmProtos {
       return initialStateProbabilities_.get(index);
     }
 
-    // optional double audio_disturbance_threshold_db = 7;
     public static final int AUDIO_DISTURBANCE_THRESHOLD_DB_FIELD_NUMBER = 7;
     private double audioDisturbanceThresholdDb_;
     /**
@@ -4414,7 +4592,6 @@ public final class SleepHmmProtos {
       return audioDisturbanceThresholdDb_;
     }
 
-    // optional double pill_magnitude_disturbance_threshold_lsb = 8;
     public static final int PILL_MAGNITUDE_DISTURBANCE_THRESHOLD_LSB_FIELD_NUMBER = 8;
     private double pillMagnitudeDisturbanceThresholdLsb_;
     /**
@@ -4430,7 +4607,6 @@ public final class SleepHmmProtos {
       return pillMagnitudeDisturbanceThresholdLsb_;
     }
 
-    // optional double natural_light_filter_start_hour = 9;
     public static final int NATURAL_LIGHT_FILTER_START_HOUR_FIELD_NUMBER = 9;
     private double naturalLightFilterStartHour_;
     /**
@@ -4454,7 +4630,6 @@ public final class SleepHmmProtos {
       return naturalLightFilterStartHour_;
     }
 
-    // optional double natural_light_filter_stop_hour = 10;
     public static final int NATURAL_LIGHT_FILTER_STOP_HOUR_FIELD_NUMBER = 10;
     private double naturalLightFilterStopHour_;
     /**
@@ -4478,7 +4653,6 @@ public final class SleepHmmProtos {
       return naturalLightFilterStopHour_;
     }
 
-    // optional int32 num_model_params = 11;
     public static final int NUM_MODEL_PARAMS_FIELD_NUMBER = 11;
     private int numModelParams_;
     /**
@@ -4502,7 +4676,6 @@ public final class SleepHmmProtos {
       return numModelParams_;
     }
 
-    // optional string model_name = 12;
     public static final int MODEL_NAME_FIELD_NUMBER = 12;
     private java.lang.Object modelName_;
     /**
@@ -4545,7 +4718,6 @@ public final class SleepHmmProtos {
       }
     }
 
-    // optional int32 num_minutes_in_meas_period = 13;
     public static final int NUM_MINUTES_IN_MEAS_PERIOD_FIELD_NUMBER = 13;
     private int numMinutesInMeasPeriod_;
     /**
@@ -4561,7 +4733,6 @@ public final class SleepHmmProtos {
       return numMinutesInMeasPeriod_;
     }
 
-    // optional bool enable_interval_search = 14;
     public static final int ENABLE_INTERVAL_SEARCH_FIELD_NUMBER = 14;
     private boolean enableIntervalSearch_;
     /**
@@ -4577,7 +4748,6 @@ public final class SleepHmmProtos {
       return enableIntervalSearch_;
     }
 
-    // optional double light_pre_multiplier = 15;
     public static final int LIGHT_PRE_MULTIPLIER_FIELD_NUMBER = 15;
     private double lightPreMultiplier_;
     /**
@@ -4593,7 +4763,6 @@ public final class SleepHmmProtos {
       return lightPreMultiplier_;
     }
 
-    // optional double light_floor_lux = 16;
     public static final int LIGHT_FLOOR_LUX_FIELD_NUMBER = 16;
     private double lightFloorLux_;
     /**
@@ -4609,7 +4778,6 @@ public final class SleepHmmProtos {
       return lightFloorLux_;
     }
 
-    // optional bool use_wave_as_disturbance = 17;
     public static final int USE_WAVE_AS_DISTURBANCE_FIELD_NUMBER = 17;
     private boolean useWaveAsDisturbance_;
     /**
@@ -4625,7 +4793,6 @@ public final class SleepHmmProtos {
       return useWaveAsDisturbance_;
     }
 
-    // optional double audio_level_above_background_threshold_db = 18;
     public static final int AUDIO_LEVEL_ABOVE_BACKGROUND_THRESHOLD_DB_FIELD_NUMBER = 18;
     private double audioLevelAboveBackgroundThresholdDb_;
     /**
@@ -4664,7 +4831,8 @@ public final class SleepHmmProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       for (int i = 0; i < getStatesCount(); i++) {
         if (!getStates(i).isInitialized()) {
@@ -4900,8 +5068,9 @@ public final class SleepHmmProtos {
      * Protobuf type {@code SleepHmm}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:SleepHmm)
+        com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_SleepHmm_descriptor;
@@ -5228,7 +5397,6 @@ public final class SleepHmmProtos {
       }
       private int bitField0_;
 
-      // optional string user_id = 1;
       private java.lang.Object userId_ = "";
       /**
        * <code>optional string user_id = 1;</code>
@@ -5242,9 +5410,12 @@ public final class SleepHmmProtos {
       public java.lang.String getUserId() {
         java.lang.Object ref = userId_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          userId_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            userId_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5302,7 +5473,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional string source = 2;
       private java.lang.Object source_ = "";
       /**
        * <code>optional string source = 2;</code>
@@ -5316,9 +5486,12 @@ public final class SleepHmmProtos {
       public java.lang.String getSource() {
         java.lang.Object ref = source_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          source_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            source_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5376,7 +5549,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // repeated .StateModel states = 3;
       private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.StateModel> states_ =
         java.util.Collections.emptyList();
       private void ensureStatesIsMutable() {
@@ -5518,7 +5690,8 @@ public final class SleepHmmProtos {
           java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmProtos.StateModel> values) {
         if (statesBuilder_ == null) {
           ensureStatesIsMutable();
-          super.addAll(values, states_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, states_);
           onChanged();
         } else {
           statesBuilder_.addAllMessages(values);
@@ -5616,7 +5789,6 @@ public final class SleepHmmProtos {
         return statesBuilder_;
       }
 
-      // optional int32 num_states = 4;
       private int numStates_ ;
       /**
        * <code>optional int32 num_states = 4;</code>
@@ -5649,7 +5821,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // repeated double state_transition_matrix = 5;
       private java.util.List<java.lang.Double> stateTransitionMatrix_ = java.util.Collections.emptyList();
       private void ensureStateTransitionMatrixIsMutable() {
         if (!((bitField0_ & 0x00000010) == 0x00000010)) {
@@ -5701,7 +5872,8 @@ public final class SleepHmmProtos {
       public Builder addAllStateTransitionMatrix(
           java.lang.Iterable<? extends java.lang.Double> values) {
         ensureStateTransitionMatrixIsMutable();
-        super.addAll(values, stateTransitionMatrix_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, stateTransitionMatrix_);
         onChanged();
         return this;
       }
@@ -5715,7 +5887,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // repeated double initial_state_probabilities = 6;
       private java.util.List<java.lang.Double> initialStateProbabilities_ = java.util.Collections.emptyList();
       private void ensureInitialStateProbabilitiesIsMutable() {
         if (!((bitField0_ & 0x00000020) == 0x00000020)) {
@@ -5767,7 +5938,8 @@ public final class SleepHmmProtos {
       public Builder addAllInitialStateProbabilities(
           java.lang.Iterable<? extends java.lang.Double> values) {
         ensureInitialStateProbabilitiesIsMutable();
-        super.addAll(values, initialStateProbabilities_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, initialStateProbabilities_);
         onChanged();
         return this;
       }
@@ -5781,7 +5953,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional double audio_disturbance_threshold_db = 7;
       private double audioDisturbanceThresholdDb_ ;
       /**
        * <code>optional double audio_disturbance_threshold_db = 7;</code>
@@ -5814,7 +5985,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional double pill_magnitude_disturbance_threshold_lsb = 8;
       private double pillMagnitudeDisturbanceThresholdLsb_ ;
       /**
        * <code>optional double pill_magnitude_disturbance_threshold_lsb = 8;</code>
@@ -5847,7 +6017,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional double natural_light_filter_start_hour = 9;
       private double naturalLightFilterStartHour_ ;
       /**
        * <code>optional double natural_light_filter_start_hour = 9;</code>
@@ -5896,7 +6065,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional double natural_light_filter_stop_hour = 10;
       private double naturalLightFilterStopHour_ ;
       /**
        * <code>optional double natural_light_filter_stop_hour = 10;</code>
@@ -5945,7 +6113,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional int32 num_model_params = 11;
       private int numModelParams_ ;
       /**
        * <code>optional int32 num_model_params = 11;</code>
@@ -5994,7 +6161,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional string model_name = 12;
       private java.lang.Object modelName_ = "";
       /**
        * <code>optional string model_name = 12;</code>
@@ -6008,9 +6174,12 @@ public final class SleepHmmProtos {
       public java.lang.String getModelName() {
         java.lang.Object ref = modelName_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          modelName_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            modelName_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -6068,7 +6237,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional int32 num_minutes_in_meas_period = 13;
       private int numMinutesInMeasPeriod_ ;
       /**
        * <code>optional int32 num_minutes_in_meas_period = 13;</code>
@@ -6101,7 +6269,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional bool enable_interval_search = 14;
       private boolean enableIntervalSearch_ ;
       /**
        * <code>optional bool enable_interval_search = 14;</code>
@@ -6134,7 +6301,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional double light_pre_multiplier = 15;
       private double lightPreMultiplier_ ;
       /**
        * <code>optional double light_pre_multiplier = 15;</code>
@@ -6167,7 +6333,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional double light_floor_lux = 16;
       private double lightFloorLux_ ;
       /**
        * <code>optional double light_floor_lux = 16;</code>
@@ -6200,7 +6365,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional bool use_wave_as_disturbance = 17;
       private boolean useWaveAsDisturbance_ ;
       /**
        * <code>optional bool use_wave_as_disturbance = 17;</code>
@@ -6233,7 +6397,6 @@ public final class SleepHmmProtos {
         return this;
       }
 
-      // optional double audio_level_above_background_threshold_db = 18;
       private double audioLevelAboveBackgroundThresholdDb_ ;
       /**
        * <code>optional double audio_level_above_background_threshold_db = 18;</code>
@@ -6277,10 +6440,10 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(class_scope:SleepHmm)
   }
 
-  public interface SleepHmmModelSetOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface SleepHmmModelSetOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SleepHmmModelSet)
+      com.google.protobuf.MessageOrBuilder {
 
-    // repeated .SleepHmm models = 1;
     /**
      * <code>repeated .SleepHmm models = 1;</code>
      */
@@ -6309,8 +6472,9 @@ public final class SleepHmmProtos {
    * Protobuf type {@code SleepHmmModelSet}
    */
   public static final class SleepHmmModelSet extends
-      com.google.protobuf.GeneratedMessage
-      implements SleepHmmModelSetOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:SleepHmmModelSet)
+      SleepHmmModelSetOrBuilder {
     // Use SleepHmmModelSet.newBuilder() to construct.
     private SleepHmmModelSet(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -6406,7 +6570,6 @@ public final class SleepHmmProtos {
       return PARSER;
     }
 
-    // repeated .SleepHmm models = 1;
     public static final int MODELS_FIELD_NUMBER = 1;
     private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> models_;
     /**
@@ -6448,7 +6611,8 @@ public final class SleepHmmProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       for (int i = 0; i < getModelsCount(); i++) {
         if (!getModels(i).isInitialized()) {
@@ -6561,8 +6725,9 @@ public final class SleepHmmProtos {
      * Protobuf type {@code SleepHmmModelSet}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSetOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:SleepHmmModelSet)
+        com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmmModelSetOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmProtos.internal_static_SleepHmmModelSet_descriptor;
@@ -6712,7 +6877,6 @@ public final class SleepHmmProtos {
       }
       private int bitField0_;
 
-      // repeated .SleepHmm models = 1;
       private java.util.List<com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> models_ =
         java.util.Collections.emptyList();
       private void ensureModelsIsMutable() {
@@ -6854,7 +7018,8 @@ public final class SleepHmmProtos {
           java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmProtos.SleepHmm> values) {
         if (modelsBuilder_ == null) {
           ensureModelsIsMutable();
-          super.addAll(values, models_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, models_);
           onChanged();
         } else {
           modelsBuilder_.addAllMessages(values);
@@ -6963,32 +7128,32 @@ public final class SleepHmmProtos {
     // @@protoc_insertion_point(class_scope:SleepHmmModelSet)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_PoissonModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_PoissonModel_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_DiscreteAlphabetModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_DiscreteAlphabetModel_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_GammaModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_GammaModel_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_StateModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_StateModel_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SleepHmm_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_SleepHmm_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SleepHmmModelSet_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -7002,91 +7167,92 @@ public final class SleepHmmProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\017sleep_hmm.proto\"\034\n\014PoissonModel\022\014\n\004mea" +
-      "n\030\001 \002(\001\".\n\025DiscreteAlphabetModel\022\025\n\rprob" +
-      "abilities\030\001 \003(\001\"*\n\nGammaModel\022\014\n\004mean\030\001 " +
-      "\002(\001\022\016\n\006stddev\030\002 \002(\001\"\230\003\n\nStateModel\022\036\n\nsl" +
-      "eep_mode\030\004 \001(\0162\n.SleepMode\022\032\n\010bed_mode\030\005" +
-      " \001(\0162\010.BedMode\022 \n\013sleep_depth\030\006 \001(\0162\013.Sl" +
-      "eepDepth\022\032\n\005light\030\013 \001(\0132\013.GammaModel\022#\n\014" +
-      "motion_count\030\014 \001(\0132\r.PoissonModel\022,\n\014dis" +
-      "turbances\030\r \001(\0132\026.DiscreteAlphabetModel\022" +
-      "$\n\017log_sound_count\030\016 \001(\0132\013.GammaModel\0224\n",
-      "\024natural_light_filter\030\017 \001(\0132\026.DiscreteAl" +
-      "phabetModel\022+\n\024partner_motion_count\030\020 \001(" +
-      "\0132\r.PoissonModel\0224\n\024partner_disturbances" +
-      "\030\021 \001(\0132\026.DiscreteAlphabetModel\"\312\004\n\010Sleep" +
-      "Hmm\022\017\n\007user_id\030\001 \001(\t\022\016\n\006source\030\002 \001(\t\022\033\n\006" +
-      "states\030\003 \003(\0132\013.StateModel\022\022\n\nnum_states\030" +
-      "\004 \001(\005\022\037\n\027state_transition_matrix\030\005 \003(\001\022#" +
-      "\n\033initial_state_probabilities\030\006 \003(\001\022&\n\036a" +
-      "udio_disturbance_threshold_db\030\007 \001(\001\0220\n(p" +
-      "ill_magnitude_disturbance_threshold_lsb\030",
-      "\010 \001(\001\022\'\n\037natural_light_filter_start_hour" +
-      "\030\t \001(\001\022&\n\036natural_light_filter_stop_hour" +
-      "\030\n \001(\001\022\030\n\020num_model_params\030\013 \001(\005\022\022\n\nmode" +
-      "l_name\030\014 \001(\t\022\"\n\032num_minutes_in_meas_peri" +
-      "od\030\r \001(\005\022\036\n\026enable_interval_search\030\016 \001(\010" +
-      "\022\034\n\024light_pre_multiplier\030\017 \001(\001\022\027\n\017light_" +
-      "floor_lux\030\020 \001(\001\022\037\n\027use_wave_as_disturban" +
-      "ce\030\021 \001(\010\0221\n)audio_level_above_background" +
-      "_threshold_db\030\022 \001(\001\"-\n\020SleepHmmModelSet\022" +
-      "\031\n\006models\030\001 \003(\0132\t.SleepHmm*7\n\tSleepMode\022",
-      "\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001\022\025\n\021CONDITIONAL_SLEE" +
-      "P\020\002*7\n\007BedMode\022\n\n\006ON_BED\020\000\022\013\n\007OFF_BED\020\001\022" +
-      "\023\n\017CONDITIONAL_BED\020\002*G\n\nSleepDepth\022\022\n\016NO" +
-      "T_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REGULAR\020\002\022\r" +
-      "\n\tDISTURBED\020\003B2\n com.hello.suripu.api.da" +
-      "tascienceB\016SleepHmmProtos"
+      "\n\017sleep_hmm.proto\",\n\014PoissonModel\022\014\n\004mea" +
+      "n\030\001 \002(\001\022\016\n\006weight\030\002 \001(\001\">\n\025DiscreteAlpha" +
+      "betModel\022\025\n\rprobabilities\030\001 \003(\001\022\016\n\006weigh" +
+      "t\030\002 \001(\001\":\n\nGammaModel\022\014\n\004mean\030\001 \002(\001\022\016\n\006s" +
+      "tddev\030\002 \002(\001\022\016\n\006weight\030\003 \001(\001\"\230\003\n\nStateMod" +
+      "el\022\036\n\nsleep_mode\030\004 \001(\0162\n.SleepMode\022\032\n\010be" +
+      "d_mode\030\005 \001(\0162\010.BedMode\022 \n\013sleep_depth\030\006 " +
+      "\001(\0162\013.SleepDepth\022\032\n\005light\030\013 \001(\0132\013.GammaM" +
+      "odel\022#\n\014motion_count\030\014 \001(\0132\r.PoissonMode" +
+      "l\022,\n\014disturbances\030\r \001(\0132\026.DiscreteAlphab",
+      "etModel\022$\n\017log_sound_count\030\016 \001(\0132\013.Gamma" +
+      "Model\0224\n\024natural_light_filter\030\017 \001(\0132\026.Di" +
+      "screteAlphabetModel\022+\n\024partner_motion_co" +
+      "unt\030\020 \001(\0132\r.PoissonModel\0224\n\024partner_dist" +
+      "urbances\030\021 \001(\0132\026.DiscreteAlphabetModel\"\312" +
+      "\004\n\010SleepHmm\022\017\n\007user_id\030\001 \001(\t\022\016\n\006source\030\002" +
+      " \001(\t\022\033\n\006states\030\003 \003(\0132\013.StateModel\022\022\n\nnum" +
+      "_states\030\004 \001(\005\022\037\n\027state_transition_matrix" +
+      "\030\005 \003(\001\022#\n\033initial_state_probabilities\030\006 " +
+      "\003(\001\022&\n\036audio_disturbance_threshold_db\030\007 ",
+      "\001(\001\0220\n(pill_magnitude_disturbance_thresh" +
+      "old_lsb\030\010 \001(\001\022\'\n\037natural_light_filter_st" +
+      "art_hour\030\t \001(\001\022&\n\036natural_light_filter_s" +
+      "top_hour\030\n \001(\001\022\030\n\020num_model_params\030\013 \001(\005" +
+      "\022\022\n\nmodel_name\030\014 \001(\t\022\"\n\032num_minutes_in_m" +
+      "eas_period\030\r \001(\005\022\036\n\026enable_interval_sear" +
+      "ch\030\016 \001(\010\022\034\n\024light_pre_multiplier\030\017 \001(\001\022\027" +
+      "\n\017light_floor_lux\030\020 \001(\001\022\037\n\027use_wave_as_d" +
+      "isturbance\030\021 \001(\010\0221\n)audio_level_above_ba" +
+      "ckground_threshold_db\030\022 \001(\001\"-\n\020SleepHmmM",
+      "odelSet\022\031\n\006models\030\001 \003(\0132\t.SleepHmm*7\n\tSl" +
+      "eepMode\022\t\n\005SLEEP\020\000\022\010\n\004WAKE\020\001\022\025\n\021CONDITIO" +
+      "NAL_SLEEP\020\002*7\n\007BedMode\022\n\n\006ON_BED\020\000\022\013\n\007OF" +
+      "F_BED\020\001\022\023\n\017CONDITIONAL_BED\020\002*G\n\nSleepDep" +
+      "th\022\022\n\016NOT_APPLICABLE\020\000\022\t\n\005LIGHT\020\001\022\013\n\007REG" +
+      "ULAR\020\002\022\r\n\tDISTURBED\020\003B2\n com.hello.surip" +
+      "u.api.datascienceB\016SleepHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_PoissonModel_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_PoissonModel_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_PoissonModel_descriptor,
-              new java.lang.String[] { "Mean", });
-          internal_static_DiscreteAlphabetModel_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_DiscreteAlphabetModel_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_DiscreteAlphabetModel_descriptor,
-              new java.lang.String[] { "Probabilities", });
-          internal_static_GammaModel_descriptor =
-            getDescriptor().getMessageTypes().get(2);
-          internal_static_GammaModel_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_GammaModel_descriptor,
-              new java.lang.String[] { "Mean", "Stddev", });
-          internal_static_StateModel_descriptor =
-            getDescriptor().getMessageTypes().get(3);
-          internal_static_StateModel_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_StateModel_descriptor,
-              new java.lang.String[] { "SleepMode", "BedMode", "SleepDepth", "Light", "MotionCount", "Disturbances", "LogSoundCount", "NaturalLightFilter", "PartnerMotionCount", "PartnerDisturbances", });
-          internal_static_SleepHmm_descriptor =
-            getDescriptor().getMessageTypes().get(4);
-          internal_static_SleepHmm_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SleepHmm_descriptor,
-              new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", "LightPreMultiplier", "LightFloorLux", "UseWaveAsDisturbance", "AudioLevelAboveBackgroundThresholdDb", });
-          internal_static_SleepHmmModelSet_descriptor =
-            getDescriptor().getMessageTypes().get(5);
-          internal_static_SleepHmmModelSet_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_SleepHmmModelSet_descriptor,
-              new java.lang.String[] { "Models", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_PoissonModel_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_PoissonModel_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_PoissonModel_descriptor,
+        new java.lang.String[] { "Mean", "Weight", });
+    internal_static_DiscreteAlphabetModel_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_DiscreteAlphabetModel_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_DiscreteAlphabetModel_descriptor,
+        new java.lang.String[] { "Probabilities", "Weight", });
+    internal_static_GammaModel_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_GammaModel_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_GammaModel_descriptor,
+        new java.lang.String[] { "Mean", "Stddev", "Weight", });
+    internal_static_StateModel_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_StateModel_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_StateModel_descriptor,
+        new java.lang.String[] { "SleepMode", "BedMode", "SleepDepth", "Light", "MotionCount", "Disturbances", "LogSoundCount", "NaturalLightFilter", "PartnerMotionCount", "PartnerDisturbances", });
+    internal_static_SleepHmm_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_SleepHmm_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SleepHmm_descriptor,
+        new java.lang.String[] { "UserId", "Source", "States", "NumStates", "StateTransitionMatrix", "InitialStateProbabilities", "AudioDisturbanceThresholdDb", "PillMagnitudeDisturbanceThresholdLsb", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "NumModelParams", "ModelName", "NumMinutesInMeasPeriod", "EnableIntervalSearch", "LightPreMultiplier", "LightFloorLux", "UseWaveAsDisturbance", "AudioLevelAboveBackgroundThresholdDb", });
+    internal_static_SleepHmmModelSet_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_SleepHmmModelSet_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_SleepHmmModelSet_descriptor,
+        new java.lang.String[] { "Models", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
