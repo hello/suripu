@@ -10,6 +10,9 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
@@ -17,6 +20,7 @@ import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.UpgradeNodeRequest;
@@ -68,6 +72,38 @@ public class FirmwareUpgradePathDAO {
         }
     }
 
+    public Optional<UpgradeNodeRequest> deleteFWUpgradeNode(final UpgradeNodeRequest upgradeNode){
+        try {
+            final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<String, ExpectedAttributeValue>();
+
+            deleteConditions.put(GROUP_NAME_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withS(upgradeNode.groupName)
+            ));
+            deleteConditions.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new ExpectedAttributeValue(
+                    new AttributeValue().withN(upgradeNode.fromFWVersion.toString())
+            ));
+
+            HashMap<String, AttributeValue> keys = new HashMap<String, AttributeValue>();
+            keys.put(GROUP_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(upgradeNode.groupName));
+            keys.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.fromFWVersion.toString()));
+
+            final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
+                    .withTableName(tableName)
+                    .withKey(keys)
+                    .withExpected(deleteConditions)
+                    .withReturnValues(ReturnValue.ALL_OLD);
+
+            final DeleteItemResult result = this.dynamoDBClient.deleteItem(deleteItemRequest);
+
+            return attributeValuesToUpgradeNode(result.getAttributes());
+
+        }  catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to delete Upgrade Node for Group: {}, error {}", upgradeNode.groupName, ase.getMessage());
+        }
+
+        return Optional.absent();
+    }
+
     @Timed
     public Optional<Integer> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
 
@@ -109,6 +145,22 @@ public class FirmwareUpgradePathDAO {
         final Integer itemNextFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
 
         return Optional.of(itemNextFW);
+    }
+
+    private Optional<UpgradeNodeRequest> attributeValuesToUpgradeNode(final Map<String, AttributeValue> item){
+
+        try {
+
+            final String groupName = item.get(GROUP_NAME_ATTRIBUTE_NAME).getS();
+            final Integer fromFWVersion = Integer.valueOf(item.get(FROM_FW_VERSION_ATTRIBUTE_NAME).getN());
+            final Integer newFWVersion = Integer.valueOf(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
+
+            return Optional.of(new UpgradeNodeRequest(groupName, fromFWVersion, newFWVersion));
+        }catch (Exception ex){
+            LOGGER.error("attributeValuesToUpgradeNode error: {}", ex.getMessage());
+        }
+
+        return Optional.absent();
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){

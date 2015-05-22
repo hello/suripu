@@ -285,4 +285,15 @@ public class FirmwareResource {
         LOGGER.info("Adding FW upgrade node for group: {} on FW Version: {} to FW Version: {}", nodeRequest.groupName, nodeRequest.fromFWVersion, nodeRequest.toFWVersion);
         firmwareUpgradePathDAO.insertFWUpgradeNode(nodeRequest);
     }
+
+    @DELETE
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/updates/delete_node")
+    public void deleteFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final UpgradeNodeRequest nodeRequest) {
+
+        LOGGER.info("Deleting FW upgrade node for group: {} on FW Version: {} to FW Version: {}", nodeRequest.groupName, nodeRequest.fromFWVersion, nodeRequest.toFWVersion);
+        firmwareUpgradePathDAO.deleteFWUpgradeNode(nodeRequest);
+    }
+
 }
