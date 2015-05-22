@@ -13,6 +13,7 @@ import com.hello.suripu.workers.timeline.TimelineWorkerCommand;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
+import org.joda.time.DateTimeZone;
 
 import java.util.TimeZone;
 
@@ -20,6 +21,7 @@ public class HelloWorker extends Service<WorkerConfiguration> {
 
     public static void main(String[] args) throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        DateTimeZone.setDefault(DateTimeZone.UTC);
         new HelloWorker().run(args);
     }
 

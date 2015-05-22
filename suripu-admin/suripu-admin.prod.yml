@@ -55,6 +55,7 @@ dynamodb:
     ota_history : ota_history
     password_reset : prod_password_reset
     pill_key_store : pill_key_store
+    pill_last_seen : prod_pill_last_seen
     sense_events : prod_sense_events
     sense_key_store : key_store
     sense_last_seen : prod_sense_last_seen
@@ -70,10 +71,12 @@ dynamodb:
       ota_history : http://dynamodb.us-east-1.amazonaws.com
       password_reset : http://dynamodb.us-east-1.amazonaws.com
       pill_key_store : http://dynamodb.us-east-1.amazonaws.com
+      pill_last_seen : http://dynamodb.us-east-1.amazonaws.com
       sense_events : http://dynamodb.us-east-1.amazonaws.com
       sense_key_store : http://dynamodb.us-east-1.amazonaws.com
       sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
       sense_prefix : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
+
 

@@ -32,6 +32,8 @@ public class FeatureFlipper {
     public final static String RING_DURATION_FROM_CONFIG = "ring_duration_from_config";
     public final static String EXTRA_EVENTS = "extra_events";
     public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB = "sense_last_seen_view_dynamodb";
+    public final static String REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP = "remove_motion_events_outside_sleep";
+    public final static String REMOVE_GREY_OUT_EVENTS = "remove_grey_out_events";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
 }

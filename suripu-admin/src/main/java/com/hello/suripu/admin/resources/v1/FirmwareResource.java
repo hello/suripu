@@ -10,6 +10,7 @@ import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
 import com.hello.suripu.core.models.FirmwareCountInfo;
 import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.OTAHistory;
@@ -337,8 +338,8 @@ public class FirmwareResource {
         }
 
         LOGGER.info("Resetting to factory FW for device: {} on FW Version: {}", deviceId, fwVersion);
-        final Map<String, Object> issuedCommands = new HashMap<>();
-        issuedCommands.put("reset_to_factory_fw", true);
+        final Map<ResponseCommand, String> issuedCommands = new HashMap<>();
+        issuedCommands.put(ResponseCommand.RESET_TO_FACTORY_FW, "true");
         responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
     }
 
