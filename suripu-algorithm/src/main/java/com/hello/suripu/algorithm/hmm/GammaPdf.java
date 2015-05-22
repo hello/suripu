@@ -9,9 +9,11 @@ public class GammaPdf implements HmmPdfInterface {
     private  final int measNum;
     private final GammaDistribution gammaDistribution;
     private final static double MIN_INPUT_VALUE = 1e-1;
+    private final double weight;
 
-    public GammaPdf(final double mean, final double stdDev, final int measNum) {
+    public GammaPdf(final double mean, final double stdDev, final int measNum, final double weight) {
         this.measNum = measNum;
+        this.weight = weight;
 
         // k*theta = mean
         // k*theta^2  = variance
@@ -46,8 +48,11 @@ public class GammaPdf implements HmmPdfInterface {
                 pdfEval = MIN_LIKELIHOOD;
             }
 
-            result[i] = Math.log(pdfEval);
+            result[i] = weight * Math.log(pdfEval);
 
+            if (Double.isNaN(result[i])) {
+                result[i] = Double.NEGATIVE_INFINITY;
+            }
         }
 
         return result;

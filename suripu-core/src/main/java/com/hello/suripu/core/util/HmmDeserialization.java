@@ -172,31 +172,84 @@ public class HmmDeserialization {
             final PdfComposite pdf = new PdfComposite();
 
             if (model.hasLight()) {
-                pdf.addPdf(new GammaPdf(model.getLight().getMean(), model.getLight().getStddev(), HmmDataConstants.LIGHT_INDEX));
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getLight().hasWeight()) {
+                    weight = model.getLight().getWeight();
+                }
+
+                pdf.addPdf(new GammaPdf(model.getLight().getMean(), model.getLight().getStddev(), HmmDataConstants.LIGHT_INDEX,weight));
             }
 
             if (model.hasMotionCount()) {
-                pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), HmmDataConstants.MOT_COUNT_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getMotionCount().hasWeight()) {
+                    weight = model.getMotionCount().getWeight();
+                }
+
+                pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), HmmDataConstants.MOT_COUNT_INDEX,weight));
             }
 
             if (model.hasDisturbances()) {
-                pdf.addPdf(new DiscreteAlphabetPdf(model.getDisturbances().getProbabilitiesList(), HmmDataConstants.DISTURBANCE_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getDisturbances().hasWeight()) {
+                    weight = model.getDisturbances().getWeight();
+                }
+
+
+                pdf.addPdf(new DiscreteAlphabetPdf(model.getDisturbances().getProbabilitiesList(), HmmDataConstants.DISTURBANCE_INDEX,weight));
             }
 
             if (model.hasLogSoundCount()) {
-                pdf.addPdf(new GammaPdf(model.getLogSoundCount().getMean(), model.getLogSoundCount().getStddev(), HmmDataConstants.LOG_SOUND_COUNT_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getLogSoundCount().hasWeight()) {
+                    weight = model.getLogSoundCount().getWeight();
+                }
+
+
+                pdf.addPdf(new GammaPdf(model.getLogSoundCount().getMean(), model.getLogSoundCount().getStddev(), HmmDataConstants.LOG_SOUND_COUNT_INDEX,weight));
             }
 
             if (model.hasNaturalLightFilter()) {
-                pdf.addPdf(new DiscreteAlphabetPdf(model.getNaturalLightFilter().getProbabilitiesList(), HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getNaturalLightFilter().hasWeight()) {
+                    weight = model.getNaturalLightFilter().getWeight();
+                }
+
+
+                pdf.addPdf(new DiscreteAlphabetPdf(model.getNaturalLightFilter().getProbabilitiesList(), HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX,weight));
             }
 
             if (model.hasPartnerMotionCount()) {
-                pdf.addPdf(new PoissonPdf(model.getPartnerMotionCount().getMean(),HmmDataConstants.PARTNER_MOT_COUNT_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getPartnerMotionCount().hasWeight()) {
+                    weight = model.getPartnerMotionCount().getWeight();
+                }
+
+
+                pdf.addPdf(new PoissonPdf(model.getPartnerMotionCount().getMean(),HmmDataConstants.PARTNER_MOT_COUNT_INDEX,weight));
             }
 
             if (model.hasPartnerDisturbances()) {
-                pdf.addPdf(new DiscreteAlphabetPdf(model.getPartnerDisturbances().getProbabilitiesList(), HmmDataConstants.PARTNER_DISTURBANCE_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getPartnerDisturbances().hasWeight()) {
+                    weight = model.getPartnerDisturbances().getWeight();
+                }
+
+
+                pdf.addPdf(new DiscreteAlphabetPdf(model.getPartnerDisturbances().getProbabilitiesList(), HmmDataConstants.PARTNER_DISTURBANCE_INDEX,weight));
             }
 
             //assign states of onbed, sleeping

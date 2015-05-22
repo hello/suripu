@@ -1,7 +1,6 @@
 package com.hello.suripu.algorithm.hmm;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 import java.util.List;
 
@@ -10,10 +9,10 @@ import java.util.List;
  */
 public class DiscreteAlphabetPdf implements HmmPdfInterface {
 
-    @JsonCreator
-    public DiscreteAlphabetPdf(final List<Double> alphabetProbabilties,final int obsNum) {
+    public DiscreteAlphabetPdf(final List<Double> alphabetProbabilties,final int obsNum, final double weight) {
         this.obsNum = obsNum;
         this.probs = new double[alphabetProbabilties.size()];
+        this.weight = weight;
 
         for (int i = 0; i < alphabetProbabilties.size(); i++) {
             this.probs[i] = alphabetProbabilties.get(i);
@@ -34,13 +33,17 @@ public class DiscreteAlphabetPdf implements HmmPdfInterface {
             //god I hope this is its likelihood function
             int idx = (int)col[i];
 
-            result[i] = Math.log(this.probs[idx]);
+            result[i] = weight * Math.log(this.probs[idx]);
+
+            if (Double.isNaN(result[i])) {
+                result[i] = Double.NEGATIVE_INFINITY;
+            }
         }
 
         return result;
     }
 
-    @JsonProperty
     final int obsNum;
     final double [] probs;
+    final double weight;
 }
