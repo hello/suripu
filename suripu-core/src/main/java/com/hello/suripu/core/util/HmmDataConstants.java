@@ -29,7 +29,7 @@ import java.util.TreeSet;
 public class HmmDataConstants {
 
     /*  Sensor data indices */
-    final static public int NUM_DATA_DIMENSIONS = 7;
+    final static public int NUM_DATA_DIMENSIONS = 8;
     final static public int LIGHT_INDEX = 0;
     final static public int MOT_COUNT_INDEX = 1;
     final static public int DISTURBANCE_INDEX = 2;
@@ -37,7 +37,7 @@ public class HmmDataConstants {
     final static public int NATURAL_LIGHT_FILTER_INDEX = 4;
     final static public int PARTNER_MOT_COUNT_INDEX = 5;
     final static public int PARTNER_DISTURBANCE_INDEX = 6;
-
+    final static public int PARTNER_ENERGY_LOG_RATIO_INDEX = 7;
 
 
     /* Sleep depth constants  */
@@ -49,6 +49,7 @@ public class HmmDataConstants {
 
     /* Misc */
     final static public int HEARTBEAT_VALUE = -1; //value for pilldata that is a heartbeat, not an actual measurement
+    final static public int ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION = 1000; //raw counts
 
     /*  some defaults in case of protobuf fail, or a constant is not included  */
     final static public int NUM_MODEL_PARAMS = 50; //probably on the low side now, but oh well.  size of A matrix + num free observation params

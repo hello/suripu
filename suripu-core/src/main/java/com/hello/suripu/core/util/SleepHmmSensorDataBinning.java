@@ -92,7 +92,7 @@ public class SleepHmmSensorDataBinning {
         final int dataLength = (int) (endTimeMillisInUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
         final double[][] data = new double[HmmDataConstants.NUM_DATA_DIMENSIONS][dataLength];
-
+        final double [][] energies = new double [2][dataLength];
         //zero out data
         for (int i = 0; i < HmmDataConstants.NUM_DATA_DIMENSIONS; i++) {
             Arrays.fill(data[i], 0.0);
@@ -140,6 +140,11 @@ public class SleepHmmSensorDataBinning {
             }
 
             addToBin(data, m.timestamp, 1.0, HmmDataConstants.MOT_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+
+            //smear out energies
+            addToBin(energies, m.timestamp + NUMBER_OF_MILLIS_IN_A_MINUTE, value , 0, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp - NUMBER_OF_MILLIS_IN_A_MINUTE, value, 0, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp, value, 0, startTimeMillisInUTC, numMinutesInWindow);
 
         }
 
@@ -238,8 +243,38 @@ public class SleepHmmSensorDataBinning {
 
             addToBin(data, m.timestamp, 1.0, HmmDataConstants.PARTNER_MOT_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
 
+            //smear out energies
+            addToBin(energies, m.timestamp + NUMBER_OF_MILLIS_IN_A_MINUTE, value , 1, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp - NUMBER_OF_MILLIS_IN_A_MINUTE, value, 1, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp, value, 1, startTimeMillisInUTC, numMinutesInWindow);
         }
 
+        //COMPUTE ENERGY RATIOS FOR EACH N MINUTE BIN
+
+        //accumulate
+        double [] energyResult = data[HmmDataConstants.PARTNER_ENERGY_LOG_RATIO_INDEX];
+        for (int t = 0; t < dataLength; t++) {
+
+            double numerator = energies[0][t];
+            double denominator = energies[1][t];
+
+            if (numerator < HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION) {
+                numerator = HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION;
+            }
+
+            if (denominator < HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION) {
+                denominator = HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION;
+            }
+
+            final double ratio = numerator / denominator;
+
+
+            energyResult[t] = Math.log(ratio) / Math.log(2.0);
+
+            if (Double.isNaN(energyResult[t])) {
+                energyResult[t] = 0.0;
+            }
+        }
 
 
         final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
