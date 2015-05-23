@@ -15,9 +15,9 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
+import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
-import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
@@ -37,8 +37,6 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
-import java.util.HashMap;
-import java.util.Map;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -61,7 +59,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -587,14 +587,19 @@ public class DeviceResources {
     public Response setColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                            @PathParam("sense_id") final String senseId,
                            @PathParam("color") final String color){
+
         final Device.Color senseColor = Device.Color.valueOf(color);
-        if(senseColor.equals(Device.Color.BLACK) || senseColor.equals(Device.Color.WHITE)) {
-            senseColorDAO.update(senseId, senseColor.name());
-            return Response.ok().build();
+
+        if (!senseColor.equals(Device.Color.BLACK) && !senseColor.equals(Device.Color.WHITE)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
         }
 
-        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
-
+        if (senseColorDAO.update(senseId, senseColor.name()) == 0) {
+            LOGGER.debug("Cannot update because sense color not found for sense {}, proceed to insert a new entry", senseId);
+            senseColorDAO.saveColorForSense(senseId, senseColor.name());
+        }
+        return Response.noContent().build();
     }
 
     @PUT
