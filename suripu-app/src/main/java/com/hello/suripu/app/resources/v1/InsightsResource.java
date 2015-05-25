@@ -146,8 +146,8 @@ public class InsightsResource extends BaseResource {
 
         final List<TrendGraph> graphs = new ArrayList<>();
 
-        if(isSensorsDBUnavailable(accessToken.accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+        if(isTrendsViewUnavailable(accessToken.accountId)) {
+            LOGGER.warn("TRENDS VIEW UNAVAILABLE FOR USER {}", accessToken.accountId);
             return graphs;
         }
 
