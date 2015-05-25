@@ -34,9 +34,7 @@ import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
-import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
@@ -126,12 +124,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new RecreatePillColorCommand());
         bootstrap.addCommand(new PopulateSleepScoreTable());
         bootstrap.addCommand(new ScanInvalidNightsCommand());
-        bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
-            @Override
-            public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
-                return configuration.getKinesisLoggerConfiguration();
-            }
-        });
     }
 
     @Override

@@ -153,12 +153,6 @@ alarm_db:
   region: us-east-1
   table_name: alarm
 
-kinesis_logger:
-  stream_name: logs
-  enabled : true
-  buffer_size: 100
-  origin: suripu-app
-
 score_threshold : 15 # minutes bucket for sleep-scores
 
 push_notifications:
