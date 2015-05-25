@@ -29,6 +29,9 @@ public class FeatureFlipper {
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
     public final static String SENSORS_DB_UNAVAILABLE = "sensors_db_unavailable";
     public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
+    public final static String VIEW_SENSORS_UNAVAILABLE = "view_sensors_unavailable";
+    public final static String VIEW_TIMELINE_UNAVAILABLE = "view_timeline_unavailable";
+    public final static String VIEW_TRENDS_UNAVAILABLE = "view_trends_unavailable";
     public final static String RING_DURATION_FROM_CONFIG = "ring_duration_from_config";
     public final static String EXTRA_EVENTS = "extra_events";
     public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB = "sense_last_seen_view_dynamodb";
