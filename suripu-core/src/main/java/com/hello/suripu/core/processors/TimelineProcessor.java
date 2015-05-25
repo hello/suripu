@@ -136,7 +136,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
     }
 
-    public boolean shouldProcessTimelineByWorker(final long accountId,
+    public boolean      shouldProcessTimelineByWorker(final long accountId,
                                                  final int maxNoMotionPeriodInMinutes,
                                                  final DateTime currentTime){
         final Optional<TrackerMotion> lastMotion = this.trackerMotionDAO.getLast(accountId);
