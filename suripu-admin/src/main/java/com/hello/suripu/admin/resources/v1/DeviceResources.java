@@ -16,6 +16,8 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.PillViewsDynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
@@ -57,7 +59,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -76,7 +80,9 @@ public class DeviceResources {
     private final JedisPool jedisPool;
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final SenseColorDAO senseColorDAO;
+    private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
     private final PillViewsDynamoDB pillViewsDynamoDB;
+
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDAOAdmin deviceDAOAdmin,
@@ -89,7 +95,9 @@ public class DeviceResources {
                            final JedisPool jedisPool,
                            final PillHeartBeatDAO pillHeartBeatDAO,
                            final SenseColorDAO senseColorDAO,
+                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
                            final PillViewsDynamoDB pillViewsDynamoDB) {
+
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
@@ -101,6 +109,7 @@ public class DeviceResources {
         this.jedisPool = jedisPool;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.senseColorDAO = senseColorDAO;
+        this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
         this.pillViewsDynamoDB = pillViewsDynamoDB;
     }
 
@@ -578,14 +587,41 @@ public class DeviceResources {
     public Response setColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                            @PathParam("sense_id") final String senseId,
                            @PathParam("color") final String color){
+
         final Device.Color senseColor = Device.Color.valueOf(color);
-        if(senseColor.equals(Device.Color.BLACK) || senseColor.equals(Device.Color.WHITE)) {
-            senseColorDAO.update(senseId, senseColor.name());
-            return Response.ok().build();
+
+        if (!senseColor.equals(Device.Color.BLACK) && !senseColor.equals(Device.Color.WHITE)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
         }
 
-        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
+        if (senseColorDAO.update(senseId, senseColor.name()) == 0) {
+            LOGGER.debug("Cannot update because sense color not found for sense {}, proceed to insert a new entry", senseId);
+            senseColorDAO.saveColorForSense(senseId, senseColor.name());
+        }
+        return Response.noContent().build();
+    }
 
+    @PUT
+    @Timed
+    @Path("/{device_id}/reset_mcu")
+    public void resetDeviceToFactoryFW(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                       @PathParam("device_id") final String deviceId,
+                                       @QueryParam("fw_version") final Integer fwVersion) {
+        if(deviceId == null) {
+            LOGGER.error("Missing device_id parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(fwVersion == null) {
+            LOGGER.error("Missing fw_version parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        LOGGER.info("Resetting device: {} on FW Version: {}", deviceId, fwVersion);
+        final Map<ResponseCommand, String> issuedCommands = new HashMap<>();
+        issuedCommands.put(ResponseCommand.RESET_MCU, "true");
+        responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
     }
 
     // Helpers

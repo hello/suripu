@@ -77,6 +77,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
+    public final static int MIN_MOTION_AMPLITUDE = 1000;
 
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
     public final static String ALGORITHM_NAME_VOTING = "voting";
@@ -479,8 +480,27 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         /* add sleep/wake events  */
+
+        // if user feedback available, use them, otherwise stick to times from algorithm
+        Optional<Event> inBedEventOptional = sleepEventsFromAlgorithm.goToBed;
+        Optional<Event> outBedOptional = sleepEventsFromAlgorithm.outOfBed;
+        Optional<Event> sleepEventOptional = sleepEventsFromAlgorithm.fallAsleep;
+        Optional<Event> awakeEventOptional = sleepEventsFromAlgorithm.wakeUp;
+
         for (final Event event : sleepEventsModifiedByFeedback) {
             timelineEvents.put(event.getStartTimestamp(), event);
+
+            // adjust event times to use feedback times
+            if (event.getType() == Event.Type.IN_BED) {
+                inBedEventOptional = Optional.of(event);
+            } else if (event.getType() == Event.Type.OUT_OF_BED) {
+                outBedOptional = Optional.of(event);
+            } else if (event.getType() == Event.Type.SLEEP) {
+                sleepEventOptional = Optional.of(event);
+            } else if (event.getType() == Event.Type.WAKE_UP) {
+                awakeEventOptional = Optional.of(event);
+            }
+            LOGGER.debug("Adding feedback type {}, time {}", event.getType(), event.getStartTimestamp());
         }
 
         /*  add "additional" events -- which is wake/sleep/get up to pee events */
@@ -492,23 +512,30 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
         final List<Event> smoothedEvents = timelineUtils.smoothEvents(eventsWithSleepEvents);
 
+
+        /* clean up timeline */
+
+        // 1. remove motion & null events outside sleep/in-bed period
         List<Event> cleanedUpEvents;
         if (this.hasRemoveMotionEventsOutsideSleep(accountId)) {
             // remove motion events outside of sleep and awake
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents,
-                    sleepEventsFromAlgorithm.fallAsleep,
-                    sleepEventsFromAlgorithm.wakeUp);
+            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideSleep(smoothedEvents, sleepEventOptional, awakeEventOptional);
         } else {
             // remove motion events outside of in-bed and out-bed
-            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents,
-                    sleepEventsFromAlgorithm.goToBed,
-                    sleepEventsFromAlgorithm.outOfBed);
+            cleanedUpEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(smoothedEvents, inBedEventOptional, outBedOptional);
         }
 
+        // 2. Grey out events outside in-bed time
+        final Boolean removeGreyOutEvents = this.hasRemoveGreyOutEvents(accountId); // rm grey events totally
+
         final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(cleanedUpEvents,
-                sleepEventsFromAlgorithm.goToBed,
-                sleepEventsFromAlgorithm.outOfBed);
+                inBedEventOptional, outBedOptional, removeGreyOutEvents);
+
+        // 3. remove non-significant that are more than 1/3 of the entire night's time-span
         final List<Event> nonSignificantFilteredEvents = timelineUtils.removeEventBeforeSignificant(greyEvents);
+
+
+        /* convert valid events to segment, compute sleep stats and score */
 
         final List<SleepSegment> sleepSegments = timelineUtils.eventsToSegments(nonSignificantFilteredEvents);
 
@@ -549,6 +576,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return false;
         }
         if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
+            return false;
+        }
+
+        boolean allLowMotionAmplitude = true;
+        for(final TrackerMotion trackerMotion:motionData){
+            if(trackerMotion.value > MIN_MOTION_AMPLITUDE){
+                allLowMotionAmplitude = false;
+                break;
+            }
+        }
+
+        if(allLowMotionAmplitude && motionData.size() < MIN_TRACKER_MOTION_COUNT){
             return false;
         }
 

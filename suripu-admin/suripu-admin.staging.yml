@@ -97,33 +97,34 @@ redis:
 dynamodb:
   region: us-east-1
   tables:
-    features : features
     alarm_info : alarm_info
-    sense_key_store : key_store
+    features : features
+    firmware_upgrade_path: fw_upgrade_path
+    firmware_versions : firmware_versions_mapping
+    ota_history : ota_history
+    password_reset : password_reset
     pill_key_store : pill_key_store
     pill_last_seen: pill_last_seen
-    password_reset : password_reset
     sense_events : sense_events
-    teams : teams
-    firmware_versions : firmware_versions_mapping
-    sync_response_commands : response_commands
-    ota_history : ota_history
-    firmware_upgrade_path: fw_upgrade_path
-    sense_prefix : sense
+    sense_key_store : key_store
     sense_last_seen : sense_last_seen
+    sense_prefix : sense
+    sync_response_commands : response_commands
+    teams : teams
 
   endpoints:
-      features : http://dynamodb.us-east-1.amazonaws.com
-      alarm_info : http://dynamodb.us-east-1.amazonaws.com
-      sense_key_store : http://dynamodb.us-east-1.amazonaws.com
-      pill_key_store : http://dynamodb.us-east-1.amazonaws.com
-      pill_last_seen : http://dynamodb.us-east-1.amazonaws.com
-      password_reset : http://dynamodb.us-east-1.amazonaws.com
-      sense_events : http://dynamodb.us-east-1.amazonaws.com
-      teams : http://dynamodb.us-east-1.amazonaws.com
-      firmware_versions : http://dynamodb.us-east-1.amazonaws.com
-      sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
-      ota_history : http://dynamodb.us-east-1.amazonaws.com
-      firmware_upgrade_path : http://dynamodb.us-east-1.amazonaws.com
-      sense_prefix : http://dynamodb.us-east-1.amazonaws.com
-      sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
+    alarm_info : http://dynamodb.us-east-1.amazonaws.com
+    features : http://dynamodb.us-east-1.amazonaws.com
+    firmware_upgrade_path : http://dynamodb.us-east-1.amazonaws.com
+    firmware_versions : http://dynamodb.us-east-1.amazonaws.com
+    ota_history : http://dynamodb.us-east-1.amazonaws.com
+    password_reset : http://dynamodb.us-east-1.amazonaws.com
+    pill_key_store : http://dynamodb.us-east-1.amazonaws.com
+    pill_last_seen : http://dynamodb.us-east-1.amazonaws.com
+    sense_events : http://dynamodb.us-east-1.amazonaws.com
+    sense_key_store : http://dynamodb.us-east-1.amazonaws.com
+    sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
+    sense_prefix : http://dynamodb.us-east-1.amazonaws.com
+    sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
+    teams : http://dynamodb.us-east-1.amazonaws.com
+

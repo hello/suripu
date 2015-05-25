@@ -2,14 +2,18 @@ package com.hello.suripu.workers.timeline;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.UserInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +23,6 @@ import java.util.Set;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Created by pangwu on 1/29/15.
@@ -51,18 +54,31 @@ public class BatchProcessUtilsTest {
 
         final long accountId = 1L;
 
-        when(deviceDAO.getLinkedAccountFromPillId(pillId1)).thenReturn(getDevice(accountId, 2L, pillId1));
-        when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(getDevice(accountId, 3L, sensId));
-
-        when(mergedUserInfoDynamoDB.getTimezone(sensId, accountId)).thenReturn(Optional.of(DateTimeZone.forID("America/Los_Angeles")));
+        final Map<Long, UserInfo> accountIdUserInfoMap = getAccountIdUserInfoMap(sensId, accountId, DateTimeZone.forID("America/Los_Angeles"));
+        final Map<String, List<DeviceAccountPair>> pillIdLinkedAccountPairs = getPillIdLinkedAccountsMap(pillId1, 2L, accountId);
 
         final Map<Long, Set<DateTime>> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndExpireDateLocalUTC(groupedPillIds,
-                this.deviceDAO,
-                this.mergedUserInfoDynamoDB);
+                accountIdUserInfoMap,
+                pillIdLinkedAccountPairs);
 
         assertThat(groupedtargetDateLocalUTC.containsKey(accountId), is(true));
         assertThat(groupedtargetDateLocalUTC.get(accountId).contains(new DateTime(2015, 1, 19, 0, 0, DateTimeZone.UTC)), is(true));
         assertThat(groupedtargetDateLocalUTC.get(accountId).contains(new DateTime(2015, 1, 20, 0, 0, DateTimeZone.UTC)), is(true));
+    }
+
+    private Map<String, List<DeviceAccountPair>> getPillIdLinkedAccountsMap(final String pillId, final long internalPillId, final Long accountId){
+        final Map<String, List<DeviceAccountPair>> pillIdLinkedAccountPairs = new HashMap<>();
+        pillIdLinkedAccountPairs.put(pillId, getDevice(accountId, internalPillId, pillId));
+        return pillIdLinkedAccountPairs;
+    }
+
+    private Map<Long, UserInfo> getAccountIdUserInfoMap(final String senseId, final Long accountId, final DateTimeZone timeZone){
+        final UserInfo userInfo = new UserInfo(senseId, accountId, Collections.EMPTY_LIST, Optional.<RingTime>absent(),
+                Optional.fromNullable(timeZone), Optional.<OutputProtos.SyncResponse.PillSettings>absent(),
+                0);
+        final Map<Long, UserInfo> accountIdUserInfoMap = new HashMap<>();
+        accountIdUserInfoMap.put(accountId, userInfo);
+        return accountIdUserInfoMap;
     }
 
 
@@ -76,15 +92,15 @@ public class BatchProcessUtilsTest {
         final String sensId = "Sense";
         groupedPillIds.put(pillId1, targetDatesUTC);
         final long accountId = 1L;
-        when(deviceDAO.getLinkedAccountFromPillId(pillId1)).thenReturn(getDevice(accountId, 2L, pillId1));
-        when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(getDevice(accountId, 3L, sensId));
-        when(mergedUserInfoDynamoDB.getTimezone(sensId, accountId)).thenReturn(Optional.of(DateTimeZone.UTC));
+        final Map<Long, UserInfo> accountIdUserInfoMap = getAccountIdUserInfoMap(sensId, accountId, DateTimeZone.UTC);
+        final Map<String, List<DeviceAccountPair>> pillIdLinkedAccountPairs = getPillIdLinkedAccountsMap(pillId1, 2L, accountId);
+
         final Map<Long, Set<DateTime>> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
                 5,
                 11,
                 new DateTime(2015, 1, 20, 20, 1, DateTimeZone.UTC),
-                this.deviceDAO,
-                this.mergedUserInfoDynamoDB);
+                accountIdUserInfoMap,
+                pillIdLinkedAccountPairs);
         assertThat(groupedtargetDateLocalUTC.containsKey(accountId), is(false));
     }
 
@@ -99,16 +115,15 @@ public class BatchProcessUtilsTest {
         groupedPillIds.put(pillId1, targetDatesUTC);
         final long accountId = 1L;
 
-        when(deviceDAO.getLinkedAccountFromPillId(pillId1)).thenReturn(getDevice(accountId, 2L, pillId1));
-        when(deviceDAO.getSensesForAccountId(accountId)).thenReturn(getDevice(accountId, 3L, sensId));
-        when(mergedUserInfoDynamoDB.getTimezone(sensId, accountId)).thenReturn(Optional.of(DateTimeZone.UTC));
+        final Map<Long, UserInfo> accountIdUserInfoMap = getAccountIdUserInfoMap(sensId, accountId, DateTimeZone.UTC);
+        final Map<String, List<DeviceAccountPair>> pillIdLinkedAccountPairs = getPillIdLinkedAccountsMap(pillId1, 2L, accountId);
 
         final Map<Long, Set<DateTime>> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndProcessDateLocalUTC(groupedPillIds,
                 5,
                 11,
                 new DateTime(2015, 1, 20, 10, 1, DateTimeZone.UTC),
-                this.deviceDAO,
-                this.mergedUserInfoDynamoDB);
+                accountIdUserInfoMap,
+                pillIdLinkedAccountPairs);
         assertThat(groupedtargetDateLocalUTC.containsKey(accountId), is(true));
         assertThat(groupedtargetDateLocalUTC.get(accountId).contains(new DateTime(2015, 1, 19, 0, 0, DateTimeZone.UTC)), is(true));
     }

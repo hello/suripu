@@ -29,7 +29,7 @@ sensors_db:
   minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 24
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false

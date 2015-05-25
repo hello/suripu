@@ -79,3 +79,4 @@ dynamodb:
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
 
+

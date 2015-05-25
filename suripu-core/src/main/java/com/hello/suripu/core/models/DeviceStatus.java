@@ -21,4 +21,9 @@ public class DeviceStatus {
         this.uptime = uptime;
     }
 
+
+    public static DeviceStatus sense(final Long deviceId, final String firmwareVersion, final DateTime lastSeen) {
+        return new DeviceStatus(0L, deviceId, firmwareVersion, 100, lastSeen, 0);
+    }
+
 }
