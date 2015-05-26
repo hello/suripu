@@ -14,6 +14,7 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.UserInfo;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,6 +146,10 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
         final Map<Long, Set<DateTime>> groupedAccountIdAndExpiredTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndExpireDateLocalUTC(
                 pillIdTargetDatesMapByData,
+                this.configuration.getEarliestProcessTime(),
+                this.configuration.getLastProcessTime(),
+                DateTime.now(),
+                this.flipper,
                 accountIdUserInfoMap,
                 pillIdPairedAccountsMap);
 
@@ -166,6 +172,10 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private void batchProcess(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap){
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
             for(final DateTime targetDateLocalUTC:groupedAccountIdTargetDateLocalUTCMap.get(accountId)) {
+                if(this.flipper.userFeatureActive(FeatureFlipper.STOP_PROCESS_TIMELINE_FROM_WORKER, accountId, Collections.EMPTY_LIST)){
+                    continue;
+                }
+
                 try {
                     final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC);
                     if(!result.isPresent()){
