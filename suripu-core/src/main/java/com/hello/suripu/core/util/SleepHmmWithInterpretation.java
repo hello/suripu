@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -271,13 +272,28 @@ CREATE CREATE CREATE
         int numMinutesInMeasPeriod = bestModel.numMinutesInMeasPeriod;
 
         //extract set boundaries as pairs of indices (i1,i2)
+
+        final  ImmutableList<SegmentPair> sleepBoundaries = getSetBoundaries(bestResult.bestPath, bestModel.sleepStates);
+        final  ImmutableList<SegmentPair> conditionalSleepBoundaries = getSetBoundaries(bestResult.bestPath, bestModel.conditionalSleepStates);
+
+        //merge conditional sleep boundaries.  if conditional sleep is surrounded by sleep, it becomes sleep.
+        final  ImmutableList<SegmentPair> mergedSleepBoundaries = mergeConditionalAndUnconditionalPairs(sleepBoundaries,conditionalSleepBoundaries);
+
+
+        final  ImmutableList<SegmentPair> bedBoundaries = getSetBoundaries(bestResult.bestPath, bestModel.onBedStates);
+        final  ImmutableList<SegmentPair> conditionalBedBoundaries = getSetBoundaries(bestResult.bestPath, bestModel.conditionalBedStates);
+
+        //merge conditional bed boundaries.  if conditional bed is surrounded by bed, it becomes bed.
+        final  ImmutableList<SegmentPair> mergedBedBoundaries = mergeConditionalAndUnconditionalPairs(bedBoundaries, conditionalBedBoundaries);
+
+
         //merge pairs that are close together, keeping track of the gaps
         //then filter out the remaining pairs that are too small in duration (i2 - i1)
         ImmutableList<SegmentPairWithGaps> sleep = filterSleepSegmentPairsByHeuristic(
-                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / bestModel.numMinutesInMeasPeriod));
+                mindTheGapsAndJoinPairs(mergedSleepBoundaries,MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / bestModel.numMinutesInMeasPeriod));
 
         ImmutableList<SegmentPairWithGaps> onBed = filterSegmentPairsByDuration(
-                mindTheGapsAndJoinPairs(getSetBoundaries(bestResult.bestPath, bestModel.onBedStates),MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES/ bestModel.numMinutesInMeasPeriod),
+                mindTheGapsAndJoinPairs(mergedBedBoundaries,MAX_ALLOWABLE_ONBED_GAP_IN_MINUTES/ bestModel.numMinutesInMeasPeriod),
                 MIN_DURATION_OF_ONBED_SEGMENT_IN_MINUTES / bestModel.numMinutesInMeasPeriod);
 
         //split into pure pairs (i.e. just a list of pairs)
@@ -800,7 +816,7 @@ CREATE CREATE CREATE
         }
         
 
-        return Optional.of(new SleepHmmResult(path,ImmutableList.copyOf(events)));
+        return Optional.of(new SleepHmmResult(path, ImmutableList.copyOf(events)));
 
 
     }
@@ -868,6 +884,87 @@ CREATE CREATE CREATE
 
         return ImmutableList.copyOf(filteredResults);
 
+    }
+
+    static public ImmutableList<SegmentPair> mergeConditionalAndUnconditionalPairs(final ImmutableList<SegmentPair> unconditionalBoundaries, final ImmutableList<SegmentPair> conditionalBoundaries) {
+
+        List<SegmentPair> merged = new ArrayList<>();
+        Iterator<SegmentPair> iUnconditional = unconditionalBoundaries.iterator();
+        Iterator<SegmentPair> iConditional = conditionalBoundaries.iterator();
+
+
+
+        if (!iConditional.hasNext() || !iUnconditional.hasNext()) {
+            return unconditionalBoundaries;
+        }
+
+        SegmentPair uncondpair = iUnconditional.next();
+        SegmentPair condpair = iConditional.next();
+
+
+
+
+        while (iUnconditional.hasNext() && iConditional.hasNext()) {
+
+
+
+            if (uncondpair.i1 > condpair.i2) {
+                condpair = iConditional.next();
+
+                //if this was the last cond pair, then we need to save off the last uncond pair
+                if (condpair == null) {
+                    merged.add(uncondpair);
+                }
+            }
+            else if (condpair.i1 > uncondpair.i2) {
+                //if you have sleep -- cond -- sleep, turn the interpret the conditional pair as being legitimate (i.e. save it off)
+
+                //first off, we are going to go to the next sleep pair here, so save off the current one
+                merged.add(uncondpair);
+
+                //get the next
+                SegmentPair sleeppair2 = iUnconditional.next();
+
+                //if the previous unconditional pair borders the cond pair
+                if (uncondpair.i2 == condpair.i1 - 1) {
+
+                    //if there was a next unconditional pair
+                    if (sleeppair2 != null) {
+
+                        //and if it borders the cond pair
+                        if (sleeppair2.i1 == condpair.i2 + 1) {
+
+                            //save off the cond pair
+                            merged.add(condpair);
+                        }
+                    }
+                    else {
+                        //last one?  merge it
+                        merged.add(condpair);
+                    }
+
+
+                }
+
+                uncondpair = sleeppair2;
+            }
+            else {
+                //should never get here
+                LOGGER.warn("merging of conditional segments were not sequential or overlapped");
+                break;
+            }
+
+
+
+        }
+
+        //save off the remaining uncoditional pairs
+        while (iUnconditional.hasNext()) {
+            merged.add(iUnconditional.next());
+        }
+
+
+        return ImmutableList.copyOf(merged);
     }
 
     //Returns the boundary indices (i.e. a segment) that is in the int array

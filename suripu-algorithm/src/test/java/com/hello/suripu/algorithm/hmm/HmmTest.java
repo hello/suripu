@@ -152,7 +152,7 @@ public class HmmTest {
         for (int j = 0; j < numStates; j++) {
             PdfComposite c = new PdfComposite();
             for (int i = 0; i < numObsModelsPerState; i++) {
-                c.addPdf(new PoissonPdf(poissonMeans[j][i],i));
+                c.addPdf(new PoissonPdf(poissonMeans[j][i],i,1.0));
             }
 
             models[j] = c;
