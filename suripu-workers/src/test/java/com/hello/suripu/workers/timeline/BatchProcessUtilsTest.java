@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
+import com.librato.rollout.RolloutClient;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
@@ -58,6 +59,10 @@ public class BatchProcessUtilsTest {
         final Map<String, List<DeviceAccountPair>> pillIdLinkedAccountPairs = getPillIdLinkedAccountsMap(pillId1, 2L, accountId);
 
         final Map<Long, Set<DateTime>> groupedtargetDateLocalUTC = BatchProcessUtils.groupAccountAndExpireDateLocalUTC(groupedPillIds,
+                5,
+                12,
+                new DateTime(2015, 1, 19, 0, 0, DateTimeZone.UTC),
+                mock(RolloutClient.class),
                 accountIdUserInfoMap,
                 pillIdLinkedAccountPairs);
 
