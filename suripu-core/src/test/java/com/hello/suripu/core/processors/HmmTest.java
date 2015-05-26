@@ -10,6 +10,8 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.HmmDeserialization;
+import com.hello.suripu.core.util.SegmentPair;
+import com.hello.suripu.core.util.SleepHmmSegmentProcessing;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import junit.framework.TestCase;
 import org.apache.commons.codec.binary.Base64;
@@ -148,7 +150,7 @@ public class HmmTest {
 
         final Optional<SleepHmmWithInterpretation>  hmm = myDAO.getLatestModelForDate(0,0);
 
-        ImmutableList<SleepHmmWithInterpretation.SegmentPair> sleeps = hmm.get().testDecodeWithData(sensordata);
+        ImmutableList<SegmentPair> sleeps = hmm.get().testDecodeWithData(sensordata);
 
         TestCase.assertTrue(sleeps.size() == 1);
 
@@ -157,16 +159,16 @@ public class HmmTest {
 
     @Test
     public void TestHmmEventProcessing() {
-        final List<SleepHmmWithInterpretation.SegmentPair> sleeps = new ArrayList<>();
-        final List<SleepHmmWithInterpretation.SegmentPair> beds = new ArrayList<>();
+        final List<SegmentPair> sleeps = new ArrayList<>();
+        final List<SegmentPair> beds = new ArrayList<>();
 
-        sleeps.add (new SleepHmmWithInterpretation.SegmentPair(10,20));
-        sleeps.add (new SleepHmmWithInterpretation.SegmentPair(36,42));
+        sleeps.add (new SegmentPair(10,20));
+        sleeps.add (new SegmentPair(36,42));
 
-        beds .add(new SleepHmmWithInterpretation.SegmentPair(5, 8));
-        beds .add(new SleepHmmWithInterpretation.SegmentPair(9,23));
-        beds .add(new SleepHmmWithInterpretation.SegmentPair(35,45));
-        beds .add(new SleepHmmWithInterpretation.SegmentPair(48,50));
+        beds .add(new SegmentPair(5, 8));
+        beds .add(new SegmentPair(9,23));
+        beds .add(new SegmentPair(35,45));
+        beds .add(new SegmentPair(48,50));
 
         final SleepHmmWithInterpretation.TimeIndexInfo timeIndexInfo = new SleepHmmWithInterpretation.TimeIndexInfo(15,0,0);
 
@@ -202,6 +204,42 @@ public class HmmTest {
         TestCase.assertEquals(numOutOfBeds, 2);
         TestCase.assertEquals(numWakes, 2);
         TestCase.assertEquals(numSleeps, 2);
+
+
+
+    }
+
+    @Test
+    public void TestConditionalHmmEventProcessing() {
+        final List<SegmentPair> sleeps = new ArrayList<>();
+        final List<SegmentPair> condSleeps = new ArrayList<>();
+
+        final List<SegmentPair> beds = new ArrayList<>();
+        final List<SegmentPair> condBeds = new ArrayList<>();
+
+        sleeps.add (new SegmentPair(10,13));
+        sleeps.add(new SegmentPair(18, 20));
+        sleeps.add(new SegmentPair(36, 42));
+
+        condSleeps.add(new SegmentPair(8, 9)); //beginning -- to be ignored
+        condSleeps.add (new SegmentPair(14,17)); //middle
+        condSleeps.add(new SegmentPair(21, 22)); //end --to be ignored
+
+
+
+
+        final ImmutableList<SegmentPair> mergedSleeps = SleepHmmSegmentProcessing.mergeConditionalAndUnconditionalPairs(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(condSleeps));
+
+
+
+        TestCase.assertEquals(10,mergedSleeps.get(0).i1);
+        TestCase.assertEquals(20,mergedSleeps.get(0).i2);
+
+        TestCase.assertEquals(36,mergedSleeps.get(1).i1);
+        TestCase.assertEquals(42,mergedSleeps.get(1).i2);
+
+
+
 
 
 
