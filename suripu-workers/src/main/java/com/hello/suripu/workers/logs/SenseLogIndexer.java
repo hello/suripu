@@ -111,7 +111,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             }
             catch (Exception e) {
                 newIndex = senseLogBackupIndex;
-                LOGGER.error("Failed to create new index because " + e.getMessage());
+                LOGGER.error("Failed to create new index because {} ", e.getMessage());
             }
             indexes.put(batchLog.createdDateString, newIndex);
         }
