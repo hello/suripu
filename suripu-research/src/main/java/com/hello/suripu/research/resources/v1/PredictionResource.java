@@ -367,9 +367,12 @@ public class PredictionResource extends BaseResource {
         final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
 
         if (deviceId.isPresent()) {
-            allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
-                    targetDate.getMillis(), endDate.getMillis(),
-                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE);
+            final int tzOffsetMillis = myMotions.get(0).offsetMillis;
+            allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                    endDate.minusMillis(tzOffsetMillis).getMillis(),
+                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE
+            );
         }
 
          /*  pull out algorithm type */
