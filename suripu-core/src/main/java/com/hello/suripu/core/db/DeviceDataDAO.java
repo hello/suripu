@@ -105,6 +105,7 @@ public abstract class DeviceDataDAO {
     @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id and ts > now() - interval '1 hours' ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceStatus> senseStatusLastHour(@Bind("sense_id") final Long senseId);
 
+    @Deprecated
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND local_utc_ts >= :start_timestamp AND local_utc_ts <= :end_timestamp ORDER BY ts ASC")
     public abstract ImmutableList<DeviceData> getBetweenByLocalTime(
