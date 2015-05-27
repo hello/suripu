@@ -41,7 +41,9 @@ import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
+import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
+import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -58,6 +60,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by pangwu on 6/5/14.
@@ -67,6 +70,8 @@ public class TimelineDAODynamoDB {
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
+    private final Meter timelineExpiredAtRequestMeter;
+    private final Meter timelineNotExpiredAtRequestMeter;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
 
@@ -99,6 +104,11 @@ public class TimelineDAODynamoDB {
         mapper.registerModule(new JodaModule());
 
         this.maxBackTrackDays = maxBackTrackDays;
+
+        this.timelineExpiredAtRequestMeter = Metrics.defaultRegistry().newMeter(TimelineDAODynamoDB.class,
+                "timelines-expired-at-request", "timelines-expired-at-request", TimeUnit.SECONDS);
+        this.timelineNotExpiredAtRequestMeter = Metrics.defaultRegistry().newMeter(TimelineDAODynamoDB.class,
+                "cache-hits-at-request", "cache-hits-at-request", TimeUnit.SECONDS);
     }
 
     @Timed
@@ -113,7 +123,7 @@ public class TimelineDAODynamoDB {
         return Optional.absent();
     }
 
-    public static Map<DateTime, TimelineResult> filterExpiredCache(final ImmutableMap<Long, CachedTimelines> dataFromCache,
+    private Map<DateTime, TimelineResult> filterExpiredCache(final ImmutableMap<Long, CachedTimelines> dataFromCache,
                                                                             final Map<Long, DateTime> requestDatesLocalUTCMillis,
                                                                             final DateTime now,
                                                                             final int maxInvalidateSpanInDay){
@@ -122,10 +132,12 @@ public class TimelineDAODynamoDB {
             if(requestDatesLocalUTCMillis.containsKey(timelineDateLocalUTCMillis)){
                 final DateTime requestDateLocalUTC = requestDatesLocalUTCMillis.get(timelineDateLocalUTCMillis);
                 if(dataFromCache.get(timelineDateLocalUTCMillis).shouldInvalidate(TimelineProcessor.VERSION, new DateTime(timelineDateLocalUTCMillis, DateTimeZone.UTC), now, maxInvalidateSpanInDay)){
+                    this.timelineExpiredAtRequestMeter.mark();
                     continue;  // Do not return out-dated timeline from dynamoDB.
                 }
 
                 finalResultMap.put(requestDateLocalUTC, dataFromCache.get(timelineDateLocalUTCMillis).result);
+                this.timelineNotExpiredAtRequestMeter.mark();
             }
         }
 
