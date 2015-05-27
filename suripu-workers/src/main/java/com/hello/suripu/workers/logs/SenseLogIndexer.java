@@ -1,7 +1,10 @@
 package com.hello.suripu.workers.logs;
 
+import com.flaptor.indextank.apiclient.IndexAlreadyExistsException;
 import com.flaptor.indextank.apiclient.IndexDoesNotExistException;
 import com.flaptor.indextank.apiclient.IndexTankClient;
+import com.flaptor.indextank.apiclient.MaximumIndexesExceededException;
+import com.flaptor.indextank.apiclient.UnexpectedCodeException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -20,6 +23,7 @@ import java.util.Map;
 public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLogIndexer.class);
+    private final static Integer INDEX_CREATION_DELAY = 1000;
 
     private final IndexTankClient indexTankClient;
     private final String senseLogIndexPrefix;
@@ -93,7 +97,10 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             LOGGER.error("Failed connecting to searchify: {}", e.getMessage());
         } catch(IndexOutOfBoundsException e) {
             LOGGER.error("Searchify client error: {}", e.getMessage());
+        } catch (UnexpectedCodeException e) {
+            LOGGER.error("Unexpected: {}", e.getMessage());
         }
+
 
         return 0;
     }
@@ -105,13 +112,39 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         documents.addAll(batchLog.documents);
 
         if (!indexes.containsKey(batchLog.createdDateString)){
-            IndexTankClient.Index newIndex;
+            IndexTankClient.Index newIndex = senseLogBackupIndex;
+            final String indexName = senseLogIndexPrefix + batchLog.createdDateString;
             try {
-                newIndex = indexTankClient.createIndex(senseLogIndexPrefix + batchLog.createdDateString);
+                newIndex = indexTankClient.createIndex(indexName);
+                Integer waitSeconds = 0;
+                while (!isIndexReady(newIndex)) {
+                    waitSeconds +=  INDEX_CREATION_DELAY/1000;
+                    LOGGER.warn("Index is not ready, has been waiting for {} seconds", waitSeconds);
+                    if (waitSeconds >= 121) {
+                        LOGGER.error("Stop waiting on index creation. Opting out");
+                        System.exit(1);
+                    }
+                    try {
+                        Thread.sleep(INDEX_CREATION_DELAY);
+                    }
+                    catch (InterruptedException e) {
+                        LOGGER.error("interrupted");
+                    }
+                }
+                LOGGER.info("Index is ready to serve!");
             }
-            catch (Exception e) {
-                newIndex = senseLogBackupIndex;
-                LOGGER.error("Failed to create new index because {} ", e.getMessage());
+            catch (IndexAlreadyExistsException indexAlreadyExistsException) {
+                LOGGER.info("Index {} already existed", indexName);
+                newIndex = indexTankClient.getIndex(indexName);
+            }
+            catch (MaximumIndexesExceededException e) {
+                LOGGER.error("Failed to create new index {} because {} ", indexName, e.getMessage());
+            }
+            catch (IOException e) {
+                LOGGER.error("Failed to create new index {} because {} ", indexName, e.getMessage());
+            }
+            catch (UnexpectedCodeException e) {
+                LOGGER.error("Failed to create new index {} because {}", indexName, e.getMessage());
             }
             indexes.put(batchLog.createdDateString, newIndex);
         }
@@ -127,4 +160,25 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         }
     }
 
+    private Boolean isIndexReady(final IndexTankClient.Index index) {
+        try {
+            index.refreshMetadata();
+            if (index.getMetadata().get("started") == null) {
+                return Boolean.FALSE;
+            }
+            return (Boolean)index.getMetadata().get("started");
+        }
+        catch (IndexDoesNotExistException e) {
+            LOGGER.error("Error when check index readiness {}", e.getMessage());
+            return Boolean.FALSE;
+        }
+        catch (IOException e) {
+            LOGGER.error("Error when check index readiness {}", e.getMessage());
+            return Boolean.FALSE;
+        }
+        catch (UnexpectedCodeException e) {
+            LOGGER.error("Error when check index readiness {}", e.getMessage());
+            return Boolean.FALSE;
+        }
+    }
 }
