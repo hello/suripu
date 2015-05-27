@@ -160,20 +160,25 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         }
     }
 
-    private Boolean isIndexReady(IndexTankClient.Index index) {
+    private Boolean isIndexReady(final IndexTankClient.Index index) {
         try {
             index.refreshMetadata();
-            return index.getMetadata().get("started") != null && index.getMetadata().get("started").equals(true);
+            if (index.getMetadata().get("started") == null) {
+                return Boolean.FALSE;
+            }
+            return (Boolean)index.getMetadata().get("started");
         }
         catch (IndexDoesNotExistException e) {
+            LOGGER.error("Error when check index readiness {}", e.getMessage());
             return Boolean.FALSE;
         }
         catch (IOException e) {
+            LOGGER.error("Error when check index readiness {}", e.getMessage());
             return Boolean.FALSE;
         }
         catch (UnexpectedCodeException e) {
+            LOGGER.error("Error when check index readiness {}", e.getMessage());
             return Boolean.FALSE;
         }
-
     }
 }
