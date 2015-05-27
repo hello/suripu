@@ -360,6 +360,15 @@ public class DeviceResources {
             final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
             this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accountId, pillRegistration.pillId);
 
+            final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getInternalPillId(pillRegistration.pillId);
+
+            if (!deviceAccountPairOptional.isPresent()){
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(400, String.format("Pill %s not found!", pillRegistration.pillId))).build());
+            }
+
+            this.pillHeartBeatDAO.insert(deviceAccountPairOptional.get().internalDeviceId, 99, 0, 0, DateTime.now(DateTimeZone.UTC));
+
             return;
         } catch (UnableToExecuteStatementException exception) {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
@@ -634,7 +643,13 @@ public class DeviceResources {
             if (!senseStatusOptional.isPresent()) {
                 senseStatusOptional = this.deviceDataDAO.senseStatus(senseAccountPair.internalDeviceId);
             }
-            senses.add(new DeviceAdmin(senseAccountPair, senseStatusOptional.orNull()));
+            if (!senseStatusOptional.isPresent()){
+                senses.add(DeviceAdmin.create(senseAccountPair));
+            }
+            else {
+                senses.add(DeviceAdmin.create(senseAccountPair, senseStatusOptional.get()));
+            }
+
         }
         return senses;
     }
@@ -648,7 +663,12 @@ public class DeviceResources {
             if (!pillStatusOptional.isPresent()){
                 pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
             }
-            pills.add(new DeviceAdmin(pillAccountPair, pillStatusOptional.orNull()));
+            if (!pillStatusOptional.isPresent()){
+                pills.add(DeviceAdmin.create(pillAccountPair));
+            }
+            else {
+                pills.add(DeviceAdmin.create(pillAccountPair, pillStatusOptional.get()));
+            }
         }
         return pills;
     }
