@@ -84,21 +84,6 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     public Integer index() {
         try {
             if (!documents.isEmpty()) {
-                Integer waitSeconds = 0;
-                while (!index.hasStarted() && waitSeconds < 121) {
-                    waitSeconds +=  INDEX_CREATION_DELAY/1000;
-                    LOGGER.warn("Index is not ready, has been waiting for {} seconds", waitSeconds);
-                    try {
-                        Thread.sleep(INDEX_CREATION_DELAY);
-                    }
-                    catch (InterruptedException e) {
-                        LOGGER.error("interrupted");
-                    }
-                }
-                if (waitSeconds == 121) {
-                    LOGGER.error("Stop waiting on index creation. Opting out");
-                    System.exit(1);
-                }
                 index.addDocuments(ImmutableList.copyOf(documents));
                 final Integer count = documents.size();
                 LOGGER.info("Indexed {} documents", count);
@@ -116,6 +101,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             LOGGER.error("Unexpected: {}", e.getMessage());
         }
 
+
         return 0;
     }
 
@@ -130,6 +116,22 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             final String indexName = senseLogIndexPrefix + batchLog.createdDateString;
             try {
                 newIndex = indexTankClient.createIndex(indexName);
+                Integer waitSeconds = 0;
+                while (!isIndexReady(newIndex)) {
+                    waitSeconds +=  INDEX_CREATION_DELAY/1000;
+                    LOGGER.warn("Index is not ready, has been waiting for {} seconds", waitSeconds);
+                    if (waitSeconds >= 121) {
+                        LOGGER.error("Stop waiting on index creation. Opting out");
+                        System.exit(1);
+                    }
+                    try {
+                        Thread.sleep(INDEX_CREATION_DELAY);
+                    }
+                    catch (InterruptedException e) {
+                        LOGGER.error("interrupted");
+                    }
+                }
+                LOGGER.info("Index is ready to serve!");
             }
             catch (IndexAlreadyExistsException indexAlreadyExistsException) {
                 LOGGER.info("Index {} already existed", indexName);
@@ -158,4 +160,20 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         }
     }
 
+    private Boolean isIndexReady(IndexTankClient.Index index) {
+        try {
+            index.refreshMetadata();
+            return index.getMetadata().get("started") != null && index.getMetadata().get("started").equals(true);
+        }
+        catch (IndexDoesNotExistException e) {
+            return Boolean.FALSE;
+        }
+        catch (IOException e) {
+            return Boolean.FALSE;
+        }
+        catch (UnexpectedCodeException e) {
+            return Boolean.FALSE;
+        }
+
+    }
 }
