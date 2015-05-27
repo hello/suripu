@@ -4,6 +4,7 @@ import com.flaptor.indextank.apiclient.IndexAlreadyExistsException;
 import com.flaptor.indextank.apiclient.IndexDoesNotExistException;
 import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.flaptor.indextank.apiclient.MaximumIndexesExceededException;
+import com.flaptor.indextank.apiclient.UnexpectedCodeException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLogIndexer.class);
+    private final static Integer INDEX_CREATION_DELAY = 1000;
 
     private final IndexTankClient indexTankClient;
     private final String senseLogIndexPrefix;
@@ -82,6 +84,21 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     public Integer index() {
         try {
             if (!documents.isEmpty()) {
+                Integer waitSeconds = 0;
+                while (!index.hasStarted() && waitSeconds < 121) {
+                    waitSeconds +=  INDEX_CREATION_DELAY/1000;
+                    LOGGER.warn("Index is not ready, has been waiting for {} seconds", waitSeconds);
+                    try {
+                        Thread.sleep(INDEX_CREATION_DELAY);
+                    }
+                    catch (InterruptedException e) {
+                        LOGGER.error("interrupted");
+                    }
+                }
+                if (waitSeconds == 121) {
+                    LOGGER.error("Stop waiting on index creation. Opting out");
+                    System.exit(1);
+                }
                 index.addDocuments(ImmutableList.copyOf(documents));
                 final Integer count = documents.size();
                 LOGGER.info("Indexed {} documents", count);
@@ -95,7 +112,10 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             LOGGER.error("Failed connecting to searchify: {}", e.getMessage());
         } catch(IndexOutOfBoundsException e) {
             LOGGER.error("Searchify client error: {}", e.getMessage());
+        } catch (UnexpectedCodeException e) {
+            LOGGER.error("Unexpected: {}", e.getMessage());
         }
+
         return 0;
     }
 
@@ -106,7 +126,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         documents.addAll(batchLog.documents);
 
         if (!indexes.containsKey(batchLog.createdDateString)){
-            IndexTankClient.Index newIndex;
+            IndexTankClient.Index newIndex = senseLogBackupIndex;
             final String indexName = senseLogIndexPrefix + batchLog.createdDateString;
             try {
                 newIndex = indexTankClient.createIndex(indexName);
@@ -115,15 +135,15 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
                 LOGGER.info("Index {} already existed", indexName);
                 newIndex = indexTankClient.getIndex(indexName);
             }
-            catch (MaximumIndexesExceededException maximumIndexesExceededException) {
-                newIndex = senseLogBackupIndex;
-                LOGGER.error("Failed to create new index {} because {} ", indexName, maximumIndexesExceededException.getMessage());
+            catch (MaximumIndexesExceededException e) {
+                LOGGER.error("Failed to create new index {} because {} ", indexName, e.getMessage());
             }
-            catch (IOException ioeException) {
-                newIndex = senseLogBackupIndex;
-                LOGGER.error("Failed to create new index {} because {} ", indexName, ioeException.getMessage());
+            catch (IOException e) {
+                LOGGER.error("Failed to create new index {} because {} ", indexName, e.getMessage());
             }
-
+            catch (UnexpectedCodeException e) {
+                LOGGER.error("Failed to create new index {} because {}", indexName, e.getMessage());
+            }
             indexes.put(batchLog.createdDateString, newIndex);
         }
         index = indexes.get(batchLog.createdDateString);
