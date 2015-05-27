@@ -61,7 +61,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("half_date", halfDateString);
             fields.put("date", dateString);
             fields.put("all", "1");
-
+            fields.put("alarm_ringing", String.valueOf(log.getMessage().contains("ALARM RINGING")));
 
             createdDateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
 
