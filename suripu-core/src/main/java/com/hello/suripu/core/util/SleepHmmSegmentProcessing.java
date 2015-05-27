@@ -138,7 +138,7 @@ public class SleepHmmSegmentProcessing {
             //anything that didn't match the above pattern but is unconditional
             //keep it
             if (states.getFirst().condition == false) {
-                merged.add(seg.seg);
+                merged.add(states.getFirst().seg);
             }
 
             states.removeFirst();

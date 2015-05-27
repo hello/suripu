@@ -210,19 +210,16 @@ public class HmmTest {
     }
 
     @Test
-    public void TestConditionalHmmEventProcessing() {
+    public void TestConditionalHmmEventProcessing1() {
         final List<SegmentPair> sleeps = new ArrayList<>();
         final List<SegmentPair> condSleeps = new ArrayList<>();
-
-        final List<SegmentPair> beds = new ArrayList<>();
-        final List<SegmentPair> condBeds = new ArrayList<>();
 
         sleeps.add (new SegmentPair(10,13));
         sleeps.add(new SegmentPair(18, 20));
         sleeps.add(new SegmentPair(36, 42));
 
         condSleeps.add(new SegmentPair(8, 9)); //beginning -- to be ignored
-        condSleeps.add (new SegmentPair(14,17)); //middle
+        condSleeps.add(new SegmentPair(14, 17)); //middle
         condSleeps.add(new SegmentPair(21, 22)); //end --to be ignored
 
 
@@ -238,9 +235,75 @@ public class HmmTest {
         TestCase.assertEquals(36,mergedSleeps.get(1).i1);
         TestCase.assertEquals(42,mergedSleeps.get(1).i2);
 
+    }
+
+    @Test
+    public void TestConditionalHmmEventProcessing2() {
+        final List<SegmentPair> sleeps = new ArrayList<>();
+        final List<SegmentPair> condSleeps = new ArrayList<>();
+
+        sleeps.add(new SegmentPair(15, 36));
+        sleeps.add(new SegmentPair(39, 40));
+        sleeps.add(new SegmentPair(42, 46));
+        sleeps.add(new SegmentPair(51, 60));
+
+
+        condSleeps.add(new SegmentPair(14, 14)); //beginning -- to be ignored
+
+
+        final ImmutableList<SegmentPair> mergedSleeps = SleepHmmSegmentProcessing.mergeConditionalAndUnconditionalPairs(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(condSleeps));
 
 
 
+        TestCase.assertEquals(15, mergedSleeps.get(0).i1);
+        TestCase.assertEquals(36, mergedSleeps.get(0).i2);
+
+        TestCase.assertEquals(39, mergedSleeps.get(1).i1);
+        TestCase.assertEquals(40, mergedSleeps.get(1).i2);
+
+
+        TestCase.assertEquals(42,mergedSleeps.get(2).i1);
+        TestCase.assertEquals(46,mergedSleeps.get(2).i2);
+
+        TestCase.assertEquals(51,mergedSleeps.get(3).i1);
+        TestCase.assertEquals(60,mergedSleeps.get(3).i2);
+
+
+/*  what the hell?
+        DEBUG [2015-05-27 16:27:39,740] com.hello.suripu.core.util.SleepHmmWithInterpretation: mergedSleepBoundaries = [[42,46],[51,60],[42,46],
+*/
+    }
+
+
+    @Test
+    public void TestConditionalHmmEventProcessing3() {
+        final List<SegmentPair> sleeps = new ArrayList<>();
+        final List<SegmentPair> condSleeps = new ArrayList<>();
+
+        sleeps.add(new SegmentPair(0, 0));
+        sleeps.add(new SegmentPair(15, 62));
+        condSleeps.add(new SegmentPair(14, 14)); //beginning -- to be ignored
+
+
+        final ImmutableList<SegmentPair> mergedSleeps = SleepHmmSegmentProcessing.mergeConditionalAndUnconditionalPairs(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(condSleeps));
+
+
+
+        TestCase.assertEquals(0, mergedSleeps.get(0).i1);
+        TestCase.assertEquals(0, mergedSleeps.get(0).i2);
+
+        TestCase.assertEquals(15,mergedSleeps.get(1).i1);
+        TestCase.assertEquals(62,mergedSleeps.get(1).i2);
+
+        TestCase.assertEquals(mergedSleeps.size(),2);
+
+
+/* again, what the hell
+        DEBUG [2015-05-27 16:27:39,740] com.hello.suripu.core.util.SleepHmmWithInterpretation: mergedSleepBoundaries = [[42,46],[51,60],[42,46],[51,60]]
+        DEBUG [2015-05-27 16:27:39,741] com.hello.suripu.core.util.SleepHmmWithInterpretation: bedBoundaries = [[0,0],[15,62]]
+        DEBUG [2015-05-27 16:27:39,742] com.hello.suripu.core.util.SleepHmmWithInterpretation: conditionalBedBoundaries = [[14,14]]
+        DEBUG [2015-05-27 16:27:39,742] com.hello.suripu.core.util.SleepHmmWithInterpretation: mergedBedBoundaries = [[15,62],[15,62]]
+*/
 
 
     }
