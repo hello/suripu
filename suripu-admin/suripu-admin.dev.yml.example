@@ -63,6 +63,7 @@ dynamodb:
       sync_response_commands : response_commands
       teams : teams
       timezone_history : timezone_history
+      smart_alarm_log: smart_alarm_log
 
   
   endpoints:

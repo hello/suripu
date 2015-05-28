@@ -47,8 +47,10 @@ import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -232,6 +234,18 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 tableNames.get(DynamoDBTableName.TIMEZONE_HISTORY)
         );
 
+        final AmazonDynamoDB smartAlarmHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SMART_ALARM_LOG);
+        final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = new SmartAlarmLoggerDynamoDB(
+                smartAlarmHistoryDynamoDBClient,
+                tableNames.get(DynamoDBTableName.SMART_ALARM_LOG)
+        );
+
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.RING_TIME_HISTORY);
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
+                ringTimeHistoryDynamoDBClient,
+                tableNames.get(DynamoDBTableName.RING_TIME_HISTORY)
+        );
+
         final AmazonDynamoDB pillViewsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_LAST_SEEN);
         final PillViewsDynamoDB pillViewsDynamoDB = new PillViewsDynamoDB(
                 pillViewsDynamoDBClient,
@@ -240,7 +254,8 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
         environment.addResource(new PingResource());
-        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin, timeZoneHistoryDAODynamoDB));
+        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin,
+                timeZoneHistoryDAODynamoDB, smartAlarmLoggerDynamoDB, ringTimeHistoryDAODynamoDB));
 
         final DeviceResources deviceResources = new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO,
                 mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO, senseColorDAO, respCommandsDAODynamoDB,pillViewsDynamoDB);
