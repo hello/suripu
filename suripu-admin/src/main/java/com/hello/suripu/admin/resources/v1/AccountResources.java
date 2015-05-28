@@ -205,9 +205,15 @@ public class AccountResources {
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/timezone_history")
-    public Map<DateTime, TimeZoneHistory> timeZoneHistoryList(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken) {
-
-        return timeZoneHistoryDAODynamoDB.getAllTimeZones(accessToken.accountId);
+    @Path("/timezone_history/{email}")
+    public Map<DateTime, TimeZoneHistory> timeZoneHistoryList(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                                              @PathParam("email") final String email) {
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Account not found!")).build());
+        }
+        return timeZoneHistoryDAODynamoDB.getAllTimeZones(accountIdOptional.get());
     }
+
 }
