@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.logging.SenseLogTag;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -26,13 +27,13 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLogIndexer.class);
     private final static Integer INDEX_CREATION_DELAY = 1000;
 
-    private static final Map<String, String> tagToField = ImmutableMap.<String, String>builder()
-            .put("ALARM RINGING", "alarm_ringing")
-            .put("fault", "firmware_crash")
-            .put("travis", "firmware_crash")
-            .put("xkd", "firmware_crash")
-            .put("SSID RSSI UNIQUE", "wifi_info")
-            .put("dust", "dust_stats")
+    private static final Map<String, SenseLogTag> tagToField = ImmutableMap.<String, SenseLogTag>builder()
+            .put("ALARM RINGING", SenseLogTag.ALARM_RINGING)
+            .put("fault", SenseLogTag.FIRMWARE_CRASH)
+            .put("travis", SenseLogTag.FIRMWARE_CRASH)
+            .put("xkd", SenseLogTag.FIRMWARE_CRASH)
+            .put("SSID RSSI UNIQUE", SenseLogTag.WIFI_INFO)
+            .put("dust", SenseLogTag.DUST_STATS)
             .build();
 
     private final IndexTankClient indexTankClient;
@@ -73,7 +74,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("all", "1");
 
             for (final String tag : tagToField.keySet()) {
-                fields.put(tagToField.get(tag), String.valueOf(log.getMessage().contains(tag)));
+                fields.put(tagToField.get(tag).value, String.valueOf(log.getMessage().contains(tag)));
             }
 
             createdDateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
