@@ -6,9 +6,11 @@ import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.flaptor.indextank.apiclient.MaximumIndexesExceededException;
 import com.flaptor.indextank.apiclient.UnexpectedCodeException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.logging.SenseLogTag;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -24,6 +26,15 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLogIndexer.class);
     private final static Integer INDEX_CREATION_DELAY = 1000;
+
+    private static final Map<String, SenseLogTag> tagToField = ImmutableMap.<String, SenseLogTag>builder()
+            .put("ALARM RINGING", SenseLogTag.ALARM_RINGING)
+            .put("fault", SenseLogTag.FIRMWARE_CRASH)
+            .put("travis", SenseLogTag.FIRMWARE_CRASH)
+            .put("xkd", SenseLogTag.FIRMWARE_CRASH)
+            .put("SSID RSSI UNIQUE", SenseLogTag.WIFI_INFO)
+            .put("dust", SenseLogTag.DUST_STATS)
+            .build();
 
     private final IndexTankClient indexTankClient;
     private final String senseLogIndexPrefix;
@@ -62,6 +73,9 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("date", dateString);
             fields.put("all", "1");
 
+            for (final String tag : tagToField.keySet()) {
+                fields.put(tagToField.get(tag).value, String.valueOf(log.getMessage().contains(tag)));
+            }
 
             createdDateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
 

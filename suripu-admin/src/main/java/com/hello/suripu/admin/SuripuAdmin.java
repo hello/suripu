@@ -50,6 +50,7 @@ import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
@@ -225,6 +226,12 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
 
+        final AmazonDynamoDB tzHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.TIMEZONE_HISTORY);
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(
+                tzHistoryDynamoDBClient,
+                tableNames.get(DynamoDBTableName.TIMEZONE_HISTORY)
+        );
+
         final AmazonDynamoDB pillViewsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_LAST_SEEN);
         final PillViewsDynamoDB pillViewsDynamoDB = new PillViewsDynamoDB(
                 pillViewsDynamoDBClient,
@@ -233,7 +240,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
         environment.addResource(new PingResource());
-        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin));
+        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin, timeZoneHistoryDAODynamoDB));
 
         final DeviceResources deviceResources = new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO,
                 mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO, senseColorDAO, respCommandsDAODynamoDB,pillViewsDynamoDB);
