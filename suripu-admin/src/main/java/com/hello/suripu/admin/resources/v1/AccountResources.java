@@ -208,6 +208,6 @@ public class AccountResources {
     @Path("/timezone_history")
     public Map<DateTime, TimeZoneHistory> timeZoneHistoryList(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken) {
 
-        return timeZoneHistoryDAODynamoDB.getAllTimeZones(19670);
+        return timeZoneHistoryDAODynamoDB.getAllTimeZones(accessToken.accountId);
     }
 }
