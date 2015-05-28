@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -157,6 +158,54 @@ public class TimeZoneHistoryDAODynamoDB {
 
         return lastTimeZone;
 
+    }
+
+    @Timed
+    public Map<DateTime, TimeZoneHistory> getAllTimeZones(final long accountId){
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+
+        final Collection<String> targetAttributeSet = new HashSet<String>();
+        Collections.addAll(targetAttributeSet,
+                UPDATED_AT_ATTRIBUTE_NAME,
+                TIMEZONE_NAME_ATTRIBUTE_NAME);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributeSet)
+                .withLimit(100)
+                .withScanIndexForward(false);
+
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+        if(items == null){
+            return Collections.EMPTY_MAP;
+        }
+
+        final Map<DateTime, TimeZoneHistory> timeZoneHistoryMap = Maps.newHashMap();
+
+        for(final Map<String, AttributeValue> item:items){
+            if(!item.keySet().containsAll(targetAttributeSet)){
+                LOGGER.warn("Missing field in item {} for account = {}", item, accountId);
+                continue;
+            }
+
+
+            final DateTimeZone dateTimeZoneFromId = DateTimeZone.forID(item.get(TIMEZONE_NAME_ATTRIBUTE_NAME).getS());
+
+            final long updatedAt = Long.valueOf(item.get(UPDATED_AT_ATTRIBUTE_NAME).getN());
+            final int offsetMillis = dateTimeZoneFromId.getOffset(updatedAt);
+
+            final TimeZoneHistory timeZoneHistory = new TimeZoneHistory(updatedAt, offsetMillis, dateTimeZoneFromId.getID());
+            timeZoneHistoryMap.put(new DateTime(updatedAt, DateTimeZone.UTC), timeZoneHistory);
+        }
+
+        return timeZoneHistoryMap;
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){

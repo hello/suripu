@@ -6,8 +6,10 @@ import com.hello.suripu.admin.models.PasswordResetAdmin;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOAdmin;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AccountCount;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -16,6 +18,7 @@ import com.hello.suripu.core.passwordreset.PasswordResetDB;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PasswordUtil;
 import com.yammer.metrics.annotation.Timed;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +33,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v1/account")
 public class AccountResources {
@@ -42,12 +46,18 @@ public class AccountResources {
     private final PasswordResetDB passwordResetDB;
     private final DeviceDAO deviceDAO;
     private final AccountDAOAdmin accountDAOAdmin;
+    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
 
-    public AccountResources(final AccountDAO accountDAO, final PasswordResetDB passwordResetDB, final DeviceDAO deviceDAO, final AccountDAOAdmin accountDAOAdmin) {
+    public AccountResources(final AccountDAO accountDAO,
+                            final PasswordResetDB passwordResetDB,
+                            final DeviceDAO deviceDAO,
+                            final AccountDAOAdmin accountDAOAdmin,
+                            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
         this.accountDAO = accountDAO;
         this.passwordResetDB = passwordResetDB;
         this.deviceDAO = deviceDAO;
         this.accountDAOAdmin = accountDAOAdmin;
+        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
     }
 
 
@@ -189,5 +199,15 @@ public class AccountResources {
     public List<AccountCount> retrieveCountsByCreated(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken) {
         return accountDAOAdmin.countByDate();
 
+    }
+
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/timezone_history")
+    public Map<DateTime, TimeZoneHistory> timeZoneHistoryList(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken) {
+
+        return timeZoneHistoryDAODynamoDB.getAllTimeZones(19670);
     }
 }
