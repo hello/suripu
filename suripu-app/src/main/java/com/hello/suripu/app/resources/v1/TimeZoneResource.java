@@ -70,6 +70,7 @@ public class TimeZoneResource {
                 this.mergedUserInfoDynamoDB.setTimeZone(deviceAccountPair.externalDeviceId, token.accountId, timeZone);
 
                 final Optional<TimeZoneHistory> timeZoneHistoryOptional = this.timeZoneHistoryDAODynamoDB.updateTimeZone(token.accountId,
+                        DateTime.now(),
                         timeZoneHistory.timeZoneId,
                         timeZoneHistory.offsetMillis
                 );
