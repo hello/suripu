@@ -6,6 +6,7 @@ import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.flaptor.indextank.apiclient.MaximumIndexesExceededException;
 import com.flaptor.indextank.apiclient.UnexpectedCodeException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.logging.LoggingProtos;
@@ -24,6 +25,15 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLogIndexer.class);
     private final static Integer INDEX_CREATION_DELAY = 1000;
+
+    private static final Map<String, String> tagToField = ImmutableMap.<String, String>builder()
+            .put("ALARM RINGING", "alarm_ringing")
+            .put("fault", "firmware_crash")
+            .put("travis", "firmware_crash")
+            .put("xkd", "firmware_crash")
+            .put("SSID RSSI UNIQUE", "wifi_info")
+            .put("dust", "dust_stats")
+            .build();
 
     private final IndexTankClient indexTankClient;
     private final String senseLogIndexPrefix;
@@ -61,14 +71,6 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("half_date", halfDateString);
             fields.put("date", dateString);
             fields.put("all", "1");
-
-            final Map<String, String> tagToField = Maps.newHashMap();
-            tagToField.put("ALARM RINGING", "alarm_ringing");
-            tagToField.put("fault", "firmware_crash");
-            tagToField.put("travis", "firmware_crash");
-            tagToField.put("xkd", "firmware_crash");
-            tagToField.put("SSID RSSI UNIQUE", "wifi_info");
-            tagToField.put("dust", "dust_stats");
 
             for (final String tag : tagToField.keySet()) {
                 fields.put(tagToField.get(tag), String.valueOf(log.getMessage().contains(tag)));
