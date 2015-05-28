@@ -75,7 +75,6 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             for (final String tag : tagToField.keySet()) {
                 fields.put(tagToField.get(tag), String.valueOf(log.getMessage().contains(tag)));
             }
-            fields.put("alarm_ringing", String.valueOf(log.getMessage().contains("ALARM RINGING")));
 
             createdDateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
 
