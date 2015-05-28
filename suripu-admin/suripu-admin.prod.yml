@@ -62,6 +62,7 @@ dynamodb:
     sense_prefix : prod_sense
     sync_response_commands : prod_response_commands
     teams : teams
+    timezone_history : prod_timezone_history
 
   endpoints:
       alarm_info : http://dynamodb.us-east-1.amazonaws.com
@@ -78,5 +79,6 @@ dynamodb:
       sense_prefix : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
+      timezone_history : http://dynamodb.us-east-1.amazonaws.com
 
 
