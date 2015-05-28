@@ -13,8 +13,11 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class FeedbackUtils {
 
@@ -138,7 +141,10 @@ public class FeedbackUtils {
 
     /* returns map of events by original event type */
     public static Map<Long,Event> getFeedbackEventsInOriginalTimeMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
-        final Map<Long,Event> eventMap = Maps.newHashMap();
+
+        /* this map will return items that are within PROXIMITY_FOR_FEEDBACK_MATCH_MILLISECONDS of the key */
+        final Map<Long,Event> eventMap =  Maps.newHashMap();
+
 
         /* iterate through list*/
         for(final TimelineFeedback timelineFeedback : timelineFeedbackList) {
@@ -168,35 +174,80 @@ public class FeedbackUtils {
 
     public static ImmutableList<Event> reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final Integer offsetMillis) {
         List<Event> matchedEvents = new ArrayList<>();
+
+        /* get events by time  */
         final  Map<Long,Event> feedbackEventMapByOriginalTime = getFeedbackEventsInOriginalTimeMap(timelineFeedbackList,offsetMillis);
+
+        Scorer longScorer = new Scorer<Long>() {
+            @Override
+            public Long getScore(Long o1, Long o2) {
+                return Math.abs(o1-o2);
+            }
+        };
+
+        Comparator longComparator = new Comparator<Long>() {
+
+            @Override
+            public int compare(Long o1, Long o2) {
+                if (o1 < o2) {
+                    return -1;
+                }
+
+                if (o1 > o2) {
+                    return 1;
+                }
+
+                return 0;
+            }
+        };
+
+        //track events by event type, and then the times.
+
+        final BestMatchByTypeMap<Event.Type,Long> typeAndTimeMatcher = new BestMatchByTypeMap<>(longScorer,longComparator);
+        final Iterator<Long> it =  feedbackEventMapByOriginalTime.keySet().iterator();
+
+        while (it.hasNext()) {
+            final Long key = it.next();
+            final Event value = feedbackEventMapByOriginalTime.get(key);
+
+            typeAndTimeMatcher.add(value.getType(),key);
+        }
+
+
 
         /* procedure: if extra event has match in map (type matches, and time matches), we replace it with the feedback
           *           otherwise, place extra event in results */
 
         for (final Event algEvent : algEvents) {
-            if (feedbackEventMapByOriginalTime.containsKey(algEvent.getStartTimestamp())) {
-                final Event feedbackEvent = feedbackEventMapByOriginalTime.get(algEvent.getStartTimestamp());
 
+            //find the closest timestamp to the alg event that is of the same type
+            Long closestTimestamp = typeAndTimeMatcher.getClosest(algEvent.getType(),algEvent.getStartTimestamp());
 
-                if (feedbackEvent.getType().equals(algEvent.getType())) {
-                    //match!
-
-                    //clone feedback, but changing the message from the default message to the alg-generated event's message
-                    matchedEvents.add(Event.createFromType(
-                            feedbackEvent.getType(),
-                            feedbackEvent.getStartTimestamp(),
-                            feedbackEvent.getEndTimestamp(),
-                            feedbackEvent.getTimezoneOffset(),
-                            algEvent.getDescription(),
-                            feedbackEvent.getSoundInfo(),
-                            feedbackEvent.getSleepDepth()));
-
-                    continue;
-                }
+            if (closestTimestamp == null) {
+                //no match, just add the event
+                matchedEvents.add(algEvent);
+                continue;
             }
 
-            //otherwise, no match, just add the event
-            matchedEvents.add(algEvent);
+            final Event feedbackEvent = feedbackEventMapByOriginalTime.get(closestTimestamp);
+
+            if (feedbackEvent == null) {
+                //no match, just add the event
+                matchedEvents.add(algEvent);
+                continue;
+            }
+
+            //match, replace the event
+
+            //clone feedback, but changing the message from the default message to the alg-generated event's message
+            matchedEvents.add(Event.createFromType(
+                    feedbackEvent.getType(),
+                    feedbackEvent.getStartTimestamp(),
+                    feedbackEvent.getEndTimestamp(),
+                    feedbackEvent.getTimezoneOffset(),
+                    algEvent.getDescription(),
+                    feedbackEvent.getSoundInfo(),
+                    feedbackEvent.getSleepDepth()));
 
         }
 
