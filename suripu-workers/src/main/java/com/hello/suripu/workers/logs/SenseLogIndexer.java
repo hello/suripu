@@ -61,6 +61,18 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("half_date", halfDateString);
             fields.put("date", dateString);
             fields.put("all", "1");
+
+            final Map<String, String> tagToField = Maps.newHashMap();
+            tagToField.put("ALARM RINGING", "alarm_ringing");
+            tagToField.put("fault", "firmware_crash");
+            tagToField.put("travis", "firmware_crash");
+            tagToField.put("xkd", "firmware_crash");
+            tagToField.put("SSID RSSI UNIQUE", "wifi_info");
+            tagToField.put("dust", "dust_stats");
+
+            for (final String tag : tagToField.keySet()) {
+                fields.put(tagToField.get(tag), String.valueOf(log.getMessage().contains(tag)));
+            }
             fields.put("alarm_ringing", String.valueOf(log.getMessage().contains("ALARM RINGING")));
 
             createdDateString = createdDateTime.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
