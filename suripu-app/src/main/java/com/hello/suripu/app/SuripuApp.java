@@ -53,6 +53,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
@@ -103,7 +104,6 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPool;
 
 import java.util.List;
 import java.util.TimeZone;
@@ -221,11 +221,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSleepStatsDynamoConfiguration().getTableName(),
                 configuration.getSleepStatsVersion());
 
-        final JedisPool jedisPool = new JedisPool(
-                configuration.getRedisConfiguration().getHost(),
-                configuration.getRedisConfiguration().getPort()
-        );
-
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
 
         final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
@@ -308,10 +303,20 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 120 // 2 minutes for cache
         );
 
+
+        final AmazonDynamoDB senseLastSeenDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseLastSeenConfiguration().getEndpoint());
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
+                senseLastSeenDynamoDBClient,
+                "", // We are not using dynamodb for minute by minute data yet
+                configuration.getSenseLastSeenConfiguration().getTableName()
+        );
+
+
+
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB));
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 

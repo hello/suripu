@@ -259,10 +259,6 @@ sleep_stats_version: v_0_2
 
 max_cache_refresh_days: 20
 
-redis:
-  host: stats.xoe7je.0001.use1.cache.amazonaws.com
-  port: 6379
-
 algorithm_test_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
@@ -293,3 +289,7 @@ fw_path_db:
   region: us-east-1
   table_name: fw_upgrade_path
 
+sense_last_seen:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_sense_last_seen

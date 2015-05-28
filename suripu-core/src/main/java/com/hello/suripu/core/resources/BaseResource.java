@@ -87,6 +87,11 @@ public class BaseResource {
     }
 
 
+    protected Boolean isSenseLastSeenDynamoDBReadEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSE_LAST_SEEN_VIEW_DYNAMODB_READ, accountId, Collections.EMPTY_LIST);
+    }
+
+
     protected Boolean isSensorsViewUnavailable(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.VIEW_SENSORS_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
