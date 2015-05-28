@@ -65,6 +65,7 @@ public class TimeZoneHistoryDAODynamoDB {
         try{
             clientTimeZone = DateTimeZone.forID(clientTimeZoneId);
         }catch (IllegalArgumentException ex){
+            LOGGER.warn("Unrecognized Timezone ID {}, proceeding to derive from offset millis", clientTimeZoneId);
             clientTimeZone = DateTimeZone.forOffsetMillis(clientTimeZoneOffsetMillis);
         }
 
