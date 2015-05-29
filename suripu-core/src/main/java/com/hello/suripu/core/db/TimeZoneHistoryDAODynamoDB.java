@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.RateLimiter;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -95,7 +96,7 @@ public class TimeZoneHistoryDAODynamoDB {
     @Timed
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
-
+        final double maxRateLimitSec = 100d;
         final Condition selectDateCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(start.getMillis())),
@@ -117,8 +118,10 @@ public class TimeZoneHistoryDAODynamoDB {
                 UPDATED_AT_ATTRIBUTE_NAME,
                 TIMEZONE_NAME_ATTRIBUTE_NAME);
 
-        do {
+        final RateLimiter rateLimiter = RateLimiter.create(maxRateLimitSec);
 
+        do {
+            rateLimiter.acquire();
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)

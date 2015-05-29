@@ -19,6 +19,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.RateLimiter;
 import com.hello.suripu.core.models.SmartAlarmHistory;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -85,9 +86,10 @@ public class SmartAlarmLoggerDynamoDB {
     }
 
     @Timed
-    public List<SmartAlarmHistory> getSmartAlarmHistoryByScheduleTime(final long accountId, final DateTime start, final DateTime end){
+    public List<SmartAlarmHistory> getSmartAlarmHistoryByScheduleTime(final long accountId,
+                                                                      final DateTime start, final DateTime end){
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
-
+        final double maxRateLimitSec = 100d;
         final Condition selectDateCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
                 .withAttributeValueList(new AttributeValue().withS(start.toString(DATETIME_FORMAT)),
@@ -114,8 +116,9 @@ public class SmartAlarmLoggerDynamoDB {
                 TIMEZONE_ID_ATTRIBUTE_NAME
                 );
 
+        final RateLimiter rateLimiter = RateLimiter.create(maxRateLimitSec);
         do {
-
+            rateLimiter.acquire();
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)

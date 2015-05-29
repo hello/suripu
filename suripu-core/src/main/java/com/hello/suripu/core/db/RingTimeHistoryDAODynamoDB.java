@@ -24,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.RateLimiter;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
 import com.yammer.metrics.annotation.Timed;
@@ -134,10 +135,12 @@ public class RingTimeHistoryDAODynamoDB {
 
     }
 
-    public List<RingTime> getRingTimesBetween(final String senseId, final Long accountId, final DateTime startTime, final DateTime endTime) {
+    public List<RingTime> getRingTimesBetween(final String senseId, final Long accountId,
+                                              final DateTime startTime,
+                                              final DateTime endTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final List<AttributeValue> values = Lists.newArrayList();
-
+        final double maxRateLimitSec = 100d;
         values.add(new AttributeValue().withN(String.valueOf(startTime.getMillis())));
         values.add(new AttributeValue().withN(String.valueOf(endTime.getMillis())));
 
@@ -165,29 +168,36 @@ public class RingTimeHistoryDAODynamoDB {
                 ACTUAL_RING_TIME_ATTRIBUTE_NAME,
                 RINGTIME_OBJECT_ATTRIBUTE_NAME,
                 CREATED_AT_ATTRIBUTE_NAME);
-
-        final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
-                .withQueryFilter(filterConditions)
-                .withAttributesToGet(targetAttributeSet)
-                .withLimit(50)
-                .withScanIndexForward(false);
-        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-
-        if(queryResult.getItems() == null){
-            return Collections.EMPTY_LIST;
-        }
-
-        final List<Map<String, AttributeValue>> items = queryResult.getItems();
-
         final List<RingTime> ringTimes = Lists.newArrayList();
-        for(final Map<String, AttributeValue> item: items){
-            final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
-            if(!ringTime.isPresent()){
-                continue;
+        Map<String, AttributeValue> lastEvaluatedKey = null;
+        final RateLimiter rateLimiter = RateLimiter.create(maxRateLimitSec);
+        do {
+            rateLimiter.acquire();
+            final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
+                    .withQueryFilter(filterConditions)
+                    .withAttributesToGet(targetAttributeSet)
+                    .withLimit(50)
+                    .withExclusiveStartKey(lastEvaluatedKey)
+                    .withScanIndexForward(false);
+            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
+
+            if (queryResult.getItems() == null) {
+                return Collections.EMPTY_LIST;
             }
 
-            ringTimes.add(ringTime.get());
-        }
+            final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+
+            for (final Map<String, AttributeValue> item : items) {
+                final Optional<RingTime> ringTime = Optional.fromNullable(ringTimeFromItemSet(senseId, targetAttributeSet, item));
+                if (!ringTime.isPresent()) {
+                    continue;
+                }
+
+                ringTimes.add(ringTime.get());
+            }
+        }while (lastEvaluatedKey != null);
 
         Collections.sort(ringTimes, new Comparator<RingTime>() {
             @Override
