@@ -232,7 +232,7 @@ public class AccountResources {
     @GET
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/time_diagnose")
+    @Path("/ring_history")
     public TimeHistory timeDiagnose(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
                                     @QueryParam("email") final String email,
                                     @QueryParam("start_time_millis") final long startMillis,
