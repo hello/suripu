@@ -625,18 +625,19 @@ public class DataScienceResource extends BaseResource {
 
         List<TrackerMotion> filteredTrackerData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(motionData.asList());
 
+        final int timezoneOffset = filteredTrackerData.get(0).offsetMillis;
+
         final int slotDurationInMinutes = 1;
         final Integer missingDataDefaultValue = 0;
-        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
-                startTs.getMillis(),
-                endTs.getMillis(),
+        final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                startTs.minusMillis(timezoneOffset).getMillis(),
+                endTs.minusMillis(timezoneOffset).getMillis(),
                 accountId,
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
                 missingDataDefaultValue
         );
 
-        final int timezoneOffset = filteredTrackerData.get(0).offsetMillis;
         final long startTimeUTC = startTs.getMillis() - timezoneOffset;
         final long stopTimeUTC = endTs.getMillis() - timezoneOffset;
         Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = Optional.absent();
