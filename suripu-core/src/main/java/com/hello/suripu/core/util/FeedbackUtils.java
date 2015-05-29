@@ -1,7 +1,9 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -18,8 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+
 
 public class FeedbackUtils {
 
@@ -184,7 +185,7 @@ public class FeedbackUtils {
         }
     }
 
-    //we're going to hash this guy
+    //we're going put this class in a hashmap
     private static class TypeAndTime {
         final public Event.Type event;
         final public Long time;
@@ -196,7 +197,7 @@ public class FeedbackUtils {
 
         @Override
         public int hashCode() {
-            return  (int) (time / 1000L) + event.getValue();
+            return Objects.hashCode(time, event.getValue());
         }
 
         @Override
@@ -207,12 +208,12 @@ public class FeedbackUtils {
 
             final TypeAndTime obj2 = (TypeAndTime) obj;
 
-            return (obj2.event.equals(event) && obj2.time.equals(time) );
+            return Objects.equal(event,obj2.event) && Objects.equal(time,obj2.time);
         }
     }
 
     private static ImmutableList<Event> remap (final Map<TypeAndTime,Long> mapping,final ImmutableList<Event> originalEvents) {
-        final List<Event> mappedEvents = new ArrayList<>();
+        final List<Event> mappedEvents = Lists.newArrayList();
 
         for (final Event event : originalEvents) {
 
@@ -248,14 +249,14 @@ public class FeedbackUtils {
         /* get events by time  */
         final  Map<Long,Event> feedbackEventMapByOriginalTime = getFeedbackEventsInOriginalTimeMap(timelineFeedbackList,offsetMillis);
 
-        Scorer longScorer = new Scorer<Long>() {
+        final Scorer longScorer = new Scorer<Long>() {
             @Override
             public Long getScore(Long o1, Long o2) {
                 return Math.abs(o1-o2);
             }
         };
 
-        Comparator longComparator = new Comparator<Long>() {
+        final Comparator longComparator = new Comparator<Long>() {
 
             @Override
             public int compare(Long o1, Long o2) {
@@ -282,7 +283,7 @@ public class FeedbackUtils {
             typeAndTimeMatcher.add(event.getType(),event.getStartTimestamp());
         }
 
-        Map<TypeAndTime,Long> timeEventMapper = new HashMap<>();
+        final Map<TypeAndTime,Long> timeEventMapper = new HashMap<>();
 
         final Iterator<Long> it =  feedbackEventMapByOriginalTime.keySet().iterator();
 

@@ -1,24 +1,21 @@
 package com.hello.suripu.core.util;
 
-import java.security.Key;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
 /**
  * Created by benjo on 5/27/15.
  */
-public class BestMatchByTypeMap<KeyType,ValueType> {
+public class BestMatchByTypeMap<K, V> {
 
 
-    private final Map<KeyType,TreeSet<ValueType>> map;
-    private final Scorer<ValueType> scorer;
-    private final Comparator<ValueType> comparator;
+    private final Map<K,TreeSet<V>> map;
+    private final Scorer<V> scorer;
+    private final Comparator<V> comparator;
 
-    public BestMatchByTypeMap(final Scorer<ValueType> scorer, final Comparator<ValueType> comparator) {
+    public BestMatchByTypeMap(final Scorer<V> scorer, final Comparator<V> comparator) {
         map = new HashMap<>();
         this.scorer = scorer;
         this.comparator = comparator;
@@ -28,16 +25,16 @@ public class BestMatchByTypeMap<KeyType,ValueType> {
         map.clear();
     }
 
-    public void add(final KeyType key, final ValueType value) {
+    public void add(final K key, final V value) {
         if (!map.containsKey(key)) {
-            map.put(key,new TreeSet<ValueType>(comparator));
+            map.put(key,new TreeSet<V>(comparator));
         }
 
         map.get(key).add(value);
     }
 
-    public ValueType getClosest(final KeyType key, final ValueType value) {
-        TreeSet<ValueType> myset = map.get(key);
+    public V getClosest(final K key, final V value) {
+        TreeSet<V> myset = map.get(key);
 
         if (myset == null) {
             return null;
@@ -47,8 +44,8 @@ public class BestMatchByTypeMap<KeyType,ValueType> {
             return value;
         }
 
-        final ValueType higher = myset.higher(value);
-        final ValueType lower =  myset.lower(value);
+        final V higher = myset.higher(value);
+        final V lower =  myset.lower(value);
 
         if (higher == null) {
             return lower;
@@ -60,8 +57,8 @@ public class BestMatchByTypeMap<KeyType,ValueType> {
 
         //assume subtraction works (maybe refactor later)
 
-        final ValueType scoreLower = scorer.getScore(lower,value);
-        final ValueType scoreHigher = scorer.getScore(higher, value);
+        final V scoreLower = scorer.getScore(lower,value);
+        final V scoreHigher = scorer.getScore(higher, value);
 
         if (comparator.compare(scoreLower,scoreHigher) > 0) {
             return higher;
@@ -71,8 +68,8 @@ public class BestMatchByTypeMap<KeyType,ValueType> {
         }
     }
 
-    public boolean remove(final KeyType key, final ValueType value) {
-        TreeSet<ValueType> myset = map.get(key);
+    public boolean remove(final K key, final V value) {
+        TreeSet<V> myset = map.get(key);
 
         if (myset == null) {
             return false;
