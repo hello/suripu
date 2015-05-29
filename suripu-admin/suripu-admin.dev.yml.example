@@ -63,6 +63,7 @@ dynamodb:
       sync_response_commands : response_commands
       teams : teams
       timezone_history : timezone_history
+      ring_time_history: ring_history_by_account
       smart_alarm_log: smart_alarm_log
 
   
@@ -83,3 +84,4 @@ dynamodb:
       teams : http://localhost:7777
       timezone_history: http://localhost:7777
       smart_alarm_log: http://localhost:7777
+      ring_time_history: http://localhost:7777
