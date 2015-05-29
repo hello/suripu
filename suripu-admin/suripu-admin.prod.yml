@@ -81,5 +81,6 @@ dynamodb:
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
       timezone_history : http://dynamodb.us-east-1.amazonaws.com
+      smart_alarm_log: http://dynamodb.us-east-1.amazonaws.com
 
 
