@@ -3,12 +3,18 @@ package com.hello.suripu.admin.resources.v1;
 import com.google.common.base.Optional;
 import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.PasswordResetAdmin;
+import com.hello.suripu.admin.models.TimeHistory;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOAdmin;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AccountCount;
+import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.SmartAlarmHistory;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -19,6 +25,7 @@ import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PasswordUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,17 +54,23 @@ public class AccountResources {
     private final DeviceDAO deviceDAO;
     private final AccountDAOAdmin accountDAOAdmin;
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
+    private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB;
+    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
 
     public AccountResources(final AccountDAO accountDAO,
                             final PasswordResetDB passwordResetDB,
                             final DeviceDAO deviceDAO,
                             final AccountDAOAdmin accountDAOAdmin,
-                            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
+                            final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
+                            final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
+                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB) {
         this.accountDAO = accountDAO;
         this.passwordResetDB = passwordResetDB;
         this.deviceDAO = deviceDAO;
         this.accountDAOAdmin = accountDAOAdmin;
         this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
+        this.smartAlarmLoggerDynamoDB = smartAlarmLoggerDynamoDB;
+        this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
     }
 
 
@@ -216,4 +229,37 @@ public class AccountResources {
         return timeZoneHistoryDAODynamoDB.getAllTimeZones(accountIdOptional.get());
     }
 
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/ring_history")
+    public TimeHistory timeDiagnose(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                    @QueryParam("email") final String email,
+                                    @QueryParam("start_time_millis") final long startMillis,
+                                    @QueryParam("end_time_millis") final long endMillis){
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(this.accountDAO, email);
+
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "Account not found")).build());
+        }
+
+        final long accountId = accountIdOptional.get();
+        final DateTime queryStart = new DateTime(startMillis, DateTimeZone.UTC);
+        final DateTime queryEnd = new DateTime(endMillis, DateTimeZone.UTC);
+
+        final List<DeviceAccountPair> deviceAccountPairs = this.deviceDAO.getSensesForAccountId(accountId);
+        if(deviceAccountPairs.isEmpty()){
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(404, "No Sense paired")).build());
+        }
+
+        final List<TimeZoneHistory> timeZoneHistories = this.timeZoneHistoryDAODynamoDB.getTimeZoneHistory(accountId, queryStart, queryEnd);
+        final List<SmartAlarmHistory> smartAlarmHistories = this.smartAlarmLoggerDynamoDB.getSmartAlarmHistoryByScheduleTime(accountId, queryStart, queryEnd);
+        final List<RingTime> ringTimeHistory = this.ringTimeHistoryDAODynamoDB.getRingTimesBetween(deviceAccountPairs.get(deviceAccountPairs.size() - 1).externalDeviceId,
+                accountId, queryStart, queryEnd);
+        final TimeHistory history = new TimeHistory(timeZoneHistories, smartAlarmHistories, ringTimeHistory);
+        return history;
+
+    }
 }
