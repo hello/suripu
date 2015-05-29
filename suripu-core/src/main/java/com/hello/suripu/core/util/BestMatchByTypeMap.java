@@ -70,4 +70,16 @@ public class BestMatchByTypeMap<KeyType,ValueType> {
             return lower;
         }
     }
+
+    public boolean remove(final KeyType key, final ValueType value) {
+        TreeSet<ValueType> myset = map.get(key);
+
+        if (myset == null) {
+            return false;
+        }
+
+        boolean result = myset.remove(value);
+
+        return result;
+    }
 }

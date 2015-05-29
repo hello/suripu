@@ -10,6 +10,7 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -45,10 +46,10 @@ public class FeedbackUtilsTest {
         final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
         timelineFeedbacks.add(feedback);
 
-        final  ImmutableList<Event>  newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks), ImmutableList.copyOf(events), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
-        final long mysleeptime = newEvents.get(0).getStartTimestamp();
+        final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
 
         TestCase.assertEquals(expectedTime, mysleeptime);
 
@@ -81,10 +82,10 @@ public class FeedbackUtilsTest {
         final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
         timelineFeedbacks.add(feedback);
 
-        final  ImmutableList<Event>  newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks), ImmutableList.copyOf(events), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
-        final long mysleeptime = newEvents.get(0).getStartTimestamp();
+        final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
 
         TestCase.assertEquals(expectedTime, mysleeptime);
 
@@ -121,10 +122,11 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback2);
         timelineFeedbacks.add(feedback3);
 
-        final  ImmutableList<Event>  newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks), ImmutableList.copyOf(events), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
-        final long mysleeptime = newEvents.get(0).getStartTimestamp();
+        final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
+
 
         TestCase.assertEquals(expectedTime, mysleeptime);
 
