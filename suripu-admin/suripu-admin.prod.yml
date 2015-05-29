@@ -63,6 +63,7 @@ dynamodb:
     sync_response_commands : prod_response_commands
     teams : teams
     timezone_history : prod_timezone_history
+    ring_time_history: prod_ring_history_by_account
     smart_alarm_log: prod_smart_alarm_log
 
   endpoints:
@@ -82,5 +83,6 @@ dynamodb:
       teams : http://dynamodb.us-east-1.amazonaws.com
       timezone_history : http://dynamodb.us-east-1.amazonaws.com
       smart_alarm_log: http://dynamodb.us-east-1.amazonaws.com
+      ring_time_history: http://dynamodb.us-east-1.amazonaws.com
 
 
