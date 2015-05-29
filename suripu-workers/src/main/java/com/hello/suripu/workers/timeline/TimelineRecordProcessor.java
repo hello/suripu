@@ -146,8 +146,8 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
         final Map<Long, Set<DateTime>> groupedAccountIdAndExpiredTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndExpireDateLocalUTC(
                 pillIdTargetDatesMapByData,
-                this.configuration.getEarliestProcessTime(),
-                this.configuration.getLastProcessTime(),
+                this.configuration.getEarliestExpireTime(),
+                this.configuration.getLastExpireTime(),
                 DateTime.now(),
                 this.flipper,
                 accountIdUserInfoMap,

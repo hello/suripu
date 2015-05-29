@@ -91,7 +91,7 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     @NotNull
     @Min(5)
     @Max(24)
-    @JsonProperty("hour_of_day_trigger")
+    @JsonProperty("start_process_time")
     private Integer earliestProcessTime;
     public Integer getEarliestProcessTime(){
         return this.earliestProcessTime;
@@ -105,6 +105,27 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     private Integer lastProcessTime;
     public Integer getLastProcessTime(){
         return this.lastProcessTime;
+    }
+
+
+    @Valid
+    @NotNull
+    @Min(5)
+    @Max(24)
+    @JsonProperty("start_expire_time")
+    private Integer earliestExpireTime;
+    public Integer getEarliestExpireTime(){
+        return this.earliestExpireTime;
+    }
+
+    @Valid
+    @NotNull
+    @Min(10)
+    @Max(24)
+    @JsonProperty("end_expire_time")
+    private Integer lastExpireTime;
+    public Integer getLastExpireTime(){
+        return this.lastExpireTime;
     }
 
     @Valid
