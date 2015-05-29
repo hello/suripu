@@ -82,3 +82,4 @@ dynamodb:
       sync_response_commands : http://localhost:7777
       teams : http://localhost:7777
       timezone_history: http://localhost:7777
+      smart_alarm_log: http://localhost:7777
