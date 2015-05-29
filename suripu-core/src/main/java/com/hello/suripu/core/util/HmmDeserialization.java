@@ -121,6 +121,16 @@ public class HmmDeserialization {
             lightFloorLux = hmmModelData.getLightFloorLux();
         }
 
+        boolean useWaveCountsAsDisturbances = HmmDataConstants.DEFAULT_USE_WAVE_COUNTS_FOR_DISTURBANCES;
+
+        if (hmmModelData.hasUseWaveAsDisturbance()) {
+            useWaveCountsAsDisturbances = hmmModelData.getUseWaveAsDisturbance();
+        }
+
+        double audioLevelAboveBackroundThresholdDb = HmmDataConstants.DEFAULT_AUDIO_ABOVE_BACKGROUND_THRESHOLD_DB;
+        if (hmmModelData.hasAudioLevelAboveBackgroundThresholdDb()) {
+            audioLevelAboveBackroundThresholdDb = hmmModelData.getAudioLevelAboveBackgroundThresholdDb();
+        }
          /*
          * interpretation parameters (which states mean what)
          *
@@ -140,6 +150,9 @@ public class HmmDeserialization {
         //go through list of enums and turn them into sets of ints
         // i.e. state 0 means not sleeping, state 1 means you're sleeping, state 2 means you're sleeping... etc.
         //so later we can say "path[i] is in sleep set?  No? Then you're not sleeping."
+        final Set<Integer> conditionalSleepStates = new TreeSet<Integer>();
+        final Set<Integer> conditionalBedStates = new TreeSet<Integer>();
+
         final Set<Integer> sleepStates = new TreeSet<Integer>();
         final Set<Integer> onBedStates = new TreeSet<Integer>();
         final Set<Integer> allowableEndingStates = new TreeSet<Integer>();
@@ -162,33 +175,102 @@ public class HmmDeserialization {
             final PdfComposite pdf = new PdfComposite();
 
             if (model.hasLight()) {
-                pdf.addPdf(new GammaPdf(model.getLight().getMean(), model.getLight().getStddev(), HmmDataConstants.LIGHT_INDEX));
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getLight().hasWeight()) {
+                    weight = model.getLight().getWeight();
+                }
+
+                pdf.addPdf(new GammaPdf(model.getLight().getMean(), model.getLight().getStddev(), HmmDataConstants.LIGHT_INDEX,weight));
             }
 
             if (model.hasMotionCount()) {
-                pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), HmmDataConstants.MOT_COUNT_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getMotionCount().hasWeight()) {
+                    weight = model.getMotionCount().getWeight();
+                }
+
+                pdf.addPdf(new PoissonPdf(model.getMotionCount().getMean(), HmmDataConstants.MOT_COUNT_INDEX,weight));
             }
 
             if (model.hasDisturbances()) {
-                pdf.addPdf(new DiscreteAlphabetPdf(model.getDisturbances().getProbabilitiesList(), HmmDataConstants.DISTURBANCE_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getDisturbances().hasWeight()) {
+                    weight = model.getDisturbances().getWeight();
+                }
+
+
+                pdf.addPdf(new DiscreteAlphabetPdf(model.getDisturbances().getProbabilitiesList(), HmmDataConstants.DISTURBANCE_INDEX,weight));
             }
 
             if (model.hasLogSoundCount()) {
-                pdf.addPdf(new GammaPdf(model.getLogSoundCount().getMean(), model.getLogSoundCount().getStddev(), HmmDataConstants.LOG_SOUND_COUNT_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getLogSoundCount().hasWeight()) {
+                    weight = model.getLogSoundCount().getWeight();
+                }
+
+
+                pdf.addPdf(new GammaPdf(model.getLogSoundCount().getMean(), model.getLogSoundCount().getStddev(), HmmDataConstants.LOG_SOUND_COUNT_INDEX,weight));
             }
 
             if (model.hasNaturalLightFilter()) {
-                pdf.addPdf(new DiscreteAlphabetPdf(model.getNaturalLightFilter().getProbabilitiesList(), HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX));
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getNaturalLightFilter().hasWeight()) {
+                    weight = model.getNaturalLightFilter().getWeight();
+                }
+
+
+                pdf.addPdf(new DiscreteAlphabetPdf(model.getNaturalLightFilter().getProbabilitiesList(), HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX,weight));
             }
 
-            //assign states of onbed, sleeping
-            if (model.hasBedMode() && model.getBedMode() == SleepHmmProtos.BedMode.ON_BED) {
-                onBedStates.add(iState);
+            if (model.hasPartnerMotionCount()) {
+
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getPartnerMotionCount().hasWeight()) {
+                    weight = model.getPartnerMotionCount().getWeight();
+                }
+
+
+                pdf.addPdf(new PoissonPdf(model.getPartnerMotionCount().getMean(),HmmDataConstants.PARTNER_MOT_COUNT_INDEX,weight));
             }
 
+            if (model.hasPartnerDisturbances()) {
 
-            if (model.hasSleepMode() && model.getSleepMode() == SleepHmmProtos.SleepMode.SLEEP) {
-                sleepStates.add(iState);
+                double weight = HmmDataConstants.DEFAULT_MODEL_WEIGHT;
+
+                if (model.getPartnerDisturbances().hasWeight()) {
+                    weight = model.getPartnerDisturbances().getWeight();
+                }
+
+
+                pdf.addPdf(new DiscreteAlphabetPdf(model.getPartnerDisturbances().getProbabilitiesList(), HmmDataConstants.PARTNER_DISTURBANCE_INDEX,weight));
+            }
+
+            //assign states of onbed,
+            if (model.hasBedMode()) {
+                if ( model.getBedMode() == SleepHmmProtos.BedMode.ON_BED) {
+                    onBedStates.add(iState);
+                } else if (model.getBedMode() == SleepHmmProtos.BedMode.CONDITIONAL_BED) {
+                    conditionalBedStates.add(iState);
+                }
+            }
+
+            //assign states for sleeping
+            if (model.hasSleepMode()) {
+                if (model.getSleepMode() == SleepHmmProtos.SleepMode.SLEEP) {
+                    sleepStates.add(iState);
+                } else if (model.getSleepMode() == SleepHmmProtos.SleepMode.CONDITIONAL_SLEEP) {
+                    conditionalSleepStates.add(iState);
+                }
             }
 
             //assign allowable ending states
@@ -239,8 +321,9 @@ public class HmmDeserialization {
         //return the HMM + everything else
         final HiddenMarkovModel hmm =  new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel,numFreeParams);
 
-        return Optional.of(new NamedSleepHmmModel(hmm,modelName, ImmutableSet.copyOf(sleepStates),ImmutableSet.copyOf(onBedStates),ImmutableSet.copyOf(allowableEndingStates), ImmutableList.copyOf(sleepDepthsByState),
-                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch,lightPreMultiplier,lightFloorLux));
+        return Optional.of(new NamedSleepHmmModel(hmm,modelName, ImmutableSet.copyOf(sleepStates),ImmutableSet.copyOf(onBedStates),ImmutableSet.copyOf(conditionalSleepStates),ImmutableSet.copyOf(conditionalBedStates),ImmutableSet.copyOf(allowableEndingStates), ImmutableList.copyOf(sleepDepthsByState),
+                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch,lightPreMultiplier,lightFloorLux,
+                useWaveCountsAsDisturbances,audioLevelAboveBackroundThresholdDb));
 
 
 

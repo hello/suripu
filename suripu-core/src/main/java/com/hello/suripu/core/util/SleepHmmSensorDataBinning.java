@@ -67,11 +67,12 @@ public class SleepHmmSensorDataBinning {
     *
     *
     * */
-    static public Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final NamedSleepHmmModel model,
+    static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final ImmutableList<TrackerMotion> pillData,final ImmutableList<TrackerMotion> partnerPillData, final NamedSleepHmmModel model,
                                                            final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset) {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
         final List<Sample> sound = sensors.get(Sensor.SOUND_PEAK_DISTURBANCE);
+        final List<Sample> soundOverBackground = sensors.get(Sensor.SOUND_PEAK_OVER_BACKGROUND_DISTURBANCE);
         final List<Sample> soundCounts = sensors.get(Sensor.SOUND_NUM_DISTURBANCES);
 
         if (light == Collections.EMPTY_LIST || light.isEmpty()) {
@@ -91,7 +92,7 @@ public class SleepHmmSensorDataBinning {
         final int dataLength = (int) (endTimeMillisInUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
 
         final double[][] data = new double[HmmDataConstants.NUM_DATA_DIMENSIONS][dataLength];
-
+        final double [][] energies = new double [2][dataLength];
         //zero out data
         for (int i = 0; i < HmmDataConstants.NUM_DATA_DIMENSIONS; i++) {
             Arrays.fill(data[i], 0.0);
@@ -129,7 +130,7 @@ public class SleepHmmSensorDataBinning {
             double value = m.value;
 
             //heartbeat value
-            if (value == -1) {
+            if (value == HmmDataConstants.HEARTBEAT_VALUE) {
                 continue;
             }
 
@@ -139,6 +140,11 @@ public class SleepHmmSensorDataBinning {
             }
 
             addToBin(data, m.timestamp, 1.0, HmmDataConstants.MOT_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+
+            //smear out energies
+            addToBin(energies, m.timestamp + NUMBER_OF_MILLIS_IN_A_MINUTE, value , 0, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp - NUMBER_OF_MILLIS_IN_A_MINUTE, value, 0, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp, value, 0, startTimeMillisInUTC, numMinutesInWindow);
 
         }
 
@@ -150,8 +156,9 @@ public class SleepHmmSensorDataBinning {
             double value = sample.value;
 
             //either wave happened or it didn't.. value can be 1.0 or 0.0
-            if (value > 0.0) {
+            if (value > 0.0 && model.useWaveCountsForDisturbances) {
                 maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.PARTNER_DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
@@ -164,20 +171,37 @@ public class SleepHmmSensorDataBinning {
 
             if (value > model.soundDisturbanceThresholdDB) {
                 maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.PARTNER_DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
         //SOUND COUNTS
-        final Iterator<Sample> it5 = soundCounts.iterator();
-        while (it5.hasNext()) {
-            final Sample sample = it5.next();
+        //if soundcounts and background over threshold don't agree in size, ignore the background over threshold
+        boolean usePeakOverBackgroundThreshold = true;
+        if (soundCounts.size() != soundOverBackground.size()) {
+            usePeakOverBackgroundThreshold = false;
+        }
 
-            //accumulate
-            if (sample.value > 0.0) {
-                addToBin(data, sample.dateTime, sample.value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+        for (int t = 0; t < soundCounts.size(); t++) {
+            final Sample countSample = soundCounts.get(t);
+
+            //if you have the peak over background information
+            //AND if peak over background is less than the specified threshold, ignore this sample
+            if (usePeakOverBackgroundThreshold) {
+                final Sample peakOverBacgrkound = soundOverBackground.get(t);
+
+                if (peakOverBacgrkound.value < model.audioThresholdAboveBackgroundToCountSound) {
+                    continue;
+                }
+            }
+
+            //sanity check... is it over 0? If true, then accumulate it
+            if (countSample.value > 0.0) {
+                addToBin(data, countSample.dateTime, countSample.value, HmmDataConstants.LOG_SOUND_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
 
         }
+
 
         //transform via log2 (1.0 + x)
         for (int i = 0; i < data[HmmDataConstants.LOG_SOUND_COUNT_INDEX].length; i++) {
@@ -194,11 +218,63 @@ public class SleepHmmSensorDataBinning {
             final Sample sample = it6.next();
 
             if (sample.value > 0.0) {
-                maxInBin(data,sample.dateTime,1.0,HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX,startTimeMillisInUTC,numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, HmmDataConstants.NATURAL_LIGHT_FILTER_INDEX, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
 
+        ///////////////////////////
+        //PARTNER PILL MOTION
+        final Iterator<TrackerMotion> it7 = partnerPillData.iterator();
+        while (it7.hasNext()) {
+            final TrackerMotion m = it7.next();
+
+            double value = m.value;
+
+            //heartbeat value
+            if (value == HmmDataConstants.HEARTBEAT_VALUE) {
+                continue;
+            }
+
+            //if there's a disturbance, register it in the disturbance index
+            if (value > model.pillMagnitudeDisturbanceThresholdLsb) {
+                maxInBin(data, m.timestamp, 1.0, HmmDataConstants.PARTNER_DISTURBANCE_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            addToBin(data, m.timestamp, 1.0, HmmDataConstants.PARTNER_MOT_COUNT_INDEX, startTimeMillisInUTC, numMinutesInWindow);
+
+            //smear out energies
+            addToBin(energies, m.timestamp + NUMBER_OF_MILLIS_IN_A_MINUTE, value , 1, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp - NUMBER_OF_MILLIS_IN_A_MINUTE, value, 1, startTimeMillisInUTC, numMinutesInWindow);
+            addToBin(energies, m.timestamp, value, 1, startTimeMillisInUTC, numMinutesInWindow);
+        }
+
+        //COMPUTE ENERGY RATIOS FOR EACH N MINUTE BIN
+
+        //accumulate
+        double [] energyResult = data[HmmDataConstants.PARTNER_ENERGY_LOG_RATIO_INDEX];
+        for (int t = 0; t < dataLength; t++) {
+
+            double numerator = energies[0][t];
+            double denominator = energies[1][t];
+
+            if (numerator < HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION) {
+                numerator = HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION;
+            }
+
+            if (denominator < HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION) {
+                denominator = HmmDataConstants.ENERGY_MIN_VALUE_FOR_RATIO_COMPUTATION;
+            }
+
+            final double ratio = numerator / denominator;
+
+
+            energyResult[t] = Math.log(ratio) / Math.log(2.0);
+
+            if (Double.isNaN(energyResult[t])) {
+                energyResult[t] = 0.0;
+            }
+        }
 
 
         final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
@@ -282,7 +358,7 @@ public class SleepHmmSensorDataBinning {
         return vecString;
     }
 
-    static public List<TrackerMotion> removeDuplicatesAndInvalidValues(final List<TrackerMotion> trackerMotions) {
+    static public ImmutableList<TrackerMotion> removeDuplicatesAndInvalidValues(final ImmutableList<TrackerMotion> trackerMotions) {
         Set<TrackerMotion> trackerMotionSet = new TreeSet<TrackerMotion>(new Comparator<TrackerMotion>() {
             @Override
             public int compare(final TrackerMotion m1, final TrackerMotion m2) {
@@ -316,6 +392,6 @@ public class SleepHmmSensorDataBinning {
 
         uniqueValues.addAll(trackerMotionSet);
 
-        return uniqueValues;
+        return ImmutableList.copyOf(uniqueValues);
     }
 }

@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -74,6 +75,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
     private final TimelineSafeguards timelineSafeguards;
+    private final SenseColorDAO senseColorDAO;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -92,15 +94,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final FeedbackDAO feedbackDAO,
                                                             final SleepHmmDAO sleepHmmDAO,
                                                             final AccountDAO accountDAO,
-                                                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                                                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                                                            final SenseColorDAO senseColorDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,Optional.<UUID>absent());
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.<UUID>absent());
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,Optional.of(uuid));
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid));
     }
 
     //private SessionLogDebug(final String)
@@ -113,6 +116,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                              final SenseColorDAO senseColorDAO,
                               final Optional<UUID> uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
@@ -122,6 +126,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.sleepHmmDAO = sleepHmmDAO;
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        this.senseColorDAO = senseColorDAO;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -206,6 +211,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
                 Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
                         sensorData.trackerMotions,
+                        sensorData.partnerMotions,
                         sensorData.allSensorSampleList);
 
                 if (results.isPresent()) {
@@ -695,7 +701,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
     }
 
-    private Optional<HmmAlgorithmResults> fromHmm(final long accountId, final DateTime currentTime, final DateTime targetDate, final DateTime endDate, final ImmutableList<TrackerMotion> trackerMotions, final AllSensorSampleList allSensorSampleList) {
+    private Optional<HmmAlgorithmResults> fromHmm(final long accountId, final DateTime currentTime, final DateTime targetDate, final DateTime endDate, final ImmutableList<TrackerMotion> trackerMotions,final ImmutableList<TrackerMotion> partnerTrackerMotions, final AllSensorSampleList allSensorSampleList) {
 
         /*  GET THE GODDAMNED HMM */
         final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
@@ -707,7 +713,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         /*  EVALUATE THE HMM */
         final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(
-                allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTime.getMillis());
+                allSensorSampleList, trackerMotions,partnerTrackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTime.getMillis());
 
         if (!optionalHmmPredictions.isPresent()) {
             LOGGER.error("Failed to get predictions from HMM for account_id {} on date {}", accountId, targetDate);
