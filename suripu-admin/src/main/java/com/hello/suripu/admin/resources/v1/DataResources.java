@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.logging.SenseLogTag;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
@@ -331,5 +332,15 @@ public class DataResources {
         }
 
         return CurrentRoomState.fromDeviceData(deviceDataOptional.get(), DateTime.now(), 15, "c");
+    }
+
+    @Timed
+    @GET
+    @Path("/log_tags")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getSenseLogsTag (@Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+                                   @PathParam("sense_id") final String senseId) {
+        return SenseLogTag.rawValues();
+
     }
 }
