@@ -45,6 +45,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -644,12 +646,16 @@ public class DeviceResources {
     public Response addSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                       @Valid final Set<String> additionalSenseBlackList) {
         Jedis jedis = jedisPool.getResource();
+        final Pipeline pipe = jedis.pipelined();
+        pipe.multi();
         try {
             for (final String senseId : additionalSenseBlackList){
-                jedis.sadd(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, senseId);
+                pipe.sadd(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, senseId);
             }
+            pipe.exec();
         }
         catch (Exception e) {
+            jedisPool.returnBrokenResource(jedis);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                             String.format("Failed to extend sense black list because %s", e.getMessage()))).build());
