@@ -21,7 +21,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,8 +61,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         this.indexes = Maps.newHashMap();
         this.index = senseLogBackupIndex;
         this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
-        this.senseBlackList =  getSenseBlackList();
-
+        this.senseBlackList = new HashSet<>();
     }
 
 
@@ -71,7 +69,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         final List<IndexTankClient.Document> documents = Lists.newArrayList();
         String createdDateString = new DateTime(DateTimeZone.UTC).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         for(final LoggingProtos.LogMessage log : batchLogMessage.getMessagesList()) {
-            if (senseBlackList.contains(log.getDeviceId())) {
+            if (getSenseBlackList().contains(log.getDeviceId())) {
                 LOGGER.info("Log from blacklisted senseId {}, will not index", log.getDeviceId());
                 continue;
             }
@@ -140,12 +138,6 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
 
     @Override
     public void collect(final LoggingProtos.BatchLogMessage batchLogMessage) {
-        if (lastBlackListFetchDateTime.plusSeconds(REFRESH_PERIOD_MINUTES).isBeforeNow()){
-            LOGGER.info("Refreshed sense black list");
-            senseBlackList = getSenseBlackList();
-            lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
-        }
-
         final BatchLog batchLog = chunkBatchLogMessage(batchLogMessage);
         documents.addAll(batchLog.documents);
 
@@ -221,13 +213,18 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     }
 
     private Set<String> getSenseBlackList() {
-        final Jedis jedis = jedisPool.getResource();
-        try {
-            return jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
-        } catch (Exception e) {
-            return new HashSet(Arrays.asList());
-        } finally {
-            jedisPool.returnResource(jedis);
+        if (lastBlackListFetchDateTime.plusMinutes(REFRESH_PERIOD_MINUTES).isBeforeNow() || senseBlackList.isEmpty()){
+            LOGGER.info("Refreshed sense black list");
+            lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
+            final Jedis jedis = jedisPool.getResource();
+            try {
+                senseBlackList = jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+            } catch (Exception e) {
+                LOGGER.error("Failed to refresh sense black list because {}", e.getMessage());
+            } finally {
+                jedisPool.returnResource(jedis);
+            }
         }
+        return senseBlackList;
     }
 }
