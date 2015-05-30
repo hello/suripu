@@ -7,7 +7,6 @@ import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.core.configuration.QuestionConfiguration;
-import com.hello.suripu.core.configuration.RedisConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -317,14 +316,6 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("redis")
-    private RedisConfiguration redisConfiguration;
-    public RedisConfiguration getRedisConfiguration() {
-        return redisConfiguration;
-    }
-
-    @Valid
-    @NotNull
     @JsonProperty("timeline_log_db")
     private DynamoDBConfiguration timelineLogDBConfiguration;
     public DynamoDBConfiguration getTimelineLogDBConfiguration(){
@@ -353,5 +344,14 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration fwUpgradePathDBConfiguration;
     public DynamoDBConfiguration getFWUpgradePathDBConfiguration(){
         return this.fwUpgradePathDBConfiguration;
+    }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("sense_last_seen")
+    private DynamoDBConfiguration senseLastSeenConfiguration;
+    public DynamoDBConfiguration getSenseLastSeenConfiguration(){
+        return this.senseLastSeenConfiguration;
     }
 }

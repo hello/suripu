@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class TeamStore {
+public class TeamStore implements TeamStoreDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TeamStore.class);
 
@@ -60,6 +60,7 @@ public class TeamStore {
         this.tableName = tableName;
     }
 
+    @Override
     public void createTeam(final Team team, final Type type) {
 
         final Map<String, AttributeValue> item = new HashMap<>();
@@ -75,6 +76,7 @@ public class TeamStore {
     }
 
 
+    @Override
     public Optional<Team> getTeam(final String teamName, final Type type) {
 
         final Map<String, AttributeValue> item = new HashMap<>();
@@ -91,6 +93,7 @@ public class TeamStore {
     }
 
 
+    @Override
     public List<Team> getTeams(final Type type) {
 
         final Map<String, Condition> conditions = new HashMap<>();
@@ -121,14 +124,17 @@ public class TeamStore {
     }
 
 
+    @Override
     public void add(final String teamName, final Type type, final List<String> ids) {
         update(teamName, type, ids, AttributeAction.ADD);
     }
 
+    @Override
     public void remove(final String teamName, final Type type, final List<String> ids) {
         update(teamName, type, ids, AttributeAction.DELETE);
     }
 
+    @Override
     public void delete(final Team team, final Type type) {
         final DeleteItemRequest deleteItemRequest = new DeleteItemRequest();
         deleteItemRequest.withTableName(tableName);

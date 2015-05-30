@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -21,7 +22,6 @@ import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.PillColorUtil;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -52,6 +52,7 @@ public class DeviceResources extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final PillHeartBeatDAO pillHeartBeatDAO;
 
     @Inject
@@ -61,12 +62,14 @@ public class DeviceResources extends BaseResource {
                            final DeviceDataDAO deviceDataDAO,
                            final TrackerMotionDAO trackerMotionDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                           final PillHeartBeatDAO pillHeartBeatDAO) {
+                           final PillHeartBeatDAO pillHeartBeatDAO,
+                           final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
+        this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
     }
 
     @GET
@@ -211,9 +214,12 @@ public class DeviceResources extends BaseResource {
 
 
         for (final DeviceAccountPair sense : senses) {
-            if(isSensorsDBUnavailable(accountId)) {
+            if (isSenseLastSeenDynamoDBReadEnabled(accountId)) {
+                final Optional<DeviceStatus> senseStatusOptional = sensorsViewsDynamoDB.senseStatus(sense.externalDeviceId, sense.accountId, sense.internalDeviceId);
+                devices.add(senseDeviceStatusToSenseDevice(sense, senseStatusOptional));
+            } else if(isSensorsDBUnavailable(accountId)){
                 LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
-                devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, "-", DateTime.now(), Device.Color.BLACK)); // TODO: grab Sense color from Serial Number
+                devices.add(senseDeviceStatusToSenseDevice(sense, Optional.<DeviceStatus>absent())); // TODO: grab Sense color from Serial Number
             } else {
                 // Try to limit the search to the last 1h first, to guarantee table index scan lower bound
                 // !!! we mutate senseStatusOptional
@@ -222,12 +228,7 @@ public class DeviceResources extends BaseResource {
                     LOGGER.warn("No data in the last hour for device id = {} (external id = {}) for account_id = {}", sense.internalDeviceId, sense.externalDeviceId, sense.accountId);
                     senseStatusOptional = this.deviceDataDAO.senseStatus(sense.internalDeviceId);
                 }
-
-                if (senseStatusOptional.isPresent()) {
-                    devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.NORMAL, senseStatusOptional.get().firmwareVersion, senseStatusOptional.get().lastSeen, Device.Color.BLACK)); // TODO: grab Sense color from Serial Number
-                } else {
-                    devices.add(new Device(Device.Type.SENSE, sense.externalDeviceId, Device.State.UNKNOWN, "-", null, Device.Color.BLACK));
-                }
+                devices.add(senseDeviceStatusToSenseDevice(sense, senseStatusOptional));
             }
         }
 
@@ -252,6 +253,22 @@ public class DeviceResources extends BaseResource {
         return devices;
     }
 
+
+    /**
+     * Helper to convert DeviceStatus to Device object for Sense
+     * @param pair
+     * @param deviceStatusOptional
+     * @return
+     */
+    private Device senseDeviceStatusToSenseDevice(final DeviceAccountPair pair, final Optional<DeviceStatus> deviceStatusOptional) {
+        if(deviceStatusOptional.isPresent()) {
+            return new Device(Device.Type.SENSE, pair.externalDeviceId, Device.State.NORMAL, deviceStatusOptional.get().firmwareVersion, deviceStatusOptional.get().lastSeen, Device.Color.BLACK);
+        }
+
+        return  new Device(Device.Type.SENSE, pair.externalDeviceId, Device.State.UNKNOWN, "-", null, Device.Color.BLACK);
+
+
+    }
     // Just for testing
     public List<Device> getDevices(final Long accountId) {
         return getDevicesByAccountId(accountId);
