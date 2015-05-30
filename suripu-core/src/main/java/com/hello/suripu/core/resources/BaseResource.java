@@ -20,6 +20,7 @@ public class BaseResource {
     @Inject
     RolloutClient featureFlipper;
 
+
     protected BaseResource()  {
         ObjectGraphRoot.getInstance().inject(this);
     }
@@ -103,5 +104,4 @@ public class BaseResource {
     protected Boolean isTrendsViewUnavailable(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.VIEW_TRENDS_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
-
 }

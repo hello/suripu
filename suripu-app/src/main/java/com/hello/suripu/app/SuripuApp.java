@@ -57,6 +57,7 @@ import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
+import com.hello.suripu.core.db.TeamStoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
@@ -241,7 +242,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
-        final TeamStore teamStore = new TeamStore(teamStoreDBClient, "teams");
+        final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
@@ -282,6 +283,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace);
+
 
 
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
@@ -339,7 +341,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
-        environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
+        environment.addResource(new AppCheckinResource(2015000000));
 
         // data science resource stuff
         final AccountInfoProcessor.Builder builder = new AccountInfoProcessor.Builder()
