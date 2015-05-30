@@ -8,6 +8,7 @@ import com.hello.suripu.admin.models.DeviceAdmin;
 import com.hello.suripu.admin.models.DeviceStatusBreakdown;
 import com.hello.suripu.admin.models.InactiveDevicesPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
+import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDAOAdmin;
@@ -62,6 +63,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -631,6 +633,32 @@ public class DeviceResources {
         final Map<ResponseCommand, String> issuedCommands = new HashMap<>();
         issuedCommands.put(ResponseCommand.RESET_MCU, "true");
         responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
+    }
+
+
+    @POST
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sense_black_list")
+    public Response addSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                      @Valid final Set<String> additionalSenseBlackList) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            for (final String senseId : additionalSenseBlackList){
+                jedis.sadd(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, senseId);
+            }
+        }
+        catch (Exception e) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to extend sense black list because %s", e.getMessage()))).build());
+        }
+        finally {
+            jedisPool.returnResource(jedis);
+        }
+        return Response.noContent().build();
+
     }
 
     // Helpers
