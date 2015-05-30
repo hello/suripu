@@ -10,23 +10,28 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
 import com.hello.suripu.core.logging.SenseLogTag;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
-
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLogIndexer.class);
     private final static Integer INDEX_CREATION_DELAY = 1000;
-
+    private static final Integer REFRESH_PERIOD_MINUTES = 15;
     private static final Map<String, SenseLogTag> tagToField = ImmutableMap.<String, SenseLogTag>builder()
             .put("ALARM RINGING", SenseLogTag.ALARM_RINGING)
             .put("fault", SenseLogTag.FIRMWARE_CRASH)
@@ -39,24 +44,38 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     private final IndexTankClient indexTankClient;
     private final String senseLogIndexPrefix;
     private final IndexTankClient.Index senseLogBackupIndex;
+    private final JedisPool jedisPool;
+
     private final List<IndexTankClient.Document> documents;
     private final Map<String, IndexTankClient.Index> indexes;
     private IndexTankClient.Index index;
+    private DateTime lastBlackListFetchDateTime;
+    private Set<String> senseBlackList;
 
-    public SenseLogIndexer(final IndexTankClient indexTankClient, final String senseLogIndexPrefix, final IndexTankClient.Index senseLogBackupIndex) {
+    public SenseLogIndexer(final IndexTankClient indexTankClient, final String senseLogIndexPrefix, final IndexTankClient.Index senseLogBackupIndex, final JedisPool jedisPool) {
         this.indexTankClient = indexTankClient;
         this.senseLogIndexPrefix = senseLogIndexPrefix;
         this.senseLogBackupIndex = senseLogBackupIndex;
+        this.jedisPool = jedisPool;
+
         this.documents = Lists.newArrayList();
         this.indexes = Maps.newHashMap();
         this.index = senseLogBackupIndex;
+        this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
+        this.senseBlackList =  getSenseBlackList();
+
     }
 
 
-    public static BatchLog chunkBatchLogMessage(LoggingProtos.BatchLogMessage batchLogMessage) {
+    public BatchLog chunkBatchLogMessage(LoggingProtos.BatchLogMessage batchLogMessage) {
         final List<IndexTankClient.Document> documents = Lists.newArrayList();
         String createdDateString = new DateTime(DateTimeZone.UTC).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
         for(final LoggingProtos.LogMessage log : batchLogMessage.getMessagesList()) {
+            if (senseBlackList.contains(log.getDeviceId())) {
+                LOGGER.info("Log from blacklisted senseId {}, will not index", log.getDeviceId());
+                continue;
+            }
+
             final Long millis = (log.getTs() == 0) ? batchLogMessage.getReceivedAt() : log.getTs() * 1000L;
             final String documentId = String.format("%s-%d", log.getDeviceId(), millis);
             final DateTime createdDateTime = new DateTime(millis, DateTimeZone.UTC);
@@ -121,6 +140,11 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
 
     @Override
     public void collect(final LoggingProtos.BatchLogMessage batchLogMessage) {
+        if (lastBlackListFetchDateTime.plusSeconds(REFRESH_PERIOD_MINUTES).isBeforeNow()){
+            LOGGER.info("Refreshed sense black list");
+            senseBlackList = getSenseBlackList();
+            lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
+        }
 
         final BatchLog batchLog = chunkBatchLogMessage(batchLogMessage);
         documents.addAll(batchLog.documents);
@@ -145,7 +169,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
                         LOGGER.error("interrupted");
                     }
                 }
-                LOGGER.info("Index is ready to serve!");
+                LOGGER.info("Index {} is ready to serve!", indexName);
             }
             catch (IndexAlreadyExistsException indexAlreadyExistsException) {
                 LOGGER.info("Index {} already existed", indexName);
@@ -193,6 +217,17 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         catch (UnexpectedCodeException e) {
             LOGGER.error("Error when check index readiness {}", e.getMessage());
             return Boolean.FALSE;
+        }
+    }
+
+    private Set<String> getSenseBlackList() {
+        final Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+        } catch (Exception e) {
+            return new HashSet(Arrays.asList());
+        } finally {
+            jedisPool.returnResource(jedis);
         }
     }
 }
