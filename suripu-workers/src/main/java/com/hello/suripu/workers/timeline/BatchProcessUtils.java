@@ -63,8 +63,8 @@ public class BatchProcessUtils {
     }
 
     public static Map<Long, Set<DateTime>> groupAccountAndExpireDateLocalUTC(final Map<String, Set<DateTime>> groupedPillIdRequestDateUTC,
-                                                                             final int startProcessHourOfDay,
-                                                                             final int endProcessHourOfDay,
+                                                                             final int startExpireHourOfDay,
+                                                                             final int endExpireHourOfDay,
                                                                              final DateTime now,
                                                                              final RolloutClient flipper,
                                                                              final Map<Long, UserInfo> accountIdUserInfoMap,
@@ -112,7 +112,7 @@ public class BatchProcessUtils {
                 final DateTime expireTargetDateLocalUTC = DateTimeUtil.getTargetDateLocalUTCFromLocalTime(dataTimeInLocal);
                 final DateTime nowInLocal = now.withZone(dateTimeZoneOptional.get());
                 final DateTime todaysTargetDateLocalUTC = DateTimeUtil.getTargetDateLocalUTCFromLocalTime(nowInLocal);
-                if((nowInLocal.getHourOfDay() < startProcessHourOfDay || nowInLocal.getHourOfDay() > endProcessHourOfDay) &&
+                if((nowInLocal.getHourOfDay() < startExpireHourOfDay || nowInLocal.getHourOfDay() > endExpireHourOfDay) &&
                         todaysTargetDateLocalUTC.equals(expireTargetDateLocalUTC)){
                     //LOGGER.debug("too early to process data for pill {}, date {}, user time {}", pillId, todaysTargetDateLocalUTC, nowInLocal);
                     continue;
