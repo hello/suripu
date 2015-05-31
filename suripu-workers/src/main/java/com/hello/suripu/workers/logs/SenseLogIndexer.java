@@ -51,6 +51,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     private IndexTankClient.Index index;
     private DateTime lastBlackListFetchDateTime;
     private Set<String> senseBlackList;
+    private Integer blackListUpdateCount;
 
     public SenseLogIndexer(final IndexTankClient indexTankClient, final String senseLogIndexPrefix, final IndexTankClient.Index senseLogBackupIndex, final JedisPool jedisPool) {
         this.indexTankClient = indexTankClient;
@@ -63,6 +64,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         this.index = senseLogBackupIndex;
         this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
         this.senseBlackList = new HashSet<>();
+        this.blackListUpdateCount = 0;
     }
 
 
@@ -214,13 +216,13 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     }
 
     private Set<String> getSenseBlackList() {
-        if (lastBlackListFetchDateTime.plusMinutes(REFRESH_PERIOD_MINUTES).isBeforeNow() || senseBlackList.isEmpty()){
-            LOGGER.info("Refreshed sense black list");
+        if (lastBlackListFetchDateTime.plusMinutes(REFRESH_PERIOD_MINUTES).isBeforeNow() || blackListUpdateCount == 0){
             lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
             Jedis jedis = null;
             try {
                 jedis = jedisPool.getResource();
                 senseBlackList = jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+                LOGGER.info("Refreshed sense black list");
             } catch (JedisDataException e) {
                 LOGGER.error("Failed to get data from redis -  {}", e.getMessage());
             } catch (Exception e) {
@@ -229,6 +231,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
                 jedisPool.returnResource(jedis);
             }
         }
+        blackListUpdateCount += 1;
         return senseBlackList;
     }
 }

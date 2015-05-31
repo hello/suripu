@@ -11,7 +11,7 @@ max_records: 50
 
 sense_logs:
   private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_prefix : sense-logs-
+  index_prefix : dev-
   backup_index_name : sense-logs-backup
 
 kinesis:
