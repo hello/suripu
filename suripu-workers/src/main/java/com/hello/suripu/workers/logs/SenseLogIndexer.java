@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -216,9 +217,12 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         if (lastBlackListFetchDateTime.plusMinutes(REFRESH_PERIOD_MINUTES).isBeforeNow() || senseBlackList.isEmpty()){
             LOGGER.info("Refreshed sense black list");
             lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
-            final Jedis jedis = jedisPool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = jedisPool.getResource();
                 senseBlackList = jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+            } catch (JedisDataException e) {
+                LOGGER.error("Failed to get data from redis -  {}", e.getMessage());
             } catch (Exception e) {
                 LOGGER.error("Failed to refresh sense black list because {}", e.getMessage());
             } finally {

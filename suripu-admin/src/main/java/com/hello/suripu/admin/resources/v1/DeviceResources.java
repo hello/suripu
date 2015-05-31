@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -643,15 +644,22 @@ public class DeviceResources {
     @Path("/sense_black_list")
     public Response updateSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                          @Valid final Set<String> updatedSenseBlackList) {
-        Jedis jedis = jedisPool.getResource();
-        final Pipeline pipe = jedis.pipelined();
-        pipe.multi();
+        Jedis jedis = null;
         try {
+            jedis = jedisPool.getResource();
+            final Pipeline pipe = jedis.pipelined();
+            pipe.multi();
             pipe.del(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
             for (final String senseId : updatedSenseBlackList){
                 pipe.sadd(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, senseId);
             }
             pipe.exec();
+        }
+        catch (JedisDataException e) {
+            jedisPool.returnBrokenResource(jedis);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to get data from redis - %s", e.getMessage()))).build());
         }
         catch (Exception e) {
             jedisPool.returnBrokenResource(jedis);
@@ -670,9 +678,16 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/sense_black_list")
     public Set<String> addSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
-        Jedis jedis = jedisPool.getResource();
+        Jedis jedis = null;
         try {
+            jedis = jedisPool.getResource();
             return jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+        }
+        catch (JedisDataException e) {
+            jedisPool.returnBrokenResource(jedis);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to get data from redis - %s", e.getMessage()))).build());
         }
         catch (Exception e) {
             jedisPool.returnBrokenResource(jedis);
