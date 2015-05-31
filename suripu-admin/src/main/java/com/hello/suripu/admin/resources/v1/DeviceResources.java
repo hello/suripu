@@ -8,6 +8,7 @@ import com.hello.suripu.admin.models.DeviceAdmin;
 import com.hello.suripu.admin.models.DeviceStatusBreakdown;
 import com.hello.suripu.admin.models.InactiveDevicesPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
+import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDAOAdmin;
@@ -44,6 +45,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -62,6 +65,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -631,6 +635,81 @@ public class DeviceResources {
         final Map<ResponseCommand, String> issuedCommands = new HashMap<>();
         issuedCommands.put(ResponseCommand.RESET_MCU, "true");
         responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
+    }
+
+    @PUT
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sense_black_list")
+    public Response updateSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                         @Valid final Set<String> updatedSenseBlackList) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            final Pipeline pipe = jedis.pipelined();
+            pipe.multi();
+            pipe.del(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+            for (final String senseId : updatedSenseBlackList){
+                pipe.sadd(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, senseId);
+            }
+            pipe.exec();
+        }
+        catch (JedisDataException e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to get data from redis - %s", e.getMessage()))).build());
+        }
+        catch (Exception e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to update sense black list because %s", e.getMessage()))).build());
+        }
+        finally {
+            if (jedis != null) {
+                jedisPool.returnResource(jedis);
+            }
+        }
+        return Response.noContent().build();
+    }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sense_black_list")
+    public Set<String> addSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            return jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+        }
+        catch (JedisDataException e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to get data from redis - %s", e.getMessage()))).build());
+        }
+        catch (Exception e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to retrieve sense black list because %s", e.getMessage()))).build());
+        }
+        finally {
+            if (jedis != null) {
+                jedisPool.returnResource(jedis);
+            }
+        }
     }
 
     // Helpers
