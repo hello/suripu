@@ -7,6 +7,7 @@ import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.SenseEventsDAO;
+import redis.clients.jedis.JedisPool;
 
 public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
@@ -32,6 +33,8 @@ public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
         final AmazonDynamoDB amazonDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(config.getSenseEventsDynamoDBConfiguration().getEndpoint());
         final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(amazonDynamoDB, config.getSenseEventsDynamoDBConfiguration().getTableName());
 
-        return LogIndexerProcessor.create(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, senseEventsDAO, this.onBoardingLogDAO);
+        final JedisPool jedisPool = new JedisPool(config.redisConfiguration().getHost(), config.redisConfiguration().getPort());
+
+        return LogIndexerProcessor.create(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, senseEventsDAO, this.onBoardingLogDAO, jedisPool);
     }
 }

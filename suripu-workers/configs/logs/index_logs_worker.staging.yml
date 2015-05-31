@@ -63,3 +63,7 @@ common_db:
 
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
+
+redis:
+  host: stats.xoe7je.0001.use1.cache.amazonaws.com
+  port: 6379
