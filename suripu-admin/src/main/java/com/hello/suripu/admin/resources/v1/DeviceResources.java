@@ -647,7 +647,7 @@ public class DeviceResources {
         final Pipeline pipe = jedis.pipelined();
         pipe.multi();
         try {
-            pipe.rename(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, "old_sense_black_list");
+            pipe.del(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
             for (final String senseId : updatedSenseBlackList){
                 pipe.sadd(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, senseId);
             }
