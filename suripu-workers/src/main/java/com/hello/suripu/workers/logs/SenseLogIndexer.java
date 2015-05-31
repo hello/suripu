@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
 import com.hello.suripu.core.logging.SenseLogTag;
@@ -23,7 +24,6 @@ import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,7 +63,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         this.indexes = Maps.newHashMap();
         this.index = senseLogBackupIndex;
         this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
-        this.senseBlackList = new HashSet<>();
+        this.senseBlackList = Sets.newHashSet();
         this.blackListUpdateCount = 0;
     }
 
