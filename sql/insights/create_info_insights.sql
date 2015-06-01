@@ -87,7 +87,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
  Breathing poor quality air while sleeping can result in clogged sinuses, a stuffy nose, headache, or scratchy throat due to the contaminants breathed in during the night.
 '),
 ----
-('sleep_duration', '', 'Sleep Duration: What''s the ideal?',
+('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
 'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need). Most current guidelines say school-age children should get at least 10 hours of sleep a night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but unique to the individual.'
 ),
 ----
