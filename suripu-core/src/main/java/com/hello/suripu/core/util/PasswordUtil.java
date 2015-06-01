@@ -128,6 +128,6 @@ public class PasswordUtil {
         if(password == null || password.length() < 2) {
             return "?";
         }
-        return password.substring(0, 1);
+        return password.substring(0, 1) + "...";
     }
 }

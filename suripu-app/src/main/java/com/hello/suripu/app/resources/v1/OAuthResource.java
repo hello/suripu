@@ -103,7 +103,7 @@ public class OAuthResource {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
         final String normalizedUsername = username.toLowerCase();
-        LOGGER.info("normalized username {}", normalizedUsername);
+        LOGGER.debug("normalized username {}", normalizedUsername);
         final Optional<Account> accountOptional = accountDAO.exists(normalizedUsername, password);
         if(!accountOptional.isPresent()) {
             LOGGER.error("Account wasn't found: {}, {}", normalizedUsername, PasswordUtil.obfuscate(password));
