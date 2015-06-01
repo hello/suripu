@@ -227,11 +227,13 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
                 LOGGER.error("Failed to get data from redis -  {}", e.getMessage());
                 if (jedis != null) {
                     jedisPool.returnBrokenResource(jedis);
+                    jedis = null;
                 }
             } catch (Exception e) {
                 LOGGER.error("Failed to refresh sense black list because {}", e.getMessage());
                 if (jedis != null) {
                     jedisPool.returnBrokenResource(jedis);
+                    jedis = null;
                 }
             } finally {
                 if (jedis != null) {

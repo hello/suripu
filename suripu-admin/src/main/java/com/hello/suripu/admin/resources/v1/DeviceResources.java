@@ -658,6 +658,7 @@ public class DeviceResources {
         catch (JedisDataException e) {
             if (jedis != null) {
                 jedisPool.returnBrokenResource(jedis);
+                jedis = null;
             }
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -666,6 +667,7 @@ public class DeviceResources {
         catch (Exception e) {
             if (jedis != null) {
                 jedisPool.returnBrokenResource(jedis);
+                jedis = null;
             }
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -692,6 +694,7 @@ public class DeviceResources {
         catch (JedisDataException e) {
             if (jedis != null) {
                 jedisPool.returnBrokenResource(jedis);
+                jedis = null;
             }
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -700,6 +703,7 @@ public class DeviceResources {
         catch (Exception e) {
             if (jedis != null) {
                 jedisPool.returnBrokenResource(jedis);
+                jedis = null;
             }
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
