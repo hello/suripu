@@ -16,6 +16,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
+import com.hello.suripu.core.util.PasswordUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,7 @@ public class OAuthResource {
         }
 
         if(username == null || password == null || username.isEmpty() || password.isEmpty()) {
-            LOGGER.error("username or password is null or empty");
+            LOGGER.error("username or password is null or empty.");
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
@@ -102,10 +103,10 @@ public class OAuthResource {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
         final String normalizedUsername = username.toLowerCase();
-        LOGGER.info("normalized username {}", normalizedUsername);
+        LOGGER.debug("normalized username {}", normalizedUsername);
         final Optional<Account> accountOptional = accountDAO.exists(normalizedUsername, password);
         if(!accountOptional.isPresent()) {
-            LOGGER.error("Account wasn't found", normalizedUsername, password);
+            LOGGER.error("Account wasn't found: {}, {}", normalizedUsername, PasswordUtil.obfuscate(password));
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
@@ -133,7 +134,7 @@ public class OAuthResource {
             throw new WebApplicationException(Response.serverError().build());
         }
 
-        LOGGER.debug("{}", accessToken);
+        LOGGER.debug("AccessToken {}", accessToken);
         LOGGER.debug("email {}", accessToken.accountId);
         return accessToken;
     }
