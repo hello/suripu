@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.exceptions.JedisException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -219,25 +220,29 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         if (lastBlackListFetchDateTime.plusMinutes(REFRESH_PERIOD_MINUTES).isBeforeNow() || blackListUpdateCount == 0){
             lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
             Jedis jedis = null;
+            String exceptionMessage = "";
             try {
                 jedis = jedisPool.getResource();
                 senseBlackList = jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
                 LOGGER.info("Refreshed sense black list");
             } catch (JedisDataException e) {
-                LOGGER.error("Failed to get data from redis -  {}", e.getMessage());
-                if (jedis != null) {
-                    jedisPool.returnBrokenResource(jedis);
-                    jedis = null;
-                }
+                exceptionMessage = String.format("Failed to get data from redis -  %s", e.getMessage());
+                LOGGER.error(exceptionMessage);
             } catch (Exception e) {
-                LOGGER.error("Failed to refresh sense black list because {}", e.getMessage());
-                if (jedis != null) {
-                    jedisPool.returnBrokenResource(jedis);
-                    jedis = null;
-                }
+                exceptionMessage = String.format("Failed to refresh sense black list because %s", e.getMessage());
+                LOGGER.error(exceptionMessage);
             } finally {
                 if (jedis != null) {
-                    jedisPool.returnResource(jedis);
+                    try {
+                        if (exceptionMessage.isEmpty()) {
+                            jedisPool.returnResource(jedis);
+                        } else {
+                            jedisPool.returnBrokenResource(jedis);
+                        }
+                    } catch (JedisException e) {
+                        LOGGER.error("Failed to return to resource {}", e.getMessage());
+                    }
+
                 }
             }
         }
