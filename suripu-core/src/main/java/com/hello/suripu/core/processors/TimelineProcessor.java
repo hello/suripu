@@ -430,8 +430,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
 
         //MOVE EVENTS BASED ON FEEDBACK
-        final ImmutableList<Event> extraEventsModifiedByFeedback = FeedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, extraEvents, offsetMillis);
-        final ImmutableList<Event> sleepEventsModifiedByFeedback = FeedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents), offsetMillis);
+        final FeedbackUtils.ReprocessedEvents reprocessedEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents),extraEvents, offsetMillis);
 
 
         // PARTNER MOTION
@@ -487,7 +486,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         Optional<Event> sleepEventOptional = sleepEventsFromAlgorithm.fallAsleep;
         Optional<Event> awakeEventOptional = sleepEventsFromAlgorithm.wakeUp;
 
-        for (final Event event : sleepEventsModifiedByFeedback) {
+        for (final Event event : reprocessedEvents.mainEvents) {
             timelineEvents.put(event.getStartTimestamp(), event);
 
             // adjust event times to use feedback times
@@ -504,7 +503,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         /*  add "additional" events -- which is wake/sleep/get up to pee events */
-        for (final Event event : extraEventsModifiedByFeedback) {
+        for (final Event event : reprocessedEvents.extraEvents) {
             timelineEvents.put(event.getStartTimestamp(), event);
         }
 
@@ -909,6 +908,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
     private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
+
         if(!hasFeedbackInTimeline(accountId)) {
             LOGGER.debug("Timeline feedback not enabled for account {}", accountId);
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
