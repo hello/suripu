@@ -3,6 +3,7 @@ package com.hello.suripu.core.flipper;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.models.Feature;
+import com.hello.suripu.core.util.FeatureUtils;
 import com.librato.rollout.RolloutAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,9 +112,8 @@ public class DynamoDBAdapter implements RolloutAdapter{
             return false;
         }
 
-        // Next, check percentage
-        if (Math.abs(hashId) % 100 < f.percentage) {
-            LOGGER.trace("Included in percentage");
+        if (FeatureUtils.entityIdHashInPercentRange(entityId, 0, f.percentage)) {
+            LOGGER.trace("Included in percentage.");
             return true;
         }
 

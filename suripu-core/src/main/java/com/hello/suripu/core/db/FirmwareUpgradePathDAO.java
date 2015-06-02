@@ -23,6 +23,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import org.apache.commons.math3.util.Pair;
 import com.hello.suripu.core.models.UpgradeNodeRequest;
 import com.yammer.metrics.annotation.Timed;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ public class FirmwareUpgradePathDAO {
     public static final String GROUP_NAME_ATTRIBUTE_NAME = "group_name";
     public static final String FROM_FW_VERSION_ATTRIBUTE_NAME = "from_firmware_version";
     public static final String TO_FW_VERSION_ATTRIBUTE_NAME = "to_firmware_version";
+    public static final String ROLLOUT_PERCENT_ATTRIBUTE_NAME = "rollout_percent";
     public static final String TIMESTAMP_ATTRIBUTE_NAME = "created";
 
     public final static String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ssZ";
@@ -60,6 +62,7 @@ public class FirmwareUpgradePathDAO {
         item.put(GROUP_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(upgradeNode.groupName));
         item.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.fromFWVersion.toString()));
         item.put(TO_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.toFWVersion.toString()));
+        item.put(ROLLOUT_PERCENT_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.toFWVersion.toString()));
         item.put(TIMESTAMP_ATTRIBUTE_NAME, new AttributeValue().withS(dateTimeToString(DateTime.now())));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
@@ -110,7 +113,7 @@ public class FirmwareUpgradePathDAO {
     }
 
     @Timed
-    public Optional<Integer> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
+    public Optional<Pair<Integer, Integer>> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
 
         final Condition byGroupName = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -148,8 +151,10 @@ public class FirmwareUpgradePathDAO {
 
         final Map<String, AttributeValue> item = items.get(0);
         final Integer itemNextFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
+        final Integer rolloutPercent = Integer.parseInt(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN());
 
-        return Optional.of(itemNextFW);
+        final Pair<Integer, Integer> nextFW = new Pair<>(itemNextFW, rolloutPercent);
+        return Optional.of(nextFW);
     }
 
     private Optional<UpgradeNodeRequest> attributeValuesToUpgradeNode(final Map<String, AttributeValue> item){
@@ -159,8 +164,9 @@ public class FirmwareUpgradePathDAO {
             final String groupName = item.get(GROUP_NAME_ATTRIBUTE_NAME).getS();
             final Integer fromFWVersion = Integer.valueOf(item.get(FROM_FW_VERSION_ATTRIBUTE_NAME).getN());
             final Integer newFWVersion = Integer.valueOf(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
+            final Integer rolloutPercent = Integer.valueOf(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN());
 
-            return Optional.of(new UpgradeNodeRequest(groupName, fromFWVersion, newFWVersion));
+            return Optional.of(new UpgradeNodeRequest(groupName, fromFWVersion, newFWVersion, rolloutPercent));
         }catch (Exception ex){
             LOGGER.error("attributeValuesToUpgradeNode error: {}", ex.getMessage());
         }
