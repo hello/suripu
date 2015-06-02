@@ -129,13 +129,29 @@ public class HiddenMarkovModel {
         final double [][] phi = new double[this.numStates][numObs];
         final int [][] viterbiIndices = new int[this.numStates][numObs];
 
-        for (int i = 0; i < this.numStates; i++) {
-            viterbiIndices[i][0] = 0;
-        }
 
         // init
         for (int i = 0; i < this.numStates; i++) {
             phi[i][0] = -Math.log(this.initialState[i]+ HmmPdfInterface.MIN_LIKELIHOOD) - logBMap[i][0];
+        }
+
+        //find minimum cost
+        {
+            double themin = Double.POSITIVE_INFINITY;
+            int minidx = 0;
+            for (int i = 0; i < this.numStates; i++) {
+                if (phi[i][0] < themin) {
+                    themin = phi[i][0];
+                    minidx = i;
+                }
+            }
+
+
+
+            //assign minimum cost index to first Viterbi state
+            for (int i = 0; i < this.numStates; i++) {
+                viterbiIndices[i][0] = minidx;
+            }
         }
 
 
