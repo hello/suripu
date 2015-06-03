@@ -5,6 +5,8 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
@@ -15,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
@@ -28,8 +31,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
+import java.util.HashMap;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -50,6 +55,7 @@ public class SensorsViewsDynamoDB {
     private final String lastSeenTableName;
 
     public static final String SENSE_ID_ATTRIBUTE_NAME = "sense_id";
+    public static final Integer MAX_LAST_SEEN_DEVICES = 100;
 
     protected static final String UTC_TIMESTAMP_ATTRIBUTE_NAME = "utc_ts";
     protected static final String TEMP_ATTRIBUTE_NAME = "temp";
@@ -230,6 +236,62 @@ public class SensorsViewsDynamoDB {
         return fromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
     }
 
+    public Optional<List<FirmwareInfo>> lastSeenFirmwareBatch(final Set<String> deviceIds) {
+
+        if (deviceIds.size() > MAX_LAST_SEEN_DEVICES) {
+            LOGGER.error("Device limit ({}) exceeded while querying last seen firmware.", MAX_LAST_SEEN_DEVICES);
+            return Optional.absent();
+        }
+
+        final List<Map<String, AttributeValue>> conditions = Lists.newArrayList();
+
+        final BatchGetItemRequest request = new BatchGetItemRequest();
+
+        for (final String devId : deviceIds) {
+            final Map<String, AttributeValue> cond = new HashMap<String, AttributeValue>();
+            cond.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(devId));
+            conditions.add(cond);
+        }
+
+        final KeysAndAttributes keys = new KeysAndAttributes().withKeys(conditions);
+        request.addRequestItemsEntry(lastSeenTableName, keys);
+
+        BatchGetItemResult batchResult;
+
+        try {
+            batchResult = dynamoDBClient.batchGetItem(request);
+        }catch (AmazonServiceException awsEx){
+            LOGGER.error("Batch sense data request failed. AWS service error: {}", awsEx.getMessage());
+            return Optional.absent();
+        }catch (AmazonClientException awcEx){
+            LOGGER.error("Batch sense data request failed. Client error: {}", awcEx.getMessage());
+            return Optional.absent();
+        }catch (Exception e) {
+            LOGGER.error("Batch sense data request failed. {}", e.getMessage());
+            return Optional.absent();
+        }
+
+        final Map<String,List<Map<String,AttributeValue>>> resultsMap = batchResult.getResponses();
+        final List<FirmwareInfo> fwVersions = Lists.newArrayList();
+
+        for (final Map<String, AttributeValue> item : resultsMap.get(lastSeenTableName)) {
+            if (!item.containsKey(SENSE_ID_ATTRIBUTE_NAME)) {
+                continue;
+            }
+            final String deviceId = item.get(SENSE_ID_ATTRIBUTE_NAME).getS();
+            final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
+            final String updatedAt = (item.containsKey(UPDATED_AT_UTC_ATTRIBUTE_NAME) ? item.get(UPDATED_AT_UTC_ATTRIBUTE_NAME).getS(): "");
+            final DateTime dateTime = DateTime.parse(updatedAt, DateTimeFormat.forPattern(DATETIME_FORMAT));
+            final FirmwareInfo latestFWInfo = new FirmwareInfo(firmwareVersion.toString(), deviceId, dateTime.getMillis());
+            fwVersions.add(latestFWInfo);
+        }
+
+        if (fwVersions.isEmpty()) {
+            return Optional.absent();
+        }
+
+        return Optional.of(fwVersions);
+    }
 
 
     public Optional<DeviceStatus> senseStatus(final String senseId, final Long accountId, final Long internalSenseId) {
