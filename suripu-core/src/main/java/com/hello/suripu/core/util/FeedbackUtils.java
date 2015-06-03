@@ -352,7 +352,11 @@ public class FeedbackUtils {
                 final DateTime feedbackOldTime = new DateTime(best.e2.time,DateTimeZone.forOffsetMillis(best.e1.event.getTimezoneOffset()));
                 final DateTime feedbackNewTime = new DateTime(best.e2.event.getStartTimestamp(),DateTimeZone.forOffsetMillis(best.e1.event.getTimezoneOffset()));
 
-                LOGGER.info("matched {} at time {} to feedback at time {} moving to {}",type,oldTime,feedbackOldTime,feedbackNewTime);
+                final Long deltaOld = (feedbackOldTime.getMillis() - oldTime.getMillis()) / 60000L;
+                final Long deltaNew = (feedbackNewTime.getMillis() - oldTime.getMillis()) / 60000L;
+
+                LOGGER.info("matched {} min apart, and moved it {} minutes",deltaOld,deltaNew);
+                LOGGER.info("matched {} at time {} to feedback at time {} moving to {}", type, oldTime, feedbackOldTime, feedbackNewTime);
 
                 switch (mergedEvent.type) {
 
