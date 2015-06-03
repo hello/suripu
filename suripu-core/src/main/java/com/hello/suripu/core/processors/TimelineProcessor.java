@@ -570,8 +570,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     * Check if the motion span in a large enough time.
      */
     private boolean isValidNight(final Long accountId, final List<TrackerMotion> motionData){
-        if(!hasNewInvalidNightFilterEnabled(accountId)){
-            return motionData.size() >= MIN_TRACKER_MOTION_COUNT;
+        if(hasPillCountFilter(accountId)){
+            if  (motionData.size() < MIN_TRACKER_MOTION_COUNT) {
+                return false;
+            }
         }
 
         if(motionData.size() == 0){
