@@ -297,7 +297,7 @@ public class FirmwareUpdateStore {
                 if (!insertedEntry.isPresent()) {
                     LOGGER.error("OTA History Insertion Failed: {} => {} for {} at {}", currentFirmwareVersion, fw_files.getKey(), deviceId, eventTime);
                 }
-                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fwList.size(), s3ObjectKey, deviceId);
+                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fwList.size(), s3ObjectKey.get(), deviceId);
                 return fwList;
             }
 
@@ -412,13 +412,13 @@ public class FirmwareUpdateStore {
 
         final Integer rolloutPercent = nextFirmwareVersion.get().getValue();
 
-        if (FeatureUtils.entityIdHashInPercentRange(deviceId, 0, rolloutPercent)) {
-            LOGGER.debug("Upgrade Node exists, but device outside rollout percentage.");
+        if (!FeatureUtils.entityIdHashInPercentRange(deviceId, 0, rolloutPercent)) {
+            LOGGER.debug("Upgrade Node exists, but device outside rollout percentage ({}%).", rolloutPercent);
             return group;
         }
 
         final String s3Object = humanNames.get(0);
-        LOGGER.info("Found upgrade path {} => {}({}) for group: {}", currentFWVersion, nextFirmwareVersion.get(), s3Object, group);
+        LOGGER.info("Found upgrade path {} => {}({}) for group: {}", currentFWVersion, nextFirmwareVersion.get().getKey(), s3Object, group);
         return s3Object;
     }
 

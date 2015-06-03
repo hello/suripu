@@ -23,6 +23,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.hello.suripu.core.util.FeatureUtils;
 import org.apache.commons.math3.util.Pair;
 import com.hello.suripu.core.models.UpgradeNodeRequest;
 import com.yammer.metrics.annotation.Timed;
@@ -62,7 +63,7 @@ public class FirmwareUpgradePathDAO {
         item.put(GROUP_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(upgradeNode.groupName));
         item.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.fromFWVersion.toString()));
         item.put(TO_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.toFWVersion.toString()));
-        item.put(ROLLOUT_PERCENT_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.toFWVersion.toString()));
+        item.put(ROLLOUT_PERCENT_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.rolloutPercent.toString()));
         item.put(TIMESTAMP_ATTRIBUTE_NAME, new AttributeValue().withS(dateTimeToString(DateTime.now())));
 
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, item);
@@ -151,7 +152,8 @@ public class FirmwareUpgradePathDAO {
 
         final Map<String, AttributeValue> item = items.get(0);
         final Integer itemNextFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
-        final Integer rolloutPercent = Integer.parseInt(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN());
+
+        final Integer rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Integer.parseInt(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
 
         final Pair<Integer, Integer> nextFW = new Pair<>(itemNextFW, rolloutPercent);
         return Optional.of(nextFW);
