@@ -11,11 +11,13 @@ import com.hello.suripu.admin.cli.CreateDynamoDBTables;
 import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
+import com.hello.suripu.admin.diagnostic.DiagnosticDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.AlarmResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
 import com.hello.suripu.admin.resources.v1.DeviceResources;
+import com.hello.suripu.admin.resources.v1.DiagnosticResources;
 import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
 import com.hello.suripu.admin.resources.v1.FirmwareResource;
@@ -47,9 +49,12 @@ import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
@@ -134,6 +139,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final OnBoardingLogDAO onBoardingLogDAO = commonDB.onDemand(OnBoardingLogDAO.class);
         final AccountDAOAdmin accountDAOAdmin = commonDB.onDemand(AccountDAOAdmin.class);
+        final DiagnosticDAO diagnosticDAO = sensorsDB.onDemand(DiagnosticDAO.class);
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
 
@@ -225,6 +231,24 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
 
+        final AmazonDynamoDB tzHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.TIMEZONE_HISTORY);
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(
+                tzHistoryDynamoDBClient,
+                tableNames.get(DynamoDBTableName.TIMEZONE_HISTORY)
+        );
+
+        final AmazonDynamoDB smartAlarmHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SMART_ALARM_LOG);
+        final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = new SmartAlarmLoggerDynamoDB(
+                smartAlarmHistoryDynamoDBClient,
+                tableNames.get(DynamoDBTableName.SMART_ALARM_LOG)
+        );
+
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.RING_TIME_HISTORY);
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
+                ringTimeHistoryDynamoDBClient,
+                tableNames.get(DynamoDBTableName.RING_TIME_HISTORY)
+        );
+
         final AmazonDynamoDB pillViewsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_LAST_SEEN);
         final PillViewsDynamoDB pillViewsDynamoDB = new PillViewsDynamoDB(
                 pillViewsDynamoDBClient,
@@ -233,7 +257,8 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
         environment.addResource(new PingResource());
-        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin));
+        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin,
+                timeZoneHistoryDAODynamoDB, smartAlarmLoggerDynamoDB, ringTimeHistoryDAODynamoDB));
 
         final DeviceResources deviceResources = new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO,
                 mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO, senseColorDAO, respCommandsDAODynamoDB,pillViewsDynamoDB);
@@ -258,6 +283,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
         environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
+        environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO));
 
     }
 }

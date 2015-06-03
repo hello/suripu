@@ -2,6 +2,7 @@ package com.hello.suripu.workers.logs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.core.configuration.RedisConfiguration;
 import com.hello.suripu.core.configuration.SearchifyConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -17,22 +18,10 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
         return maxRecords;
     }
 
-    @JsonProperty("application_logs")
-    private SearchifyConfiguration applicationLogs;
-    public SearchifyConfiguration applicationLogs() {
-        return applicationLogs;
-    }
-
     @JsonProperty("sense_logs")
     private SearchifyConfiguration senseLogs;
     public SearchifyConfiguration senseLogs() {
         return senseLogs;
-    }
-
-    @JsonProperty("workers_logs")
-    private SearchifyConfiguration workersLogs;
-    public SearchifyConfiguration workersLogs() {
-        return workersLogs;
     }
 
     @Valid
@@ -59,5 +48,11 @@ public class LogIndexerWorkerConfiguration extends WorkerConfiguration {
     private DynamoDBConfiguration featuresDynamoDBConfiguration;
     public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
         return this.featuresDynamoDBConfiguration;
+    }
+
+    @JsonProperty("redis")
+    private RedisConfiguration redisConfiguration;
+    public RedisConfiguration redisConfiguration() {
+        return redisConfiguration;
     }
 }

@@ -29,11 +29,18 @@ public class FeatureFlipper {
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
     public final static String SENSORS_DB_UNAVAILABLE = "sensors_db_unavailable";
     public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
+    public final static String VIEW_SENSORS_UNAVAILABLE = "view_sensors_unavailable";
+    public final static String VIEW_TIMELINE_UNAVAILABLE = "view_timeline_unavailable";
+    public final static String VIEW_TRENDS_UNAVAILABLE = "view_trends_unavailable";
     public final static String RING_DURATION_FROM_CONFIG = "ring_duration_from_config";
     public final static String EXTRA_EVENTS = "extra_events";
     public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB = "sense_last_seen_view_dynamodb";
+    public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB_READ = "sense_last_seen_view_dynamodb_read";
     public final static String REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP = "remove_motion_events_outside_sleep";
     public final static String REMOVE_GREY_OUT_EVENTS = "remove_grey_out_events";
+    public final static String STOP_PROCESS_TIMELINE_FROM_WORKER = "stop_process_timeline_from_worker";
+    public final static String EXPIRE_TIMELINE_IN_PROCESSING_TIME_SPAN = "expire_timeline_in_processing_time_span";
+
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
 }

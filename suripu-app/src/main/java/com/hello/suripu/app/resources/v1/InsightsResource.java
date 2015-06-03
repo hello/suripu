@@ -21,14 +21,17 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TrendGraphUtils;
+import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -44,7 +47,7 @@ import java.util.Map;
  * Created by kingshy on 10/24/14.
  */
 @Path("/v1/insights")
-public class InsightsResource {
+public class InsightsResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
     private static long DAY_IN_MILLIS = 86400000L;
     private static int MIN_DATAPOINTS = 2;
@@ -59,6 +62,9 @@ public class InsightsResource {
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final InsightProcessor insightProcessor;
+
+    @Inject
+    RolloutClient feature;
 
     public InsightsResource(final AccountDAO accountDAO, final TrendsInsightsDAO trendsInsightsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB,
@@ -138,6 +144,13 @@ public class InsightsResource {
                                 @QueryParam("data_type") String dataType,
                                 @QueryParam("time_period") String timePeriod) {
 
+        final List<TrendGraph> graphs = new ArrayList<>();
+
+        if(isTrendsViewUnavailable(accessToken.accountId)) {
+            LOGGER.warn("TRENDS VIEW UNAVAILABLE FOR USER {}", accessToken.accountId);
+            return graphs;
+        }
+
         LOGGER.debug("Returning data to plot trends for account id = {}", accessToken.accountId);
 
         final TrendGraph.TimePeriodType timePeriodType = TrendGraph.TimePeriodType.fromString(timePeriod);
@@ -145,7 +158,7 @@ public class InsightsResource {
 
         Optional<TrendGraph> graphOptional = getGraph(accessToken.accountId, timePeriodType, graphDataType);
 
-        final List<TrendGraph> graphs = new ArrayList<>();
+
         if (graphOptional.isPresent()) {
             graphs.add(graphOptional.get());
         }

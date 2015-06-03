@@ -4,7 +4,7 @@ sensors_db:
   driverClass: org.postgresql.Driver
   user: sensors
   password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  url: jdbc:postgresql://sensors-1-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
   properties:
     charSet: UTF-8
 
@@ -62,6 +62,9 @@ dynamodb:
     sense_prefix : prod_sense
     sync_response_commands : prod_response_commands
     teams : teams
+    timezone_history : prod_timezone_history
+    ring_time_history: prod_ring_history_by_account
+    smart_alarm_log: prod_smart_alarm_log
 
   endpoints:
       alarm_info : http://dynamodb.us-east-1.amazonaws.com
@@ -78,5 +81,8 @@ dynamodb:
       sense_prefix : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
+      timezone_history : http://dynamodb.us-east-1.amazonaws.com
+      smart_alarm_log: http://dynamodb.us-east-1.amazonaws.com
+      ring_time_history: http://dynamodb.us-east-1.amazonaws.com
 
 

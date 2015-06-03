@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.collect.ImmutableSet;
+import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Set;
@@ -121,5 +122,12 @@ public class PasswordUtil {
         );
             // https://raw.githubusercontent.com/discourse/discourse/master/lib/common_passwords/10k-common-passwords.txt
             // Top 100 with password length >= 6
+    }
+
+    public static String obfuscate(@NotNull final String password) {
+        if(password == null || password.length() < 2) {
+            return "?";
+        }
+        return password.substring(0, 1) + "...";
     }
 }

@@ -104,12 +104,6 @@ alarm_db:
   region: us-east-1
   table_name: alarm
 
-kinesis_logger:
-  stream_name: logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-app
-
 score_threshold : 15 # minutes bucket for sleep-scores
 
 push_notifications:
@@ -230,10 +224,6 @@ sleep_stats_version: v_0_2
 
 max_cache_refresh_days: 20
 
-redis:
-  host: localhost
-  port: 6379
-
 smart_alarm_log_db:
   endpoint : http://localhost:7777
   region: us-east-1
@@ -253,3 +243,8 @@ fw_path_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: fw_upgrade_path
+
+sense_last_seen:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: sense_last_seen

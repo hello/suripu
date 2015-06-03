@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
 import com.hello.suripu.core.models.Registration;
+import com.hello.suripu.core.util.PasswordUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.joda.time.DateTime;
 import org.mindrot.jbcrypt.BCrypt;
@@ -108,7 +109,7 @@ public abstract class AccountDAOImpl implements AccountDAO {
         }
 
         if(!accountOptional.isPresent()) {
-            LOGGER.warn("exists: Account wasn't found for email = {} and password = {}...", email, password.substring(0, 1));
+            LOGGER.warn("exists: Account wasn't found for email = {} and password = {}...", email, PasswordUtil.obfuscate(password));
             return Optional.absent();
         }
 

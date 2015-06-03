@@ -92,7 +92,12 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
                 workerId);
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
-        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
+
+        if(configuration.getTrimHorizon()) {
+            kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
+        } else {
+            kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
+        }
 
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
 

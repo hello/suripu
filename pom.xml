@@ -5,11 +5,11 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.4-SNAPSHOT</version>
+    <version>0.4.22-SNAPSHOT</version>
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
-        <aws.sdk.version>1.9.13</aws.sdk.version>
+        <aws.sdk.version>1.9.37</aws.sdk.version>
         <jodatime.version>20150319</jodatime.version>
         <librato.reporter.version>2.2.0.5</librato.reporter.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

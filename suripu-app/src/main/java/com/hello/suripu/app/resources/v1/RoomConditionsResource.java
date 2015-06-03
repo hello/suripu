@@ -57,8 +57,8 @@ public class RoomConditionsResource extends BaseResource {
     public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
                                     @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
-        if(isSensorsDBUnavailable(token.accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", token.accountId);
+        if(isSensorsViewUnavailable(token.accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", token.accountId);
             return CurrentRoomState.empty();
         }
 
@@ -141,8 +141,8 @@ public class RoomConditionsResource extends BaseResource {
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
 
 
-        if(isSensorsDBUnavailable(accessToken.accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+        if(isSensorsViewUnavailable(accessToken.accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", accessToken.accountId);
             return AllSensorSampleList.getEmptyData();
         }
         validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
@@ -179,8 +179,8 @@ public class RoomConditionsResource extends BaseResource {
         validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
 
-        if(isSensorsDBUnavailable(accessToken.accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+        if(isSensorsViewUnavailable(accessToken.accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", accessToken.accountId);
             return AllSensorSampleList.getEmptyData();
         }
 
@@ -314,8 +314,8 @@ public class RoomConditionsResource extends BaseResource {
 
     private List<Sample> retrieveDayData(final Long accountId, final String sensor, final Long queryEndTimestampInUTC) {
 
-        if(isSensorsDBUnavailable(accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
+        if(isSensorsViewUnavailable(accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", accountId);
             return Collections.EMPTY_LIST;
         }
 
@@ -345,8 +345,8 @@ public class RoomConditionsResource extends BaseResource {
 
     private List<Sample> retrieveWeekData(final Long accountId, final String sensor, final Long queryEndTimestampInUTC) {
 
-        if(isSensorsDBUnavailable(accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
+        if(isSensorsViewUnavailable(accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", accountId);
             return Collections.EMPTY_LIST;
         }
 
@@ -376,8 +376,8 @@ public class RoomConditionsResource extends BaseResource {
 
     private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
 
-        if(isSensorsDBUnavailable(accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
+        if(isSensorsViewUnavailable(accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", accountId);
             return AllSensorSampleList.getEmptyData();
         }
 

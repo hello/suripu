@@ -146,8 +146,8 @@ public class TimelineResource extends BaseResource {
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
-        if(isSensorsDBUnavailable(accessToken.accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+        if(isTimelineViewUnavailable(accessToken.accountId)) {
+            LOGGER.warn("TIMELINE VIEW UNAVAILABLE FOR USER {}", accessToken.accountId);
             final List<Timeline> timelines = Lists.newArrayList(
                     Timeline.createEmpty(English.TIMELINE_UNAVAILABLE)
             );

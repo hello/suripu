@@ -111,6 +111,9 @@ dynamodb:
     sense_prefix : sense
     sync_response_commands : response_commands
     teams : teams
+    timezone_history : timezone_history
+    ring_time_history: ring_history_by_account
+    smart_alarm_log: smart_alarm_log
 
   endpoints:
     alarm_info : http://dynamodb.us-east-1.amazonaws.com
@@ -127,4 +130,7 @@ dynamodb:
     sense_prefix : http://dynamodb.us-east-1.amazonaws.com
     sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
     teams : http://dynamodb.us-east-1.amazonaws.com
+    timezone_history : http://dynamodb.us-east-1.amazonaws.com
+    smart_alarm_log: http://dynamodb.us-east-1.amazonaws.com
+    ring_time_history: http://dynamodb.us-east-1.amazonaws.com
 

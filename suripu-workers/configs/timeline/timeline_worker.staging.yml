@@ -162,8 +162,10 @@ score_threshold : 15 # minutes bucket for sleep-scores
 
 
 max_no_motion_period_minutes: 90
-hour_of_day_trigger: 5
+start_process_time: 5
 end_process_time: 11
+start_expire_time: 5
+end_expire_time: 12
 max_cache_refresh_days: 20
 sleep_stats_version: v_0_2
 

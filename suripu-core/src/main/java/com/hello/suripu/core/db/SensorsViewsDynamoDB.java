@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.FirmwareInfo;
+import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
 import java.util.HashMap;
 import org.joda.time.DateTime;
@@ -291,6 +292,40 @@ public class SensorsViewsDynamoDB {
 
         return Optional.of(fwVersions);
     }
+
+
+    public Optional<DeviceStatus> senseStatus(final String senseId, final Long accountId, final Long internalSenseId) {
+        final Map<String, AttributeValue> key = Maps.newHashMap();
+        key.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
+        final GetItemRequest getItemRequest = new GetItemRequest()
+                .withKey(key)
+                .withTableName(lastSeenTableName);
+        final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
+        return deviceStatusfromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
+    }
+
+
+    private Optional<DeviceStatus> deviceStatusfromDynamoDB(final Map<String, AttributeValue> item, final String senseId, final Long accountId, final Long internalSenseId) {
+        if(item == null || item.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final String dateTimeUTC = (item.containsKey(UPDATED_AT_UTC_ATTRIBUTE_NAME) ? item.get(UPDATED_AT_UTC_ATTRIBUTE_NAME).getS() : "");
+        if(dateTimeUTC.isEmpty()) {
+            LOGGER.error("Malformed data stored in last seen for device_id={}.", senseId);
+            return Optional.absent();
+        }
+
+        final String firmwareVersion = item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME)
+                ? Integer.toHexString(Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()))
+                : "-";
+
+        final DateTime dateTime = DateTime.parse(dateTimeUTC, DateTimeFormat.forPattern(DATETIME_FORMAT));
+
+        final DeviceStatus deviceStatus = DeviceStatus.sense(internalSenseId, firmwareVersion, dateTime);
+        return Optional.of(deviceStatus);
+    }
+
 
     private Optional<DeviceData> fromDynamoDB(final Map<String, AttributeValue> item, final String senseId, final Long accountId, final Long internalSenseId) {
         if(item == null || item.isEmpty()) {
