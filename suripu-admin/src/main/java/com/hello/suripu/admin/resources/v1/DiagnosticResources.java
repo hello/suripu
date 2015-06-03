@@ -36,11 +36,10 @@ public class DiagnosticResources {
     }
 
     @GET
-    @Path("/uptime/{email}/{external_sense_id}")
+    @Path("/uptime/{email}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Count> uptime(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                              @PathParam("email") final String email,
-                              @PathParam("external_sense_id") final String senseId) {
+                              @PathParam("email") final String email) {
 
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
         if(!accountIdOptional.isPresent()) {
@@ -53,6 +52,8 @@ public class DiagnosticResources {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(
                     new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "Device not found")).build());
         }
-        return diagnosticDAO.uptime(accountIdOptional.get(), deviceAccountPairOptional.get().internalDeviceId);
+
+        final List<Count> counts = diagnosticDAO.uptime(accountIdOptional.get(), deviceAccountPairOptional.get().internalDeviceId);
+        return counts;
     }
 }
