@@ -48,7 +48,8 @@ public class FeedbackUtilsTest {
         final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
         timelineFeedbacks.add(feedback);
 
-        final FeedbackUtils.ReprocessedEvents newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
+        final FeedbackUtils utils = new FeedbackUtils();
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
         final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
@@ -84,7 +85,9 @@ public class FeedbackUtilsTest {
         final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
         timelineFeedbacks.add(feedback);
 
-        final FeedbackUtils.ReprocessedEvents newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
+        final FeedbackUtils utils = new FeedbackUtils();
+
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
         final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
@@ -95,7 +98,7 @@ public class FeedbackUtilsTest {
 
     @Test
     public void TestGettingTheClosestFeedback() {
-
+        FeedbackUtils utils = new FeedbackUtils();
 
         final long t1 = 1429134060000L; //Wed, 15 Apr 2015 21:41:00 GMT
         final long t2 = t1 + 1 * 60000L;
@@ -134,7 +137,7 @@ public class FeedbackUtilsTest {
         timelineFeedbacks.add(feedback2);
         timelineFeedbacks.add(feedback3);
 
-        final FeedbackUtils.ReprocessedEvents newEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(extraEvents), offset);
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(extraEvents), offset);
 
         final long ref = 1429134000000L; //Wed, 15 Apr 2015 21:40:00 GMT
 

@@ -74,6 +74,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
     private final TimelineSafeguards timelineSafeguards;
+    private final FeedbackUtils feedbackUtils;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -127,12 +128,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
             timelineUtils = new TimelineUtils(uuid.get());
             timelineSafeguards = new TimelineSafeguards(uuid.get());
+            feedbackUtils = new FeedbackUtils(uuid.get());
 
         }
         else {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
             timelineUtils = new TimelineUtils();
             timelineSafeguards = new TimelineSafeguards();
+            feedbackUtils = new FeedbackUtils();
         }
     }
 
@@ -430,7 +433,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
 
         //MOVE EVENTS BASED ON FEEDBACK
-        final FeedbackUtils.ReprocessedEvents reprocessedEvents = FeedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents),extraEvents, offsetMillis);
+        final FeedbackUtils.ReprocessedEvents reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents),extraEvents, offsetMillis);
 
 
         // PARTNER MOTION
