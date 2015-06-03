@@ -102,7 +102,7 @@ public class FirmwareUpdateStore {
                 .build();
 
         final Cache<DeviceGroupFW, String> s3ObjectKeyCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .expireAfterWrite(1, TimeUnit.MINUTES)
                 .build();
 
         return new FirmwareUpdateStore(otaHistoryDAO, s3, bucketName, s3Signer, s3Cache, firmwareVersionMappingDAO, firmwareUpgradePathDAO, s3ObjectKeyCache);
