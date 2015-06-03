@@ -30,7 +30,7 @@ import java.util.UUID;
 
 public class FeedbackUtils {
 
-    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineUtils.class);
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(FeedbackUtils.class);
     private final Logger LOGGER;
 
     public FeedbackUtils(final UUID uuid) {
