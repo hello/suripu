@@ -159,7 +159,7 @@ public class FeedbackUtils {
         return events;
     }
 
-    /* returns map of events by original event type */
+    /* returns list of events by original event type */
     public static List<EventWithTime> getFeedbackEventsInOriginalTimeMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
 
         /* this map will return items that are within PROXIMITY_FOR_FEEDBACK_MATCH_MILLISECONDS of the key */
