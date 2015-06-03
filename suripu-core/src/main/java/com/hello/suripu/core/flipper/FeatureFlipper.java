@@ -26,7 +26,7 @@ public class FeatureFlipper {
     public final static String PCH_SPECIAL_OTA = "pch_special_ota";
     public final static String ALLOW_RESPONSE_COMMANDS = "allow_response_commands";
     public final static String ALL_SENSOR_QUERY_USE_UTC_TS = "all_sensor_query_user_utc_ts";
-    public final static String PILL_COUNT_FILTER = "PILL_COUNT_FILTER";
+    public final static String PILL_COUNT_FILTER = "pill_count_filter";
     public final static String SENSORS_DB_UNAVAILABLE = "sensors_db_unavailable";
     public final static String COMMON_DB_UNAVAILABLE = "common_db_unavailable";
     public final static String VIEW_SENSORS_UNAVAILABLE = "view_sensors_unavailable";
