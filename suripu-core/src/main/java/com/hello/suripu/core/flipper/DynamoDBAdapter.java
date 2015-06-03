@@ -61,12 +61,22 @@ public class DynamoDBAdapter implements RolloutAdapter{
 
     @Override
     public boolean userFeatureActive(final String feature, final long userId, final List<String> userGroups) {
-        return featureActive(feature, String.valueOf(userId), userId, userGroups);
+        final Feature f = features.get().get(feature);
+        if(f == null) {
+            LOGGER.warn("Feature {} is null", feature);
+            return false;
+        }
+        return featureActive(f, String.valueOf(userId), userGroups);
     }
 
     @Override
     public boolean deviceFeatureActive(final String feature, final String deviceId, final List<String> deviceGroups) {
-        return featureActive(feature,deviceId,deviceId.hashCode(),deviceGroups);
+        final Feature f = features.get().get(feature);
+        if(f == null) {
+            LOGGER.warn("Feature {} is null", feature);
+            return false;
+        }
+        return featureActive(f, deviceId, deviceGroups);
     }
 
 
@@ -78,41 +88,36 @@ public class DynamoDBAdapter implements RolloutAdapter{
      * @param groups
      * @return boolean indicating whether feature is active
      */
-    private boolean featureActive(final String feature, final String entityId, final long hashId, List<String> groups) {
+    public static boolean featureActive(final Feature feature, final String entityId, List<String> groups) {
+
         final Set<String> userGroupsSet = new HashSet<>();
         userGroupsSet.addAll(groups);
 
-        LOGGER.trace("Feature name = {}", feature);
+        LOGGER.trace("Feature name = {}", feature.name);
 
-        final Feature f = features.get().get(feature);
-        if(f == null) {
-            LOGGER.warn("Feature {} is null", feature);
-            return false;
-        }
-
-        if(f.ids.contains(String.valueOf(entityId))) {
+        if(feature.ids.contains(String.valueOf(entityId))) {
             LOGGER.trace("User id in userIds");
             return true;
         }
 
-        if (f.groups.contains("all")) {
+        if (feature.groups.contains("all")) {
             LOGGER.trace("feature groups contains all");
             return true;
         }
 
         if (userGroupsSet != null && !userGroupsSet.isEmpty()) {
-            if(!Sets.intersection(userGroupsSet, f.groups).isEmpty()) {
+            if(!Sets.intersection(userGroupsSet, feature.groups).isEmpty()) {
                 LOGGER.trace("User group is contained in feature groups");
                 return true;
             }
         }
 
-        if(f.percentage == 0) {
+        if(feature.percentage == 0) {
             LOGGER.trace("Percentage is 0, turning off for everyone");
             return false;
         }
 
-        if (FeatureUtils.entityIdHashInPercentRange(entityId, 0, f.percentage)) {
+        if (FeatureUtils.entityIdHashInPercentRange(entityId, 0, feature.percentage)) {
             LOGGER.trace("Included in percentage.");
             return true;
         }
