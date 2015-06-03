@@ -164,8 +164,10 @@ public class DataResources {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, sensor, 0);
+                accountId, deviceId.get(), slotDurationInMinutes, sensor, 0,color);
     }
 
 

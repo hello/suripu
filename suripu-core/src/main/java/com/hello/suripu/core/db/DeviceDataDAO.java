@@ -235,7 +235,8 @@ public abstract class DeviceDataDAO {
             final Long deviceId,
             final int slotDurationInMinutes,
             final String sensor,
-            final Integer missingDataDefaultValue) {
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color) {
 
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
@@ -271,7 +272,7 @@ public abstract class DeviceDataDAO {
         LOGGER.trace("Map size = {}", map.size());
 
 
-        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor);
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor,color);
 
         if(!optionalPopulatedMap.isPresent()) {
             return Collections.EMPTY_LIST;

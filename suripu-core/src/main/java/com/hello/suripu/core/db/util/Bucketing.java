@@ -61,7 +61,7 @@ public class Bucketing {
      * @param sensorName
      * @return
      */
-    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName) {
+    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,final Optional<Device.Color> optionalColor) {
 
         if(deviceDataList == null) {
             LOGGER.error("deviceDataList is null for sensor {}", sensorName);
@@ -70,6 +70,12 @@ public class Bucketing {
 
         if(deviceDataList.isEmpty()) {
             return Optional.absent();
+        }
+
+        Device.Color color = DEFAULT_COLOR;
+
+        if (optionalColor.isPresent()) {
+            color = optionalColor.get();
         }
 
         final Map<Long, Sample> map = new HashMap<>();
@@ -88,7 +94,7 @@ public class Bucketing {
             } else if (sensorName.equals("particulates")) {
                 sensorValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientAirQualityRaw, deviceData.firmwareVersion);
             } else if (sensorName.equals("light")) {
-                sensorValue =  deviceData.ambientLightFloat;
+                sensorValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             } else if (sensorName.equals("sound")) {
                 sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             } else if(sensorName.equals("wave_count")) {
