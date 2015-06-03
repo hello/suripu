@@ -8,6 +8,8 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -20,6 +22,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class FeedbackUtilsTest {
+
+    @Before
+    public void setup() {
+       // DateTimeZone.setDefault(DateTimeZone.UTC);
+    }
 
     @Test
     public void TestFeedbackReprocessing() {
@@ -99,12 +106,14 @@ public class FeedbackUtilsTest {
     @Test
     public void TestGettingTheClosestFeedback() {
         FeedbackUtils utils = new FeedbackUtils();
+//
+// Wed, 15 Apr 2015 21:41:00 GMT
+        final long t1 = 1429134060000L; //22:41
 
-        final long t1 = 1429134060000L; //Wed, 15 Apr 2015 21:41:00 GMT
-        final long t2 = t1 + 1 * 60000L;
-        final long t3 = t1 - 2 * 60000L;
-        final long t4 = t1 + 2 * 60000L;
-        final long t5 = t1 + 3 * 60000L;
+        final long t2 = t1 + 1 * 60000L; //22:42
+        final long t3 = t1 - 3 * 60000L; //22:38
+        final long t4 = t1 + 2 * 60000L; //22:43
+        final long t5 = t1 + 3 * 60000L; //22:44
 
         final int offset = 3600000; // + 1 hour
         final long expectedTime = t1 + 4 * 60000L;
