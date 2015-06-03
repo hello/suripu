@@ -4,8 +4,10 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -41,12 +43,14 @@ public class RoomConditionsResource extends BaseResource {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
+    private final SenseColorDAO senseColorDAO;
 
-    public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds) {
+    public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.allowedRangeInSeconds = allowedRangeInSeconds;
+        this.senseColorDAO = senseColorDAO;
     }
 
 
@@ -157,8 +161,10 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -195,8 +201,11 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+
+
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId));
+                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
@@ -398,8 +407,10 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId));
+                accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId),color);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();

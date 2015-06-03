@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.AllSensorSampleMap;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.util.DataUtils;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Bucketing {
-
+    private  static final Device.Color DEFAULT_COLOR = Device.Color.BLACK;
     private static final Logger LOGGER = LoggerFactory.getLogger(Bucketing.class);
 
     /**
@@ -114,7 +115,9 @@ public class Bucketing {
         return Optional.of(map);
     }
 
-    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList) {
+
+
+    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
 
@@ -122,11 +125,17 @@ public class Bucketing {
             return populatedMap;
         }
 
+        Device.Color color = DEFAULT_COLOR;
+
+        if (optionalColor.isPresent()) {
+            color = optionalColor.get();
+        }
+
         for(final DeviceData deviceData: deviceDataList) {
 
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
-            final float lightValue = deviceData.ambientLightFloat;
+            final float lightValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);

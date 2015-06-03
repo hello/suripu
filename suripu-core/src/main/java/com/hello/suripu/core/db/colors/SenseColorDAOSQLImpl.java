@@ -15,6 +15,9 @@ public abstract class SenseColorDAOSQLImpl implements SenseColorDAO {
     @SqlQuery("SELECT * FROM sense_colors WHERE sense_id = :sense_id LIMIT 1")
     public abstract Optional<Device.Color> getColorForSense(@Bind("sense_id") final String senseId);
 
+    public Optional<Device.Color> getColorForSense(final Long senseId) {
+        return getColorForSense(Long.toHexString(senseId));
+    }
 
     @SqlUpdate("INSERT INTO sense_colors (sense_id, color) VALUES(:sense_id, :color);")
     public abstract int saveColorForSense(@Bind("sense_id") final String senseId, @Bind("color") final String color);

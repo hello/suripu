@@ -10,6 +10,7 @@ import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
@@ -37,6 +38,7 @@ import java.util.regex.Matcher;
 
 
 public abstract class DeviceDataDAO {
+    public final static Device.Color DEFAULT_COLOR = Device.Color.WHITE;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
 
@@ -293,7 +295,8 @@ public abstract class DeviceDataDAO {
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final Integer missingDataDefaultValue) {
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
@@ -311,7 +314,7 @@ public abstract class DeviceDataDAO {
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;
@@ -386,7 +389,8 @@ public abstract class DeviceDataDAO {
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final Integer missingDataDefaultValue) {
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
@@ -405,7 +409,7 @@ public abstract class DeviceDataDAO {
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;

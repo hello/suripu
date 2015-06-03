@@ -9,11 +9,13 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.SenseLogTag;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DataScience.UserLabel;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
@@ -57,19 +59,23 @@ public class DataResources {
     private final UserLabelDAO userLabelDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
+    private final SenseColorDAO senseColorDAO;
 
     public DataResources(final DeviceDataDAO deviceDataDAO,
                          final DeviceDAO deviceDAO,
                          final AccountDAO accountDAO,
                          final UserLabelDAO userLabelDAO,
                          final TrackerMotionDAO trackerMotionDAO,
-                         final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+                         final SensorsViewsDynamoDB sensorsViewsDynamoDB,
+                         final SenseColorDAO senseColorDAO) {
+
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.userLabelDAO = userLabelDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
+        this.senseColorDAO = senseColorDAO;
     }
 
     @GET
@@ -280,13 +286,17 @@ public class DataResources {
 
         final int slotDurationInMinutes = 5;
         final Integer missingDataDefaultValue = 0;
+
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceAccountPairOptional.get().internalDeviceId);
+
         final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 startTimestamp,
                 endTimestamp,
                 accountId,
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
-                missingDataDefaultValue
+                missingDataDefaultValue,
+                color
         );
 
         final List<UserInteraction> userInteractions = new ArrayList<>();

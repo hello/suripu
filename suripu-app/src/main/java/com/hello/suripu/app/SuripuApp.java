@@ -65,6 +65,8 @@ import com.hello.suripu.core.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -306,6 +308,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         );
 
 
+        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+        
         final AmazonDynamoDB senseLastSeenDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseLastSeenConfiguration().getEndpoint());
         final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
                 senseLastSeenDynamoDBClient,
@@ -317,7 +321,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
+        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB));
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
@@ -330,7 +334,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
                 accountDAO,
-                sleepStatsDAODynamoDB);
+                sleepStatsDAODynamoDB,
+                senseColorDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
 
