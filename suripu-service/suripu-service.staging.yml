@@ -99,7 +99,7 @@ kinesis:
     registrations: registrations
     encode_audio: encode_audio
     batch_pill_data : batch_pill_data
-    sense_sensors_data : sense_sensors_data
+    sense_sensors_data : dev_sense_sensors_data
     logs: dev-logs
 
 audio_bucket_name : hello-data
