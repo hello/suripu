@@ -25,7 +25,7 @@ public class FeedbackUtilsTest {
 
     @Before
     public void setup() {
-        DateTimeZone.setDefault(DateTimeZone.UTC);
+       // DateTimeZone.setDefault(DateTimeZone.UTC);
     }
 
     @Test
