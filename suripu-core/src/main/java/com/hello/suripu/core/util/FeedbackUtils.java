@@ -1,10 +1,10 @@
 package com.hello.suripu.core.util;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -13,16 +13,33 @@ import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.TimelineFeedback;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 
 public class FeedbackUtils {
+
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(FeedbackUtils.class);
+    private final Logger LOGGER;
+
+    public FeedbackUtils(final UUID uuid) {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+    }
+
+    public FeedbackUtils() {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+    }
 
     public static Optional<DateTime> convertFeedbackToDateTimeByNewTime(final TimelineFeedback feedback, final Integer offsetMillis) {
 
@@ -142,11 +159,11 @@ public class FeedbackUtils {
         return events;
     }
 
-    /* returns map of events by original event type */
-    public static Map<Long,Event> getFeedbackEventsInOriginalTimeMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
+    /* returns list of events by original event type */
+    public static List<EventWithTime> getFeedbackEventsInOriginalTimeMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
 
         /* this map will return items that are within PROXIMITY_FOR_FEEDBACK_MATCH_MILLISECONDS of the key */
-        final Map<Long,Event> eventMap =  Maps.newHashMap();
+        final List<EventWithTime> eventList =  Lists.newArrayList();
 
 
         /* iterate through list*/
@@ -168,11 +185,11 @@ public class FeedbackUtils {
             }
 
 
-            eventMap.put(oldTime.get().getMillis(),event.get());
+            eventList.add(new EventWithTime(oldTime.get().getMillis(), event.get(),EventWithTime.Type.NONE));
 
         }
 
-        return eventMap;
+        return eventList;
     }
 
     public static class ReprocessedEvents {
@@ -185,141 +202,194 @@ public class FeedbackUtils {
         }
     }
 
-    //we're going put this class in a hashmap
-    private static class TypeAndTime {
-        final public Event.Type event;
-        final public Long time;
 
-        public TypeAndTime(Event.Type event, Long time) {
-            this.event = event;
+
+
+
+    private static class EventWithTime {
+        enum Type {
+            NONE,
+            MAIN,
+            EXTRA;
+        }
+
+        public final Long time;
+        public final Event event;
+        public final Type type;
+
+        public EventWithTime(Long time, Event event,Type type) {
             this.time = time;
+            this.event = event;
+            this.type = type;
         }
 
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(time, event.getValue());
-        }
 
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof TypeAndTime)) {
-                return false;
-            }
 
-            final TypeAndTime obj2 = (TypeAndTime) obj;
+    }
 
-            return Objects.equal(event,obj2.event) && Objects.equal(time,obj2.time);
+    private static class ScoredEventWithTimePair {
+        public final EventWithTime e1;
+        public final EventWithTime e2;
+        public final double score;
+
+
+        public ScoredEventWithTimePair(EventWithTime e1, EventWithTime e2) {
+            this.e1 = e1;
+            this.e2 = e2;
+            this.score = Math.abs( (e1.time - e2.time) / 60000L);
         }
     }
 
-    private static ImmutableList<Event> remap (final Map<TypeAndTime,Long> mapping,final ImmutableList<Event> originalEvents) {
-        final List<Event> mappedEvents = Lists.newArrayList();
-
-        for (final Event event : originalEvents) {
-
-            final TypeAndTime typeAndTime = new TypeAndTime(event.getType(),event.getStartTimestamp());
-
-            final Long mappedTime = mapping.get(typeAndTime);
-
-            if (mappedTime == null) {
-                mappedEvents.add(event);
-                continue;
+    private static final Comparator<ScoredEventWithTimePair> lowestScoreComparator = new Comparator<ScoredEventWithTimePair>() {
+        @Override
+        public int compare(ScoredEventWithTimePair o1, ScoredEventWithTimePair o2) {
+            if (o1.score > o2.score) {
+                return 1;
             }
 
-            //remap
+            if (o1.score < o2.score) {
+                return -1;
+            }
+
+            return 0;
+        }
+    };
+
+    private static EventWithTime mergeEvents(final ScoredEventWithTimePair pair) {
+
 
             //clone feedback, but changing the message from the default message to the alg-generated event's message
-            mappedEvents.add(Event.createFromType(
-                    event.getType(),
-                    mappedTime,
-                    mappedTime + 60000L,
-                    event.getTimezoneOffset(),
-                    event.getDescription(),
-                    event.getSoundInfo(),
-                    event.getSleepDepth()));
+            final Event event = Event.createFromType(
+                    pair.e1.event.getType(),
+                    pair.e2.event.getStartTimestamp(),
+                    pair.e2.event.getEndTimestamp(),
+                    pair.e1.event.getTimezoneOffset(),
+                    pair.e1.event.getDescription(),
+                    pair.e1.event.getSoundInfo(),
+                    pair.e1.event.getSleepDepth());
 
-        }
 
-        return ImmutableList.copyOf(mappedEvents);
+            return new EventWithTime(event.getStartTimestamp(),event,pair.e1.type);
+
     }
 
-    public static ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
+
+    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
 
 
         /* get events by time  */
-        final  Map<Long,Event> feedbackEventMapByOriginalTime = getFeedbackEventsInOriginalTimeMap(timelineFeedbackList,offsetMillis);
+        final  List<EventWithTime> feedbackEventByOriginalTime = getFeedbackEventsInOriginalTimeMap(timelineFeedbackList,offsetMillis);
 
-        final Scorer longScorer = new Scorer<Long>() {
-            @Override
-            public Long getScore(Long o1, Long o2) {
-                return Math.abs(o1-o2);
+        Map<Event.Type,Set<EventWithTime>> algEventsByType = Maps.newHashMap();
+        Map<Event.Type,Set<EventWithTime>> feedbackEventsByType = Maps.newHashMap();
+
+
+        //populate maps
+        for (final EventWithTime event : feedbackEventByOriginalTime) {
+            if (!feedbackEventsByType.containsKey(event.event.getType())) {
+                feedbackEventsByType.put(event.event.getType(),new HashSet<EventWithTime>());
             }
-        };
 
-        final Comparator longComparator = new Comparator<Long>() {
+            feedbackEventsByType.get(event.event.getType()).add(event);
 
-            @Override
-            public int compare(Long o1, Long o2) {
-                if (o1 < o2) {
-                    return -1;
-                }
-
-                if (o1 > o2) {
-                    return 1;
-                }
-
-                return 0;
-            }
-        };
-
-        //track events by event type, and then the times.
-        final BestMatchByTypeMap<Event.Type,Long> typeAndTimeMatcher = new BestMatchByTypeMap<>(longScorer,longComparator);
+        }
 
         for (final Event event : algEvents) {
-            typeAndTimeMatcher.add(event.getType(),event.getStartTimestamp());
+            if (!algEventsByType.containsKey(event.getType())) {
+                algEventsByType.put(event.getType(),new HashSet<EventWithTime>());
+            }
+
+            algEventsByType.get(event.getType()).add(new EventWithTime(event.getStartTimestamp(),event,EventWithTime.Type.MAIN));
         }
 
         for (final Event event : extraEvents) {
-            typeAndTimeMatcher.add(event.getType(),event.getStartTimestamp());
+            if (!algEventsByType.containsKey(event.getType())) {
+                algEventsByType.put(event.getType(),new HashSet<EventWithTime>());
+            }
+
+            algEventsByType.get(event.getType()).add(new EventWithTime(event.getStartTimestamp(),event,EventWithTime.Type.EXTRA));
         }
 
-        final Map<TypeAndTime,Long> timeEventMapper = new HashMap<>();
+        final List<Event> newAlgEvents = Lists.newArrayList();
+        final List<Event> newExtraEvents = Lists.newArrayList();
 
-        final Iterator<Long> it =  feedbackEventMapByOriginalTime.keySet().iterator();
+        //match up feedback with alg events
+        for (final Event.Type key : algEventsByType.keySet()) {
+            final Set<EventWithTime> feedbacksOfOneType = feedbackEventsByType.get(key);
 
-        //go through feedback times, find matches by type and closest time
-        //when you find the match, remove the item from our overly-complicated tracker map
-        while (it.hasNext()) {
-            final Long key = it.next(); //feedback original time
-            final Event value = feedbackEventMapByOriginalTime.get(key);
-            final Long newFeedbackTime = value.getStartTimestamp();
-
-            //this matchedEventTime is the original alg-produced event time, the "key" is the feedback time
-            //we are finding the closest original event time with this "key"
-            //SO NOTE WE ARE MATCHING BY FEEDBACK ORIGINAL TIME
-            Long matchedEventTime = typeAndTimeMatcher.getClosest(value.getType(),key);
-
-            if (matchedEventTime == null) {
+            if (feedbacksOfOneType == null) {
                 continue;
             }
 
-            //remove matched event
-            typeAndTimeMatcher.remove(value.getType(),matchedEventTime);
 
-            //store event old time, type, and new time
-            //we will go back and lookup the original alg-produced event time and type to go find the newFeedbackTime
-            timeEventMapper.put(new TypeAndTime(value.getType(),matchedEventTime), newFeedbackTime);
+            final Set<EventWithTime> algeventsOfOneType = algEventsByType.get(key);
+
+            while (!algeventsOfOneType.isEmpty() && !feedbacksOfOneType.isEmpty()) {
+                final List<ScoredEventWithTimePair> scoredPairs = Lists.newArrayList();
+
+                //SCORE AND REMOVE
+                for (final EventWithTime aevent : algeventsOfOneType) {
+                    for (final EventWithTime feedback : feedbacksOfOneType) {
+                        scoredPairs.add(new ScoredEventWithTimePair(aevent, feedback));
+                    }
+                }
+
+                Collections.sort(scoredPairs, lowestScoreComparator);
+
+                //lowest score!
+                final ScoredEventWithTimePair best = scoredPairs.get(0);
+
+                //remove matches
+                algeventsOfOneType.remove(best.e1);
+                feedbacksOfOneType.remove(best.e2);
+
+
+                //add event
+                final EventWithTime mergedEvent = mergeEvents(best);
+
+                final String type = best.e1.event.getType().toString();
+                final DateTime oldTime = new DateTime(best.e1.event.getStartTimestamp(),DateTimeZone.forOffsetMillis(best.e1.event.getTimezoneOffset()));
+                final DateTime feedbackOldTime = new DateTime(best.e2.time,DateTimeZone.forOffsetMillis(best.e1.event.getTimezoneOffset()));
+                final DateTime feedbackNewTime = new DateTime(best.e2.event.getStartTimestamp(),DateTimeZone.forOffsetMillis(best.e1.event.getTimezoneOffset()));
+
+                LOGGER.info("matched {} at time {} to feedback at time {} moving to {}",type,oldTime,feedbackOldTime,feedbackNewTime);
+
+                switch (mergedEvent.type) {
+
+                    case NONE:
+                        break;
+                    case MAIN:
+                        newAlgEvents.add(mergedEvent.event);
+                        break;
+                    case EXTRA:
+                        newExtraEvents.add(mergedEvent.event);
+                        break;
+                }
+
+
+            }
+
         }
 
+        //add the remainder of alg events
+        for (final Set<EventWithTime> eventWithTimes : algEventsByType.values()) {
+            for (final EventWithTime event : eventWithTimes) {
+                switch (event.type) {
 
-        //operating under the assumption that all events type with time are mutually exclusive
-        final ImmutableList<Event> newAlgEvents = remap(timeEventMapper,algEvents);
+                    case NONE:
+                        break;
+                    case MAIN:
+                        newAlgEvents.add(event.event);
+                        break;
+                    case EXTRA:
+                        newExtraEvents.add(event.event);
+                        break;
+                }
 
-        final ImmutableList<Event> newExtraEvents = remap(timeEventMapper,extraEvents);
+            }
+        }
 
-        return  new ReprocessedEvents(newAlgEvents,newExtraEvents);
-
-
+        return  new ReprocessedEvents(ImmutableList.copyOf(newAlgEvents),ImmutableList.copyOf(newExtraEvents));
 
     }
 
