@@ -1,5 +1,7 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
@@ -86,7 +88,25 @@ public class TeamStore {
         getItemRequest.withTableName(tableName)
                 .withKey(item);
 
-        final GetItemResult result = dynamoDB.getItem(getItemRequest);
+        final GetItemResult result;
+
+        try {
+            result = dynamoDB.getItem(getItemRequest);
+        }catch (AmazonServiceException awsEx){
+            LOGGER.error("getTeam request failed. AWS service error: {}", awsEx.getMessage());
+            return Optional.absent();
+        }catch (AmazonClientException awcEx){
+            LOGGER.error("getTeam request failed. Client error: {}", awcEx.getMessage());
+            return Optional.absent();
+        }catch (Exception e) {
+            LOGGER.error("getTeam request failed. {}", e.getMessage());
+            return Optional.absent();
+        }
+
+        if(result.getItem() == null){
+            return Optional.absent();
+        }
+
         return makeTeam(result.getItem(), type);
     }
 

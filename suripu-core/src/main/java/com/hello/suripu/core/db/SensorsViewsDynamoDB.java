@@ -33,7 +33,6 @@ import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.Sample;
-import java.util.ArrayList;
 import java.util.HashMap;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -55,6 +54,7 @@ public class SensorsViewsDynamoDB {
     private final String lastSeenTableName;
 
     public static final String SENSE_ID_ATTRIBUTE_NAME = "sense_id";
+    public static final Integer MAX_LAST_SEEN_DEVICES = 100;
 
     protected static final String UTC_TIMESTAMP_ATTRIBUTE_NAME = "utc_ts";
     protected static final String TEMP_ATTRIBUTE_NAME = "temp";
@@ -235,19 +235,24 @@ public class SensorsViewsDynamoDB {
         return fromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
     }
 
-    public Optional<List<FirmwareInfo>> lastSeenFirmwareBatch(Set<String> deviceIds) {
+    public Optional<List<FirmwareInfo>> lastSeenFirmwareBatch(final Set<String> deviceIds) {
 
-        List<Map<String, AttributeValue>> conditions = new ArrayList<Map<String, AttributeValue>>();
+        if (deviceIds.size() > MAX_LAST_SEEN_DEVICES) {
+            LOGGER.error("Device limit ({}) exceeded while querying last seen firmware.", MAX_LAST_SEEN_DEVICES);
+            return Optional.absent();
+        }
 
-        BatchGetItemRequest request = new BatchGetItemRequest();
+        final List<Map<String, AttributeValue>> conditions = Lists.newArrayList();
 
-        for (String devId : deviceIds) {
-            Map<String, AttributeValue> cond = new HashMap<String, AttributeValue>();
+        final BatchGetItemRequest request = new BatchGetItemRequest();
+
+        for (final String devId : deviceIds) {
+            final Map<String, AttributeValue> cond = new HashMap<String, AttributeValue>();
             cond.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(devId));
             conditions.add(cond);
         }
 
-        KeysAndAttributes keys = new KeysAndAttributes().withKeys(conditions);
+        final KeysAndAttributes keys = new KeysAndAttributes().withKeys(conditions);
         request.addRequestItemsEntry(lastSeenTableName, keys);
 
         BatchGetItemResult batchResult;
@@ -265,10 +270,10 @@ public class SensorsViewsDynamoDB {
             return Optional.absent();
         }
 
-        Map<String,List<Map<String,AttributeValue>>> resultsMap = batchResult.getResponses();
-        List<FirmwareInfo> fwVersions = new ArrayList<>();
+        final Map<String,List<Map<String,AttributeValue>>> resultsMap = batchResult.getResponses();
+        final List<FirmwareInfo> fwVersions = Lists.newArrayList();
 
-        for (Map<String, AttributeValue> item : resultsMap.get(lastSeenTableName)) {
+        for (final Map<String, AttributeValue> item : resultsMap.get(lastSeenTableName)) {
             if (!item.containsKey(SENSE_ID_ATTRIBUTE_NAME)) {
                 continue;
             }

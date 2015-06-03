@@ -1,6 +1,8 @@
 package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
@@ -20,7 +22,6 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
-import java.util.Collections;
 import java.util.HashMap;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -244,14 +245,17 @@ public class FirmwareResource {
         }
 
         final Team group = team.get();
-        final Optional<List<FirmwareInfo>> firmwares = sensorsViewsDynamoDB.lastSeenFirmwareBatch(group.ids);
+        final List<String> groupIds = Lists.newArrayList(group.ids);
+        final List<List<String>> devices = Lists.partition(groupIds, SensorsViewsDynamoDB.MAX_LAST_SEEN_DEVICES);
 
-        if (!firmwares.isPresent()) {
-            return Collections.EMPTY_LIST;
+        final List<FirmwareInfo> firmwares = Lists.newArrayList();
+        for (final List<String> deviceSubList : devices) {
+            final Optional<List<FirmwareInfo>> fwInfo = sensorsViewsDynamoDB.lastSeenFirmwareBatch(Sets.newHashSet(deviceSubList));
+            if (fwInfo.isPresent()) {
+                firmwares.addAll(fwInfo.get());
+            }
         }
-
-        return firmwares.get();
-
+        return firmwares;
     }
 
 
