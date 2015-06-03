@@ -135,7 +135,7 @@ public class OAuthResource {
         }
 
         LOGGER.debug("AccessToken {}", accessToken);
-        LOGGER.debug("email {}", accessToken.accountId);
+        LOGGER.debug("email {}", username);
         return accessToken;
     }
 

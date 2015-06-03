@@ -168,7 +168,7 @@ VALUES ('sleep_hygiene', '', 'Healthy Sleep Habits',
 
 **Regular exercise** has been shown to promote good sleep. However, vigorous exercise close to bedtime may be too stimulating, try a more gentle exercise such as yoga.
 
-Get sufficient **exposure to natural light**, which helps to maintain a healthy sleep-wake cycle. Go for a 15-minute after lunch, or take a coffee break during the afternoon.
+Get sufficient **exposure to natural light**, which helps to maintain a healthy sleep-wake cycle. Go for a 15-minute walk after lunch, or take a coffee break during the afternoon.
 
 **Avoid bright lights** close to bedtime to allow the production of melatonin, a sleep-inducing hormone. The “blue light” from many modern smartphones or tablets has been shown to **interfere with** the body’s melatonin levels. Try not to use such devices in bed.
 
