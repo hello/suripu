@@ -25,6 +25,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.util.FeatureUtils;
+import java.util.Collections;
 import org.apache.commons.math3.util.Pair;
 import com.hello.suripu.core.models.UpgradeNodeRequest;
 import com.yammer.metrics.annotation.Timed;
@@ -78,7 +79,7 @@ public class FirmwareUpgradePathDAO {
     }
 
     @Timed
-    public Optional<List<UpgradeNodeRequest>> getFWUpgradeNodesForGroup(final String groupName) {
+    public List<UpgradeNodeRequest> getFWUpgradeNodesForGroup(final String groupName) {
         final Condition byGroupName = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withS(groupName));
@@ -96,16 +97,16 @@ public class FirmwareUpgradePathDAO {
             queryResult = this.dynamoDBClient.query(queryRequest);
         } catch (AmazonServiceException ase){
             LOGGER.error("getFWUpgradeNodesForGroup query failed. {}", ase.getErrorMessage());
-            return Optional.absent();
+            return Collections.EMPTY_LIST;
         } catch (Exception e) {
             LOGGER.error("Exception thrown while querying upgrade nodes. {}", e.getMessage());
-            return Optional.absent();
+            return Collections.EMPTY_LIST;
         }
 
         final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
         if (items.isEmpty()) {
-            return Optional.absent();
+            return Collections.EMPTY_LIST;
         }
         final List<UpgradeNodeRequest> upgradeNodes = Lists.newArrayList();
 
@@ -118,11 +119,7 @@ public class FirmwareUpgradePathDAO {
             upgradeNodes.add(nodeRequest);
         }
 
-        if (upgradeNodes.isEmpty()) {
-            return Optional.absent();
-        }
-
-        return Optional.of(upgradeNodes);
+        return upgradeNodes;
     }
 
     public Optional<UpgradeNodeRequest> deleteFWUpgradeNode(final UpgradeNodeRequest upgradeNode){

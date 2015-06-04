@@ -360,13 +360,7 @@ public class FirmwareResource {
         }
         LOGGER.info("Retrieving FW upgrade node(s) for group: {}", groupName);
 
-        final Optional<List<UpgradeNodeRequest>> nodeRequests = firmwareUpgradePathDAO.getFWUpgradeNodesForGroup(groupName);
-
-        if (!nodeRequests.isPresent()){
-            return Collections.EMPTY_LIST;
-        }
-
-        return nodeRequests.get();
+        return firmwareUpgradePathDAO.getFWUpgradeNodesForGroup(groupName);
     }
 
     @PUT
