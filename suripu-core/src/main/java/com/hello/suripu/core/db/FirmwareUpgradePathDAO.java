@@ -23,6 +23,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.util.FeatureUtils;
 import org.apache.commons.math3.util.Pair;
 import com.hello.suripu.core.models.UpgradeNodeRequest;
@@ -74,6 +75,54 @@ public class FirmwareUpgradePathDAO {
         }catch (AmazonClientException awcEx){
             LOGGER.error("FW Upgrade Node insert failed. Client error: {}", awcEx.getMessage());
         }
+    }
+
+    @Timed
+    public Optional<List<UpgradeNodeRequest>> getFWUpgradeNodesForGroup(final String groupName) {
+        final Condition byGroupName = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withS(groupName));
+
+        final Map<String, Condition> queryConditions = new HashMap<>();
+        queryConditions.put(GROUP_NAME_ATTRIBUTE_NAME, byGroupName);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withLimit(50);
+
+        QueryResult queryResult;
+        try {
+            queryResult = this.dynamoDBClient.query(queryRequest);
+        } catch (AmazonServiceException ase){
+            LOGGER.error("getFWUpgradeNodesForGroup query failed. {}", ase.getErrorMessage());
+            return Optional.absent();
+        } catch (Exception e) {
+            LOGGER.error("Exception thrown while querying upgrade nodes. {}", e.getMessage());
+            return Optional.absent();
+        }
+
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+        if (items.isEmpty()) {
+            return Optional.absent();
+        }
+        final List<UpgradeNodeRequest> upgradeNodes = Lists.newArrayList();
+
+        for (final Map<String, AttributeValue> item : items) {
+            final Integer fromFW = Integer.parseInt(item.get(FROM_FW_VERSION_ATTRIBUTE_NAME).getN());
+            final Integer toFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
+            final Integer rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Integer.parseInt(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
+            final UpgradeNodeRequest nodeRequest = new UpgradeNodeRequest(groupName, fromFW, toFW, rolloutPercent);
+
+            upgradeNodes.add(nodeRequest);
+        }
+
+        if (upgradeNodes.isEmpty()) {
+            return Optional.absent();
+        }
+
+        return Optional.of(upgradeNodes);
     }
 
     public Optional<UpgradeNodeRequest> deleteFWUpgradeNode(final UpgradeNodeRequest upgradeNode){
