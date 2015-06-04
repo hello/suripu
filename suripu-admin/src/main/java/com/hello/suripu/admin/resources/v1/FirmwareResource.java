@@ -22,6 +22,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
+import java.util.Collections;
 import java.util.HashMap;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -347,10 +348,25 @@ public class FirmwareResource {
         responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
     }
 
+    @GET
+    @Timed
+    @Path("/{group_name}/upgrade_nodes")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<UpgradeNodeRequest> getFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken, @PathParam("group_name") final String groupName) {
+
+        if(groupName == null) {
+            LOGGER.error("Missing group name parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        LOGGER.info("Retrieving FW upgrade node(s) for group: {}", groupName);
+
+        return firmwareUpgradePathDAO.getFWUpgradeNodesForGroup(groupName);
+    }
+
     @PUT
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/updates/add_node")
+    @Path("/upgrades/add_node")
     public void addFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final UpgradeNodeRequest nodeRequest) {
 
         LOGGER.info("Adding FW upgrade node for group: {} on FW Version: {} to FW Version: {} @ {}% Rollout", nodeRequest.groupName, nodeRequest.fromFWVersion, nodeRequest.toFWVersion, nodeRequest.rolloutPercent);
@@ -360,7 +376,7 @@ public class FirmwareResource {
     @DELETE
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/updates/delete_node")
+    @Path("/upgrades/delete_node")
     public void deleteFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final UpgradeNodeRequest nodeRequest) {
 
         LOGGER.info("Deleting FW upgrade node for group: {} on FW Version: {} to FW Version: {}", nodeRequest.groupName, nodeRequest.fromFWVersion, nodeRequest.toFWVersion);
