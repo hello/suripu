@@ -36,6 +36,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.InvalidNightType;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
@@ -173,14 +174,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
-        if(!isValidNight(accountId, sensorData.trackerMotions)){
-            LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+        final InvalidNightType discardReason = isValidNight(accountId, sensorData.trackerMotions);
 
-            // We want to differentiate between no data, and some data but not enough
-            if(sensorData.trackerMotions.size() > 0) {
+        switch (discardReason){
+            case TIMESPAN_TOO_SHORT:
                 return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
-            }
-            return Optional.absent();
+            case NO_DATA:
+            case LOW_AMP_DATA:  // treat the low amplitude data as noise
+                LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+                return Optional.absent();
         }
 
         String algorithm = TimelineLog.NO_ALGORITHM;
@@ -569,16 +571,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     /*
     * Check if the motion span in a large enough time.
      */
-    private boolean isValidNight(final Long accountId, final List<TrackerMotion> motionData){
+    protected InvalidNightType isValidNight(final Long accountId, final List<TrackerMotion> motionData){
         if(!hasNewInvalidNightFilterEnabled(accountId)){
-            return motionData.size() >= MIN_TRACKER_MOTION_COUNT;
+            if(motionData.size() >= MIN_TRACKER_MOTION_COUNT){
+                return InvalidNightType.VALID;
+            }
+
+            return InvalidNightType.LOW_AMP_DATA;  // This needs to align to the old behavior before the new filter has been discussed.
         }
 
         if(motionData.size() == 0){
-            return false;
-        }
-        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
-            return false;
+            return InvalidNightType.NO_DATA;
         }
 
         boolean allLowMotionAmplitude = true;
@@ -589,11 +592,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        if(allLowMotionAmplitude && motionData.size() < MIN_TRACKER_MOTION_COUNT){
-            return false;
+        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
+            if(allLowMotionAmplitude){
+                return InvalidNightType.LOW_AMP_DATA;
+            }
+            return InvalidNightType.TIMESPAN_TOO_SHORT;
         }
 
-        return true;
+        if(allLowMotionAmplitude && motionData.size() < MIN_TRACKER_MOTION_COUNT){
+            return InvalidNightType.LOW_AMP_DATA;
+        }
+
+        return InvalidNightType.VALID;
     }
 
 
@@ -750,7 +760,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         //find the events that aren't the main events
-        final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inBed,sleep,wake,outOfBed);
+        final SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(inBed, sleep, wake, outOfBed);
         final Set<Long> takenTimes = new HashSet<Long>();
 
         for (final Optional<Event> e : sleepEvents.toList()) {
