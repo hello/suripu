@@ -55,8 +55,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.ALL_SENSOR_QUERY_USE_UTC_TS, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasNewInvalidNightFilterEnabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.NEW_INVALID_NIGHT_FILTER, accountId, Collections.EMPTY_LIST);
+    protected Boolean hasPillCountFilter(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.PILL_COUNT_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasRemoveMotionEventsOutsideSleep(final Long accountId) {
