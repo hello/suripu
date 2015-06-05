@@ -73,10 +73,7 @@ public class RoomConditionsResource extends BaseResource {
             return CurrentRoomState.empty();
         }
 
-        Optional<Device.Color> color = Optional.absent();
-        if (this.hasColorCompensationEnabled(token.accountId)) {
-            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
-        }
+
 
 
         final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceIdPair.get().internalDeviceId, DateTime.now(DateTimeZone.UTC).plusMinutes(2), DateTime.now(DateTimeZone.UTC).minusMinutes(30));
@@ -86,8 +83,16 @@ public class RoomConditionsResource extends BaseResource {
             return CurrentRoomState.empty();
         }
 
-        final DeviceData deviceData = data.get().withCalibratedLight(color);
-        
+        //default -- return the usual
+        DeviceData deviceData = data.get();
+
+        if (this.hasColorCompensationEnabled(token.accountId)) {
+            //color compensation?  get the color
+            final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+            deviceData = data.get().withCalibratedLight(color); //and compensate 
+        }
+
+
         LOGGER.debug("Last device data in db = {}", deviceData);
         final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 15, unit);
         return roomState;
