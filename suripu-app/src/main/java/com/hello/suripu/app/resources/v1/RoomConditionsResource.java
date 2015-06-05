@@ -67,18 +67,27 @@ public class RoomConditionsResource extends BaseResource {
             return CurrentRoomState.empty();
         }
 
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(token.accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(token.accountId);
+        if(!deviceIdPair.isPresent()) {
             LOGGER.warn("Did not find any device_id for account_id = {}", token.accountId);
             return CurrentRoomState.empty();
         }
 
-        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceId.get(), DateTime.now(DateTimeZone.UTC).plusMinutes(2), DateTime.now(DateTimeZone.UTC).minusMinutes(30));
+        Optional<Device.Color> color = Optional.absent();
+        if (this.hasColorCompensationEnabled(token.accountId)) {
+            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        }
+
+
+        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceIdPair.get().internalDeviceId, DateTime.now(DateTimeZone.UTC).plusMinutes(2), DateTime.now(DateTimeZone.UTC).minusMinutes(30));
+
+
         if(!data.isPresent()) {
             return CurrentRoomState.empty();
         }
 
-        final DeviceData deviceData = data.get();
+        final DeviceData deviceData = data.get().withCalibratedLight(color);
+        
         LOGGER.debug("Last device data in db = {}", deviceData);
         final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 15, unit);
         return roomState;

@@ -28,6 +28,9 @@ public class Device {
         YELLOW
     }
 
+    public static Color DEFAULT_COLOR = Color.BLACK;
+
+
     @JsonProperty("color")
     public final Color color;
 

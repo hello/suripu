@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 public class Bucketing {
-    private  static final Device.Color DEFAULT_COLOR = Device.Color.BLACK;
     private static final Logger LOGGER = LoggerFactory.getLogger(Bucketing.class);
 
     /**
@@ -72,7 +71,7 @@ public class Bucketing {
             return Optional.absent();
         }
 
-        Device.Color color = DEFAULT_COLOR;
+        Device.Color color = Device.DEFAULT_COLOR;
 
         if (optionalColor.isPresent()) {
             color = optionalColor.get();
@@ -131,7 +130,7 @@ public class Bucketing {
             return populatedMap;
         }
 
-        Device.Color color = DEFAULT_COLOR;
+        Device.Color color = Device.DEFAULT_COLOR;
 
         if (optionalColor.isPresent()) {
             color = optionalColor.get();
