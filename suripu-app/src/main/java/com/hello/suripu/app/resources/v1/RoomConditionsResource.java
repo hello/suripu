@@ -132,8 +132,10 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
-
+        Optional<Device.Color> color = Optional.absent();
+        if (this.hasColorCompensationEnabled(accessToken.accountId)) {
+            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId),color);
@@ -165,7 +167,10 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        Optional<Device.Color> color = Optional.absent();
+        if (this.hasColorCompensationEnabled(accessToken.accountId)) {
+            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        }
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
@@ -205,8 +210,10 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
-
+        Optional<Device.Color> color = Optional.absent();
+        if (this.hasColorCompensationEnabled(accessToken.accountId)) {
+            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        }
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
@@ -273,7 +280,11 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceName);
+        Optional<Device.Color> color = Optional.absent();
+
+        if (this.hasColorCompensationEnabled(accessToken.accountId)) {
+            color = senseColorDAO.getColorForSense(deviceName);
+        }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
@@ -306,8 +317,11 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceName);
+        Optional<Device.Color> color = Optional.absent();
 
+        if (this.hasColorCompensationEnabled(accessToken.accountId)) {
+            color = senseColorDAO.getColorForSense(deviceName);
+        }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
@@ -359,8 +373,11 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        Optional<Device.Color> color = Optional.absent();
 
+        if (this.hasColorCompensationEnabled(accountId)) {
+            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color);
@@ -393,7 +410,11 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        Optional<Device.Color> color = Optional.absent();
+
+        if (this.hasColorCompensationEnabled(accountId)) {
+            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        }
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
@@ -424,7 +445,11 @@ public class RoomConditionsResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        Optional<Device.Color> color = Optional.absent();
+
+        if (this.hasColorCompensationEnabled(accountId)) {
+            color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+        }
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId),color);
