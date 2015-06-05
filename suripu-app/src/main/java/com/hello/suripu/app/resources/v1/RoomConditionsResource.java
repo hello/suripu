@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Device;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
@@ -126,16 +127,16 @@ public class RoomConditionsResource extends BaseResource {
 
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accessToken.accountId);
+        if(!deviceIdPair.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId),color);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId),color);
     }
 
     @Timed
@@ -159,15 +160,15 @@ public class RoomConditionsResource extends BaseResource {
 
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accessToken.accountId);
+        if(!deviceIdPair.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -199,16 +200,16 @@ public class RoomConditionsResource extends BaseResource {
 
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accessToken.accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accessToken.accountId);
+        if(!deviceIdPair.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
@@ -267,11 +268,12 @@ public class RoomConditionsResource extends BaseResource {
 
         // check that accountId, deviceName pair exists
         final Optional<Long> deviceId = deviceDAO.getIdForAccountIdDeviceId(accessToken.accountId, deviceName);
+
         if (!deviceId.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceName);
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
@@ -299,11 +301,12 @@ public class RoomConditionsResource extends BaseResource {
 
         // check that accountId, deviceName pair exists
         final Optional<Long> deviceId = deviceDAO.getIdForAccountIdDeviceId(accessToken.accountId, deviceName);
+
         if (!deviceId.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceName);
 
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
@@ -350,16 +353,17 @@ public class RoomConditionsResource extends BaseResource {
         );
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+
+        if(!deviceIdPair.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color);
 
     }
 
@@ -384,15 +388,15 @@ public class RoomConditionsResource extends BaseResource {
                 allowedRangeInSeconds);
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if(!deviceIdPair.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes,
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
                 sensor, missingDataDefaultValue(accountId),color);
     }
 
@@ -415,15 +419,15 @@ public class RoomConditionsResource extends BaseResource {
         validateQueryRange(queryEndTimestampInUTC, DateTime.now(), accountId, allowedRangeInSeconds);
 
         // get latest device_id connected to this account
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if(!deviceIdPair.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, missingDataDefaultValue(accountId),color);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId),color);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();

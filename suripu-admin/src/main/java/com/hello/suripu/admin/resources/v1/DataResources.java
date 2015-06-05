@@ -159,15 +159,15 @@ public class DataResources {
 
         // get latest device_id connected to this account
         final Long accountId = optionalAccountId.get();
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if(!deviceId.isPresent()) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if(!deviceIdPair.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, sensor, 0,color);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, 0,color);
     }
 
 
@@ -289,7 +289,7 @@ public class DataResources {
         final int slotDurationInMinutes = 5;
         final Integer missingDataDefaultValue = 0;
 
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceAccountPairOptional.get().internalDeviceId);
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceAccountPairOptional.get().externalDeviceId);
 
         final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 startTimestamp,

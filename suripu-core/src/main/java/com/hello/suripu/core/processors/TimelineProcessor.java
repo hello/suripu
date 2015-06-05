@@ -347,17 +347,19 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
 
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         Optional<DateTime> wakeUpWaveTimeOptional = Optional.absent();
 
-        if (!deviceId.isPresent()) {
+        if (!deviceIdPair.isPresent()) {
             LOGGER.debug("No device ID for account_id = {} and day = {}", accountId, targetDate);
             return Optional.absent();
         }
 
+        final String externalDeviceId = deviceIdPair.get().externalDeviceId;
+        final Long deviceId = deviceIdPair.get().internalDeviceId;
 
         // get color of sense, yes this matters for the light sensor
-        final Optional<Device.Color> optionalColor = senseColorDAO.getColorForSense(deviceId.get());
+        final Optional<Device.Color> optionalColor = senseColorDAO.getColorForSense(externalDeviceId);
 
 
         AllSensorSampleList allSensorSampleList;
@@ -369,7 +371,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                     targetDate.minusMillis(tzOffsetMillis).getMillis(),
                     endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor);
         } else {
             // query dates are in local_utc_ts
             LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
@@ -377,7 +379,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(),
                     endDate.getMillis(),
-                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor);
         }
 
         if (allSensorSampleList.isEmpty()) {
