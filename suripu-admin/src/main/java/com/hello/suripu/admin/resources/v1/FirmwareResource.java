@@ -8,11 +8,11 @@ import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.FirmwareVersionMappingDAO;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
 import com.hello.suripu.core.models.FirmwareCountInfo;
 import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.OTAHistory;
@@ -22,11 +22,6 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.yammer.metrics.annotation.Timed;
-import java.util.Collections;
-import java.util.HashMap;
-import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.PUT;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +29,12 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Tuple;
 
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -44,6 +43,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -373,7 +373,7 @@ public class FirmwareResource {
         firmwareUpgradePathDAO.insertFWUpgradeNode(nodeRequest);
     }
 
-    @DELETE
+    @POST
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/upgrades/delete_node")
