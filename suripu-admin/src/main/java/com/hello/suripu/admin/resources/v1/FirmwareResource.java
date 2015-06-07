@@ -33,7 +33,6 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -373,14 +372,16 @@ public class FirmwareResource {
         firmwareUpgradePathDAO.insertFWUpgradeNode(nodeRequest);
     }
 
-    @POST
+    @DELETE
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/upgrades/delete_node")
-    public void deleteFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken, @Valid final UpgradeNodeRequest nodeRequest) {
+    @Path("/upgrades/delete_node/{group_name}/{from_fw_version}")
+    public void deleteFWUpgradeNode(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                    @PathParam("group_name") final String groupName,
+                                    @PathParam("from_fw_version") final Integer fromFWVersion) {
 
-        LOGGER.info("Deleting FW upgrade node for group: {} on FW Version: {} to FW Version: {}", nodeRequest.groupName, nodeRequest.fromFWVersion, nodeRequest.toFWVersion);
-        firmwareUpgradePathDAO.deleteFWUpgradeNode(nodeRequest);
+        LOGGER.info("Deleting FW upgrade node for group: {} on FW Version: {}", groupName, fromFWVersion);
+        firmwareUpgradePathDAO.deleteFWUpgradeNode(groupName, fromFWVersion);
     }
 
     private Optional<FirmwareInfo> getFirmwareVersionForDevice(final String deviceId) {
