@@ -52,6 +52,8 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final Meter messagesProcessed;
     private final Meter timelinesSaved;
     private final Meter timelinesExpired;
+    private final Meter timelineReadyToProcess;
+    private final Meter emptyTimelineAfterProcess;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
@@ -68,6 +70,8 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.timelinesSaved = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-saved", "timelines-saved", TimeUnit.SECONDS);
         this.timelinesExpired = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-expired", "timelines-expired", TimeUnit.SECONDS);
+        this.timelineReadyToProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-ready-to-process", "timelines-ready-to-process", TimeUnit.SECONDS);
+        this.emptyTimelineAfterProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "empty-timeline", "empty-timeline", TimeUnit.SECONDS);
     }
 
     @Override
@@ -176,9 +180,11 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                     continue;
                 }
 
+                this.timelineReadyToProcess.mark(1);
                 try {
                     final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC);
                     if(!result.isPresent()){
+                        this.emptyTimelineAfterProcess.mark(1);
                         continue;
                     }
 

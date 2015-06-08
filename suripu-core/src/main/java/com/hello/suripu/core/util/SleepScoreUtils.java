@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.insights.SleepDuration;
@@ -125,6 +126,18 @@ public class SleepScoreUtils {
 
         return motionScore;
     }
+
+    public static Optional<MotionScore> getSleepMotionScoreMaybe(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+        try {
+            return Optional.of(getSleepMotionScore(targetDate, trackerMotions, fallAsleepTimestamp, wakeUpTimestamp));
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error: {}", e.getMessage());
+        }
+
+        return Optional.absent();
+    }
+
+
 
     /**
      * Computes an aggregated score

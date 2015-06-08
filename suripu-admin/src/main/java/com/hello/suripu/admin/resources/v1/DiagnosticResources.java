@@ -68,7 +68,8 @@ public class DiagnosticResources {
 
     @PUT
     @Path("/track/uptime/{email}")
-    public void Track(//@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+    public void Track(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+
                       @PathParam("email") final String email) {
 
 

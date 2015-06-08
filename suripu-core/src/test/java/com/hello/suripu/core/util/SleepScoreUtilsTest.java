@@ -114,6 +114,6 @@ public class SleepScoreUtilsTest {
     public void testAlmostEmptyTrackerMotionList() {
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
         final Optional<MotionScore> score = SleepScoreUtils.getSleepMotionScoreMaybe(new DateTime(2015, 5, 8, 20, 0, 0),trackerMotionList.subList(0,2), 0L, 0L);
-        assertThat(score.isPresent(), is(Boolean.FALSE));
+        assertThat(score.isPresent(), is(Boolean.TRUE));
     }
 }

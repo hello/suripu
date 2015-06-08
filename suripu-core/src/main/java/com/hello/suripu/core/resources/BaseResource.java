@@ -38,6 +38,10 @@ public class BaseResource {
         return (active) ? -1 : 0;
     }
 
+    protected Boolean hasColorCompensationEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.COMPENSATE_LIGHT_WITH_SENSE_COLOR, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasHmmEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.HMM_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }

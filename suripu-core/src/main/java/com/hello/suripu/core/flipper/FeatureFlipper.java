@@ -40,7 +40,7 @@ public class FeatureFlipper {
     public final static String REMOVE_GREY_OUT_EVENTS = "remove_grey_out_events";
     public final static String STOP_PROCESS_TIMELINE_FROM_WORKER = "stop_process_timeline_from_worker";
     public final static String EXPIRE_TIMELINE_IN_PROCESSING_TIME_SPAN = "expire_timeline_in_processing_time_span";
-
+    public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
 }

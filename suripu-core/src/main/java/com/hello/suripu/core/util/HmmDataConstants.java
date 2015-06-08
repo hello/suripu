@@ -53,7 +53,7 @@ public class HmmDataConstants {
     final static double NATURAL_LIGHT_FILTER_STOP_HOUR = 4.0; //4am
     final static int NUM_MINUTES_IN_MEAS_PERIOD = 15;
     final static boolean DEFAULT_IS_USING_INTERVAL_SEARCH = true;
-    final static double DEFAULT_LIGHT_PRE_MULTIPLIER = 4.0;
+    final static double DEFAULT_LIGHT_PRE_MULTIPLIER = 1.0;
     final static double DEFAULT_LIGHT_FLOOR_LUX = 0.0; //lux
 
 }
