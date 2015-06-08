@@ -1,4 +1,4 @@
-package com.hello.suripu.admin.diagnostic;
+package com.hello.suripu.core.diagnostic;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
