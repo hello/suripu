@@ -1,4 +1,4 @@
-package com.hello.suripu.admin.diagnostic;
+package com.hello.suripu.core.diagnostic;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

@@ -1,4 +1,4 @@
-package com.hello.suripu.admin.diagnostic;
+package com.hello.suripu.core.diagnostic;
 
 import com.google.common.collect.ImmutableList;
 import org.skife.jdbi.v2.sqlobject.Bind;
