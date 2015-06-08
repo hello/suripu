@@ -30,6 +30,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAdminConfigura
         createSenseEventsTable(configuration, awsCredentialsProvider);
         createFirmwareVersionsMappingTable(configuration, awsCredentialsProvider);
         createPillLastSeen(configuration, awsCredentialsProvider);
+        createFWUpgradePath(configuration, awsCredentialsProvider);
     }
 
     private void createSenseEventsTable(final SuripuAdminConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
@@ -71,6 +72,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAdminConfigura
 
         client.setEndpoint(config.endpoints().get(DynamoDBTableName.PILL_LAST_SEEN));
         final String tableName = config.tables().get(DynamoDBTableName.PILL_LAST_SEEN);
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = PillViewsDynamoDB.createLastSeenTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(tableName + " " + description.getTableStatus());
+        }
+    }
+
+    private void createFWUpgradePath(final SuripuAdminConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final NewDynamoDBConfiguration config = configuration.dynamoDBConfiguration();
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+
+        client.setEndpoint(config.endpoints().get(DynamoDBTableName.FIRMWARE_UPGRADE_PATH));
+        final String tableName = config.tables().get(DynamoDBTableName.FIRMWARE_UPGRADE_PATH);
         try {
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));
