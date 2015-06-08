@@ -24,17 +24,18 @@ import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.util.FeatureUtils;
-import java.util.Collections;
-import org.apache.commons.math3.util.Pair;
 import com.hello.suripu.core.models.UpgradeNodeRequest;
+import com.hello.suripu.core.util.FeatureUtils;
 import com.yammer.metrics.annotation.Timed;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by jnorgan on 4/30/15.
@@ -122,20 +123,20 @@ public class FirmwareUpgradePathDAO {
         return upgradeNodes;
     }
 
-    public Optional<UpgradeNodeRequest> deleteFWUpgradeNode(final UpgradeNodeRequest upgradeNode){
+    public Optional<UpgradeNodeRequest> deleteFWUpgradeNode(final String groupName, final Integer fromFWVersion){
         try {
             final Map<String, ExpectedAttributeValue> deleteConditions = new HashMap<String, ExpectedAttributeValue>();
 
             deleteConditions.put(GROUP_NAME_ATTRIBUTE_NAME, new ExpectedAttributeValue(
-                    new AttributeValue().withS(upgradeNode.groupName)
+                    new AttributeValue().withS(groupName)
             ));
             deleteConditions.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new ExpectedAttributeValue(
-                    new AttributeValue().withN(upgradeNode.fromFWVersion.toString())
+                    new AttributeValue().withN(fromFWVersion.toString())
             ));
 
             HashMap<String, AttributeValue> keys = new HashMap<String, AttributeValue>();
-            keys.put(GROUP_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(upgradeNode.groupName));
-            keys.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(upgradeNode.fromFWVersion.toString()));
+            keys.put(GROUP_NAME_ATTRIBUTE_NAME, new AttributeValue().withS(groupName));
+            keys.put(FROM_FW_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(fromFWVersion.toString()));
 
             final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
                     .withTableName(tableName)
@@ -148,7 +149,7 @@ public class FirmwareUpgradePathDAO {
             return attributeValuesToUpgradeNode(result.getAttributes());
 
         } catch (AmazonServiceException ase) {
-            LOGGER.error("Failed to delete Upgrade Node for Group: {}. Service error {}", upgradeNode.groupName, ase.getMessage());
+            LOGGER.error("Failed to delete Upgrade Node for Group: {}. Service error {}", groupName, ase.getMessage());
         } catch (AmazonClientException awcEx){
             LOGGER.error("Failed to delete Upgrade Node for Group: {}. Client error: {}", awcEx.getMessage());
         } catch (Exception e) {
