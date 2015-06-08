@@ -2,17 +2,21 @@ package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.admin.Util;
-import com.hello.suripu.admin.diagnostic.Count;
-import com.hello.suripu.admin.diagnostic.DiagnosticDAO;
+import com.hello.suripu.core.diagnostic.Count;
+import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.tracking.Category;
+import com.hello.suripu.core.tracking.TrackingDAO;
 import com.hello.suripu.core.util.JsonError;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -27,12 +31,17 @@ public class DiagnosticResources {
     private final DiagnosticDAO diagnosticDAO;
     private final AccountDAO accountDAO;
     private final DeviceDAO deviceDAO;
+    private final TrackingDAO trackingDAO;
 
 
-    public DiagnosticResources(final DiagnosticDAO diagnosticDAO, final AccountDAO accountDAO, final DeviceDAO deviceDAO) {
+    public DiagnosticResources(final DiagnosticDAO diagnosticDAO,
+                               final AccountDAO accountDAO,
+                               final DeviceDAO deviceDAO,
+                               final TrackingDAO trackingDAO) {
         this.diagnosticDAO = diagnosticDAO;
         this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;
+        this.trackingDAO = trackingDAO;
     }
 
     @GET
@@ -55,5 +64,22 @@ public class DiagnosticResources {
 
         final List<Count> counts = diagnosticDAO.uptime(accountIdOptional.get(), deviceAccountPairOptional.get().internalDeviceId);
         return counts;
+    }
+
+    @PUT
+    @Path("/track/uptime/{email}")
+    public void Track(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                      @PathParam("email") final String email) {
+
+
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+        if(!accountOptional.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountOptional.get().id.get());
+        for(final DeviceAccountPair pair : pairs) {
+            trackingDAO.insert(pair.externalDeviceId, pair.internalDeviceId, pair.accountId, Category.UPTIME.value);
+        }
     }
 }

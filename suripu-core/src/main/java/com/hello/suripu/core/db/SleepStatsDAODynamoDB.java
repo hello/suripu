@@ -214,7 +214,10 @@ public class SleepStatsDAODynamoDB {
                         continue;
                     }
                     final AggregateSleepStats score = this.createAggregateStat(item);
-                    scoreResults.add(score);
+                    if(score.motionScore.score >= 0 ) {
+                        scoreResults.add(score);
+                    }
+
                 }
             }
 

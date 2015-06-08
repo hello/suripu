@@ -11,7 +11,7 @@ import com.hello.suripu.admin.cli.CreateDynamoDBTables;
 import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
-import com.hello.suripu.admin.diagnostic.DiagnosticDAO;
+import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.AlarmResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
@@ -68,6 +68,7 @@ import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
+import com.hello.suripu.core.tracking.TrackingDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.sun.jersey.api.core.ResourceConfig;
@@ -130,18 +131,24 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
 
+        // Common DB
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
+        final AccountDAOAdmin accountDAOAdmin = commonDB.onDemand(AccountDAOAdmin.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final DeviceDAOAdmin deviceDAOAdmin = commonDB.onDemand(DeviceDAOAdmin.class);
-        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
-        final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
-        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
-        final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final OnBoardingLogDAO onBoardingLogDAO = commonDB.onDemand(OnBoardingLogDAO.class);
-        final AccountDAOAdmin accountDAOAdmin = commonDB.onDemand(AccountDAOAdmin.class);
-        final DiagnosticDAO diagnosticDAO = sensorsDB.onDemand(DiagnosticDAO.class);
-
+        final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+        final TrackingDAO trackingDAO = commonDB.onDemand(TrackingDAO.class);
+        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
+
+        // Sensor DB
+        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
+        final DiagnosticDAO diagnosticDAO = sensorsDB.onDemand(DiagnosticDAO.class);
+        final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+
+
+
 
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
@@ -283,7 +290,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
         environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
-        environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO));
-
+        environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO, trackingDAO));
     }
 }
