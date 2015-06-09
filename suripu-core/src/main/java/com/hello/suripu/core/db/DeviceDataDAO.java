@@ -38,7 +38,6 @@ import java.util.regex.Matcher;
 
 
 public abstract class DeviceDataDAO {
-    public final static Device.Color DEFAULT_COLOR = Device.Color.WHITE;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
 
