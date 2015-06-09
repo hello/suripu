@@ -10,22 +10,24 @@ import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.GrantTypeParam;
 import com.hello.suripu.core.oauth.ImplicitTokenRequest;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -37,6 +39,8 @@ public class TokenResources {
     private final ApplicationStore applicationStore;
     private final AccountDAO accountDAO;
 
+    @Context
+    HttpServletRequest request;
     public TokenResources(final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore,
                           final ApplicationStore<Application, ApplicationRegistration> applicationStore,
                           final AccountDAO accountDAO) {
@@ -46,6 +50,8 @@ public class TokenResources {
         this.accountDAO = accountDAO;
     }
 
+
+
     @POST
     @Path("/implicit")
     @Timed
@@ -53,17 +59,22 @@ public class TokenResources {
     @Produces(MediaType.APPLICATION_JSON)
     public AccessToken accessToken(@Scope({OAuthScope.IMPLICIT_TOKEN}) final AccessToken accessToken,
                                    final ImplicitTokenRequest implicitTokenRequest) {
+        LOGGER.debug("Raw implicit token request {}", implicitTokenRequest);
+        String requesterEmail = this.request.getHeader(HelloHttpHeader.ADMIN);
 
-        LOGGER.info("raw request {}", implicitTokenRequest);
+        if (requesterEmail == null || !requesterEmail.endsWith("@sayhello.com")) {
+            LOGGER.error("Unauthorized attempt to generate token from email {}", requesterEmail);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
 
         final Optional<Account> accountOptional = accountDAO.getByEmail(implicitTokenRequest.email);
         if (!accountOptional.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity(new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "Account not found")).build());
+            LOGGER.error("Account not found for email {}", implicitTokenRequest.email);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
         final Long accountId = accountOptional.get().id.get();
 
-        LOGGER.info("Attempt to generate token on behalf of account {} - email {}", accountId, implicitTokenRequest.email);
+        LOGGER.info("Admin {} attempts to generate token on behalf of account {} - email {}", requesterEmail, accountId, implicitTokenRequest.email);
 
 
         final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(implicitTokenRequest.clientId);
@@ -78,29 +89,20 @@ public class TokenResources {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         }
 
-        final ClientDetails details = new ClientDetails(
-                GrantTypeParam.GrantType.IMPLICIT,
-                implicitTokenRequest.clientId,
-                application.redirectURI,
-                application.scopes,
-                "", // state
-                "", // code
-                accountId,
-                application.clientSecret
-        );
+        final ClientDetails details = ClientDetails.createWithImplicitGrantType(application, accountId);
 
         details.setApp(application);
-        AccessToken impersonalizeToken;
+        AccessToken implicitToken;
         try {
-            impersonalizeToken = tokenStore.storeAccessToken(details);
+            implicitToken = tokenStore.storeAccessToken(details);
         } catch (ClientAuthenticationException e) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                             String.format("Failed to generate token on behalf of account {} because {}", implicitTokenRequest.email, e.getMessage()))).build());
         }
 
-        LOGGER.debug("Impersonalize Token is {} for account {}", impersonalizeToken.toString(), implicitTokenRequest.email);
-        return impersonalizeToken;
+        LOGGER.debug("Admin {} created implicit token {} for account {}", requesterEmail, implicitToken.toString(), implicitTokenRequest.email);
+        return implicitToken;
 
     }
 }

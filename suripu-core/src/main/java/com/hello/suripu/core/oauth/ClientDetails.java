@@ -77,4 +77,17 @@ public class ClientDetails{
                 .add("secret", secret)
                 .toString();
     }
+
+    public static ClientDetails createWithImplicitGrantType(final Application application, final Long accountId) {
+        return new ClientDetails(
+                GrantTypeParam.GrantType.IMPLICIT,
+                application.clientId,
+                application.redirectURI,
+                application.scopes,
+                "", // state
+                "", // code
+                accountId,
+                application.clientSecret
+        );
+    }
 }
