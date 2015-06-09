@@ -25,10 +25,11 @@ public class AppCheckinResource {
     @Produces(MediaType.APPLICATION_JSON)
     public AppCheckinResponse needsUpdate(@Valid final AppCheckin checkin) {
 
-//        if(checkin.platform.equals(AppCheckin.Platform.ANDROID)) {
-//            final Boolean needsUpdate = Integer.parseInt(checkin.appVersion) < minVersion;
-//            return new AppCheckinResponse(needsUpdate, "You don't need to update", "new app"); // currently returning same app version
-//        }
+        if(checkin.platform.equals(AppCheckin.Platform.ANDROID)) {
+            final Boolean needsUpdate = Integer.parseInt(checkin.appVersion) < minVersion;
+            final String message = (needsUpdate) ? "Please update" : "You don't need to update";
+            return new AppCheckinResponse(needsUpdate, message, minVersion.toString()); // currently returning same app version
+        }
 
         return new AppCheckinResponse(false, "You don't need to update", checkin.appVersion);
     }

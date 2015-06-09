@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
+import com.hello.suripu.admin.cli.PopulateColors;
 import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
@@ -104,6 +105,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new ScanSerialNumbers());
         bootstrap.addCommand(new ScanFWVersion());
+        bootstrap.addCommand(new PopulateColors());
         bootstrap.addBundle(new KinesisLoggerBundle<SuripuAdminConfiguration>() {
             @Override
             public KinesisLoggerConfiguration getConfiguration(final SuripuAdminConfiguration configuration) {
@@ -146,6 +148,8 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final DiagnosticDAO diagnosticDAO = sensorsDB.onDemand(DiagnosticDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+
+
 
 
 
