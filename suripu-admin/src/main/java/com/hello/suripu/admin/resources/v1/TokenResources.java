@@ -16,7 +16,6 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.util.HelloHttpHeader;
-import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,9 +95,9 @@ public class TokenResources {
         try {
             implicitToken = tokenStore.storeAccessToken(details);
         } catch (ClientAuthenticationException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                            String.format("Failed to generate token on behalf of account {} because {}", implicitTokenRequest.email, e.getMessage()))).build());
+            LOGGER.error("Failed to generate token on behalf of account {} because {}", implicitTokenRequest.email, e.getMessage());
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+
         }
 
         LOGGER.debug("Admin {} created implicit token {} for account {}", requesterEmail, implicitToken.toString(), implicitTokenRequest.email);
