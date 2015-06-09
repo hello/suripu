@@ -168,7 +168,7 @@ public class BatchProcessUtils {
             for(final DateTime dataTime:groupedPillIdRequestDateUTC.get(pillId)){
                 final DateTime dataTimeInLocal = dataTime.withZone(dateTimeZoneOptional.get());
                 final DateTime processTargetDateLocalUTC = DateTimeUtil.getTargetDateLocalUTCFromLocalTime(dataTimeInLocal);
-                final DateTime nowInLocal = now.withZone(dateTimeZoneOptional.get());
+                final DateTime nowInLocal = dataTimeInLocal; //now.withZone(dateTimeZoneOptional.get());
                 final DateTime todaysTargetDateLocalUTC = DateTimeUtil.getTargetDateLocalUTCFromLocalTime(nowInLocal);
                 if((nowInLocal.getHourOfDay() < startProcessHourOfDay || nowInLocal.getHourOfDay() > endProcessHourOfDay) && todaysTargetDateLocalUTC.equals(processTargetDateLocalUTC)){
                     LOGGER.debug("too early to process data for pill {} data time {}, date {}, user time {}, process hrs {} - {}",

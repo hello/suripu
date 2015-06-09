@@ -54,6 +54,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final Meter timelinesExpired;
     private final Meter timelineReadyToProcess;
     private final Meter emptyTimelineAfterProcess;
+    private final Meter errorCount;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
@@ -67,11 +68,12 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
 
-        this.messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
-        this.timelinesSaved = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-saved", "timelines-saved", TimeUnit.SECONDS);
-        this.timelinesExpired = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-expired", "timelines-expired", TimeUnit.SECONDS);
-        this.timelineReadyToProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-ready-to-process", "timelines-ready-to-process", TimeUnit.SECONDS);
-        this.emptyTimelineAfterProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "empty-timeline", "empty-timeline", TimeUnit.SECONDS);
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-messages", "d-messages-processed", TimeUnit.SECONDS);
+        this.timelinesSaved = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-timelines-saved", "d-timelines-saved", TimeUnit.SECONDS);
+        this.timelinesExpired = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-timelines-expired", "d-timelines-expired", TimeUnit.SECONDS);
+        this.timelineReadyToProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-timelines-ready-to-process", "d-timelines-ready-to-process", TimeUnit.SECONDS);
+        this.emptyTimelineAfterProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-empty-timeline", "d-empty-timeline", TimeUnit.SECONDS);
+        this.errorCount = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-err", "d-errs", TimeUnit.SECONDS);
     }
 
     @Override
@@ -188,7 +190,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                         continue;
                     }
 
-                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, result.get());
+                    //this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, result.get());
                     timelinesSaved.mark(1);
 
                     LOGGER.info("{} Timeline saved for account {} at local utc {}",
@@ -199,8 +201,10 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                     // TODO: Push notification here?
                 } catch (AmazonServiceException awsException) {
                     LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
+                    errorCount.mark(1);
                 } catch (Exception ex) {
                     LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
+                    errorCount.mark(1);
                 }
             }
         }
@@ -211,18 +215,21 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
             for(final DateTime targetDate:groupedAccountIdTargetDateLocalUTCMap.get(accountId)) {
                 try {
-                    final boolean expired = this.timelineDAODynamoDB.invalidateCache(accountId,
+                    /*final boolean expired = this.timelineDAODynamoDB.invalidateCache(accountId,
                             targetDate,
                             expiresAtUTC);
                     LOGGER.info("Timeline expired {} for account {} at local utc {}",
                             expired,
                             accountId,
                             DateTimeUtil.dateToYmdString(targetDate));
+                            */
                     timelinesExpired.mark(1);
                 } catch (AmazonServiceException awsException) {
                     LOGGER.error("Failed to expire timeline: {}", awsException.getErrorMessage());
+                    errorCount.mark(1);
                 } catch (Exception ex) {
                     LOGGER.error("Failed to expire timeline. General error {}", ex.getMessage());
+                    errorCount.mark(1);
                 }
             }
         }
