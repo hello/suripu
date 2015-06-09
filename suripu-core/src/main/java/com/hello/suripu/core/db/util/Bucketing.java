@@ -130,7 +130,7 @@ public class Bucketing {
             return populatedMap;
         }
 
-        Device.Color color = Device.Color.WHITE;
+        Device.Color color = Device.DEFAULT_COLOR;
 
         if (optionalColor.isPresent()) {
             color = optionalColor.get();
