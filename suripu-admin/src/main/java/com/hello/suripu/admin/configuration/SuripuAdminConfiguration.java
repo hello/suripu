@@ -1,6 +1,7 @@
 package com.hello.suripu.admin.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
@@ -39,6 +40,26 @@ public class SuripuAdminConfiguration extends Configuration {
     public Boolean getDebug() {
         return debug;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("metrics_enabled")
+    private Boolean metricsEnabled;
+
+    public Boolean getMetricsEnabled() {
+        return metricsEnabled;
+    }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("graphite")
+    private GraphiteConfiguration graphite;
+
+    public GraphiteConfiguration getGraphite() {
+        return graphite;
+    }
+
 
     @Valid
     @NotNull

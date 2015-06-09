@@ -38,7 +38,6 @@ import java.util.regex.Matcher;
 
 
 public abstract class DeviceDataDAO {
-    public final static Device.Color DEFAULT_COLOR = Device.Color.WHITE;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
 
@@ -98,7 +97,7 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(SenseDeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY ts DESC LIMIT 1;")
+    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id AND ts > now() - interval '7 days'  ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 
 

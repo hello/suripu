@@ -1,11 +1,14 @@
 package com.hello.suripu.admin.resources.v1;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.OnBoardingLogDAO;
+import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.OnBoardingLog;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PairingResults;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -41,9 +44,9 @@ public class OnBoardingLogResource {
     @GET
     @Path("/sense/{sense_id}/{count}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<OnBoardingLog> getLogs(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                                       @PathParam("sense_id") final String senseId,
-                                       @PathParam("count") final int count){
+    public List<OnBoardingLog> getLogsBySenseId(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                @PathParam("sense_id") final String senseId,
+                                                @PathParam("count") final int count){
         try{
             final List<OnBoardingLog> logs = this.onBoardingLogDAO.getBySenseId(senseId, count);
             return logs;
@@ -53,6 +56,26 @@ public class OnBoardingLogResource {
         }
     }
 
+    @GET
+    @Path("/account/{email}/{count}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<OnBoardingLog> getLogsByEmail(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                              @PathParam("email") final String email,
+                                              @PathParam("count") final int count){
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
+        if (!accountOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "Account not found")).build());
+        }
+        final long accountId = accountOptional.get().id.get();
+        try{
+            final List<OnBoardingLog> logs = this.onBoardingLogDAO.getByAccountId(accountId, count);
+            return logs;
+        }catch (Exception ex){
+            LOGGER.error("Get pairing log from account {} failed: {}", accountId, ex.getMessage());
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+    }
 
     @GET
     @Path("/result")
