@@ -143,3 +143,4 @@ dynamodb:
     smart_alarm_log: http://dynamodb.us-east-1.amazonaws.com
     ring_time_history: http://dynamodb.us-east-1.amazonaws.com
 
+token_expiration: 300

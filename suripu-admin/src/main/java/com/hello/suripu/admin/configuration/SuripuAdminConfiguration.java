@@ -98,4 +98,11 @@ public class SuripuAdminConfiguration extends Configuration {
     public NewDynamoDBConfiguration dynamoDBConfiguration(){
         return dynamoDBConfiguration;
     }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("token_expiration")
+    private Long tokenExpiration;
+    public Long getTokenExpiration() {return this.tokenExpiration;}
 }
