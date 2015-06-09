@@ -14,6 +14,7 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.tracking.Category;
 import com.hello.suripu.core.tracking.TrackingDAO;
 import com.hello.suripu.core.util.JsonError;
+import com.yammer.metrics.annotation.Timed;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -44,6 +45,7 @@ public class DiagnosticResources {
         this.trackingDAO = trackingDAO;
     }
 
+    @Timed
     @GET
     @Path("/uptime/{email}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -66,6 +68,7 @@ public class DiagnosticResources {
         return counts;
     }
 
+    @Timed
     @PUT
     @Path("/track/uptime/{email}")
     public void Track(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,

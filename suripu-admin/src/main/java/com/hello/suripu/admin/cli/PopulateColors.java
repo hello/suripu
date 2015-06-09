@@ -87,16 +87,18 @@ public class PopulateColors extends ConfiguredCommand<SuripuAdminConfiguration> 
 
         for(final String deviceId : store.keySet()) {
             final String serialNumber = store.get(deviceId);
-            Optional<Device.Color> colorOptional = toColor(serialNumber);
+            Optional<Device.Color> colorOptional = toColor(serialNumber, deviceId);
             if(colorOptional.isPresent()) {
                 System.out.println("OK " + deviceId + " " +  serialNumber + " " + colorOptional.get().name());
+            } else {
+                System.out.println("KO " + deviceId);
             }
         }
     }
 
-    public static Optional<Device.Color> toColor(final String serialNumber) {
+    public static Optional<Device.Color> toColor(final String serialNumber, final String deviceId) {
         if(serialNumber.length() < SENSE_US_PREFIX_WHITE.length()) {
-            LOGGER.error("SN {} is too short", serialNumber);
+            LOGGER.error("SN {} is too short for device_id = {}", serialNumber, deviceId);
             return Optional.absent();
         }
         final String snPrefix = serialNumber.substring(0, SENSE_US_PREFIX_WHITE.length());
@@ -106,7 +108,7 @@ public class PopulateColors extends ConfiguredCommand<SuripuAdminConfiguration> 
             return Optional.of(Device.Color.BLACK);
         }
 
-        LOGGER.error("Can't get color for SN {}", serialNumber);
+        LOGGER.error("Can't get color for SN {}, {}", serialNumber, deviceId);
         return Optional.absent();
     }
 }
