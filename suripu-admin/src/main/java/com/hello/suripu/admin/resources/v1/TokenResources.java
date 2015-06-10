@@ -73,7 +73,7 @@ public class TokenResources {
         }
         final Long accountId = accountOptional.get().id.get();
 
-        LOGGER.info("Admin {} attempts to generate token on behalf of account {} - email {}", requesterEmail, accountId, implicitTokenRequest.email);
+        LOGGER.debug("Admin {} attempts to generate token on behalf of account {} - email {}", requesterEmail, accountId, implicitTokenRequest.email);
 
 
         final Optional<Application> applicationOptional = applicationStore.getApplicationByClientId(implicitTokenRequest.clientId);
@@ -100,7 +100,7 @@ public class TokenResources {
 
         }
 
-        LOGGER.debug("Admin {} created implicit token {} for account {}", requesterEmail, implicitToken.toString(), implicitTokenRequest.email);
+        LOGGER.info("Admin {} created implicit token {} for account {}", requesterEmail, implicitToken.toString(), implicitTokenRequest.email);
         return implicitToken;
 
     }
