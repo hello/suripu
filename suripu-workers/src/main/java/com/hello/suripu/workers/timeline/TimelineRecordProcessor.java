@@ -54,6 +54,9 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final Meter timelinesExpired;
     private final Meter timelineReadyToProcess;
     private final Meter emptyTimelineAfterProcess;
+    private final Meter awsErrorCount;
+    private final Meter generalErrorCount;
+    private final Meter errorCount;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
@@ -72,6 +75,9 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.timelinesExpired = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-expired", "timelines-expired", TimeUnit.SECONDS);
         this.timelineReadyToProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-ready-to-process", "timelines-ready-to-process", TimeUnit.SECONDS);
         this.emptyTimelineAfterProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "empty-timeline", "empty-timeline", TimeUnit.SECONDS);
+        this.awsErrorCount = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "aws-error", "aws-errors", TimeUnit.SECONDS);
+        this.generalErrorCount = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "gen-error", "gen-errors", TimeUnit.SECONDS);
+        this.errorCount = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "error", "errors", TimeUnit.SECONDS);
     }
 
     @Override
@@ -199,8 +205,12 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                     // TODO: Push notification here?
                 } catch (AmazonServiceException awsException) {
                     LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
+                    this.awsErrorCount.mark(1);
+                    this.errorCount.mark(1);
                 } catch (Exception ex) {
                     LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
+                    this.generalErrorCount.mark(1);
+                    this.errorCount.mark(1);
                 }
             }
         }
