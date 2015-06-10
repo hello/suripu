@@ -5,4 +5,5 @@ package com.hello.suripu.core.util;
  */
 public class HelloHttpHeader {
     public static final String SENSE_ID = "X-Hello-Sense-Id";
+    public static final String ADMIN = "X-Hello-Admin";
 }
