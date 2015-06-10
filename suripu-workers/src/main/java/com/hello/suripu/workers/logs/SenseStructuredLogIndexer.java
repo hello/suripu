@@ -37,8 +37,7 @@ public class SenseStructuredLogIndexer implements LogIndexer<LoggingProtos.Batch
     }
 
     public static Set<String> decode(final String text) {
-        final Map<String, String> m = Maps.newHashMap();
-        final String noBraces = text.replace("{","").replace("}","");
+        final String noBraces = text.replace("}{",",").replace("{","").replace("}","").replace(", ", ",");
         final String[] pairs = noBraces.split(",");
         return ImmutableSet.copyOf(pairs);
     }
