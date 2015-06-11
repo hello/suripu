@@ -10,11 +10,6 @@
     <artifactId>suripu-workers</artifactId>
 
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>com.google.guava</groupId>-->
-            <!--<artifactId>guava</artifactId>-->
-            <!--<version>17.0</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-api</artifactId>
@@ -25,17 +20,7 @@
             <artifactId>suripu-core</artifactId>
             <version>0.4.33-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
-            <version>${aws.sdk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>joda-time</artifactId>
-                    <groupId>joda-time</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- DO NOT INCLUDE DROPWIZARD CORE AND AWS_JAVA_SDK SINCE THEY ARE INCLUDED IN THE SURIPU_CORE -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>amazon-kinesis-client</artifactId>
@@ -46,32 +31,10 @@
             <artifactId>RoaringBitmap</artifactId>
             <version>0.3.3</version>
         </dependency>
-        <!-- used for its cli commands -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.2-1004-jdbc4</version>
-        </dependency>
         <dependency>
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
             <version>2.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
-            <version>${dropwizard.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>joda-time</artifactId>
-                    <groupId>joda-time</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
-            <version>${dropwizard.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.dagger</groupId>
