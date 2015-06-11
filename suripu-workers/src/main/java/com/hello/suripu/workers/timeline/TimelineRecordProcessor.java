@@ -19,11 +19,11 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.TimelineProcessor;
-import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +56,11 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final Meter emptyTimelineAfterProcess;
     private final Meter errorCount;
 
+    private int ready = 0;
+    private int saved = 0;
+    private int empty = 0;
+    private int error = 0;
+
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
                                    final DeviceDAO deviceDAO,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
@@ -74,6 +79,13 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.timelineReadyToProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-timelines-ready-to-process", "d-timelines-ready-to-process", TimeUnit.SECONDS);
         this.emptyTimelineAfterProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-empty-timeline", "d-empty-timeline", TimeUnit.SECONDS);
         this.errorCount = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-err", "d-errs", TimeUnit.SECONDS);
+
+        if(!this.timelineProcessor.retrieveTimelinesFast(1648L, new DateTime(2015,6,9,6,0, DateTimeZone.UTC)).isPresent()){
+            LOGGER.info("empty!");
+        }
+        LOGGER.info("enter xxxx");
+        System.exit(1);
+
     }
 
     @Override
@@ -107,6 +119,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
             try {
                 final List<DeviceAccountPair> accountsLinkedToPill = deviceDAO.getLinkedAccountFromPillId(pillId);
                 map.put(pillId, accountsLinkedToPill);
+                LOGGER.info("******* Pill id acc map: pill {}, acc {}", pillId, accountsLinkedToPill.size());
             }catch (UnableToExecuteStatementException sqlException){
                 LOGGER.error("Fail to get accounts linked with pill {}", pillId);
             }
@@ -116,17 +129,25 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void processRecords(final List<Record> list, final IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        messagesProcessed.mark(list.size());
+        //messagesProcessed.mark(list.size());
         final List<SenseCommandProtos.batched_pill_data> batchedPillData = new ArrayList<>();
         final Map<String, String> pillIdSenseIdMap = new HashMap<>();
 
         for(final Record record:list){
             try {
                 SenseCommandProtos.batched_pill_data dataBatch = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
-                batchedPillData.add(dataBatch);
+
                 final String senseId = dataBatch.getDeviceId();
+                if(!senseId.equals("5337C1C9D7F2CB66")){
+                    continue;
+                }
+                batchedPillData.add(dataBatch);
+
                 for(final SenseCommandProtos.pill_data pillData:dataBatch.getPillsList()){
                     pillIdSenseIdMap.put(pillData.getDeviceId(), senseId);
+                    LOGGER.info("put {} from sense {}, {}, is heartbeat {}", pillData.getDeviceId(), senseId,
+                            new DateTime(pillData.getTimestamp() * 1000L, DateTimeZone.UTC),
+                            pillData.hasUptime());
                 }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
@@ -134,10 +155,12 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         }
 
         final Map<String, List<DeviceAccountPair>> pillIdPairedAccountsMap = getPillIdAccountsMap(pillIdSenseIdMap.keySet(), this.deviceDAO);
+
+
         final Map<String, Set<DateTime>> pillIdTargetDatesMapByHeartbeat = BatchProcessUtils.groupRequestingPillIdsByDataType(batchedPillData,
                 BatchProcessUtils.DataTypeFilter.PILL_HEARTBEAT);
-        final Map<String, Set<DateTime>> pillIdTargetDatesMapByData = BatchProcessUtils.groupRequestingPillIdsByDataType(batchedPillData,
-                BatchProcessUtils.DataTypeFilter.PILL_DATA);
+//        final Map<String, Set<DateTime>> pillIdTargetDatesMapByData = BatchProcessUtils.groupRequestingPillIdsByDataType(batchedPillData,
+//                BatchProcessUtils.DataTypeFilter.PILL_DATA);
 
         final Map<Long, UserInfo> accountIdUserInfoMap = getSenseIdAccountsMap(pillIdSenseIdMap.values(),
                 this.mergedUserInfoDynamoDB,
@@ -150,20 +173,22 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
                 accountIdUserInfoMap,
                 pillIdPairedAccountsMap);
 
-        final Map<Long, Set<DateTime>> groupedAccountIdAndExpiredTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndExpireDateLocalUTC(
-                pillIdTargetDatesMapByData,
-                this.configuration.getEarliestExpireTime(),
-                this.configuration.getLastExpireTime(),
-                DateTime.now(),
-                this.flipper,
-                accountIdUserInfoMap,
-                pillIdPairedAccountsMap);
+//        final Map<Long, Set<DateTime>> groupedAccountIdAndExpiredTargetDateLocalUTCMap = BatchProcessUtils.groupAccountAndExpireDateLocalUTC(
+//                pillIdTargetDatesMapByData,
+//                this.configuration.getEarliestExpireTime(),
+//                this.configuration.getLastExpireTime(),
+//                DateTime.now(),
+//                this.flipper,
+//                accountIdUserInfoMap,
+//                pillIdPairedAccountsMap);
 
         // Expires all out dated timeline
-        expires(groupedAccountIdAndExpiredTargetDateLocalUTCMap, DateTime.now());
+        //expires(groupedAccountIdAndExpiredTargetDateLocalUTCMap, DateTime.now());
 
         // Reprocess
         batchProcess(groupedAccountIdAndRegenerateTimelineTargetDateLocalUTCMap);
+
+        LOGGER.info("READY {}, SAVED {}, EMPTY {}, ERROR {}", this.ready, this.saved, this.empty, this.error);
 
         try {
             iRecordProcessorCheckpointer.checkpoint();
@@ -176,36 +201,50 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     }
 
     private void batchProcess(final Map<Long, Set<DateTime>> groupedAccountIdTargetDateLocalUTCMap){
+        final Map<Long, Set<DateTime>> mapClone = new HashMap<>(groupedAccountIdTargetDateLocalUTCMap);
+
         for(final Long accountId:groupedAccountIdTargetDateLocalUTCMap.keySet()) {
-            for(final DateTime targetDateLocalUTC:groupedAccountIdTargetDateLocalUTCMap.get(accountId)) {
+            for(final DateTime targetDateLocalUTC:mapClone.get(accountId)) {
+                LOGGER.info("reprocess acc {} date {}", accountId, targetDateLocalUTC);
                 if(this.flipper.userFeatureActive(FeatureFlipper.STOP_PROCESS_TIMELINE_FROM_WORKER, accountId, Collections.EMPTY_LIST)){
                     continue;
                 }
 
-                this.timelineReadyToProcess.mark(1);
+                //this.timelineReadyToProcess.mark(1);
+                this.ready++;
+                LOGGER.info("enter 1");
                 try {
                     final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC);
                     if(!result.isPresent()){
-                        this.emptyTimelineAfterProcess.mark(1);
+                        //this.emptyTimelineAfterProcess.mark(1);
+                        this.empty++;
+                        LOGGER.info("enter 2");
                         continue;
                     }
-
+                    LOGGER.info("enter 3");
                     //this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, result.get());
-                    timelinesSaved.mark(1);
+                    //timelinesSaved.mark(1);
+                    this.saved++;
+                    LOGGER.info("enter 4");
 
-                    LOGGER.info("{} Timeline saved for account {} at local utc {}",
-                            DateTime.now(),
-                            accountId,
-                            DateTimeUtil.dateToYmdString(targetDateLocalUTC));
+//                    LOGGER.info("{} Timeline saved for account {} at local utc {}",
+//                            DateTime.now(),
+//                            accountId,
+//                            DateTimeUtil.dateToYmdString(targetDateLocalUTC));
 
                     // TODO: Push notification here?
                 } catch (AmazonServiceException awsException) {
-                    LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
-                    errorCount.mark(1);
+                    //LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
+                    //errorCount.mark(1);
+                    this.error++;
                 } catch (Exception ex) {
-                    LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
-                    errorCount.mark(1);
+                    //LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
+                    //errorCount.mark(1);
+                    this.error++;
                 }
+
+                int i = 0;
+                i++;
             }
         }
 

@@ -55,6 +55,10 @@ public class BatchProcessUtils {
 
                 final DateTime targetDateUTC = new DateTime(pillData.getTimestamp() * 1000L, DateTimeZone.UTC);
                 pillIdTargetDatesMap.get(pillData.getDeviceId()).add(targetDateUTC);
+
+                if(filter == DataTypeFilter.PILL_HEARTBEAT) {
+                    LOGGER.info("heartbeat requesting {}, {}", pillData.getDeviceId(), targetDateUTC);
+                }
             }
 
         }
@@ -136,6 +140,8 @@ public class BatchProcessUtils {
                                                                               final Map<String, List<DeviceAccountPair>> pillIdsLinkedAccountMap){
         final Map<Long, Set<DateTime>> accountIdTargetDatesLocalUTCMap = new HashMap<>();
         for(final String pillId:groupedPillIdRequestDateUTC.keySet()) {
+            LOGGER.info("Pill id {}", pillId);
+
             final List<DeviceAccountPair> accountsLinkedWithPill = pillIdsLinkedAccountMap.get(pillId);
             if (accountsLinkedWithPill.size() == 0) {
                 LOGGER.warn("No account linked with pill {}", pillId);
@@ -164,6 +170,8 @@ public class BatchProcessUtils {
                 continue;
             }
 
+
+            LOGGER.info("Processing accout {}, sense {}", userInfo.accountId, senseId);
             final Set<DateTime> targetDatesLocalUTC = new HashSet<>();
             for(final DateTime dataTime:groupedPillIdRequestDateUTC.get(pillId)){
                 final DateTime dataTimeInLocal = dataTime.withZone(dateTimeZoneOptional.get());
@@ -182,6 +190,7 @@ public class BatchProcessUtils {
                 }
 
                 targetDatesLocalUTC.add(processTargetDateLocalUTC);
+                LOGGER.info("Target date {}", processTargetDateLocalUTC);
             }
 
             if(!targetDatesLocalUTC.isEmpty()){

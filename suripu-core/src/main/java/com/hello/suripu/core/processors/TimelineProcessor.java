@@ -53,7 +53,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -133,14 +132,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.senseColorDAO = senseColorDAO;
 
         if (uuid.isPresent()) {
-            this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
+            this.LOGGER = STATIC_LOGGER; //new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
             timelineUtils = new TimelineUtils(uuid.get());
             timelineSafeguards = new TimelineSafeguards(uuid.get());
             feedbackUtils = new FeedbackUtils(uuid.get());
 
         }
         else {
-            this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+            this.LOGGER = STATIC_LOGGER; // new LoggerWithSessionId(STATIC_LOGGER);
             timelineUtils = new TimelineUtils();
             timelineSafeguards = new TimelineSafeguards();
             feedbackUtils = new FeedbackUtils();
@@ -266,7 +265,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = Collections.EMPTY_LIST;
             }
 
+            LOGGER.info("populateTimeline");
             final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
+            LOGGER.info("populateTimeline end");
 
             final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
 
@@ -423,9 +424,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         // create sleep-motion segments
+        LOGGER.info("WTF");
         final List<MotionEvent> motionEvents = timelineUtils.generateMotionEvents(trackerMotions);
-
+        LOGGER.info("line 426");
         final Map<Long, Event> timelineEvents = TimelineRefactored.populateTimeline(motionEvents);
+        LOGGER.info("line 428: TimelineRefactored.populateTimeline(motionEvents)");
 
         // LIGHT
         for(final Event event : lightEvents) {
@@ -449,10 +452,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         //  get the feedback in one form or another
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
-
+        LOGGER.info("line 452: getFeedbackList(accountId, targetDate, offsetMillis)");
         //MOVE EVENTS BASED ON FEEDBACK
         final FeedbackUtils.ReprocessedEvents reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents),extraEvents, offsetMillis);
-
+        LOGGER.info("line 456: reprocessEventsBasedOnFeedback");
 
         // PARTNER MOTION
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, ImmutableList.copyOf(motionEvents), partnerMotions);
@@ -463,6 +466,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         // SOUND
         int numSoundEvents = 0;
+        LOGGER.info("line 467: getSound");
         if (this.hasSoundInTimeline(accountId)) {
             final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
                     motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
@@ -573,7 +577,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
 
-        LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
+        LOGGER.info("Score for account_id = {} is {}", accountId, sleepScore);
 
 
         final List<Insight> insights = timelineUtils.generatePreSleepInsights(allSensorSampleList, sleepStats.sleepTime, accountId);
@@ -581,6 +585,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
         final List<Timeline> timelines = Lists.newArrayList(timeline);
+        LOGGER.info("Return");
         return timelines;
     }
 

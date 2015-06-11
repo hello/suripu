@@ -19,7 +19,6 @@ import com.hello.suripu.algorithm.sleep.scores.MotionDensityScoringFunction;
 import com.hello.suripu.algorithm.sleep.scores.WaveAccumulateMotionScoreFunction;
 import com.hello.suripu.algorithm.sleep.scores.ZeroToMaxMotionCountDurationScoreFunction;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
-import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
@@ -80,7 +79,7 @@ public class TimelineUtils {
     private static final int SOUND_WINDOW_SIZE_MINS = 30; // smoothing windows, binning
     private static final int MAX_SOUND_EVENT_SIZE = 5; // max sound event allowed in timeline
 
-    private final Logger LOGGER;
+    private final Logger LOGGER = STATIC_LOGGER;
 
     public List<Event> convertLightMotionToNone(final List<Event> eventList, final int thresholdSleepDepth){
         final LinkedList<Event> convertedEvents = new LinkedList<>();
@@ -100,11 +99,11 @@ public class TimelineUtils {
     }
 
     public TimelineUtils(final UUID uuid) {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+        //LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
     public TimelineUtils() {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        //LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
     }
 
     /**
@@ -140,8 +139,10 @@ public class TimelineUtils {
 
     public List<MotionEvent> generateMotionEvents(final List<TrackerMotion> trackerMotions) {
         final List<MotionEvent> motionEvents = new ArrayList<>();
+        LOGGER.info("generateMotionEvents");
 
         final List<TrackerMotion> positiveMotions = removeNegativeAmplitudes(trackerMotions);
+        LOGGER.info("Negative removed");
         if(positiveMotions.isEmpty()) {
             return motionEvents;
         }
@@ -149,7 +150,7 @@ public class TimelineUtils {
         int maxSVM = getMaxSVM(positiveMotions);
         final Map<Integer, Integer> positionMap = constructValuePositionMap(positiveMotions);
 
-        LOGGER.debug("Max SVM = {}", maxSVM);
+        LOGGER.info("Max SVM = {}", maxSVM);
 
         final Long trackerId = positiveMotions.get(0).trackerId;
         for(final TrackerMotion trackerMotion : positiveMotions) {
@@ -165,7 +166,7 @@ public class TimelineUtils {
                     getSleepDepth(trackerMotion.value, positionMap, maxSVM));
             motionEvents.add(motionEvent);
         }
-        LOGGER.debug("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
+        LOGGER.info("Generated {} segments from {} tracker motion samples", motionEvents.size(), trackerMotions.size());
 
         return motionEvents;
     }

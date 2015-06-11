@@ -18,7 +18,7 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @Max(20)
+    @Max(2000)
     @JsonProperty("max_records")
     private Integer maxRecords;
 

@@ -3,12 +3,8 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
-import com.hello.suripu.core.logging.LoggerWithSessionId;
-import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
-import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.models.TrackerMotion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +23,14 @@ public class TimelineSafeguards {
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineSafeguards.class);
 
-    private final Logger LOGGER;
+    private final Logger LOGGER = STATIC_LOGGER;
 
     public TimelineSafeguards(final UUID uuid) {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+        //LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
     public TimelineSafeguards() {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        //LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
     }
 
     public boolean checkEventOrdering(SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents) {

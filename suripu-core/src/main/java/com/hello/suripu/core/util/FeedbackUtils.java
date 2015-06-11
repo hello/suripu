@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -16,12 +15,9 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,14 +27,14 @@ import java.util.UUID;
 public class FeedbackUtils {
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(FeedbackUtils.class);
-    private final Logger LOGGER;
+    private final Logger LOGGER = STATIC_LOGGER;
 
     public FeedbackUtils(final UUID uuid) {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+        //LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
     public FeedbackUtils() {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        //LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
     }
 
     public static Optional<DateTime> convertFeedbackToDateTimeByNewTime(final TimelineFeedback feedback, final Integer offsetMillis) {
