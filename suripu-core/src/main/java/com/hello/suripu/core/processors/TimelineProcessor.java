@@ -53,7 +53,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -145,20 +144,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             timelineSafeguards = new TimelineSafeguards();
             feedbackUtils = new FeedbackUtils();
         }
-    }
-
-    public boolean shouldProcessTimelineByWorker(final long accountId,
-                                                 final int maxNoMotionPeriodInMinutes,
-                                                 final DateTime currentTime){
-        final Optional<TrackerMotion> lastMotion = this.trackerMotionDAO.getLast(accountId);
-        if(!lastMotion.isPresent()){
-            return false;
-        }
-
-        if(currentTime.minusMinutes(maxNoMotionPeriodInMinutes).isAfter(lastMotion.get().timestamp)){
-            return true;
-        }
-        return false;
     }
 
     public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
