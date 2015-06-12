@@ -10,11 +10,6 @@
     <artifactId>suripu-workers</artifactId>
 
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>com.google.guava</groupId>-->
-            <!--<artifactId>guava</artifactId>-->
-            <!--<version>17.0</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-api</artifactId>
@@ -25,17 +20,7 @@
             <artifactId>suripu-core</artifactId>
             <version>0.4.34-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
-            <version>${aws.sdk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>joda-time</artifactId>
-                    <groupId>joda-time</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- DO NOT INCLUDE DROPWIZARD CORE AND AWS_JAVA_SDK SINCE THEY ARE INCLUDED IN THE SURIPU_CORE -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>amazon-kinesis-client</artifactId>
@@ -56,22 +41,6 @@
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
             <version>2.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
-            <version>${dropwizard.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>joda-time</artifactId>
-                    <groupId>joda-time</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
-            <version>${dropwizard.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.dagger</groupId>

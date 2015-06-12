@@ -172,7 +172,7 @@ public class RingTimeHistoryDAODynamoDB {
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final RateLimiter rateLimiter = RateLimiter.create(maxRateLimitSec);
         do {
-            // rateLimiter.acquire();
+            rateLimiter.acquire();
             final QueryRequest queryRequest = new QueryRequest(tableName).withKeyConditions(queryConditions)
                     .withQueryFilter(filterConditions)
                     .withAttributesToGet(targetAttributeSet)
