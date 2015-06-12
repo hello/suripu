@@ -227,7 +227,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         LOGGER.trace("Token = {} for account_id = {}", accessToken.serializeAccessToken(), accessToken.accountId);
         LOGGER.trace("Token created at = {}", accessToken.createdAt);
         LOGGER.trace("DiffInSeconds = {}", diffInSeconds);
-        if(diffInSeconds > expirationTimeInSeconds) {
+        if(diffInSeconds > accessToken.expiresIn) {
             LOGGER.warn("Token {} has expired {} seconds ago (accountId = {})", accessToken.serializeAccessToken(), diffInSeconds, accessToken.accountId);
             return true;
         }

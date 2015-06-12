@@ -28,6 +28,7 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.HEAD;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -73,19 +74,14 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
 
-        this.messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-messages", "d-messages-processed", TimeUnit.SECONDS);
-        this.timelinesSaved = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-timelines-saved", "d-timelines-saved", TimeUnit.SECONDS);
-        this.timelinesExpired = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-timelines-expired", "d-timelines-expired", TimeUnit.SECONDS);
-        this.timelineReadyToProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-timelines-ready-to-process", "d-timelines-ready-to-process", TimeUnit.SECONDS);
-        this.emptyTimelineAfterProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-empty-timeline", "d-empty-timeline", TimeUnit.SECONDS);
-        this.errorCount = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "d-err", "d-errs", TimeUnit.SECONDS);
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
+        this.timelinesSaved = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-saved", "timelines-saved", TimeUnit.SECONDS);
+        this.timelinesExpired = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-expired", "timelines-expired", TimeUnit.SECONDS);
+        this.timelineReadyToProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "timelines-ready-to-process", "timelines-ready-to-process", TimeUnit.SECONDS);
+        this.emptyTimelineAfterProcess = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "empty-timeline", "empty-timeline", TimeUnit.SECONDS);
+        this.errorCount = Metrics.defaultRegistry().newMeter(TimelineRecordProcessor.class, "error", "errors", TimeUnit.SECONDS);
 
-        if(!this.timelineProcessor.retrieveTimelinesFast(1648L, new DateTime(2015,6,9,6,0, DateTimeZone.UTC)).isPresent()){
-            LOGGER.info("empty!");
-        }
-        LOGGER.info("enter xxxx");
-        System.exit(1);
-
+        this.timelineProcessor.retrieveTimelinesFast(1648L, new DateTime(2015,6,10,0,0, DateTimeZone.UTC));
     }
 
     @Override

@@ -36,7 +36,8 @@ public enum OAuthScope {
     PASSWORD_RESET(25),
     RESEARCH(26),
     TIMEZONE_READ(27),
-    PCH_READ(28);
+    PCH_READ(28),
+    IMPLICIT_TOKEN(29);
 
     private int value;
 

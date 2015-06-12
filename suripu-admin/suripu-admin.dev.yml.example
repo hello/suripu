@@ -94,3 +94,5 @@ dynamodb:
       timezone_history: http://localhost:7777
       smart_alarm_log: http://localhost:7777
       ring_time_history: http://localhost:7777
+
+token_expiration: 300

@@ -10,6 +10,7 @@ import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 
 public class SuripuAdminConfiguration extends Configuration {
@@ -98,4 +99,12 @@ public class SuripuAdminConfiguration extends Configuration {
     public NewDynamoDBConfiguration dynamoDBConfiguration(){
         return dynamoDBConfiguration;
     }
+
+
+    @Valid
+    @NotNull
+    @Max(600)
+    @JsonProperty("token_expiration")
+    private Long tokenExpiration;
+    public Long getTokenExpiration() {return this.tokenExpiration;}
 }

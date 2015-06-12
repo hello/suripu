@@ -2,10 +2,10 @@ package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.admin.Util;
-import com.hello.suripu.core.diagnostic.Count;
-import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.diagnostic.Count;
+import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -14,12 +14,15 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.tracking.Category;
 import com.hello.suripu.core.tracking.TrackingDAO;
 import com.hello.suripu.core.util.JsonError;
+import com.yammer.metrics.annotation.Timed;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -44,11 +47,13 @@ public class DiagnosticResources {
         this.trackingDAO = trackingDAO;
     }
 
+    @Timed
     @GET
     @Path("/uptime/{email}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Count> uptime(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-                              @PathParam("email") final String email) {
+                              @PathParam("email") final String email,
+                              @DefaultValue("false") @QueryParam("padded") Boolean padded) {
 
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
         if(!accountIdOptional.isPresent()) {
@@ -62,10 +67,15 @@ public class DiagnosticResources {
                     new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "Device not found")).build());
         }
 
-        final List<Count> counts = diagnosticDAO.uptime(accountIdOptional.get(), deviceAccountPairOptional.get().internalDeviceId);
-        return counts;
+        if(padded) {
+            final List<Count> counts = diagnosticDAO.uptimePadded(accountIdOptional.get(), deviceAccountPairOptional.get().internalDeviceId);
+            return counts;
+        }
+
+        return diagnosticDAO.uptime(accountIdOptional.get(), deviceAccountPairOptional.get().internalDeviceId);
     }
 
+    @Timed
     @PUT
     @Path("/track/uptime/{email}")
     public void Track(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
