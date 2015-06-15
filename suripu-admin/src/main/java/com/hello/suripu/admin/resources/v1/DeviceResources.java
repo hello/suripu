@@ -733,7 +733,7 @@ public class DeviceResources {
             }
             else {
                 final DeviceData deviceData = deviceDataOptional.get();
-                LOGGER.info("device data {}", deviceData);
+                LOGGER.debug("device data {}", deviceData);
                 senses.add(DeviceAdmin.create(senseAccountPair, DeviceStatus.sense(deviceData.deviceId, Integer.toHexString(deviceData.firmwareVersion), deviceData.dateTimeUTC)));
             }
         }
