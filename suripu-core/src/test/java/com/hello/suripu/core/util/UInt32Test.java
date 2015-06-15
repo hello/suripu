@@ -14,7 +14,7 @@ public class UInt32Test {
     @Test
     public void testSignedToUnsigned(){
         int signedInt = -2;
-        long expected = 0xFFFFFFFEl;
+        long expected = 0xFFFFFFFEL;
         long actual = UInt32.getValue(signedInt);
         assertThat(actual, is(expected));
         assertThat(actual > 0, is(true));

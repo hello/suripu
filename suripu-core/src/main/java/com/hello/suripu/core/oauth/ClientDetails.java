@@ -3,6 +3,8 @@ package com.hello.suripu.core.oauth;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
+import java.util.Arrays;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ClientDetails{
@@ -43,7 +45,7 @@ public class ClientDetails{
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(responseType, clientId, redirectUri, scopes, state, code, accountId, secret);
+        return Objects.hashCode(responseType, clientId, redirectUri, Arrays.hashCode(scopes), state, code, accountId, secret);
     }
 
     @Override
@@ -56,7 +58,7 @@ public class ClientDetails{
         return Objects.equal(this.responseType, that.responseType) &&
                 Objects.equal(this.clientId, that.clientId) &&
                 Objects.equal(this.redirectUri, that.redirectUri) &&
-                Objects.equal(this.scopes, that.scopes) &&
+                Arrays.equals(this.scopes, that.scopes) &&
                 Objects.equal(this.state, that.state) &&
                 Objects.equal(this.code, that.code) &&
                 Objects.equal(this.accountId, that.accountId) &&
