@@ -13,6 +13,7 @@ import com.hello.suripu.admin.cli.PopulateColors;
 import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
+import com.hello.suripu.admin.resources.v1.TokenResources;
 import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.AlarmResources;
@@ -216,7 +217,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
 
-        final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
+        final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore, configuration.getTokenExpiration());
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
 
@@ -322,5 +323,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
         environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO, trackingDAO));
+        environment.addResource(new TokenResources(accessTokenStore, applicationStore, accountDAO));
     }
 }

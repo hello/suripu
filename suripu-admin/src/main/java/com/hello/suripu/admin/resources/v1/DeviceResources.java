@@ -744,6 +744,7 @@ public class DeviceResources {
         for (final DeviceAccountPair pillAccountPair: pillAccountPairs) {
             Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
             if (!pillStatusOptional.isPresent()){
+                LOGGER.warn("Failed to get heartbeat for account id {} on pill internal id: {} - external id: {}, looking into tracker motion", accountId, pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId);
                 pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
             }
             if (!pillStatusOptional.isPresent()){
