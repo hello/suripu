@@ -270,7 +270,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         );
 
 
-        final AmazonDynamoDB tzHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.TIMEZONE_HISTORY);
+        final AmazonDynamoDB tzHistoryDynamoDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.TIMEZONE_HISTORY, TimeZoneHistoryDAODynamoDB.class);
         final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(
                 tzHistoryDynamoDBClient,
                 tableNames.get(DynamoDBTableName.TIMEZONE_HISTORY)
