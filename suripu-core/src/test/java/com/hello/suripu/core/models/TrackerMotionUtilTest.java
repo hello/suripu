@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -69,7 +70,7 @@ public class TrackerMotionUtilTest {
         final byte[] encrypted = new byte[]{(byte)0xFE, (byte)0xD2, 0x70, 0x18};
         final byte[] expected = new byte[]{0x67, 0x5B, (byte)0xB0, 0x69};
         final byte[] actual = TrackerMotion.Utils.counterModeDecrypt(new byte[16], nonce, encrypted);
-        assertThat(actual.equals(expected), is(false));
+        assertThat(Arrays.equals(actual, expected), is(false));
     }
 
     @Test
