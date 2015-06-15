@@ -342,7 +342,6 @@ public class DataResources {
         if(!deviceDataOptional.isPresent()) {
             return CurrentRoomState.empty();
         }
-
         return CurrentRoomState.fromDeviceData(deviceDataOptional.get(), DateTime.now(), 15, "c");
     }
 
@@ -354,5 +353,34 @@ public class DataResources {
                                    @PathParam("sense_id") final String senseId) {
         return SenseLogTag.rawValues();
 
+    }
+
+    @Timed
+    @GET
+    @Path("/sense_last_seen/{email}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceData getSenseLastSeenData(@Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+                                           @PathParam("email") final String email) {
+
+        final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
+        if (!accountIdOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "Account not found")).build());
+        }
+
+        final List<DeviceAccountPair> pairs = deviceDAO.getSensesForAccountId(accountIdOptional.get());
+        if(pairs.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "Account has no sense")).build());
+        }
+
+        final DeviceAccountPair pair = pairs.get(0);
+
+        final Optional<DeviceData> deviceDataOptional = sensorsViewsDynamoDB.lastSeen(pair.externalDeviceId, pair.accountId, pair.internalDeviceId);
+        if(!deviceDataOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "Sense has no last seen data")).build());
+        }
+        return deviceDataOptional.get();
     }
 }
