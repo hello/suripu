@@ -5,6 +5,6 @@ package com.hello.suripu.core.util;
  */
 public class UInt32 {
     public static long getValue(final int value){
-        return value & 0xFFFFFFFFl;
+        return value & 0xFFFFFFFFL;
     }
 }

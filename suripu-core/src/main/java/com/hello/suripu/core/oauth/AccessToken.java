@@ -9,6 +9,7 @@ import com.google.common.base.Objects;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -133,7 +134,7 @@ public class AccessToken {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(token, refreshToken, tokenType, expiresIn, accountId, appId, scopes);
+        return Objects.hashCode(token, refreshToken, tokenType, expiresIn, accountId, appId, Arrays.hashCode(scopes));
     }
 
     @Override
@@ -150,7 +151,7 @@ public class AccessToken {
                 && Objects.equal(this.createdAt, that.createdAt)
                 && Objects.equal(this.accountId, that.accountId)
                 && Objects.equal(this.appId, that.appId)
-                && Objects.equal(this.scopes, that.scopes);
+                && Arrays.equals(this.scopes, that.scopes);
     }
 
     @Override
