@@ -19,12 +19,14 @@ import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
@@ -86,6 +88,7 @@ public class DeviceResources {
     private final SenseColorDAO senseColorDAO;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
     private final PillViewsDynamoDB pillViewsDynamoDB;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
 
 
     public DeviceResources(final DeviceDAO deviceDAO,
@@ -100,7 +103,8 @@ public class DeviceResources {
                            final PillHeartBeatDAO pillHeartBeatDAO,
                            final SenseColorDAO senseColorDAO,
                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
-                           final PillViewsDynamoDB pillViewsDynamoDB) {
+                           final PillViewsDynamoDB pillViewsDynamoDB,
+                           final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
 
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
@@ -115,6 +119,7 @@ public class DeviceResources {
         this.senseColorDAO = senseColorDAO;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
         this.pillViewsDynamoDB = pillViewsDynamoDB;
+        this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
     }
 
     @GET
@@ -722,17 +727,15 @@ public class DeviceResources {
         final List<DeviceAdmin> senses = new ArrayList<>();
 
         for (final DeviceAccountPair senseAccountPair: senseAccountPairs) {
-            Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatusLastHour(senseAccountPair.internalDeviceId);
-            if (!senseStatusOptional.isPresent()) {
-                senseStatusOptional = this.deviceDataDAO.senseStatus(senseAccountPair.internalDeviceId);
-            }
-            if (!senseStatusOptional.isPresent()){
+            final Optional<DeviceData> deviceDataOptional = sensorsViewsDynamoDB.lastSeen(senseAccountPair.externalDeviceId, accountId, senseAccountPair.internalDeviceId);
+            if (!deviceDataOptional.isPresent()) {
                 senses.add(DeviceAdmin.create(senseAccountPair));
             }
             else {
-                senses.add(DeviceAdmin.create(senseAccountPair, senseStatusOptional.get()));
+                final DeviceData deviceData = deviceDataOptional.get();
+                LOGGER.debug("device data {}", deviceData);
+                senses.add(DeviceAdmin.create(senseAccountPair, DeviceStatus.sense(deviceData.deviceId, Integer.toHexString(deviceData.firmwareVersion), deviceData.dateTimeUTC)));
             }
-
         }
         return senses;
     }
