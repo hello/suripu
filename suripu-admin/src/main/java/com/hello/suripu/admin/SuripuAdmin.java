@@ -236,33 +236,33 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
 
-        final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
+        final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.FEATURES, FeatureStore.class);
         final FeatureStore featureStore = new FeatureStore(
                 featuresDynamoDBClient,
                 tableNames.get(DynamoDBTableName.FEATURES),
                 namespace
         );
 
-        final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.TEAMS);
+        final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.TEAMS, TeamStore.class);
         final TeamStore teamStore = new TeamStore(teamStoreDBClient, tableNames.get(DynamoDBTableName.TEAMS));
 
-        final AmazonDynamoDB senseEventsDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_EVENTS);
+        final AmazonDynamoDB senseEventsDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.SENSE_EVENTS, SenseEventsDAO.class);
         final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(senseEventsDBClient, tableNames.get(DynamoDBTableName.SENSE_EVENTS));
 
 
-        final AmazonDynamoDB fwVersionMapping = dynamoDBClientFactory.getForTable(DynamoDBTableName.FIRMWARE_VERSIONS);
+        final AmazonDynamoDB fwVersionMapping = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.FIRMWARE_VERSIONS, FirmwareVersionMappingDAO.class);
         final FirmwareVersionMappingDAO firmwareVersionMappingDAO = new FirmwareVersionMappingDAO(fwVersionMapping, tableNames.get(DynamoDBTableName.FIRMWARE_VERSIONS));
 
-        final AmazonDynamoDB otaHistoryClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.OTA_HISTORY);
+        final AmazonDynamoDB otaHistoryClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.OTA_HISTORY, OTAHistoryDAODynamoDB.class);
         final OTAHistoryDAODynamoDB otaHistoryDAODynamoDB = new OTAHistoryDAODynamoDB(otaHistoryClient, tableNames.get(DynamoDBTableName.OTA_HISTORY));
 
-        final AmazonDynamoDB respCommandsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SYNC_RESPONSE_COMMANDS);
+        final AmazonDynamoDB respCommandsDynamoDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.SYNC_RESPONSE_COMMANDS, ResponseCommandsDAODynamoDB.class);
         final ResponseCommandsDAODynamoDB respCommandsDAODynamoDB = new ResponseCommandsDAODynamoDB(respCommandsDynamoDBClient, tableNames.get(DynamoDBTableName.SYNC_RESPONSE_COMMANDS));
 
-        final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBClientFactory.getForTable(DynamoDBTableName.FIRMWARE_UPGRADE_PATH);
+        final AmazonDynamoDB fwUpgradePathDynamoDB = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.FIRMWARE_UPGRADE_PATH, FirmwareUpgradePathDAO.class);
         final FirmwareUpgradePathDAO firmwareUpgradePathDAO = new FirmwareUpgradePathDAO(fwUpgradePathDynamoDB, tableNames.get(DynamoDBTableName.FIRMWARE_UPGRADE_PATH));
 
-        final AmazonDynamoDB sensorsViewsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+        final AmazonDynamoDB sensorsViewsDynamoDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.SENSE_LAST_SEEN, SensorsViewsDynamoDB.class);
         final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
                 sensorsViewsDynamoDBClient,
                 tableNames.get(DynamoDBTableName.SENSE_PREFIX),
@@ -276,19 +276,19 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 tableNames.get(DynamoDBTableName.TIMEZONE_HISTORY)
         );
 
-        final AmazonDynamoDB smartAlarmHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SMART_ALARM_LOG);
+        final AmazonDynamoDB smartAlarmHistoryDynamoDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.TIMEZONE_HISTORY, SmartAlarmLoggerDynamoDB.class);
         final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = new SmartAlarmLoggerDynamoDB(
                 smartAlarmHistoryDynamoDBClient,
                 tableNames.get(DynamoDBTableName.SMART_ALARM_LOG)
         );
 
-        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.RING_TIME_HISTORY);
+        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.TIMEZONE_HISTORY, RingTimeHistoryDAODynamoDB.class);
         final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
                 ringTimeHistoryDynamoDBClient,
                 tableNames.get(DynamoDBTableName.RING_TIME_HISTORY)
         );
 
-        final AmazonDynamoDB pillViewsDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_LAST_SEEN);
+        final AmazonDynamoDB pillViewsDynamoDBClient = dynamoDBClientFactory.getInstrumented(DynamoDBTableName.PILL_LAST_SEEN, PillViewsDynamoDB.class);
         final PillViewsDynamoDB pillViewsDynamoDB = new PillViewsDynamoDB(
                 pillViewsDynamoDBClient,
                 "", // TODO FIX THIS
