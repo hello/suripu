@@ -20,7 +20,6 @@
             <artifactId>suripu-core</artifactId>
             <version>0.4.38-SNAPSHOT</version>
         </dependency>
-        <!-- DO NOT INCLUDE DROPWIZARD CORE AND AWS_JAVA_SDK SINCE THEY ARE INCLUDED IN THE SURIPU_CORE -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>amazon-kinesis-client</artifactId>
