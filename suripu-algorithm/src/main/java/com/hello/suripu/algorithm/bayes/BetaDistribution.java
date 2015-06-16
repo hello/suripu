@@ -26,7 +26,7 @@ public class BetaDistribution {
 
     public void updateWithInference(final Double probOfSuccess, Integer numObs) {
         alpha += probOfSuccess * numObs.doubleValue();
-        beta += probOfSuccess * (1.0 - numObs.doubleValue());
+        beta += (1.0 - probOfSuccess) * numObs.doubleValue();
 
     }
 
