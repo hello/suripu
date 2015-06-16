@@ -298,7 +298,6 @@ public class HiddenMarkovModel {
 
         double [][] beta = new double[numObs][this.numStates];
 
-
         for (int s = 0 ; s < this.numStates; s++) {
             beta[numObs-1][s] = 1.0;
         }
@@ -310,15 +309,12 @@ public class HiddenMarkovModel {
                 }
             }
 
-
             for (int i = 0; i < this.numStates; i++) {
                 beta[t][i] /= c[t];
             }
         }
 
         return beta;
-
-
     }
 
 }

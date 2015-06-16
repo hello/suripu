@@ -91,7 +91,7 @@ public class MultipleEventModel {
      *  i.e.   P(A_forwards) * P(A_backwards) = P(A_forwards, A_backwards)
      *
      *  */
-    public List<List<Double>> getNotJointOfForwardsAndBackwards(final ImmutableList<Integer> events) {
+    public List<List<Double>> getJointOfForwardsAndBackwards(final ImmutableList<Integer> events) {
 
         //make backward events
         UnmodifiableListIterator<Integer> iterator = events.listIterator();
