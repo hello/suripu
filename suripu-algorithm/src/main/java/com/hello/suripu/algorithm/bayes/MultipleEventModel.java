@@ -13,14 +13,14 @@ public class MultipleEventModel {
     final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models;
     List<Double> discreteProbabilties;
 
-    public MultipleEventModel(final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models) {
+    public MultipleEventModel(final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models, final int numDiscreteProbs) {
         this.models = models;
 
         discreteProbabilties = Lists.newArrayList();
 
         //default is uniform prior
-        for (final ModelWithDiscreteProbabiltiesAndEventOccurence model : models) {
-            discreteProbabilties.add(1.0 / (double)models.size());
+        for (int iState = 0; iState < numDiscreteProbs; iState++) {
+            discreteProbabilties.add(1.0 / (double)numDiscreteProbs);
         }
     }
 
@@ -45,11 +45,6 @@ public class MultipleEventModel {
         }
 
         discreteProbabilties.set(iState,prior);
-    }
-
-    public void addModel(final ModelWithDiscreteProbabiltiesAndEventOccurence model ) {
-        models.add(model);
-        discreteProbabilties.add(1.0);
     }
 
 
@@ -94,7 +89,7 @@ public class MultipleEventModel {
     public List<List<Double>> getJointOfForwardsAndBackwards(final ImmutableList<Integer> events) {
 
         //make backward events
-        UnmodifiableListIterator<Integer> iterator = events.listIterator();
+        UnmodifiableListIterator<Integer> iterator = events.listIterator(events.size());
         List<Integer> backwardsEvents = Lists.newArrayList();
         while (iterator.hasPrevious()) {
             backwardsEvents.add(iterator.previous());

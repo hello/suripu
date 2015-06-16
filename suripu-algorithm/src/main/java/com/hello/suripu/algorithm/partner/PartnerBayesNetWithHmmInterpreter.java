@@ -33,7 +33,7 @@ public class PartnerBayesNetWithHmmInterpreter {
         }
 
 
-        bayesModel = new MultipleEventModel(models);
+        bayesModel = new MultipleEventModel(models,2);
     }
 
 
