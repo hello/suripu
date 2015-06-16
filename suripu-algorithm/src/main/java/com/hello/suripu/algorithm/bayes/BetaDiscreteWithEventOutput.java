@@ -1,5 +1,6 @@
 package com.hello.suripu.algorithm.bayes;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -70,29 +71,19 @@ import java.util.List;
 
 
  */
-public class BetaDiscreteWithEventOutput implements  ContinuousDiscreteWithEventOutput{
-
-    private final List<Double> discreteProbabilities;
+public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabiltiesAndEventOccurence{
+    private static final Double MINIMUM_PROBABILITY = 5e-2;
+    private static final Double MAXIMUM_PROBABILITY = 1.0 - MINIMUM_PROBABILITY;
+    private static final Double TOL = 1e-7;
     private final List<BetaDistribution> continuousDistributionProbabilities;
 
-    public BetaDiscreteWithEventOutput(final List<BetaDistribution> continuousDistributionPriors, final List<Double> discreteProbabilitiesPriors) {
-        discreteProbabilities = discreteProbabilitiesPriors;
+    public BetaDiscreteWithEventOutput(final List<BetaDistribution> continuousDistributionPriors) {
         continuousDistributionProbabilities = continuousDistributionPriors;
     }
 
-    @Override
-    public void setDiscretePriors(final List<Double> discreteProbabilities) {
-        this.discreteProbabilities.clear();
-        this.discreteProbabilities.addAll(discreteProbabilities);
-    }
 
     @Override
-    public List<Double> getDiscreteProbabilities() {
-        return discreteProbabilities;
-    }
-
-    @Override
-    public void inferContinuousProbabiltiesAsssumingGivenEventHappened(final List<Double> discreteProbabilities) {
+    public void inferModelGivenObservedProbabilities(final ImmutableList<Double> discreteProbabilities) {
         for (int iState = 0; iState < discreteProbabilities.size(); iState++) {
             final Double probSuccess = discreteProbabilities.get(iState);
             continuousDistributionProbabilities.get(iState).updateWithInference(probSuccess);
@@ -100,8 +91,48 @@ public class BetaDiscreteWithEventOutput implements  ContinuousDiscreteWithEvent
     }
 
     @Override
-    public void inferDiscreteProbabilitiesGivenContinuousPriorAndEventHapeend() {
+    public ImmutableList<Double> inferProbabilitiesGivenModel(final ImmutableList<Double> prior) {
+        List<Double> joints = Lists.newArrayList();
 
-        
+        //compute joint probabilties P(Si,event)
+        for (int iState = 0; iState < prior.size(); iState++) {
+            final BetaDistribution dist = continuousDistributionProbabilities.get(iState);
+            joints.add(dist.getExpectation() * prior.get(iState));
+        }
+
+        //sum to get P(event)
+        Double probEvent = 0.0;
+
+        for (final Double joint : joints) {
+            probEvent += joint;
+        }
+
+        //make sure we never divide by zero
+        if (probEvent < TOL) {
+            probEvent = TOL;
+        }
+
+        //compute posteriors
+        final List<Double> posterior = Lists.newArrayList();
+
+        for (int iState = 0; iState < prior.size(); iState++) {
+            posterior.add(joints.get(iState) / probEvent);
+        }
+
+        //enforce max/min probabilties
+        for (int iState = 0; iState < posterior.size(); iState++) {
+            if (posterior.get(iState) < MINIMUM_PROBABILITY) {
+                posterior.set(iState,MINIMUM_PROBABILITY);
+            }
+
+            if (posterior.get(iState) > MAXIMUM_PROBABILITY) {
+                posterior.set(iState,MAXIMUM_PROBABILITY);
+            }
+        }
+
+
+        return ImmutableList.copyOf(posterior);
+
+
     }
 }
