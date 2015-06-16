@@ -262,4 +262,20 @@ public class AccountResources {
         return history;
 
     }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/zendesk/{email}")
+    public Long getAccountIdForZendesk(@Scope({OAuthScope.ZENDESK_EXTENSION}) final AccessToken accessToken,
+                                          @PathParam("email") final String email){
+
+        LOGGER.debug("Looking account up by email {}", email);
+        final Optional<Account> accountByEmailOptional = accountDAO.getByEmail(email.toLowerCase());
+        if (!accountByEmailOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Account not found").build());
+        }
+        return accountByEmailOptional.get().id.get();
+
+    }
 }
