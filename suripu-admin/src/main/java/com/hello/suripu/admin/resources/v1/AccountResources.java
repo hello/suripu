@@ -21,6 +21,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.passwordreset.PasswordReset;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
+import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PasswordUtil;
 import com.yammer.metrics.annotation.Timed;
@@ -29,6 +30,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,6 +39,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -57,6 +60,8 @@ public class AccountResources {
     private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
 
+    @Context
+    HttpServletRequest request;
     public AccountResources(final AccountDAO accountDAO,
                             final PasswordResetDB passwordResetDB,
                             final DeviceDAO deviceDAO,
@@ -271,6 +276,11 @@ public class AccountResources {
                                           @PathParam("email") final String email){
 
         LOGGER.debug("Looking account up by email {}", email);
+        final String zendeskHeader = this.request.getHeader(HelloHttpHeader.ZENDESK);
+
+        if (zendeskHeader == null || !zendeskHeader.equals("mixpanel")) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
         final Optional<Account> accountByEmailOptional = accountDAO.getByEmail(email.toLowerCase());
         if (!accountByEmailOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Account not found").build());
