@@ -7,6 +7,7 @@ import com.hello.suripu.api.audio.AudioControlProtos;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.output.OutputProtos;
+import com.hello.suripu.core.configuration.DynamicConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
@@ -81,7 +82,7 @@ public class ReceiveResource extends BaseResource {
 
     private final FirmwareUpdateStore firmwareUpdateStore;
     private final GroupFlipper groupFlipper;
-    private final SenseUploadConfiguration senseUploadConfiguration;
+    private final DynamicConfiguration senseUploadDynamicConfiguration;
     private final OTAConfiguration otaConfiguration;
     private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
 
@@ -98,7 +99,7 @@ public class ReceiveResource extends BaseResource {
                            final Boolean debug,
                            final FirmwareUpdateStore firmwareUpdateStore,
                            final GroupFlipper groupFlipper,
-                           final SenseUploadConfiguration senseUploadConfiguration,
+                           final DynamicConfiguration senseUploadDynamicConfiguration,
                            final OTAConfiguration otaConfiguration,
                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
                            final int ringDurationSec) {
@@ -113,7 +114,7 @@ public class ReceiveResource extends BaseResource {
 
         this.firmwareUpdateStore = firmwareUpdateStore;
         this.groupFlipper = groupFlipper;
-        this.senseUploadConfiguration = senseUploadConfiguration;
+        this.senseUploadDynamicConfiguration = senseUploadDynamicConfiguration;
         this.otaConfiguration = otaConfiguration;
         this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
         this.senseClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "sense-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
@@ -346,7 +347,7 @@ public class ReceiveResource extends BaseResource {
                 responseBuilder.setBatchSize(1);
             } else {
 
-                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration);
+                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, (SenseUploadConfiguration) senseUploadDynamicConfiguration.getConfiguration());
                 responseBuilder.setBatchSize(uploadCycle);
 
             }

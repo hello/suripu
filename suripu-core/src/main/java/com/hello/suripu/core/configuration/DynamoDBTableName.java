@@ -26,7 +26,8 @@ public enum DynamoDBTableName {
     TIMELINE_LOG("timeline_log"),
     TIMEZONE_HISTORY("timezone_history"),
     ALARM_LOG("alarm_log"),
-    SMART_ALARM_LOG("smart_alarm_log");
+    SMART_ALARM_LOG("smart_alarm_log"),
+    CONFIGURATIONS("configurations");
 
     private String value;
 

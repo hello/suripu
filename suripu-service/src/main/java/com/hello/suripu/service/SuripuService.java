@@ -14,10 +14,12 @@ import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamicConfiguration;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
+import com.hello.suripu.core.db.ConfigurationDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
@@ -214,6 +216,11 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.FEATURES);
         final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, tableNames.get(DynamoDBTableName.FEATURES), namespace);
 
+
+        final AmazonDynamoDB configDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.CONFIGURATIONS);
+        final ConfigurationDAODynamoDB senseUploadConfigDAO = new ConfigurationDAODynamoDB(configuration.getSenseUploadConfiguration(), configDynamoDBClient, tableNames.get(DynamoDBTableName.CONFIGURATIONS), namespace);
+        final DynamicConfiguration senseUploadDynamicConfig = new DynamicConfiguration(senseUploadConfigDAO, 10);
+
         final RolloutModule module = new RolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
@@ -225,7 +232,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 configuration.getDebug(),
                 firmwareUpdateStore,
                 groupFlipper,
-                configuration.getSenseUploadConfiguration(),
+                senseUploadDynamicConfig,
                 configuration.getOTAConfiguration(),
                 respCommandsDAODynamoDB,
                 configuration.getRingDuration()
