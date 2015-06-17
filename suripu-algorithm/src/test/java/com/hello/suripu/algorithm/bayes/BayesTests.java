@@ -2,8 +2,6 @@ package com.hello.suripu.algorithm.bayes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.sun.org.apache.xpath.internal.operations.Mult;
-import com.sun.tools.internal.ws.processor.model.Model;
 import junit.framework.TestCase;
 import org.junit.Test;
 

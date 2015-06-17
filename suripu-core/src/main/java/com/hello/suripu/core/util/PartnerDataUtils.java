@@ -5,24 +5,40 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 import com.hello.suripu.algorithm.partner.PartnerBayesNetWithHmmInterpreter;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sound.midi.Track;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by benjo on 2/22/15.
  */
 public class PartnerDataUtils {
 
+
     private static final int NUM_SIGNALS = 3;
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
     final static protected double probThresholdToRejectData  = 0.5;
+
+    private final Logger LOGGER;
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(PartnerDataUtils.class);
+
+    public PartnerDataUtils(final UUID uuid) {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+    }
+
+    public PartnerDataUtils() {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+    }
 
     private static double [][] clone2D(double [][] x) {
         double [][] x2 = new double [x.length][] ;
@@ -78,7 +94,8 @@ public class PartnerDataUtils {
         }
 
     }
-    static public PartnerMotions getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
+
+    public PartnerMotions getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
         final MotionDataSignalWithT0 motData = getMotionFeatureVectorsByTheMinute(motData1,motData2,true);
 
         final int[] classes = TwoPillsClassifier.classifyPillOwnershipByMovingSimilarity(motData.xAppendedInTime);
@@ -115,7 +132,7 @@ public class PartnerDataUtils {
     //turns two list of motion data into an MxN array of data
     //array is by the minute, where N = number of minutes between the two data sets
     //M is number of signals--right now that's 3 per
-    static private MotionDataSignalWithT0 getMotionFeatureVectorsByTheMinute(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2,boolean smearByOne) {
+    private MotionDataSignalWithT0 getMotionFeatureVectorsByTheMinute(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2,boolean smearByOne) {
 
         final SignalExtractor [] extractors = {new ValueExtractor(),new KickoffCountExtractor(),new DurationExtractor()};
 
@@ -246,7 +263,13 @@ public class PartnerDataUtils {
         }
 
     }
-    static ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
+
+    private static String getTimestampOfTrackerMotionInLocalTimezone(final TrackerMotion m) {
+        final DateTime time = new DateTime(m.timestamp).withZone(DateTimeZone.forOffsetMillis(m.offsetMillis));
+        return time.toLocalDateTime().toString();
+    }
+
+    public ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
 
         if (yourMotions.isEmpty() || myMotions.isEmpty()) {
             return myMotions;
@@ -293,19 +316,32 @@ public class PartnerDataUtils {
 
 
         List<TrackerMotion> myFilteredMotion = Lists.newArrayList();
-
+        int numPointsRejected = 0;
+        String dates = new String();
         while (it.hasNext()) {
             final TrackerMotion m = it.next();
 
             final double probItsMine = probs.get(getIndex(m.timestamp,t0,period));
 
             if (probItsMine < probThresholdToRejectData) {
+                numPointsRejected++;
+
+                if (numPointsRejected < 100) {
+                    dates += getTimestampOfTrackerMotionInLocalTimezone(m);
+                    dates += ",";
+                }
+                else {
+                    dates += ".";
+                }
                 continue;
             }
 
             myFilteredMotion.add(m);
 
         }
+
+        LOGGER.info("rejected {} tracker motions because they are likely due to partner movement",numPointsRejected);
+        LOGGER.info("rejected times; {}",dates);
 
         return ImmutableList.copyOf(myFilteredMotion);
 
