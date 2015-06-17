@@ -242,31 +242,54 @@ public class PartnerDataUtils {
 
     }
 
-    private static int getIndex(final Long timestamp, final Long t0,final Long period) {
-        return (int) ((timestamp - t0) / period);
+    private static int getIndex(final Long timestamp, final Long t0,final Long period, final int max) {
+        int idx = (int) ((timestamp - t0) / period);
+        if (idx >= max || idx < 0) {
+            return -1;
+        }
+
+        return idx;
 
     }
 
-    private static void fillBinsWithTrackerDurations(final Double [] bins, final Long t0,final Long period,final List<TrackerMotion> data, int sign) {
+    private static void fillBinsWithTrackerDurations(final Double [] bins, final Long t0,final Long period,final List<TrackerMotion> data, int sign,boolean smear) {
 
         Iterator<TrackerMotion> it = data.iterator();
 
         while(it.hasNext()) {
             final TrackerMotion m1 = it.next();
 
-            final int idx = getIndex(m1.timestamp,t0,period);
+            final int idx = getIndex(m1.timestamp,t0,period,bins.length);
+            double normalizer = 1.0;
 
-            if (idx >= 0 && idx < bins.length) {
-                bins[idx] += sign * m1.onDurationInSeconds;
+            if (smear) {
+                normalizer = 3.0;
             }
 
-        }
+            if (idx >= 0) {
+                bins[idx] += (sign * m1.onDurationInSeconds) / normalizer;
+            }
 
+            if (smear) {
+
+                final int idx1 = getIndex(m1.timestamp - 1 * NUMBER_OF_MILLIS_IN_A_MINUTE,t0,period,bins.length);
+                final int idx2 = getIndex(m1.timestamp + 1 * NUMBER_OF_MILLIS_IN_A_MINUTE,t0,period,bins.length);
+
+                if (idx1 >= 0) {
+                    bins[idx1] += (sign * m1.onDurationInSeconds) / normalizer;
+
+                }
+
+                if (idx2 >= 0) {
+                    bins[idx2] += (sign * m1.onDurationInSeconds) / normalizer;
+                }
+            }
+        }
     }
 
     private static String getTimestampOfTrackerMotionInLocalTimezone(final TrackerMotion m) {
         final DateTime time = new DateTime(m.timestamp).withZone(DateTimeZone.forOffsetMillis(m.offsetMillis));
-        return time.toLocalDateTime().toString();
+        return time.toLocalDateTime().toString("MM/dd HH:mm");
     }
 
     public ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
@@ -302,10 +325,10 @@ public class PartnerDataUtils {
 
         final Double data [] = new Double[durationInIntervals];
 
-        Arrays.fill(data,0);
+        Arrays.fill(data,0.0);
 
-        fillBinsWithTrackerDurations(data,t0,period,myMotionsDeDuped,1);
-        fillBinsWithTrackerDurations(data,t0,period,yourMotionsDeDuped,-1);
+        fillBinsWithTrackerDurations(data,t0,period,myMotionsDeDuped,1,true);
+        fillBinsWithTrackerDurations(data,t0,period,yourMotionsDeDuped,-1,true);
 
         final PartnerBayesNetWithHmmInterpreter partnerHmmFilter = new PartnerBayesNetWithHmmInterpreter();
         final List<Double> probs = partnerHmmFilter.interpretDurationDiff(ImmutableList.copyOf(data));
@@ -321,14 +344,20 @@ public class PartnerDataUtils {
         while (it.hasNext()) {
             final TrackerMotion m = it.next();
 
-            final double probItsMine = probs.get(getIndex(m.timestamp,t0,period));
+            final int idx = getIndex(m.timestamp,t0,period,probs.size());
+
+            if (idx < 0) {
+                continue;
+            }
+
+            final double probItsMine = probs.get(idx);
 
             if (probItsMine < probThresholdToRejectData) {
                 numPointsRejected++;
 
                 if (numPointsRejected < 100) {
                     dates += getTimestampOfTrackerMotionInLocalTimezone(m);
-                    dates += ",";
+                    dates += ",  ";
                 }
                 else {
                     dates += ".";
