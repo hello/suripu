@@ -67,7 +67,7 @@ public class PartnerHmm {
     
     final HiddenMarkovModel hmm;
 
-    private static double [] conditionalProbsOfMeInBed = {0.51,0.90,0.80,0.10,0.20,0.55,0.95,0.50,0.60,0.45,0.20,0.40,0.60,0.55,0.55,0.30,0.10,0.10,0.05,0.10};
+    private static double [] conditionalProbsOfMeInBed = {0.51,0.90,0.80,0.10,0.20,0.95,0.95,0.50,0.60,0.10,0.20,0.40,0.60,0.55,0.55,0.30,0.10,0.10,0.05,0.10};
 
     public PartnerHmm() {
         hmm = new HiddenMarkovModel(numStates,A,pi,obsModels,numStates*2);
