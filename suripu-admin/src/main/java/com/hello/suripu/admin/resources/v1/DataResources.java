@@ -137,12 +137,13 @@ public class DataResources {
 
     @Timed
     @GET
-    @Path("/{email}/{sensor}/day")
+    @Path("/{email}/{sensor}/{resolution}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Sample> getAdminLastDay(
             @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
             @PathParam("email") final String email,
             @PathParam("sensor") final String sensor,
+            @PathParam("resolution") final String resolution,
             @QueryParam("from") Long queryEndTimestampInUTC) {
 
         final Optional<Long> optionalAccountId = Util.getAccountIdByEmail(accountDAO, email);
@@ -150,12 +151,12 @@ public class DataResources {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final int slotDurationInMinutes = 5;
+//        final int slotDurationInMinutes = 5;
         /*
         * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
         * data, instead of 24 hours.
          */
-        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
+//        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
 
         // get latest device_id connected to this account
         final Long accountId = optionalAccountId.get();
@@ -166,8 +167,28 @@ public class DataResources {
 
         final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
+
+        int slotDurationInMinutes;
+        int limitDays;
+
+        switch (resolution) {
+            case "week":
+                slotDurationInMinutes = 60;
+                limitDays = 7;
+                break;
+            case "day":
+                slotDurationInMinutes = 5;
+                limitDays = 1;
+                break;
+            default:
+                slotDurationInMinutes = 60;
+                limitDays = 1;
+        }
+
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(limitDays).getMillis();
+
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, 0,color);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, 0, color);
     }
 
 
