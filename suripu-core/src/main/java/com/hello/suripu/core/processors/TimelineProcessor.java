@@ -78,6 +78,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TimelineUtils timelineUtils;
     private final TimelineSafeguards timelineSafeguards;
     private final FeedbackUtils feedbackUtils;
+    private final PartnerDataUtils partnerDataUtils;
     private final SenseColorDAO senseColorDAO;
 
     final private static int SLOT_DURATION_MINUTES = 1;
@@ -136,6 +137,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             timelineUtils = new TimelineUtils(uuid.get());
             timelineSafeguards = new TimelineSafeguards(uuid.get());
             feedbackUtils = new FeedbackUtils(uuid.get());
+            partnerDataUtils = new PartnerDataUtils(uuid.get());
 
         }
         else {
@@ -143,6 +145,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             timelineUtils = new TimelineUtils();
             timelineSafeguards = new TimelineSafeguards();
             feedbackUtils = new FeedbackUtils();
+            partnerDataUtils = new PartnerDataUtils();
         }
     }
 
@@ -311,14 +314,25 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        if (!partnerMotions.isEmpty() && this.hasPartnerFilterEnabled(accountId)) {
-            try {
-                PartnerDataUtils.PartnerMotions motions = PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
-                trackerMotions.addAll(motions.myMotions);
+        if (!partnerMotions.isEmpty()) {
+            if (this.hasPartnerFilterEnabled(accountId)) {
+                LOGGER.info("using original partner filter");
+                try {
+                    PartnerDataUtils.PartnerMotions motions = partnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
+                    trackerMotions.addAll(motions.myMotions);
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage());
+                    trackerMotions.addAll(originalTrackerMotions);
+                }
             }
-            catch (Exception e) {
-                LOGGER.info(e.getMessage());
-                trackerMotions.addAll(originalTrackerMotions);
+            else if (this.hasBayesianPartnerFilterEnabled(accountId)) {
+                LOGGER.info("using bayesian partner filter");
+                try {
+                    trackerMotions.addAll(partnerDataUtils.partnerFilterWithDurationsDiffHmm(ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(partnerMotions)));
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage());
+                    trackerMotions.addAll(originalTrackerMotions);
+                }
             }
         }
         else {

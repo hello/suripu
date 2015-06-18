@@ -1,22 +1,45 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.UnmodifiableIterator;
+import com.hello.suripu.algorithm.partner.PartnerBayesNetWithHmmInterpreter;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.sound.midi.Track;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by benjo on 2/22/15.
  */
 public class PartnerDataUtils {
 
+
     private static final int NUM_SIGNALS = 3;
+    final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
+    final static protected double probThresholdToRejectData  = 0.5;
+
+    private final Logger LOGGER;
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(PartnerDataUtils.class);
+
+    public PartnerDataUtils(final UUID uuid) {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+    }
+
+    public PartnerDataUtils() {
+        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+    }
 
     private static double [][] clone2D(double [][] x) {
         double [][] x2 = new double [x.length][] ;
@@ -72,7 +95,8 @@ public class PartnerDataUtils {
         }
 
     }
-    static public PartnerMotions getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
+
+    public PartnerMotions getMyMotion(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2) {
         final MotionDataSignalWithT0 motData = getMotionFeatureVectorsByTheMinute(motData1,motData2,true);
 
         final int[] classes = TwoPillsClassifier.classifyPillOwnershipByMovingSimilarity(motData.xAppendedInTime);
@@ -109,7 +133,7 @@ public class PartnerDataUtils {
     //turns two list of motion data into an MxN array of data
     //array is by the minute, where N = number of minutes between the two data sets
     //M is number of signals--right now that's 3 per
-    static private MotionDataSignalWithT0 getMotionFeatureVectorsByTheMinute(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2,boolean smearByOne) {
+    private MotionDataSignalWithT0 getMotionFeatureVectorsByTheMinute(final List<TrackerMotion> motData1,final List<TrackerMotion> motData2,boolean smearByOne) {
 
         final SignalExtractor [] extractors = {new ValueExtractor(),new KickoffCountExtractor(),new DurationExtractor()};
 
@@ -216,6 +240,144 @@ public class PartnerDataUtils {
 
 
         return returnValues;
+
+    }
+
+    private static int getIndex(final Long timestamp, final Long t0,final Long period, final int max) {
+        int idx = (int) ((timestamp - t0) / period);
+        if (idx >= max || idx < 0) {
+            return -1;
+        }
+
+        return idx;
+
+    }
+
+    private static void fillBinsWithTrackerDurations(final Double [] bins, final Long t0,final Long period,final List<TrackerMotion> data, int sign,boolean smear) {
+
+        Iterator<TrackerMotion> it = data.iterator();
+
+        while(it.hasNext()) {
+            final TrackerMotion m1 = it.next();
+
+            final int idx = getIndex(m1.timestamp,t0,period,bins.length);
+            double normalizer = 1.0;
+
+            if (smear) {
+                normalizer = 3.0;
+            }
+
+            if (idx >= 0) {
+                bins[idx] += (sign * m1.onDurationInSeconds) / normalizer;
+            }
+
+            if (smear) {
+
+                final int idx1 = getIndex(m1.timestamp - 1 * NUMBER_OF_MILLIS_IN_A_MINUTE,t0,period,bins.length);
+                final int idx2 = getIndex(m1.timestamp + 1 * NUMBER_OF_MILLIS_IN_A_MINUTE,t0,period,bins.length);
+
+                if (idx1 >= 0) {
+                    bins[idx1] += (sign * m1.onDurationInSeconds) / normalizer;
+
+                }
+
+                if (idx2 >= 0) {
+                    bins[idx2] += (sign * m1.onDurationInSeconds) / normalizer;
+                }
+            }
+        }
+    }
+
+    private static String getTimestampOfTrackerMotionInLocalTimezone(final TrackerMotion m) {
+        final DateTime time = new DateTime(m.timestamp).withZone(DateTimeZone.forOffsetMillis(m.offsetMillis));
+        return time.toLocalDateTime().toString("MM/dd HH:mm");
+    }
+
+    public ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
+
+        if (yourMotions.isEmpty() || myMotions.isEmpty()) {
+            return myMotions;
+        }
+
+        //de-dup tracker motion
+        final List<TrackerMotion> myMotionsDeDuped = TrackerMotionUtils.removeDuplicatesAndInvalidValues(myMotions.asList());
+        final List<TrackerMotion> yourMotionsDeDuped = TrackerMotionUtils.removeDuplicatesAndInvalidValues(yourMotions.asList());
+
+
+
+        //construct 5 minute bins of duration difference
+        Long t0 = myMotionsDeDuped.get(0).timestamp;
+        Long t02 = yourMotionsDeDuped.get(0).timestamp;
+
+        if (t0 > t02) {
+            t0 = t02;
+        }
+
+        Long tf = myMotionsDeDuped.get(myMotionsDeDuped.size() - 1).timestamp;
+        Long tf2 = yourMotionsDeDuped.get(yourMotionsDeDuped.size() - 1).timestamp;
+
+        if (tf < tf2) {
+            tf = tf2;
+        }
+
+        final long period = NUMBER_OF_MILLIS_IN_A_MINUTE * 5;
+        final int durationInIntervals = (int) ((tf - t0) / period);
+
+
+        final Double data [] = new Double[durationInIntervals];
+
+        Arrays.fill(data,0.0);
+
+        fillBinsWithTrackerDurations(data,t0,period,myMotionsDeDuped,1,true);
+        fillBinsWithTrackerDurations(data,t0,period,yourMotionsDeDuped,-1,true);
+
+        final PartnerBayesNetWithHmmInterpreter partnerHmmFilter = new PartnerBayesNetWithHmmInterpreter();
+        final List<Double> probs = partnerHmmFilter.interpretDurationDiff(ImmutableList.copyOf(data));
+
+        //iterate through my motion and reject
+
+        final Iterator<TrackerMotion> it = myMotionsDeDuped.iterator();
+
+
+        final List<TrackerMotion> myFilteredMotion = Lists.newArrayList();
+
+        final List<String> dates = Lists.newArrayList();
+
+        int numPointsRejected = 0;
+
+        while (it.hasNext()) {
+            final TrackerMotion m = it.next();
+
+            final int idx = getIndex(m.timestamp,t0,period,probs.size());
+
+            if (idx < 0) {
+                continue;
+            }
+
+            final double probItsMine = probs.get(idx);
+
+            if (probItsMine < probThresholdToRejectData) {
+                numPointsRejected++;
+
+                if (numPointsRejected < 100) {
+                    dates.add(getTimestampOfTrackerMotionInLocalTimezone(m));
+                }
+
+                continue;
+            }
+
+            myFilteredMotion.add(m);
+
+        }
+
+
+
+        LOGGER.info("rejected {} tracker motions because they are likely due to partner movement",numPointsRejected);
+
+        final Joiner joiner = Joiner.on(",").skipNulls();
+        LOGGER.info("rejected times; {}",joiner.join(dates));
+
+        return ImmutableList.copyOf(myFilteredMotion);
 
     }
 }
