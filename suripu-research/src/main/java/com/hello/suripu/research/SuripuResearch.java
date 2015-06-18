@@ -5,7 +5,6 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
@@ -21,7 +20,6 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
@@ -40,8 +38,9 @@ import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
-import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.research.configuration.SuripuResearchConfiguration;
+import com.hello.suripu.research.db.LabelDAO;
+import com.hello.suripu.research.db.LabelDAOImpl;
 import com.hello.suripu.research.modules.RolloutResearchModule;
 import com.hello.suripu.research.resources.v1.AccountInfoResource;
 import com.hello.suripu.research.resources.v1.DataScienceResource;
@@ -60,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.TimeZone;
-import java.util.UUID;
 
 /**
  * Created by pangwu on 3/2/15.
@@ -109,6 +107,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         researchDB.registerContainerFactory(new ImmutableListContainerFactory());
         researchDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
+        final LabelDAO labelDAO = commonDB.onDemand(LabelDAOImpl.class);
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -176,7 +175,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         environment.getJerseyResourceConfig()
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
-                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO,timelineLogDAO));
+                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO,timelineLogDAO,labelDAO));
 
 
 
