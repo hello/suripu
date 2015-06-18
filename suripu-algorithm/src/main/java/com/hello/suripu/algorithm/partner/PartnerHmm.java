@@ -75,7 +75,7 @@ public class PartnerHmm {
 
     public List<Double> getConditionalProbabiltiesOfMeBeingInBed() {
 
-        List<Double> condProbs = Lists.newArrayList();
+        final List<Double> condProbs = Lists.newArrayList();
 
         for (int i = 0; i < conditionalProbsOfMeInBed.length; i++) {
             condProbs.add(conditionalProbsOfMeInBed[i]);

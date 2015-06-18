@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
@@ -335,12 +336,15 @@ public class PartnerDataUtils {
 
         //iterate through my motion and reject
 
-        Iterator<TrackerMotion> it = myMotionsDeDuped.iterator();
+        final Iterator<TrackerMotion> it = myMotionsDeDuped.iterator();
 
 
-        List<TrackerMotion> myFilteredMotion = Lists.newArrayList();
+        final List<TrackerMotion> myFilteredMotion = Lists.newArrayList();
+
+        final List<String> dates = Lists.newArrayList();
+
         int numPointsRejected = 0;
-        String dates = new String();
+
         while (it.hasNext()) {
             final TrackerMotion m = it.next();
 
@@ -356,12 +360,9 @@ public class PartnerDataUtils {
                 numPointsRejected++;
 
                 if (numPointsRejected < 100) {
-                    dates += getTimestampOfTrackerMotionInLocalTimezone(m);
-                    dates += ",  ";
+                    dates.add(getTimestampOfTrackerMotionInLocalTimezone(m));
                 }
-                else {
-                    dates += ".";
-                }
+
                 continue;
             }
 
@@ -369,8 +370,12 @@ public class PartnerDataUtils {
 
         }
 
+
+
         LOGGER.info("rejected {} tracker motions because they are likely due to partner movement",numPointsRejected);
-        LOGGER.info("rejected times; {}",dates);
+
+        final Joiner joiner = Joiner.on(",").skipNulls();
+        LOGGER.info("rejected times; {}",joiner.join(dates));
 
         return ImmutableList.copyOf(myFilteredMotion);
 

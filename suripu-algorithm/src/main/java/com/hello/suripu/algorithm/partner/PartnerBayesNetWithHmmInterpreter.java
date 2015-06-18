@@ -40,11 +40,11 @@ public class PartnerBayesNetWithHmmInterpreter {
     public List<Double> interpretDurationDiff(ImmutableList<Double> durationDiff) {
         final ImmutableList<Integer> path = hmm.decodeSensorData(durationDiff);
 
-        List<List<Double>> jointProbs = bayesModel.getJointOfForwardsAndBackwards(path);
+        final List<List<Double>> jointProbs = bayesModel.getJointOfForwardsAndBackwards(path);
 
         //class 0 is my motion.....
         //class 1 means your motion
-        List<Double> probOfMeInBed = Lists.newArrayList();
+        final List<Double> probOfMeInBed = Lists.newArrayList();
 
         for (final List<Double> joint : jointProbs) {
             final double notJointNot = 1.0 - joint.get(1); //   !P(!a1,!a2) not joint of false forwards and false backwards  i.e. prob of forwards OR prob of backwards

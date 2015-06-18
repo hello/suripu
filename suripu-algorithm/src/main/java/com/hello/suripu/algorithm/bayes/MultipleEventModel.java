@@ -89,8 +89,8 @@ public class MultipleEventModel {
     public List<List<Double>> getJointOfForwardsAndBackwards(final ImmutableList<Integer> events) {
 
         //make backward events
-        UnmodifiableListIterator<Integer> iterator = events.listIterator(events.size());
-        List<Integer> backwardsEvents = Lists.newArrayList();
+        final UnmodifiableListIterator<Integer> iterator = events.listIterator(events.size());
+        final List<Integer> backwardsEvents = Lists.newArrayList();
         while (iterator.hasPrevious()) {
             backwardsEvents.add(iterator.previous());
         }
