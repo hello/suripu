@@ -151,13 +151,6 @@ public class DataResources {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-//        final int slotDurationInMinutes = 5;
-        /*
-        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
-        * data, instead of 24 hours.
-         */
-//        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
-
         // get latest device_id connected to this account
         final Long accountId = optionalAccountId.get();
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
@@ -185,6 +178,10 @@ public class DataResources {
                 limitDays = 1;
         }
 
+        /*
+        * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
+        * data, instead of 24 hours.
+         */
         final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(limitDays).getMillis();
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
