@@ -32,6 +32,7 @@ import com.hello.suripu.core.util.NamedSleepHmmModel;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmSensorDataBinning;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.hello.suripu.research.db.LabelDAO;
 import com.hello.suripu.research.models.BinnedSensorData;
 import com.hello.suripu.research.models.MatchedFeedback;
 import org.joda.time.DateTime;
@@ -72,6 +73,7 @@ public class DataScienceResource extends BaseResource {
     private final FeedbackDAO feedbackDAO;
     private final UserLabelDAO userLabelDAO;
     private final TimelineLogDAO timelineLogDAO;
+    private final LabelDAO labelDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
@@ -79,7 +81,8 @@ public class DataScienceResource extends BaseResource {
                                final DeviceDAO deviceDAO,
                                final UserLabelDAO userLabelDAO,
                                final FeedbackDAO feedbackDAO,
-                               final TimelineLogDAO timelineLogDAO) {
+                               final TimelineLogDAO timelineLogDAO,
+                               final LabelDAO labelDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -87,6 +90,7 @@ public class DataScienceResource extends BaseResource {
         this.userLabelDAO = userLabelDAO;
         this.feedbackDAO = feedbackDAO;
         this.timelineLogDAO = timelineLogDAO;
+        this.labelDAO = labelDAO;
     }
 
     @GET
@@ -677,6 +681,26 @@ public class DataScienceResource extends BaseResource {
         return new BinnedSensorData(accountId,matrix,times,timezoneOffset);
 
 
+
+
+    }
+
+    @GET
+    @Path("/partneraccountswithfeedback/{query_date_utc}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Long> getPartnerAccountsWithFeedback(@Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                                              @PathParam("query_date_utc") final String date,
+                                                              @DefaultValue("1") @QueryParam("num_days") final Integer numDays) {
+
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC);
+
+        final DateTime endDate = targetDate.plusDays(numDays);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+
+        return labelDAO.getPartnerAccountsThatHadFeedback(targetDate,endDate);
 
 
     }
