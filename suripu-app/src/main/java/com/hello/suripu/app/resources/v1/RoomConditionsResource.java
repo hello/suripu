@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -31,7 +32,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,7 +47,7 @@ public class RoomConditionsResource extends BaseResource {
     private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
     private final SenseColorDAO senseColorDAO;
-    private final static List<String> hiddenSensors = new ArrayList<>(Arrays.asList("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
+    private final static ImmutableList<String> hiddenSensors = ImmutableList.copyOf(Arrays.asList("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
 
     public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO) {
         this.accountDAO = accountDAO;
