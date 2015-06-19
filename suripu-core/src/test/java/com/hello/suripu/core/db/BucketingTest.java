@@ -3,6 +3,7 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.util.Bucketing;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import org.joda.time.DateTime;
@@ -33,7 +34,7 @@ public class BucketingTest {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(deviceData);
 
-        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature");
+        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature",Optional.<Device.Color>absent());
         return populatedMap.get();
     }
 
@@ -62,7 +63,7 @@ public class BucketingTest {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(deviceData);
 
-        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature");
+        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature",Optional.<Device.Color>absent());
         assertThat(populatedMap.isPresent(), is(true));
 
         assertThat(populatedMap.get().size(), is(1));
@@ -76,17 +77,17 @@ public class BucketingTest {
 
         final List<DeviceData> deviceDataList = new ArrayList<>();
 
-        Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(new ArrayList<DeviceData>(), "temperature");
+        Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(new ArrayList<DeviceData>(), "temperature",Optional.<Device.Color>absent());
         assertThat(populatedMap.isPresent(), is(false));
 
-        populatedMap = Bucketing.populateMap(null, "temperature");
+        populatedMap = Bucketing.populateMap(null, "temperature",Optional.<Device.Color>absent());
         assertThat(populatedMap.isPresent(), is(false));
     }
 
     @Test
     public void testPopulateMapWrongSensor() {
 
-        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(Collections.EMPTY_LIST, "temp");
+        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(Collections.EMPTY_LIST, "temp",Optional.<Device.Color>absent());
         assertThat(populatedMap.isPresent(), is(false));
     }
 

@@ -9,10 +9,13 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.logging.SenseLogTag;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DataScience.UserLabel;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
@@ -56,19 +59,23 @@ public class DataResources {
     private final UserLabelDAO userLabelDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
+    private final SenseColorDAO senseColorDAO;
 
     public DataResources(final DeviceDataDAO deviceDataDAO,
                          final DeviceDAO deviceDAO,
                          final AccountDAO accountDAO,
                          final UserLabelDAO userLabelDAO,
                          final TrackerMotionDAO trackerMotionDAO,
-                         final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+                         final SensorsViewsDynamoDB sensorsViewsDynamoDB,
+                         final SenseColorDAO senseColorDAO) {
+
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.accountDAO = accountDAO;
         this.userLabelDAO = userLabelDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
+        this.senseColorDAO = senseColorDAO;
     }
 
     @GET
@@ -130,12 +137,13 @@ public class DataResources {
 
     @Timed
     @GET
-    @Path("/{email}/{sensor}/day")
+    @Path("/{email}/{sensor}/{resolution}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Sample> getAdminLastDay(
             @Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
             @PathParam("email") final String email,
             @PathParam("sensor") final String sensor,
+            @PathParam("resolution") final String resolution,
             @QueryParam("from") Long queryEndTimestampInUTC) {
 
         final Optional<Long> optionalAccountId = Util.getAccountIdByEmail(accountDAO, email);
@@ -143,22 +151,41 @@ public class DataResources {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final int slotDurationInMinutes = 5;
+        // get latest device_id connected to this account
+        final Long accountId = optionalAccountId.get();
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if(!deviceIdPair.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+
+
+        int slotDurationInMinutes;
+        int limitDays;
+
+        switch (resolution) {
+            case "week":
+                slotDurationInMinutes = 60;
+                limitDays = 7;
+                break;
+            case "day":
+                slotDurationInMinutes = 5;
+                limitDays = 1;
+                break;
+            default:
+                slotDurationInMinutes = 60;
+                limitDays = 1;
+        }
+
         /*
         * We have to minutes one day instead of 24 hours, for the same reason that we want one DAY's
         * data, instead of 24 hours.
          */
-        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(1).getMillis();
-
-        // get latest device_id connected to this account
-        final Long accountId = optionalAccountId.get();
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
-        if(!deviceId.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
-        }
+        final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(limitDays).getMillis();
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceId.get(), slotDurationInMinutes, sensor, 0);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, 0, color);
     }
 
 
@@ -279,13 +306,17 @@ public class DataResources {
 
         final int slotDurationInMinutes = 5;
         final Integer missingDataDefaultValue = 0;
+
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceAccountPairOptional.get().externalDeviceId);
+
         final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 startTimestamp,
                 endTimestamp,
                 accountId,
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
-                missingDataDefaultValue
+                missingDataDefaultValue,
+                color
         );
 
         final List<UserInteraction> userInteractions = new ArrayList<>();
@@ -329,7 +360,16 @@ public class DataResources {
         if(!deviceDataOptional.isPresent()) {
             return CurrentRoomState.empty();
         }
-
         return CurrentRoomState.fromDeviceData(deviceDataOptional.get(), DateTime.now(), 15, "c");
+    }
+
+    @Timed
+    @GET
+    @Path("/log_tags")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getSenseLogsTag (@Scope({OAuthScope.ADMINISTRATION_READ}) AccessToken accessToken,
+                                   @PathParam("sense_id") final String senseId) {
+        return SenseLogTag.rawValues();
+
     }
 }

@@ -20,7 +20,6 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.google.common.base.Joiner;
 import com.yammer.metrics.annotation.Timed;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -45,17 +44,38 @@ public class ResponseCommandsDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ResponseCommandsDAODynamoDB.class);
 
+    public enum ResponseCommand {
+        RESET_TO_FACTORY_FW("reset_to_factory_fw"),
+        RESET_MCU("reset_mcu");
+
+        private String value;
+        private ResponseCommand(final String value) {
+            this.value = value;
+        }
+
+        public static ResponseCommand create(final String val) {
+            for (final ResponseCommand command : ResponseCommand.values()) {
+                if (command.value.equals(val.toLowerCase())) {
+                    return command;
+                }
+            }
+            throw new IllegalArgumentException(String.format("%s is not a valid Response Command name.", val));
+        }
+    }
+
+
     public ResponseCommandsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
 
     @Timed
-    public void insertResponseCommands(final String deviceId, final Integer fwVersion, final Map<String, Object> respCommands) {
+    public void insertResponseCommands(final String deviceId, final Integer fwVersion, final Map<ResponseCommand, String> respCommands) {
 
         Map<String, AttributeValue> commands = new HashMap<>();
-        for (Map.Entry<String, Object> cmd : respCommands.entrySet()) {
-            commands.put(cmd.getKey(), new AttributeValue().withS(cmd.getValue().toString()));
+        for (Map.Entry<ResponseCommand, String> cmd : respCommands.entrySet()) {
+            final ResponseCommand resp = cmd.getKey();
+            commands.put(resp.value, new AttributeValue().withS(cmd.getValue()));
         }
 
         final Map<String, AttributeValue> item = new HashMap<>();
@@ -76,7 +96,7 @@ public class ResponseCommandsDAODynamoDB {
 
     }
 
-    public Map<String, String> getResponseCommands(final String deviceId, final Integer fwVersion, final List<String> commandsList) {
+    public Map<ResponseCommand, String> getResponseCommands(final String deviceId, final Integer fwVersion, final List<ResponseCommand> commandsList) {
         if (commandsList.isEmpty()) {
             return Collections.EMPTY_MAP;
         }
@@ -87,8 +107,8 @@ public class ResponseCommandsDAODynamoDB {
             expressionAttributeNames.put("#commands", COMMAND_ATTRIBUTE_NAME);
             final List<String> expressionCommands = new ArrayList<>();
             Integer cmdCount = 0;
-            for (String command : commandsList) {
-                expressionAttributeNames.put("#cmd" + cmdCount.toString(), command);
+            for (ResponseCommand command : commandsList) {
+                expressionAttributeNames.put("#cmd" + cmdCount.toString(), command.value);
                 expressionCommands.add("#commands.#cmd" + cmdCount.toString());
                 cmdCount++;
             }
@@ -112,16 +132,16 @@ public class ResponseCommandsDAODynamoDB {
                 return Collections.EMPTY_MAP;
             }
 
-            final Map<String, String> respCommandMap = new HashMap<>();
+            final Map<ResponseCommand, String> respCommandMap = new HashMap<>();
             final Map<String, AttributeValue> updatedEntry = updateResult.getAttributes();
 
             if(updatedEntry == null || updatedEntry.isEmpty()) {
                 return Collections.EMPTY_MAP;
             }
 
-            for(final String remCmd: commandsList){
+            for(final ResponseCommand remCmd: commandsList){
                 //Build response Command map
-                if(!updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM().containsKey(remCmd)) {
+                if(!updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM().containsKey(remCmd.value)) {
                     continue;
                 }
 
@@ -132,7 +152,7 @@ public class ResponseCommandsDAODynamoDB {
 
                     final Integer itemFWVersion = Integer.parseInt(updatedEntry.get(FW_VERSION_ATTRIBUTE_NAME).getN());
                     final Map<String, AttributeValue> itemCommand = updatedEntry.get(COMMAND_ATTRIBUTE_NAME).getM();
-                    final String itemCmdValue = itemCommand.get(remCmd).getS();
+                    final String itemCmdValue = itemCommand.get(remCmd.value).getS();
 
                     if (itemFWVersion.equals(fwVersion)) {
                         respCommandMap.put(remCmd, itemCmdValue);

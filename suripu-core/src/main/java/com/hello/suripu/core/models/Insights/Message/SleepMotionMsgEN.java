@@ -33,7 +33,7 @@ public class SleepMotionMsgEN {
 
         return new Text("The Way You Move",
                 String.format("In each of the last %d nights, ", numNights) +
-                String.format("we noticed that you only moved **%.1f%% %s** than the average Sense user. ", diff, description) +
+                String.format("we noticed that you only moved **%.1f%% %s** than the average Sense user. ", Math.abs(diff), description) +
                 String.format("About %.1f%% of your sleep consists of agitated sleep.", perc));
     }
 }

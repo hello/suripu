@@ -15,6 +15,7 @@ import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.JedisPool;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -43,11 +44,14 @@ public class LogIndexerProcessor implements IRecordProcessor {
         this.onboardingLogs  = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "onboarding-logs", "onboarding-processed", TimeUnit.SECONDS);
     }
 
-    public static LogIndexerProcessor create(final IndexTankClient.Index senseIndex,
+    public static LogIndexerProcessor create(final IndexTankClient indexTankClient,
+                                             final String senseLogIndexPrefix,
+                                             final IndexTankClient.Index senseLogBackupIndex,
                                              final SenseEventsDAO senseEventsDAO,
-                                             final OnBoardingLogDAO onBoardingLogDAO) {
+                                             final OnBoardingLogDAO onBoardingLogDAO,
+                                             final JedisPool jedisPool) {
         return new LogIndexerProcessor(
-                new SenseLogIndexer(senseIndex),
+                new SenseLogIndexer(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, jedisPool),
                 new SenseStructuredLogIndexer(senseEventsDAO),
                 new OnBoardingLogIndexer(onBoardingLogDAO)
         );

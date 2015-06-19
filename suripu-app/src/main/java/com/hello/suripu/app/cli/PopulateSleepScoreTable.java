@@ -18,6 +18,8 @@ import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -105,6 +107,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
+        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
@@ -112,7 +115,8 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
                 accountDAO,
-                sleepStatsDAODynamoDB);
+                sleepStatsDAODynamoDB,
+                senseColorDAO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);

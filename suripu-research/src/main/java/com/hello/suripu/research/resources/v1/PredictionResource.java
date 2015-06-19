@@ -14,7 +14,10 @@ import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.Device;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -87,6 +90,7 @@ public class PredictionResource extends BaseResource {
     private final FeedbackDAO feedbackDAO;
     private final TimelineProcessor timelineProcessor;
     private final TimelineUtils timelineUtils;
+    private final SenseColorDAO senseColorDAO;
 
 
     public PredictionResource(final AccountDAO accountDAO,
@@ -96,7 +100,8 @@ public class PredictionResource extends BaseResource {
                               final UserLabelDAO userLabelDAO,
                               final SleepHmmDAO sleepHmmDAO,
                               final FeedbackDAO feedbackDAO,
-                              final TimelineProcessor timelineProcessor) {
+                              final TimelineProcessor timelineProcessor,
+                              final SenseColorDAO senseColorDAO) {
 
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
@@ -107,6 +112,7 @@ public class PredictionResource extends BaseResource {
         this.timelineProcessor = timelineProcessor;
         this.timelineUtils = new TimelineUtils();
         this.feedbackDAO = feedbackDAO;
+        this.senseColorDAO = senseColorDAO;
     }
 
 
@@ -352,6 +358,13 @@ public class PredictionResource extends BaseResource {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+
+        if (!deviceIdPair.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "no sense found")).build());
+        }
+
         /* Get "Pill" data  */
         final List<TrackerMotion> myMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
@@ -365,12 +378,17 @@ public class PredictionResource extends BaseResource {
         }
 
 
+
         List<TrackerMotion> motions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty() && usePartnerFilter ) {
             try {
-                PartnerDataUtils.PartnerMotions separatedMotions = PartnerDataUtils.getMyMotion(myMotions, partnerMotions);
-                motions.addAll(separatedMotions.myMotions);
+                PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
+
+                final ImmutableList<TrackerMotion> myFilteredMotions =
+                        partnerDataUtils.partnerFilterWithDurationsDiffHmm(ImmutableList.copyOf(myMotions), ImmutableList.copyOf(partnerMotions));
+
+                motions.addAll(myFilteredMotions);
             }
             catch (Exception e) {
                 LOGGER.info(e.getMessage());
@@ -385,16 +403,19 @@ public class PredictionResource extends BaseResource {
         // get all sensor data, used for light and sound disturbances, and presleep-insights
         AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
 
-        final Optional<Long> deviceId = deviceDAO.getMostRecentSenseByAccountId(accountId);
 
-        if (deviceId.isPresent()) {
-            final int tzOffsetMillis = myMotions.get(0).offsetMillis;
-            allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
-                    endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId.get(), SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE
-            );
-        }
+
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+
+
+
+        final int tzOffsetMillis = myMotions.get(0).offsetMillis;
+
+        allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                endDate.minusMillis(tzOffsetMillis).getMillis(),
+                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color);
+
 
          /*  pull out algorithm type */
 
@@ -420,11 +441,16 @@ public class PredictionResource extends BaseResource {
         //get feedback for this day
         ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
 
-        final Map<Long,Event> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsInOriginalTimeMap(feedbacks.asList(),myMotions.get(0).offsetMillis);
+        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsInOriginalTimeMap(feedbacks.asList(),myMotions.get(0).offsetMillis);
 
         LOGGER.debug("got {} pieces of feedback",feedbacksAsEvents.size());
 
-        final EventsWithLabels eventsWithLabels = new EventsWithLabels(events,Lists.newArrayList(feedbacksAsEvents.values()));
+        List<Event> feedbackEvents = Lists.newArrayList();
+        for (FeedbackUtils.EventWithTime eventWithTime : feedbacksAsEvents) {
+            feedbackEvents.add(eventWithTime.event);
+        }
+
+        final EventsWithLabels eventsWithLabels = new EventsWithLabels(events,Lists.newArrayList(feedbackEvents));
 
         return eventsWithLabels;
 

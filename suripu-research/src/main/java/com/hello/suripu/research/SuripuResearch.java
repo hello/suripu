@@ -26,6 +26,8 @@ import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -116,7 +118,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
-
+        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
         // TODO: create research DB DAOs here
 
 
@@ -175,13 +177,13 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         environment.getJerseyResourceConfig()
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
-                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO,timelineLogDAO,labelDAO));
+                deviceDataDAO, deviceDAO, userLabelDAO, feedbackDAO,timelineLogDAO,labelDAO,senseColorDAO));
 
 
 
-        final TimelineProcessor timelineProcessor =  TimelineProcessor.createTimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAODynamoDB,accountDAO,sleepStatsDAODynamoDB);
+        final TimelineProcessor timelineProcessor =  TimelineProcessor.createTimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAODynamoDB,accountDAO,sleepStatsDAODynamoDB,senseColorDAO);
 
-        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,feedbackDAO,timelineProcessor));
+        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,feedbackDAO,timelineProcessor,senseColorDAO));
         environment.addResource(new AccountInfoResource(accountDAO, deviceDAO));
 
     }

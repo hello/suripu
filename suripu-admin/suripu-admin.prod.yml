@@ -1,10 +1,19 @@
+metrics_enabled: true
 debug: false
+graphite:
+  host: carbon.hostedgraphite.com
+  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
+  reporting_interval_in_seconds: 30
+  include_metrics:
+    - org.skife
+    - xx-responses
+    - com.hello
 
 sensors_db:
   driverClass: org.postgresql.Driver
   user: sensors
   password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  url: jdbc:postgresql://sensors-1-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
   properties:
     charSet: UTF-8
 
@@ -55,12 +64,16 @@ dynamodb:
     ota_history : ota_history
     password_reset : prod_password_reset
     pill_key_store : pill_key_store
+    pill_last_seen : prod_pill_last_seen
     sense_events : prod_sense_events
     sense_key_store : key_store
     sense_last_seen : prod_sense_last_seen
     sense_prefix : prod_sense
     sync_response_commands : prod_response_commands
     teams : teams
+    timezone_history : prod_timezone_history
+    ring_time_history: prod_ring_history_by_account
+    smart_alarm_log: prod_smart_alarm_log
 
   endpoints:
       alarm_info : http://dynamodb.us-east-1.amazonaws.com
@@ -70,10 +83,16 @@ dynamodb:
       ota_history : http://dynamodb.us-east-1.amazonaws.com
       password_reset : http://dynamodb.us-east-1.amazonaws.com
       pill_key_store : http://dynamodb.us-east-1.amazonaws.com
+      pill_last_seen : http://dynamodb.us-east-1.amazonaws.com
       sense_events : http://dynamodb.us-east-1.amazonaws.com
       sense_key_store : http://dynamodb.us-east-1.amazonaws.com
       sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
       sense_prefix : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
+      timezone_history : http://dynamodb.us-east-1.amazonaws.com
+      smart_alarm_log: http://dynamodb.us-east-1.amazonaws.com
+      ring_time_history: http://dynamodb.us-east-1.amazonaws.com
+
+token_expiration: 300
 

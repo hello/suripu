@@ -50,7 +50,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final Meter messagesProcessed;
     private final Meter batchSaved;
     private final Meter clockOutOfSync;
-    private final Meter emptyDynamoDB;
 
 
     public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
@@ -62,7 +61,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
-        this.emptyDynamoDB = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "dynamo-db", "empty-dynamo-db", TimeUnit.SECONDS);
     }
 
     @Override
@@ -133,7 +131,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             //LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
-
 
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
 

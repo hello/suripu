@@ -109,6 +109,18 @@ public class HmmDeserialization {
             isUsingIntervalSearch = hmmModelData.getEnableIntervalSearch();
         }
 
+        double lightPreMultiplier = HmmDataConstants.DEFAULT_LIGHT_PRE_MULTIPLIER;
+
+        if (hmmModelData.hasLightPreMultiplier()) {
+            lightPreMultiplier = hmmModelData.getLightPreMultiplier();
+        }
+
+        double lightFloorLux = HmmDataConstants.DEFAULT_LIGHT_FLOOR_LUX;
+
+        if (hmmModelData.hasLightFloorLux()) {
+            lightFloorLux = hmmModelData.getLightFloorLux();
+        }
+
          /*
          * interpretation parameters (which states mean what)
          *
@@ -228,7 +240,7 @@ public class HmmDeserialization {
         final HiddenMarkovModel hmm =  new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel,numFreeParams);
 
         return Optional.of(new NamedSleepHmmModel(hmm,modelName, ImmutableSet.copyOf(sleepStates),ImmutableSet.copyOf(onBedStates),ImmutableSet.copyOf(allowableEndingStates), ImmutableList.copyOf(sleepDepthsByState),
-                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch));
+                audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch,lightPreMultiplier,lightFloorLux));
 
 
 
