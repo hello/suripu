@@ -27,12 +27,14 @@ public class PersistentAccessTokenStoreTest {
     private PersistentAccessTokenStore store;
     private AccessToken accessToken;
     private Application application;
+
     private UUID validUUID = UUID.randomUUID();
     private DateTime now = DateTime.now();
 
     @Before
     public void setUp() {
         store = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
+
         accessToken = new AccessToken.Builder()
                 .withAccountId(123L)
                 .withAppId(999L)
@@ -56,6 +58,17 @@ public class PersistentAccessTokenStoreTest {
                 DateTime.now(),
                 GrantTypeParam.GrantType.PASSWORD
         );
+    }
+
+
+    @Test
+    public void testScopes() {
+        boolean validScopes = store.hasRequiredScopes(new OAuthScope[]{OAuthScope.AUTH}, new OAuthScope[]{OAuthScope.AUTH, OAuthScope.ZENDESK_EXTENSION});
+        assertThat(validScopes, is(false));
+
+
+        validScopes = store.hasRequiredScopes(new OAuthScope[]{OAuthScope.AUTH, OAuthScope.ZENDESK_EXTENSION}, new OAuthScope[]{OAuthScope.AUTH});
+        assertThat(validScopes, is(true));
     }
 
     @Test
