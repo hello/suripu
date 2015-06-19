@@ -10,6 +10,7 @@ import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataScience.JoinedSensorsMinuteData;
@@ -33,6 +34,7 @@ import com.hello.suripu.core.util.NamedSleepHmmModel;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmSensorDataBinning;
 import com.hello.suripu.core.util.TimelineUtils;
+import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.hello.suripu.research.db.LabelDAO;
 import com.hello.suripu.research.models.BinnedSensorData;
 import com.hello.suripu.research.models.MatchedFeedback;
@@ -75,6 +77,7 @@ public class DataScienceResource extends BaseResource {
     private final UserLabelDAO userLabelDAO;
     private final TimelineLogDAO timelineLogDAO;
     private final LabelDAO labelDAO;
+    private final SenseColorDAO senseColorDAO;
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
@@ -83,7 +86,8 @@ public class DataScienceResource extends BaseResource {
                                final UserLabelDAO userLabelDAO,
                                final FeedbackDAO feedbackDAO,
                                final TimelineLogDAO timelineLogDAO,
-                               final LabelDAO labelDAO) {
+                               final LabelDAO labelDAO,
+                               final SenseColorDAO senseColorDAO) {
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -92,6 +96,7 @@ public class DataScienceResource extends BaseResource {
         this.feedbackDAO = feedbackDAO;
         this.timelineLogDAO = timelineLogDAO;
         this.labelDAO = labelDAO;
+        this.senseColorDAO = senseColorDAO;
     }
 
     @GET
@@ -167,7 +172,8 @@ public class DataScienceResource extends BaseResource {
             if(partnerMotions.isEmpty()){
                 myMotions.addAll(originalTrackerMotions);
             }else{
-                myMotions.addAll(PartnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions).myMotions);
+                final PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
+                myMotions.addAll(partnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions).myMotions);
             }
         }
 
@@ -573,7 +579,7 @@ public class DataScienceResource extends BaseResource {
         boolean isUsingIntervalSearch) */
 
         NamedSleepHmmModel model = new NamedSleepHmmModel(null,"dummy", ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableList.copyOf(Collections.EMPTY_LIST),
-                soundThreshold,pillThreshold,naturalLightStartHour,naturalLightStopHour,numMinutesInMeasPeriod,false);
+                soundThreshold,pillThreshold,naturalLightStartHour,naturalLightStopHour,numMinutesInMeasPeriod,false,1.0,0.0);
 
         if ( (email == null && accountId == null) || fromTimestamp == null) {
             throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
@@ -631,19 +637,23 @@ public class DataScienceResource extends BaseResource {
                     .entity(new JsonError(500,"No data on this day")).build());
         }
 
-        List<TrackerMotion> filteredTrackerData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(motionData.asList());
+        final List<TrackerMotion> filteredTrackerData = TrackerMotionUtils.removeDuplicatesAndInvalidValues(motionData.asList());
 
         final int timezoneOffset = filteredTrackerData.get(0).offsetMillis;
 
         final int slotDurationInMinutes = 1;
         final Integer missingDataDefaultValue = 0;
+
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceAccountPairOptional.get().externalDeviceId);
+
         final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 startTs.minusMillis(timezoneOffset).getMillis(),
                 endTs.minusMillis(timezoneOffset).getMillis(),
                 accountId,
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
-                missingDataDefaultValue
+                missingDataDefaultValue,
+                color
         );
 
         final long startTimeUTC = startTs.getMillis() - timezoneOffset;
