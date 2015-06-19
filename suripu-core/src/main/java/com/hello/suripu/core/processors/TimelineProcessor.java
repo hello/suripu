@@ -173,11 +173,23 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         switch (discardReason){
             case TIMESPAN_TOO_SHORT:
+                LOGGER.info("Tracker motion span too short for account_id = {} and day = {}", accountId, targetDate);
                 return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
+
+            case NOT_ENOUGH_DATA:
+                LOGGER.info("Not enough tracker motion seen for account_id = {} and day = {}", accountId, targetDate);
+                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
+
             case NO_DATA:
-            case LOW_AMP_DATA:  // treat the low amplitude data as noise
-                LOGGER.debug("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
+                LOGGER.info("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
                 return Optional.absent();
+
+            case LOW_AMP_DATA:
+                LOGGER.debug("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
+                return Optional.absent();
+
+            default:
+                break;
         }
 
         String algorithm = TimelineLog.NO_ALGORITHM;
@@ -584,38 +596,45 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
     /*
-    * Check if the motion span in a large enough time.
+     * PRELIMINARY SANITY CHECK
      */
     protected InvalidNightType isValidNight(final Long accountId, final List<TrackerMotion> motionData){
         if(!hasNewInvalidNightFilterEnabled(accountId)){
             if(motionData.size() >= MIN_TRACKER_MOTION_COUNT){
                 return InvalidNightType.VALID;
             }
-
-            return InvalidNightType.LOW_AMP_DATA;  // This needs to align to the old behavior before the new filter has been discussed.
+            else {
+                return InvalidNightType.NOT_ENOUGH_DATA;  // This needs to align to the old behavior before the new filter has been discussed.
+            }
         }
 
         if(motionData.size() == 0){
             return InvalidNightType.NO_DATA;
         }
 
-        boolean allLowMotionAmplitude = true;
-        for(final TrackerMotion trackerMotion:motionData){
+        //CHECK TO SEE IF MOTION AMPLITUDE IS EVER ABOVE MINIMUM THRESHOLD
+        boolean isMotionAmplitudeAboveMinimumThreshold = false;
+
+        for(final TrackerMotion trackerMotion : motionData){
             if(trackerMotion.value > MIN_MOTION_AMPLITUDE){
-                allLowMotionAmplitude = false;
+                isMotionAmplitudeAboveMinimumThreshold = true;
                 break;
             }
         }
 
+        //NEVER ABOVE THRESHOLD?  REJECT.
+        if (!isMotionAmplitudeAboveMinimumThreshold) {
+            return InvalidNightType.LOW_AMP_DATA;
+        }
+
+        //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT IS ABOVE 5 HOURS
         if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
-            if(allLowMotionAmplitude){
-                return InvalidNightType.LOW_AMP_DATA;
-            }
             return InvalidNightType.TIMESPAN_TOO_SHORT;
         }
 
-        if(allLowMotionAmplitude && motionData.size() < MIN_TRACKER_MOTION_COUNT){
-            return InvalidNightType.LOW_AMP_DATA;
+        //LAST, CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
+        if(motionData.size() < MIN_TRACKER_MOTION_COUNT){
+            return InvalidNightType.NOT_ENOUGH_DATA;
         }
 
         return InvalidNightType.VALID;

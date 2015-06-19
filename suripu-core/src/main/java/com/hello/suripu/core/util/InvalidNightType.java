@@ -7,5 +7,6 @@ public enum InvalidNightType {
     VALID,
     TIMESPAN_TOO_SHORT,
     LOW_AMP_DATA,
+    NOT_ENOUGH_DATA,
     NO_DATA
 }
