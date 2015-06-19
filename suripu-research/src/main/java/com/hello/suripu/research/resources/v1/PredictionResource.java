@@ -2,6 +2,7 @@ package com.hello.suripu.research.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.sleep.Vote;
@@ -9,6 +10,7 @@ import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
@@ -20,6 +22,7 @@ import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -28,12 +31,15 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SoundUtils;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
+import com.hello.suripu.research.models.EventsWithLabels;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -48,11 +54,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 3/6/15.
@@ -75,6 +84,7 @@ public class PredictionResource extends BaseResource {
     private final DeviceDAO deviceDAO;
     private final UserLabelDAO userLabelDAO;
     private final SleepHmmDAO sleepHmmDAO;
+    private final FeedbackDAO feedbackDAO;
     private final TimelineProcessor timelineProcessor;
     private final TimelineUtils timelineUtils;
 
@@ -85,6 +95,7 @@ public class PredictionResource extends BaseResource {
                               final DeviceDAO deviceDAO,
                               final UserLabelDAO userLabelDAO,
                               final SleepHmmDAO sleepHmmDAO,
+                              final FeedbackDAO feedbackDAO,
                               final TimelineProcessor timelineProcessor) {
 
         this.accountDAO = accountDAO;
@@ -95,6 +106,7 @@ public class PredictionResource extends BaseResource {
         this.sleepHmmDAO = sleepHmmDAO;
         this.timelineProcessor = timelineProcessor;
         this.timelineUtils = new TimelineUtils();
+        this.feedbackDAO = feedbackDAO;
     }
 
 
@@ -297,7 +309,7 @@ public class PredictionResource extends BaseResource {
     @Path("/sleep_events/{account_id}/{query_date_local_utc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public  List<Event> getSleepPredictionsByUserAndAlgorithm(
+    public EventsWithLabels getSleepPredictionsByUserAndAlgorithm(
 
             @Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
 
@@ -331,6 +343,8 @@ public class PredictionResource extends BaseResource {
         /*  Time stuff */
         final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
 
+        final DateTime dateOfNight = DateTime.parse(strTargetDate, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(0);
         final DateTime targetDate = DateTime.parse(strTargetDate, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(20);
         final DateTime endDate = targetDate.plusHours(16);
@@ -343,6 +357,12 @@ public class PredictionResource extends BaseResource {
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
 
         LOGGER.debug("Length of trackerMotion: {}, partnerTrackerMotion: {}", myMotions.size(),partnerMotions.size());
+
+
+        if (myMotions.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "no motion data found")).build());
+        }
 
 
         List<TrackerMotion> motions = new ArrayList<>();
@@ -360,6 +380,7 @@ public class PredictionResource extends BaseResource {
         else {
             motions.addAll(myMotions);
         }
+
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
         AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
@@ -396,8 +417,16 @@ public class PredictionResource extends BaseResource {
         }
 
 
-        return events;
-        //throw new WebApplicationException(Response.Status.NOT_FOUND);
+        //get feedback for this day
+        ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
+
+        final Map<Long,Event> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsInOriginalTimeMap(feedbacks.asList(),myMotions.get(0).offsetMillis);
+
+        LOGGER.debug("got {} pieces of feedback",feedbacksAsEvents.size());
+
+        final EventsWithLabels eventsWithLabels = new EventsWithLabels(events,Lists.newArrayList(feedbacksAsEvents.values()));
+
+        return eventsWithLabels;
 
     }
 }
