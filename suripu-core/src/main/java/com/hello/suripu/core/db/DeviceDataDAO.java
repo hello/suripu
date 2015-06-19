@@ -10,6 +10,7 @@ import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
@@ -96,7 +97,7 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(SenseDeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id ORDER BY ts DESC LIMIT 1;")
+    @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id AND ts > now() - interval '7 days'  ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
 
 
@@ -105,6 +106,7 @@ public abstract class DeviceDataDAO {
     @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id and ts > now() - interval '1 hours' ORDER BY ts DESC LIMIT 1;")
     public abstract Optional<DeviceStatus> senseStatusLastHour(@Bind("sense_id") final Long senseId);
 
+    @Deprecated
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master WHERE account_id = :account_id AND local_utc_ts >= :start_timestamp AND local_utc_ts <= :end_timestamp ORDER BY ts ASC")
     public abstract ImmutableList<DeviceData> getBetweenByLocalTime(
@@ -232,7 +234,8 @@ public abstract class DeviceDataDAO {
             final Long deviceId,
             final int slotDurationInMinutes,
             final String sensor,
-            final Integer missingDataDefaultValue) {
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color) {
 
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
@@ -268,7 +271,7 @@ public abstract class DeviceDataDAO {
         LOGGER.trace("Map size = {}", map.size());
 
 
-        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor);
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor,color);
 
         if(!optionalPopulatedMap.isPresent()) {
             return Collections.EMPTY_LIST;
@@ -292,7 +295,8 @@ public abstract class DeviceDataDAO {
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final Integer missingDataDefaultValue) {
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
@@ -310,7 +314,7 @@ public abstract class DeviceDataDAO {
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;
@@ -385,7 +389,8 @@ public abstract class DeviceDataDAO {
             final Long accountId,
             final Long deviceId,
             final int slotDurationInMinutes,
-            final Integer missingDataDefaultValue) {
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
@@ -404,7 +409,7 @@ public abstract class DeviceDataDAO {
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;

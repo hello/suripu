@@ -8,6 +8,7 @@ import com.hello.suripu.admin.models.DeviceAdmin;
 import com.hello.suripu.admin.models.DeviceStatusBreakdown;
 import com.hello.suripu.admin.models.InactiveDevicesPaginator;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
+import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDAOAdmin;
@@ -15,12 +16,17 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
+import com.hello.suripu.core.db.PillViewsDynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceInactivePage;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import com.hello.suripu.core.models.DeviceStatus;
@@ -41,6 +47,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -56,7 +64,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 @Path("/v1/devices")
@@ -75,6 +86,10 @@ public class DeviceResources {
     private final JedisPool jedisPool;
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final SenseColorDAO senseColorDAO;
+    private final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB;
+    private final PillViewsDynamoDB pillViewsDynamoDB;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
+
 
     public DeviceResources(final DeviceDAO deviceDAO,
                            final DeviceDAOAdmin deviceDAOAdmin,
@@ -86,7 +101,11 @@ public class DeviceResources {
                            final KeyStore pillKeyStore,
                            final JedisPool jedisPool,
                            final PillHeartBeatDAO pillHeartBeatDAO,
-                           final SenseColorDAO senseColorDAO) {
+                           final SenseColorDAO senseColorDAO,
+                           final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
+                           final PillViewsDynamoDB pillViewsDynamoDB,
+                           final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+
         this.deviceDAO = deviceDAO;
         this.deviceDAOAdmin = deviceDAOAdmin;
         this.accountDAO = accountDAO;
@@ -98,6 +117,9 @@ public class DeviceResources {
         this.jedisPool = jedisPool;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.senseColorDAO = senseColorDAO;
+        this.responseCommandsDAODynamoDB = responseCommandsDAODynamoDB;
+        this.pillViewsDynamoDB = pillViewsDynamoDB;
+        this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
     }
 
     @GET
@@ -166,6 +188,31 @@ public class DeviceResources {
 
         return pillStatuses;
     }
+
+    @GET
+    @Timed
+    @Path("/pill_heartbeat/{pill_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DeviceStatus getPillHeartBeat(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                            @PathParam("pill_id") final String pillId) {
+
+        final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getInternalPillId(pillId);
+        if(!deviceAccountPairOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("No pill found!").build());
+        }
+
+
+        final Optional<DeviceStatus> deviceStatusOptional = pillViewsDynamoDB.lastHeartBeat(deviceAccountPairOptional.get().externalDeviceId, deviceAccountPairOptional.get().internalDeviceId);
+        if(deviceStatusOptional.isPresent()) {
+            return deviceStatusOptional.get();
+        }
+
+
+        throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                .entity("No heartbeat found!").build());
+    }
+
 
     @Timed
     @GET
@@ -321,6 +368,15 @@ public class DeviceResources {
 
             final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
             this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accountId, pillRegistration.pillId);
+
+            final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getInternalPillId(pillRegistration.pillId);
+
+            if (!deviceAccountPairOptional.isPresent()){
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(400, String.format("Pill %s not found!", pillRegistration.pillId))).build());
+            }
+
+            this.pillHeartBeatDAO.insert(deviceAccountPairOptional.get().internalDeviceId, 99, 0, 0, DateTime.now(DateTimeZone.UTC));
 
             return;
         } catch (UnableToExecuteStatementException exception) {
@@ -549,14 +605,120 @@ public class DeviceResources {
     public Response setColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                            @PathParam("sense_id") final String senseId,
                            @PathParam("color") final String color){
+
         final Device.Color senseColor = Device.Color.valueOf(color);
-        if(senseColor.equals(Device.Color.BLACK) || senseColor.equals(Device.Color.WHITE)) {
-            senseColorDAO.update(senseId, senseColor.name());
-            return Response.ok().build();
+
+        if (!senseColor.equals(Device.Color.BLACK) && !senseColor.equals(Device.Color.WHITE)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
         }
 
-        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), "Bad color for Sense")).build());
+        if (senseColorDAO.update(senseId, senseColor.name()) == 0) {
+            LOGGER.debug("Cannot update because sense color not found for sense {}, proceed to insert a new entry", senseId);
+            senseColorDAO.saveColorForSense(senseId, senseColor.name());
+        }
+        return Response.noContent().build();
+    }
 
+    @PUT
+    @Timed
+    @Path("/{device_id}/reset_mcu")
+    public void resetDeviceToFactoryFW(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                       @PathParam("device_id") final String deviceId,
+                                       @QueryParam("fw_version") final Integer fwVersion) {
+        if(deviceId == null) {
+            LOGGER.error("Missing device_id parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        if(fwVersion == null) {
+            LOGGER.error("Missing fw_version parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        LOGGER.info("Resetting device: {} on FW Version: {}", deviceId, fwVersion);
+        final Map<ResponseCommand, String> issuedCommands = new HashMap<>();
+        issuedCommands.put(ResponseCommand.RESET_MCU, "true");
+        responseCommandsDAODynamoDB.insertResponseCommands(deviceId, fwVersion, issuedCommands);
+    }
+
+    @PUT
+    @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sense_black_list")
+    public Response updateSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                         @Valid final Set<String> updatedSenseBlackList) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            final Pipeline pipe = jedis.pipelined();
+            pipe.multi();
+            pipe.del(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+            for (final String senseId : updatedSenseBlackList){
+                pipe.sadd(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY, senseId);
+            }
+            pipe.exec();
+        }
+        catch (JedisDataException e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+                jedis = null;
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to get data from redis - %s", e.getMessage()))).build());
+        }
+        catch (Exception e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+                jedis = null;
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to update sense black list because %s", e.getMessage()))).build());
+        }
+        finally {
+            if (jedis != null) {
+                jedisPool.returnResource(jedis);
+            }
+        }
+        return Response.noContent().build();
+    }
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/sense_black_list")
+    public Set<String> addSenseBlackList(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            return jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+        }
+        catch (JedisDataException e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+                jedis = null;
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to get data from redis - %s", e.getMessage()))).build());
+        }
+        catch (Exception e) {
+            if (jedis != null) {
+                jedisPool.returnBrokenResource(jedis);
+                jedis = null;
+            }
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to retrieve sense black list because %s", e.getMessage()))).build());
+        }
+        finally {
+            if (jedis != null) {
+                jedisPool.returnResource(jedis);
+            }
+        }
     }
 
     // Helpers
@@ -565,11 +727,15 @@ public class DeviceResources {
         final List<DeviceAdmin> senses = new ArrayList<>();
 
         for (final DeviceAccountPair senseAccountPair: senseAccountPairs) {
-            Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatusLastHour(senseAccountPair.internalDeviceId);
-            if (!senseStatusOptional.isPresent()) {
-                senseStatusOptional = this.deviceDataDAO.senseStatus(senseAccountPair.internalDeviceId);
+            final Optional<DeviceData> deviceDataOptional = sensorsViewsDynamoDB.lastSeen(senseAccountPair.externalDeviceId, accountId, senseAccountPair.internalDeviceId);
+            if (!deviceDataOptional.isPresent()) {
+                senses.add(DeviceAdmin.create(senseAccountPair));
             }
-            senses.add(new DeviceAdmin(senseAccountPair, senseStatusOptional.orNull()));
+            else {
+                final DeviceData deviceData = deviceDataOptional.get();
+                LOGGER.debug("device data {}", deviceData);
+                senses.add(DeviceAdmin.create(senseAccountPair, DeviceStatus.sense(deviceData.deviceId, Integer.toHexString(deviceData.firmwareVersion), deviceData.dateTimeUTC)));
+            }
         }
         return senses;
     }
@@ -581,9 +747,15 @@ public class DeviceResources {
         for (final DeviceAccountPair pillAccountPair: pillAccountPairs) {
             Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
             if (!pillStatusOptional.isPresent()){
+                LOGGER.warn("Failed to get heartbeat for account id {} on pill internal id: {} - external id: {}, looking into tracker motion", accountId, pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId);
                 pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
             }
-            pills.add(new DeviceAdmin(pillAccountPair, pillStatusOptional.orNull()));
+            if (!pillStatusOptional.isPresent()){
+                pills.add(DeviceAdmin.create(pillAccountPair));
+            }
+            else {
+                pills.add(DeviceAdmin.create(pillAccountPair, pillStatusOptional.get()));
+            }
         }
         return pills;
     }

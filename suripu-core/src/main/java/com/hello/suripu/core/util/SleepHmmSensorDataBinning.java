@@ -104,7 +104,7 @@ public class SleepHmmSensorDataBinning {
         final Iterator<Sample> it1 = light.iterator();
         while (it1.hasNext()) {
             final Sample sample = it1.next();
-            double value = sample.value;
+            double value = sample.value - model.lightFloorLux;
             if (value < 0) {
                 value = 0.0;
             }
@@ -117,7 +117,7 @@ public class SleepHmmSensorDataBinning {
             data[HmmDataConstants.LIGHT_INDEX][i] /= numMinutesInWindow; //average
 
             //transform via log2(4.0 * x + 1.0)
-            data[HmmDataConstants.LIGHT_INDEX][i] =  Math.log(data[HmmDataConstants.LIGHT_INDEX][i] * HmmDataConstants.LIGHT_PREMULTIPLIER + 1.0) / Math.log(2);
+            data[HmmDataConstants.LIGHT_INDEX][i] =  Math.log(data[HmmDataConstants.LIGHT_INDEX][i] * model.lightPreMultiplier + 1.0) / Math.log(2);
         }
 
         ///////////////////////////
@@ -282,40 +282,5 @@ public class SleepHmmSensorDataBinning {
         return vecString;
     }
 
-    static public List<TrackerMotion> removeDuplicatesAndInvalidValues(final List<TrackerMotion> trackerMotions) {
-        Set<TrackerMotion> trackerMotionSet = new TreeSet<TrackerMotion>(new Comparator<TrackerMotion>() {
-            @Override
-            public int compare(final TrackerMotion m1, final TrackerMotion m2) {
-                final long t1 = m1.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
-                final long t2 = m2.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
-                final int f1 = m1.value;
-                final int f2 = m1.value;
 
-                if (t1 < t2) {
-                    return -1;
-                }
-
-                if (t1 > t2) {
-                    return 1;
-                }
-
-                return 0;
-
-            }
-        });
-
-
-        for (final TrackerMotion m : trackerMotions) {
-            if (m.value != -1) {
-                trackerMotionSet.add(m);
-            }
-        }
-
-
-        List<TrackerMotion> uniqueValues = new ArrayList<>();
-
-        uniqueValues.addAll(trackerMotionSet);
-
-        return uniqueValues;
-    }
 }

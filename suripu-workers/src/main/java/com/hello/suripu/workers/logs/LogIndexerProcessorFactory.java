@@ -7,6 +7,7 @@ import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.db.OnBoardingLogDAO;
 import com.hello.suripu.core.db.SenseEventsDAO;
+import redis.clients.jedis.JedisPool;
 
 public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
@@ -25,12 +26,15 @@ public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
     @Override
     public IRecordProcessor createProcessor() {
 
-        final IndexTankClient client = new IndexTankClient(config.applicationLogs().privateUrl());
-        final IndexTankClient.Index senseIndex = client.getIndex(config.senseLogs().indexName());
+        final IndexTankClient indexTankClient = new IndexTankClient(config.senseLogs().privateUrl());
+        final String senseLogIndexPrefix = config.senseLogs().indexPrefix();
+        final IndexTankClient.Index senseLogBackupIndex = indexTankClient.getIndex(config.senseLogs().backupIndexName());
 
         final AmazonDynamoDB amazonDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(config.getSenseEventsDynamoDBConfiguration().getEndpoint());
         final SenseEventsDAO senseEventsDAO = new SenseEventsDAO(amazonDynamoDB, config.getSenseEventsDynamoDBConfiguration().getTableName());
 
-        return LogIndexerProcessor.create(senseIndex, senseEventsDAO, this.onBoardingLogDAO);
+        final JedisPool jedisPool = new JedisPool(config.redisConfiguration().getHost(), config.redisConfiguration().getPort());
+
+        return LogIndexerProcessor.create(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, senseEventsDAO, this.onBoardingLogDAO, jedisPool);
     }
 }

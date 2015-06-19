@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.DataScience.JoinedSensorsMinuteData;
 import com.hello.suripu.core.models.DataScience.UserLabel;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
@@ -204,7 +205,8 @@ public class DataScienceResource extends BaseResource {
                     targetDate.getMillis(), endDate.getMillis(),
                     accountId.get(), internalSenseIdOptional.get(),
                     slotDurationMins,
-                    missingDataDefaultValue(accountId.get()));
+                    missingDataDefaultValue(accountId.get()),
+                    Optional.<Device.Color>absent());
             final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
             final TimelineUtils timelineUtils = new TimelineUtils();
             final List<Event> lightEvents = timelineUtils.getLightEventsWithMultipleLightOut(lightData);
@@ -241,7 +243,8 @@ public class DataScienceResource extends BaseResource {
                     targetDate.getMillis(), endDate.getMillis(),
                     accountId.get(), deviceId.get(),
                     slotDurationMins,
-                    missingDataDefaultValue(accountId.get()));
+                    missingDataDefaultValue(accountId.get()),
+                    Optional.<Device.Color>absent());
             final List<Sample> data = sensorData.get(Sensor.valueOf(dataType));
             return data;
         }
@@ -511,7 +514,8 @@ public class DataScienceResource extends BaseResource {
                 accountId,
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
-                missingDataDefaultValue
+                missingDataDefaultValue,
+                Optional.<Device.Color>absent()
         );
 
         final List<Sample> lightSamples = sensorSamples.get(Sensor.LIGHT);

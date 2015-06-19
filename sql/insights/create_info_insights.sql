@@ -87,7 +87,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
  Breathing poor quality air while sleeping can result in clogged sinuses, a stuffy nose, headache, or scratchy throat due to the contaminants breathed in during the night.
 '),
 ----
-('sleep_duration', '', 'Sleep Duration: What''s the ideal?',
+('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
 'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need). Most current guidelines say school-age children should get at least 10 hours of sleep a night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but unique to the individual.'
 ),
 ----
@@ -168,7 +168,7 @@ VALUES ('sleep_hygiene', '', 'Healthy Sleep Habits',
 
 **Regular exercise** has been shown to promote good sleep. However, vigorous exercise close to bedtime may be too stimulating, try a more gentle exercise such as yoga.
 
-Get sufficient **exposure to natural light**, which helps to maintain a healthy sleep-wake cycle. Go for a 15-minute after lunch, or take a coffee break during the afternoon.
+Get sufficient **exposure to natural light**, which helps to maintain a healthy sleep-wake cycle. Go for a 15-minute walk after lunch, or take a coffee break during the afternoon.
 
 **Avoid bright lights** close to bedtime to allow the production of melatonin, a sleep-inducing hormone. The “blue light” from many modern smartphones or tablets has been shown to **interfere with** the body’s melatonin levels. Try not to use such devices in bed.
 

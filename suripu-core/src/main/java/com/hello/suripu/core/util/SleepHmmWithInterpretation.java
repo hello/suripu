@@ -221,7 +221,7 @@ CREATE CREATE CREATE
         final long endTimeMillisUTC = currentTimeInMillisUTC < endOfThePeriodUTC ? currentTimeInMillisUTC : endOfThePeriodUTC; //find earlier of end of period or current time
 
 
-        final List<TrackerMotion> cleanedUpPillData = SleepHmmSensorDataBinning.removeDuplicatesAndInvalidValues(pillData);
+        final List<TrackerMotion> cleanedUpPillData = TrackerMotionUtils.removeDuplicatesAndInvalidValues(pillData);
 
 
         LOGGER.debug("removed {} duplicate or invalid pill data points",pillData.size() - cleanedUpPillData.size());

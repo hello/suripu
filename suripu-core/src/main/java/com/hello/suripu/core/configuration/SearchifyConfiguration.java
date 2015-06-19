@@ -16,10 +16,18 @@ public class SearchifyConfiguration extends Configuration {
     }
 
     @NotNull
-    @JsonProperty("index_name")
-    private String indexName;
+    @JsonProperty("index_prefix")
+    private String indexPrefix;
 
-    public String indexName() {
-        return indexName;
+    public String indexPrefix() {
+        return indexPrefix;
+    }
+
+    @NotNull
+    @JsonProperty("backup_index_name")
+    private String backupIndexName;
+
+    public String backupIndexName() {
+        return backupIndexName;
     }
 }

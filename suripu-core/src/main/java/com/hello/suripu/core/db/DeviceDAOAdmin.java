@@ -23,7 +23,7 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
 
     @RegisterMapper(AccountMapper.class)
     @SingleValueResult(Account.class)
-    @SqlQuery("SELECT * FROM account_device_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_name = :device_id LIMIT :max_devices;")
+    @SqlQuery("SELECT a.* FROM account_device_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_name = :device_id LIMIT :max_devices;")
     public ImmutableList<Account> getAccountsBySenseId(
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
@@ -31,7 +31,7 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
 
     @RegisterMapper(AccountMapper.class)
     @SingleValueResult(Account.class)
-    @SqlQuery("SELECT * FROM account_tracker_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_id = :device_id LIMIT :max_devices;")
+    @SqlQuery("SELECT a.* FROM account_tracker_map as m JOIN accounts as a ON (a.id = m.account_id) WHERE m.device_id = :device_id LIMIT :max_devices;")
     public ImmutableList<Account> getAccountsByPillId(
             @Bind("device_id") final String deviceId,
             @Bind("max_devices") final Long maxDevices
@@ -44,7 +44,7 @@ public interface DeviceDAOAdmin extends Transactional<DeviceDAOAdmin> {
 
     @RegisterMapper(AccountMapper.class)
     @SingleValueResult(Account.class)
-    @SqlQuery("SELECT * FROM account_device_map AS s LEFT OUTER JOIN " +
+    @SqlQuery("SELECT a.* FROM account_device_map AS s LEFT OUTER JOIN " +
               "account_tracker_map AS p ON s.account_id = p.account_id LEFT OUTER JOIN " +
               "accounts AS a ON s.account_id = a.id WHERE p.account_id IS NULL ORDER BY p.id DESC LIMIT :limit;")
     public ImmutableList<Account> getAccountsWithSenseWithoutPill(

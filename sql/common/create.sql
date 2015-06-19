@@ -253,3 +253,12 @@ CREATE UNIQUE index sense_id_color on sense_colors(sense_id);
 
 GRANT ALL PRIVILEGES ON sense_colors TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sense_colors_id_seq TO ingress_user;
+
+
+
+CREATE TABLE tracking (id SERIAL PRIMARY KEY, sense_id VARCHAR(255), internal_sense_id BIGINT, account_id BIGINT, category SMALLINT, created_at TIMESTAMP);
+CREATE UNIQUE index tracking_uniq_device_id_category on tracking(internal_sense_id, category);
+
+
+GRANT ALL PRIVILEGES ON tracking TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE tracking_id_seq TO ingress_user;

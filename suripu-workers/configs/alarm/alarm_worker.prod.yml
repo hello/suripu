@@ -12,7 +12,7 @@ sensors_db:
   driverClass: org.postgresql.Driver
   user: sensors
   password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  url: jdbc:postgresql://sensors-1-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
 
   # any properties specific to your JDBC driver:
   properties:

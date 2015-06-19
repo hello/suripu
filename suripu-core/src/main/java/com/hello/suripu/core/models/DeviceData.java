@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 
@@ -75,6 +76,40 @@ public class DeviceData {
 
     @JsonProperty("audio_peak_background_db")
     public final Integer audioPeakBackgroundDB; // already converted to decibels, multiplied by 1000
+
+    public DeviceData withCalibratedLight(Optional<Device.Color> colorOptional) {
+
+        Device.Color color = Device.DEFAULT_COLOR;
+
+        if (colorOptional.isPresent()) {
+            color = colorOptional.get();
+        }
+
+        final float calibratedAmbientLightFloat = DataUtils.calibrateLight(ambientLightFloat, color);
+        final int calibratedAmbientLight = (int)calibratedAmbientLightFloat;
+
+        return new DeviceData(accountId,
+                deviceId,
+                ambientTemperature,
+                ambientHumidity,
+                ambientAirQuality,
+                ambientAirQualityRaw,
+                ambientDustVariance,
+                ambientDustMin,
+                ambientDustMax,
+                calibratedAmbientLight,
+                calibratedAmbientLightFloat,
+                ambientLightVariance,
+                ambientLightPeakiness,
+                dateTimeUTC,
+                offsetMillis,
+                firmwareVersion,
+                waveCount,
+                holdCount,
+                audioNumDisturbances,
+                audioPeakDisturbancesDB,
+                audioPeakBackgroundDB);
+    }
 
     public DeviceData(
             final Long accountId,

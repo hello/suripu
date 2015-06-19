@@ -17,7 +17,16 @@ public enum DynamoDBTableName {
     FIRMWARE_UPGRADE_PATH("firmware_upgrade_path"),
     RING_TIME_HISTORY("ring_time_history"),
     SENSE_PREFIX("sense_prefix"),
-    SENSE_LAST_SEEN("sense_last_seen");
+    SENSE_LAST_SEEN("sense_last_seen"),
+    PILL_LAST_SEEN("pill_last_seen"),
+    SLEEP_SCORE("sleep_score"),
+    TIMELINE("timeline"),
+    SLEEP_HMM("sleep_hmm"),
+    SLEEP_STATS("sleep_stats"),
+    TIMELINE_LOG("timeline_log"),
+    TIMEZONE_HISTORY("timezone_history"),
+    ALARM_LOG("alarm_log"),
+    SMART_ALARM_LOG("smart_alarm_log");
 
     private String value;
 

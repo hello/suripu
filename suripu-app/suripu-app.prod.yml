@@ -29,7 +29,7 @@ sensors_db:
   minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 24
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -150,12 +150,6 @@ alarm_db:
   region: us-east-1
   table_name: prod_alarm
 
-kinesis_logger:
-  stream_name: logs
-  enabled : true
-  buffer_size: 100
-  origin: suripu-app
-
 score_threshold : 15 # minutes bucket for sleep-scores
 
 push_notifications:
@@ -248,7 +242,7 @@ email:
 ring_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_ring_history
+  table_name: prod_ring_history_by_account
 
 sleephmm_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -264,10 +258,6 @@ sleep_stats_db:
 sleep_stats_version: v_0_2
 
 max_cache_refresh_days: 20
-
-redis:
-  host: stats.xoe7je.0001.use1.cache.amazonaws.com
-  port: 6379
 
 algorithm_test_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -299,3 +289,7 @@ fw_path_db:
   region: us-east-1
   table_name: fw_upgrade_path
 
+sense_last_seen:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_sense_last_seen

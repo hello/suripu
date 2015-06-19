@@ -3,6 +3,8 @@ package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Objects;
 
+import java.util.Arrays;
+
 public class ClientCredentials {
 
     public final OAuthScope[] scopes;
@@ -23,7 +25,7 @@ public class ClientCredentials {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(scopes, tokenOrCode);
+        return Objects.hashCode(Arrays.hashCode(scopes), tokenOrCode);
     }
 
     @Override
@@ -33,7 +35,7 @@ public class ClientCredentials {
 
         final ClientCredentials that = (ClientCredentials) o;
 
-        return Objects.equal(this.scopes, that.scopes) &&
+        return Arrays.equals(this.scopes, that.scopes) &&
                 Objects.equal(this.tokenOrCode, that.tokenOrCode);
     }
 }

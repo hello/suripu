@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.hello.suripu.core.models.Device;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +110,29 @@ public class DataUtils{
 
     public static float calibrateTemperature(final int valueFromDatabase) {
         return dbIntToFloat(valueFromDatabase - TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS);
+    }
+
+    public static float calibrateLight(final float lightInLux, Device.Color color) {
+        float calibratedLight = lightInLux;
+
+        switch (color) {
+
+            case BLACK:
+                calibratedLight *= 5.0f;
+                break;
+            case WHITE:
+                break;
+            case BLUE:
+                break;
+            case RED:
+                break;
+            case AQUA:
+                break;
+            case YELLOW:
+                break;
+        }
+
+        return calibratedLight;
     }
 
     public static int floatToDBInt(final float value){

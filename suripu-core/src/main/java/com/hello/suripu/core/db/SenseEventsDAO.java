@@ -158,11 +158,11 @@ public class SenseEventsDAO {
 
                     final Map<String, AttributeValue> req = Maps.newHashMap();
                     req.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-
                     req.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(createdAt));
-                    final Set<String> events = ImmutableSet.copyOf(eventsPerSecond.get(key));
 
+                    final Set<String> events = ImmutableSet.copyOf(eventsPerSecond.get(key));
                     req.put(EVENTS_ATTRIBUTE_NAME, new AttributeValue().withSS(events));
+
                     final PutRequest pr = new PutRequest().withItem(req);
 
                     writeRequests.add(new WriteRequest().withPutRequest(pr));
@@ -171,21 +171,21 @@ public class SenseEventsDAO {
                         LOGGER.warn("No requests to send to dynamoDB");
                         continue;
                     }
+                }
 
-                    requests.put(tableName, writeRequests);
-                    BatchWriteItemResult results = amazonDynamoDB.batchWriteItem(requests);
+                requests.put(tableName, writeRequests);
+                BatchWriteItemResult results = amazonDynamoDB.batchWriteItem(requests);
 
-                    while (!results.getUnprocessedItems().isEmpty() && retries < MAX_RETRY) {
+                while (!results.getUnprocessedItems().isEmpty() && retries < MAX_RETRY) {
 
-                        retries += 1;
-                        try {
-                            LOGGER.debug("retrying for the {} time", retries);
-                            Thread.sleep(retries * retries * 500L);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        results = amazonDynamoDB.batchWriteItem(results.getUnprocessedItems());
+                    retries += 1;
+                    try {
+                        LOGGER.debug("retrying for the {} time", retries);
+                        Thread.sleep(retries * retries * 500L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
+                    results = amazonDynamoDB.batchWriteItem(results.getUnprocessedItems());
                 }
 
             }
