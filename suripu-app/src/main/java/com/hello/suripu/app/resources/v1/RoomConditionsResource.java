@@ -1,6 +1,8 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -45,6 +47,7 @@ public class RoomConditionsResource extends BaseResource {
     private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
     private final SenseColorDAO senseColorDAO;
+    private final static ImmutableSet<String> hiddenSensors = ImmutableSet.copyOf(Sets.newHashSet("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
 
     public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO) {
         this.accountDAO = accountDAO;
@@ -107,6 +110,11 @@ public class RoomConditionsResource extends BaseResource {
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("sensor") final String sensor,
             @QueryParam("from") Long queryEndTimestampUTC) { // utc or local???
+
+        if (hiddenSensors.contains(sensor)) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
         return retrieveWeekData(accessToken.accountId, sensor, queryEndTimestampUTC);
     }
 
@@ -134,6 +142,9 @@ public class RoomConditionsResource extends BaseResource {
             @PathParam("sensor") String sensor,
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
 
+        if (hiddenSensors.contains(sensor)) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
         validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
         final int slotDurationInMinutes = 5;
@@ -164,6 +175,9 @@ public class RoomConditionsResource extends BaseResource {
             @PathParam("sensor") String sensor,
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
 
+        if (hiddenSensors.contains(sensor)) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
 
         if(isSensorsViewUnavailable(accessToken.accountId)) {
             LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", accessToken.accountId);
@@ -230,7 +244,7 @@ public class RoomConditionsResource extends BaseResource {
         }
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color);
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
@@ -255,6 +269,9 @@ public class RoomConditionsResource extends BaseResource {
             // to make it explicit that the API is expecting a local time and not confuse
             // the user.
             @QueryParam("from") Long queryEndTimestampInUTC) {
+        if (hiddenSensors.contains(sensor)) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
         return retrieveDayData(accessToken.accountId, sensor, queryEndTimestampInUTC);
     }
 
@@ -276,6 +293,10 @@ public class RoomConditionsResource extends BaseResource {
             // to make it explicit that the API is expecting a local time and not confuse
             // the user.
             @QueryParam("from") Long queryEndTimestampInUTC) {
+
+        if (hiddenSensors.contains(sensor)) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
 
         final int slotDurationInMinutes = 5;
 
@@ -318,6 +339,10 @@ public class RoomConditionsResource extends BaseResource {
             @PathParam("sensor") String sensor,
             @PathParam("device_name") String deviceName,
             @QueryParam("from_utc") Long queryEndTimestampUTC) {
+
+        if (hiddenSensors.contains(sensor)) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
 
         validateQueryRange(queryEndTimestampUTC, DateTime.now(), accessToken.accountId, allowedRangeInSeconds);
 
