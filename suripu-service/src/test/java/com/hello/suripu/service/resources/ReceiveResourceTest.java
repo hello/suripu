@@ -22,7 +22,7 @@ public class ReceiveResourceTest {
         final long actualRingTime = DateTime.now().plusMinutes(3).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
 
         final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
-        final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration);
+        final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration, false);
         assertThat(uploadCycle, is(1));
 
     }
@@ -49,7 +49,7 @@ public class ReceiveResourceTest {
             final long actualRingTime = DateTime.now().plusMinutes(i).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
 
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
-            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration);
+            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration, false);
             assertThat(uploadCycle <= senseUploadConfiguration.getLongInterval(), is(true));
         }
     }
@@ -63,7 +63,7 @@ public class ReceiveResourceTest {
             final long actualRingTime = DateTime.now().minusMinutes(i).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
 
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
-            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration);
+            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration, false);
             assertThat(uploadCycle <= senseUploadConfiguration.getLongInterval(), is(true));
         }
     }
@@ -76,7 +76,7 @@ public class ReceiveResourceTest {
             final long actualRingTime = DateTime.now().minusMinutes(i).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
 
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
-            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration);
+            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration, false);
             assertThat(uploadCycle > 0, is(true));
         }
     }
@@ -92,7 +92,7 @@ public class ReceiveResourceTest {
 
             final DateTime current = new DateTime(random.nextLong());
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
-            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, current, senseUploadConfiguration);
+            final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, current, senseUploadConfiguration, false);
             assertThat(uploadCycle <= senseUploadConfiguration.getLongInterval(), is(true));
         }
     }
