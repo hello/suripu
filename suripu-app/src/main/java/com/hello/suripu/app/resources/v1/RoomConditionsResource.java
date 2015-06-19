@@ -110,6 +110,11 @@ public class RoomConditionsResource extends BaseResource {
             @Scope({OAuthScope.SENSORS_BASIC}) final AccessToken accessToken,
             @PathParam("sensor") final String sensor,
             @QueryParam("from") Long queryEndTimestampUTC) { // utc or local???
+
+        if (hiddenSensors.contains(sensor)) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+
         return retrieveWeekData(accessToken.accountId, sensor, queryEndTimestampUTC);
     }
 
