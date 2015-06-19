@@ -111,4 +111,18 @@ public class ReceiveResourceTest {
             assertThat(uploadCycle <= 10, is(true));
         }
     }
+
+    @Test
+    public void testComputeNextUploadIntervalReduced(){
+
+        final SenseUploadConfiguration senseUploadConfiguration = new SenseUploadConfiguration();
+        final long actualRingTime = DateTime.now().minusMinutes(30).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
+
+        final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
+        final int reducedUploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now().withHourOfDay(12), senseUploadConfiguration, true);
+        final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now().withHourOfDay(12), senseUploadConfiguration, false);
+
+        assertThat(SenseUploadConfiguration.REDUCED_LONG_INTERVAL.equals(reducedUploadCycle), is(true));
+        assertThat(reducedUploadCycle < uploadCycle, is(true));
+    }
 }
