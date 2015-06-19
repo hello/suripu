@@ -106,6 +106,16 @@ public class Bucketing {
                 sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
             } else if(sensorName.equals("peak_disturb")) {
                 sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
+            } else if(sensorName.equals("light_variance")) {
+                sensorValue = deviceData.ambientLightVariance;
+            } else if(sensorName.equals("light_peakiness")) {
+                sensorValue = deviceData.ambientLightPeakiness;
+            } else if(sensorName.equals("dust_min")) {
+                sensorValue = deviceData.ambientDustMin;
+            } else if(sensorName.equals("dust_max")) {
+                sensorValue = deviceData.ambientDustMax;
+            } else if(sensorName.equals("dust_variance")) {
+                sensorValue = deviceData.ambientDustVariance;
             } else {
                 LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensorName);
                 return Optional.absent();
