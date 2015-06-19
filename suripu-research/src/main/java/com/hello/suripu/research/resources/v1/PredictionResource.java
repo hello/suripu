@@ -421,19 +421,19 @@ public class PredictionResource extends BaseResource {
 
         switch (algorithm) {
             case ALGORITHM_VOTING:
-                events = getVotingEvents(allSensorSampleList, myMotions);
+                events = getVotingEvents(allSensorSampleList, motions);
                 break;
             case ALGORITHM_SLEEP_SCORED:
-                events = getSleepScoreEvents(targetDate, allSensorSampleList, myMotions);
+                events = getSleepScoreEvents(targetDate, allSensorSampleList, motions);
                 break;
 
             case ALGORITHM_HIDDEN_MARKOV:
-                events = getHmmEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,myMotions,hmmDAO);
+                events = getHmmEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,motions,hmmDAO);
                 break;
 
             default:
-                events = getHmmEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,myMotions,hmmDAO);
-                break;
+                throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                        .entity(new JsonError(204, "bad alg specified")).build());
 
         }
 
