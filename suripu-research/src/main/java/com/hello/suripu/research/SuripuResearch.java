@@ -181,7 +181,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
 
         final TimelineProcessor timelineProcessor =  TimelineProcessor.createTimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAODynamoDB,accountDAO,sleepStatsDAODynamoDB);
 
-        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,timelineProcessor));
+        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,feedbackDAO,timelineProcessor));
         environment.addResource(new AccountInfoResource(accountDAO, deviceDAO));
 
     }
