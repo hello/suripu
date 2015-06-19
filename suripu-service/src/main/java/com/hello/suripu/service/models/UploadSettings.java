@@ -16,7 +16,7 @@ public class UploadSettings {
     private static final Integer FASTEST_UPLOAD_INTERVAL = 1; // This must be 1 minutes or Sense will miss alarm.
 
 
-    public static Integer computeUploadIntervalPerUserPerSetting(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration) {
+    public static Integer computeUploadIntervalPerUserPerSetting(final DateTime userLocalDateTime, final SenseUploadConfiguration senseUploadConfiguration, final Boolean isReducedInterval) {
 
         final Integer hourOfDay = userLocalDateTime.getHourOfDay();
 
@@ -32,10 +32,11 @@ public class UploadSettings {
         }
 
         // Non peak hours trigger long upload interval, peak hours trigger short upload interval
-        if (isNonPeak) {
-            return senseUploadConfiguration.getLongInterval();
+        if (isReducedInterval) {
+            return (isNonPeak) ? SenseUploadConfiguration.REDUCED_LONG_INTERVAL : SenseUploadConfiguration.REDUCED_SHORT_INTERVAL;
         }
-        return senseUploadConfiguration.getShortInterval();
+
+        return (isNonPeak) ? senseUploadConfiguration.getLongInterval() : senseUploadConfiguration.getShortInterval();
     }
 
     public static Integer adjustUploadIntervalInMinutes(final Long currentTimestampMillis, final Integer standardUploadIntervalInMinutes, final Long userNextAlarmTimestampMillis) {
