@@ -116,11 +116,11 @@ public class ReceiveResourceTest {
     public void testComputeNextUploadIntervalReduced(){
 
         final SenseUploadConfiguration senseUploadConfiguration = new SenseUploadConfiguration();
-        final long actualRingTime = DateTime.now().withHourOfDay(12).minusMinutes(30).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
+        final long actualRingTime = DateTime.now().plusDays(1).withHourOfDay(12).minusMinutes(30).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
 
         final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
-        final int reducedUploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now().withHourOfDay(12), senseUploadConfiguration, true);
-        final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now().withHourOfDay(12), senseUploadConfiguration, false);
+        final int reducedUploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now().withHourOfDay(12).withMinuteOfHour(0), senseUploadConfiguration, true);
+        final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now().withHourOfDay(12).withMinuteOfHour(0), senseUploadConfiguration, false);
 
         assertThat(SenseUploadConfiguration.REDUCED_LONG_INTERVAL.equals(reducedUploadCycle), is(true));
         assertThat(reducedUploadCycle < uploadCycle, is(true));
