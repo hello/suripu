@@ -346,6 +346,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     trackerMotions.addAll(originalTrackerMotions);
                 }
             }
+            else {
+                trackerMotions.addAll(originalTrackerMotions);
+            }
         }
         else {
             trackerMotions.addAll(originalTrackerMotions);
