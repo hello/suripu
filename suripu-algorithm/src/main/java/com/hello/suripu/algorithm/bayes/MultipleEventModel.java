@@ -2,20 +2,21 @@ package com.hello.suripu.algorithm.bayes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableListIterator;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 6/16/15.
  */
 public class MultipleEventModel {
-    final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models;
-    List<Double> discreteProbabilties;
+    final List<Double> discreteProbabilties;
+    final Map<String,List<ModelWithDiscreteProbabiltiesAndEventOccurence>> models;
 
-    public MultipleEventModel(final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models, final int numDiscreteProbs) {
-        this.models = models;
-
+    public MultipleEventModel(final int numDiscreteProbs) {
+        this.models = Maps.newHashMap();
         discreteProbabilties = Lists.newArrayList();
 
         //default is uniform prior
@@ -28,6 +29,10 @@ public class MultipleEventModel {
         for (int iState = 0; iState < discreteProbabilties.size(); iState++) {
             discreteProbabilties.set(iState,1.0 / (double)discreteProbabilties.size());
         }
+    }
+
+    public void addModel(final String id, List<ModelWithDiscreteProbabiltiesAndEventOccurence> models) {
+        this.models.put(id,models);
     }
 
     void setPriorForAllStatesBasedOnOneState(final int iState, final double prior) {
@@ -62,18 +67,23 @@ public class MultipleEventModel {
                 continue;
             }
 
-            //get the model for this event happening
-            final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = models.get(event);
+            //iterate through each model
+            for (final List<ModelWithDiscreteProbabiltiesAndEventOccurence> myModels : models.values()) {
 
+                //get the model for this event happening
+                final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = myModels.get(event);
 
-            //Bayes update
-            final ImmutableList<Double> posterior = myModel.inferProbabilitiesGivenModel(prior);
+                //Bayes update
+                final ImmutableList<Double> posterior = myModel.inferProbabilitiesGivenModel(prior);
+
+                //posterior becomes prior
+                prior = posterior;
+            }
+
 
             //save posterior
-            probs.add(posterior);
+            probs.add(ImmutableList.copyOf(prior));
 
-            //posterior becomes prior
-            prior = posterior;
         }
 
         return probs;
@@ -122,6 +132,7 @@ public class MultipleEventModel {
         return joints;
     }
 
+    /* Apply to some subset of events where this label is valid  */
     public void inferModelParametersGivenEventsAndLabel(final ImmutableList<Double> label, final ImmutableList<Integer> events) {
         for (final Integer event : events) {
             if (event < 0 || event >= models.size()) {
@@ -129,12 +140,15 @@ public class MultipleEventModel {
                 continue;
             }
 
-            //get the model for this event happening
-            final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = models.get(event);
+            //iterate through each model
+            for (final List<ModelWithDiscreteProbabiltiesAndEventOccurence> myModels : models.values()) {
 
-            //updates state of model
-            myModel.inferModelGivenObservedProbabilities(label);
+                //get the model for this event happening
+                final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = myModels.get(event);
 
+                //updates state of model
+                myModel.inferModelGivenObservedProbabilities(label);
+            }
         }
     }
 }

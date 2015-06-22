@@ -72,7 +72,8 @@ public class BayesTests {
         models.add(bayesElement2);
         models.add(bayesElement3);
 
-        final MultipleEventModel multipleEventModel = new MultipleEventModel(models,2);
+        final MultipleEventModel multipleEventModel = new MultipleEventModel(2);
+        multipleEventModel.addModel("foobars",models);
 
 
         multipleEventModel.setPriorForAllStatesBasedOnOneState(0,0.70);
