@@ -7,6 +7,7 @@ import com.hello.suripu.algorithm.bayes.BetaDiscreteWithEventOutput;
 import com.hello.suripu.algorithm.bayes.BetaDistribution;
 import com.hello.suripu.algorithm.bayes.ModelWithDiscreteProbabiltiesAndEventOccurence;
 import com.hello.suripu.algorithm.bayes.MultipleEventModel;
+import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
 import com.hello.suripu.algorithm.hmm.ChiSquarePdf;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
@@ -38,17 +39,7 @@ public class HmmBayesNetDeserialization {
     *
     * */
 
-    public static class SensorDataReductionAndInterpretation {
-        public final Map<String,HiddenMarkovModel> hmmByModelName;
-        public final Map<String,MultipleEventModel> interpretationByOutputName;
-        public final Map<String,String> modelNameMappedToOutputName;
 
-        public SensorDataReductionAndInterpretation(Map<String, HiddenMarkovModel> hmmByModelName, Map<String, MultipleEventModel> interpretationByOutputName, Map<String, String> modelNameMappedToOutputName) {
-            this.hmmByModelName = hmmByModelName;
-            this.interpretationByOutputName = interpretationByOutputName;
-            this.modelNameMappedToOutputName = modelNameMappedToOutputName;
-        }
-    }
 
     public static SensorDataReductionAndInterpretation Deserialize(final SleepHmmBayesNetProtos.HmmBayesNet proto) {
         final SleepHmmBayesNetProtos.MeasurementParams params = proto.getMeasurementParameters();

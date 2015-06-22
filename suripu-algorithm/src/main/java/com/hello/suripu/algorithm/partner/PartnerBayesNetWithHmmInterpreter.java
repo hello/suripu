@@ -44,7 +44,7 @@ public class PartnerBayesNetWithHmmInterpreter {
     public List<Double> interpretDurationDiff(ImmutableList<Double> durationDiff) {
         final ImmutableList<Integer> path = hmm.decodeSensorData(durationDiff);
 
-        final Map<String,List<Integer>> eventsByModel = Maps.newHashMap();
+        final Map<String,ImmutableList<Integer>> eventsByModel = Maps.newHashMap();
         eventsByModel.put("partner_filter",path);
 
         final List<List<Double>> jointProbs = bayesModel.getJointOfForwardsAndBackwards(eventsByModel,path.size());
