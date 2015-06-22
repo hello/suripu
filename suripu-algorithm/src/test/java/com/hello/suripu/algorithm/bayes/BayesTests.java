@@ -2,11 +2,13 @@ package com.hello.suripu.algorithm.bayes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 6/16/15.
@@ -88,13 +90,27 @@ public class BayesTests {
         final List<Integer> events3 = Arrays.asList(e3);
         final List<Integer> events4 = Arrays.asList(e4);
 
-        final List<Double> probs1 = getFirstElement(multipleEventModel.getProbsFromEventSequence(ImmutableList.copyOf(events1)));
 
-        final List<Double> probs2 = getFirstElement(multipleEventModel.getProbsFromEventSequence(ImmutableList.copyOf(events2)));
+        final Map<String,List<Integer>> eventsByModel1 = Maps.newHashMap();
+        eventsByModel1.put("foobars",events1);
 
-        final List<Double> probs3 = getFirstElement(multipleEventModel.getProbsFromEventSequence(ImmutableList.copyOf(events3)));
+        final Map<String,List<Integer>> eventsByModel2 = Maps.newHashMap();
+        eventsByModel1.put("foobars",events2);
 
-        final List<Double> probs4 = getFirstElement(multipleEventModel.getJointOfForwardsAndBackwards(ImmutableList.copyOf(events4)));
+        final Map<String,List<Integer>> eventsByModel3 = Maps.newHashMap();
+        eventsByModel1.put("foobars",events3);
+
+        final Map<String,List<Integer>> eventsByModel4 = Maps.newHashMap();
+        eventsByModel1.put("foobars",events4);
+
+
+        final List<Double> probs1 = getFirstElement(multipleEventModel.getProbsFromEventSequence(eventsByModel1,events1.size(),true));
+
+        final List<Double> probs2 = getFirstElement(multipleEventModel.getProbsFromEventSequence(eventsByModel2,events2.size(),true));
+
+        final List<Double> probs3 = getFirstElement(multipleEventModel.getProbsFromEventSequence(eventsByModel3,events3.size(),true));
+
+        final List<Double> probs4 = getFirstElement(multipleEventModel.getJointOfForwardsAndBackwards(eventsByModel4,events4.size()));
 
         //sanity check only
         TestCase.assertTrue(probs4.get(12) > 0.90);

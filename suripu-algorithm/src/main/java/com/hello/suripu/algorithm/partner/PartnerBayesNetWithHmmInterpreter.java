@@ -2,6 +2,7 @@ package com.hello.suripu.algorithm.partner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.bayes.BetaDiscreteWithEventOutput;
 import com.hello.suripu.algorithm.bayes.BetaDistribution;
 import com.hello.suripu.algorithm.bayes.ModelWithDiscreteProbabiltiesAndEventOccurence;
@@ -10,6 +11,7 @@ import com.hello.suripu.algorithm.core.Segment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 6/16/15.
@@ -42,7 +44,10 @@ public class PartnerBayesNetWithHmmInterpreter {
     public List<Double> interpretDurationDiff(ImmutableList<Double> durationDiff) {
         final ImmutableList<Integer> path = hmm.decodeSensorData(durationDiff);
 
-        final List<List<Double>> jointProbs = bayesModel.getJointOfForwardsAndBackwards(path);
+        final Map<String,List<Integer>> eventsByModel = Maps.newHashMap();
+        eventsByModel.put("partner_filter",path);
+
+        final List<List<Double>> jointProbs = bayesModel.getJointOfForwardsAndBackwards(eventsByModel,path.size());
 
         //class 0 is my motion.....
         //class 1 means your motion

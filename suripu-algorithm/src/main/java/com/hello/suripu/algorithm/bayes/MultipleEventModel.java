@@ -53,37 +53,65 @@ public class MultipleEventModel {
     }
 
 
+    private ImmutableList<Double> getBayesianUpdateAtIndex(final ImmutableList<Double> prior, final int t, final Map<String,List<Integer>> eventsByModel) {
+
+
+        ImmutableList<Double> p1 = prior;
+
+        //process events... go through each matching key from events
+        for (final String key : eventsByModel.keySet()) {
+            final List<ModelWithDiscreteProbabiltiesAndEventOccurence> condProbModels = models.get(key);
+
+            if (condProbModels == null) {
+                continue;
+            }
+
+            final List<Integer> events = eventsByModel.get(key);
+
+            if (events == null) {
+                //should never happen
+                continue;
+            }
+
+            //get event
+            final Integer event = events.get(t);
+
+            //get conditional probability model of event
+            final ModelWithDiscreteProbabiltiesAndEventOccurence condProbModel = condProbModels.get(event);
+
+            p1 = condProbModel.inferProbabilitiesGivenModel(p1);
+
+        }
+
+        return p1;
+    }
 
     /* get list of probabilties as they are sequentially updated with the events  */
-    public List<List<Double>> getProbsFromEventSequence(final ImmutableList<Integer> events) {
+    public List<List<Double>> getProbsFromEventSequence(final Map<String,List<Integer>> eventsByModel, final int numEvents, boolean forwards) {
         List<List<Double>> probs = Lists.newArrayList();
 
         //set prior
         ImmutableList<Double> prior = ImmutableList.copyOf(this.discreteProbabilties);
 
-        for (final Integer event : events) {
-            if (event < 0 || event >= models.size()) {
-                //TODO LOG ERROR
-                continue;
+        if (forwards) {
+            for (int t = 0; t < numEvents; t++) {
+
+                final ImmutableList<Double> posterior = getBayesianUpdateAtIndex(prior, t, eventsByModel);
+
+                //save posterior
+                probs.add(posterior);
+
             }
+        }
+        else {
+            for (int t = numEvents - 1; t >= 0; t--) {
 
-            //iterate through each model
-            for (final List<ModelWithDiscreteProbabiltiesAndEventOccurence> myModels : models.values()) {
+                final ImmutableList<Double> posterior = getBayesianUpdateAtIndex(prior, t, eventsByModel);
 
-                //get the model for this event happening
-                final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = myModels.get(event);
+                //save posterior
+                probs.add(posterior);
 
-                //Bayes update
-                final ImmutableList<Double> posterior = myModel.inferProbabilitiesGivenModel(prior);
-
-                //posterior becomes prior
-                prior = posterior;
             }
-
-
-            //save posterior
-            probs.add(ImmutableList.copyOf(prior));
-
         }
 
         return probs;
@@ -96,21 +124,14 @@ public class MultipleEventModel {
      *  i.e.   P(A_forwards) * P(A_backwards) = P(A_forwards, A_backwards)
      *
      *  */
-    public List<List<Double>> getJointOfForwardsAndBackwards(final ImmutableList<Integer> events) {
-
-        //make backward events
-        final UnmodifiableListIterator<Integer> iterator = events.listIterator(events.size());
-        final List<Integer> backwardsEvents = Lists.newArrayList();
-        while (iterator.hasPrevious()) {
-            backwardsEvents.add(iterator.previous());
-        }
+    public List<List<Double>> getJointOfForwardsAndBackwards(final Map<String,List<Integer>> eventsByModel, final int numEvents) {
 
 
         //do forwards
-        final List<List<Double>> forwardProbs = getProbsFromEventSequence(events);
+        final List<List<Double>> forwardProbs = getProbsFromEventSequence(eventsByModel,numEvents,true);
 
         //do backwards
-        final List<List<Double>> backwardProbs = getProbsFromEventSequence(ImmutableList.copyOf(backwardsEvents));
+        final List<List<Double>> backwardProbs =  getProbsFromEventSequence(eventsByModel,numEvents,false);
 
         final List<List<Double>> joints = Lists.newArrayList();
 
