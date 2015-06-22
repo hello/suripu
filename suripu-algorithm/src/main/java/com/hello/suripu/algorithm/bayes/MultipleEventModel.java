@@ -101,6 +101,8 @@ public class MultipleEventModel {
                 //save posterior
                 probs.add(posterior);
 
+                prior = posterior;
+
             }
         }
         else {
@@ -110,6 +112,9 @@ public class MultipleEventModel {
 
                 //save posterior
                 probs.add(posterior);
+
+                prior = posterior;
+
 
             }
         }

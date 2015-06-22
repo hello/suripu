@@ -31,7 +31,7 @@ public class BetaDistribution {
     }
 
     public static List<BetaDistribution> createBinaryComplementaryBetaDistributions(double p,int numMeasurementsInPrior) {
-        List<BetaDistribution> dists = Lists.newArrayList();
+        final List<BetaDistribution> dists = Lists.newArrayList();
 
         if (numMeasurementsInPrior < 1) {
             numMeasurementsInPrior = 1;

@@ -50,7 +50,7 @@ public class HmmBayesNetDeserialization {
         }
     }
 
-    static SensorDataReductionAndInterpretation Deserialize(final SleepHmmBayesNetProtos.HmmBayesNet proto) {
+    public static SensorDataReductionAndInterpretation Deserialize(final SleepHmmBayesNetProtos.HmmBayesNet proto) {
         final SleepHmmBayesNetProtos.MeasurementParams params = proto.getMeasurementParameters();
 
         /*  FIRST MAKE THE HMMS */
@@ -67,38 +67,41 @@ public class HmmBayesNetDeserialization {
         for (final SleepHmmBayesNetProtos.CondProbs condProbs : proto.getConditionalProbabilitiesList()) {
             final String modelId = condProbs.getModelId();
             final String outputId = condProbs.getOutputId();
+
+            //map of input to output
             modelNamesToOutputNames.put(modelId, outputId);
+
+
+            //deserialize beta distributions (representing conditional probabilities)
+            final List<ModelWithDiscreteProbabiltiesAndEventOccurence> condProbsByEvent = getConditionalProbabilityModel(condProbs);
 
             //populate defaults
             if (interpretationByOutputName.get(outputId) == null) {
                 interpretationByOutputName.put(outputId,new MultipleEventModel(2)); //binary distriubtions -- 2 discrete probs
             }
+
+            interpretationByOutputName.get(outputId).addModel(modelId,condProbsByEvent);
         }
 
 
-        /*
-        {
-            //create mutliple event model
-            final List<ModelWithDiscreteProbabiltiesAndEventOccurence> betaDists = Lists.newArrayList();
+        return new SensorDataReductionAndInterpretation(hmmMapById,interpretationByOutputName,modelNamesToOutputNames);
+    }
 
-            final List<BetaDistribution> condProbsAsBetaDistributions = Lists.newArrayList();
-            for (SleepHmmBayesNetProtos.BetaCondProb betaCondProb : condProbs.getProbsList()) {
-                condProbsAsBetaDistributions.add(new BetaDistribution(betaCondProb.getAlpha(),betaCondProb.getBeta()));
-            }
+    private static List<ModelWithDiscreteProbabiltiesAndEventOccurence> getConditionalProbabilityModel(final SleepHmmBayesNetProtos.CondProbs condProbs) {
+        List<ModelWithDiscreteProbabiltiesAndEventOccurence> condProbModel = Lists.newArrayList();
+        for (SleepHmmBayesNetProtos.BetaCondProb betaCondProb : condProbs.getProbsList()) {
 
-            BetaDiscreteWithEventOutput betaDiscreteWithEventOutput = new BetaDiscreteWithEventOutput(condProbsAsBetaDistributions);
+            //create binary complementary model (p, not p) and you can do this with the beta distribution by swapping alpha and beta
+            final BetaDistribution betaDistribution = new BetaDistribution(betaCondProb.getAlpha(),betaCondProb.getBeta());
+            final BetaDistribution betaDistributionComplementary = new BetaDistribution(betaCondProb.getBeta(),betaCondProb.getAlpha());
+            final BetaDiscreteWithEventOutput betaDiscreteWithEventOutput = new BetaDiscreteWithEventOutput(Lists.newArrayList(betaDistribution,betaDistributionComplementary));
 
-
-            multipleEventModel.addModel();
-
+            condProbModel.add(betaDiscreteWithEventOutput);
         }
-        */
 
 
+        return condProbModel;
 
-
-      //  return new SensorDataReductionAndInterpretation(hmmMapById,something,modelNamesToOutputNames);
-        return null;
     }
 
     private static HiddenMarkovModel getHmm(final SleepHmmBayesNetProtos.HiddenMarkovModel model) {
