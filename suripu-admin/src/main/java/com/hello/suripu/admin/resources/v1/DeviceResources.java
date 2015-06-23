@@ -40,6 +40,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
+import java.util.HashSet;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -719,6 +720,37 @@ public class DeviceResources {
                 jedisPool.returnResource(jedis);
             }
         }
+    }
+
+    @GET
+    @Timed
+    @Path("/invalid/sense")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Set<String> getInvalidActiveSenses(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                     @QueryParam("start_ts") final Long startTs,
+                                                     @QueryParam("end_ts") final Long endTs) {
+
+        if (startTs == null || endTs == null) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Require start_ts & end_ts").build());
+        }
+
+        final Jedis jedis = jedisPool.getResource();
+        final Set<String> allSeenSenses = new HashSet<>();
+        final Set<String> allValidSeenSenses = new HashSet<>();
+
+        try {
+             allSeenSenses.addAll(jedis.zrangeByScore(ActiveDevicesTrackerConfiguration.ALL_DEVICES_SEEN_SET_KEY, startTs, endTs));
+             allValidSeenSenses.addAll(jedis.zrangeByScore(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, startTs, endTs));
+        } catch (Exception e) {
+            LOGGER.error("Failed retrieving fw history for device.", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+
+        //Returns all the devices that did not get paired account info or had no timezone in the sense save worker
+        allSeenSenses.removeAll(allValidSeenSenses);
+        return allSeenSenses;
     }
 
     // Helpers
