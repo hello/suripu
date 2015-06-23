@@ -85,22 +85,22 @@ public class BayesTests {
         final Integer [] e3 = {2,2,2,2,2,2,2,2,2,2,2};
         final Integer [] e4 = {2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2};
 
-        final List<Integer> events1 = Arrays.asList(e1);
-        final List<Integer> events2 = Arrays.asList(e2);
-        final List<Integer> events3 = Arrays.asList(e3);
-        final List<Integer> events4 = Arrays.asList(e4);
+        final ImmutableList<Integer> events1 = ImmutableList.copyOf(Arrays.asList(e1));
+        final ImmutableList<Integer> events2 = ImmutableList.copyOf(Arrays.asList(e2));
+        final ImmutableList<Integer> events3 = ImmutableList.copyOf(Arrays.asList(e3));
+        final ImmutableList<Integer> events4 = ImmutableList.copyOf(Arrays.asList(e4));
 
 
-        final Map<String,List<Integer>> eventsByModel1 = Maps.newHashMap();
+        final Map<String,ImmutableList<Integer>> eventsByModel1 = Maps.newHashMap();
         eventsByModel1.put("foobars",events1);
 
-        final Map<String,List<Integer>> eventsByModel2 = Maps.newHashMap();
+        final Map<String,ImmutableList<Integer>> eventsByModel2 = Maps.newHashMap();
         eventsByModel1.put("foobars",events2);
 
-        final Map<String,List<Integer>> eventsByModel3 = Maps.newHashMap();
+        final Map<String,ImmutableList<Integer>> eventsByModel3 = Maps.newHashMap();
         eventsByModel1.put("foobars",events3);
 
-        final Map<String,List<Integer>> eventsByModel4 = Maps.newHashMap();
+        final Map<String,ImmutableList<Integer>> eventsByModel4 = Maps.newHashMap();
         eventsByModel1.put("foobars",events4);
 
 
