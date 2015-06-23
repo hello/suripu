@@ -74,6 +74,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
+        final Map<String, Long> allSeenSenses = new HashMap<>(records.size());
         final Map<String, Integer> seenFirmwares = new HashMap<>(records.size());
         final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
 
@@ -88,6 +89,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             final String deviceName = batchPeriodicDataWorker.getData().getDeviceId();
+
+            //Logging seen device before attempting account pairing
+            allSeenSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
 
             if(!deviceDataGroupedByDeviceId.containsKey(deviceName)){
                 deviceDataGroupedByDeviceId.put(deviceName, new LinkedList<DeviceData>());
@@ -258,6 +262,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         }
 
 
+        activeDevicesTracker.trackAllSeenSenses(allSeenSenses);
         activeDevicesTracker.trackSenses(activeSenses);
         activeDevicesTracker.trackFirmwares(seenFirmwares);
     }
