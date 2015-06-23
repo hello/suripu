@@ -176,6 +176,43 @@ public class FirmwareResource {
 
     @GET
     @Timed
+    @Path("/list_by_time")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<FirmwareCountInfo> getSeenFirmwareByTime(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                            @QueryParam("range_start") final Long rangeStart,
+                                                            @QueryParam("range_end") final Long rangeEnd) {
+
+        if(rangeStart == null) {
+            LOGGER.error("Missing range_start parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        if(rangeEnd == null) {
+            LOGGER.error("Missing range_end parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Jedis jedis = jedisPool.getResource();
+        final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
+        try {
+            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
+            for (String fw_version:seenFirmwares) {
+                final long fwCount = jedis.zcard(fw_version);
+                if (fwCount > 0) {
+                    final long lastSeen = (long)jedis.zrevrangeByScoreWithScores(fw_version, rangeStart, rangeEnd).iterator().next().getScore();
+                    firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount, lastSeen));
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed retrieving all seen firmware by time.", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+
+        return firmwareCounts;
+    }
+
+    @GET
+    @Timed
     @Path("/{device_id}/history")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
