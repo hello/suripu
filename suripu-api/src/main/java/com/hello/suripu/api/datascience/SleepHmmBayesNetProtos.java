@@ -26,17 +26,17 @@ public final class SleepHmmBayesNetProtos {
      */
     MOTION_DURATION(1, 1),
     /**
-     * <code>LOG_SOUND = 2;</code>
+     * <code>PILL_MAGNITUDE_DISTURBANCE = 2;</code>
      */
-    LOG_SOUND(2, 2),
+    PILL_MAGNITUDE_DISTURBANCE(2, 2),
     /**
      * <code>NATURAL_LIGHT = 3;</code>
      */
     NATURAL_LIGHT(3, 3),
     /**
-     * <code>PILL_MAGNITUDE_DISTURBANCE = 4;</code>
+     * <code>LOG_SOUND = 4;</code>
      */
-    PILL_MAGNITUDE_DISTURBANCE(4, 4),
+    LOG_SOUND(4, 4),
     ;
 
     /**
@@ -48,17 +48,17 @@ public final class SleepHmmBayesNetProtos {
      */
     public static final int MOTION_DURATION_VALUE = 1;
     /**
-     * <code>LOG_SOUND = 2;</code>
+     * <code>PILL_MAGNITUDE_DISTURBANCE = 2;</code>
      */
-    public static final int LOG_SOUND_VALUE = 2;
+    public static final int PILL_MAGNITUDE_DISTURBANCE_VALUE = 2;
     /**
      * <code>NATURAL_LIGHT = 3;</code>
      */
     public static final int NATURAL_LIGHT_VALUE = 3;
     /**
-     * <code>PILL_MAGNITUDE_DISTURBANCE = 4;</code>
+     * <code>LOG_SOUND = 4;</code>
      */
-    public static final int PILL_MAGNITUDE_DISTURBANCE_VALUE = 4;
+    public static final int LOG_SOUND_VALUE = 4;
 
 
     public final int getNumber() { return value; }
@@ -67,9 +67,9 @@ public final class SleepHmmBayesNetProtos {
       switch (value) {
         case 0: return LOG_LIGHT;
         case 1: return MOTION_DURATION;
-        case 2: return LOG_SOUND;
+        case 2: return PILL_MAGNITUDE_DISTURBANCE;
         case 3: return NATURAL_LIGHT;
-        case 4: return PILL_MAGNITUDE_DISTURBANCE;
+        case 4: return LOG_SOUND;
         default: return null;
       }
     }
@@ -9262,9 +9262,9 @@ public final class SleepHmmBayesNetProtos {
       "ependent_hmms\030\002 \003(\0132\030.hello.HiddenMarkov" +
       "Model\0223\n\031conditional_probabilities\030\003 \003(\013" +
       "2\020.hello.CondProbs*p\n\010MeasType\022\r\n\tLOG_LI" +
-      "GHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\r\n\tLOG_SOUND\020" +
-      "\002\022\021\n\rNATURAL_LIGHT\020\003\022\036\n\032PILL_MAGNITUDE_D" +
-      "ISTURBANCE\020\004B:\n com.hello.suripu.api.dat" +
+      "GHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\036\n\032PILL_MAGNI" +
+      "TUDE_DISTURBANCE\020\002\022\021\n\rNATURAL_LIGHT\020\003\022\r\n" +
+      "\tLOG_SOUND\020\004B:\n com.hello.suripu.api.dat" +
       "ascienceB\026SleepHmmBayesNetProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
