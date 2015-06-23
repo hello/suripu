@@ -36,10 +36,6 @@ public class ScanNonSmartAlarmCommand extends ConfiguredCommand<SuripuAppConfigu
         final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = new SmartAlarmLoggerDynamoDB(
                 smartAlarmLogDynamoDBClient, configuration.getSmartAlarmLogDBConfiguration().getTableName());
         final List<Map.Entry<Long, RingTime>> nonStartAlarms = smartAlarmLoggerDynamoDB.scanSmartRingTimesTooCloseToExpected();
-        LOGGER.info("account_id,diff");
-        for(final Map.Entry<Long, RingTime> item:nonStartAlarms){
-            LOGGER.info("{},{}", item.getKey(), (item.getValue().expectedRingTimeUTC - item.getValue().actualRingTimeUTC) / 1000 / 60d);
-        }
 
         LOGGER.info("Scan completed.");
     }

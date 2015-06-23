@@ -107,7 +107,7 @@ public class SmartAlarmLoggerDynamoDB {
             final String smartRingTimeString = row.get(SMART_RING_TIME_ATTRIBUTE_NAME).getS();
             final String expectedRingTimeString = row.get(EXPECTED_RING_TIME_ATTRIBUTE_NAME).getS();
             if(smartRingTimeString == null || expectedRingTimeString == null){
-                LOGGER.error("invalid row, missing smart ring time or expected ring time");
+//                LOGGER.error("invalid row, missing smart ring time or expected ring time");
                 continue;
             }
             final DateTime expectedRingTime = expectedRingTimeString.split(" ").length == 3 ?
@@ -119,7 +119,14 @@ public class SmartAlarmLoggerDynamoDB {
                     DateTime.parse(smartRingTimeString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT));
 
             final Long accountId = Long.valueOf(row.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
-            if(expectedRingTime.minusMinutes(5).isBefore(smartRingTime)){
+            if(expectedRingTime.isBefore(smartRingTime)){
+//                LOGGER.error("Smart ring time after expected ring time, smart: {}, expect: {}, for account {}",
+//                        smartRingTime, expectedRingTime,
+//                        accountId);
+                continue;
+            }
+
+            if(expectedRingTime.minusMinutes(5).isBefore(smartRingTime) || expectedRingTime.minusMinutes(25).isAfter(smartRingTime)){
                 // TODO: We still need to save the timezone id, parsing the string will give us
                 // correct offset but Joda Time will not preserve the time zone.
                 final RingTime ringTime  = new RingTime(smartRingTime.getMillis(), expectedRingTime.getMillis(), new long[0], true);
@@ -137,7 +144,7 @@ public class SmartAlarmLoggerDynamoDB {
             LOGGER.info("scanned,{},{},{},{},{},{}", accountId,
                     smartRingTimeString, expectedRingTimeString, row.get(LAST_SLEEP_CYCLE_ATTRIBUTE_NAME).getS(),
                     diffInMinute,
-                    diffInMinute < 5 ? true : false);
+                    (diffInMinute < 5 || diffInMinute > 25) ? true : false);
         }
 
         return result;
