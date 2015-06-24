@@ -15,15 +15,20 @@ public class ElasticSearchIndexSettings {
     private final static String DEFAULT_FILTER_TYPE = "word_delimiter";
     private final static String DEFAULT_ANALYZER_TYPE = "custom";
     private final static String DEFAULT_TOKENIZER = "whitespace";
-    private final static String[] DEFAULT_FILTER_TYPE_TABLE = new String[]{"# => ALPHANUM", "@ => ALPHANUM", ": => ALPHANUM", "- => ALPHANUM"};
     private final static String DEFAULT_FILTER_NAME = "sense_logs_filter";
     private final static String DEFAULT_ANALYZER_NAME = "sense_logs_analyzer";
     private final static String[] DEFAULT_FILTER_ARRAY = new String[]{"lowercase", DEFAULT_FILTER_NAME};
-
+    private final static String[] DEFAULT_FILTER_TYPE_TABLE = new String[]{
+            "# => ALPHANUM",
+            "@ => ALPHANUM",
+            ": => ALPHANUM",
+            "- => ALPHANUM",
+            "+ => ALPHANUM",
+            "/ => ALPHANUM",
+    };
 
     public final Integer numberOfShards;
     public final Integer numberOfReplicas;
-//    public final String documentType;
     public final String filterType;
     public final String[] filterTypeTable;
     public final String analyzerType;
@@ -31,14 +36,12 @@ public class ElasticSearchIndexSettings {
 
     public ElasticSearchIndexSettings(final Integer numberOfShards,
                                       final Integer numberOfReplicas,
-//                                      final String documentType,
                                       final String filterType,
                                       final String[] filterTypeTable,
                                       final String analyzerType,
                                       final String tokenizer){
         this.numberOfShards = numberOfShards;
         this.numberOfReplicas = numberOfReplicas;
-//        this.documentType = documentType;
         this.filterType = filterType;
         this.filterTypeTable = filterTypeTable;
         this.analyzerType = analyzerType;
@@ -63,7 +66,7 @@ public class ElasticSearchIndexSettings {
                             .endObject()
                         .endObject()
                         .startObject("analyzer")
-                            .startObject("sense_logs_analyzer")
+                            .startObject(DEFAULT_ANALYZER_NAME)
                                 .field("type", analyzerType)
                                 .field("tokenizer", tokenizer)
                                 .field("filter", DEFAULT_FILTER_ARRAY)
