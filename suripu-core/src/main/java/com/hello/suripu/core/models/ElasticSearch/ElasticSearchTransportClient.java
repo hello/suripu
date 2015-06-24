@@ -9,7 +9,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 public class ElasticSearchTransportClient {
     private static final String DEFAULT_CLUSTER = "elasticsearch";
     private static final Boolean DEFAULT_SNIFF_ENABLED = true;
-    private static final String DEFFAULT_TIMEOUT = "30s";
+    private static final String DEFFAULT_TIMEOUT = "7s";
 
     private final String host;
     private final Integer port;
