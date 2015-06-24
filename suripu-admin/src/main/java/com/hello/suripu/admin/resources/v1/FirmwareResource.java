@@ -2,6 +2,7 @@ package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Tuple;
 
 import javax.validation.Valid;
@@ -41,7 +43,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,7 @@ public class FirmwareResource {
 
         final Jedis jedis = jedisPool.getResource();
         final String fwVersion = firmwareVersion.toString();
-        final List<FirmwareInfo> deviceInfo = new ArrayList<>();
+        final List<FirmwareInfo> deviceInfo = Lists.newArrayList();
         try {
             //Get all elements in the index range provided
             final Set<Tuple> allFWDevices = jedis.zrevrangeWithScores(fwVersion, rangeStart, rangeEnd);
@@ -155,14 +156,21 @@ public class FirmwareResource {
     public List<FirmwareCountInfo> getAllSeenFirmwares(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
 
         final Jedis jedis = jedisPool.getResource();
-        final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
+        final List<FirmwareCountInfo> firmwareCounts = Lists.newArrayList();
         try {
-            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
-            for (String fw_version:seenFirmwares) {
-                final long fwCount = jedis.zcard(fw_version);
+            final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
+            final Pipeline pipe = jedis.pipelined();
+            final Map<String, redis.clients.jedis.Response<Long>> responseMap = Maps.newHashMap();
+            for (final Tuple fwInfo:seenFirmwares) {
+                responseMap.put(fwInfo.getElement(), pipe.zcard(fwInfo.getElement()));
+            }
+            pipe.sync();
+            for (final Tuple fwInfo:seenFirmwares) {
+                final String fwVersion = fwInfo.getElement();
+                final long fwCount = responseMap.get(fwVersion).get();
+                final long lastSeen = (long) fwInfo.getScore();
                 if (fwCount > 0) {
-                    final long lastSeen = (long)jedis.zrevrangeWithScores(fw_version, 0, 1).iterator().next().getScore();
-                    firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount, lastSeen));
+                    firmwareCounts.add(new FirmwareCountInfo(fwInfo.getElement(), fwCount, lastSeen));
                 }
             }
         } catch (Exception e) {
@@ -176,9 +184,54 @@ public class FirmwareResource {
 
     @GET
     @Timed
+    @Path("/list_by_time")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<FirmwareCountInfo> getSeenFirmwareByTime(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                            @QueryParam("range_start") final Long rangeStart,
+                                                            @QueryParam("range_end") final Long rangeEnd) {
+
+        if(rangeStart == null) {
+            LOGGER.error("Missing range_start parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        if(rangeEnd == null) {
+            LOGGER.error("Missing range_end parameter");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final Jedis jedis = jedisPool.getResource();
+        final List<FirmwareCountInfo> firmwareCounts = Lists.newArrayList();
+        try {
+            final Set<Tuple> seenFirmwares = jedis.zrangeByScoreWithScores(REDIS_SEEN_FIRMWARE_KEY, rangeStart, rangeEnd);
+            final Pipeline pipe = jedis.pipelined();
+            final Map<String, redis.clients.jedis.Response<Long>> responseMap = Maps.newHashMap();
+            for (final Tuple fwInfo:seenFirmwares) {
+                responseMap.put(fwInfo.getElement(), pipe.zcard(fwInfo.getElement()));
+            }
+            pipe.sync();
+            for (final Tuple fwInfo:seenFirmwares) {
+                final String fwVersion = fwInfo.getElement();
+                final long fwCount = responseMap.get(fwVersion).get();
+                final long lastSeen = (long) fwInfo.getScore();
+                if (fwCount > 0) {
+                    firmwareCounts.add(new FirmwareCountInfo(fwInfo.getElement(), fwCount, lastSeen));
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Failed retrieving all seen firmware by time.", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+
+        return firmwareCounts;
+    }
+
+    @GET
+    @Timed
     @Path("/{device_id}/history")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public TreeMap<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                  @PathParam("device_id") final String deviceId) {
 
         if(deviceId == null) {
@@ -187,15 +240,13 @@ public class FirmwareResource {
         }
 
         final Jedis jedis = jedisPool.getResource();
-        final TreeMap<Long, String> fwHistory = new TreeMap<>();
+        final TreeMap<Long, String> fwHistory = Maps.newTreeMap();
 
         try {
-            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
-            for (String fw_version:seenFirmwares) {
-                final Double score = jedis.zscore(fw_version, deviceId);
-                if(score != null) {
-                    fwHistory.put(score.longValue(), fw_version);
-                }
+            final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
+            for (final Tuple fwInfo:seenFirmwares) {
+                final long lastSeen = (long) fwInfo.getScore();
+                fwHistory.put(lastSeen, fwInfo.getElement());
             }
         } catch (Exception e) {
             LOGGER.error("Failed retrieving fw history for device.", e.getMessage());
@@ -271,7 +322,7 @@ public class FirmwareResource {
 
         final Jedis jedis = jedisPool.getResource();
         try {
-            if (jedis.srem(REDIS_SEEN_FIRMWARE_KEY, fwVersion) > 0) {
+            if (jedis.zrem(REDIS_SEEN_FIRMWARE_KEY, fwVersion) > 0) {
                 jedis.del(fwVersion);
             } else {
                 LOGGER.error("Attempted to delete non-existent Redis member: {}", fwVersion);
