@@ -13,19 +13,13 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
-import com.yammer.dropwizard.cli.ConfiguredCommand;
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.yammer.dropwizard.config.Environment;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
-import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +27,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class ElasticSearchIndexerWorkerCommand extends ConfiguredCommand<LogIndexerWorkerConfiguration> {
+public class ElasticSearchIndexerWorkerCommand extends WorkerEnvironmentCommand<LogIndexerWorkerConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexerWorkerCommand.class);
 
@@ -42,7 +36,7 @@ public class ElasticSearchIndexerWorkerCommand extends ConfiguredCommand<LogInde
     }
 
     @Override
-    protected void run(final Bootstrap<LogIndexerWorkerConfiguration> bootstrap, final Namespace namespace, final LogIndexerWorkerConfiguration configuration) throws Exception {
+    protected void run(Environment environment, Namespace namespace, LogIndexerWorkerConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         if(configuration.getMetricsEnabled()) {
@@ -85,14 +79,6 @@ public class ElasticSearchIndexerWorkerCommand extends ConfiguredCommand<LogInde
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
-
-        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final DBI commonDB = new DBI(managedDataSourceFactory.build(configuration.getCommonDBConfiguration()));
-
-        commonDB.registerContainerFactory(new OptionalContainerFactory());
-        commonDB.registerContainerFactory(new ImmutableListContainerFactory());
-        commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
-        commonDB.registerArgumentFactory(new JodaArgumentFactory());
 
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
