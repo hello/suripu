@@ -15,8 +15,8 @@ public class ElasticSearchIndexMappings {
     private final static String INDEX_TIME_TO_LIVE_ENABLE_KEY = "enabled";
     private final static String INDEX_TIME_TO_LIVE_DURATION_KEY = "default";
     private final static String DEFAULT_ANALYZER = "sense_logs_analyzer";
-    private final static Boolean DEFAULT_TIME_TO_LIVE_ENABLED = Boolean.TRUE;
-    private final static Long DEFAULT_TIME_TO_LIVE_MILLIS = 864000000L;
+    private final static Boolean DEFAULT_TIME_TO_LIVE_ENABLED = Boolean.FALSE;
+    private final static Long DEFAULT_TIME_TO_LIVE_MILLIS = Long.MAX_VALUE;
     private final static Boolean IMMORTAL_TIME_TO_LIVE_ENABLED = Boolean.FALSE;
     private final static Long IMMORTAL_TIME_TO_LIVE_MILLIS = Long.MAX_VALUE;
 

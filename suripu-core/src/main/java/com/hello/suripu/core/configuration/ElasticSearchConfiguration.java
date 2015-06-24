@@ -12,7 +12,6 @@ import javax.validation.constraints.NotNull;
 public class ElasticSearchConfiguration extends Configuration{
     private static final Integer DEFAULT_HTTP_PORT = 9200;
     private static final Integer DEFAULT_TRANSPORT_TCP_PORT = 9300;
-    private static final String DEFAULT_INDEX_NAME = "logs";
 
     @JsonProperty("host")
     private String host;
@@ -45,17 +44,6 @@ public class ElasticSearchConfiguration extends Configuration{
             return DEFAULT_TRANSPORT_TCP_PORT;
         }
         return transportTCPPort;
-    }
-
-    @Valid
-    @JsonProperty("index_name")
-    private String indexName;
-
-    public String getIndexName() {
-        if (indexName == null) {
-            return DEFAULT_INDEX_NAME;
-        }
-        return indexName;
     }
 
     @Valid

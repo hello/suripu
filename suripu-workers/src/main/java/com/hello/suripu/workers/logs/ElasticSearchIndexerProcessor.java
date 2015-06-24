@@ -32,9 +32,9 @@ public class ElasticSearchIndexerProcessor implements IRecordProcessor {
         this.senseLogs= Metrics.defaultRegistry().newMeter(ElasticSearchIndexerProcessor.class, "es-sense-logs", "es-sense-processed", TimeUnit.SECONDS);
     }
 
-    public static ElasticSearchIndexerProcessor create(final JedisPool jedisPool, final TransportClient transportClient, final ElasticSearchBulkSettings elasticSearchBulkSettings, final String elasticSearchIndexName) {
+    public static ElasticSearchIndexerProcessor create(final JedisPool jedisPool, final TransportClient transportClient, final ElasticSearchBulkSettings elasticSearchBulkSettings) {
 
-        return new ElasticSearchIndexerProcessor(new ElasticSearchLogIndexer(jedisPool, transportClient, elasticSearchBulkSettings, elasticSearchIndexName));
+        return new ElasticSearchIndexerProcessor(new ElasticSearchLogIndexer(jedisPool, transportClient, elasticSearchBulkSettings));
     }
 
     @Override

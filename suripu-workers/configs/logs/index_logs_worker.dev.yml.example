@@ -76,7 +76,6 @@ redis:
 
 elastic_search:
   host: localhost
-  index_name: dev-logs
   bulk_actions: 500
   bulk_size_in_megabytes: 50
   flush_interval_in_seconds: 5

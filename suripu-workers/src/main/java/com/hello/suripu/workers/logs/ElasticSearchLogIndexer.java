@@ -33,12 +33,12 @@ import java.util.concurrent.TimeUnit;
 public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
     private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchLogIndexer.class);
     private static final Integer REFRESH_PERIOD_MINUTES = 15;
-    private static final String IMMORTAL_DOCUMENTS_REGEX = "(?s)^.*?(xkd|travis|fault).*$";
+    private static final String IMPORTANT_DOCUMENTS_REGEX = "(?s)^.*?(xkd|travis|fault).*$";
+    private static final String DEFAULT_DOCUMENT_TYPE = "1";
 
     private final JedisPool jedisPool;
     private final TransportClient transportClient;
     private final ElasticSearchBulkSettings elasticSearchBulkSettings;
-    private final String elasticSearchIndexName;
 
     private final List<SenseLogDocument> documents;
     private DateTime lastBlackListFetchDateTime;
@@ -46,12 +46,11 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
     private Integer blackListUpdateCount;
     private final Stopwatch stopwatch;
 
-    public ElasticSearchLogIndexer(final JedisPool jedisPool, final TransportClient transportClient , ElasticSearchBulkSettings elasticSearchBulkSettings,
-                                   final String elasticSearchIndexName) {
+    public ElasticSearchLogIndexer(final JedisPool jedisPool, final TransportClient transportClient , ElasticSearchBulkSettings elasticSearchBulkSettings) {
+
         this.jedisPool = jedisPool;
         this.transportClient = transportClient;
         this.elasticSearchBulkSettings = elasticSearchBulkSettings;
-        this.elasticSearchIndexName = elasticSearchIndexName;
 
         this.documents = Lists.newArrayList();
         this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
@@ -110,7 +109,7 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
                         for (final BulkItemResponse bulkItemResponse : response.getItems()) {
                             LOGGER.debug("Successfully {} {}/{}/{}", bulkItemResponse.getOpType(), bulkItemResponse.getIndex(), bulkItemResponse.getType(), bulkItemResponse.getId());
                         }
-                        LOGGER.info("After bulking: Took {} ms to successfully index {} documents into index {}", stopwatch.elapsed(TimeUnit.MILLISECONDS), response.getItems().length, elasticSearchIndexName);
+                        LOGGER.info("After bulking: Took {} ms to successfully index {} documents", stopwatch.elapsed(TimeUnit.MILLISECONDS), response.getItems().length);
                     }
 
                     @Override
@@ -127,8 +126,9 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
                 .build();
 
             for (final SenseLogDocument document : documents) {
-                final String documentType = document.content.matches(IMMORTAL_DOCUMENTS_REGEX) ? "immortal" : new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT);
-                bulkProcessor.add(new IndexRequest(elasticSearchIndexName, documentType).source(document.toMap()));
+                final String documentType = document.content.matches(IMPORTANT_DOCUMENTS_REGEX) ? "important" : DEFAULT_DOCUMENT_TYPE;
+                bulkProcessor.add(new IndexRequest(new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), documentType).source(document.toMap()));
+                LOGGER.info("{}", new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
             }
             LOGGER.info("Adding {} documents to bulk processor", documentsSize);
         }
