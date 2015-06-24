@@ -73,7 +73,7 @@ public class ElasticSearchIndexerWorkerCommand extends ConfiguredCommand<LogInde
         LOGGER.info("\n\n\n!!! ElasticSearch worker is using the following queue: {} !!!\n\n\n", queueName);
 
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(
-                configuration.getAppName(),
+                configuration.getElasticSearchAppName(),
                 queueName,
                 awsCredentialsProvider,
                 workerId);
