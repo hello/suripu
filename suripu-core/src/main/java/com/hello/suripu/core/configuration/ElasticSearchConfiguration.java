@@ -10,20 +10,53 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class ElasticSearchConfiguration extends Configuration{
+    private static final Integer DEFAULT_HTTP_PORT = 9200;
+    private static final Integer DEFAULT_TRANSPORT_TCP_PORT = 9300;
+    private static final String DEFAULT_INDEX_NAME = "logs";
+
     @JsonProperty("host")
     private String host;
 
     public String getHost() {return host;}
 
+    // according to http: https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-http.html
+    @Valid
+    @Max(9300)
+    @Min(9200)
     @JsonProperty("http_port")
     private Integer httpPort;
 
-    public Integer getHttpPort() {return httpPort;}
+    public Integer getHttpPort() {
+        if (httpPort == null) {
+            return DEFAULT_HTTP_PORT;
+        }
+        return httpPort;
+    }
 
+    // according to https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-transport.html
+    @Valid
+    @Max(9400)
+    @Min(9300)
     @JsonProperty("transport_tcp_port")
     private Integer transportTCPPort;
 
-    public Integer getTransportTCPPort() { return transportTCPPort; }
+    public Integer getTransportTCPPort() {
+        if (transportTCPPort == null) {
+            return DEFAULT_TRANSPORT_TCP_PORT;
+        }
+        return transportTCPPort;
+    }
+
+    @Valid
+    @JsonProperty("index_name")
+    private String indexName;
+
+    public String getIndexName() {
+        if (indexName == null) {
+            return DEFAULT_INDEX_NAME;
+        }
+        return indexName;
+    }
 
     @Valid
     @NotNull
