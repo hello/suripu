@@ -96,3 +96,13 @@ dynamodb:
       ring_time_history: http://localhost:7777
 
 token_expiration: 300
+
+elastic_search:
+  host: localhost
+  port: 9200
+
+elastic_search:
+  host: localhost
+  http_port: 9200
+  transport_tcp_port: 9300
+

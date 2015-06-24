@@ -13,14 +13,13 @@ import com.hello.suripu.admin.cli.PopulateColors;
 import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
-import com.hello.suripu.admin.resources.v1.TokenResources;
-import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.AlarmResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
 import com.hello.suripu.admin.resources.v1.DeviceResources;
 import com.hello.suripu.admin.resources.v1.DiagnosticResources;
+import com.hello.suripu.admin.resources.v1.ElasticSearchResource;
 import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
 import com.hello.suripu.admin.resources.v1.FirmwareResource;
@@ -28,6 +27,7 @@ import com.hello.suripu.admin.resources.v1.InspectionResources;
 import com.hello.suripu.admin.resources.v1.OnBoardingLogResource;
 import com.hello.suripu.admin.resources.v1.PCHResources;
 import com.hello.suripu.admin.resources.v1.TeamsResources;
+import com.hello.suripu.admin.resources.v1.TokenResources;
 import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
@@ -64,9 +64,11 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.core.models.ElasticSearch.ElasticSearchTransportClient;
 import com.hello.suripu.core.oauth.OAuthAuthenticator;
 import com.hello.suripu.core.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
@@ -295,13 +297,13 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 tableNames.get(DynamoDBTableName.PILL_LAST_SEEN)
         );
 
-        environment.addResource(new PingResource());
-        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin,
-                timeZoneHistoryDAODynamoDB, smartAlarmLoggerDynamoDB, ringTimeHistoryDAODynamoDB));
-
         final DeviceResources deviceResources = new DeviceResources(deviceDAO, deviceDAOAdmin, deviceDataDAO, trackerMotionDAO, accountDAO,
                 mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO, senseColorDAO, respCommandsDAODynamoDB,pillViewsDynamoDB, sensorsViewsDynamoDB);
 
+        final ElasticSearchTransportClient elasticSearchTransportClient = ElasticSearchTransportClient.createWithDefaulSettings(configuration.getElasticSearchConfiguration().getHost(), configuration.getElasticSearchConfiguration().getTransportTCPPort());
+
+        environment.addResource(new PingResource());
+        environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin, timeZoneHistoryDAODynamoDB, smartAlarmLoggerDynamoDB, ringTimeHistoryDAODynamoDB));
         environment.addResource(deviceResources);
         environment.addResource(new DataResources(deviceDataDAO, deviceDAO, accountDAO, userLabelDAO, trackerMotionDAO, sensorsViewsDynamoDB,senseColorDAO));
         environment.addResource(new ApplicationResources(applicationStore));
@@ -311,18 +313,10 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new EventsResources(senseEventsDAO));
         environment.addResource(new InspectionResources(deviceDAOAdmin));
         environment.addResource(new OnBoardingLogResource(accountDAO, onBoardingLogDAO));
-
-        environment.addResource(
-                new PCHResources(
-                        senseKeyStoreDynamoDBClient, // we use the same endpoint for Sense and Pill keystore
-                        tableNames.get(DynamoDBTableName.SENSE_KEY_STORE),
-                        tableNames.get(DynamoDBTableName.PILL_KEY_STORE),
-                        senseColorDAO
-                )
-        );
-
+        environment.addResource(new PCHResources(senseKeyStoreDynamoDBClient, tableNames.get(DynamoDBTableName.SENSE_KEY_STORE), tableNames.get(DynamoDBTableName.PILL_KEY_STORE), senseColorDAO)); // we use the same endpoint for Sense and Pill keystore
         environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
         environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO, trackingDAO));
         environment.addResource(new TokenResources(accessTokenStore, applicationStore, accountDAO));
+        environment.addResource(new ElasticSearchResource(elasticSearchTransportClient));
     }
 }

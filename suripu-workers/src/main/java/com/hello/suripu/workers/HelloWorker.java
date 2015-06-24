@@ -5,6 +5,7 @@ import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.workers.alarm.AlarmWorkerCommand;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.hello.suripu.workers.insights.InsightsGeneratorWorkerCommand;
+import com.hello.suripu.workers.logs.ElasticSearchIndexerWorkerCommand;
 import com.hello.suripu.workers.logs.LogIndexerWorkerCommand;
 import com.hello.suripu.workers.notifications.PushNotificationsWorkerCommand;
 import com.hello.suripu.workers.pill.PillWorkerCommand;
@@ -37,6 +38,7 @@ public class HelloWorker extends Service<WorkerConfiguration> {
         bootstrap.addCommand(new SenseSaveWorkerCommand("sense_save", "saving sense sensor data"));
         bootstrap.addCommand(new AlarmWorkerCommand("smart_alarm", "Start smart alarm worker"));
         bootstrap.addCommand(new LogIndexerWorkerCommand("index_logs", "Indexes logs from Kinesis stream into searchify index"));
+        bootstrap.addCommand(new ElasticSearchIndexerWorkerCommand("es_index_logs", "Indexes logs from Kinesis stream into elastic search index"));
         bootstrap.addCommand(new InsightsGeneratorWorkerCommand("insights_generator", "generate insights for users"));
         bootstrap.addCommand(new TimelineWorkerCommand("timeline", "generate timeline for users"));
         bootstrap.addCommand(new PushNotificationsWorkerCommand("push", "send push notifications"));
