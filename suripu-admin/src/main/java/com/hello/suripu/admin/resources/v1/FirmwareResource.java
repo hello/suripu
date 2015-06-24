@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Tuple;
 
 import javax.validation.Valid;
@@ -158,9 +159,16 @@ public class FirmwareResource {
         final List<FirmwareCountInfo> firmwareCounts = Lists.newArrayList();
         try {
             final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
+            final Pipeline pipe = jedis.pipelined();
+            final Map<String, redis.clients.jedis.Response<Long>> responseMap = Maps.newHashMap();
             for (final Tuple fwInfo:seenFirmwares) {
+                responseMap.put(fwInfo.getElement(), pipe.zcard(fwInfo.getElement()));
+            }
+            pipe.sync();
+            for (final Tuple fwInfo:seenFirmwares) {
+                final String fwVersion = fwInfo.getElement();
+                final long fwCount = responseMap.get(fwVersion).get();
                 final long lastSeen = (long) fwInfo.getScore();
-                final long fwCount = jedis.zcard(fwInfo.getElement());
                 if (fwCount > 0) {
                     firmwareCounts.add(new FirmwareCountInfo(fwInfo.getElement(), fwCount, lastSeen));
                 }
@@ -195,13 +203,21 @@ public class FirmwareResource {
         final List<FirmwareCountInfo> firmwareCounts = Lists.newArrayList();
         try {
             final Set<Tuple> seenFirmwares = jedis.zrangeByScoreWithScores(REDIS_SEEN_FIRMWARE_KEY, rangeStart, rangeEnd);
+            final Pipeline pipe = jedis.pipelined();
+            final Map<String, redis.clients.jedis.Response<Long>> responseMap = Maps.newHashMap();
             for (final Tuple fwInfo:seenFirmwares) {
+                responseMap.put(fwInfo.getElement(), pipe.zcard(fwInfo.getElement()));
+            }
+            pipe.sync();
+            for (final Tuple fwInfo:seenFirmwares) {
+                final String fwVersion = fwInfo.getElement();
+                final long fwCount = responseMap.get(fwVersion).get();
                 final long lastSeen = (long) fwInfo.getScore();
-                final long fwCount = jedis.zcard(fwInfo.getElement());
                 if (fwCount > 0) {
                     firmwareCounts.add(new FirmwareCountInfo(fwInfo.getElement(), fwCount, lastSeen));
                 }
             }
+
         } catch (Exception e) {
             LOGGER.error("Failed retrieving all seen firmware by time.", e.getMessage());
         } finally {

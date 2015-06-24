@@ -82,7 +82,7 @@ public class ActiveDevicesTracker {
             final Pipeline pipe = jedis.pipelined();
             pipe.multi();
             for(final Map.Entry <String, FirmwareInfo> entry : seenFirmwares.entrySet()) {
-                final FirmwareInfo fwEntry= entry.getValue();
+                final FirmwareInfo fwEntry = entry.getValue();
                 pipe.zadd(ActiveDevicesTrackerConfiguration.FIRMWARES_SEEN_SET_KEY, fwEntry.timestamp, fwEntry.version);
                 pipe.zadd(fwEntry.version, fwEntry.timestamp, fwEntry.device_id);
             }
