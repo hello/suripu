@@ -6,8 +6,8 @@ import com.google.common.collect.Sets;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
 import com.hello.suripu.core.models.ElasticSearch.ElasticSearchBulkSettings;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchTransportClient;
 import com.hello.suripu.core.models.SenseLogDocument;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -33,27 +33,31 @@ import java.util.concurrent.TimeUnit;
 public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
     private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchLogIndexer.class);
     private static final Integer REFRESH_PERIOD_MINUTES = 15;
+    private static final String IMMORTAL_DOCUMENTS_REGEX = "(?s)^.*?(xkd|travis|fault).*$";
 
     private final JedisPool jedisPool;
-    private final ElasticSearchTransportClient elasticSearchTransportClient;
+    private final TransportClient transportClient;
     private final ElasticSearchBulkSettings elasticSearchBulkSettings;
+    private final String elasticSearchIndexName;
 
     private final List<SenseLogDocument> documents;
     private DateTime lastBlackListFetchDateTime;
     private Set<String> senseBlackList;
     private Integer blackListUpdateCount;
-    private Stopwatch stopwatch;
+    private final Stopwatch stopwatch;
 
-    public ElasticSearchLogIndexer(final JedisPool jedisPool, final ElasticSearchTransportClient elasticSearchTransportClient, ElasticSearchBulkSettings elasticSearchBulkSettings) {
+    public ElasticSearchLogIndexer(final JedisPool jedisPool, final TransportClient transportClient , ElasticSearchBulkSettings elasticSearchBulkSettings,
+                                   final String elasticSearchIndexName) {
         this.jedisPool = jedisPool;
-        this.elasticSearchTransportClient = elasticSearchTransportClient;
+        this.transportClient = transportClient;
         this.elasticSearchBulkSettings = elasticSearchBulkSettings;
+        this.elasticSearchIndexName = elasticSearchIndexName;
 
         this.documents = Lists.newArrayList();
         this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
         this.senseBlackList = Sets.newHashSet();
         this.blackListUpdateCount = 0;
-        this.stopwatch = new Stopwatch().start();
+        this.stopwatch = new Stopwatch();
     }
 
 
@@ -83,8 +87,6 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
 
         BulkProcessor bulkProcessor = null;
 
-        final TransportClient transportClient = elasticSearchTransportClient.generateClient();
-
 //        To be extra cautious - check if index really exists
 //        final IndicesExistsResponse indicesExistsResponse = client.admin().indices().prepareExists(INDEX_NAME).execute().actionGet();
 //        if (indicesExistsResponse.isExists()) {
@@ -108,8 +110,7 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
                         for (final BulkItemResponse bulkItemResponse : response.getItems()) {
                             LOGGER.debug("Successfully {} {}/{}/{}", bulkItemResponse.getOpType(), bulkItemResponse.getIndex(), bulkItemResponse.getType(), bulkItemResponse.getId());
                         }
-                        LOGGER.info("After bulking: Successfully indexed {} documents into index {}", response.getItems().length, INDEX_NAME);
-                        LOGGER.info("Elapsed indexing time is {} ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
+                        LOGGER.info("After bulking: Took {} ms to successfully index {} documents into index {}", stopwatch.elapsed(TimeUnit.MILLISECONDS), response.getItems().length, elasticSearchIndexName);
                     }
 
                     @Override

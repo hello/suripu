@@ -9,9 +9,9 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.models.ElasticSearch.ElasticSearchBulkSettings;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchTransportClient;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
+import org.elasticsearch.client.transport.TransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
@@ -29,12 +29,12 @@ public class ElasticSearchIndexerProcessor implements IRecordProcessor {
 
     private ElasticSearchIndexerProcessor(final LogIndexer<LoggingProtos.BatchLogMessage> senseLogElasticSearchIndexer){
         this.senseLogElasticSearchIndexer = senseLogElasticSearchIndexer;
-        this.senseLogs= Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "sense-logs", "sense-processed", TimeUnit.SECONDS);
+        this.senseLogs= Metrics.defaultRegistry().newMeter(ElasticSearchIndexerProcessor.class, "es-sense-logs", "es-sense-processed", TimeUnit.SECONDS);
     }
 
-    public static ElasticSearchIndexerProcessor create(final JedisPool jedisPool, final ElasticSearchTransportClient elasticSearchTransportClient, final ElasticSearchBulkSettings elasticSearchBulkSettings) {
+    public static ElasticSearchIndexerProcessor create(final JedisPool jedisPool, final TransportClient transportClient, final ElasticSearchBulkSettings elasticSearchBulkSettings, final String elasticSearchIndexName) {
 
-        return new ElasticSearchIndexerProcessor(new ElasticSearchLogIndexer(jedisPool, elasticSearchTransportClient, elasticSearchBulkSettings));
+        return new ElasticSearchIndexerProcessor(new ElasticSearchLogIndexer(jedisPool, transportClient, elasticSearchBulkSettings, elasticSearchIndexName));
     }
 
     @Override
