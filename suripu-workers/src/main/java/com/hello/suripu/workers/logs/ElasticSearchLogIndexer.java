@@ -27,15 +27,11 @@ import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
     private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchLogIndexer.class);
-
-    private final static String INDEX_NAME = "mirage"; // probably will be determined by current datetime
-
     private static final Integer REFRESH_PERIOD_MINUTES = 15;
 
     private final JedisPool jedisPool;
@@ -129,8 +125,9 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
                 .setConcurrentRequests(elasticSearchBulkSettings.concurrentRequests)
                 .build();
 
-            for (final SenseLogDocument senseLogDocument : documents) {
-                bulkProcessor.add(new IndexRequest(INDEX_NAME, String.valueOf(new Random().nextInt(10))).source(senseLogDocument.toMap()));
+            for (final SenseLogDocument document : documents) {
+                final String documentType = document.content.matches(IMMORTAL_DOCUMENTS_REGEX) ? "immortal" : new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT);
+                bulkProcessor.add(new IndexRequest(elasticSearchIndexName, documentType).source(document.toMap()));
             }
             LOGGER.info("Adding {} documents to bulk processor", documentsSize);
         }
