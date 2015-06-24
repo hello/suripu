@@ -16,6 +16,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
@@ -74,7 +75,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
-        final Map<String, Integer> seenFirmwares = new HashMap<>(records.size());
+        final Map<String, FirmwareInfo> seenFirmwares = new HashMap<>(records.size());
         final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
 
         for(final Record record : records) {
@@ -211,7 +212,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     dataForDevice.add(deviceData);
                 }
                 //TODO: Eventually break out metrics to their own worker
-                seenFirmwares.put(deviceName, firmwareVersion);
+                seenFirmwares.put(deviceName, new FirmwareInfo(firmwareVersion.toString(), deviceName, timestampMillis));
             }
 
 

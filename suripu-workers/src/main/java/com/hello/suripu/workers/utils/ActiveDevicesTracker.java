@@ -2,7 +2,7 @@ package com.hello.suripu.workers.utils;
 
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.ActiveDevicesTrackerConfiguration;
-import org.joda.time.DateTime;
+import com.hello.suripu.core.models.FirmwareInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -74,16 +74,17 @@ public class ActiveDevicesTracker {
         LOGGER.debug("Tracked {} active devices", devicesSeen.size());
     }
 
-    public void trackFirmwares(final Map<String, Integer> seenFirmwares) {
+    public void trackFirmwares(final Map<String, FirmwareInfo> seenFirmwares) {
         Jedis jedis = null;
 
         try {
             jedis = jedisPool.getResource();
             final Pipeline pipe = jedis.pipelined();
             pipe.multi();
-            for(Map.Entry<String, Integer> entry : seenFirmwares.entrySet()) {
-                pipe.sadd(ActiveDevicesTrackerConfiguration.FIRMWARES_SEEN_SET_KEY, entry.getValue().toString());
-                pipe.zadd(entry.getValue().toString(), DateTime.now().getMillis(), entry.getKey());
+            for(final Map.Entry <String, FirmwareInfo> entry : seenFirmwares.entrySet()) {
+                final FirmwareInfo fwEntry= entry.getValue();
+                pipe.zadd(ActiveDevicesTrackerConfiguration.FIRMWARES_SEEN_SET_KEY, fwEntry.timestamp, fwEntry.version);
+                pipe.zadd(fwEntry.version, fwEntry.timestamp, fwEntry.device_id);
             }
             pipe.exec();
         }catch (JedisDataException exception) {

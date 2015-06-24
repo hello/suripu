@@ -157,12 +157,12 @@ public class FirmwareResource {
         final Jedis jedis = jedisPool.getResource();
         final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
         try {
-            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
-            for (String fw_version:seenFirmwares) {
-                final long fwCount = jedis.zcard(fw_version);
+            final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
+            for (final Tuple fwInfo:seenFirmwares) {
+                final long lastSeen = (long) fwInfo.getScore();
+                final long fwCount = jedis.zcard(fwInfo.getElement());
                 if (fwCount > 0) {
-                    final long lastSeen = (long)jedis.zrevrangeWithScores(fw_version, 0, 1).iterator().next().getScore();
-                    firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount, lastSeen));
+                    firmwareCounts.add(new FirmwareCountInfo(fwInfo.getElement(), fwCount, lastSeen));
                 }
             }
         } catch (Exception e) {
@@ -194,12 +194,12 @@ public class FirmwareResource {
         final Jedis jedis = jedisPool.getResource();
         final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
         try {
-            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
-            for (String fw_version:seenFirmwares) {
-                final long fwCount = jedis.zcard(fw_version);
+            final Set<Tuple> seenFirmwares = jedis.zrangeByScoreWithScores(REDIS_SEEN_FIRMWARE_KEY, rangeStart, rangeEnd);
+            for (final Tuple fwInfo:seenFirmwares) {
+                final long lastSeen = (long) fwInfo.getScore();
+                final long fwCount = jedis.zcard(fwInfo.getElement());
                 if (fwCount > 0) {
-                    final long lastSeen = (long)jedis.zrevrangeByScoreWithScores(fw_version, rangeStart, rangeEnd).iterator().next().getScore();
-                    firmwareCounts.add(new FirmwareCountInfo(fw_version, fwCount, lastSeen));
+                    firmwareCounts.add(new FirmwareCountInfo(fwInfo.getElement(), fwCount, lastSeen));
                 }
             }
         } catch (Exception e) {
@@ -227,12 +227,10 @@ public class FirmwareResource {
         final TreeMap<Long, String> fwHistory = new TreeMap<>();
 
         try {
-            final Set<String> seenFirmwares = jedis.smembers(REDIS_SEEN_FIRMWARE_KEY);
-            for (String fw_version:seenFirmwares) {
-                final Double score = jedis.zscore(fw_version, deviceId);
-                if(score != null) {
-                    fwHistory.put(score.longValue(), fw_version);
-                }
+            final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
+            for (final Tuple fwInfo:seenFirmwares) {
+                final long lastSeen = (long) fwInfo.getScore();
+                fwHistory.put(lastSeen, fwInfo.getElement());
             }
         } catch (Exception e) {
             LOGGER.error("Failed retrieving fw history for device.", e.getMessage());
@@ -308,7 +306,7 @@ public class FirmwareResource {
 
         final Jedis jedis = jedisPool.getResource();
         try {
-            if (jedis.srem(REDIS_SEEN_FIRMWARE_KEY, fwVersion) > 0) {
+            if (jedis.zrem(REDIS_SEEN_FIRMWARE_KEY, fwVersion) > 0) {
                 jedis.del(fwVersion);
             } else {
                 LOGGER.error("Attempted to delete non-existent Redis member: {}", fwVersion);
