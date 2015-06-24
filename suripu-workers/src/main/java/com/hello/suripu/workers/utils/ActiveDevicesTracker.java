@@ -33,6 +33,10 @@ public class ActiveDevicesTracker {
         trackDevices(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, ImmutableMap.copyOf(activeSenses));
     }
 
+    public void trackAllSeenSenses(final Map<String, Long> allActiveSenses) {
+        trackDevices(ActiveDevicesTrackerConfiguration.ALL_DEVICES_SEEN_SET_KEY, ImmutableMap.copyOf(allActiveSenses));
+    }
+
     public void trackPill(final String pillId, final Long lastSeen) {
         final Map<String, Long> seenDevices = new HashMap<>(1);
         seenDevices.put(pillId, lastSeen);
