@@ -21,6 +21,7 @@ public class ChiSquarePdf implements HmmPdfInterface {
 
     @Override
     public double[] getLogLikelihood(double[][] measurements) {
+        final double scale = 1.0 / Math.sqrt(2.0 * mean);
         double [] result = new double[measurements[0].length];
         //row major or column major? assume it's like C
         final double [] col =  measurements[measNum];
@@ -34,7 +35,7 @@ public class ChiSquarePdf implements HmmPdfInterface {
                 inputValue = MIN_INPUT_VALUE;
             }
 
-            double pdfEval = this.chiSquaredDistribution.density(inputValue / this.mean) ;
+            double pdfEval = this.chiSquaredDistribution.density(inputValue * scale) ;
 
             if (pdfEval < MIN_LIKELIHOOD) {
                 pdfEval = MIN_LIKELIHOOD;

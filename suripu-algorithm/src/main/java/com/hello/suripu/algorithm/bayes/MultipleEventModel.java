@@ -12,8 +12,11 @@ import java.util.Map;
  * Created by benjo on 6/16/15.
  */
 public class MultipleEventModel {
-    final List<Double> discreteProbabilties;
-    final Map<String,List<ModelWithDiscreteProbabiltiesAndEventOccurence>> models;
+    private static final Double MINIMUM_PROBABILITY = 5e-2;
+    private static final Double MAXIMUM_PROBABILITY = 1.0 - MINIMUM_PROBABILITY;
+
+    private final List<Double> discreteProbabilties;
+    private final Map<String,List<ModelWithDiscreteProbabiltiesAndEventOccurence>> models;
 
     public MultipleEventModel(final int numDiscreteProbs) {
         this.models = Maps.newHashMap();
@@ -76,8 +79,24 @@ public class MultipleEventModel {
             final ModelWithDiscreteProbabiltiesAndEventOccurence condProbModel = condProbModels.get(event);
 
             p1 = condProbModel.inferProbabilitiesGivenModel(p1);
-
         }
+
+        final List<Double> enforcedPosterior = Lists.newArrayList();
+
+        //enforce max/min probabilities
+        for (Double p : p1) {
+            if (p > MAXIMUM_PROBABILITY) {
+                p = MAXIMUM_PROBABILITY;
+            }
+
+            if (p < MINIMUM_PROBABILITY) {
+                p = MINIMUM_PROBABILITY;
+            }
+
+            enforcedPosterior.add(p);
+        }
+
+        p1 = ImmutableList.copyOf(enforcedPosterior);
 
         return p1;
     }

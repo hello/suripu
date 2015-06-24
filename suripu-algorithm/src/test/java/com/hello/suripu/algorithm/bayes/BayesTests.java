@@ -95,14 +95,16 @@ public class BayesTests {
         eventsByModel1.put("foobars",events1);
 
         final Map<String,ImmutableList<Integer>> eventsByModel2 = Maps.newHashMap();
-        eventsByModel1.put("foobars",events2);
+        eventsByModel2.put("foobars",events2);
 
         final Map<String,ImmutableList<Integer>> eventsByModel3 = Maps.newHashMap();
-        eventsByModel1.put("foobars",events3);
+        eventsByModel3.put("foobars",events3);
 
         final Map<String,ImmutableList<Integer>> eventsByModel4 = Maps.newHashMap();
-        eventsByModel1.put("foobars",events4);
+        eventsByModel4.put("foobars",events4);
 
+
+        multipleEventModel.setPriorForAllStatesBasedOnOneState(0,0.95);
 
         final List<Double> probs1 = getFirstElement(multipleEventModel.getProbsFromEventSequence(eventsByModel1,events1.size(),true));
 

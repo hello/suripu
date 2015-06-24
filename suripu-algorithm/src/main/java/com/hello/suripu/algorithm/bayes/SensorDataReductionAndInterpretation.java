@@ -69,4 +69,12 @@ public class SensorDataReductionAndInterpretation {
         return inferredProbabiltiesByOutputName;
 
     }
+
+    static public List<Double> getInverseOfNthElement(List<List<Double>> x, final int index) {
+        List<Double> ret = Lists.newArrayList();
+        for (List<Double> vec :  x) {
+            ret.add(1.0 - vec.get(index));
+        }
+        return ret;
+    }
 }
