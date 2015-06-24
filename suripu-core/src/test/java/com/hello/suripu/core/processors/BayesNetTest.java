@@ -7,8 +7,12 @@ import com.hello.suripu.algorithm.bayes.ProbabilitySegmenter;
 import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.HmmBayesNetDeserialization;
+import com.hello.suripu.core.util.HmmBayesNetMeasurementParameters;
+import com.hello.suripu.core.util.HmmBayesNetPredictor;
+import com.hello.suripu.core.util.SleepEventProducer;
 import junit.framework.TestCase;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
@@ -115,6 +119,18 @@ public class BayesNetTest {
 
             checkProbs(refProbs,probs,0.1,10);
 
+            final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(deserializedSleepHmmBayesNetWithParams);
+
+            final Map<String,List<Event>> eventsByCondProb = predictor.makePredictions(sensordata, 0, 0);
+
+            final List<Event> sleepEvents = eventsByCondProb.get(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP);
+
+            //basic sanity check
+            TestCase.assertTrue(sleepEvents.size() == 2);
+            TestCase.assertTrue(sleepEvents.get(0).getStartTimestamp() < sleepEvents.get(1).getStartTimestamp());
+            TestCase.assertTrue(sleepEvents.get(0).getType() == Event.Type.SLEEP);
+            TestCase.assertTrue(sleepEvents.get(1).getType() == Event.Type.WAKE_UP);
+            
         }
         catch (InvalidProtocolBufferException e) {
             e.printStackTrace();

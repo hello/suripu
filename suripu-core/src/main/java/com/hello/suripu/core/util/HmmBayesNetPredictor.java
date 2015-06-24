@@ -33,10 +33,10 @@ public class HmmBayesNetPredictor {
 
     //returns list of events by output id (the name of the conditional probabilities that produced it)
     public Map<String,List<Event>> makePredictions(final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> pillData, final long startTimeUTC, final long stopTimeUTC, final int timezoneOffset) {
-        Map<String,List<Event>> eventsByOutputId = Maps.newHashMap();
+        Map<String, List<Event>> eventsByOutputId = Maps.newHashMap();
 
         /*  Get the sensor data */
-        final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(allSensorSampleList,pillData,allTheData.params,startTimeUTC,stopTimeUTC,timezoneOffset);
+        final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(allSensorSampleList, pillData, allTheData.params, startTimeUTC, stopTimeUTC, timezoneOffset);
 
         if (!binnedDataOptional.isPresent()) {
             return eventsByOutputId;
@@ -44,8 +44,15 @@ public class HmmBayesNetPredictor {
 
         final SleepHmmBayesNetSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
 
+        return makePredictions(binnedData.data,binnedData.t0,timezoneOffset);
+    }
+
+    public Map<String,List<Event>> makePredictions(final double [][] sensorData,final long t0, final int timezoneOffset) {
+
+        Map<String, List<Event>> eventsByOutputId = Maps.newHashMap();
+
         /* use models to get probabilities of states */
-        final Map<String,List<List<Double>>> probsByOutputId = allTheData.sensorDataReductionAndInterpretation.inferProbabilitiesFromModelAndSensorData(binnedData.data);
+        final Map<String,List<List<Double>>> probsByOutputId = allTheData.sensorDataReductionAndInterpretation.inferProbabilitiesFromModelAndSensorData(sensorData);
 
         /* process probabilities by   */
         for (final String key : eventProducers.keySet()) {
@@ -57,7 +64,7 @@ public class HmmBayesNetPredictor {
                 continue;
             }
 
-            final List<Event> events = producer.getEventsFromProbabilitySequence(probsByOutputId,binnedData.data,startTimeUTC,allTheData.params.numMinutesInMeasPeriod,timezoneOffset);
+            final List<Event> events = producer.getEventsFromProbabilitySequence(probsByOutputId,sensorData,t0,allTheData.params.numMinutesInMeasPeriod,timezoneOffset);
 
             eventsByOutputId.put(key,events);
         }

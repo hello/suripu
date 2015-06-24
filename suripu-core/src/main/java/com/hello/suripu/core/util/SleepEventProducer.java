@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.translations.English;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -23,7 +24,7 @@ public class SleepEventProducer implements EventProducer {
     private final Double PROB_THRESHOLD = 0.90;
     private final Integer MIN_DURATION_OF_SLEEP_IN_MINUTES = 20;
     private final Integer MAX_WAKEUP_PERIOD_IN_MINUTES = 60; //nobody spends more than this time in bed not sleeping when waking up
-    private final Double MIN_AVG_MOTION_TO_BE_WAKEFUL = 2.0; //per minute
+    private final Double MIN_AVG_MOTION_TO_BE_WAKEFUL = 1.0; //per minute
 
     @Override
     public List<Event> getEventsFromProbabilitySequence(final Map<String,List<List<Double>>> probsByOutputId,
@@ -65,7 +66,7 @@ public class SleepEventProducer implements EventProducer {
 
             final int duration = seg.i2 - seg.i1;
 
-            if (duration < MAX_WAKEUP_PERIOD_IN_MINUTES / numMinutesPerInterval) {
+            if (duration > MAX_WAKEUP_PERIOD_IN_MINUTES / numMinutesPerInterval) {
                 it.remove();
             }
         }
@@ -92,13 +93,13 @@ public class SleepEventProducer implements EventProducer {
         }
 
         final long sleepTimestamp = getTimestamp(iStart,t0,timezoneOffset,numMinutesPerInterval);
-        final long wakeTimestamp = getTimestamp(iStart,t0,timezoneOffset,numMinutesPerInterval);
+        final long wakeTimestamp = getTimestamp(iEnd,t0,timezoneOffset,numMinutesPerInterval);
 
         events.add(Event.createFromType(Event.Type.SLEEP, sleepTimestamp, sleepTimestamp + NUM_MINUTES_IN_MILLIS, timezoneOffset,
-                Optional.<String>absent(), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+                Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
 
         events.add(Event.createFromType(Event.Type.WAKE_UP, wakeTimestamp, wakeTimestamp + NUM_MINUTES_IN_MILLIS, timezoneOffset,
-                Optional.<String>absent(), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+                Optional.of(English.WAKE_UP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
 
         return events;
     }
@@ -112,15 +113,20 @@ public class SleepEventProducer implements EventProducer {
         final double [] disturbances = sensordata[SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE];
 
         double motion = 0.0;
+        int numDisturbances = 0;
         for (int i = seg.i1; i <= seg.i2; i++) {
             motion += motionDuration[i];
-            motion += 10*disturbances[i];
+            if (disturbances[i] > 0.0) {
+                numDisturbances++;
+            }
         }
 
-        double duration = (seg.i2 - seg.i1 + 1) * numMinutesPerInterval;
-        motion /= duration;
+        motion += numDisturbances * 30.0;
 
-        return motion;
+        final double duration = (seg.i2 - seg.i1 + 1) * numMinutesPerInterval;
+        final double avgmotion = motion / duration;
+
+        return avgmotion;
 
     }
 
