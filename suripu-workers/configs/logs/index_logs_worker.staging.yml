@@ -20,6 +20,7 @@ kinesis:
     logs : dev-logs
 
 app_name: LogIndexer
+es_app_name: ElasticSearchLogIndexer
 
 features_db:
     endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -67,3 +68,11 @@ common_db:
 redis:
   host: stats.xoe7je.0001.use1.cache.amazonaws.com
   port: 6379
+
+elastic_search:
+  host: localhost
+  index_name: staging-logs
+  bulk_actions: 500
+  bulk_size_in_megabytes: 50
+  flush_interval_in_seconds: 5
+  concurrent_requests: 2
