@@ -86,7 +86,8 @@ public class BayesNetTest {
         try {
             final SleepHmmBayesNetProtos.HmmBayesNet bayesNet = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(decodedBytes);
             
-            final SensorDataReductionAndInterpretation stuff = HmmBayesNetDeserialization.Deserialize(bayesNet);
+            final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams deserializedSleepHmmBayesNetWithParams = HmmBayesNetDeserialization.Deserialize(bayesNet);
+            final SensorDataReductionAndInterpretation stuff = deserializedSleepHmmBayesNetWithParams.sensorDataReductionAndInterpretation;
 
             final Integer [] endStates = new Integer[1];
             endStates[0] = 0;

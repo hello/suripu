@@ -39,9 +39,17 @@ public class HmmBayesNetDeserialization {
     *
     * */
 
+    public static class DeserializedSleepHmmBayesNetWithParams {
+        public final SensorDataReductionAndInterpretation sensorDataReductionAndInterpretation;
+        public final HmmBayesNetMeasurementParameters params;
 
+        public DeserializedSleepHmmBayesNetWithParams(SensorDataReductionAndInterpretation sensorDataReductionAndInterpretation, HmmBayesNetMeasurementParameters params) {
+            this.sensorDataReductionAndInterpretation = sensorDataReductionAndInterpretation;
+            this.params = params;
+        }
+    }
 
-    public static SensorDataReductionAndInterpretation Deserialize(final SleepHmmBayesNetProtos.HmmBayesNet proto) {
+    public static DeserializedSleepHmmBayesNetWithParams Deserialize(final SleepHmmBayesNetProtos.HmmBayesNet proto) {
         final SleepHmmBayesNetProtos.MeasurementParams params = proto.getMeasurementParameters();
 
         /*  FIRST MAKE THE HMMS */
@@ -74,8 +82,11 @@ public class HmmBayesNetDeserialization {
             interpretationByOutputName.get(outputId).addModel(modelId,condProbsByEvent);
         }
 
-
-        return new SensorDataReductionAndInterpretation(hmmMapById,interpretationByOutputName,modelNamesToOutputNames);
+        /* LAST, EXTRACT THE MEAUREMENT PARAMS OF THIS MODEL */
+    
+        return new DeserializedSleepHmmBayesNetWithParams(
+                new SensorDataReductionAndInterpretation(hmmMapById,interpretationByOutputName,modelNamesToOutputNames),
+                HmmBayesNetMeasurementParameters.createFromProto(proto.getMeasurementParameters()));
     }
 
     private static List<ModelWithDiscreteProbabiltiesAndEventOccurence> getConditionalProbabilityModel(final SleepHmmBayesNetProtos.CondProbs condProbs) {
