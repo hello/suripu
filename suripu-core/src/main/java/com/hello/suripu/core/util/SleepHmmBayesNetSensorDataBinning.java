@@ -22,17 +22,19 @@ import java.util.List;
  * Created by benjo on 3/20/15.
  */
 public class SleepHmmBayesNetSensorDataBinning {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmWithInterpretation.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmBayesNetSensorDataBinning.class);
 
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
     static public class BinnedData {
         public final double[][] data;
         public final int numMinutesInWindow;
+        public final long t0;
 
-        public BinnedData(double[][] data, int numMinutesInWindow) {
+        public BinnedData(double[][] data, int numMinutesInWindow,final long t0) {
             this.data = data;
             this.numMinutesInWindow = numMinutesInWindow;
+            this.t0 = t0;
         }
     }
 
@@ -215,7 +217,7 @@ public class SleepHmmBayesNetSensorDataBinning {
         LOGGER.debug("natlight={}", getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE]));
 
 
-        return Optional.of(new BinnedData(data,numMinutesInWindow));
+        return Optional.of(new BinnedData(data,numMinutesInWindow,startTimeMillisInUTC));
     }
 
 

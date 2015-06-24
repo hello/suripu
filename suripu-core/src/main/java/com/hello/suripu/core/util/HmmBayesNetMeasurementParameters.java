@@ -15,6 +15,9 @@ public class HmmBayesNetMeasurementParameters {
     public static Boolean DEFAULT_USE_WAVES_AS_DISTURBANCES = true;
     public static Integer DEFAULT_NUM_MINUTES_IN_MEASUREMENT_PERIOD = 5;
 
+    public static String CONDITIONAL_PROBABILITY_OF_SLEEP = "p_state_given_sleep";
+    public static String CONDITIONAL_PROBABILITY_OF_BED = "p_state_given_bed";
+
 
     public final Boolean enableIntervalSearch;
     public final Double lightFloorLux;
