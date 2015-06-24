@@ -740,10 +740,15 @@ public class DeviceResources {
         final Set<String> allValidSeenSenses = new HashSet<>();
 
         try {
-             allSeenSenses.addAll(jedis.zrangeByScore(ActiveDevicesTrackerConfiguration.ALL_DEVICES_SEEN_SET_KEY, startTs, endTs));
-             allValidSeenSenses.addAll(jedis.zrangeByScore(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, startTs, endTs));
+            final Pipeline pipe = jedis.pipelined();
+            final redis.clients.jedis.Response<Set<String>> allDevs = pipe.zrangeByScore(ActiveDevicesTrackerConfiguration.ALL_DEVICES_SEEN_SET_KEY, startTs, endTs);
+            final redis.clients.jedis.Response<Set<String>> allValid = pipe.zrangeByScore(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, startTs, endTs);
+            pipe.sync();
+
+            allSeenSenses.addAll(allDevs.get());
+            allValidSeenSenses.addAll(allValid.get());
         } catch (Exception e) {
-            LOGGER.error("Failed retrieving fw history for device.", e.getMessage());
+            LOGGER.error("Failed retrieving invalid active senses.", e.getMessage());
         } finally {
             jedisPool.returnResource(jedis);
         }
