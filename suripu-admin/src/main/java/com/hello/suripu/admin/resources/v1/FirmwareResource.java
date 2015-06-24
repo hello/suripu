@@ -2,6 +2,7 @@ package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
@@ -41,7 +42,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +105,7 @@ public class FirmwareResource {
 
         final Jedis jedis = jedisPool.getResource();
         final String fwVersion = firmwareVersion.toString();
-        final List<FirmwareInfo> deviceInfo = new ArrayList<>();
+        final List<FirmwareInfo> deviceInfo = Lists.newArrayList();
         try {
             //Get all elements in the index range provided
             final Set<Tuple> allFWDevices = jedis.zrevrangeWithScores(fwVersion, rangeStart, rangeEnd);
@@ -155,7 +155,7 @@ public class FirmwareResource {
     public List<FirmwareCountInfo> getAllSeenFirmwares(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken) {
 
         final Jedis jedis = jedisPool.getResource();
-        final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
+        final List<FirmwareCountInfo> firmwareCounts = Lists.newArrayList();
         try {
             final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
             for (final Tuple fwInfo:seenFirmwares) {
@@ -192,7 +192,7 @@ public class FirmwareResource {
         }
 
         final Jedis jedis = jedisPool.getResource();
-        final List<FirmwareCountInfo> firmwareCounts = new ArrayList<>();
+        final List<FirmwareCountInfo> firmwareCounts = Lists.newArrayList();
         try {
             final Set<Tuple> seenFirmwares = jedis.zrangeByScoreWithScores(REDIS_SEEN_FIRMWARE_KEY, rangeStart, rangeEnd);
             for (final Tuple fwInfo:seenFirmwares) {
@@ -215,7 +215,7 @@ public class FirmwareResource {
     @Timed
     @Path("/{device_id}/history")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public TreeMap<Long, String> getFirmwareHistory(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                  @PathParam("device_id") final String deviceId) {
 
         if(deviceId == null) {
@@ -224,7 +224,7 @@ public class FirmwareResource {
         }
 
         final Jedis jedis = jedisPool.getResource();
-        final TreeMap<Long, String> fwHistory = new TreeMap<>();
+        final TreeMap<Long, String> fwHistory = Maps.newTreeMap();
 
         try {
             final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
