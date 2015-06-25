@@ -130,7 +130,7 @@ public class BayesNetTest {
             TestCase.assertTrue(sleepEvents.get(0).getStartTimestamp() < sleepEvents.get(1).getStartTimestamp());
             TestCase.assertTrue(sleepEvents.get(0).getType() == Event.Type.SLEEP);
             TestCase.assertTrue(sleepEvents.get(1).getType() == Event.Type.WAKE_UP);
-            
+
         }
         catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
