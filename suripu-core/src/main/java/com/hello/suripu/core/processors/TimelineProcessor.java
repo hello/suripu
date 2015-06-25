@@ -216,7 +216,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 algorithmWorked = true;
 
             }
-            else if (this.hasBayesNetEnabled(accountId)) {
+            else if (this.hasBayesNetEnabled(accountId) ) {
                 final List<Event> events = HmmBayesNetPredictor.getBayesNetHmmEvents(targetDate,endDate,currentTime.getMillis(),accountId,sensorData.allSensorSampleList,sensorData.trackerMotions,sensorData.trackerMotions.get(0).offsetMillis);
 
                 if (events.size() >= 2) {
@@ -224,6 +224,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.<Optional<Event>>create(Optional.<Event>absent(), Optional.of(events.get(0)), Optional.of(events.get(1)), Optional.<Event>absent());
 
                     sleepEventsFromAlgorithmOptional = Optional.of(sleepEventsFromAlgorithm);
+
+                    algorithmWorked = true;
                 }
             }
             else {
