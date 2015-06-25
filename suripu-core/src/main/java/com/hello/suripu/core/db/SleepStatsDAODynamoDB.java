@@ -214,7 +214,8 @@ public class SleepStatsDAODynamoDB {
                         continue;
                     }
                     final AggregateSleepStats score = this.createAggregateStat(item);
-                    if(score.motionScore.score >= 0 ) {
+                    // temp fix for when sleep scores are out of range
+                    if(score.motionScore.score >= 0 && score.motionScore.score < 100) {
                         scoreResults.add(score);
                     }
 
