@@ -1,6 +1,7 @@
 package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.ElasticSearch.ElasticSearchIndexMappings;
 import com.hello.suripu.core.models.ElasticSearch.ElasticSearchIndexSettings;
 import com.hello.suripu.core.models.ElasticSearch.ElasticSearchTransportClient;
@@ -21,50 +22,43 @@ import org.elasticsearch.transport.ConnectTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/v1/elastic_search")
 public class ElasticSearchResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchResource.class);
 
     private final ElasticSearchTransportClient elasticSearchTransportClient;
+    private final String indexPrefix;
 
-    public ElasticSearchResource(final ElasticSearchTransportClient elasticSearchTransportClient) {
+    public ElasticSearchResource(final ElasticSearchTransportClient elasticSearchTransportClient, final String indexPrefix) {
         this.elasticSearchTransportClient = elasticSearchTransportClient;
+        this.indexPrefix = indexPrefix;
     }
 
     @POST
     @Path("/{index_name}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response createIndex(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
-                                @PathParam("index_name") final String indexName) {
+                                @QueryParam("with_prefix") final Boolean withPrefix,
+                                @PathParam("index_name") String indexName) {
 
         final TransportClient transportClient = elasticSearchTransportClient.generateClient();
-
-        final CreateIndexRequestBuilder createIndexRequestBuilder = transportClient.admin().indices().prepareCreate(indexName);
-        final Optional<String> settingsJSONOptional = ElasticSearchIndexSettings.createDefault().toJSON();
-        if (settingsJSONOptional.isPresent()) {
-            createIndexRequestBuilder.setSettings(ImmutableSettings.settingsBuilder().loadFromSource(settingsJSONOptional.get()));
-        }
-
-        // mapping tokenizer, analyzer and ttl per document type, default mapping is used for "mortal" documents
-        final Optional<XContentBuilder> indexMappingDefaultOptional = ElasticSearchIndexMappings.createDefault().toJSON();
-        final Optional<XContentBuilder> indexMappingMortalOptional = ElasticSearchIndexMappings.createImmortal().toJSON();
-        if (indexMappingDefaultOptional.isPresent()) {
-            createIndexRequestBuilder.addMapping("_default_", indexMappingDefaultOptional.get());
-        }
-        if (indexMappingMortalOptional.isPresent()) {
-            createIndexRequestBuilder.addMapping("immortal", indexMappingMortalOptional.get());
-        }
         try {
-            createIndexRequestBuilder.execute().actionGet();
+
+            buildIndex(transportClient, indexName, withPrefix).execute().actionGet();
         }
         catch (IndexAlreadyExistsException e) {
             LOGGER.error(e.getMessage());
@@ -80,6 +74,34 @@ public class ElasticSearchResource {
             transportClient.close();
         }
 
+        return Response.noContent().build();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createIndices(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                  @QueryParam("with_prefix") final Boolean withPrefix,
+                                  @Valid @NotNull final String[] indexNames){
+
+        final TransportClient transportClient = elasticSearchTransportClient.generateClient();
+        final List<String> createdIndices = Lists.newArrayList();
+        for (String indexName : indexNames) {
+            try {
+                buildIndex(transportClient, indexName, withPrefix).execute().actionGet();
+                createdIndices.add(indexName);
+            }
+            catch (IndexAlreadyExistsException e) {
+                LOGGER.error(e.getMessage());
+                continue;
+            }
+            catch (ConnectTransportException e) {
+                LOGGER.error(e.getMessage());
+                continue;
+            }
+        }
+        LOGGER.info("Successfully created {}", createdIndices);
+        transportClient.close();
         return Response.noContent().build();
     }
 
@@ -138,4 +160,26 @@ public class ElasticSearchResource {
         return Response.noContent().build();
     }
 
+
+    private CreateIndexRequestBuilder buildIndex(final TransportClient transportClient, String indexName, final Boolean withPrefix) {
+        if (withPrefix != null && withPrefix.equals(Boolean.TRUE)){
+            indexName = indexPrefix + indexName;
+        }
+        final CreateIndexRequestBuilder createIndexRequestBuilder = transportClient.admin().indices().prepareCreate(indexName);
+        final Optional<String> settingsJSONOptional = ElasticSearchIndexSettings.createDefault().toJSON();
+        if (settingsJSONOptional.isPresent()) {
+            createIndexRequestBuilder.setSettings(ImmutableSettings.settingsBuilder().loadFromSource(settingsJSONOptional.get()));
+        }
+
+        // mapping tokenizer, analyzer and ttl per document type, default mapping is used for "mortal" documents
+        final Optional<XContentBuilder> indexMappingDefaultOptional = ElasticSearchIndexMappings.createDefault().toJSON();
+        final Optional<XContentBuilder> indexMappingMortalOptional = ElasticSearchIndexMappings.createImmortal().toJSON();
+        if (indexMappingDefaultOptional.isPresent()) {
+            createIndexRequestBuilder.addMapping("_default_", indexMappingDefaultOptional.get());
+        }
+        if (indexMappingMortalOptional.isPresent()) {
+            createIndexRequestBuilder.addMapping("immortal", indexMappingMortalOptional.get());
+        }
+        return createIndexRequestBuilder;
+    }
 }
