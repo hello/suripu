@@ -42,6 +42,15 @@ public class WorkerConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("es_app_name")
+    private String elasticSearchAppName;
+
+    public String getElasticSearchAppName() {
+        return elasticSearchAppName;
+    }
+
+    @Valid
+    @NotNull
     @JsonProperty("kinesis")
     private KinesisConfiguration kinesisConfiguration;
 

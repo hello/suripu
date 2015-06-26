@@ -1,6 +1,7 @@
 package com.hello.suripu.admin.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.ElasticSearchConfiguration;
 import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
@@ -96,6 +97,7 @@ public class SuripuAdminConfiguration extends Configuration {
     @NotNull
     @JsonProperty("dynamodb")
     private NewDynamoDBConfiguration dynamoDBConfiguration;
+
     public NewDynamoDBConfiguration dynamoDBConfiguration(){
         return dynamoDBConfiguration;
     }
@@ -106,5 +108,13 @@ public class SuripuAdminConfiguration extends Configuration {
     @Max(600)
     @JsonProperty("token_expiration")
     private Long tokenExpiration;
+
     public Long getTokenExpiration() {return this.tokenExpiration;}
+
+    @Valid
+    @NotNull
+    @JsonProperty("elastic_search")
+    private ElasticSearchConfiguration elasticSearchConfiguration;
+
+    public ElasticSearchConfiguration getElasticSearchConfiguration() {return elasticSearchConfiguration; }
 }

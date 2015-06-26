@@ -144,3 +144,11 @@ dynamodb:
     ring_time_history: http://dynamodb.us-east-1.amazonaws.com
 
 token_expiration: 300
+
+elastic_search:
+  index_prefix: sense-logs-staging-
+  host: ec2-54-164-33-1.compute-1.amazonaws.com
+  bulk_actions: 500
+  bulk_size_in_megabytes: 50
+  flush_interval_in_seconds: 5
+  concurrent_requests: 2

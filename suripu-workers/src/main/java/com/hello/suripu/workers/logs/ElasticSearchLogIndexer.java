@@ -1,0 +1,197 @@
+package com.hello.suripu.workers.logs;
+
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
+import com.hello.suripu.core.models.ElasticSearch.ElasticSearchBulkSettings;
+import com.hello.suripu.core.models.SenseLogDocument;
+import com.hello.suripu.core.util.DateTimeUtil;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkProcessor;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.unit.ByteSizeUnit;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.indices.InvalidIndexNameException;
+import org.elasticsearch.transport.ConnectTransportException;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.exceptions.JedisException;
+
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
+    private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchLogIndexer.class);
+    private static final Integer REFRESH_PERIOD_MINUTES = 15;
+    private static final String IMPORTANT_DOCUMENTS_REGEX = "(?s)^.*?(xkd|travis|fault).*$";
+    private static final String DEFAULT_DOCUMENT_TYPE = "1";
+
+    private final JedisPool jedisPool;
+    private final TransportClient transportClient;
+    private final ElasticSearchBulkSettings elasticSearchBulkSettings;
+
+    private final List<SenseLogDocument> documents;
+    private DateTime lastBlackListFetchDateTime;
+    private Set<String> senseBlackList;
+    private Integer blackListUpdateCount;
+    private final Stopwatch stopwatch;
+    private final String indexPrefix;
+
+    public ElasticSearchLogIndexer(final JedisPool jedisPool, final TransportClient transportClient , final ElasticSearchBulkSettings elasticSearchBulkSettings, final String indexPrefix) {
+
+        this.jedisPool = jedisPool;
+        this.transportClient = transportClient;
+        this.elasticSearchBulkSettings = elasticSearchBulkSettings;
+        this.indexPrefix = indexPrefix;
+
+        this.documents = Lists.newArrayList();
+        this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
+        this.senseBlackList = Sets.newHashSet();
+        this.blackListUpdateCount = 0;
+        this.stopwatch = new Stopwatch();
+    }
+
+
+    public List<SenseLogDocument> chunkBatchLogMessage(LoggingProtos.BatchLogMessage batchLogMessage) {
+        final List<SenseLogDocument> documents = Lists.newArrayList();
+
+        for(final LoggingProtos.LogMessage log : batchLogMessage.getMessagesList()) {
+            if (getSenseBlackList().contains(log.getDeviceId())) {
+                LOGGER.info("Received log from blacklisted senseId {}, will not index", log.getDeviceId());
+                continue;
+            }
+
+            final Long timestamp = (log.getTs() == 0) ? batchLogMessage.getReceivedAt() : log.getTs() * 1000L;
+            documents.add(new SenseLogDocument(log.getDeviceId(), timestamp, log.getMessage(), log.getOrigin()));
+
+        }
+        return documents;
+    }
+
+    @Override
+    public Integer index() {
+        final Integer documentsSize = documents.size();
+        if (documentsSize == 0) {
+            LOGGER.warn("EMPTY DOCUMENTS");
+            return 0;
+        }
+
+        BulkProcessor bulkProcessor = null;
+
+//        To be extra cautious - check if index really exists
+//        final IndicesExistsResponse indicesExistsResponse = client.admin().indices().prepareExists(INDEX_NAME).execute().actionGet();
+//        if (indicesExistsResponse.isExists()) {
+//            LOGGER.error("Index {} does not exist, please do something about it", INDEX_NAME);
+//        }
+
+        try {
+            bulkProcessor = BulkProcessor.builder(
+                transportClient,
+                new BulkProcessor.Listener() {
+                    @Override
+                    public void beforeBulk(long executionId,
+                                           BulkRequest request) {
+                        stopwatch.reset().start();
+                    }
+
+                    @Override
+                    public void afterBulk(long executionId,
+                                          BulkRequest request,
+                                          BulkResponse response) {
+                        for (final BulkItemResponse bulkItemResponse : response.getItems()) {
+                            LOGGER.debug("Successfully {} {}/{}/{}", bulkItemResponse.getOpType(), bulkItemResponse.getIndex(), bulkItemResponse.getType(), bulkItemResponse.getId());
+                        }
+                        LOGGER.info("After bulking: Took {} ms to successfully index {} documents", stopwatch.elapsed(TimeUnit.MILLISECONDS), response.getItems().length);
+                    }
+
+                    @Override
+                    public void afterBulk(long executionId,
+                                          BulkRequest request,
+                                          Throwable failure) {
+                        LOGGER.error(failure.getMessage());
+                    }
+                })
+                .setBulkActions(elasticSearchBulkSettings.bulkActions)
+                .setBulkSize(new ByteSizeValue(elasticSearchBulkSettings.bulkSizeInMegabyes, ByteSizeUnit.MB))
+                .setFlushInterval(TimeValue.timeValueSeconds(elasticSearchBulkSettings.flushIntervalInSeconds))
+                .setConcurrentRequests(elasticSearchBulkSettings.concurrentRequests)
+                .build();
+
+            for (final SenseLogDocument document : documents) {
+                final String indexName = indexPrefix + new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT);
+                final String documentType = document.content.matches(IMPORTANT_DOCUMENTS_REGEX) ? "important" : DEFAULT_DOCUMENT_TYPE;
+                bulkProcessor.add(new IndexRequest(indexName, documentType).source(document.toMap()));
+            }
+            LOGGER.info("Adding {} documents to bulk processor", documentsSize);
+        }
+        catch (InvalidIndexNameException e) {
+            LOGGER.error("Bulk processing failed because {}", e.getMessage());
+        }
+        catch (ConnectTransportException e) {
+            LOGGER.error("Bulk processing failed because {}", e.getMessage());
+        }
+        finally {
+            documents.clear();
+            bulkProcessor.close();
+            return documentsSize;
+
+        }
+    }
+
+    @Override
+    public void collect(final LoggingProtos.BatchLogMessage batchLogMessage) {
+        LOGGER.debug("bye searchify, hello es");
+        documents.addAll(chunkBatchLogMessage(batchLogMessage));
+
+
+    }
+
+    private Set<String> getSenseBlackList() {
+        if (lastBlackListFetchDateTime.plusMinutes(REFRESH_PERIOD_MINUTES).isBeforeNow() || blackListUpdateCount == 0){
+            lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
+            Jedis jedis = null;
+            String exceptionMessage = "";
+            try {
+                jedis = jedisPool.getResource();
+                senseBlackList = jedis.smembers(BlackListDevicesConfiguration.SENSE_BLACK_LIST_KEY);
+                LOGGER.info("Refreshed sense black list");
+            } catch (JedisDataException e) {
+                exceptionMessage = String.format("Failed to get data from redis -  %s", e.getMessage());
+                LOGGER.error(exceptionMessage);
+            } catch (Exception e) {
+                exceptionMessage = String.format("Failed to refresh sense black list because %s", e.getMessage());
+                LOGGER.error(exceptionMessage);
+            } finally {
+                if (jedis != null) {
+                    try {
+                        if (exceptionMessage.isEmpty()) {
+                            jedisPool.returnResource(jedis);
+                        } else {
+                            jedisPool.returnBrokenResource(jedis);
+                        }
+                    } catch (JedisException e) {
+                        LOGGER.error("Failed to return to resource {}", e.getMessage());
+                    }
+
+                }
+            }
+        }
+        blackListUpdateCount += 1;
+        return senseBlackList;
+    }
+
+
+
+}

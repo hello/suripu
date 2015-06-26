@@ -20,6 +20,7 @@ kinesis:
     logs : dev-logs
 
 app_name: LogIndexerDev
+es_app_name: ElasticSearchLogIndexerDev
 
 features_db:
     endpoint : http://localhost:7777
@@ -72,3 +73,11 @@ common_db:
 redis:
   host: localhost
   port: 6379
+
+elastic_search:
+  index_prefix: sense-logs-dev-
+  host: localhost
+  bulk_actions: 500
+  bulk_size_in_megabytes: 50
+  flush_interval_in_seconds: 5
+  concurrent_requests: 2
