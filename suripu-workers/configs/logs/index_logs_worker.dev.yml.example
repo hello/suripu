@@ -75,6 +75,7 @@ redis:
   port: 6379
 
 elastic_search:
+  index_prefix: sense-logs-dev-
   host: localhost
   bulk_actions: 500
   bulk_size_in_megabytes: 50

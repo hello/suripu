@@ -17,6 +17,8 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.indices.InvalidIndexNameException;
+import org.elasticsearch.transport.ConnectTransportException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -45,12 +47,14 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
     private Set<String> senseBlackList;
     private Integer blackListUpdateCount;
     private final Stopwatch stopwatch;
+    private final String indexPrefix;
 
-    public ElasticSearchLogIndexer(final JedisPool jedisPool, final TransportClient transportClient , ElasticSearchBulkSettings elasticSearchBulkSettings) {
+    public ElasticSearchLogIndexer(final JedisPool jedisPool, final TransportClient transportClient , final ElasticSearchBulkSettings elasticSearchBulkSettings, final String indexPrefix) {
 
         this.jedisPool = jedisPool;
         this.transportClient = transportClient;
         this.elasticSearchBulkSettings = elasticSearchBulkSettings;
+        this.indexPrefix = indexPrefix;
 
         this.documents = Lists.newArrayList();
         this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
@@ -126,15 +130,18 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
                 .build();
 
             for (final SenseLogDocument document : documents) {
+                final String indexName = indexPrefix + new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT);
                 final String documentType = document.content.matches(IMPORTANT_DOCUMENTS_REGEX) ? "important" : DEFAULT_DOCUMENT_TYPE;
-                bulkProcessor.add(new IndexRequest(new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), documentType).source(document.toMap()));
-                LOGGER.info("{}", new DateTime(document.timestamp).toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT));
+                bulkProcessor.add(new IndexRequest(indexName, documentType).source(document.toMap()));
             }
             LOGGER.info("Adding {} documents to bulk processor", documentsSize);
         }
-        catch (Exception e) {
+        catch (InvalidIndexNameException e) {
             LOGGER.error("Bulk processing failed because {}", e.getMessage());
-            }
+        }
+        catch (ConnectTransportException e) {
+            LOGGER.error("Bulk processing failed because {}", e.getMessage());
+        }
         finally {
             documents.clear();
             bulkProcessor.close();

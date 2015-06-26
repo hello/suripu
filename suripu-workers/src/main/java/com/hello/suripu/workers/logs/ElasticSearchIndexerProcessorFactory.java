@@ -25,6 +25,6 @@ public class ElasticSearchIndexerProcessorFactory implements IRecordProcessorFac
                 config.getElasticSearchConfiguration().getFlushIntervalInSeconds(),
                 config.getElasticSearchConfiguration().getConcurrentRequests()
         );
-        return ElasticSearchIndexerProcessor.create(jedisPool, elasticSearchTransportClient.generateClient(), elasticSearchBulkSettings);
+        return ElasticSearchIndexerProcessor.create(jedisPool, elasticSearchTransportClient.generateClient(), elasticSearchBulkSettings, config.getElasticSearchConfiguration().getIndexPrefix());
     }
 }

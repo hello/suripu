@@ -97,7 +97,8 @@ dynamodb:
 token_expiration: 300
 
 elastic_search:
-  host: localhost
+  index_prefix: sense-logs-prod-
+  host: ec2-54-164-33-1.compute-1.amazonaws.com
   bulk_actions: 500
   bulk_size_in_megabytes: 50
   flush_interval_in_seconds: 5

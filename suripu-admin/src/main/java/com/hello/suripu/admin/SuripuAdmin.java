@@ -317,6 +317,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
         environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO, trackingDAO));
         environment.addResource(new TokenResources(accessTokenStore, applicationStore, accountDAO));
-        environment.addResource(new ElasticSearchResource(elasticSearchTransportClient));
+        environment.addResource(new ElasticSearchResource(elasticSearchTransportClient, configuration.getElasticSearchConfiguration().getIndexPrefix()));
     }
 }

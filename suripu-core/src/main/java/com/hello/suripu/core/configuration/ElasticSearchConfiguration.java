@@ -82,5 +82,12 @@ public class ElasticSearchConfiguration extends Configuration{
 
     public Integer getConcurrentRequests() {return concurrentRequests; }
 
+
+    @Valid
+    @NotNull
+    @JsonProperty("index_prefix")
+    private String indexPrefix;
+
+    public String getIndexPrefix() {return indexPrefix; }
 }
 
