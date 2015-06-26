@@ -246,6 +246,7 @@ public class TimelineResource extends BaseResource {
         for (int i = 0; i < timelineLogs.size(); i++) {
             if (timelineLogs.get(i).createdDate > latestCreated) {
                 index = i;
+                latestCreated = timelineLogs.get(i).createdDate;
             }
         }
         return timelineLogs.get(index);
