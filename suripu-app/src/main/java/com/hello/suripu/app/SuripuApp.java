@@ -326,7 +326,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new AccountResource(accountDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB));
-        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
+
+        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure", "hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
@@ -387,6 +388,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));
 
         environment.addResource(new SupportResource(supportDAO));
-        environment.addResource(new com.hello.suripu.app.v2.TimelineResource());
+        environment.addResource(new com.hello.suripu.app.v2.TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
     }
 }
