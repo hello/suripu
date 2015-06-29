@@ -271,6 +271,19 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
+
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
+        if(shutdownReason == ShutdownReason.TERMINATE) {
+            LOGGER.warn("Going to checkpoint");
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+                LOGGER.warn("Checkpointed successfully");
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+
     }
 }
