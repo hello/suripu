@@ -4,12 +4,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.bayes.BetaDiscreteWithEventOutput;
-import com.hello.suripu.algorithm.bayes.BetaDistribution;
+import com.hello.suripu.algorithm.bayes.BetaBinomialBayesModel;
 import com.hello.suripu.algorithm.bayes.ModelWithDiscreteProbabiltiesAndEventOccurence;
 import com.hello.suripu.algorithm.bayes.MultipleEventModel;
-import com.hello.suripu.algorithm.core.Segment;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +27,7 @@ public class PartnerBayesNetWithHmmInterpreter {
 
         for (final Double prob : conditionalProbs) {
             BetaDiscreteWithEventOutput betaBayesElement = new BetaDiscreteWithEventOutput(
-                    BetaDistribution.createBinaryComplementaryBetaDistributions(prob,1));
+                    BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(prob, 1));
 
             models.add(betaBayesElement);
         }

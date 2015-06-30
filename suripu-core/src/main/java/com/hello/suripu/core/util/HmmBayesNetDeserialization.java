@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.bayes.BetaDiscreteWithEventOutput;
-import com.hello.suripu.algorithm.bayes.BetaDistribution;
+import com.hello.suripu.algorithm.bayes.BetaBinomialBayesModel;
 import com.hello.suripu.algorithm.bayes.ModelWithDiscreteProbabiltiesAndEventOccurence;
 import com.hello.suripu.algorithm.bayes.MultipleEventModel;
 import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
@@ -94,9 +94,9 @@ public class HmmBayesNetDeserialization {
         for (SleepHmmBayesNetProtos.BetaCondProb betaCondProb : condProbs.getProbsList()) {
 
             //create binary complementary model (p, not p) and you can do this with the beta distribution by swapping alpha and beta
-            final BetaDistribution betaDistribution = new BetaDistribution(betaCondProb.getAlpha(),betaCondProb.getBeta());
-            final BetaDistribution betaDistributionComplementary = new BetaDistribution(betaCondProb.getBeta(),betaCondProb.getAlpha());
-            final BetaDiscreteWithEventOutput betaDiscreteWithEventOutput = new BetaDiscreteWithEventOutput(Lists.newArrayList(betaDistribution,betaDistributionComplementary));
+            final BetaBinomialBayesModel betaBinomialBayesModel = new BetaBinomialBayesModel(betaCondProb.getAlpha(),betaCondProb.getBeta());
+            final BetaBinomialBayesModel betaBinomialBayesModelComplementary = new BetaBinomialBayesModel(betaCondProb.getBeta(),betaCondProb.getAlpha());
+            final BetaDiscreteWithEventOutput betaDiscreteWithEventOutput = new BetaDiscreteWithEventOutput(Lists.newArrayList(betaBinomialBayesModel, betaBinomialBayesModelComplementary));
 
             condProbModel.add(betaDiscreteWithEventOutput);
         }

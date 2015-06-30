@@ -18,24 +18,24 @@ public class BayesTests {
     @Test
     public void testBetaDist() {
 
-        final List<BetaDistribution> betaDistributions = BetaDistribution.createBinaryComplementaryBetaDistributions(0.8,10);
+        final List<BetaBinomialBayesModel> betaBinomialBayesModels = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.8, 10);
 
-        TestCase.assertEquals(betaDistributions.get(0).getExpectation(), 0.8, 1e-6);
-        TestCase.assertEquals(betaDistributions.get(1).getExpectation(),0.2,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(0).getExpectation(), 0.8, 1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(1).getExpectation(),0.2,1e-6);
 
 
-        betaDistributions.get(0).updateWithInference(1.0);
-        betaDistributions.get(1).updateWithInference(0.0);
+        betaBinomialBayesModels.get(0).updateWithInference(1.0);
+        betaBinomialBayesModels.get(1).updateWithInference(0.0);
 
-        TestCase.assertEquals(betaDistributions.get(0).getExpectation(),9.0 / 11.0,1e-6);
-        TestCase.assertEquals(betaDistributions.get(1).getExpectation(),2.0 / 11.0,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(0).getExpectation(),9.0 / 11.0,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(1).getExpectation(),2.0 / 11.0,1e-6);
     }
 
     @Test
     public void testBayesRule() {
-        final List<BetaDistribution> betaDistributions = BetaDistribution.createBinaryComplementaryBetaDistributions(0.8,10);
+        final List<BetaBinomialBayesModel> betaBinomialBayesModels = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.8, 10);
 
-        final BetaDiscreteWithEventOutput bayesElement = new BetaDiscreteWithEventOutput(betaDistributions);
+        final BetaDiscreteWithEventOutput bayesElement = new BetaDiscreteWithEventOutput(betaBinomialBayesModels);
 
         final List<Double> p1 = Lists.newArrayList();
         p1.add(0.6);
@@ -60,9 +60,9 @@ public class BayesTests {
 
     @Test
     public void TestSequentialBayes() {
-        final List<BetaDistribution> betaDistributions1 = BetaDistribution.createBinaryComplementaryBetaDistributions(0.8,1);
-        final List<BetaDistribution> betaDistributions2 = BetaDistribution.createBinaryComplementaryBetaDistributions(0.2,1);
-        final List<BetaDistribution> betaDistributions3 = BetaDistribution.createBinaryComplementaryBetaDistributions(0.5,1);
+        final List<BetaBinomialBayesModel> betaDistributions1 = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.8, 1);
+        final List<BetaBinomialBayesModel> betaDistributions2 = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.2, 1);
+        final List<BetaBinomialBayesModel> betaDistributions3 = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.5, 1);
 
         final BetaDiscreteWithEventOutput bayesElement1 = new BetaDiscreteWithEventOutput(betaDistributions1);
         final BetaDiscreteWithEventOutput bayesElement2 = new BetaDiscreteWithEventOutput(betaDistributions2);

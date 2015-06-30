@@ -74,9 +74,9 @@ import java.util.List;
 public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabiltiesAndEventOccurence{
 
     private static final Double TOL = 1e-7;
-    private final List<BetaDistribution> continuousDistributionProbabilities;
+    private final List<BetaBinomialBayesModel> continuousDistributionProbabilities;
 
-    public BetaDiscreteWithEventOutput(final List<BetaDistribution> continuousDistributionPriors) {
+    public BetaDiscreteWithEventOutput(final List<BetaBinomialBayesModel> continuousDistributionPriors) {
         continuousDistributionProbabilities = continuousDistributionPriors;
     }
 
@@ -95,7 +95,7 @@ public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabilti
 
         //compute joint probabilties P(Si,event)
         for (int iState = 0; iState < prior.size(); iState++) {
-            final BetaDistribution dist = continuousDistributionProbabilities.get(iState);
+            final BetaBinomialBayesModel dist = continuousDistributionProbabilities.get(iState);
             joints.add(dist.getExpectation() * prior.get(iState));
         }
 
