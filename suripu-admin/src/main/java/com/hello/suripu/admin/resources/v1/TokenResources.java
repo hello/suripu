@@ -2,9 +2,11 @@ package com.hello.suripu.admin.resources.v1;
 
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.oauth.AccessToken;
+import com.hello.suripu.core.oauth.AccessTokenUtils;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ApplicationRegistration;
 import com.hello.suripu.core.oauth.ClientAuthenticationException;
@@ -22,13 +24,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.UUID;
 
 @Path("/v1/token")
 public class TokenResources {
@@ -36,20 +41,39 @@ public class TokenResources {
     private static final Logger LOGGER = LoggerFactory.getLogger(TokenResources.class);
     private final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore;
     private final ApplicationStore applicationStore;
+    private final AccessTokenDAO accessTokenDAO;
     private final AccountDAO accountDAO;
 
     @Context
     HttpServletRequest request;
     public TokenResources(final OAuthTokenStore<AccessToken,ClientDetails, ClientCredentials> tokenStore,
                           final ApplicationStore<Application, ApplicationRegistration> applicationStore,
+                          final AccessTokenDAO accessTokenDAO,
                           final AccountDAO accountDAO) {
 
         this.tokenStore = tokenStore;
         this.applicationStore = applicationStore;
+        this.accessTokenDAO = accessTokenDAO;
         this.accountDAO = accountDAO;
     }
-
-
+    @GET
+    @Path("/expiration/{dirty_token}")
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    public Integer getExpiration(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                              @PathParam("dirty_token") final String dirtyToken) {
+        final Optional<UUID> tokenUUIDOptional = AccessTokenUtils.cleanUUID(dirtyToken);
+        if(!tokenUUIDOptional.isPresent()) {
+            LOGGER.warn("Invalid format for token {}", dirtyToken);
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+        final Optional<AccessToken> accessTokenOptional = accessTokenDAO.getByAccessToken(tokenUUIDOptional.get());
+        if (!accessTokenOptional.isPresent()) {
+            LOGGER.warn("Token {} not found", dirtyToken);
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+        }
+        return AccessTokenUtils.expiresInDays(accessTokenOptional.get());
+    }
 
     @POST
     @Path("/implicit")
