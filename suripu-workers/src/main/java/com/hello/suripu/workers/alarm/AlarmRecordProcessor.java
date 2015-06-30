@@ -78,17 +78,24 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
         for(final String senseId : senseIds) {
-            RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                    this.scheduledRingTimeHistoryDAODynamoDB,
-                    this.smartAlarmLoggerDynamoDB,
-                    this.trackerMotionDAO,
-                    senseId,
-                    DateTime.now(),
-                    this.configuration.getProcessAheadTimeInMinutes(),
-                    this.configuration.getAggregateWindowSizeInMinute(),
-                    this.configuration.getLightSleepThreshold(),
-                    flipper
-            );
+            try {
+                RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                        this.scheduledRingTimeHistoryDAODynamoDB,
+                        this.smartAlarmLoggerDynamoDB,
+                        this.trackerMotionDAO,
+                        senseId,
+                        DateTime.now(),
+                        this.configuration.getProcessAheadTimeInMinutes(),
+                        this.configuration.getAggregateWindowSizeInMinute(),
+                        this.configuration.getLightSleepThreshold(),
+                        flipper
+                );
+            }catch (Exception ex){
+                LOGGER.error("Update next ring time for sense {} failed at {}, error {}",
+                        senseId,
+                        DateTime.now(),
+                        ex.getMessage());
+            }
         }
 
         LOGGER.info("Successfully updated smart ring time for {} sense", senseIds.size());
