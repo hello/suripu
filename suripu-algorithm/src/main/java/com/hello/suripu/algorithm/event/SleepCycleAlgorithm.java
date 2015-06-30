@@ -116,7 +116,7 @@ public class SleepCycleAlgorithm {
 
         DateTime smartAlarmTime = new DateTime(alarmDeadlineUTC, DateTimeZone.UTC);
 
-        final int possibleSpanInMinutes = (int)(deepSleepMoment - dataCollectionMoment) / DateTimeConstants.MILLIS_PER_MINUTE;
+        final int possibleSpanInMinutes = possibleSpanInMinutes(deepSleepMoment, dataCollectionMoment);
         final Random random = new Random();
 
         if(possibleSpanInMinutes > 0) {
@@ -137,14 +137,28 @@ public class SleepCycleAlgorithm {
                 smartAlarmTime = new DateTime(nextLightSleepMoment, DateTimeZone.UTC);
             }else {
                 // Give fallback random more space, so it doesn't always ring near the end
-                final int fakeSmartSpanMin = (int)(alarmDeadlineUTC - minAlarmTimeUTC) / 2 / DateTimeConstants.MILLIS_PER_MINUTE;
-                smartAlarmTime = smartAlarmTime.minusMinutes(fakeSmartSpanMin).plusMinutes(random.nextInt(fakeSmartSpanMin));
+                smartAlarmTime = fakeSmartAlarm(minAlarmTimeUTC, alarmDeadlineUTC);
             }
         }
 
         LOGGER.debug("Smart alarm time: " + smartAlarmTime);
 
         return smartAlarmTime;
+    }
+
+    protected static int possibleSpanInMinutes(final long deepSleepMomentMillis, final long dataCollectionMomentMillis){
+        LOGGER.debug("deep sleep {}, data collection {}", deepSleepMomentMillis, dataCollectionMomentMillis);
+        final int possibleSpanInMinutes = (int)(deepSleepMomentMillis - dataCollectionMomentMillis) / DateTimeConstants.MILLIS_PER_MINUTE;
+        return possibleSpanInMinutes;
+    }
+
+    protected static DateTime fakeSmartAlarm(final long minAlarmTimeMillis, final long alarmSetTimeMillis){
+        final int fakeSmartSpanMin = (int)(alarmSetTimeMillis - minAlarmTimeMillis) / 2 / DateTimeConstants.MILLIS_PER_MINUTE;
+        final Random random = new Random();
+        final DateTime fakeSmartAlarmTime = new DateTime(alarmSetTimeMillis, DateTimeZone.UTC)
+                .minusMinutes(fakeSmartSpanMin)
+                .plusMinutes(random.nextInt(fakeSmartSpanMin));
+        return fakeSmartAlarmTime;
     }
 
 
