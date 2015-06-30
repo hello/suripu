@@ -15,6 +15,7 @@ import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.ImplicitTokenRequest;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.oauth.TokenExpirationRequest;
 import com.hello.suripu.core.oauth.stores.ApplicationStore;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.util.HelloHttpHeader;
@@ -24,10 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -56,12 +55,14 @@ public class TokenResources {
         this.accessTokenDAO = accessTokenDAO;
         this.accountDAO = accountDAO;
     }
-    @GET
-    @Path("/expiration/{dirty_token}")
+    @POST
+    @Path("/expiration")
     @Timed
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Integer getExpiration(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
-                              @PathParam("dirty_token") final String dirtyToken) {
+                                 final TokenExpirationRequest tokenExpirationRequest) {
+        final String dirtyToken = tokenExpirationRequest.dirtyToken;
         final Optional<UUID> tokenUUIDOptional = AccessTokenUtils.cleanUUID(dirtyToken);
         if(!tokenUUIDOptional.isPresent()) {
             LOGGER.warn("Invalid format for token {}", dirtyToken);
