@@ -5,9 +5,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.configuration.BlackListDevicesConfiguration;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchBulkSettings;
 import com.hello.suripu.core.models.SenseLogDocument;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.search.ElasticSearchBulkSettings;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -191,7 +191,4 @@ public class ElasticSearchLogIndexer implements LogIndexer<LoggingProtos.BatchLo
         blackListUpdateCount += 1;
         return senseBlackList;
     }
-
-
-
 }

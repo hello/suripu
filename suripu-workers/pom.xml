@@ -62,6 +62,11 @@
             <artifactId>indextank-java</artifactId>
             <version>1.0.6</version>
         </dependency>
+        <dependency>
+            <groupId>com.hello.suripu</groupId>
+            <artifactId>suripu-search</artifactId>
+            <version>0.4.43-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

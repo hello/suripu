@@ -1,4 +1,4 @@
-package com.hello.suripu.core.models.ElasticSearch;
+package com.hello.suripu.search;
 
 
 import org.elasticsearch.client.transport.TransportClient;
@@ -30,11 +30,11 @@ public class ElasticSearchTransportClient {
     }
 
     public TransportClient generateClient() {
-        final Settings setings = ImmutableSettings.settingsBuilder()
+        final Settings settings = ImmutableSettings.settingsBuilder()
                 .put("cluster.name", cluster)
                 .put("client.transport.sniff", sniffEnabled)
                 .put("client.transport.ping_timeout", timeout)
                 .build();
-        return new TransportClient(setings).addTransportAddress(new InetSocketTransportAddress(host, port));
+        return new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(host, port));
     }
 }

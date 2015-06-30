@@ -27,6 +27,7 @@
         <module>suripu-workers</module>
         <module>suripu-admin</module>
         <module>suripu-research</module>
+        <module>suripu-search</module>
     </modules>
 
     <scm>

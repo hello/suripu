@@ -2,8 +2,8 @@ package com.hello.suripu.workers.logs;
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchBulkSettings;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchTransportClient;
+import com.hello.suripu.search.ElasticSearchBulkSettings;
+import com.hello.suripu.search.ElasticSearchTransportClient;
 import redis.clients.jedis.JedisPool;
 
 public class ElasticSearchIndexerProcessorFactory implements IRecordProcessorFactory {

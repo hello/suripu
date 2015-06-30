@@ -1,4 +1,4 @@
-package com.hello.suripu.core.models.ElasticSearch;
+package com.hello.suripu.search;
 
 public class ElasticSearchBulkSettings {
     public final Integer bulkActions;

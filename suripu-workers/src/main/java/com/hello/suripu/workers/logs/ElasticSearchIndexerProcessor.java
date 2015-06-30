@@ -8,7 +8,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchBulkSettings;
+import com.hello.suripu.search.ElasticSearchBulkSettings;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
 import org.elasticsearch.client.transport.TransportClient;

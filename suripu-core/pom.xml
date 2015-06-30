@@ -96,10 +96,5 @@
             <artifactId>annotations</artifactId>
             <version>12.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>elasticsearch</artifactId>
-            <version>1.6.0</version>
-        </dependency>
     </dependencies>
 </project>

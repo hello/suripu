@@ -1,6 +1,8 @@
-package com.hello.suripu.core.models.ElasticSearch;
+package com.hello.suripu.search;
 
 
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
 import com.google.common.base.Optional;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.slf4j.Logger;
@@ -52,32 +54,60 @@ public class ElasticSearchIndexSettings {
         return new ElasticSearchIndexSettings(DEFAULT_NUMBER_OF_SHARDS, DEFAULT_NUMBER_OF_REPLICAS, DEFAULT_FILTER_TYPE, DEFAULT_FILTER_TYPE_TABLE, DEFAULT_ANALYZER_TYPE, DEFAULT_TOKENIZER);
     }
 
-    public Optional<String> toJSON() {
+    public Optional<String> toJSONString() {
         try {
             return Optional.of(XContentFactory.jsonBuilder()
                 .startObject()
-                        .field("number_of_shards", numberOfShards)
+                    .field("number_of_shards", numberOfShards)
                         .field("number_of_replicas", numberOfReplicas)
                     .startObject("analysis")
-                        .startObject("filter")
-                            .startObject(DEFAULT_FILTER_NAME)
-                                .field("type", DEFAULT_FILTER_TYPE)
+                    .startObject("filter")
+                    .startObject(DEFAULT_FILTER_NAME)
+                    .field("type", DEFAULT_FILTER_TYPE)
                                 .field("type_table", DEFAULT_FILTER_TYPE_TABLE)
-                            .endObject()
-                        .endObject()
-                        .startObject("analyzer")
-                            .startObject(DEFAULT_ANALYZER_NAME)
-                                .field("type", analyzerType)
+                    .endObject()
+                    .endObject()
+                    .startObject("analyzer")
+                    .startObject(DEFAULT_ANALYZER_NAME)
+                    .field("type", analyzerType)
                                 .field("tokenizer", tokenizer)
                                 .field("filter", DEFAULT_FILTER_ARRAY)
-                            .endObject()
+                    .endObject()
                     .endObject()
                     .endObject()
                     .endObject().string());
         }
         catch (IOException e) {
-            LOGGER.error("Failed to add serialize mapping because {}", e.getMessage());
+            LOGGER.error("Failed to add settings because {}", e.getMessage());
             return Optional.absent();
         }
+    }
+
+    public JSONObject toJSONObject() {
+        try {
+            return new JSONObject()
+                .put("number_of_shards", numberOfShards)
+                .put("number_of_replicas", numberOfReplicas)
+                .put("analysis", new JSONObject()
+                    .put("filter", new JSONObject()
+                        .put(DEFAULT_FILTER_NAME, new JSONObject()
+                            .put("type", DEFAULT_FILTER_TYPE)
+                            .put("type_table", DEFAULT_FILTER_TYPE_TABLE)
+                        )
+                    )
+                    .put("analyzer", new JSONObject()
+                        .put(DEFAULT_ANALYZER_NAME, new JSONObject()
+                            .put("type", analyzerType)
+                            .put("tokenizer", tokenizer)
+                            .put("filter", DEFAULT_FILTER_ARRAY)
+                        )
+                    )
+                );
+        }
+        catch (JSONException e) {
+            LOGGER.error("Failed to add settings because {}", e.getMessage());
+            return new JSONObject();
+        }
+
     }
 }

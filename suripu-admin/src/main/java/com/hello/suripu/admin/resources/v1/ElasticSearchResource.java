@@ -2,13 +2,13 @@ package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchIndexMappings;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchIndexSettings;
-import com.hello.suripu.core.models.ElasticSearch.ElasticSearchTransportClient;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
+import com.hello.suripu.search.ElasticSearchIndexMappings;
+import com.hello.suripu.search.ElasticSearchIndexSettings;
+import com.hello.suripu.search.ElasticSearchTransportClient;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;

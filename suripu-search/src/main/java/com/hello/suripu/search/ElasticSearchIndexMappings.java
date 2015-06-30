@@ -1,5 +1,7 @@
-package com.hello.suripu.core.models.ElasticSearch;
+package com.hello.suripu.search;
 
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
 import com.google.common.base.Optional;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -43,6 +45,7 @@ public class ElasticSearchIndexMappings {
                     .startObject(INDEX_TIME_TO_LIVE_SETTINGS_KEY)
                     .field(INDEX_TIME_TO_LIVE_ENABLE_KEY, timeToLiveEnabled)
                     .field(INDEX_TIME_TO_LIVE_DURATION_KEY, timeToLiveMillis)
+                    .startObject("_timestamp")
                     .endObject()
                     .startObject("properties")
                     .startObject("content")
@@ -55,6 +58,25 @@ public class ElasticSearchIndexMappings {
         catch (IOException e) {
             LOGGER.error("Failed to add serialize mapping because {}", e.getMessage());
             return Optional.absent();
+        }
+    }
+    public JSONObject toJSONObject() {
+        try {
+            return new JSONObject()
+                .put(INDEX_TIME_TO_LIVE_SETTINGS_KEY, new JSONObject()
+                    .put(INDEX_TIME_TO_LIVE_ENABLE_KEY, timeToLiveEnabled)
+                    .put(INDEX_TIME_TO_LIVE_DURATION_KEY, timeToLiveMillis)
+                )
+                .put("properties", new JSONObject()
+                    .put("content", new JSONObject()
+                        .put("type", "string")
+                        .put("analyzer", DEFAULT_ANALYZER)
+                    )
+                );
+        }
+        catch (JSONException e) {
+            LOGGER.error("Failed to add index mappings because {}", e.getMessage());
+            return new JSONObject();
         }
     }
 }
