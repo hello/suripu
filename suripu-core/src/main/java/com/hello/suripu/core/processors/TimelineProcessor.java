@@ -934,6 +934,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
                 trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
+        if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
+            // if motion score is zero, something is not quite right, don't save score
+            LOGGER.error("No motion score generated for {} on {}", accountId, targetDate);
+            return 0;
+        }
+
         // Sleep duration score
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
