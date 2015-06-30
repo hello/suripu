@@ -11,6 +11,8 @@ import org.joda.time.DateTime;
  */
 public interface TimelineLogDAO {
 
+    public  ImmutableList<Long> getActiveUers(final DateTime day,final Optional<Integer> numDaysAfterday);
+
     public ImmutableList<TimelineLog> getLogsForUserAndDay(long accountId, DateTime day,Optional<Integer> numDaysAfterday);
 
     public boolean putTimelineLog(final long accountId,final TimelineLog logdata);

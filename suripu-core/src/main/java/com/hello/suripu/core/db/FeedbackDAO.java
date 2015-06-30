@@ -63,9 +63,11 @@ public abstract class FeedbackDAO {
 
     @SqlQuery("SELECT * FROM timeline_feedback WHERE account_id = :account_id AND date_of_night = :date_of_night order by created")
     public abstract ImmutableList<TimelineFeedback> getForNight(@Bind("account_id") final Long accountId, @Bind("date_of_night") final DateTime dateOfNight);
+    
+    @SqlQuery("SELECT * FROM timeline_feedback WHERE date_of_night >= :start_time and date_of_night < :stop_time")
+    public abstract ImmutableList<TimelineFeedback> getForTimeRange(@Bind("start_time") final DateTime tstartUTC, @Bind("stop_time") final DateTime tstopUTC);
 
-    @SqlQuery("SELECT * FROM timeline_feedback WHERE date_of_night >= :tstartUTC and date_of_night < :tstopUTC")
-    public abstract ImmutableList<TimelineFeedback> getForTimeRange(@Bind("start_time") final Long tstartUTC, @Bind("stop_time") final Long tstopUTC);
 
-
+    @SqlQuery("SELECT * FROM timeline_feedback where account_id = :account_id")
+    public abstract ImmutableList<TimelineFeedback> getForAccount(@Bind("account_id") final Long accountId);
 }
