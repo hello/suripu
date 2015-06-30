@@ -82,7 +82,7 @@ public class TimelineResource extends BaseResource {
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{date}/event")
-    public Response amendTimeOfEvent(/*@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,*/
+    public Response amendTimeOfEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                      @PathParam("date") String date,
                                      @Valid TimelineFeedback timelineFeedback) {
         return Response.status(Response.Status.ACCEPTED).build();
@@ -92,7 +92,7 @@ public class TimelineResource extends BaseResource {
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{date}/event")
-    public Response deleteEvent(/*@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,*/
+    public Response deleteEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                      @Valid TimelineFeedback timelineFeedback) {
         return Response.status(Response.Status.ACCEPTED).build();
     }
@@ -101,7 +101,7 @@ public class TimelineResource extends BaseResource {
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{date}/event")
-    public Response validateEvent(/*@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,*/
+    public Response validateEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                      @Valid TimelineFeedback timelineFeedback) {
         return Response.status(Response.Status.ACCEPTED).build();
     }
