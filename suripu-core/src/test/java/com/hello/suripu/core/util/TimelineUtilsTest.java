@@ -19,7 +19,6 @@ import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
-import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -162,15 +161,22 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.of(events.get(1));
         final Optional<Event> outBedOptional = Optional.of(events.get(3));
 
+        final Boolean removeGreyEvents = true;
         final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional, removeGreyEvents);
 
         // motion events outside of first meaningful event is removed
-        assertThat(greyEvents.size(), is(events.size()));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
-        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
-
+        if (removeGreyEvents) {
+            assertThat(greyEvents.size(), is(3)); // all events before in-bed and after out-bed are removed
+            assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
+            assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
+            assertThat(greyEvents.get(2).getType(), is(Event.Type.OUT_OF_BED));
+        } else {
+            assertThat(greyEvents.size(), is(events.size())); // all events before in-bed and after out-bed are removed
+            assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
+            assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+            assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+        }
     }
 
     @Test
@@ -187,14 +193,23 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> inBedOptional = Optional.of(events.get(1));
         final Optional<Event> outBedOptional = Optional.absent();
 
-        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final Boolean removeGreyEvents = false;
 
-        assertThat(greyEvents.size(), is(events.size()));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
-        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.MOTION));
-        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.SLEEPING));
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional, removeGreyEvents);
+
+        if (removeGreyEvents) {
+            assertThat(greyEvents.size(), is(events.size() - 1));
+            assertThat(greyEvents.get(0).getType(), is(Event.Type.IN_BED));
+            assertThat(greyEvents.get(1).getType(), is(Event.Type.SLEEPING));
+            assertThat(greyEvents.get(greyEvents.size() - 1).getType(), is(Event.Type.SLEEPING));
+        } else {
+            assertThat(greyEvents.size(), is(events.size()));
+            assertThat(greyEvents.get(0).getType(), is(Event.Type.NONE));
+            assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+            assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.MOTION));
+            assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.SLEEPING));
+        }
 
     }
 
@@ -205,21 +220,30 @@ public class TimelineUtilsTest extends FixtureTest {
         events.add(new MotionEvent(now.getMillis(), now.plusMinutes(1).getMillis(),0,5));
         events.add(new InBedEvent(now.plusMinutes(1).getMillis(), now.plusMinutes(2).getMillis(),0));
         events.add(new NullEvent(now.plusMinutes(2).getMillis(), now.plusMinutes(3).getMillis(),0,100));
-        events.add(new OutOfBedEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(4).getMillis(),0));
-        events.add(new MotionEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(5).getMillis(),0,10));
-        events.add(new NullEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(6).getMillis(), 0, 1));
+        events.add(new MotionEvent(now.plusMinutes(3).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new OutOfBedEvent(now.plusMinutes(4).getMillis(), now.plusMinutes(4).getMillis(),0));
+        events.add(new MotionEvent(now.plusMinutes(5).getMillis(), now.plusMinutes(5).getMillis(),0,10));
+        events.add(new NullEvent(now.plusMinutes(6).getMillis(), now.plusMinutes(6).getMillis(), 0, 1));
 
         final Optional<Event> inBedOptional = Optional.absent();
         final Optional<Event> outBedOptional = Optional.of(events.get(3));
 
-        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final Boolean removeGreyEvents = true;
 
-        assertThat(greyEvents.size(), is(events.size()));
-        assertThat(greyEvents.get(0).getType(), is(Event.Type.MOTION));
-        assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
-        assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.NONE));
-        assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+        final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional, removeGreyEvents);
+
+        if (removeGreyEvents) {
+            assertThat(greyEvents.size(), is(5));
+            assertThat(greyEvents.get(1).getType(), is(Event.Type.IN_BED));
+            assertThat(greyEvents.get(4).getType(), is(Event.Type.OUT_OF_BED));
+        } else {
+            assertThat(greyEvents.size(), is(events.size()));
+            assertThat(greyEvents.get(0).getType(), is(Event.Type.MOTION));
+            assertThat(greyEvents.get(2).getType(), is(Event.Type.SLEEPING));
+            assertThat(greyEvents.get(filteredEvents.size() - 2).getType(), is(Event.Type.NONE));
+            assertThat(greyEvents.get(filteredEvents.size() - 1).getType(), is(Event.Type.NONE));
+        }
 
     }
 
@@ -238,7 +262,7 @@ public class TimelineUtilsTest extends FixtureTest {
         final Optional<Event> outBedOptional = Optional.absent();
 
         final List<Event> filteredEvents = timelineUtils.removeMotionEventsOutsideBedPeriod(events, inBedOptional, outBedOptional);
-        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional);
+        final List<Event> greyEvents = timelineUtils.greyNullEventsOutsideBedPeriod(filteredEvents, inBedOptional, outBedOptional, true);
 
         for(int i = 0; i < events.size(); i++){
             assertThat(greyEvents.get(i).getType() == Event.Type.NONE, is(false));

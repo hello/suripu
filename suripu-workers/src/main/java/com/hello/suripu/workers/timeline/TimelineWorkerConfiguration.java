@@ -1,7 +1,7 @@
 package com.hello.suripu.workers.timeline;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -14,6 +14,8 @@ import javax.validation.constraints.NotNull;
  * Created by pangwu on 1/26/15.
  */
 public class TimelineWorkerConfiguration extends WorkerConfiguration {
+    private static int DEFAULT_MAX_READ_CAPACITY = 200;
+
     @Valid
     @NotNull
     @Max(20)
@@ -61,38 +63,6 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     }
 
     @Valid
-    @NotNull
-    @JsonProperty("ring_history_db")
-    private DynamoDBConfiguration ringTimeHistoryDBConfiguration;
-    public DynamoDBConfiguration getRingTimeHistoryDBConfiguration(){
-        return this.ringTimeHistoryDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("timezone_history_db")
-    private DynamoDBConfiguration timeZoneHistoryDBConfiguration;
-    public DynamoDBConfiguration getTimeZoneHistoryDBConfiguration(){
-        return this.timeZoneHistoryDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("alarm_db")
-    private DynamoDBConfiguration alarmDBConfiguration;
-    public DynamoDBConfiguration getAlarmDBConfiguration(){
-        return this.alarmDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("user_info_db")
-    private DynamoDBConfiguration userInfoDynamoDBConfiguration;
-    public DynamoDBConfiguration getUserInfoDynamoDBConfiguration(){
-        return this.userInfoDynamoDBConfiguration;
-    }
-
-    @Valid
     @JsonProperty("score_threshold")
     private int scoreThreshold;
 
@@ -102,26 +72,10 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("sleep_score_db")
-    private DynamoDBConfiguration sleepScoreDBConfiguration;
-    public DynamoDBConfiguration getSleepScoreDBConfiguration(){
-        return this.sleepScoreDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
     @JsonProperty("sleep_score_version")
     private String sleepScoreVersion;
     public String getSleepScoreVersion() {
         return this.sleepScoreVersion;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("timeline_db")
-    private DynamoDBConfiguration timelineDBConfiguration;
-    public DynamoDBConfiguration getTimelineDBConfiguration(){
-        return this.timelineDBConfiguration;
     }
 
     @Valid
@@ -137,7 +91,7 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     @NotNull
     @Min(5)
     @Max(24)
-    @JsonProperty("hour_of_day_trigger")
+    @JsonProperty("start_process_time")
     private Integer earliestProcessTime;
     public Integer getEarliestProcessTime(){
         return this.earliestProcessTime;
@@ -153,14 +107,26 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
         return this.lastProcessTime;
     }
 
+
     @Valid
     @NotNull
-    @JsonProperty("sleephmm_db")
-    private DynamoDBConfiguration sleepHmmDBConfiguration;
-    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
-        return this.sleepHmmDBConfiguration;
+    @Min(5)
+    @Max(24)
+    @JsonProperty("start_expire_time")
+    private Integer earliestExpireTime;
+    public Integer getEarliestExpireTime(){
+        return this.earliestExpireTime;
     }
 
+    @Valid
+    @NotNull
+    @Min(10)
+    @Max(24)
+    @JsonProperty("end_expire_time")
+    private Integer lastExpireTime;
+    public Integer getLastExpireTime(){
+        return this.lastExpireTime;
+    }
 
     @Valid
     @NotNull
@@ -174,14 +140,6 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("sleep_stats_db")
-    private DynamoDBConfiguration sleepStatsDBConfiguration;
-    public DynamoDBConfiguration getSleepStatsDBConfiguration(){
-        return this.sleepStatsDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
     @JsonProperty("sleep_stats_version")
     private String sleepStatsVersion;
     public String getSleepStatsVersion() {
@@ -190,25 +148,18 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("algorithm_test_db")
-    private DynamoDBConfiguration algorithmTestDBConfiguration;
-    public DynamoDBConfiguration getAlgorithmTestDBConfiguration(){
-        return this.algorithmTestDBConfiguration;
+    @JsonProperty("dynamodb")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+
+    public NewDynamoDBConfiguration getDynamoDBConfiguration(){
+        return dynamoDBConfiguration;
     }
 
-    @Valid
-    @NotNull
-    @JsonProperty("timeline_log_db")
-    private DynamoDBConfiguration timelineLogDbConfiguration;
-    public DynamoDBConfiguration getTimelineLogDbConfiguration(){
-        return this.timelineLogDbConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("features_db")
-    private DynamoDBConfiguration featuresDynamoDBConfiguration;
-    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
-        return this.featuresDynamoDBConfiguration;
+    @Min(50)
+    @Max(200)
+    @JsonProperty("user_info_max_read_capacity_sec")
+    private Integer mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound = DEFAULT_MAX_READ_CAPACITY;
+    public Integer getMergeUserInfoDynamoDBReadCapacityPerSecondUpperBound(){
+        return this.mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound;
     }
 }

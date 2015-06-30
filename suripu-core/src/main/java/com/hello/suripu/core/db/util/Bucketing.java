@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.AllSensorSampleMap;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.util.DataUtils;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 public class Bucketing {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Bucketing.class);
 
     /**
@@ -60,7 +60,7 @@ public class Bucketing {
      * @param sensorName
      * @return
      */
-    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName) {
+    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,final Optional<Device.Color> optionalColor) {
 
         if(deviceDataList == null) {
             LOGGER.error("deviceDataList is null for sensor {}", sensorName);
@@ -69,6 +69,12 @@ public class Bucketing {
 
         if(deviceDataList.isEmpty()) {
             return Optional.absent();
+        }
+
+        Device.Color color = Device.DEFAULT_COLOR;
+
+        if (optionalColor.isPresent()) {
+            color = optionalColor.get();
         }
 
         final Map<Long, Sample> map = new HashMap<>();
@@ -87,7 +93,7 @@ public class Bucketing {
             } else if (sensorName.equals("particulates")) {
                 sensorValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientAirQualityRaw, deviceData.firmwareVersion);
             } else if (sensorName.equals("light")) {
-                sensorValue =  deviceData.ambientLightFloat;
+                sensorValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             } else if (sensorName.equals("sound")) {
                 sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             } else if(sensorName.equals("wave_count")) {
@@ -100,6 +106,16 @@ public class Bucketing {
                 sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB);
             } else if(sensorName.equals("peak_disturb")) {
                 sensorValue = DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB);
+            } else if(sensorName.equals("light_variance")) {
+                sensorValue = deviceData.ambientLightVariance;
+            } else if(sensorName.equals("light_peakiness")) {
+                sensorValue = deviceData.ambientLightPeakiness;
+            } else if(sensorName.equals("dust_min")) {
+                sensorValue = deviceData.ambientDustMin;
+            } else if(sensorName.equals("dust_max")) {
+                sensorValue = deviceData.ambientDustMax;
+            } else if(sensorName.equals("dust_variance")) {
+                sensorValue = deviceData.ambientDustVariance;
             } else {
                 LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensorName);
                 return Optional.absent();
@@ -114,7 +130,9 @@ public class Bucketing {
         return Optional.of(map);
     }
 
-    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList) {
+
+
+    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
 
@@ -122,11 +140,17 @@ public class Bucketing {
             return populatedMap;
         }
 
+        Device.Color color = Device.DEFAULT_COLOR;
+
+        if (optionalColor.isPresent()) {
+            color = optionalColor.get();
+        }
+
         for(final DeviceData deviceData: deviceDataList) {
 
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
-            final float lightValue = deviceData.ambientLightFloat;
+            final float lightValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);

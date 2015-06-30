@@ -24,7 +24,7 @@ while tries < 10:
 # Get ready to process some data from the stream
 
 print "Get shard iterator"
-response = kinesis.get_shard_iterator(stream_name, shard_id, 'TRIM_HORIZON')
+response = kinesis.get_shard_iterator(stream_name, shard_id, 'LATEST')
 shard_iterator = response['ShardIterator']
 print shard_iterator
 
@@ -41,6 +41,9 @@ while True:
       decoded = base64.b64decode(data)
       req.ParseFromString(decoded)
       print req.path
+      for header in req.headers:
+        print "\t", header.name, header.value
+      print
     except Exception, e:
       print e
   else:

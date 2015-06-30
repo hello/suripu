@@ -12,6 +12,7 @@ CREATE TABLE account_tracker_map(
 
 -- CREATE UNIQUE INDEX uniq_account_tracker on account_tracker_map(account_id, device_id);
 CREATE UNIQUE INDEX uniq_account_tracker_active on account_tracker_map(account_id, device_id, active);
+CREATE INDEX pill_id_active ON account_tracker_map(device_id, active);
 
 
 GRANT ALL PRIVILEGES ON account_tracker_map TO ingress_user;

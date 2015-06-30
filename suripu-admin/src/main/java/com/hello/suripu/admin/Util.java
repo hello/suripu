@@ -16,6 +16,7 @@ public class Util {
             LOGGER.debug("Account {} not found", email);
             return Optional.absent();
         }
+
         final Account account = accountOptional.get();
         if (!account.id.isPresent()) {
             LOGGER.debug("ID not found for account {}", email);

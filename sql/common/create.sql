@@ -244,7 +244,8 @@ CREATE TABLE onboarding_logs (
 GRANT ALL PRIVILEGES ON onboarding_logs TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE onboarding_logs_id_seq TO ingress_user;
 CREATE UNIQUE INDEX unique_sense_id_time ON onboarding_logs(sense_id, account_id, utc_ts);
-
+CREATE INDEX onboarding_logs_result_time ON onboarding_logs(result, utc_ts);
+CREATE INDEX onboarding_logs_account_id_time ON onboarding_logs(account_id, utc_ts);
 
 
 CREATE TABLE sense_colors (id SERIAL PRIMARY KEY, sense_id VARCHAR(64),color VARCHAR(64));
@@ -252,3 +253,12 @@ CREATE UNIQUE index sense_id_color on sense_colors(sense_id);
 
 GRANT ALL PRIVILEGES ON sense_colors TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sense_colors_id_seq TO ingress_user;
+
+
+
+CREATE TABLE tracking (id SERIAL PRIMARY KEY, sense_id VARCHAR(255), internal_sense_id BIGINT, account_id BIGINT, category SMALLINT, created_at TIMESTAMP);
+CREATE UNIQUE index tracking_uniq_device_id_category on tracking(internal_sense_id, category);
+
+
+GRANT ALL PRIVILEGES ON tracking TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE tracking_id_seq TO ingress_user;

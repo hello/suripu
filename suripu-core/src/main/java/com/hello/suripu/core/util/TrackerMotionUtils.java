@@ -4,12 +4,16 @@ import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.core.models.TrackerMotion;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by pangwu on 3/24/15.
  */
 public class TrackerMotionUtils {
+    final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     public static List<AmplitudeData> trackerMotionToAmplitudeData(final List<TrackerMotion> trackerMotions){
         final List<AmplitudeData> converted = new ArrayList<>();
@@ -27,5 +31,42 @@ public class TrackerMotionUtils {
         }
 
         return converted;
+    }
+
+    static public List<TrackerMotion> removeDuplicatesAndInvalidValues(final List<TrackerMotion> trackerMotions) {
+        Set<TrackerMotion> trackerMotionSet = new TreeSet<TrackerMotion>(new Comparator<TrackerMotion>() {
+            @Override
+            public int compare(final TrackerMotion m1, final TrackerMotion m2) {
+                final long t1 = m1.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                final long t2 = m2.timestamp / NUMBER_OF_MILLIS_IN_A_MINUTE;
+                final int f1 = m1.value;
+                final int f2 = m1.value;
+
+                if (t1 < t2) {
+                    return -1;
+                }
+
+                if (t1 > t2) {
+                    return 1;
+                }
+
+                return 0;
+
+            }
+        });
+
+
+        for (final TrackerMotion m : trackerMotions) {
+            if (m.value != -1) {
+                trackerMotionSet.add(m);
+            }
+        }
+
+
+        List<TrackerMotion> uniqueValues = new ArrayList<>();
+
+        uniqueValues.addAll(trackerMotionSet);
+
+        return uniqueValues;
     }
 }

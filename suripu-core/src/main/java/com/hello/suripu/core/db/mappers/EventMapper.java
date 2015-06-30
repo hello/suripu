@@ -3,7 +3,6 @@ package com.hello.suripu.core.db.mappers;
 import com.hello.suripu.core.models.Event;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,6 +23,6 @@ public class EventMapper implements ResultSetMapper<Event> {
         );
         */
 
-        throw new NotImplementedException();
+        throw new RuntimeException("Not implemented.");
     }
 }

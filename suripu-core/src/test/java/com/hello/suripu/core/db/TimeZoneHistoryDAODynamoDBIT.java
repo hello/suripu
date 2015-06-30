@@ -72,7 +72,7 @@ public class TimeZoneHistoryDAODynamoDBIT {
     public void testUpdateTimeZone(){
         final long accountId = 1;
         int offsetMillis  = DateTimeZone.getDefault().getOffset(DateTime.now());
-        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, DateTime.now().getZone().getID(), DateTime.now().getZone().getOffset(DateTime.now()));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  DateTime.now(), DateTime.now().getZone().getID(), DateTime.now().getZone().getOffset(DateTime.now()));
 
         final Optional<TimeZoneHistory> updated = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
         assertThat(updated.isPresent(), is(true));
@@ -85,6 +85,7 @@ public class TimeZoneHistoryDAODynamoDBIT {
         final long accountId = 1;
         int offsetMillis  = DateTime.now().getZone().getOffset(DateTime.now());
         this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,
+                DateTime.now(),
                 DateTime.now().getZone().getID(),
                 offsetMillis);
 
@@ -95,7 +96,7 @@ public class TimeZoneHistoryDAODynamoDBIT {
         }
 
 
-        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, DateTimeZone.UTC.getID(), DateTimeZone.UTC.getOffset(DateTime.now()));
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, DateTime.now(), DateTimeZone.UTC.getID(), DateTimeZone.UTC.getOffset(DateTime.now()));
 
         final Optional<TimeZoneHistory> updated = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
         assertThat(updated.isPresent(), is(true));
@@ -110,7 +111,7 @@ public class TimeZoneHistoryDAODynamoDBIT {
         final long accountId = 1;
         int offsetMillis  = DateTime.now().getZone().getOffset(DateTime.now());
         final DateTimeZone zoneFromOffset = DateTimeZone.forOffsetMillis(offsetMillis - 1);
-        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, zoneFromOffset.getID(), offsetMillis - 1);
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, DateTime.now(), zoneFromOffset.getID(), offsetMillis - 1);
 
 
         final Optional<TimeZoneHistory> updated = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
@@ -132,7 +133,7 @@ public class TimeZoneHistoryDAODynamoDBIT {
         final long accountId = 1;
         int offsetMillis  = DateTime.now().getZone().getOffset(DateTime.now());
         final DateTimeZone timeZone = DateTimeZone.getDefault();
-        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, timeZone.getID(), offsetMillis - 100);
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, DateTime.now(), timeZone.getID(), offsetMillis - 100);
 
 
         final Optional<TimeZoneHistory> updated = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
@@ -151,7 +152,7 @@ public class TimeZoneHistoryDAODynamoDBIT {
         final long accountId = 1;
         int offsetMillis  = DateTime.now().getZone().getOffset(DateTime.now());
         final DateTimeZone timeZone = DateTimeZone.getDefault();
-        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId, "Invalid time zone id", offsetMillis);
+        this.timeZoneHistoryDAODynamoDB.updateTimeZone(accountId,  DateTime.now(), "Invalid time zone id", offsetMillis);
 
 
         final Optional<TimeZoneHistory> updated = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);

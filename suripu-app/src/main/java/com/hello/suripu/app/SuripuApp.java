@@ -31,12 +31,11 @@ import com.hello.suripu.app.resources.v1.PasswordResetResource;
 import com.hello.suripu.app.resources.v1.ProvisionResource;
 import com.hello.suripu.app.resources.v1.QuestionsResource;
 import com.hello.suripu.app.resources.v1.RoomConditionsResource;
+import com.hello.suripu.app.resources.v1.SupportResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.core.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
-import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
@@ -55,9 +54,11 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
+import com.hello.suripu.core.db.TeamStoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
@@ -65,6 +66,8 @@ import com.hello.suripu.core.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -86,6 +89,7 @@ import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.provision.PillProvisionDAO;
+import com.hello.suripu.core.support.SupportDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.KeyStoreUtils;
@@ -105,7 +109,6 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPool;
 
 import java.util.List;
 import java.util.TimeZone;
@@ -126,12 +129,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new RecreatePillColorCommand());
         bootstrap.addCommand(new PopulateSleepScoreTable());
         bootstrap.addCommand(new ScanInvalidNightsCommand());
-        bootstrap.addBundle(new KinesisLoggerBundle<SuripuAppConfiguration>() {
-            @Override
-            public KinesisLoggerConfiguration getConfiguration(final SuripuAppConfiguration configuration) {
-                return configuration.getKinesisLoggerConfiguration();
-            }
-        });
     }
 
     @Override
@@ -165,6 +162,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
         final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
+        final SupportDAO supportDAO = commonDB.onDemand(SupportDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -229,11 +227,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSleepStatsDynamoConfiguration().getTableName(),
                 configuration.getSleepStatsVersion());
 
-        final JedisPool jedisPool = new JedisPool(
-                configuration.getRedisConfiguration().getHost(),
-                configuration.getRedisConfiguration().getPort()
-        );
-
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
 
         final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
@@ -254,7 +247,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
-        final TeamStore teamStore = new TeamStore(teamStoreDBClient, "teams");
+        final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
@@ -297,6 +290,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace);
 
 
+
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
@@ -316,11 +310,24 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 120 // 2 minutes for cache
         );
 
+
+        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+        
+        final AmazonDynamoDB senseLastSeenDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseLastSeenConfiguration().getEndpoint());
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
+                senseLastSeenDynamoDBClient,
+                "", // We are not using dynamodb for minute by minute data yet
+                configuration.getSenseLastSeenConfiguration().getTableName()
+        );
+
+
+
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange()));
-        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO));
-        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure","hello-pvt.pem");
+        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO));
+        environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB));
+
+        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure", "hello-pvt.pem");
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
@@ -331,7 +338,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
                 accountDAO,
-                sleepStatsDAODynamoDB);
+                sleepStatsDAODynamoDB,
+                senseColorDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
 
@@ -342,7 +350,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
         environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
-        environment.addResource(new AppCheckinResource(false, "")); // TODO: replace this with real app version. Maybe move it to admin tool?
+        environment.addResource(new AppCheckinResource(2015000000));
 
         // data science resource stuff
         final AccountInfoProcessor.Builder builder = new AccountInfoProcessor.Builder()
@@ -378,5 +386,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
 
         environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));
+
+        environment.addResource(new SupportResource(supportDAO));
+        environment.addResource(new com.hello.suripu.app.v2.TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
     }
 }

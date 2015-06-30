@@ -18,7 +18,7 @@ public abstract class PillHeartBeatDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(PillHeartBeatDAO.class);
 
     @SqlUpdate("INSERT INTO pill_status (pill_id, battery_level, uptime, fw_version, last_updated) VALUES(:pill_id, :battery_level, :uptime, :firmware_version, :last_updated);")
-    abstract int insert(@Bind("pill_id") final Long internalPillId, @Bind("battery_level") final Integer batteryLevel, @Bind("uptime") final Integer uptime, @Bind("firmware_version") final Integer firmwareVersion, @Bind("last_updated") final DateTime lastUpdated);
+    public abstract int insert(@Bind("pill_id") final Long internalPillId, @Bind("battery_level") final Integer batteryLevel, @Bind("uptime") final Integer uptime, @Bind("firmware_version") final Integer firmwareVersion, @Bind("last_updated") final DateTime lastUpdated);
 
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
@@ -34,5 +34,4 @@ public abstract class PillHeartBeatDAO {
             LOGGER.error("{}", exception.getMessage());
         }
     }
-
 }

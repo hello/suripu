@@ -5,11 +5,11 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.99-SNAPSHOT</version>
+    <version>0.4.51-SNAPSHOT</version>
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
-        <aws.sdk.version>1.9.13</aws.sdk.version>
+        <aws.sdk.version>1.9.37</aws.sdk.version>
         <jodatime.version>20150319</jodatime.version>
         <librato.reporter.version>2.2.0.5</librato.reporter.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -92,6 +92,16 @@
                 <artifactId>dropwizard-jdbi</artifactId>
                 <version>${dropwizard.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>[14.0.1]</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>2.5.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -146,11 +156,29 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.3</version>
                 <configuration>
+                    <compilerId>javac-with-errorprone</compilerId>
+                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
+                    <!-- maven-compiler-plugin defaults to targeting Java 5, but our javac
+                         only supports >=6 -->
                     <source>1.7</source>
                     <target>1.7</target>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.plexus</groupId>
+                        <artifactId>plexus-compiler-javac-errorprone</artifactId>
+                        <version>2.5</version>
+                    </dependency>
+                    <!-- override plexus-compiler-javac-errorprone's dependency on
+                         Error Prone with the latest version -->
+                    <dependency>
+                        <groupId>com.google.errorprone</groupId>
+                        <artifactId>error_prone_core</artifactId>
+                        <version>2.0.3</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

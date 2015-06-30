@@ -14,6 +14,8 @@ public class SenseUploadConfiguration extends Configuration {
     private static final Boolean DEFAULT_WEEK_DAYS_ONLY = true;           // weekends are treated as peak periods
     private static final Integer DEFAULT_LONG_INTERVAL = 6;    // minutes
     private static final Integer DEFAULT_SHORT_INTERVAL = 2;   // minutes
+    public static final Integer REDUCED_LONG_INTERVAL = 2;    // minutes
+    public static final Integer REDUCED_SHORT_INTERVAL = 1;   // minutes
 
 
     @JsonProperty("non_peak_hour_lower_bound")

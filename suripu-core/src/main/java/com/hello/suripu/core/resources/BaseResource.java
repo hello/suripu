@@ -20,6 +20,7 @@ public class BaseResource {
     @Inject
     RolloutClient featureFlipper;
 
+
     protected BaseResource()  {
         ObjectGraphRoot.getInstance().inject(this);
     }
@@ -35,6 +36,10 @@ public class BaseResource {
     protected Integer missingDataDefaultValue(final Long accountId) {
         boolean active = featureFlipper.userFeatureActive(FeatureFlipper.MISSING_DATA_DEFAULT_VALUE, accountId, Collections.EMPTY_LIST);
         return (active) ? -1 : 0;
+    }
+
+    protected Boolean hasColorCompensationEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.COMPENSATE_LIGHT_WITH_SENSE_COLOR, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasHmmEnabled(final Long accountId) {
@@ -86,4 +91,25 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.SENSORS_DB_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
 
+
+    protected Boolean isSenseLastSeenDynamoDBReadEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSE_LAST_SEEN_VIEW_DYNAMODB_READ, accountId, Collections.EMPTY_LIST);
+    }
+
+
+    protected Boolean isSensorsViewUnavailable(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.VIEW_SENSORS_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean isTimelineViewUnavailable(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.VIEW_TIMELINE_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean isTrendsViewUnavailable(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.VIEW_TRENDS_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean isTimelineV2Enabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_V2_AVAILABLE, accountId, Collections.EMPTY_LIST);
+    }
 }

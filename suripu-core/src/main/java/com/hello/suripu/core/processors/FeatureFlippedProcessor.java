@@ -51,12 +51,24 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasBayesianPartnerFilterEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.BAYESIAN_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasAllSensorQueryUseUTCTs(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.ALL_SENSOR_QUERY_USE_UTC_TS, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasNewInvalidNightFilterEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.NEW_INVALID_NIGHT_FILTER, accountId, Collections.EMPTY_LIST);
-
     }
+
+    protected Boolean hasRemoveMotionEventsOutsideSleep(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
+    }
+
 }

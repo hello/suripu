@@ -1,6 +1,7 @@
 package com.hello.suripu.admin.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
@@ -9,6 +10,7 @@ import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 
 public class SuripuAdminConfiguration extends Configuration {
@@ -39,6 +41,26 @@ public class SuripuAdminConfiguration extends Configuration {
     public Boolean getDebug() {
         return debug;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("metrics_enabled")
+    private Boolean metricsEnabled;
+
+    public Boolean getMetricsEnabled() {
+        return metricsEnabled;
+    }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("graphite")
+    private GraphiteConfiguration graphite;
+
+    public GraphiteConfiguration getGraphite() {
+        return graphite;
+    }
+
 
     @Valid
     @NotNull
@@ -77,4 +99,12 @@ public class SuripuAdminConfiguration extends Configuration {
     public NewDynamoDBConfiguration dynamoDBConfiguration(){
         return dynamoDBConfiguration;
     }
+
+
+    @Valid
+    @NotNull
+    @Max(600)
+    @JsonProperty("token_expiration")
+    private Long tokenExpiration;
+    public Long getTokenExpiration() {return this.tokenExpiration;}
 }

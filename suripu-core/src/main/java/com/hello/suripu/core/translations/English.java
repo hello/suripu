@@ -157,6 +157,7 @@ public class English {
 
     // TIMELINE
     public final static String TIMELINE_NO_SLEEP_DATA = " No sleep data recorded";
+    public final static String TIMELINE_NOT_ENOUGH_SLEEP_DATA = "Some sleep data was recorded, but not enough to generate a Sleep Timeline for this night.";
 
     // Trends
     public final static String TRENDS_SCORE_AVERAGE = "AVERAGE SLEEP SCORE";
@@ -185,4 +186,6 @@ public class English {
 
 
     public final static String TIMELINE_UNAVAILABLE = "Your timeline is currently unavailable. Please try again later.";
+
+    public final static String ERROR_CLOCK_OUT_OF_SYNC = "Your device's time is significantly different from our reference time. From your device's Settings app, please enable automatic Date & Time, or enter the correct time manually.";
 }

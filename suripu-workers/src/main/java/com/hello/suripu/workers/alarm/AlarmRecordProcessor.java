@@ -61,6 +61,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         for (final Record record : records) {
             try {
                 final DataInputProtos.BatchPeriodicDataWorker pb = DataInputProtos.BatchPeriodicDataWorker.parseFrom(record.getData().array());
+
                 if(!pb.getData().hasDeviceId() || pb.getData().getDeviceId().isEmpty()) {
                     LOGGER.warn("Found a periodic_data without a device_id {}");
                     continue;
@@ -77,17 +78,24 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
         for(final String senseId : senseIds) {
-            RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
-                    this.scheduledRingTimeHistoryDAODynamoDB,
-                    this.smartAlarmLoggerDynamoDB,
-                    this.trackerMotionDAO,
-                    senseId,
-                    DateTime.now(),
-                    this.configuration.getProcessAheadTimeInMinutes(),
-                    this.configuration.getAggregateWindowSizeInMinute(),
-                    this.configuration.getLightSleepThreshold(),
-                    flipper
-            );
+            try {
+                RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
+                        this.scheduledRingTimeHistoryDAODynamoDB,
+                        this.smartAlarmLoggerDynamoDB,
+                        this.trackerMotionDAO,
+                        senseId,
+                        DateTime.now(),
+                        this.configuration.getProcessAheadTimeInMinutes(),
+                        this.configuration.getAggregateWindowSizeInMinute(),
+                        this.configuration.getLightSleepThreshold(),
+                        flipper
+                );
+            }catch (Exception ex){
+                LOGGER.error("Update next ring time for sense {} failed at {}, error {}",
+                        senseId,
+                        DateTime.now(),
+                        ex.getMessage());
+            }
         }
 
         LOGGER.info("Successfully updated smart ring time for {} sense", senseIds.size());
@@ -112,5 +120,14 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     @Override
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
+        if(shutdownReason == ShutdownReason.TERMINATE) {
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
     }
 }

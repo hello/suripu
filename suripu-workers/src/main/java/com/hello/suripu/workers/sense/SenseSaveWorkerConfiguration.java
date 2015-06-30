@@ -56,4 +56,8 @@ public class SenseSaveWorkerConfiguration extends WorkerConfiguration {
     public RedisConfiguration getRedisConfiguration() {
         return redisConfiguration;
     }
+
+    @JsonProperty("trim_horizon")
+    private Boolean trimHorizon = Boolean.TRUE;
+    public Boolean getTrimHorizon() {return trimHorizon;}
 }

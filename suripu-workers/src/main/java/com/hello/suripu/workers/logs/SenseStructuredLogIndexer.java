@@ -1,19 +1,19 @@
 package com.hello.suripu.workers.logs;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.SenseEventsDAO;
 import com.hello.suripu.core.metrics.DeviceEvents;
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class SenseStructuredLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage> {
@@ -37,10 +37,13 @@ public class SenseStructuredLogIndexer implements LogIndexer<LoggingProtos.Batch
     }
 
     public static Set<String> decode(final String text) {
-        final Map<String, String> m = Maps.newHashMap();
-        final String noBraces = text.replace("{","").replace("}","");
-        final String[] pairs = noBraces.split(",");
-        return ImmutableSet.copyOf(pairs);
+
+        final Set<String> decoded = new HashSet<>();
+        final Pattern pattern = Pattern.compile("(\\w+:{1}\\w+)");
+        final Matcher matcher = pattern.matcher(text.replace(" ", ""));
+        while (matcher.find())
+            decoded.add(matcher.group());
+        return decoded;
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
+import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 
@@ -18,6 +19,7 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final DeviceDAO deviceDAO;
     private final ActiveDevicesTracker activeDevicesTracker;
+    private final PillViewsDynamoDB pillViewsDynamoDB;
 
     public SavePillDataProcessorFactory(
             final TrackerMotionDAO trackerMotionDAO,
@@ -26,7 +28,8 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
             final PillHeartBeatDAO pillHeartBeatDAO,
             final KeyStore pillKeyStore,
             final DeviceDAO deviceDAO,
-            final ActiveDevicesTracker activeDevicesTracker) {
+            final ActiveDevicesTracker activeDevicesTracker,
+            final PillViewsDynamoDB pillViewsDynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
         this.mergedUserInfoDynamoDB= mergedUserInfoDynamoDB;
@@ -34,10 +37,11 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.activeDevicesTracker = activeDevicesTracker;
+        this.pillViewsDynamoDB = pillViewsDynamoDB;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new SavePillDataProcessor(trackerMotionDAO, batchSize, pillHeartBeatDAO, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, activeDevicesTracker);
+        return new SavePillDataProcessor(trackerMotionDAO, batchSize, pillHeartBeatDAO, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, activeDevicesTracker, pillViewsDynamoDB);
     }
 }

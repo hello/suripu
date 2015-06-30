@@ -6,6 +6,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
+import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -13,14 +15,24 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.QueryRequest;
+import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.RateLimiter;
+import com.hello.suripu.core.models.SmartAlarmHistory;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -76,6 +88,96 @@ public class SmartAlarmLoggerDynamoDB {
         }catch (AmazonClientException awcEx){
             LOGGER.error("Log smart alarm for account {} failed, client error.", accountId, awcEx.getMessage());
         }
+    }
+
+    @Timed
+    public List<SmartAlarmHistory> getSmartAlarmHistoryByScheduleTime(final long accountId,
+                                                                      final DateTime start, final DateTime end){
+        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
+        final double maxRateLimitSec = 100d;
+        final Condition selectDateCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withAttributeValueList(new AttributeValue().withS(start.toString(DATETIME_FORMAT)),
+                        new AttributeValue().withS(end.toString(DATETIME_FORMAT)));
+
+
+        queryConditions.put(CURRENT_TIME_ATTRIBUTE_NAME, selectDateCondition);
+
+        // AND accound_id = :accound_id
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
+
+        Map<String, AttributeValue> lastEvaluatedKey = null;
+        final List<SmartAlarmHistory> history = new ArrayList<>();
+        final Collection<String> targetAttributeSet = new HashSet<String>();
+        Collections.addAll(targetAttributeSet,
+                ACCOUNT_ID_ATTRIBUTE_NAME,
+                CURRENT_TIME_ATTRIBUTE_NAME,
+                EXPECTED_RING_TIME_ATTRIBUTE_NAME,
+                SMART_RING_TIME_ATTRIBUTE_NAME,
+                LAST_SLEEP_CYCLE_ATTRIBUTE_NAME,
+                TIMEZONE_ID_ATTRIBUTE_NAME
+                );
+
+        final RateLimiter rateLimiter = RateLimiter.create(maxRateLimitSec);
+        do {
+            rateLimiter.acquire();
+            final QueryRequest queryRequest = new QueryRequest()
+                    .withTableName(this.tableName)
+                    .withKeyConditions(queryConditions)
+                    .withAttributesToGet(targetAttributeSet)
+                    .withLimit(100)
+                    .withExclusiveStartKey(lastEvaluatedKey);
+
+            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
+
+            final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+            for (final Map<String, AttributeValue> item : items) {
+                final Optional<SmartAlarmHistory> smartAlarmHistoryOptional = smartAlarmHistoryFromAttributeValues(item);
+                if(smartAlarmHistoryOptional.isPresent()){
+                    history.add(smartAlarmHistoryOptional.get());
+                }
+            }
+
+            LOGGER.warn("Account {} get timezone failed, no data or aws error.", accountId);
+        }while (lastEvaluatedKey != null);
+
+        return history;
+    }
+
+    private Optional<SmartAlarmHistory> smartAlarmHistoryFromAttributeValues(final Map<String, AttributeValue> item){
+        final Collection<String> targetAttributeSet = new HashSet<String>();
+        Collections.addAll(targetAttributeSet,
+                ACCOUNT_ID_ATTRIBUTE_NAME,
+                CURRENT_TIME_ATTRIBUTE_NAME,
+                EXPECTED_RING_TIME_ATTRIBUTE_NAME,
+                SMART_RING_TIME_ATTRIBUTE_NAME,
+                LAST_SLEEP_CYCLE_ATTRIBUTE_NAME
+                // TIMEZONE_ID_ATTRIBUTE_NAME  // backward compatibility
+        );
+
+        if (!item.keySet().containsAll(targetAttributeSet)) {
+            LOGGER.warn("Missing field in item {}", item);
+            return Optional.absent();
+        }
+
+        final long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
+        final String scheduledAtLocal = item.get(CURRENT_TIME_ATTRIBUTE_NAME).getS();
+        final String expectedRingLocal = item.get(EXPECTED_RING_TIME_ATTRIBUTE_NAME).getS();
+        final String actualRingLocal = item.get(SMART_RING_TIME_ATTRIBUTE_NAME).getS();
+        final String lastSleepCycleLocal = item.get(LAST_SLEEP_CYCLE_ATTRIBUTE_NAME).getS();
+        final String timeZoneId = item.containsKey(TIMEZONE_ID_ATTRIBUTE_NAME) ? item.get(TIMEZONE_ID_ATTRIBUTE_NAME).getS() : null;
+        final SmartAlarmHistory smartAlarmHistory = SmartAlarmHistory.create(accountId,
+                scheduledAtLocal,
+                expectedRingLocal,
+                actualRingLocal,
+                lastSleepCycleLocal,
+                timeZoneId);
+        return Optional.of(smartAlarmHistory);
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){

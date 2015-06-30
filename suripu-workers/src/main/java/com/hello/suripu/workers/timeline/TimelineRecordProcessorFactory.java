@@ -2,7 +2,6 @@ package com.hello.suripu.workers.timeline;
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
-import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
@@ -18,20 +17,17 @@ public class TimelineRecordProcessorFactory implements IRecordProcessorFactory {
     private final TimelineWorkerConfiguration configuration;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final DeviceDAO deviceDAO;
-    private final AlgorithmResultsDAODynamoDB algorithmResultsDAODynamoDB;
 
     public TimelineRecordProcessorFactory(final TimelineProcessor timelineProcessor,
                                           final DeviceDAO deviceDAO,
                                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                           final TimelineDAODynamoDB timelineDAODynamoDB,
-                                          final AlgorithmResultsDAODynamoDB algorithmResultsDAODynamoDB,
                                           final TimelineWorkerConfiguration configuration) {
         this.timelineProcessor = timelineProcessor;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.configuration = configuration;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.deviceDAO = deviceDAO;
-        this.algorithmResultsDAODynamoDB = algorithmResultsDAODynamoDB;
     }
 
 
@@ -41,7 +37,6 @@ public class TimelineRecordProcessorFactory implements IRecordProcessorFactory {
                 this.deviceDAO,
                 this.mergedUserInfoDynamoDB,
                 this.timelineDAODynamoDB,
-                this.algorithmResultsDAODynamoDB,
                 this.configuration);
     }
 }

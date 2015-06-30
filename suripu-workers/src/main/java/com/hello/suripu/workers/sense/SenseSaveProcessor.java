@@ -16,6 +16,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.hello.suripu.workers.utils.ActiveDevicesTracker;
@@ -50,7 +51,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final Meter messagesProcessed;
     private final Meter batchSaved;
     private final Meter clockOutOfSync;
-    private final Meter emptyDynamoDB;
 
 
     public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
@@ -62,7 +62,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
-        this.emptyDynamoDB = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "dynamo-db", "empty-dynamo-db", TimeUnit.SECONDS);
     }
 
     @Override
@@ -76,7 +75,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
-        final Map<String, Integer> seenFirmwares = new HashMap<>(records.size());
+        final Map<String, FirmwareInfo> seenFirmwares = new HashMap<>(records.size());
+        final Map<String, Long> allSeenSenses = new HashMap<>(records.size());
+
         final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
 
         for(final Record record : records) {
@@ -90,6 +91,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             final String deviceName = batchPeriodicDataWorker.getData().getDeviceId();
+
+            //Logging seen device before attempting account pairing
+            allSeenSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
 
             if(!deviceDataGroupedByDeviceId.containsKey(deviceName)){
                 deviceDataGroupedByDeviceId.put(deviceName, new LinkedList<DeviceData>());
@@ -133,7 +137,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             //LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
-
 
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
 
@@ -214,7 +217,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     dataForDevice.add(deviceData);
                 }
                 //TODO: Eventually break out metrics to their own worker
-                seenFirmwares.put(deviceName, firmwareVersion);
+                seenFirmwares.put(deviceName, new FirmwareInfo(firmwareVersion.toString(), deviceName, timestampMillis));
             }
 
 
@@ -260,13 +263,31 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
-
+        // Commenting this out, it is causing production failures
+        /*
+        activeDevicesTracker.trackAllSeenSenses(allSeenSenses);
         activeDevicesTracker.trackSenses(activeSenses);
         activeDevicesTracker.trackFirmwares(seenFirmwares);
+        */
+
+        LOGGER.info("Seen device: {}", activeSenses.size());
     }
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
+
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
+        if(shutdownReason == ShutdownReason.TERMINATE) {
+            LOGGER.warn("Going to checkpoint");
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+                LOGGER.warn("Checkpointed successfully");
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+
     }
 }

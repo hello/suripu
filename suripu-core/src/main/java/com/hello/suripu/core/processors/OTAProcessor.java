@@ -58,7 +58,7 @@ public class OTAProcessor {
                                        final DateTime currentDTZ,
                                        final DateTime startOTAWindow,
                                        final DateTime endOTAWindow,
-                                       final Boolean isAlwaysOTA,
+                                       final Boolean bypassOTAChecks,
                                        final String ipAddress) {
 
         boolean canOTA;
@@ -68,8 +68,8 @@ public class OTAProcessor {
                 return false;
         }
 
-        if (isAlwaysOTA) {
-            LOGGER.info("Always OTA is on for device: {}", deviceID);
+        if (bypassOTAChecks) {
+            LOGGER.info("OTA checks are bypassed for device: {}", deviceID);
             canOTA = true;
         } else {
 

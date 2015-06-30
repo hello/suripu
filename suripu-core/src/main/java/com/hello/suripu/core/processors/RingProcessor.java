@@ -450,11 +450,17 @@ public class RingProcessor {
                         Optional.<DateTime>absent(),
                         timeZone);
             }
-            LOGGER.info("User {} smartAlarm time is {}", accountId, new DateTime(smartAlarmRingTimeUTC, timeZone));
+            LOGGER.info("User {} smartAlarm time is {}, for ring {}",
+                    accountId,
+                    new DateTime(smartAlarmRingTimeUTC, timeZone),
+                    new DateTime(nextRegularRingTime.expectedRingTimeUTC, timeZone));
             nextRingTimeMillis = smartAlarmRingTimeUTC.getMillis();
         }
 
-        return new RingTime(nextRingTimeMillis, nextRegularRingTime.expectedRingTimeUTC, nextRegularRingTime.soundIds, nextRegularRingTime.fromSmartAlarm);
+        return new RingTime(nextRingTimeMillis < nextRegularRingTime.expectedRingTimeUTC ? nextRingTimeMillis : nextRegularRingTime.expectedRingTimeUTC,  // double check
+                nextRegularRingTime.expectedRingTimeUTC,
+                nextRegularRingTime.soundIds,
+                nextRegularRingTime.fromSmartAlarm);
     }
 
 

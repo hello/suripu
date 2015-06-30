@@ -2,12 +2,14 @@ package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Timeline;
+import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -115,6 +117,11 @@ public class TimelineResource extends BaseResource {
             //if it was successful,
             if (result.isPresent()) {
 
+                // Timeline result could be present but no timeline if not enough data for the night
+                if(result.get().timelines.isEmpty()) {
+                    return result.get();
+                }
+
                 //place in cache cache, money money, yo.
                 cacheTimeline(accountId, targetDate, result.get());
 
@@ -141,8 +148,8 @@ public class TimelineResource extends BaseResource {
             @Scope(OAuthScope.SLEEP_TIMELINE)final AccessToken accessToken,
             @PathParam("date") String date) {
 
-        if(isSensorsDBUnavailable(accessToken.accountId)) {
-            LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accessToken.accountId);
+        if(isTimelineViewUnavailable(accessToken.accountId)) {
+            LOGGER.warn("TIMELINE VIEW UNAVAILABLE FOR USER {}", accessToken.accountId);
             final List<Timeline> timelines = Lists.newArrayList(
                     Timeline.createEmpty(English.TIMELINE_UNAVAILABLE)
             );
@@ -190,6 +197,23 @@ public class TimelineResource extends BaseResource {
         return this.timelineDAODynamoDB.invalidateCache(accountId.get(), targetDate, DateTime.now());
     }
 
+    @Timed
+    @Path("/admin/algo/{email}/{date}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @GET
+    public TimelineLog getTimelineAlgorithm(
+            @Scope(OAuthScope.ADMINISTRATION_READ)final AccessToken accessToken,
+            @PathParam("email") String email,
+            @PathParam("date") String date) {
+
+        final Optional<Long> accountId = getAccountIdByEmail(email);
+        if (!accountId.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        return getAlgorithmFromTimelineLog(accountId.get(), date);
+    }
+
     private Optional<Long> getAccountIdByEmail(final String email) {
         final Optional<Account> accountOptional = accountDAO.getByEmail(email);
 
@@ -204,4 +228,28 @@ public class TimelineResource extends BaseResource {
         }
         return account.id;
     }
+
+    private TimelineLog getAlgorithmFromTimelineLog(final Long accountId, final String date) {
+
+        final DateTime dateTime = DateTimeUtil.ymdStringToDateTime(date);
+        final ImmutableList<TimelineLog> timelineLogs = this.timelineLogDAO.getLogsForUserAndDay(accountId, dateTime, Optional.<Integer>absent());
+
+        if (timelineLogs.isEmpty()) {
+            return TimelineLog.createEmpty();
+        } else if (timelineLogs.size() == 1) {
+            return timelineLogs.get(0);
+        }
+
+        // multiple logs, return the latest
+        int index = 0;
+        Long latestCreated = timelineLogs.get(0).createdDate;
+        for (int i = 0; i < timelineLogs.size(); i++) {
+            if (timelineLogs.get(i).createdDate > latestCreated) {
+                index = i;
+                latestCreated = timelineLogs.get(i).createdDate;
+            }
+        }
+        return timelineLogs.get(index);
+    }
+
 }

@@ -12,6 +12,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
+import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB.ResponseCommand;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.firmware.FirmwareUpdateStore;
 import com.hello.suripu.core.flipper.FeatureFlipper;
@@ -153,7 +154,7 @@ public class ReceiveResource extends BaseResource {
         LOGGER.debug("Received valid protobuf {}", data.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
-        if(data.getDeviceId() == null || data.getDeviceId().isEmpty()){
+        if(!data.hasDeviceId() || data.getDeviceId().isEmpty()){
             LOGGER.error("Empty device id");
             return plainTextError(Response.Status.BAD_REQUEST, "empty device id");
         }
@@ -180,7 +181,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
         if(error.isPresent()) {
-            LOGGER.error(error.get().message);
+            LOGGER.error("{} : {}", deviceId, error.get().message);
             return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
 
@@ -196,7 +197,8 @@ public class ReceiveResource extends BaseResource {
             final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
             batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
         } catch (Exception e) {
-            LOGGER.error("Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+            LOGGER.error("IMPORTANT Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+            return plainTextError(Response.Status.SERVICE_UNAVAILABLE, "");
         }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
@@ -341,17 +343,17 @@ public class ReceiveResource extends BaseResource {
             }
 
 
-            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceName, groups) || groups.contains("chris-dev")) {
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.BYPASS_OTA_CHECKS, deviceName, groups) || groups.contains("chris-dev")) {
                 responseBuilder.setBatchSize(1);
             } else {
 
-                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration);
+                final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
+                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
                 responseBuilder.setBatchSize(uploadCycle);
-
             }
 
             if(shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())){
-                this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, nextRingTime, now);
+                this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, userInfoList, nextRingTime);
             }
 
             LOGGER.info("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
@@ -389,11 +391,11 @@ public class ReceiveResource extends BaseResource {
     }
 
 
-    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration){
+    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration, final Boolean isReducedInterval){
         int uploadInterval = 1;
         final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
         // Alter upload cycles based on date-time
-        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration);
+        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration, isReducedInterval);
 
         // Boost upload cycle based on expected alarm deadline.
         final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
@@ -421,6 +423,7 @@ public class ReceiveResource extends BaseResource {
     public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle){
         final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
         if(isNextUploadCrossRingBound(nextRingTime, now)){
+            //If an alarm will ring in the next 2 minutes, push the batch upload out 2 mins after the alarm ring time.
             final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 2;
             return uploadCycleThatPassRingTime;
         }
@@ -525,7 +528,7 @@ public class ReceiveResource extends BaseResource {
         final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0);
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
-        final Boolean alwaysOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.ALWAYS_OTA_RELEASE, deviceID, deviceGroups));
+        final Boolean bypassOTAChecks = (featureFlipper.deviceFeatureActive(FeatureFlipper.BYPASS_OTA_CHECKS, deviceID, deviceGroups));
         final String ipAddress = getIpAddress(request);
 
         final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
@@ -549,7 +552,7 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, alwaysOTA, ipAddress);
+        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, bypassOTAChecks, ipAddress);
 
         if(canOTA) {
 
@@ -586,19 +589,23 @@ public class ReceiveResource extends BaseResource {
 
         LOGGER.info("Response commands allowed for DeviceId: {}", deviceName);
         //Create a list of SyncResponse commands to be fetched from DynamoDB for a given device & firmware
-        final List<String> respCommandsToFetch = new ArrayList<>();
-        respCommandsToFetch.add("reset_to_factory_fw");
+        final List<ResponseCommand> respCommandsToFetch = new ArrayList<>();
+        respCommandsToFetch.add(ResponseCommand.RESET_TO_FACTORY_FW);
+        respCommandsToFetch.add(ResponseCommand.RESET_MCU);
 
-        Map<String,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
+        Map<ResponseCommand,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
 
         if (!commandMap.isEmpty()) {
             //Process and inject commands
-            for (final String cmdName : respCommandsToFetch) {
-                if (commandMap.containsKey(cmdName)) {
-                    final String cmdValue = commandMap.get(cmdName);
-                    switch(cmdName) {
-                        case "reset_to_factory_fw":
+            for (final ResponseCommand cmd : respCommandsToFetch) {
+                if (commandMap.containsKey(cmd)) {
+                    final String cmdValue = commandMap.get(cmd);
+                    switch(cmd) {
+                        case RESET_TO_FACTORY_FW:
                             responseBuilder.setResetToFactoryFw(Boolean.parseBoolean(cmdValue));
+                            break;
+                        case RESET_MCU:
+                            responseBuilder.setResetMcu(Boolean.parseBoolean(cmdValue));
                             break;
                     }
                 }

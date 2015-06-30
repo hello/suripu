@@ -14,18 +14,23 @@ import javax.ws.rs.core.MediaType;
 @Path("/v1/app/checkin")
 public class AppCheckinResource {
 
-    private final Boolean needsUpdate;
-    private final String newAppVersion;
+    private final Integer minVersion;
 
-    public AppCheckinResource(final Boolean needsUpdate, final String newAppVersion) {
-        this.needsUpdate = needsUpdate;
-        this.newAppVersion = newAppVersion;
+    public AppCheckinResource(final Integer minVersion) {
+        this.minVersion= minVersion;
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public AppCheckinResponse needsUpdate(@Valid final AppCheckin checkin) {
-        return new AppCheckinResponse(needsUpdate, "You don't need to update", checkin.appVersion); // currently returning same app version
+
+//        if(checkin.platform.equals(AppCheckin.Platform.ANDROID)) {
+//            final Boolean needsUpdate = Integer.parseInt(checkin.appVersion) < minVersion;
+//            final String message = (needsUpdate) ? "Please update" : "You don't need to update";
+//            return new AppCheckinResponse(needsUpdate, message, minVersion.toString()); // currently returning same app version
+//        }
+
+        return new AppCheckinResponse(false, "You don't need to update", checkin.appVersion);
     }
 }
