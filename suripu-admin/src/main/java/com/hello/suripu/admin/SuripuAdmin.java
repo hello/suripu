@@ -301,6 +301,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
                 mergedUserInfoDynamoDB, senseKeyStore, pillKeyStore, jedisPool, pillHeartBeatDAO, senseColorDAO, respCommandsDAODynamoDB,pillViewsDynamoDB, sensorsViewsDynamoDB);
 
         final ElasticSearchTransportClient elasticSearchTransportClient = ElasticSearchTransportClient.createWithDefaulSettings(configuration.getElasticSearchConfiguration().getHost(), configuration.getElasticSearchConfiguration().getTransportTCPPort());
+        final String elasticSearchHttpEndpoint = String.format("http://%s:%s/",configuration.getElasticSearchConfiguration().getHost(), configuration.getElasticSearchConfiguration().getHttpPort());
 
         environment.addResource(new PingResource());
         environment.addResource(new AccountResources(accountDAO, passwordResetDB, deviceDAO, accountDAOAdmin, timeZoneHistoryDAODynamoDB, smartAlarmLoggerDynamoDB, ringTimeHistoryDAODynamoDB));
@@ -317,6 +318,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
         environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO, trackingDAO));
         environment.addResource(new TokenResources(accessTokenStore, applicationStore, accountDAO));
-        environment.addResource(new ElasticSearchResource(elasticSearchTransportClient, configuration.getElasticSearchConfiguration().getIndexPrefix()));
+        environment.addResource(new ElasticSearchResource(elasticSearchTransportClient, configuration.getElasticSearchConfiguration().getIndexPrefix(), elasticSearchHttpEndpoint));
     }
 }
