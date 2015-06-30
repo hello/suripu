@@ -29,8 +29,7 @@ public class WakeVariance {
         final long wakeTimeList[] = new long[dateTimeList.length];
 
         final DateTime queryEndDate = dateTimeList[0] = DateTime.now(DateTimeZone.UTC);
-        int i;
-        for (i = 1; i < dateTimeList.length; i++) {
+        for (int i = 1; i < dateTimeList.length; i++) {
             dateTimeList[i] = queryEndDate.minusDays(i);
 
             final Optional<TimelineResult> optionalTimeline = timelineProcessor.retrieveTimelinesFast(accountId, dateTimeList[i]);
@@ -51,20 +50,22 @@ public class WakeVariance {
 
     public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final long[] wakeTimeList, final WakeVarianceData wakeVarianceData) {
 
-        if (wakeTimeList.length == 0) return Optional.absent();
+        if (wakeTimeList.length == 0) {
+            return Optional.absent();
+        }
 
         // compute variance
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final long wakeTime : wakeTimeList) {
-            stats.addValue(wakeTime); //what is type/properties of timelineResult. See above
+            stats.addValue(wakeTime);
         }
 
-        int wakeVariance = 99;
+        double wakeVariance = 99;
         if (stats.getN() >= 2) {
-            wakeVariance = (int) stats.getVariance();//May want to change to Suh et. al formula
+            wakeVariance = stats.getVariance();//May want to change to Suh et. al formula
         }
 
-        final int percentile = wakeVarianceData.getWakeVariancePercentile(wakeVariance);
+        final Integer percentile = wakeVarianceData.getWakeVariancePercentile(wakeVariance);
 
         // see: Suh et. al on Clinical Significance of night-to-night sleep variability in insomnia, also need to refine levels based on our data
         Text text;

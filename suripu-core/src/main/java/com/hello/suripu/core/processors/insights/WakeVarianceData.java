@@ -412,24 +412,27 @@ public class WakeVarianceData {
             "399,84.4\n" +
             "400,85.2";
 
-    private static final int MAX_WAKE_VAR = 400;
+    private static final double MAX_WAKE_VAR = 400;
     private static final int MAX_WAKE_VAR_PERCENTILE = 86;
 
-    private ImmutableMap<Integer, Integer> distributionLookup;
+
+    private ImmutableMap<Double, Integer> distributionLookup;
+
 
     public WakeVarianceData() {
-        final Map<Integer, Integer> temp = new HashMap<>();
+        final Map<Double, Integer> temp = new HashMap<>();
         final String[] rows = DISTRIBUTION_DATA.split("\n");
-        for(String row : rows) {
-            final String[] parts = row.split(",");
-            final int wakeVariance = Integer.parseInt(parts[0]);
-            final int percentile =  (int) Float.parseFloat(parts[1]);
+        for(final String row : rows) {
+            final String[] rowParts = row.split(",");
+            final double wakeVariance = Float.parseFloat(rowParts[0]);
+            final int percentile =  (int) Float.parseFloat(rowParts[1]);
             temp.put(wakeVariance, percentile);
         }
         this.distributionLookup = ImmutableMap.copyOf(temp);
     }
 
-        public int getWakeVariancePercentile(final int wakeVarValue) {
+
+        public int getWakeVariancePercentile(final double wakeVarValue) {
         if (wakeVarValue > MAX_WAKE_VAR) {
                 return MAX_WAKE_VAR_PERCENTILE;
         }
