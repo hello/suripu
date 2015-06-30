@@ -16,7 +16,7 @@ public class BetaBinomialBayesModel {
         this.beta = beta;
     }
 
-    public Double getExpectation() {
+    public Double getPrediction() {
         return alpha / (alpha + beta);
     }
 

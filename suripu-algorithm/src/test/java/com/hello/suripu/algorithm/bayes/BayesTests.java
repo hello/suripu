@@ -20,15 +20,15 @@ public class BayesTests {
 
         final List<BetaBinomialBayesModel> betaBinomialBayesModels = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.8, 10);
 
-        TestCase.assertEquals(betaBinomialBayesModels.get(0).getExpectation(), 0.8, 1e-6);
-        TestCase.assertEquals(betaBinomialBayesModels.get(1).getExpectation(),0.2,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(0).getPrediction(), 0.8, 1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(1).getPrediction(),0.2,1e-6);
 
 
         betaBinomialBayesModels.get(0).updateWithInference(1.0);
         betaBinomialBayesModels.get(1).updateWithInference(0.0);
 
-        TestCase.assertEquals(betaBinomialBayesModels.get(0).getExpectation(),9.0 / 11.0,1e-6);
-        TestCase.assertEquals(betaBinomialBayesModels.get(1).getExpectation(),2.0 / 11.0,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(0).getPrediction(),9.0 / 11.0,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(1).getPrediction(),2.0 / 11.0,1e-6);
     }
 
     @Test

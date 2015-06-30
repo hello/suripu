@@ -96,7 +96,7 @@ public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabilti
         //compute joint probabilties P(Si,event)
         for (int iState = 0; iState < prior.size(); iState++) {
             final BetaBinomialBayesModel dist = continuousDistributionProbabilities.get(iState);
-            joints.add(dist.getExpectation() * prior.get(iState));
+            joints.add(dist.getPrediction() * prior.get(iState));
         }
 
         //sum to get P(event)
