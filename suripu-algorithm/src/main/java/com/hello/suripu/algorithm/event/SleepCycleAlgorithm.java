@@ -158,6 +158,7 @@ public class SleepCycleAlgorithm {
             return new DateTime(alarmSetTimeMillis, DateTimeZone.UTC);
         }
         final Random random = new Random();
+        LOGGER.debug("Fake span {}", fakeSmartSpanMin);
         final DateTime fakeSmartAlarmTime = new DateTime(alarmSetTimeMillis, DateTimeZone.UTC)
                 .minusMinutes(fakeSmartSpanMin)
                 .plusMinutes(random.nextInt(fakeSmartSpanMin));
