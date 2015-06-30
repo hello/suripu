@@ -78,7 +78,7 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    batch_pill_data : dev_batch_pill_data
+    worker_tasks : dev_worker_tasks
 
 app_name: PillStatusWorker
 

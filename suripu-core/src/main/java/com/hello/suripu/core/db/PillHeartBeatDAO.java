@@ -13,6 +13,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 public abstract class PillHeartBeatDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillHeartBeatDAO.class);
@@ -25,6 +27,13 @@ public abstract class PillHeartBeatDAO {
     @SqlQuery("SELECT id, pill_id, fw_version AS firmware_version, battery_level, last_updated as last_seen, uptime " +
             "FROM pill_status WHERE pill_id = :pill_id and last_updated > now() - interval '24 hours' ORDER BY last_updated DESC LIMIT 1")
     public abstract Optional<DeviceStatus> getPillStatus(@Bind("pill_id") final Long pillId);
+
+    @RegisterMapper(DeviceStatusMapper.class)
+    @SqlQuery("SELECT * FROM pill_status WHERE pill_id = :pill_id AND last_updated > :from AND last_updated <= :to ORDER BY last_updated ASC")
+    public abstract List<DeviceStatus> getPillStatusBetweenUTC(@Bind("pill_id") final Long pillId, @Bind("from") final DateTime from, @Bind("to") final DateTime to);
+
+    @SqlQuery("SELECT DISTINCT ON (pill_id) pill_id FROM pill_status WHERE last_updated > now() - interval '30 hours' AND battery_level < 80;")
+    public abstract List<Long> getPillIdsSeenInLast24Hours();
 
     public void silentInsert(final Long internalPillId, final Integer batteryLevel, final Integer uptime, final Integer firmwareVersion, final DateTime lastUpdated) {
         try {

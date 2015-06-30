@@ -6,6 +6,7 @@ import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -30,6 +31,18 @@ public class PillStatusWorkerConfiguration extends WorkerConfiguration {
     public DatabaseConfiguration getSensorsDB() {
         return sensorsDB;
     }
+
+
+    @Valid
+    @NotNull
+    @Max(1000)
+    @JsonProperty("max_records")
+    private Integer maxRecords;
+
+    public Integer getMaxRecords() {
+        return maxRecords;
+    }
+
 
     @Valid
     @NotNull
