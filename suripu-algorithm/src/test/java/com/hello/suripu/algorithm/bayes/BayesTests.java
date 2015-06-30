@@ -148,6 +148,6 @@ public class BayesTests {
 
         TestCase.assertEquals(40,seg.i1,2);
         TestCase.assertEquals(60,seg.i2,2);
-        
+
     }
 }

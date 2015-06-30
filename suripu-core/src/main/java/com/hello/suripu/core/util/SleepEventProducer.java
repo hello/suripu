@@ -26,6 +26,9 @@ public class SleepEventProducer implements EventProducer {
     private final Integer MAX_WAKEUP_PERIOD_IN_MINUTES = 60; //nobody spends more than this time in bed not sleeping when waking up
     private final Double MIN_AVG_MOTION_TO_BE_WAKEFUL = 1.0; //per minute
 
+    private final Double NOMINAL_HOURS_SLEEPING = 8.0;
+    private final Double PRE_AND_POST_DURATION_HOURS = 0.5 * (16.0 - NOMINAL_HOURS_SLEEPING);
+
     @Override
     public List<Event> getEventsFromProbabilitySequence(final Map<String,List<List<Double>>> probsByOutputId,
                                                         final double [][] sensorData,
@@ -42,58 +45,14 @@ public class SleepEventProducer implements EventProducer {
 
         final List<Double> sleepProbForwardsOrBackwards = SensorDataReductionAndInterpretation.getInverseOfNthElement(probs, 1);
 
-        final List<ProbabilitySegment> sleepSegs = ProbabilitySegmenter.getSegmentsFromProbabilitySignal(sleepProbForwardsOrBackwards, PROB_THRESHOLD, true);
-        final List<ProbabilitySegment> wakeSegs = ProbabilitySegmenter.getSegmentsFromProbabilitySignal(sleepProbForwardsOrBackwards, PROB_THRESHOLD, false);
+        final int numIntervalsPre = ((int)(PRE_AND_POST_DURATION_HOURS * 60.0))  / numMinutesPerInterval;
+        final int numIntervalsDuring = ((int)(NOMINAL_HOURS_SLEEPING * 60.0))  / numMinutesPerInterval;
+        final int numIntervalsPost = ((int)(PRE_AND_POST_DURATION_HOURS * 60.0))  / numMinutesPerInterval;
 
-        final LinkedList<ProbabilitySegment> sleepSegsToBeModified = Lists.newLinkedList(sleepSegs); //so we can remove segments
-        final LinkedList<ProbabilitySegment> wakeSegsToBeModified = Lists.newLinkedList(wakeSegs); //so we can remove segments
+        final ProbabilitySegment seg = ProbabilitySegmenter.getBestSegment(numIntervalsPre, numIntervalsDuring, numIntervalsPost, sleepProbForwardsOrBackwards);
 
-        //apply some heuristic rules about finding wake and sleep
-
-        //1) filter by duration -- hey nobody can sleep for 20 minutes
-        for (Iterator<ProbabilitySegment> it = sleepSegsToBeModified.iterator(); it.hasNext(); )  {
-            final ProbabilitySegment seg = it.next();
-
-            final int duration = seg.i2 - seg.i1;
-
-            if (duration < MIN_DURATION_OF_SLEEP_IN_MINUTES / numMinutesPerInterval) {
-                it.remove();
-            }
-        }
-
-        for (Iterator<ProbabilitySegment> it = wakeSegsToBeModified.iterator(); it.hasNext(); )  {
-            final ProbabilitySegment seg = it.next();
-
-            final int duration = seg.i2 - seg.i1;
-
-            if (duration > MAX_WAKEUP_PERIOD_IN_MINUTES / numMinutesPerInterval) {
-                it.remove();
-            }
-        }
-
-        //2) determine sleep/wake
-        //first sleep is sleep
-        final int iStart = sleepSegsToBeModified.getFirst().i1;
-
-        //by default, last sleep is the time you wake up
-        int iEnd = sleepSegsToBeModified.getLast().i2;
-
-        //3) find last wake segment of significant energy, this will be your wakeup time
-        for (Iterator<ProbabilitySegment> it = wakeSegsToBeModified.iterator(); it.hasNext(); ) {
-            final ProbabilitySegment seg = it.next();
-            final double avgMotion = getWeightedAverageOfMotionFeatures(seg, sensorData, numMinutesPerInterval);
-
-            if (avgMotion < MIN_AVG_MOTION_TO_BE_WAKEFUL) {
-                it.remove();
-            }
-        }
-
-        if (!wakeSegsToBeModified.isEmpty()) {
-            iEnd = wakeSegsToBeModified.getLast().i1;
-        }
-
-        final long sleepTimestamp = getTimestamp(iStart,t0,timezoneOffset,numMinutesPerInterval);
-        final long wakeTimestamp = getTimestamp(iEnd,t0,timezoneOffset,numMinutesPerInterval);
+        final long sleepTimestamp = getTimestamp(seg.i1,t0,timezoneOffset,numMinutesPerInterval);
+        final long wakeTimestamp = getTimestamp(seg.i2,t0,timezoneOffset,numMinutesPerInterval);
 
         events.add(Event.createFromType(Event.Type.SLEEP, sleepTimestamp, sleepTimestamp + NUM_MINUTES_IN_MILLIS, timezoneOffset,
                 Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
