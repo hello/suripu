@@ -40,7 +40,6 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
-import java.util.HashSet;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -66,6 +65,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -785,7 +785,7 @@ public class DeviceResources {
             Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
             if (!pillStatusOptional.isPresent()){
                 LOGGER.warn("Failed to get heartbeat for account id {} on pill internal id: {} - external id: {}, looking into tracker motion", accountId, pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId);
-                pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
+                pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId, accountId);
             }
             if (!pillStatusOptional.isPresent()){
                 pills.add(DeviceAdmin.create(pillAccountPair));
