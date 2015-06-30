@@ -263,10 +263,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
-
+        // Commenting this out, it is causing production failures
+        /*
         activeDevicesTracker.trackAllSeenSenses(allSeenSenses);
         activeDevicesTracker.trackSenses(activeSenses);
         activeDevicesTracker.trackFirmwares(seenFirmwares);
+        */
     }
 
     @Override
