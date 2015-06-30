@@ -61,6 +61,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         for (final Record record : records) {
             try {
                 final DataInputProtos.BatchPeriodicDataWorker pb = DataInputProtos.BatchPeriodicDataWorker.parseFrom(record.getData().array());
+
                 if(!pb.getData().hasDeviceId() || pb.getData().getDeviceId().isEmpty()) {
                     LOGGER.warn("Found a periodic_data without a device_id {}");
                     continue;
@@ -112,5 +113,14 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     @Override
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
+        if(shutdownReason == ShutdownReason.TERMINATE) {
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
     }
 }
