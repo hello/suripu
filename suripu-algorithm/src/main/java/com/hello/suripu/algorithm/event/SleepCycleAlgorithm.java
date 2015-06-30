@@ -138,7 +138,7 @@ public class SleepCycleAlgorithm {
             }else {
                 // Give fallback random more space, so it doesn't always ring near the end
                 final int fakeSmartSpanMin = (int)(alarmDeadlineUTC - minAlarmTimeUTC) / 2 / DateTimeConstants.MILLIS_PER_MINUTE;
-                smartAlarmTime = smartAlarmTime.minusMinutes(fakeSmartSpanMin).plusMinutes(random.nextInt(fakeSmartSpanMin) + 1);
+                smartAlarmTime = smartAlarmTime.minusMinutes(fakeSmartSpanMin).plusMinutes(random.nextInt(fakeSmartSpanMin));
             }
         }
 
