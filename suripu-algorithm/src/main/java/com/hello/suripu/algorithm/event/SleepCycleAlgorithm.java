@@ -154,6 +154,9 @@ public class SleepCycleAlgorithm {
 
     protected static DateTime fakeSmartAlarm(final long minAlarmTimeMillis, final long alarmSetTimeMillis){
         final int fakeSmartSpanMin = (int)(alarmSetTimeMillis - minAlarmTimeMillis) / 2 / DateTimeConstants.MILLIS_PER_MINUTE;
+        if(fakeSmartSpanMin <= 0){
+            return new DateTime(alarmSetTimeMillis, DateTimeZone.UTC);
+        }
         final Random random = new Random();
         final DateTime fakeSmartAlarmTime = new DateTime(alarmSetTimeMillis, DateTimeZone.UTC)
                 .minusMinutes(fakeSmartSpanMin)

@@ -14,7 +14,7 @@ public class SleepCycleAlgorithmTest {
     @Test
     public void testFakeSmartAlarmWhenCurrentTimeApproachedAlarmSetTime(){
         final DateTime alarmSetTime = new DateTime(2015, 6, 30, 0, 0, 0, DateTimeZone.UTC);
-        final DateTime currentTime = alarmSetTime.minusMinutes(2);
+        final DateTime currentTime = alarmSetTime;
 
         final DateTime fakeSmartAlarmTime = SleepCycleAlgorithm.fakeSmartAlarm(currentTime.getMillis(), alarmSetTime.getMillis());
         assertThat(fakeSmartAlarmTime.isAfter(alarmSetTime), is(false));
