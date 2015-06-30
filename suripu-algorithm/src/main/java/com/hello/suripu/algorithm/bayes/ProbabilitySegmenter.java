@@ -76,14 +76,14 @@ public class ProbabilitySegmenter {
             vec[t] = probs.get(t);
         }
 
-        HmmDecodedResult res = segmentingHiddenMarkovModel.decode(meas, possibleEndStates);
+        HmmDecodedResult res = segmentingHiddenMarkovModel.decode(meas, possibleEndStates,1e-100);
 
         int i1 = 0;
         int i2 = 0;
         boolean foundFirst = false;
         for (int t = 0; t < res.bestPath.size(); t++) {
 
-            if (res.bestPath.get(t) == t) {
+            if (res.bestPath.get(t) == 1) {
                 if (!foundFirst) {
                     foundFirst = true;
                     i1 = t;

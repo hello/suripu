@@ -123,4 +123,31 @@ public class BayesTests {
 
 
     }
+
+    @Test
+    public void testHmmSegmenter() {
+        List<Double> probs = Lists.newArrayList();
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.2);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.5);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.9);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.6);
+        }
+
+        final ProbabilitySegment seg = ProbabilitySegmenter.getBestSegment(40, 20, 20, probs);
+
+        TestCase.assertEquals(40,seg.i1,2);
+        TestCase.assertEquals(60,seg.i2,2);
+        
+    }
 }
