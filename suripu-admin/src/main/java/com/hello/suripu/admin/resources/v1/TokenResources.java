@@ -24,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -61,7 +63,7 @@ public class TokenResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Integer getExpiration(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
-                                 final TokenExpirationRequest tokenExpirationRequest) {
+                                 @Valid @NotNull TokenExpirationRequest tokenExpirationRequest) {
         final String dirtyToken = tokenExpirationRequest.dirtyToken;
         final Optional<UUID> tokenUUIDOptional = AccessTokenUtils.cleanUUID(dirtyToken);
         if(!tokenUUIDOptional.isPresent()) {
@@ -82,7 +84,7 @@ public class TokenResources {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public AccessToken accessToken(@Scope({OAuthScope.IMPLICIT_TOKEN}) final AccessToken accessToken,
-                                   final ImplicitTokenRequest implicitTokenRequest) {
+                                   @Valid @NotNull final ImplicitTokenRequest implicitTokenRequest) {
         LOGGER.debug("Raw implicit token request {}", implicitTokenRequest);
         String requesterEmail = this.request.getHeader(HelloHttpHeader.ADMIN);
 
