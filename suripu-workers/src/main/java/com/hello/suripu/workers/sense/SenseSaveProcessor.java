@@ -269,6 +269,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         activeDevicesTracker.trackSenses(activeSenses);
         activeDevicesTracker.trackFirmwares(seenFirmwares);
         */
+
+        LOGGER.info("Seen device: {}", activeSenses.size());
     }
 
     @Override
