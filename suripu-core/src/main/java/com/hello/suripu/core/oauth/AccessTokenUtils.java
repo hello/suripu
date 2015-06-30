@@ -62,7 +62,6 @@ public class AccessTokenUtils {
     }
 
     public static Integer expiresInDays(final AccessToken accessToken) {
-//        return new Interval(DateTime.now(DateTimeZone.UTC), accessToken.createdAt.plusSeconds((int)(long) accessToken.expiresIn)).toDuration();
         return Days.daysBetween(DateTime.now(DateTimeZone.UTC), accessToken.createdAt.plusSeconds((int)(long) accessToken.expiresIn)).getDays();
     }
 }
