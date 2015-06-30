@@ -27,7 +27,7 @@ public class SleepCycleAlgorithmTest {
 
         final DateTime fakeSmartAlarmTime = SleepCycleAlgorithm.fakeSmartAlarm(currentTime.getMillis(), alarmSetTime.getMillis());
         assertThat(fakeSmartAlarmTime.isAfter(alarmSetTime), is(false));
-        assertThat(fakeSmartAlarmTime.isBefore(alarmSetTime.minusMinutes(15)), is(false));
+        assertThat(fakeSmartAlarmTime.isBefore(alarmSetTime.minusMinutes(14)), is(false));
 
     }
 }
