@@ -107,7 +107,7 @@ public class SleepCycleAlgorithm {
     public static DateTime getSmartAlarmTimeUTC(final List<Segment> sleepCycles,
                                          long dataCollectionMoment, long minAlarmTimeUTC, long alarmDeadlineUTC){
 
-        if(minAlarmTimeUTC >= alarmDeadlineUTC){
+        if(minAlarmTimeUTC >= alarmDeadlineUTC || sleepCycles.size() == 0){
             return new DateTime(alarmDeadlineUTC);
         }
         
