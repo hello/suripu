@@ -600,12 +600,12 @@ public class DeviceResources {
     @POST
     @Path("/color/{sense_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Integer updateColorsForMissingSense(//@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public Integer updateColorsForMissingSense(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                                                     @PathParam("sense_id") final String senseId){
 
         final Optional<DeviceKeyStoreRecord> deviceKeyStoreRecordOptional = senseKeyStore.getKeyStoreRecord(senseId);
         if(!deviceKeyStoreRecordOptional.isPresent()) {
-            LOGGER.warn("Couldn't find");
+            LOGGER.warn("Couldn't KeyStoreRecord for deviceId {}", senseId);
         }
 
         final Optional<Device.Color> colorOptional = serialNumberToColor(deviceKeyStoreRecordOptional.get().metadata, deviceKeyStoreRecordOptional.get().key);
