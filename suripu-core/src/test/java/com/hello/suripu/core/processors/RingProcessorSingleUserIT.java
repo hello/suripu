@@ -258,15 +258,21 @@ public class RingProcessorSingleUserIT {
 
         // 1st alarm, smart: 2014-09-23 08:20
         // 2nd alarm, smart: 2014-09-24 08:20
-        // Now: [actual ring time - 11 minute]
+        // Now: [actual ring time - 3 minute]
         // Minutes after smart alarm processing but before alarm take off time -11 minutes.
-        DateTime now = actualRingTime.minusMinutes(11);
+        // Progressive alarm processing triggered
+        DateTime now = actualRingTime.minusMinutes(3);
         mockProgressiveMotionData(now.minusMinutes(5), now);
         ringTime = updateAndReturnNextRingTime(now);
 
         assertThat(ringTime.isEmpty(), is(false));
         actualRingTime = new DateTime(ringTime.actualRingTimeUTC, userInfo1.timeZone.get());
-        assertThat(actualRingTime.equals(now.plusMinutes(3)), is(true));
+        LOGGER.debug("=========> Now: {}, actual: {}, expected: {}",
+                now,
+                actualRingTime,
+                new DateTime(ringTime.expectedRingTimeUTC));
+
+        assertThat(actualRingTime.equals(now.plusMinutes(RingProcessor.PROGRESSIVE_SAFE_GAP_MIN)), is(true));
 
         userInfo1 = this.userInfoList1.get(0);
         this.userInfoList1.set(0, new UserInfo(userInfo1.deviceId, userInfo1.accountId,

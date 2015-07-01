@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.SmartAlarmHistory;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -77,7 +78,7 @@ public class SmartAlarmLoggerDynamoDBIT {
         final DateTime actualRingTime = now.plusMinutes(25);
         final long accountId = 1L;
 
-        this.smartAlarmLoggerDynamoDB.log(accountId, now, lastSleepCycleEnd, actualRingTime, expectedRingTime, dateTimeZone);
+        this.smartAlarmLoggerDynamoDB.log(accountId, now, lastSleepCycleEnd, actualRingTime, expectedRingTime, Optional.<DateTime>absent(), dateTimeZone);
         final List<SmartAlarmHistory> history = this.smartAlarmLoggerDynamoDB.getSmartAlarmHistoryByScheduleTime(accountId, now.withTimeAtStartOfDay(), now);
         assertThat(history.isEmpty(), is(false));
         assertThat(history.get(0).actualRingTimeLocal, is(actualRingTime.toString(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT)));

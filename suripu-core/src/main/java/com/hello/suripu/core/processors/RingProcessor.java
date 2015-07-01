@@ -41,7 +41,7 @@ public class RingProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessor.class);
     private final static int SMART_ALARM_MIN_DELAY_MILLIS = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  // This must be >= 2 * max possible data upload interval
-    private final static int PROGRESSIVE_SAFE_GAP_MIN = 2;
+    public final static int PROGRESSIVE_SAFE_GAP_MIN = 2;
 
     public static class PipeDataSource implements DataSource<AmplitudeData> {
 
@@ -186,15 +186,16 @@ public class RingProcessor {
         }
 
         // check if the current time is within the range of smart alarm processing - inside the 30 min window
-        final boolean isNextSmartAlarmWithinProcessRange =  new DateTime(nextRingTimeFromWorker.expectedRingTimeUTC, DateTimeZone.UTC)
+        final DateTime alarmSetTime = new DateTime(nextRingTimeFromWorker.expectedRingTimeUTC, DateTimeZone.UTC);
+        final boolean isCurrentTimeWithinProcessRangeOfNextSmartAlarm =  alarmSetTime
                 .minusMinutes(smartAlarmProcessRangeInMinutes)
-                .isBefore(currentTimeAlignedToStartOfMinute) == false;
+                .isBefore(currentTimeAlignedToStartOfMinute) == true;
 
         // check if the smart alarm is far enough in the future, but in the 30 min process window
         // so we can do progressive processing.
-        final boolean notTooCloseToRingTime = currentTimeAlignedToStartOfMinute.plusMinutes(PROGRESSIVE_SAFE_GAP_MIN)
+        final boolean currentTimeNotTooCloseToRingTime = currentTimeAlignedToStartOfMinute.plusMinutes(PROGRESSIVE_SAFE_GAP_MIN)
                 .isBefore(nextRingTimeFromWorker.actualRingTimeUTC);
-        return isNextSmartAlarmWithinProcessRange && notTooCloseToRingTime;
+        return isCurrentTimeWithinProcessRangeOfNextSmartAlarm && currentTimeNotTooCloseToRingTime;
     }
 
     protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
