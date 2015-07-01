@@ -25,6 +25,8 @@ import java.util.Random;
  */
 public class SleepCycleAlgorithm {
     private final static Logger LOGGER = LoggerFactory.getLogger(SleepCycleAlgorithm.class);
+    private final static int AWAKE_AMPLITUDE_THRESHOLD_MILLIG = 5000;
+    private final static int AWAKE_KICKOFF_THRESHOLD = 5;
 
     private DataSource<AmplitudeData> dataSource;
     private int slidingWindowSizeInMinutes = 15;
@@ -246,5 +248,37 @@ public class SleepCycleAlgorithm {
         }
 
         return segments;
+    }
+
+    /*
+    * Check if the user is awake in the data's duration by following criteria:
+    * If the amplitude is larger than certain threshold for >= 2 minutes, or
+    * In a certain minute, the user moves more than [certain threshold] times.
+     */
+    public static boolean isUserAwakeInGivenDataSpan(final List<AmplitudeData> maxAmplitude,
+                                                     final List<AmplitudeData> kickOffCounts){
+        if(maxAmplitude.size() != kickOffCounts.size()) {
+            return false;
+        }
+
+        for(final AmplitudeData kickOff:kickOffCounts){
+            if(kickOff.amplitude > AWAKE_KICKOFF_THRESHOLD){
+                return true;
+            }
+        }
+
+        int count = 0;
+        for(final AmplitudeData amplitude:maxAmplitude){
+            if(amplitude.amplitude > AWAKE_AMPLITUDE_THRESHOLD_MILLIG){
+                count++;
+            }
+
+            if(count == 2){
+                return true;
+            }
+        }
+
+        return false;
+
     }
 }
