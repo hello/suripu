@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db.colors;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Device;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -20,4 +21,11 @@ public abstract class SenseColorDAOSQLImpl implements SenseColorDAO {
 
     @SqlUpdate("UPDATE sense_colors SET color = :color WHERE sense_id = :sense_id;")
     public abstract int update(@Bind("sense_id") final String senseId, @Bind("color") final String color);
+
+    @SqlQuery("SELECT device_id\n" +
+            "FROM   account_device_map\n" +
+            "LEFT OUTER JOIN sense_colors\n" +
+            "  ON (account_device_map.device_id = sense_colors.sense_id)\n" +
+            "  WHERE sense_colors.color IS NULL;")
+    public abstract ImmutableList<String> missing();
 }

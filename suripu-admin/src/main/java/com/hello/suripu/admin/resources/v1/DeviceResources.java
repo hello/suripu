@@ -40,7 +40,6 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
-import java.util.HashSet;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -66,6 +65,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -586,6 +586,16 @@ public class DeviceResources {
     }
 
 
+
+
+    @GET
+    @Path("/color/missing")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> missingColors(/*@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken*/){
+        final List<String> deviceIdsMissingColor = senseColorDAO.missing();
+        return deviceIdsMissingColor;
+    }
+
     @GET
     @Path("/color/{sense_id}")
     public String getColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
@@ -605,7 +615,7 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response setColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                            @PathParam("sense_id") final String senseId,
-                           @PathParam("color") final String color){
+                           @PathParam("color") final String color) {
 
         final Device.Color senseColor = Device.Color.valueOf(color);
 
