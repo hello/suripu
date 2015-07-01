@@ -150,16 +150,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
     /**
-     * added by jyfan 7/1/2015 - used for variance Insights
      * @param timelineResultList
      * @param sleepEvent
      * @return
      */
-    public List<Long> getEventDiffFromLocalStartOfDayList(final List<TimelineResult> timelineResultList, Event.Type sleepEvent) {
+    public List<Long> getEventDiffFromLocalStartOfDayList(final List<TimelineResult> timelineResultList, final Event.Type sleepEvent) {
         final List<Long> eventTimeList = new ArrayList<>();
 
-        for (TimelineResult timelineResult : timelineResultList) {
-            for (SleepSegment event : timelineResult.timelines.get(0).events) { //need to get(0) because TimelineResult allows for multiple timeline in a single day
+        for (final TimelineResult timelineResult : timelineResultList) {
+            for (final SleepSegment event : timelineResult.timelines.get(0).events) { //need to get(0) because TimelineResult allows for multiple timeline in a single day
                 if (event.getType() == sleepEvent) {
                     DateTime eventTime = new DateTime(event.getTimestamp(), DateTimeZone.forOffsetMillis(event.getOffsetMillis()));
                     eventTimeList.add(eventTime.getMillis() - eventTime.withTimeAtStartOfDay().getMillis()); //get difference in millis btwn event and start of day time
@@ -170,7 +169,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
     /**
-     * added by jyfan 7/1/2015 - used for variance Insights
      * @param accountId
      * @param dateList
      * @return
@@ -178,7 +176,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public List<TimelineResult> retrieveTimelinesListFast(final Long accountId, final List<DateTime> dateList){
         final List<TimelineResult> timelineResultList = new ArrayList<>();
 
-        for (DateTime dateTime : dateList) {
+        for (final DateTime dateTime : dateList) {
             final Optional<TimelineResult> optionalTimeline = retrieveTimelinesFast(accountId, dateTime);
             if (optionalTimeline.isPresent()){
                 timelineResultList.add(optionalTimeline.get());

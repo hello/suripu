@@ -39,7 +39,7 @@ public class WakeVariance {
 
     public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final List<Long> wakeTimeList, final WakeVarianceData wakeVarianceData) {
 
-        if (wakeTimeList.size() == 0) {
+        if (wakeTimeList.isEmpty()) {
             return Optional.absent();
         }
         else if (wakeTimeList.size() <= 2) {
