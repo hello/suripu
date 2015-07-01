@@ -211,6 +211,8 @@ public class RingProcessor {
         }
         final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionFromLast5Minutes);
         final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionFromLast5Minutes);
+
+        // TODO: CHANGE THRESHOLD WHEN NECESSARY
         if(SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts)){
             // TODO: STATE CHECK NEEDED FOR ROUBUST IMPLEMENTATION
             final RingTime progressiveRingTime = new RingTime(
