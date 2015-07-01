@@ -586,6 +586,35 @@ public class DeviceResources {
     }
 
 
+
+
+    @GET
+    @Path("/color/missing")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> missingColors(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken){
+        final List<String> deviceIdsMissingColor = senseColorDAO.missing();
+        return deviceIdsMissingColor;
+    }
+
+
+    @POST
+    @Path("/color/{sense_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Integer updateColorsForMissingSense(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                    @PathParam("sense_id") final String senseId){
+
+        final Optional<DeviceKeyStoreRecord> deviceKeyStoreRecordOptional = senseKeyStore.getKeyStoreRecord(senseId);
+        if(!deviceKeyStoreRecordOptional.isPresent()) {
+            LOGGER.warn("Couldn't KeyStoreRecord for deviceId {}", senseId);
+        }
+
+        final Optional<Device.Color> colorOptional = serialNumberToColor(deviceKeyStoreRecordOptional.get().metadata, deviceKeyStoreRecordOptional.get().key);
+        if(colorOptional.isPresent()) {
+            return senseColorDAO.saveColorForSense(senseId, colorOptional.get().name());
+        }
+        return 0;
+    }
+
     @GET
     @Path("/color/{sense_id}")
     public String getColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
@@ -605,7 +634,7 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response setColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                            @PathParam("sense_id") final String senseId,
-                           @PathParam("color") final String color){
+                           @PathParam("color") final String color) {
 
         final Device.Color senseColor = Device.Color.valueOf(color);
 
@@ -826,5 +855,24 @@ public class DeviceResources {
             return Optional.absent();
         }
         return Optional.of(new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID()));
+    }
+
+    private Optional<Device.Color> serialNumberToColor(final String serialNumber, final String deviceId) {
+        final String SENSE_US_PREFIX_WHITE = "91000008W";
+        final String SENSE_US_PREFIX_BLACK = "91000008B";
+
+        if(serialNumber.length() < SENSE_US_PREFIX_WHITE.length()) {
+            LOGGER.error("SN {} is too short for device_id = {}", serialNumber, deviceId);
+            return Optional.absent();
+        }
+        final String snPrefix = serialNumber.substring(0, SENSE_US_PREFIX_WHITE.length());
+        if(snPrefix.toUpperCase().equals(SENSE_US_PREFIX_WHITE)) {
+            return Optional.of(Device.Color.WHITE);
+        } else if (snPrefix.toUpperCase().equals(SENSE_US_PREFIX_BLACK)) {
+            return Optional.of(Device.Color.BLACK);
+        }
+
+        LOGGER.error("Can't get color for SN {}, {}", serialNumber, deviceId);
+        return Optional.absent();
     }
 }
