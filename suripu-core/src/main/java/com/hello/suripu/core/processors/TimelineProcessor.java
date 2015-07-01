@@ -149,6 +149,44 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
     }
 
+    /**
+     * added by jyfan 7/1/2015 - used for variance Insights
+     * @param timelineResultList
+     * @param sleepEvent
+     * @return
+     */
+    public List<Long> getEventDiffFromLocalStartOfDayList(final List<TimelineResult> timelineResultList, Event.Type sleepEvent) {
+        final List<Long> eventTimeList = new ArrayList<>();
+
+        for (TimelineResult timelineResult : timelineResultList) {
+            for (SleepSegment event : timelineResult.timelines.get(0).events) { //need to get(0) because TimelineResult allows for multiple timeline in a single day
+                if (event.getType() == sleepEvent) {
+                    DateTime eventTime = new DateTime(event.getTimestamp(), DateTimeZone.forOffsetMillis(event.getOffsetMillis()));
+                    eventTimeList.add(eventTime.getMillis() - eventTime.withTimeAtStartOfDay().getMillis()); //get difference in millis btwn event and start of day time
+                }
+            }
+        }
+        return eventTimeList;
+    }
+
+    /**
+     * added by jyfan 7/1/2015 - used for variance Insights
+     * @param accountId
+     * @param dateList
+     * @return
+     */
+    public List<TimelineResult> retrieveTimelinesListFast(final Long accountId, final List<DateTime> dateList){
+        final List<TimelineResult> timelineResultList = new ArrayList<>();
+
+        for (DateTime dateTime : dateList) {
+            final Optional<TimelineResult> optionalTimeline = retrieveTimelinesFast(accountId, dateTime);
+            if (optionalTimeline.isPresent()){
+                timelineResultList.add(optionalTimeline.get());
+            }
+        }
+        return timelineResultList;
+    }
+
     public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
         final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);

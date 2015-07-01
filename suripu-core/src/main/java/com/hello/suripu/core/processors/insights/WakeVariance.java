@@ -11,6 +11,7 @@ import com.hello.suripu.core.processors.TimelineProcessor;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,37 +22,28 @@ import java.util.List;
 
 //TODO: Plot distribution of wakeVariances and pull different percentiles, and then with more time, do cluster analysis to get better threshold cutoffs
 public class WakeVariance {
-    public static Optional<InsightCard> getInsights(final TimelineProcessor timelineProcessor, final Long accountId, final WakeVarianceData wakeVarianceData) {
+    public static Optional<InsightCard> getInsights(final TimelineProcessor timelineProcessor, final Long accountId, final WakeVarianceData wakeVarianceData, final DateTime queryEndDate, final int numDays) {
 
-        // get wake variance data for last week (7 days)
-        final DateTime dateTimeList[] = new DateTime[7];
-        //final List<TimelineResult> timelineResultList = new ArrayList<>();
-        final long wakeTimeList[] = new long[dateTimeList.length];
-
-        final DateTime queryEndDate = dateTimeList[0] = DateTime.now(DateTimeZone.UTC);
-        for (int i = 1; i < dateTimeList.length; i++) {
-            dateTimeList[i] = queryEndDate.minusDays(i);
-
-            final Optional<TimelineResult> optionalTimeline = timelineProcessor.retrieveTimelinesFast(accountId, dateTimeList[i]);
-            if (optionalTimeline.isPresent()) {
-                final TimelineResult timelineResult = optionalTimeline.get();
-                for (SleepSegment event : timelineResult.timelines.get(0).events) { //need to get(0) because TimelineResult allows for multiple timeline in a single day
-                    if (event.getType() == Event.Type.WAKE_UP) {
-                        DateTime wakeDateTime = new DateTime(event.getTimestamp(), DateTimeZone.forOffsetMillis(event.getOffsetMillis()));
-                        wakeTimeList[i] = wakeDateTime.getMillis() - wakeDateTime.withTimeAtStartOfDay().getMillis(); //get difference in millis between wake time and start of day time
-                    }
-                }
-            }
+        final List<DateTime> dateTimeList = new ArrayList<>();
+        for (int i = 1; i < numDays; i++) {
+            dateTimeList.add(queryEndDate.minusDays(i));
         }
+
+        //get wake variance data for the past n=-numDays days
+        final List<TimelineResult> timelineResultList = timelineProcessor.retrieveTimelinesListFast(accountId, dateTimeList);
+        final List<Long> wakeTimeList = timelineProcessor.getEventDiffFromLocalStartOfDayList(timelineResultList, Event.Type.WAKE_UP);
 
         final Optional<InsightCard> card = processWakeVarianceData(accountId, wakeTimeList, wakeVarianceData);
         return card;
     }
 
-    public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final long[] wakeTimeList, final WakeVarianceData wakeVarianceData) {
+    public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final List<Long> wakeTimeList, final WakeVarianceData wakeVarianceData) {
 
-        if (wakeTimeList.length == 0) {
+        if (wakeTimeList.size() == 0) {
             return Optional.absent();
+        }
+        else if (wakeTimeList.size() <= 2) {
+            return Optional.absent(); //not big enough to calculate variance usefully
         }
 
         // compute variance
@@ -61,7 +53,7 @@ public class WakeVariance {
         }
 
         double wakeVariance = 99;
-        if (stats.getN() >= 2) {
+        if (stats.getN() > 2) {
             wakeVariance = stats.getVariance();//May want to change to Suh et. al formula
         }
 
