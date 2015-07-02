@@ -223,6 +223,8 @@ public class RingProcessor {
                     true);
             return Optional.of(progressiveRingTime);
         }
+
+        LOGGER.info("User {} not awake for progressive smart alarm.", accountId);
         return Optional.absent();
     }
 
@@ -244,6 +246,9 @@ public class RingProcessor {
         if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
             if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
                     hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
+                LOGGER.debug("trying update progressive alarm for device {}, account {}",
+                        userInfo.deviceId,
+                        userInfo.accountId);
 
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
