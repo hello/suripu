@@ -15,27 +15,21 @@ public class RoomConditionUtil {
     private static final int BAD_PERCENTAGE = 30;
 
     public static CurrentRoomState.State.Condition getGeneralRoomCondition(final CurrentRoomState currentRoomState) {
-        float numberOfModality = 5;
+        float numberOfModality = 3;
         float totalScore = numberOfModality * 100;
         float currentScore = 0;
 
         currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.humidity);
         currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.particulates);
         currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.temperature);
-        currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.light);
-        currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.sound);
 
         currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.humidity);
         currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.particulates);
         currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.temperature);
-        currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.light);
-        currentScore += WARNING_SCORE * getWarningCountFromSate(currentRoomState.sound);
 
         currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.humidity);
         currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.particulates);
         currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.temperature);
-        currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.light);
-        currentScore += BAD_SCORE * getAlertCountFromSate(currentRoomState.sound);
 
         float percentage = currentScore / totalScore * 100;
         if(percentage > WARNING_PERCENTAGE){
@@ -46,6 +40,48 @@ public class RoomConditionUtil {
             return CurrentRoomState.State.Condition.ALERT;
         }
 
+    }
+
+
+    public static CurrentRoomState.State.Condition getGeneralRoomConditionV2(final CurrentRoomState currentRoomState) {
+        float numberOfModality = 5;
+        float warningCount = 0;
+        float idealCount = 0;
+        float alertCount = 0;
+
+        idealCount += getIdealCountFromSate(currentRoomState.humidity);
+        idealCount += getIdealCountFromSate(currentRoomState.particulates);
+        idealCount += getIdealCountFromSate(currentRoomState.temperature);
+        idealCount += getIdealCountFromSate(currentRoomState.light);
+        idealCount += getIdealCountFromSate(currentRoomState.sound);
+
+        warningCount += getWarningCountFromSate(currentRoomState.humidity);
+        warningCount += getWarningCountFromSate(currentRoomState.particulates);
+        warningCount += getWarningCountFromSate(currentRoomState.temperature);
+        warningCount += getWarningCountFromSate(currentRoomState.light);
+        warningCount += getWarningCountFromSate(currentRoomState.sound);
+
+        alertCount += getAlertCountFromSate(currentRoomState.humidity);
+        alertCount += getAlertCountFromSate(currentRoomState.particulates);
+        alertCount += getAlertCountFromSate(currentRoomState.temperature);
+        alertCount += getAlertCountFromSate(currentRoomState.light);
+        alertCount += getAlertCountFromSate(currentRoomState.sound);
+
+
+        // decision tree :)
+        if(alertCount / numberOfModality <= 0.2f){
+            if(idealCount / numberOfModality > 0.5f) {
+                if(idealCount < (numberOfModality - 1f) / numberOfModality) {
+                    return CurrentRoomState.State.Condition.WARNING;
+                }else{
+                    return CurrentRoomState.State.Condition.IDEAL;
+                }
+            }else{
+                return CurrentRoomState.State.Condition.ALERT;
+            }
+        }else{
+            return CurrentRoomState.State.Condition.ALERT;
+        }
     }
 
     private static int getIdealCountFromSate(CurrentRoomState.State state) {
