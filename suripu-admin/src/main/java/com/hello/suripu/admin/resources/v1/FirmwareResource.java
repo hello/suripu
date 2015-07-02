@@ -1,6 +1,7 @@
 package com.hello.suripu.admin.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -355,8 +356,8 @@ public class FirmwareResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, List<String>> getFWNamesBatch(
             @Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
-            @Valid @NotNull final List<String> fwHashList) {
-        return firmwareVersionMappingDAO.getBatch(fwHashList);
+            @Valid @NotNull final ImmutableSet<String> fwHashSet) {
+        return firmwareVersionMappingDAO.getBatch(fwHashSet);
     }
 
     @GET

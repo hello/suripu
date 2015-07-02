@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -81,11 +82,11 @@ public class FirmwareVersionMappingDAO {
         return Lists.newArrayList();
     }
 
-    public Map<String, List<String>> getBatch(final List<String> fwHashList) {
+    public Map<String, List<String>> getBatch(final ImmutableSet<String> fwHashSet) {
         final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
         final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
 
-        for (final String fwHash : fwHashList) {
+        for (final String fwHash : fwHashSet) {
             final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
             attributeValueMap.put(FW_HASH, new AttributeValue().withS(fwHash));
             itemKeys.add(attributeValueMap);
