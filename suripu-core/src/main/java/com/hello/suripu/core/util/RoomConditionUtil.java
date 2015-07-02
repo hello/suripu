@@ -69,7 +69,19 @@ public class RoomConditionUtil {
 
 
         // decision tree :)
-        if(alertCount / numberOfModality <= 0.2f){
+        //
+        //  Left child is true, right child is false
+        //
+        //          bad_count > 1 ?
+        //            /     \
+        //         alert    ideal_count > 50% ?
+        //                      /       \
+        //          warn_count > 1 ?    alert
+        //              /       \
+        //          warning   ideal
+        //
+        
+        if(alertCount / numberOfModality <= 1f / numberOfModality){
             if(idealCount / numberOfModality > 0.5f) {
                 if(idealCount < (numberOfModality - 1f) / numberOfModality) {
                     return CurrentRoomState.State.Condition.WARNING;
