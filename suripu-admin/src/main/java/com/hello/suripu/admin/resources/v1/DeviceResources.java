@@ -600,7 +600,7 @@ public class DeviceResources {
     @POST
     @Path("/color/{sense_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Integer updateColorsForMissingSense(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+    public Integer updateColorsForMissingSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
                                                     @PathParam("sense_id") final String senseId){
 
         final Optional<DeviceKeyStoreRecord> deviceKeyStoreRecordOptional = senseKeyStore.getKeyStoreRecord(senseId);
