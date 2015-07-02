@@ -6,7 +6,6 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -19,7 +18,6 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
-import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
 import org.joda.time.DateTime;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class SavePillDataProcessor extends HelloBaseRecordProcessor {
@@ -41,7 +38,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    private final ActiveDevicesTracker activeDevicesTracker;
     private final PillViewsDynamoDB pillViewsDynamoDB;
 
 
@@ -54,7 +50,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                                  final KeyStore pillKeyStore,
                                  final DeviceDAO deviceDAO,
                                  final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                 final ActiveDevicesTracker activeDevicesTracker,
                                  final PillViewsDynamoDB pillViewsDynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
@@ -62,7 +57,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
-        this.activeDevicesTracker = activeDevicesTracker;
         this.pillViewsDynamoDB = pillViewsDynamoDB;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
@@ -79,14 +73,10 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
-        final Map<String, Long> activePills = Maps.newHashMap();
         for (final Record record : records) {
             try {
                 final SenseCommandProtos.batched_pill_data batched_pill_data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
                 for(final SenseCommandProtos.pill_data data : batched_pill_data.getPillsList()) {
-
-                    final Long pillTs = data.getTimestamp() * 1000L;
-                    activePills.put(data.getDeviceId(), pillTs);
 
                     final Optional<byte[]> decryptionKey = pillKeyStore.get(data.getDeviceId());
                     //TODO: Get the actual decryption key.
@@ -162,7 +152,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
             }
         }
-        activeDevicesTracker.trackPills(activePills);
         messagesProcessed.mark(records.size());
     }
 
