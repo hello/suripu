@@ -116,15 +116,15 @@ public class CurrentRoomState {
         final float temperature = DataUtils.calibrateTemperature(rawTemperature);
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
         final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), DataUtils.convertAudioRawToDB(rawPeakNoise));
-        return fromTempHumidDust(temperature, humidity, particulatesAQI, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
+        return fromTempHumidDustLightSound(temperature, humidity, particulatesAQI, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
     }
 
-    public static CurrentRoomState fromTempHumidDust(final float temperature, final float humidity, final float particulatesAQI, final float light, final float sound,
-                                                     final DateTime dataTimestampUTC,
-                                                     final DateTime referenceTime,
-                                                     final Integer thresholdInMinutes,
-                                                     final String tempUnit) {
+    public static CurrentRoomState fromTempHumidDustLightSound(final float temperature, final float humidity, final float particulatesAQI, final float light, final float sound,
+                                                               final DateTime dataTimestampUTC,
+                                                               final DateTime referenceTime,
+                                                               final Integer thresholdInMinutes,
+                                                               final String tempUnit) {
 
 
         LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
@@ -160,7 +160,7 @@ public class CurrentRoomState {
         final float sound = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(data.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(data.audioPeakDisturbancesDB));
         // max value is in raw counts, conversion needed
         final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientAirQualityRaw, data.firmwareVersion));
-        return fromTempHumidDust(temp, humidity, particulatesAQI, light, sound, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
+        return fromTempHumidDustLightSound(temp, humidity, particulatesAQI, light, sound, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
 
