@@ -161,10 +161,10 @@ public class RingProcessor {
 
     protected static boolean isRingTimeFromNextSmartAlarm(final DateTime currentTimeAlignedToStartOfMinute,
                                                           final RingTime nextRingTimeFromWorker){
-        final boolean isCurrentTimeAfterNextRingTime = currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+        final boolean alarmNotYetRing = currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
         final boolean isProcessedSmartAlarm = nextRingTimeFromWorker.processed();
 
-        return isCurrentTimeAfterNextRingTime && isProcessedSmartAlarm;
+        return alarmNotYetRing && isProcessedSmartAlarm;
     }
 
     protected static boolean isCurrentTimeBetweenActualRingTimeAndExpectedRingTime(final DateTime currentTimeAlignedToStartOfMinute,
@@ -257,7 +257,8 @@ public class RingProcessor {
                             new DateTime(progressiveRingTimeOptional.get().expectedRingTimeUTC, userInfo.timeZone.get()),
                             Optional.of(new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get())),
                             userInfo.timeZone.get());
-                    LOGGER.info("Reset smart alarm with updated progressive smart alarm, original ring time {}, updated ring time {}",
+                    LOGGER.info("Reset smart alarm with updated progressive smart alarm for account {}, original ring time {}, updated ring time {}",
+                            userInfo.accountId,
                             new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                             new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get()));
                     return progressiveRingTimeOptional.get();
