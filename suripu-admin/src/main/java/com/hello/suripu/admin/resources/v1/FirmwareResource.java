@@ -32,9 +32,11 @@ import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Tuple;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -344,6 +346,17 @@ public class FirmwareResource {
             @Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
             @PathParam("fw_hash") final String fwHash) {
         return firmwareVersionMappingDAO.get(fwHash);
+    }
+
+    @POST
+    @Timed
+    @Path("/names")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, List<String>> getFWNamesBatch(
+            @Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+            @Valid @NotNull final List<String> fwHashList) {
+        return firmwareVersionMappingDAO.getBatch(fwHashList);
     }
 
     @GET
