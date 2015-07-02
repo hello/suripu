@@ -73,17 +73,17 @@ public class RoomConditionUtil {
         //  Left child is true, right child is false
         //
         //          bad_count > 1 ?
-        //            /     \
+        //            /         \
         //         alert    ideal_count > 50% ?
-        //                      /       \
-        //          warn_count > 1 ?    alert
-        //              /       \
-        //          warning   ideal
+        //                      /           \
+        //              warn_count > 1 ?    alert
+        //                 /       \
+        //              warning   ideal
         //
-        
-        if(alertCount / numberOfModality <= 1f / numberOfModality){
+
+        if(alertCount <= 1){
             if(idealCount / numberOfModality > 0.5f) {
-                if(idealCount < (numberOfModality - 1f) / numberOfModality) {
+                if(warningCount > 1) {
                     return CurrentRoomState.State.Condition.WARNING;
                 }else{
                     return CurrentRoomState.State.Condition.IDEAL;
