@@ -360,7 +360,7 @@ public class DataResources {
         if(!deviceDataOptional.isPresent()) {
             return CurrentRoomState.empty();
         }
-        return CurrentRoomState.fromDeviceData(deviceDataOptional.get(), DateTime.now(), 15, "c");
+        return CurrentRoomState.fromDeviceData(deviceDataOptional.get().withCalibratedLight(senseColorDAO.getColorForSense(senseId)), DateTime.now(), 15, "c");
     }
 
     @Timed
