@@ -182,6 +182,10 @@ public class RingProcessor {
                                                                            final RingTime nextRingTimeFromWorker,
                                                                            final int smartAlarmProcessRangeInMinutes){
         if(!nextRingTimeFromWorker.fromSmartAlarm || !nextRingTimeFromWorker.processed()){
+            LOGGER.debug("from smart alarm {}, processed {}",
+                    !nextRingTimeFromWorker.fromSmartAlarm,
+                    !nextRingTimeFromWorker.processed());
+
             return false;
         }
 
@@ -195,6 +199,10 @@ public class RingProcessor {
         // so we can do progressive processing.
         final boolean currentTimeNotTooCloseToRingTime = currentTimeAlignedToStartOfMinute.plusMinutes(PROGRESSIVE_SAFE_GAP_MIN)
                 .isBefore(nextRingTimeFromWorker.actualRingTimeUTC);
+
+        LOGGER.debug("isCurrentTimeWithinProcessRangeOfNextSmartAlarm {}, currentTimeNotTooCloseToRingTime {}",
+                isCurrentTimeWithinProcessRangeOfNextSmartAlarm,
+                currentTimeNotTooCloseToRingTime);
         return isCurrentTimeWithinProcessRangeOfNextSmartAlarm && currentTimeNotTooCloseToRingTime;
     }
 
@@ -244,6 +252,9 @@ public class RingProcessor {
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
         if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
+            LOGGER.debug("Ring time from smart alarm {}",
+                    feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST));
+
             if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
                     hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
                 LOGGER.debug("trying update progressive alarm for device {}, account {}",
