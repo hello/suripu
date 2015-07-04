@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableListIterator;
+import com.hello.suripu.algorithm.core.AlgorithmException;
 
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class MultipleEventModel {
     }
 
 
-    private ImmutableList<Double> getBayesianUpdateAtIndex(final ImmutableList<Double> prior, final int t, final Map<String,ImmutableList<Integer>> eventsByModel) {
+    private ImmutableList<Double> getBayesianUpdateAtIndex(final ImmutableList<Double> prior, final int t, final Map<String,ImmutableList<Integer>> eventsByModel) throws AlgorithmException {
 
 
         ImmutableList<Double> p1 = prior;
@@ -69,7 +70,7 @@ public class MultipleEventModel {
 
             if (events == null) {
                 //should never happen
-                continue;
+                throw new AlgorithmException(String.format("did not find events for model=%s",key));
             }
 
             //get event
@@ -102,7 +103,7 @@ public class MultipleEventModel {
     }
 
     /* get list of probabilties as they are sequentially updated with the events  */
-    public List<List<Double>> getProbsFromEventSequence(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents, boolean forwards) {
+    public List<List<Double>> getProbsFromEventSequence(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents, boolean forwards) throws AlgorithmException {
         List<List<Double>> probs = Lists.newArrayList();
 
         //set prior
@@ -144,7 +145,7 @@ public class MultipleEventModel {
      *  i.e.   P(A_forwards) * P(A_backwards) = P(A_forwards, A_backwards)
      *
      *  */
-    public List<List<Double>> getJointOfForwardsAndBackwards(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents) {
+    public List<List<Double>> getJointOfForwardsAndBackwards(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents) throws AlgorithmException {
 
 
         //do forwards

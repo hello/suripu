@@ -142,6 +142,7 @@ public class BayesNetTest {
             e.printStackTrace();
             TestCase.assertTrue(false);
         }
+
     }
 
     @Test

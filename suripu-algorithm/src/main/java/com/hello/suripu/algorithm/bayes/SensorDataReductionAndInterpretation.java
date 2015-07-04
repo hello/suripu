@@ -3,6 +3,7 @@ package com.hello.suripu.algorithm.bayes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 
@@ -24,7 +25,7 @@ public class SensorDataReductionAndInterpretation {
     }
 
 
-    public Map<String,List<List<Double>>> inferProbabilitiesFromModelAndSensorData(final double [][] sensorData) {
+    public Map<String,List<List<Double>>> inferProbabilitiesFromModelAndSensorData(final double [][] sensorData) throws AlgorithmException {
 
         final Map<String,List<List<Double>>> inferredProbabiltiesByOutputName = Maps.newHashMap();
 
@@ -54,16 +55,9 @@ public class SensorDataReductionAndInterpretation {
 
             final MultipleEventModel bayesModel = interpretationByOutputName.get(outputId);
 
-            if (bayesModel == null) {
-                //TODO LOG THIS
-                continue;
-            }
-
-
             final List<List<Double>> probs = bayesModel.getJointOfForwardsAndBackwards(pathsByModelId,N);
 
             inferredProbabiltiesByOutputName.put(outputId,probs);
-
         }
 
         return inferredProbabiltiesByOutputName;
