@@ -30,8 +30,7 @@ public class SensorDataReductionAndInterpretation {
         final Map<String,List<List<Double>>> inferredProbabiltiesByOutputName = Maps.newHashMap();
 
         if (sensorData.length == 0) {
-            //TODO LOG THIS
-            return inferredProbabiltiesByOutputName;
+            throw new AlgorithmException("sensor data length was zero!");
         }
 
         final int N = sensorData[0].length;

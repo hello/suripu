@@ -9,7 +9,6 @@ import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
-import org.slf4j.Logger;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -29,13 +28,6 @@ public class SleepEventProducer implements EventProducer {
 
     private final Double NOMINAL_HOURS_SLEEPING = 8.0;
     private final Double PRE_AND_POST_DURATION_HOURS = 0.5 * (16.0 - NOMINAL_HOURS_SLEEPING);
-
-    private final Logger LOGGER;
-
-    //we pass in logger directly so we have the UUID
-    public SleepEventProducer(Logger logger) {
-        LOGGER = logger;
-    }
 
     @Override
     public List<Event> getEventsFromProbabilitySequence(final Map<String,List<List<Double>>> probsByOutputId,

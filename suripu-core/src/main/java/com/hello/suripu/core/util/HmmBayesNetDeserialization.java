@@ -17,17 +17,22 @@ import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by benjo on 6/21/15.
  */
 public class HmmBayesNetDeserialization {
     final static int MAX_NUM_HMM_STATES = 500;
-
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(HmmBayesNetDeserialization.class);
+    private final Logger LOGGER;
     /*
     *  Goal is to create a bunch of HMMs, which decode some sensor data.
     *  The state sequences map to a bunch of conditional probabilities conditioned on a binary probability
@@ -39,6 +44,8 @@ public class HmmBayesNetDeserialization {
     *
     * */
 
+    private final SleepHmmBayesNetProtos.HmmBayesNet proto;
+
     public static class DeserializedSleepHmmBayesNetWithParams {
         public final SensorDataReductionAndInterpretation sensorDataReductionAndInterpretation;
         public final HmmBayesNetMeasurementParameters params;
@@ -49,7 +56,12 @@ public class HmmBayesNetDeserialization {
         }
     }
 
-    public static DeserializedSleepHmmBayesNetWithParams Deserialize(final SleepHmmBayesNetProtos.HmmBayesNet proto) {
+    public HmmBayesNetDeserialization(final SleepHmmBayesNetProtos.HmmBayesNet proto, Optional<UUID> uuid) {
+        this.proto = proto;
+        this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid);
+    }
+
+    public DeserializedSleepHmmBayesNetWithParams Deserialize() {
         final SleepHmmBayesNetProtos.MeasurementParams params = proto.getMeasurementParameters();
 
         /*  FIRST MAKE THE HMMS */
@@ -89,7 +101,7 @@ public class HmmBayesNetDeserialization {
                 HmmBayesNetMeasurementParameters.createFromProto(proto.getMeasurementParameters()));
     }
 
-    private static List<ModelWithDiscreteProbabiltiesAndEventOccurence> getConditionalProbabilityModel(final SleepHmmBayesNetProtos.CondProbs condProbs) {
+    private  List<ModelWithDiscreteProbabiltiesAndEventOccurence> getConditionalProbabilityModel(final SleepHmmBayesNetProtos.CondProbs condProbs) {
         List<ModelWithDiscreteProbabiltiesAndEventOccurence> condProbModel = Lists.newArrayList();
         for (SleepHmmBayesNetProtos.BetaCondProb betaCondProb : condProbs.getProbsList()) {
 
@@ -106,7 +118,7 @@ public class HmmBayesNetDeserialization {
 
     }
 
-    private static HiddenMarkovModel getHmm(final SleepHmmBayesNetProtos.HiddenMarkovModel model) {
+    private  HiddenMarkovModel getHmm(final SleepHmmBayesNetProtos.HiddenMarkovModel model) {
         final int numStates = model.getNumStates();
         final double [][] A = getMatrix(model.getStateTransitionMatrixList(),numStates);
 
@@ -125,16 +137,17 @@ public class HmmBayesNetDeserialization {
         return hmm;
     }
 
-    private static HmmPdfInterface [] getObsModels(List<SleepHmmBayesNetProtos.ObsModel> obsModels, final int numStates) {
+    private  HmmPdfInterface [] getObsModels(List<SleepHmmBayesNetProtos.ObsModel> obsModels, final int numStates) {
 
         final Map<Integer,PdfComposite> composites = Maps.newHashMap();
 
         int highestStateNumber = 0;
+        int count = 0;
         for (SleepHmmBayesNetProtos.ObsModel model : obsModels) {
             final Optional<HmmPdfInterface> pdf = getPdfFromObsModel(model);
 
             if (!pdf.isPresent()) {
-                //TODO LOG ERRROR
+                LOGGER.error("did not find a valid observation model number {}",count);
                 continue;
             }
 
@@ -148,6 +161,8 @@ public class HmmBayesNetDeserialization {
             if (model.getStateIndex() > highestStateNumber) {
                 highestStateNumber = model.getStateIndex();
             }
+
+            count++;
         }
 
         if (highestStateNumber >= numStates) {
@@ -158,7 +173,7 @@ public class HmmBayesNetDeserialization {
         for (Integer iState = 0; iState < numStates; iState++) {
 
             if (composites.get(iState) == null) {
-                //TODO LOG ERRROR or THROW or SOMETHING
+                LOGGER.error("No models found for state {}, which means it is a gap (every state index should have a model, which means you overlooked something when you made the protobuf");
                 //no gaps!
                 return new HmmPdfInterface[0];
             }
@@ -171,7 +186,7 @@ public class HmmBayesNetDeserialization {
         return pdfs;
     }
 
-    private static double [][] getMatrix(final List<Double> matAsVec, final int ncols) {
+    private  double [][] getMatrix(final List<Double> matAsVec, final int ncols) {
         final int nrows = matAsVec.size() / ncols;
 
         double [][] mat = new double[nrows][ncols];
@@ -186,7 +201,7 @@ public class HmmBayesNetDeserialization {
         return mat;
     }
 
-    private static Optional<HmmPdfInterface> getPdfFromObsModel(final SleepHmmBayesNetProtos.ObsModel obsModel) {
+    private  Optional<HmmPdfInterface> getPdfFromObsModel(final SleepHmmBayesNetProtos.ObsModel obsModel) {
 
         final int measNumber = obsModel.getMeasType().getNumber();
 

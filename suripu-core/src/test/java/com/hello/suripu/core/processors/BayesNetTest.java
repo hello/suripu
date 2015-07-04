@@ -91,8 +91,9 @@ public class BayesNetTest {
 
         try {
             final SleepHmmBayesNetProtos.HmmBayesNet bayesNet = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(decodedBytes);
-            
-            final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams deserializedSleepHmmBayesNetWithParams = HmmBayesNetDeserialization.Deserialize(bayesNet);
+
+            final HmmBayesNetDeserialization deserialization = new HmmBayesNetDeserialization(bayesNet,Optional.<UUID>absent());
+            final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams deserializedSleepHmmBayesNetWithParams = deserialization.Deserialize();
             final SensorDataReductionAndInterpretation stuff = deserializedSleepHmmBayesNetWithParams.sensorDataReductionAndInterpretation;
 
             final Integer [] endStates = new Integer[1];

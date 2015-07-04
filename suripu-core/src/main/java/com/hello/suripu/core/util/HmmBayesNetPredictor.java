@@ -48,7 +48,8 @@ public class HmmBayesNetPredictor {
             try {
                 final byte[] decodedBytes = Base64.decodeBase64(DEFAULT_PROTOBUF);
                 final SleepHmmBayesNetProtos.HmmBayesNet bayesNet = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(decodedBytes);
-                final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams data = HmmBayesNetDeserialization.Deserialize(bayesNet);
+                final HmmBayesNetDeserialization deserialization = new HmmBayesNetDeserialization(bayesNet,uuid);
+                final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams data = deserialization.Deserialize();
                 return Optional.of(new HmmBayesNetPredictor(data,uuid));
             }
             catch (InvalidProtocolBufferException exception) {
@@ -70,8 +71,8 @@ public class HmmBayesNetPredictor {
 
         //populate factory map
         eventProducers = Maps.newHashMap();
-        eventProducers.put(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP,new SleepEventProducer(LOGGER));
-        eventProducers.put(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_BED,new BedEventProducer(LOGGER));
+        eventProducers.put(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP,new SleepEventProducer());
+        eventProducers.put(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_BED,new BedEventProducer());
 
         allTheData = data;
     }
@@ -132,7 +133,7 @@ public class HmmBayesNetPredictor {
             final EventProducer producer = eventProducers.get(key);
 
             if (producer == null) {
-                LOGGER.warn("could not find event producer for conditional probabilities of {}",key);
+                LOGGER.warn("could not find event producer for conditional probabilities of {}", key);
                 continue;
             }
 
