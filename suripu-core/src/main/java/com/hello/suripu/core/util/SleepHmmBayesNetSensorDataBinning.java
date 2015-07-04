@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Sample;
@@ -39,7 +40,7 @@ public class SleepHmmBayesNetSensorDataBinning {
     }
 
     static protected List<Sample> getTimeOfDayAsMeasurement(final List<Sample> light, final double startNaturalLightForbiddedenHour, final double stopNaturalLightForbiddenHour) {
-        List<Sample> minuteData = new ArrayList<>();
+        final List<Sample> minuteData = Lists.newArrayList();
 
         for (final Sample s : light) {
             //local UTC
