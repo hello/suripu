@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.algorithm.bayes.ProbabilitySegment;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by benjo on 6/22/15.
@@ -119,7 +121,11 @@ public class BayesNetTest {
 
             checkProbs(refProbs,probs,0.1,10);
 
-            final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(deserializedSleepHmmBayesNetWithParams);
+            final Optional<HmmBayesNetPredictor> predictorOptional = HmmBayesNetPredictor.createHmmBayesNetPredictor(Optional.of(deserializedSleepHmmBayesNetWithParams), Optional.<UUID>absent());
+
+            TestCase.assertTrue(predictorOptional.isPresent());
+
+            final HmmBayesNetPredictor predictor = predictorOptional.get();
 
             final Map<String,List<Event>> eventsByCondProb = predictor.makePredictions(sensordata, 0, 0);
 

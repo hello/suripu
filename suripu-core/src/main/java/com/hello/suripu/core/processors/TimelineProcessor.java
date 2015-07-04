@@ -38,6 +38,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.HmmBayesNetDeserialization;
 import com.hello.suripu.core.util.HmmBayesNetPredictor;
 import com.hello.suripu.core.util.InvalidNightType;
 import com.hello.suripu.core.util.MultiLightOutUtils;
@@ -81,6 +82,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
     private final SenseColorDAO senseColorDAO;
+    private final Optional<UUID> uuidOptional;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -149,6 +151,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             feedbackUtils = new FeedbackUtils();
             partnerDataUtils = new PartnerDataUtils();
         }
+
+        uuidOptional = uuid;
     }
 
     public Optional<TimelineResult> retrieveTimelinesFast(final Long accountId, final DateTime date) {
@@ -217,15 +221,22 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             }
             else if (this.hasBayesNetEnabled(accountId) ) {
-                final List<Event> events = HmmBayesNetPredictor.getBayesNetHmmEvents(targetDate,endDate,currentTime.getMillis(),accountId,sensorData.allSensorSampleList,sensorData.trackerMotions,sensorData.trackerMotions.get(0).offsetMillis);
+                final Optional<HmmBayesNetPredictor> predictorOptional = HmmBayesNetPredictor.createHmmBayesNetPredictor(Optional.<HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams>absent(),uuidOptional);
 
-                if (events.size() >= 2) {
+                if (predictorOptional.isPresent()) {
+                    final HmmBayesNetPredictor predictor = predictorOptional.get();
 
-                    final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.<Optional<Event>>create(Optional.<Event>absent(), Optional.of(events.get(0)), Optional.of(events.get(1)), Optional.<Event>absent());
+                    final List<Event> events = predictor.getBayesNetHmmEvents(targetDate,endDate,currentTime.getMillis(),accountId,sensorData.allSensorSampleList,sensorData.trackerMotions,sensorData.trackerMotions.get(0).offsetMillis);
 
-                    sleepEventsFromAlgorithmOptional = Optional.of(sleepEventsFromAlgorithm);
+                    /*  NOTE THAT THIS ONLY DOES SLEEP RIGHT NOW, NOT ON-BED */
+                    if (events.size() >= 2) {
 
-                    algorithmWorked = true;
+                        final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.<Optional<Event>>create(Optional.<Event>absent(), Optional.of(events.get(0)), Optional.of(events.get(1)), Optional.<Event>absent());
+
+                        sleepEventsFromAlgorithmOptional = Optional.of(sleepEventsFromAlgorithm);
+
+                        algorithmWorked = true;
+                    }
                 }
             }
             else {
