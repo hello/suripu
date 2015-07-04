@@ -318,7 +318,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
 
     private void createSleepHmmTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
-
+        client.setEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
         final String tableName = configuration.getSleepHmmDBConfiguration().getTableName();
 
         try {

@@ -237,7 +237,7 @@ public class DeviceResources extends BaseResource {
             if (!pillStatusOptional.isPresent()) {
                 // no heartbeat yet, pull from tracker-motion
                 LOGGER.warn("No heartbeat yet for pill id = {} (external id = {}) for account_id = {}", pill.internalDeviceId, pill.externalDeviceId, pill.accountId);
-                pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId);
+                pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId, accountId);
             }
 
             if(!pillStatusOptional.isPresent()) {

@@ -123,7 +123,7 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
                 workerId);
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
-        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
+        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
 
         final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(mergedUserInfoDynamoDB,
                 scheduledRingTimeHistoryDAODynamoDB,

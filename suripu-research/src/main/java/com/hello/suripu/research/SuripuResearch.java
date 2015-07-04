@@ -131,7 +131,5 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
         environment.addResource(new DataScienceResource(accountDAO, trackerMotionDAO,
                 deviceDataDAO, deviceDAO, userLabelDAO));
-
-
     }
 }

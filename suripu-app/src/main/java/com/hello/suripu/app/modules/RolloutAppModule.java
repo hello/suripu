@@ -20,6 +20,7 @@ import javax.inject.Singleton;
         TimelineProcessor.class,
         InsightsResource.class,
         DeviceResources.class,
+        com.hello.suripu.app.v2.TimelineResource.class
 })
 public class RolloutAppModule {
     private final FeatureStore featureStore;

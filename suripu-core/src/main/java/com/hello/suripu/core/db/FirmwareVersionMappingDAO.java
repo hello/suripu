@@ -2,26 +2,30 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.PutItemResult;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.util.Collections;
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +34,7 @@ public class FirmwareVersionMappingDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(FirmwareVersionMappingDAO.class);
 
     public final static String FW_HASH = "fw_hash";
-    public final static String HUMAN_VERSION = "human_version";
+    public final static String HUMAN_VERSION = "human_versions";
 
     private final AmazonDynamoDB amazonDynamoDB;
     private final String tableName;
@@ -43,69 +47,88 @@ public class FirmwareVersionMappingDAO {
     public void put(final String fwHash, final String humanVersion) {
         final Map<String, AttributeValue> attributes = Maps.newHashMap();
         attributes.put(FW_HASH, new AttributeValue().withS(fwHash));
-        attributes.put(HUMAN_VERSION, new AttributeValue().withS(humanVersion));
 
-        final PutItemResult result = amazonDynamoDB.putItem(tableName, attributes);
+
+        final Map<String, AttributeValueUpdate> attributeValueUpdateMap = Maps.newHashMap();
+
+        attributeValueUpdateMap.put(HUMAN_VERSION, new AttributeValueUpdate()
+                .withAction(AttributeAction.ADD)
+                .withValue(new AttributeValue().withSS(Sets.newHashSet(humanVersion))));
+
+        final UpdateItemResult updateItemResult = amazonDynamoDB.updateItem(tableName, attributes, attributeValueUpdateMap);
     }
 
     public List<String> get(final String fwHash) {
-        final Map<String, AttributeValue> attributes = Maps.newHashMap();
-        attributes.put(FW_HASH, new AttributeValue().withS(fwHash));
+        final Map<String, AttributeValue> key = Maps.newHashMap();
+        key.put(FW_HASH, new AttributeValue().withS(fwHash));
 
+        final GetItemRequest getItemRequest = new GetItemRequest();
+        getItemRequest.withTableName(tableName).withKey(key).withAttributesToGet(HUMAN_VERSION);
 
-        final Condition byFirmwareHash = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withS(String.valueOf(fwHash)));
-
-        final Condition byRange = new Condition()
-                    .withComparisonOperator(ComparisonOperator.GT.toString())
-                    .withAttributeValueList(new AttributeValue().withS(" "));
-
-        final Map<String, Condition> queryConditions = new HashMap<>();
-        queryConditions.put(FW_HASH, byFirmwareHash);
-        queryConditions.put(HUMAN_VERSION, byRange);
-
-        final QueryRequest queryRequest = new QueryRequest()
-                .withTableName(this.tableName)
-                .withKeyConditions(queryConditions)
-                .withLimit(10);
-
-        final QueryResult queryResult;
-
+        GetItemResult getItemResult;
         try {
-            queryResult = amazonDynamoDB.query(queryRequest);
+            getItemResult = amazonDynamoDB.getItem(getItemRequest);
         } catch (AmazonServiceException ase){
             LOGGER.error("Firmware Version map query failed.");
             return Collections.EMPTY_LIST;
         }
 
-        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+        final Map<String, AttributeValue> item = getItemResult.getItem();
 
-        final List<String> humanVersions = Lists.newArrayList();
-
-        if (queryResult.getItems() != null) {
-            for (final Map<String, AttributeValue> item : items) {
-                humanVersions.add(item.get(HUMAN_VERSION).getS());
-            }
+        if (item != null && item.containsKey(HUMAN_VERSION)) {
+            return item.get(HUMAN_VERSION).getSS();
         }
 
-        return humanVersions;
+        return Lists.newArrayList();
+    }
+
+    public Map<String, List<String>> getBatch(final ImmutableSet<String> fwHashSet) {
+        final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
+        final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
+
+        for (final String fwHash : fwHashSet) {
+            final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
+            attributeValueMap.put(FW_HASH, new AttributeValue().withS(fwHash));
+            itemKeys.add(attributeValueMap);
+        }
+
+        final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(FW_HASH, HUMAN_VERSION);
+        final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
+        requestItems.put(tableName, key);
+
+        batchGetItemRequest.withRequestItems(requestItems);
+
+        try {
+            final BatchGetItemResult batchGetItemResult = amazonDynamoDB.batchGetItem(batchGetItemRequest);
+            final Map<String, List<String>> results = Maps.newHashMap();
+
+            for (final String item : batchGetItemResult.getResponses().keySet()) {
+                final List<Map<String, AttributeValue>> responses = batchGetItemResult.getResponses().get(item);
+                for (final Map<String, AttributeValue> response : responses) {
+                    if (response.containsKey(HUMAN_VERSION)) {
+                        final List<String> fwVersions = response.get(HUMAN_VERSION).getSS();
+                        results.put(response.get(FW_HASH).getS(), fwVersions);
+                    }
+                }
+            }
+            return results;
+        } catch (AmazonServiceException ase){
+            LOGGER.error("Firmware Version map query failed.");
+
+        }
+        return Collections.EMPTY_MAP;
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB amazonDynamoDB) {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(FW_HASH).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(HUMAN_VERSION).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(FW_HASH).withKeyType(KeyType.HASH)
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(FW_HASH).withAttributeType(ScalarAttributeType.S),
-                new AttributeDefinition().withAttributeName(HUMAN_VERSION).withAttributeType(ScalarAttributeType.S)
-
+                new AttributeDefinition().withAttributeName(FW_HASH).withAttributeType(ScalarAttributeType.S)
         );
-
 
         request.setProvisionedThroughput(new ProvisionedThroughput()
                 .withReadCapacityUnits(1L)

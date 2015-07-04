@@ -242,6 +242,19 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     @Override
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
-        System.exit(1);
+        if(shutdownReason == ShutdownReason.TERMINATE) {
+            LOGGER.warn("Got Termintate. Attempting to checkpoint.");
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+                LOGGER.warn("Checkpoint successful.");
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        } else {
+            System.exit(1);
+        }
+
     }
 }
