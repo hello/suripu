@@ -16,8 +16,6 @@ import java.util.Map;
  */
 public class BayesNetHmmModelPrior {
 
-
-
     public final String modelId;
 
     public final String outputId;
@@ -61,7 +59,7 @@ public class BayesNetHmmModelPrior {
     }
 
     /* returns a map of MultipleCondProbs where the key is the model id
-       because this is how it's stored in the database */
+      *  */
     public static Map<String,byte []> getProtobufsByModelId(final List<BayesNetHmmModelPrior> priors) {
 
         final Map<String,List<BetaBinomialProtos.CondProbs>> dataByModelId = Maps.newHashMap();
