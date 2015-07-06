@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models.timeline.v2;
 
 public enum EventType {
+    IN_BED,
     GENERIC_MOTION,
     PARTNER_MOTION,
     GENERIC_SOUND,

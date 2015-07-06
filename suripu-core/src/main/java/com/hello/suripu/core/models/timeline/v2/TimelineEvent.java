@@ -56,14 +56,24 @@ public class TimelineEvent {
 
 
     public static TimelineEvent fromV1(final SleepSegment segment) {
+        SleepState sleepState;
+        EventType eventType;
+        if (segment.getType() == null) {
+            sleepState = SleepState.AWAKE;
+            eventType = EventType.IN_BED;
+        } else {
+            sleepState = SleepState.from(segment.getSleepDepth());
+            eventType = from(segment.getType());
+        }
+
         return new TimelineEvent(
                 segment.getTimestamp(),
                 segment.getOffsetMillis(),
                 segment.getDurationInSeconds(),
                 segment.getMessage(),
                 segment.getSleepDepth(),
-                SleepState.from(segment.getSleepDepth()),
-                from(segment.getType()),
+                sleepState,
+                eventType,
                 ValidAction.from(segment.getType())
         );
     }
@@ -80,6 +90,8 @@ public class TimelineEvent {
     private static final ImmutableMap<Event.Type, EventType> typesMapping;
     static {
         final Map<Event.Type, EventType> temp = Maps.newHashMap();
+
+        temp.put(Event.Type.SLEEPING, EventType.IN_BED);
 
         temp.put(Event.Type.IN_BED, EventType.GOT_IN_BED);
         temp.put(Event.Type.OUT_OF_BED, EventType.GOT_OUT_OF_BED);
@@ -111,5 +123,14 @@ public class TimelineEvent {
         }
 
         return EventType.UNKNOWN;
+    }
+
+
+    public static class TimeAmendment {
+        public final String newEventTime;
+
+        public TimeAmendment(@JsonProperty("new_event_time") String newEventTime) {
+            this.newEventTime = newEventTime;
+        }
     }
 }

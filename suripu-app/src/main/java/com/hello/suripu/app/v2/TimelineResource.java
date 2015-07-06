@@ -6,7 +6,7 @@ import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.timeline.v2.Timeline;
-import com.hello.suripu.core.models.timeline.v2.TimelineFeedback;
+import com.hello.suripu.core.models.timeline.v2.TimelineEvent;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -22,14 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -71,7 +64,7 @@ public class TimelineResource extends BaseResource {
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
         final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
         if(!timeline.isPresent()) {
-            return Timeline.createEmpty();
+            return Timeline.createEmpty(targetDate);
         }
         // That's super ugly. Need to find a more elegant way to write this
         return Timeline.fromV1(timeline.get().timelines.get(0));
@@ -81,28 +74,38 @@ public class TimelineResource extends BaseResource {
     @PATCH
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{date}/event")
+    @Path("/{date}/events/{type}/{timestamp}")
     public Response amendTimeOfEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                      @PathParam("date") String date,
-                                     @Valid TimelineFeedback timelineFeedback) {
-        return Response.status(Response.Status.ACCEPTED).build();
+                                     @PathParam("type") String type,
+                                     @PathParam("timestamp") long timestamp,
+                                     @Valid TimelineEvent.TimeAmendment timeAmendment) {
+        return Response.status(Response.Status.ACCEPTED)
+                       .entity(getTimelineForNight(accessToken, date))
+                       .build();
     }
 
     @DELETE
     @Timed
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{date}/event")
+    @Path("/{date}/events/{type}/{timestamp}")
     public Response deleteEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
-                                     @Valid TimelineFeedback timelineFeedback) {
-        return Response.status(Response.Status.ACCEPTED).build();
+                                @PathParam("date") String date,
+                                @PathParam("type") String type,
+                                @PathParam("timestamp") long timestamp) {
+        return Response.status(Response.Status.ACCEPTED)
+                       .entity(getTimelineForNight(accessToken, date))
+                       .build();
     }
 
     @PUT
     @Timed
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{date}/event")
+    @Path("/{date}/events/{type}/{timestamp}")
     public Response validateEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
-                                     @Valid TimelineFeedback timelineFeedback) {
-        return Response.status(Response.Status.ACCEPTED).build();
+                                  @PathParam("date") String date,
+                                  @PathParam("type") String type,
+                                  @PathParam("timestamp") long timestamp) {
+        return Response.status(Response.Status.ACCEPTED)
+                       .entity(getTimelineForNight(accessToken, date))
+                       .build();
     }
 }
