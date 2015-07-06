@@ -37,7 +37,14 @@ public class TimelineEvent {
     @JsonProperty("valid_actions")
     public final List<ValidAction> validActions;
 
-    private TimelineEvent(final Long timestamp, final Integer timezoneOffset, final Integer duration, final String message, final Integer sleepDepth, final SleepState sleepState, final EventType eventType, final List<ValidAction> validActions) {
+    private TimelineEvent(final Long timestamp,
+                          final Integer timezoneOffset,
+                          final Integer duration,
+                          final String message,
+                          final Integer sleepDepth,
+                          final SleepState sleepState,
+                          final EventType eventType,
+                          final List<ValidAction> validActions) {
         this.timestamp = timestamp;
         this.timezoneOffset = timezoneOffset;
         this.duration = duration * 1000L;
@@ -48,8 +55,14 @@ public class TimelineEvent {
         this.validActions = validActions;
     }
 
-    public static TimelineEvent create(final Long timestamp, final Integer timezoneOffset, final Integer duration, final String message, final Integer sleepDepth, final SleepState sleepState, final EventType eventType) {
-        return new TimelineEvent(timestamp, timezoneOffset, duration, message, sleepDepth, sleepState, eventType, Collections.EMPTY_LIST);
+    public static TimelineEvent create(final Long timestamp,
+                                       final Integer timezoneOffset,
+                                       final Integer durationInSeconds,
+                                       final String message,
+                                       final Integer sleepDepth,
+                                       final SleepState sleepState,
+                                       final EventType eventType) {
+        return new TimelineEvent(timestamp, timezoneOffset, durationInSeconds, message, sleepDepth, sleepState, eventType, Collections.EMPTY_LIST);
     }
 
 
@@ -58,7 +71,7 @@ public class TimelineEvent {
     public static TimelineEvent fromV1(final SleepSegment segment) {
         SleepState sleepState;
         EventType eventType;
-        if (segment.getType() == null) {
+        if (segment.getType() == Event.Type.NONE) {
             sleepState = SleepState.AWAKE;
             eventType = EventType.IN_BED;
         } else {
