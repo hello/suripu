@@ -60,7 +60,7 @@
         <dependency>
             <groupId>com.indextank</groupId>
             <artifactId>indextank-java</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.9</version>
         </dependency>
     </dependencies>
     <build>

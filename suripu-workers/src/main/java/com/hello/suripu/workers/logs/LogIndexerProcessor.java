@@ -49,9 +49,10 @@ public class LogIndexerProcessor implements IRecordProcessor {
                                              final IndexTankClient.Index senseLogBackupIndex,
                                              final SenseEventsDAO senseEventsDAO,
                                              final OnBoardingLogDAO onBoardingLogDAO,
-                                             final JedisPool jedisPool) {
+                                             final JedisPool jedisPool,
+                                             final Integer searchifyBulkSize) {
         return new LogIndexerProcessor(
-                new SenseLogIndexer(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, jedisPool),
+                new SenseLogIndexer(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, jedisPool, searchifyBulkSize),
                 new SenseStructuredLogIndexer(senseEventsDAO),
                 new OnBoardingLogIndexer(onBoardingLogDAO)
         );
