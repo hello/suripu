@@ -1,6 +1,7 @@
 package com.hello.suripu.workers.timeline;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -161,5 +162,21 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     private Integer mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound = DEFAULT_MAX_READ_CAPACITY;
     public Integer getMergeUserInfoDynamoDBReadCapacityPerSecondUpperBound(){
         return this.mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_priors")
+    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
+        return this.hmmBayesnetPriorsConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_paths")
+    private DynamoDBConfiguration hmmBayesnetPathsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetPathsConfiguration() {
+        return this.hmmBayesnetPathsConfiguration;
     }
 }

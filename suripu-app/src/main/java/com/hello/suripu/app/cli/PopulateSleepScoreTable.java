@@ -14,6 +14,10 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.ModelPathsDAO;
+import com.hello.suripu.core.db.ModelPathsDAODynamoDB;
+import com.hello.suripu.core.db.ModelPriorsDAO;
+import com.hello.suripu.core.db.ModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -96,6 +100,15 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 configuration.getSleepStatsVersion()
         );
 
+          /* Priors for bayesnet  */
+        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
+        final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        final String pathDbTableName = configuration.getHmmBayesnetPathsConfiguration().getTableName();
+        final AmazonDynamoDB pathsDb = dynamoDBClientFactory.getForEndpoint(pathDbTableName);
+        final ModelPathsDAO pathsDAO = new ModelPathsDAODynamoDB(pathsDb,pathDbTableName);
+
+        /* data for ye olde HMM */
         final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
         final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
         final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
@@ -116,7 +129,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                senseColorDAO);
+                senseColorDAO, priorsDAO, pathsDAO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);

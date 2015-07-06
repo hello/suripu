@@ -23,6 +23,10 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.ModelPathsDAO;
+import com.hello.suripu.core.db.ModelPathsDAODynamoDB;
+import com.hello.suripu.core.db.ModelPriorsDAO;
+import com.hello.suripu.core.db.ModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -105,6 +109,13 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient,
                 configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ALARM_INFO));
 
+        /* Priors for bayesnet  */
+        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
+        final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        final String pathDbTableName = configuration.getHmmBayesnetPathsConfiguration().getTableName();
+        final AmazonDynamoDB pathsDb = dynamoDBClientFactory.getForEndpoint(pathDbTableName);
+        final ModelPathsDAO pathsDAO = new ModelPathsDAODynamoDB(pathsDb,pathDbTableName);
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
@@ -169,7 +180,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                        senseColorDAO);
+                        senseColorDAO, priorsDAO, pathsDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

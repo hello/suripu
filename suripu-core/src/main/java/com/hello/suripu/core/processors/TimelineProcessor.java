@@ -10,6 +10,8 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.ModelPathsDAO;
+import com.hello.suripu.core.db.ModelPriorsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -82,6 +84,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
     private final SenseColorDAO senseColorDAO;
+    private final ModelPriorsDAO priorsDAO;
+    private final ModelPathsDAO pathsDAO;
     private final Optional<UUID> uuidOptional;
 
     final private static int SLOT_DURATION_MINUTES = 1;
@@ -103,15 +107,21 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final SleepHmmDAO sleepHmmDAO,
                                                             final AccountDAO accountDAO,
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
-                                                            final SenseColorDAO senseColorDAO) {
+                                                            final SenseColorDAO senseColorDAO,
+                                                            ModelPriorsDAO priorsDAO,
+                                                            ModelPathsDAO pathsDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.<UUID>absent());
+        return new TimelineProcessor(trackerMotionDAO,
+                deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,
+                feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
+                senseColorDAO,priorsDAO,pathsDAO,
+                Optional.<UUID>absent());
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,Optional.of(uuid));
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO, pathsDAO,Optional.of(uuid));
     }
 
     //private SessionLogDebug(final String)
@@ -125,6 +135,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
+                              final ModelPriorsDAO priorsDAO,
+                              final ModelPathsDAO pathsDAO,
                               final Optional<UUID> uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
@@ -135,6 +147,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.accountDAO = accountDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.senseColorDAO = senseColorDAO;
+        this.priorsDAO = priorsDAO;
+        this.pathsDAO = pathsDAO;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -151,7 +165,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             feedbackUtils = new FeedbackUtils();
             partnerDataUtils = new PartnerDataUtils();
         }
-
         uuidOptional = uuid;
     }
 

@@ -51,6 +51,10 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.ModelPathsDAO;
+import com.hello.suripu.core.db.ModelPathsDAODynamoDB;
+import com.hello.suripu.core.db.ModelPriorsDAO;
+import com.hello.suripu.core.db.ModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
@@ -246,6 +250,14 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
+        /* Priors for bayesnet  */
+        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
+        final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        final String pathDbTableName = configuration.getHmmBayesnetPathsConfiguration().getTableName();
+        final AmazonDynamoDB pathsDb = dynamoDBClientFactory.getForEndpoint(pathDbTableName);
+        final ModelPathsDAO pathsDAO = new ModelPathsDAODynamoDB(pathsDb,pathDbTableName);
+
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
@@ -339,7 +351,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                senseColorDAO);
+                senseColorDAO,
+                priorsDAO,
+                pathsDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
 
