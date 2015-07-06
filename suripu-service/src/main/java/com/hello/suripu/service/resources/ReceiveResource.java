@@ -279,9 +279,15 @@ public class ReceiveResource extends BaseResource {
                         DateTime.now(),
                         2);
 
-                responseBuilder.setRoomConditions(
-                        OutputProtos.SyncResponse.RoomConditions.valueOf(
-                                RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
+                    responseBuilder.setRoomConditions(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal()));
+                }else {
+                    responseBuilder.setRoomConditions(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                }
 
             }
         }
