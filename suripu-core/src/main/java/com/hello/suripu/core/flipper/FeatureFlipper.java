@@ -45,6 +45,7 @@ public class FeatureFlipper {
     public final static String BAYESIAN_PARTNER_FILTER = "bayesian_partner_filter";
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";
+    public final static String NEW_ROOM_CONDITION = "new_room_condition";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String BAYES_NET_ALGORITHM = "bayes_net_algorithm";
 }

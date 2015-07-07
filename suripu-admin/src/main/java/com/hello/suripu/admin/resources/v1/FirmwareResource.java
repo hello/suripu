@@ -248,8 +248,11 @@ public class FirmwareResource {
         try {
             final Set<Tuple> seenFirmwares = jedis.zrangeWithScores(REDIS_SEEN_FIRMWARE_KEY, 0, -1);
             for (final Tuple fwInfo:seenFirmwares) {
-                final long lastSeen = (long) fwInfo.getScore();
-                fwHistory.put(lastSeen, fwInfo.getElement());
+                final String fwVersion = fwInfo.getElement();
+                final Double score = jedis.zscore(fwVersion, deviceId);
+                if(score != null) {
+                    fwHistory.put(score.longValue(), fwVersion);
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Failed retrieving fw history for device.", e.getMessage());
