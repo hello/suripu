@@ -606,6 +606,7 @@ public class DeviceResources {
         final Optional<DeviceKeyStoreRecord> deviceKeyStoreRecordOptional = senseKeyStore.getKeyStoreRecord(senseId);
         if(!deviceKeyStoreRecordOptional.isPresent()) {
             LOGGER.warn("Couldn't KeyStoreRecord for deviceId {}", senseId);
+            return 0;
         }
 
         final Optional<Device.Color> colorOptional = serialNumberToColor(deviceKeyStoreRecordOptional.get().metadata, deviceKeyStoreRecordOptional.get().key);

@@ -113,6 +113,19 @@ public class LogIndexerProcessor implements IRecordProcessor {
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
         LOGGER.warn("Shutting down because: {}", shutdownReason);
-        System.exit(1);
+        if(shutdownReason == ShutdownReason.TERMINATE) {
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+                LOGGER.warn("Checkpoint successful after shutdown");
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        } else {
+            LOGGER.error("Unknown shutdown reason. exit()");
+            System.exit(1);
+        }
+
     }
 }
