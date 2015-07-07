@@ -209,7 +209,7 @@ public class FirmwareResource {
             final Pipeline pipe = jedis.pipelined();
             final Map<String, redis.clients.jedis.Response<Long>> responseMap = Maps.newHashMap();
             for (final Tuple fwInfo:seenFirmwares) {
-                responseMap.put(fwInfo.getElement(), pipe.zcard(fwInfo.getElement()));
+                responseMap.put(fwInfo.getElement(), pipe.zcount(fwInfo.getElement(), rangeStart, rangeEnd));
             }
             pipe.sync();
             for (final Tuple fwInfo:seenFirmwares) {
