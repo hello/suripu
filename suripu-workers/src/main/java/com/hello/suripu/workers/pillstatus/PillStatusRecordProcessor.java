@@ -164,7 +164,7 @@ public class PillStatusRecordProcessor extends HelloBaseRecordProcessor {
 
     }
 
-    private void doProcess(final List<Long> internalPillIds){
+    public void classifyPills(final List<Long> internalPillIds){
         final RateLimiter rateLimiter = RateLimiter.create(100d);
         for(final Long internalPillId:internalPillIds){
             rateLimiter.acquire();
@@ -196,13 +196,14 @@ public class PillStatusRecordProcessor extends HelloBaseRecordProcessor {
                     queryStartTimeFor72hrWindow,
                     72);
 
-            // Plug it into the decision boundary:
-            // -0.0064 * d2d + 0.1281 * d3d - 3.4344 = 0
-
             if(!maxDrop24hr.isPresent() || !maxDrop72hr.isPresent()){
                 LOGGER.debug("Not enough data to classify pill {}", internalPillId);
                 continue;
             }
+
+            // Plug it into the decision boundary:
+            // -0.0064 * d2d + 0.1281 * d3d - 3.4344 = 0
+            final PillStatus status = PillClassification.classify(new float[]{maxDrop24hr.get(), maxDrop72hr.get()});
 
             final DeviceStatus lastHeartBeat = dataFromLast72Hours.get(dataFromLast72Hours.size() - 1);
             final long lastHeartBeatTimeMillis = lastHeartBeat.lastSeen.getMillis();
@@ -213,7 +214,7 @@ public class PillStatusRecordProcessor extends HelloBaseRecordProcessor {
                     lastHeartBeat.batteryLevel,
                     Math.max(maxDrop24hr.get(), pillClassificationOptional.isPresent() ? pillClassificationOptional.get().max24HoursBatteryDelta : 0f),
                     Math.max(maxDrop72hr.get(), pillClassificationOptional.isPresent() ? pillClassificationOptional.get().max72HoursBatteryDelta : 0f),
-                    PillStatus.NORMAL.toInt()
+                    status.toInt()
                     );
 
 
@@ -258,7 +259,7 @@ public class PillStatusRecordProcessor extends HelloBaseRecordProcessor {
                     internalPillIdsToBeClassified.addAll(pillsSeenFromLast24HoursAndHaveLessThan80PercentBattery);
                 }
 
-                doProcess(internalPillIdsToBeClassified);
+                classifyPills(internalPillIdsToBeClassified);
 
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());

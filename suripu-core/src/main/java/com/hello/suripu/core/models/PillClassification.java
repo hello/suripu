@@ -65,4 +65,23 @@ public class PillClassification {
     public static List<DeviceStatus> restoreBuffer(final long internalPillId, final DateTime queryStartTime, final DateTime queryEndTime, final PillHeartBeatDAO pillHeartBeatDAO){
         return pillHeartBeatDAO.getPillStatusBetweenUTC(internalPillId, queryStartTime, queryEndTime);
     }
+
+    /*
+    * Decision boundary from SVM
+    * -0.0064 * d2d + 0.1281 * d3d - 3.4344 = 0
+     */
+    public static PillStatus classify(final float[] features){
+        if(features.length < 2){
+            return PillStatus.UNKNOWN;
+        }
+
+        final float dayToDayDrop = features[0];
+        final float threeDayDrop = features[1];
+        final float result = -0.0064f * dayToDayDrop + 0.1281f * threeDayDrop - 3.4344f;
+        if(result > 0){
+            return PillStatus.NORMAL;
+        }
+
+        return PillStatus.BAD;
+    }
 }
