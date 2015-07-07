@@ -197,7 +197,8 @@ public class ReceiveResource extends BaseResource {
             final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
             batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
         } catch (Exception e) {
-            LOGGER.error("Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+            LOGGER.error("IMPORTANT Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+            return plainTextError(Response.Status.SERVICE_UNAVAILABLE, "");
         }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
@@ -278,9 +279,15 @@ public class ReceiveResource extends BaseResource {
                         DateTime.now(),
                         2);
 
-                responseBuilder.setRoomConditions(
-                        OutputProtos.SyncResponse.RoomConditions.valueOf(
-                                RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
+                    responseBuilder.setRoomConditions(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal()));
+                }else {
+                    responseBuilder.setRoomConditions(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                }
 
             }
         }

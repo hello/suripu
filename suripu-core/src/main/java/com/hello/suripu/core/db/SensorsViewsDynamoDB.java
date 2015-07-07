@@ -31,10 +31,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.DeviceStatus;
+import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.Sample;
-import java.util.HashMap;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -42,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -399,7 +399,6 @@ public class SensorsViewsDynamoDB {
         request.withAttributeDefinitions(
                 new AttributeDefinition().withAttributeName(SENSE_ID_ATTRIBUTE_NAME).withAttributeType(ScalarAttributeType.S)
         );
-
 
         request.setProvisionedThroughput(new ProvisionedThroughput()
                 .withReadCapacityUnits(1L)
