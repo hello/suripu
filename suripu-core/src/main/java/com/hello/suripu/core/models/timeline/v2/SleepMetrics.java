@@ -2,11 +2,11 @@ package com.hello.suripu.core.models.timeline.v2;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.SleepStats;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SleepMetrics {
@@ -35,7 +35,7 @@ public class SleepMetrics {
     }
 
     public static List<SleepMetrics> fromV1(final com.hello.suripu.core.models.Timeline timelineV1) {
-        final List<SleepMetrics> metrics = new ArrayList<>();
+        final List<SleepMetrics> metrics = Lists.newArrayList();
 
         final Optional<SleepStats> maybeStatistics = timelineV1.statistics;
         if (maybeStatistics.isPresent() && !maybeStatistics.get().isFromNull()) {
