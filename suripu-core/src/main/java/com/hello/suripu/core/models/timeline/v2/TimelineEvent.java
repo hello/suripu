@@ -37,7 +37,14 @@ public class TimelineEvent {
     @JsonProperty("valid_actions")
     public final List<ValidAction> validActions;
 
-    private TimelineEvent(final Long timestamp, final Integer timezoneOffset, final Integer duration, final String message, final Integer sleepDepth, final SleepState sleepState, final EventType eventType, final List<ValidAction> validActions) {
+    private TimelineEvent(final Long timestamp,
+                          final Integer timezoneOffset,
+                          final Integer duration,
+                          final String message,
+                          final Integer sleepDepth,
+                          final SleepState sleepState,
+                          final EventType eventType,
+                          final List<ValidAction> validActions) {
         this.timestamp = timestamp;
         this.timezoneOffset = timezoneOffset;
         this.duration = duration * 1000L;
@@ -48,22 +55,38 @@ public class TimelineEvent {
         this.validActions = validActions;
     }
 
-    public static TimelineEvent create(final Long timestamp, final Integer timezoneOffset, final Integer duration, final String message, final Integer sleepDepth, final SleepState sleepState, final EventType eventType) {
-        return new TimelineEvent(timestamp, timezoneOffset, duration, message, sleepDepth, sleepState, eventType, Collections.EMPTY_LIST);
+    public static TimelineEvent create(final Long timestamp,
+                                       final Integer timezoneOffset,
+                                       final Integer durationInSeconds,
+                                       final String message,
+                                       final Integer sleepDepth,
+                                       final SleepState sleepState,
+                                       final EventType eventType) {
+        return new TimelineEvent(timestamp, timezoneOffset, durationInSeconds, message, sleepDepth, sleepState, eventType, Collections.EMPTY_LIST);
     }
 
 
 
 
     public static TimelineEvent fromV1(final SleepSegment segment) {
+        SleepState sleepState;
+        EventType eventType;
+        if (segment.getType() == Event.Type.NONE) {
+            sleepState = SleepState.AWAKE;
+            eventType = EventType.IN_BED;
+        } else {
+            sleepState = SleepState.from(segment.getSleepDepth());
+            eventType = from(segment.getType());
+        }
+
         return new TimelineEvent(
                 segment.getTimestamp(),
                 segment.getOffsetMillis(),
                 segment.getDurationInSeconds(),
                 segment.getMessage(),
                 segment.getSleepDepth(),
-                SleepState.from(segment.getSleepDepth()),
-                from(segment.getType()),
+                sleepState,
+                eventType,
                 ValidAction.from(segment.getType())
         );
     }
@@ -80,6 +103,8 @@ public class TimelineEvent {
     private static final ImmutableMap<Event.Type, EventType> typesMapping;
     static {
         final Map<Event.Type, EventType> temp = Maps.newHashMap();
+
+        temp.put(Event.Type.SLEEPING, EventType.IN_BED);
 
         temp.put(Event.Type.IN_BED, EventType.GOT_IN_BED);
         temp.put(Event.Type.OUT_OF_BED, EventType.GOT_OUT_OF_BED);
@@ -111,5 +136,14 @@ public class TimelineEvent {
         }
 
         return EventType.UNKNOWN;
+    }
+
+
+    public static class TimeAmendment {
+        public final String newEventTime;
+
+        public TimeAmendment(@JsonProperty("new_event_time") String newEventTime) {
+            this.newEventTime = newEventTime;
+        }
     }
 }
