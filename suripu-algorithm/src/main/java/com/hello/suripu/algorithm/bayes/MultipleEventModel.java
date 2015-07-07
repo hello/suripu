@@ -57,7 +57,7 @@ public class MultipleEventModel {
     }
 
 
-    private ImmutableList<Double> getBayesianUpdateAtIndex(final ImmutableList<Double> prior, final int t, final Map<String,ImmutableList<Integer>> eventsByModel) throws AlgorithmException {
+    private ImmutableList<Double> getBayesianUpdateAtIndex(final ImmutableList<Double> prior, final int t, final Map<String,ImmutableList<Integer>> eventsByModel) {
 
 
         ImmutableList<Double> p1 = prior;
@@ -103,7 +103,7 @@ public class MultipleEventModel {
     }
 
     /* get list of probabilties as they are sequentially updated with the events  */
-    public List<List<Double>> getProbsFromEventSequence(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents, boolean forwards) throws AlgorithmException {
+    public List<List<Double>> getProbsFromEventSequence(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents, boolean forwards)  {
         List<List<Double>> probs = Lists.newArrayList();
 
         //set prior
@@ -145,7 +145,7 @@ public class MultipleEventModel {
      *  i.e.   P(A_forwards) * P(A_backwards) = P(A_forwards, A_backwards)
      *
      *  */
-    public List<List<Double>> getJointOfForwardsAndBackwards(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents) throws AlgorithmException {
+    public List<List<Double>> getJointOfForwardsAndBackwards(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents)  {
 
 
         //do forwards

@@ -16,7 +16,7 @@ public class BedEventProducer implements  EventProducer{
 
 
     @Override
-    public List<Event> getEventsFromProbabilitySequence(Map<String,List<List<Double>>> probsByOutputId, double [][] sensorData,Long t0, Integer numMinutesPerInterval, Integer timezoneOffset) throws AlgorithmException {
+    public List<Event> getEventsFromProbabilitySequence(Map<String,List<List<Double>>> probsByOutputId, double [][] sensorData,Long t0, Integer numMinutesPerInterval, Integer timezoneOffset) {
         final List<Event> events = Lists.newArrayList();
         final List<List<Double>> probsOfBed = probsByOutputId.get(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_BED);
         final List<List<Double>> probsOfSleep = probsByOutputId.get(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP);
@@ -31,6 +31,8 @@ public class BedEventProducer implements  EventProducer{
 
 
         final List<Double> sleepProbForwardsOrBackwards = SensorDataReductionAndInterpretation.getInverseOfNthElement(probsOfSleep, 1);
+
+        //THIS DOES NOTHING RIGHT NOW
 
         return events;
     }

@@ -25,7 +25,7 @@ public class SensorDataReductionAndInterpretation {
     }
 
 
-    public Map<String,List<List<Double>>> inferProbabilitiesFromModelAndSensorData(final double [][] sensorData) throws AlgorithmException {
+    public Map<String,List<List<Double>>> inferProbabilitiesFromModelAndSensorData(final double [][] sensorData) {
 
         final Map<String,List<List<Double>>> inferredProbabiltiesByOutputName = Maps.newHashMap();
 
