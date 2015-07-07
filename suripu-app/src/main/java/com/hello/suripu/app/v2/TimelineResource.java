@@ -74,6 +74,7 @@ public class TimelineResource extends BaseResource {
     @PATCH
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{date}/events/{type}/{timestamp}")
     public Response amendTimeOfEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                      @PathParam("date") String date,
@@ -87,6 +88,7 @@ public class TimelineResource extends BaseResource {
 
     @DELETE
     @Timed
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{date}/events/{type}/{timestamp}")
     public Response deleteEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                 @PathParam("date") String date,
@@ -99,6 +101,7 @@ public class TimelineResource extends BaseResource {
 
     @PUT
     @Timed
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{date}/events/{type}/{timestamp}")
     public Response validateEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                   @PathParam("date") String date,
