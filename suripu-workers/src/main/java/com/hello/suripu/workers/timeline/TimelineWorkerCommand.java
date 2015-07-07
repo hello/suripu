@@ -23,8 +23,6 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.ModelPathsDAO;
-import com.hello.suripu.core.db.ModelPathsDAODynamoDB;
 import com.hello.suripu.core.db.ModelPriorsDAO;
 import com.hello.suripu.core.db.ModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
@@ -113,9 +111,6 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
         final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
-        final String pathDbTableName = configuration.getHmmBayesnetPathsConfiguration().getTableName();
-        final AmazonDynamoDB pathsDb = dynamoDBClientFactory.getForEndpoint(pathDbTableName);
-        final ModelPathsDAO pathsDAO = new ModelPathsDAODynamoDB(pathsDb,pathDbTableName);
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
@@ -180,7 +175,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                        senseColorDAO, priorsDAO, pathsDAO);
+                        senseColorDAO, priorsDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

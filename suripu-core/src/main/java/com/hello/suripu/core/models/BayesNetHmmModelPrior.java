@@ -58,8 +58,26 @@ public class BayesNetHmmModelPrior {
         return priors;
     }
 
-    /* returns a map of MultipleCondProbs where the key is the model id
-      *  */
+
+    public static byte [] listToProtobuf(final List<BayesNetHmmModelPrior> priors) {
+
+        final List<BetaBinomialProtos.CondProbs> condProbs = Lists.newArrayList();
+
+        for (final BayesNetHmmModelPrior prior : priors) {
+            final List<BetaBinomialProtos.BetaCondProb> probs = Lists.newArrayList();
+            for (final BetaDistributionModel bdm : prior.priors) {
+                probs.add(BetaBinomialProtos.BetaCondProb.newBuilder().setAlpha(bdm.alpha).setBeta(bdm.beta).build());
+            }
+
+            condProbs.add(BetaBinomialProtos.CondProbs.newBuilder().addAllProbs(probs).setModelId(prior.modelId).setOutputId(prior.outputId).build());
+        }
+
+        return BetaBinomialProtos.MultipleCondProbs.newBuilder().addAllCondProbs(condProbs).build().toByteArray();
+    }
+
+    /*
+     * returns a map of MultipleCondProbs where the key is the model id
+     */
     public static Map<String,byte []> getProtobufsByModelId(final List<BayesNetHmmModelPrior> priors) {
 
         final Map<String,List<BetaBinomialProtos.CondProbs>> dataByModelId = Maps.newHashMap();

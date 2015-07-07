@@ -17,18 +17,14 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.simpledb.model.BatchPutAttributesRequest;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.BayesNetHmmModelPrior;
-import com.hello.suripu.core.models.BayesNetHmmModelResult;
-import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.util.DateTimeUtil;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,8 +40,9 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(ModelPriorsDAODynamoDB.class);
 
     public static final String HASH_KEY = "account_id";
-    public static final String RANGE_KEY = "model_id";
+    public static final String RANGE_KEY = "date";
     public static final String PAYLOAD_KEY = "prior";
+    public static final String CURRENT_RANGE_KEY = "current";
 
     private final AmazonDynamoDB dynamoDBClient;
 
@@ -57,21 +54,24 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
     }
 
     @Override
-    public List<BayesNetHmmModelPrior> getModelPriorsByAccountId(final Long accountId, final List<String> modelNames) {
+    //this will return the prior for that date, or the "current" model priors
+    public List<BayesNetHmmModelPrior> getModelPriorsByAccountIdAndDate(final Long accountId,final DateTime dateLocalUTC) {
+
+        final String dateString = DateTimeUtil.dateToYmdString(dateLocalUTC);
 
         final Map<Long, byte []> finalResult = new HashMap<>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
         final List<BayesNetHmmModelPrior> results = Lists.newArrayList();
 
-        List<AttributeValue> modelNameList = Lists.newArrayList();
-        for (final String name : modelNames) {
-            modelNameList.add(new AttributeValue().withS(name));
-        }
+        final List<AttributeValue> attributeValueList = Lists.newArrayList();
+        attributeValueList.add(new AttributeValue().withS(dateString));
+        attributeValueList.add(new AttributeValue().withS(CURRENT_RANGE_KEY));
+
 
         final Condition selectModelConditions = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(modelNameList);
+                .withAttributeValueList(attributeValueList);
 
         queryConditions.put(RANGE_KEY, selectModelConditions);
 
@@ -96,7 +96,8 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
         final QueryRequest queryRequest = new QueryRequest()
                 .withTableName(this.tableName)
                 .withKeyConditions(queryConditions)
-                .withAttributesToGet(targetAttributeSet);
+                .withAttributesToGet(targetAttributeSet)
+                .withLimit(2);
 
 
         final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
@@ -108,59 +109,89 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
         }
 
 
-        //get first item
-        byte[] protoData = null;
 
-        for(final Map<String, AttributeValue> item : items) {
+        if (items.size() == 2) {
+            //prior already exists for this day
+            for(final Map<String, AttributeValue> item : items) {
+                if (!item.keySet().containsAll(targetAttributeSet)) {
+                    LOGGER.error("Missing field in item {}", item);
+                    return results;
+                }
+
+                //skip current key, use the one for the day
+                if (item.get(RANGE_KEY).equals(CURRENT_RANGE_KEY)) {
+                    continue;
+                }
+
+                final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
+
+                results.addAll(BayesNetHmmModelPrior.createListFromProtbuf(byteBuffer.array()));
+            }
+        }
+        else if (items.size() == 1) {
+            //only current exists for this day
+            final Map<String, AttributeValue> item = items.get(0);
+
             if (!item.keySet().containsAll(targetAttributeSet)) {
-                LOGGER.warn("Missing field in item {}", item);
-                continue;
+                LOGGER.error("Missing field in item {}", item);
+                return results;
             }
 
-            final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
+            final ByteBuffer byteBuffer = item.get(RANGE_KEY).getB();
+            final String rangeKey = item.get(PAYLOAD_KEY).getS();
 
-            results.addAll(BayesNetHmmModelPrior.createListFromProtbuf(byteBuffer.array()));
+            if (rangeKey.equals(CURRENT_RANGE_KEY)) {
+                results.addAll(BayesNetHmmModelPrior.createListFromProtbuf(byteBuffer.array()));
+            }
+            else {
+                LOGGER.error("current range key not found when it should have been, instead it was {} for account_id {} requested for date {}",rangeKey,accountId,dateString);
+            }
+        }
+        else if (items.size() == 0) {
+            //first time ever for this user
+            LOGGER.info("no model prior retrieved for account_id {} for date {}",accountId,dateString);
+        }
+        else {
+            //this should never happen
+            LOGGER.error("got more than zero, one, or two results for account_id {} requested for date {}",accountId,dateString);
         }
 
         return results;
     }
 
     @Override
-    public boolean updateModelPriorsByAccountId(final Long accountId,final List<BayesNetHmmModelPrior> priors) {
+    public boolean updateModelPriorsByAccountIdForDate(final Long accountId,final DateTime dateLocalUTC, final List<BayesNetHmmModelPrior> priors) {
 
-        final Map<String, byte[]> protobufs = BayesNetHmmModelPrior.getProtobufsByModelId(priors);
+        final String dateString = DateTimeUtil.dateToYmdString(dateLocalUTC);
 
 
-        //TODO replace with a batch put
-        for (final String modelId : protobufs.keySet()) {
+        final HashMap<String, AttributeValue> keyValueMap = new HashMap<>();
 
-            final HashMap<String, AttributeValue> keyValueMap = new HashMap<>();
+        keyValueMap.put(HASH_KEY, new AttributeValue().withN(String.valueOf(accountId)));
+        keyValueMap.put(RANGE_KEY, new AttributeValue().withS(dateString));
+        keyValueMap.put(PAYLOAD_KEY, new AttributeValue().withB(ByteBuffer.wrap(BayesNetHmmModelPrior.listToProtobuf(priors))));
 
-            keyValueMap.put(HASH_KEY, new AttributeValue().withN(String.valueOf(accountId)));
-            keyValueMap.put(RANGE_KEY, new AttributeValue().withS(modelId));
-            keyValueMap.put(PAYLOAD_KEY, new AttributeValue().withB(ByteBuffer.wrap(protobufs.get(modelId))));
+        final PutItemRequest request = new PutItemRequest()
+                .withTableName(this.tableName)
+                .withItem(keyValueMap);
 
-            final PutItemRequest request = new PutItemRequest()
-                    .withTableName(this.tableName)
-                    .withItem(keyValueMap);
+        try {
+            final PutItemResult result = this.dynamoDBClient.putItem(request);
+        } catch (AmazonServiceException awsException) {
+            LOGGER.error("Server exception {} while saving {} result for account {}",
+                    awsException.getMessage(),
+                    dateLocalUTC,
+                    accountId);
+            return false;
+        } catch (AmazonClientException acExp) {
+            LOGGER.error("AmazonClientException exception {} while saving {} result for account {}",
+                    acExp.getMessage(),
+                    dateLocalUTC,
+                    accountId);
+            return false;
 
-            try {
-                final PutItemResult result = this.dynamoDBClient.putItem(request);
-            } catch (AmazonServiceException awsException) {
-                LOGGER.error("Server exception {} while saving {} result for account {}",
-                        awsException.getMessage(),
-                        modelId,
-                        accountId);
-                return false;
-            } catch (AmazonClientException acExp) {
-                LOGGER.error("AmazonClientException exception {} while saving {} result for account {}",
-                        acExp.getMessage(),
-                        modelId,
-                        accountId);
-                return false;
-
-            }
         }
+
 
         return true;
 
@@ -170,8 +201,8 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(ModelPathsDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(ModelPathsDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(ModelPriorsDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(ModelPriorsDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
@@ -183,7 +214,7 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
 
         request.setProvisionedThroughput(new ProvisionedThroughput()
                 .withReadCapacityUnits(5L)
-                .withWriteCapacityUnits(1L));
+                .withWriteCapacityUnits(5L));
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;

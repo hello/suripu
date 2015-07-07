@@ -363,11 +363,5 @@ public class SuripuAppConfiguration extends Configuration {
         return this.hmmBayesnetPriorsConfiguration;
     }
 
-    @Valid
-    @NotNull
-    @JsonProperty("hmm_bayesnet_paths")
-    private DynamoDBConfiguration hmmBayesnetPathsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetPathsConfiguration() {
-        return this.hmmBayesnetPathsConfiguration;
-    }
+
 }
