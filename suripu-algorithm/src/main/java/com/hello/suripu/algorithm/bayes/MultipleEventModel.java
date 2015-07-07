@@ -2,20 +2,25 @@ package com.hello.suripu.algorithm.bayes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableListIterator;
+import com.hello.suripu.algorithm.core.AlgorithmException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 6/16/15.
  */
 public class MultipleEventModel {
-    final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models;
-    List<Double> discreteProbabilties;
+    private static final Double MINIMUM_PROBABILITY = 5e-2;
+    private static final Double MAXIMUM_PROBABILITY = 1.0 - MINIMUM_PROBABILITY;
 
-    public MultipleEventModel(final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models, final int numDiscreteProbs) {
-        this.models = models;
+    private final List<Double> discreteProbabilties;
+    private final Map<String,List<ModelWithDiscreteProbabiltiesAndEventOccurence>> models;
 
+    public MultipleEventModel(final int numDiscreteProbs) {
+        this.models = Maps.newHashMap();
         discreteProbabilties = Lists.newArrayList();
 
         //default is uniform prior
@@ -28,6 +33,10 @@ public class MultipleEventModel {
         for (int iState = 0; iState < discreteProbabilties.size(); iState++) {
             discreteProbabilties.set(iState,1.0 / (double)discreteProbabilties.size());
         }
+    }
+
+    public void addModel(final String id, List<ModelWithDiscreteProbabiltiesAndEventOccurence> models) {
+        this.models.put(id,models);
     }
 
     void setPriorForAllStatesBasedOnOneState(final int iState, final double prior) {
@@ -48,32 +57,82 @@ public class MultipleEventModel {
     }
 
 
+    private ImmutableList<Double> getBayesianUpdateAtIndex(final ImmutableList<Double> prior, final int t, final Map<String,ImmutableList<Integer>> eventsByModel) {
+
+
+        ImmutableList<Double> p1 = prior;
+
+        //process events... go through each matching key from events
+        for (final String key : models.keySet()) {
+            final List<ModelWithDiscreteProbabiltiesAndEventOccurence> condProbModels = models.get(key);
+
+            final List<Integer> events = eventsByModel.get(key);
+
+            if (events == null) {
+                //should never happen
+                throw new AlgorithmException(String.format("did not find events for model=%s",key));
+            }
+
+            //get event
+            final Integer event = events.get(t);
+
+            //get conditional probability model of event
+            final ModelWithDiscreteProbabiltiesAndEventOccurence condProbModel = condProbModels.get(event);
+
+            p1 = condProbModel.inferProbabilitiesGivenModel(p1);
+        }
+
+        final List<Double> enforcedPosterior = Lists.newArrayList();
+
+        //enforce max/min probabilities
+        for (Double p : p1) {
+            if (p > MAXIMUM_PROBABILITY) {
+                p = MAXIMUM_PROBABILITY;
+            }
+
+            if (p < MINIMUM_PROBABILITY) {
+                p = MINIMUM_PROBABILITY;
+            }
+
+            enforcedPosterior.add(p);
+        }
+
+        p1 = ImmutableList.copyOf(enforcedPosterior);
+
+        return p1;
+    }
 
     /* get list of probabilties as they are sequentially updated with the events  */
-    public List<List<Double>> getProbsFromEventSequence(final ImmutableList<Integer> events) {
+    public List<List<Double>> getProbsFromEventSequence(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents, boolean forwards)  {
         List<List<Double>> probs = Lists.newArrayList();
 
         //set prior
         ImmutableList<Double> prior = ImmutableList.copyOf(this.discreteProbabilties);
 
-        for (final Integer event : events) {
-            if (event < 0 || event >= models.size()) {
-                //TODO LOG ERROR
-                continue;
+        if (forwards) {
+            for (int t = 0; t < numEvents; t++) {
+
+                final ImmutableList<Double> posterior = getBayesianUpdateAtIndex(prior, t, eventsByModel);
+
+                //save posterior
+                probs.add(posterior);
+
+                prior = posterior;
+
             }
+        }
+        else {
+            for (int t = numEvents - 1; t >= 0; t--) {
 
-            //get the model for this event happening
-            final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = models.get(event);
+                final ImmutableList<Double> posterior = getBayesianUpdateAtIndex(prior, t, eventsByModel);
+
+                //save posterior
+                probs.add(posterior);
+
+                prior = posterior;
 
 
-            //Bayes update
-            final ImmutableList<Double> posterior = myModel.inferProbabilitiesGivenModel(prior);
-
-            //save posterior
-            probs.add(posterior);
-
-            //posterior becomes prior
-            prior = posterior;
+            }
         }
 
         return probs;
@@ -86,21 +145,14 @@ public class MultipleEventModel {
      *  i.e.   P(A_forwards) * P(A_backwards) = P(A_forwards, A_backwards)
      *
      *  */
-    public List<List<Double>> getJointOfForwardsAndBackwards(final ImmutableList<Integer> events) {
-
-        //make backward events
-        final UnmodifiableListIterator<Integer> iterator = events.listIterator(events.size());
-        final List<Integer> backwardsEvents = Lists.newArrayList();
-        while (iterator.hasPrevious()) {
-            backwardsEvents.add(iterator.previous());
-        }
+    public List<List<Double>> getJointOfForwardsAndBackwards(final Map<String,ImmutableList<Integer>> eventsByModel, final int numEvents)  {
 
 
         //do forwards
-        final List<List<Double>> forwardProbs = getProbsFromEventSequence(events);
+        final List<List<Double>> forwardProbs = getProbsFromEventSequence(eventsByModel,numEvents,true);
 
         //do backwards
-        final List<List<Double>> backwardProbs = getProbsFromEventSequence(ImmutableList.copyOf(backwardsEvents));
+        final List<List<Double>> backwardProbs =  getProbsFromEventSequence(eventsByModel,numEvents,false);
 
         final List<List<Double>> joints = Lists.newArrayList();
 
@@ -122,6 +174,7 @@ public class MultipleEventModel {
         return joints;
     }
 
+    /* Apply to some subset of events where this label is valid  */
     public void inferModelParametersGivenEventsAndLabel(final ImmutableList<Double> label, final ImmutableList<Integer> events) {
         for (final Integer event : events) {
             if (event < 0 || event >= models.size()) {
@@ -129,12 +182,15 @@ public class MultipleEventModel {
                 continue;
             }
 
-            //get the model for this event happening
-            final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = models.get(event);
+            //iterate through each model
+            for (final List<ModelWithDiscreteProbabiltiesAndEventOccurence> myModels : models.values()) {
 
-            //updates state of model
-            myModel.inferModelGivenObservedProbabilities(label);
+                //get the model for this event happening
+                final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = myModels.get(event);
 
+                //updates state of model
+                myModel.inferModelGivenObservedProbabilities(label);
+            }
         }
     }
 }

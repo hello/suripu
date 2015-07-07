@@ -2,14 +2,14 @@ package com.hello.suripu.algorithm.partner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.bayes.BetaDiscreteWithEventOutput;
-import com.hello.suripu.algorithm.bayes.BetaDistribution;
+import com.hello.suripu.algorithm.bayes.BetaBinomialBayesModel;
 import com.hello.suripu.algorithm.bayes.ModelWithDiscreteProbabiltiesAndEventOccurence;
 import com.hello.suripu.algorithm.bayes.MultipleEventModel;
-import com.hello.suripu.algorithm.core.Segment;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 6/16/15.
@@ -27,20 +27,25 @@ public class PartnerBayesNetWithHmmInterpreter {
 
         for (final Double prob : conditionalProbs) {
             BetaDiscreteWithEventOutput betaBayesElement = new BetaDiscreteWithEventOutput(
-                    BetaDistribution.createBinaryComplementaryBetaDistributions(prob,1));
+                    BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(prob, 1));
 
             models.add(betaBayesElement);
         }
 
 
-        bayesModel = new MultipleEventModel(models,2);
+        bayesModel = new MultipleEventModel(2);
+
+        bayesModel.addModel("partner_filter",models);
     }
 
 
     public List<Double> interpretDurationDiff(ImmutableList<Double> durationDiff) {
         final ImmutableList<Integer> path = hmm.decodeSensorData(durationDiff);
 
-        final List<List<Double>> jointProbs = bayesModel.getJointOfForwardsAndBackwards(path);
+        final Map<String,ImmutableList<Integer>> eventsByModel = Maps.newHashMap();
+        eventsByModel.put("partner_filter",path);
+
+        final List<List<Double>> jointProbs = bayesModel.getJointOfForwardsAndBackwards(eventsByModel,path.size());
 
         //class 0 is my motion.....
         //class 1 means your motion

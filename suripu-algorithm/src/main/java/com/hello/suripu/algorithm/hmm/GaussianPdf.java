@@ -32,4 +32,9 @@ public class GaussianPdf implements HmmPdfInterface {
 
         return result;
     }
+
+    @Override
+    public int getNumFreeParams() {
+        return 2;
+    }
 }

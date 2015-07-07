@@ -1,46 +1,41 @@
 package com.hello.suripu.algorithm.hmm;
 
-import org.apache.commons.math3.distribution.GammaDistribution;
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
 /**
- * Created by benjo on 3/4/15.
+ * Created by benjo on 6/21/15.
  */
-public class GammaPdf implements HmmPdfInterface {
-    private  final int measNum;
-    private final GammaDistribution gammaDistribution;
+public class ChiSquarePdf implements HmmPdfInterface {
+    final int measNum;
+    final double mean;
+    final ChiSquaredDistribution chiSquaredDistribution;
     private final static double MIN_INPUT_VALUE = 1e-1;
 
-    public GammaPdf(final double mean, final double stdDev, final int measNum) {
+    public ChiSquarePdf(final double mean, final int measNum) {
+        this.chiSquaredDistribution = new ChiSquaredDistribution(1);
         this.measNum = measNum;
+        this.mean = mean;
 
-        // k*theta = mean
-        // k*theta^2  = variance
-        //
-        // k = mean / theta
-        // mean / theta * theta^2 = mean * theta = variance
-        // theta = variance / mean
-        // k = mean / (variance / mean) = mean*mean / variance
 
-        final double variance = stdDev*stdDev;
-        final double theta  = variance / mean;
-        final double k = mean*mean / variance;
-
-        this.gammaDistribution = new GammaDistribution(k,theta);
     }
+
     @Override
     public double[] getLogLikelihood(double[][] measurements) {
+        final double scale = 1.0 / Math.sqrt(2.0 * mean);
         double [] result = new double[measurements[0].length];
         //row major or column major? assume it's like C
         final double [] col =  measurements[measNum];
 
         for (int i = 0; i < col.length; i++) {
             //god I hope this is its likelihood function
+
             double inputValue = col[i];
+
             if (inputValue < MIN_INPUT_VALUE) {
                 inputValue = MIN_INPUT_VALUE;
             }
 
-            double pdfEval = gammaDistribution.density(inputValue);
+            double pdfEval = this.chiSquaredDistribution.density(inputValue * scale) ;
 
             if (pdfEval < MIN_LIKELIHOOD) {
                 pdfEval = MIN_LIKELIHOOD;
@@ -55,6 +50,6 @@ public class GammaPdf implements HmmPdfInterface {
 
     @Override
     public int getNumFreeParams() {
-        return 2;
+        return 1;
     }
 }

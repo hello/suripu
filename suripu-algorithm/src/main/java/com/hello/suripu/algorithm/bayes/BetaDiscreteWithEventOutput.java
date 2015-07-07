@@ -72,12 +72,11 @@ import java.util.List;
 
  */
 public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabiltiesAndEventOccurence{
-    private static final Double MINIMUM_PROBABILITY = 5e-2;
-    private static final Double MAXIMUM_PROBABILITY = 1.0 - MINIMUM_PROBABILITY;
-    private static final Double TOL = 1e-7;
-    private final List<BetaDistribution> continuousDistributionProbabilities;
 
-    public BetaDiscreteWithEventOutput(final List<BetaDistribution> continuousDistributionPriors) {
+    private static final Double TOL = 1e-7;
+    private final List<BetaBinomialBayesModel> continuousDistributionProbabilities;
+
+    public BetaDiscreteWithEventOutput(final List<BetaBinomialBayesModel> continuousDistributionPriors) {
         continuousDistributionProbabilities = continuousDistributionPriors;
     }
 
@@ -96,8 +95,8 @@ public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabilti
 
         //compute joint probabilties P(Si,event)
         for (int iState = 0; iState < prior.size(); iState++) {
-            final BetaDistribution dist = continuousDistributionProbabilities.get(iState);
-            joints.add(dist.getExpectation() * prior.get(iState));
+            final BetaBinomialBayesModel dist = continuousDistributionProbabilities.get(iState);
+            joints.add(dist.getPrediction() * prior.get(iState));
         }
 
         //sum to get P(event)
@@ -118,18 +117,6 @@ public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabilti
         for (int iState = 0; iState < prior.size(); iState++) {
             posterior.add(joints.get(iState) / probEvent);
         }
-
-        //enforce max/min probabilties
-        for (int iState = 0; iState < posterior.size(); iState++) {
-            if (posterior.get(iState) < MINIMUM_PROBABILITY) {
-                posterior.set(iState,MINIMUM_PROBABILITY);
-            }
-
-            if (posterior.get(iState) > MAXIMUM_PROBABILITY) {
-                posterior.set(iState,MAXIMUM_PROBABILITY);
-            }
-        }
-
 
         return ImmutableList.copyOf(posterior);
 

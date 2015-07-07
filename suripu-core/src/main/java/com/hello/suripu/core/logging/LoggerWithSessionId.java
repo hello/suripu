@@ -1,5 +1,6 @@
 package com.hello.suripu.core.logging;
 
+import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
@@ -28,6 +29,17 @@ public class LoggerWithSessionId implements Logger {
     }
 
     final public Logger logger;
+
+    public LoggerWithSessionId(final Logger original, final Optional<UUID> uuid) {
+        logger = original;
+
+        if (uuid.isPresent()) {
+            uniqeString = uuid.get().toString();
+        }
+        else {
+            uniqeString = "";
+        }
+    }
 
     public LoggerWithSessionId(final Logger original) {
         logger = original;
