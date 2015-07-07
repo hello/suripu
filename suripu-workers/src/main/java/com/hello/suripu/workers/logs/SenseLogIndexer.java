@@ -53,8 +53,9 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     private DateTime lastBlackListFetchDateTime;
     private Set<String> senseBlackList;
     private Integer blackListUpdateCount;
+    private final Integer searchifyBulkSize;
 
-    public SenseLogIndexer(final IndexTankClient indexTankClient, final String senseLogIndexPrefix, final IndexTankClient.Index senseLogBackupIndex, final JedisPool jedisPool) {
+    public SenseLogIndexer(final IndexTankClient indexTankClient, final String senseLogIndexPrefix, final IndexTankClient.Index senseLogBackupIndex, final JedisPool jedisPool, final Integer searchifyBulkSize) {
         this.indexTankClient = indexTankClient;
         this.senseLogIndexPrefix = senseLogIndexPrefix;
         this.senseLogBackupIndex = senseLogBackupIndex;
@@ -66,12 +67,15 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
         this.lastBlackListFetchDateTime = DateTime.now(DateTimeZone.UTC);
         this.senseBlackList = Sets.newHashSet();
         this.blackListUpdateCount = 0;
+        this.searchifyBulkSize = searchifyBulkSize;
     }
 
 
     public BatchLog chunkBatchLogMessage(LoggingProtos.BatchLogMessage batchLogMessage) {
         final List<IndexTankClient.Document> documents = Lists.newArrayList();
         String createdDateString = new DateTime(DateTimeZone.UTC).toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
+
+
         for(final LoggingProtos.LogMessage log : batchLogMessage.getMessagesList()) {
             if (getSenseBlackList().contains(log.getDeviceId())) {
                 LOGGER.info("Log from blacklisted senseId {}, will not index", log.getDeviceId());
@@ -119,9 +123,13 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     public Integer index() {
         try {
             if (!documents.isEmpty()) {
-                index.addDocuments(ImmutableList.copyOf(documents));
-                final Integer count = documents.size();
-                LOGGER.info("Indexed {} documents", count);
+                Integer count = 0;
+                for(final List<IndexTankClient.Document> docs : Lists.partition(documents, searchifyBulkSize)) {
+                    index.addDocuments(ImmutableList.copyOf(docs));
+                    count += docs.size();
+                    LOGGER.info("Indexed {} documents", docs.size());
+                }
+                LOGGER.info("Indexed total = {}", count);
                 documents.clear();
                 return count;
             }

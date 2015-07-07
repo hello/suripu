@@ -49,9 +49,10 @@ public class LogIndexerProcessor implements IRecordProcessor {
                                              final IndexTankClient.Index senseLogBackupIndex,
                                              final SenseEventsDAO senseEventsDAO,
                                              final OnBoardingLogDAO onBoardingLogDAO,
-                                             final JedisPool jedisPool) {
+                                             final JedisPool jedisPool,
+                                             final Integer searchifyBulkSize) {
         return new LogIndexerProcessor(
-                new SenseLogIndexer(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, jedisPool),
+                new SenseLogIndexer(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, jedisPool, searchifyBulkSize),
                 new SenseStructuredLogIndexer(senseEventsDAO),
                 new OnBoardingLogIndexer(onBoardingLogDAO)
         );
@@ -112,6 +113,19 @@ public class LogIndexerProcessor implements IRecordProcessor {
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
         LOGGER.warn("Shutting down because: {}", shutdownReason);
-        System.exit(1);
+        if(shutdownReason == ShutdownReason.TERMINATE) {
+            try {
+                iRecordProcessorCheckpointer.checkpoint();
+                LOGGER.warn("Checkpoint successful after shutdown");
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        } else {
+            LOGGER.error("Unknown shutdown reason. exit()");
+            System.exit(1);
+        }
+
     }
 }
