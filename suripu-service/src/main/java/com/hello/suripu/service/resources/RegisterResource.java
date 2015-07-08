@@ -116,10 +116,10 @@ public class RegisterResource extends BaseResource {
             if(pillColor.isPresent()) {
                 LOGGER.info("Pill {} set to color {} on sense {}", pillId, pillColor.get(), senseId);
             } else {
-                LOGGER.warn("Could not get next pill_color for pill{} on sense {}", pillId, senseId);
+                LOGGER.warn("Could not get next pill_color for pill {} on sense {}", pillId, senseId);
             }
         }catch (AmazonServiceException ase){
-            LOGGER.error("Set pill {} color for sense {} faile: {}", pillId, senseId, ase.getErrorMessage());
+            LOGGER.error("Set pill {} color for sense {} failed: {}", pillId, senseId, ase.getErrorMessage());
         }
     }
 
@@ -144,7 +144,7 @@ public class RegisterResource extends BaseResource {
         final List<DeviceAccountPair> pillsPairedToCurrentAccount = this.deviceDAO.getPillsForAccountId(accountId);
         final List<DeviceAccountPair> accountsPairedToCurrentPill = this.deviceDAO.getLinkedAccountFromPillId(pillId);
         if(pillsPairedToCurrentAccount.size() > 1){  // This account already paired with multiple pills
-            LOGGER.warn("Account {} already paired with multiple pills. pills paired {}, accounts paired {}",
+            LOGGER.warn("Account {} has already paired with multiple pills. pills paired {}, accounts paired {}",
                     accountId,
                     pillsPairedToCurrentAccount.size(),
                     accountsPairedToCurrentPill.size());
