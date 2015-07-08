@@ -299,3 +299,14 @@ sense_last_seen:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: sense_last_seen
+
+hmm_bayesnet_priors:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: hmm_bayesnet_priors
+
+hmm_bayesnet_models:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: hmm_bayesnet_models
+~                                         
