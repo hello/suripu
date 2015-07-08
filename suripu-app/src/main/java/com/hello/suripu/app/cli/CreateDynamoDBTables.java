@@ -11,6 +11,7 @@ import com.hello.suripu.core.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -67,6 +68,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createResponseCommandsTable(configuration, awsCredentialsProvider);
         createFWUpgradePathTable(configuration, awsCredentialsProvider);
         createHmmBayesNetModelPriorTable(configuration,awsCredentialsProvider);
+        createHmmBayesNetModelTable(configuration,awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -426,6 +428,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = ModelPriorsDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createHmmBayesNetModelTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getHmmBayesnetModelsConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = BayesNetHmmModelDAODynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }
