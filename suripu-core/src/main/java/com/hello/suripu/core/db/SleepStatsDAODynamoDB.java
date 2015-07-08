@@ -176,7 +176,7 @@ public class SleepStatsDAODynamoDB {
     }
 
     @Timed
-    public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId, final String startDate, final String endDate, final int numDays){
+    public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId, final String startDate, final String endDate) {
 
         final Condition selectByAccountId  = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -196,12 +196,12 @@ public class SleepStatsDAODynamoDB {
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int loopCount = 0;
 
+
         do {
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
                     .withAttributesToGet(this.targetAttributes)
-                    .withLimit(numDays)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
