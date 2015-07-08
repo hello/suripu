@@ -10,6 +10,8 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -103,6 +105,11 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
         final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
+        /* Models for bayesnet  */
+        final String modelsDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(modelsDbTableName);
+        final BayesNetModelDAO modelsDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelsDbTableName);
+
 
         /* data for ye olde HMM */
         final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
@@ -125,7 +132,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                senseColorDAO, priorsDAO,null);
+                senseColorDAO, priorsDAO,modelsDAO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);

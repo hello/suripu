@@ -363,5 +363,13 @@ public class SuripuAppConfiguration extends Configuration {
         return this.hmmBayesnetPriorsConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_models")
+    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
+        return this.hmmBayesnetModelsConfiguration;
+    }
+
 
 }

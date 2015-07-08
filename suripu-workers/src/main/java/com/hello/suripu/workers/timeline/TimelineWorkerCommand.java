@@ -18,6 +18,8 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -112,6 +114,11 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
         final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
+         /* Models for bayesnet */
+        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(modelDbTableName);
+        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
+
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
         final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
@@ -175,7 +182,9 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                        senseColorDAO, priorsDAO,null);
+                senseColorDAO,
+                priorsDAO,
+                modelDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

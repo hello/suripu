@@ -174,9 +174,10 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("hmm_bayesnet_paths")
-    private DynamoDBConfiguration hmmBayesnetPathsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetPathsConfiguration() {
-        return this.hmmBayesnetPathsConfiguration;
+    @JsonProperty("hmm_bayesnet_models")
+    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
+        return this.hmmBayesnetModelsConfiguration;
     }
+
 }

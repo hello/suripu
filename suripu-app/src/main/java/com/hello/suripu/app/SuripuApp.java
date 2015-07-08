@@ -43,6 +43,8 @@ import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -253,6 +255,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
         final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
+        /* Models for bayesnet */
+        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(modelDbTableName);
+        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
+
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
@@ -348,7 +355,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
                 priorsDAO,
-                null);
+                modelDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
 
