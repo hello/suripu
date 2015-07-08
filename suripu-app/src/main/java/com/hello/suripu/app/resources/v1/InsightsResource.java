@@ -272,7 +272,7 @@ public class InsightsResource extends BaseResource {
 
         // get relevant data from first batch
         final Interval interval = new Interval(newStartDate, endDate);
-        final List<AggregateSleepStats> overTimeSleepStats = new ArrayList<>();
+        final List<AggregateSleepStats> overTimeSleepStats = Lists.newArrayList();
         for (final AggregateSleepStats stat: sleepStats.reverse()) {
             if (interval.contains(stat.dateTime)) {
                 overTimeSleepStats.add(stat);
