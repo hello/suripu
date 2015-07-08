@@ -113,7 +113,11 @@ public class RegisterResource extends BaseResource {
         try {
             // WARNING: potential race condition here.
             final Optional<Color> pillColor = this.mergedUserInfoDynamoDB.setNextPillColor(senseId, accountId, pillId);
-            LOGGER.info("Pill {} set to color {} on sense {}", pillId, pillColor.get(), senseId);
+            if(pillColor.isPresent()) {
+                LOGGER.info("Pill {} set to color {} on sense {}", pillId, pillColor.get(), senseId);
+            } else {
+                LOGGER.warn("Could not get next pill_color for pill{} on sense {}", pillId, senseId);
+            }
         }catch (AmazonServiceException ase){
             LOGGER.error("Set pill {} color for sense {} faile: {}", pillId, senseId, ase.getErrorMessage());
         }
