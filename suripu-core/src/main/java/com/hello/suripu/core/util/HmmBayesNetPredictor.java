@@ -5,9 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.algorithm.bayes.ProbabilitySegment;
-import com.hello.suripu.algorithm.bayes.ProbabilitySegmenter;
-import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -33,11 +30,11 @@ public class HmmBayesNetPredictor {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineUtils.class);
     private final Logger LOGGER;
 
-    private final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams allTheData;
+    private final DeserializedSleepHmmBayesNetWithParams allTheData;
     private final Map<String,EventProducer> eventProducers;
 
 
-    static public Optional<HmmBayesNetPredictor> createHmmBayesNetPredictor(Optional<HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams> allTheData,final Optional<UUID> uuid) {
+    static public Optional<HmmBayesNetPredictor> createHmmBayesNetPredictor(Optional<DeserializedSleepHmmBayesNetWithParams> allTheData,final Optional<UUID> uuid) {
 
 
 
@@ -50,7 +47,7 @@ public class HmmBayesNetPredictor {
                 final byte[] decodedBytes = Base64.decodeBase64(DEFAULT_PROTOBUF);
                 final SleepHmmBayesNetProtos.HmmBayesNet bayesNet = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(decodedBytes);
                 final HmmBayesNetDeserialization deserialization = new HmmBayesNetDeserialization(bayesNet,uuid);
-                final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams data = deserialization.Deserialize();
+                final DeserializedSleepHmmBayesNetWithParams data = deserialization.deserialize();
                 return Optional.of(new HmmBayesNetPredictor(data,uuid));
             }
             catch (InvalidProtocolBufferException exception) {
@@ -61,7 +58,7 @@ public class HmmBayesNetPredictor {
         return Optional.absent();
     }
 
-    private HmmBayesNetPredictor(HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams data, Optional<UUID> uuid) {
+    private HmmBayesNetPredictor(DeserializedSleepHmmBayesNetWithParams data, Optional<UUID> uuid) {
         //setup logger
         if (uuid.isPresent()) {
             LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());

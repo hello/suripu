@@ -46,22 +46,14 @@ public class HmmBayesNetDeserialization {
 
     private final SleepHmmBayesNetProtos.HmmBayesNet proto;
 
-    public static class DeserializedSleepHmmBayesNetWithParams {
-        public final SensorDataReductionAndInterpretation sensorDataReductionAndInterpretation;
-        public final HmmBayesNetMeasurementParameters params;
 
-        public DeserializedSleepHmmBayesNetWithParams(SensorDataReductionAndInterpretation sensorDataReductionAndInterpretation, HmmBayesNetMeasurementParameters params) {
-            this.sensorDataReductionAndInterpretation = sensorDataReductionAndInterpretation;
-            this.params = params;
-        }
-    }
 
     public HmmBayesNetDeserialization(final SleepHmmBayesNetProtos.HmmBayesNet proto, Optional<UUID> uuid) {
         this.proto = proto;
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid);
     }
 
-    public DeserializedSleepHmmBayesNetWithParams Deserialize() {
+    public DeserializedSleepHmmBayesNetWithParams deserialize() {
         final SleepHmmBayesNetProtos.MeasurementParams params = proto.getMeasurementParameters();
 
         /*  FIRST MAKE THE HMMS */

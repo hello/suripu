@@ -9,11 +9,9 @@ import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.HmmBayesNetDeserialization;
 import com.hello.suripu.core.util.HmmBayesNetMeasurementParameters;
 import com.hello.suripu.core.util.HmmBayesNetPredictor;
-import com.hello.suripu.core.util.SleepEventProducer;
 import junit.framework.TestCase;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
@@ -93,7 +91,7 @@ public class BayesNetTest {
             final SleepHmmBayesNetProtos.HmmBayesNet bayesNet = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(decodedBytes);
 
             final HmmBayesNetDeserialization deserialization = new HmmBayesNetDeserialization(bayesNet,Optional.<UUID>absent());
-            final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams deserializedSleepHmmBayesNetWithParams = deserialization.Deserialize();
+            final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams deserializedSleepHmmBayesNetWithParams = deserialization.deserialize();
             final SensorDataReductionAndInterpretation stuff = deserializedSleepHmmBayesNetWithParams.sensorDataReductionAndInterpretation;
 
             final Integer [] endStates = new Integer[1];

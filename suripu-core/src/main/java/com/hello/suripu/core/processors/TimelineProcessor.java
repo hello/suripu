@@ -38,6 +38,7 @@ import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.DeserializedSleepHmmBayesNetWithParams;
 import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.HmmBayesNetDeserialization;
 import com.hello.suripu.core.util.HmmBayesNetPredictor;
@@ -229,7 +230,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             }
             else if (this.hasBayesNetEnabled(accountId) ) {
-                final Optional<HmmBayesNetPredictor> predictorOptional = HmmBayesNetPredictor.createHmmBayesNetPredictor(Optional.<HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams>absent(),uuidOptional);
+                final Optional<HmmBayesNetPredictor> predictorOptional = HmmBayesNetPredictor.createHmmBayesNetPredictor(Optional.<DeserializedSleepHmmBayesNetWithParams>absent(),uuidOptional);
 
                 if (predictorOptional.isPresent()) {
                     final HmmBayesNetPredictor predictor = predictorOptional.get();
@@ -243,6 +244,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                         sleepEventsFromAlgorithmOptional = Optional.of(sleepEventsFromAlgorithm);
 
+                        algorithm = ALGORITHM_NAME_BAYESNET;
                         algorithmWorked = true;
                     }
                 }
