@@ -35,7 +35,7 @@ public class PartnerBayesNetWithHmmInterpreter {
 
         bayesModel = new MultipleEventModel(2);
 
-        bayesModel.addModel("partner_filter",models);
+        bayesModel.putModel("partner_filter", models);
     }
 
 

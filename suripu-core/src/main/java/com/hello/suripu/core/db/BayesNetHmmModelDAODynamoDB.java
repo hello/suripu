@@ -19,12 +19,9 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.hello.suripu.core.util.DeserializedSleepHmmBayesNetWithParams;
-import com.hello.suripu.core.util.HmmBayesNetDeserialization;
+import com.hello.suripu.core.util.HmmBayesNetData;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -93,7 +90,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
     }
 
     @Override
-    public Optional<DeserializedSleepHmmBayesNetWithParams> getLatestModelForDate(final Long accountId, final DateTime dateTimeLocalUTC) {
+    public HmmBayesNetData getLatestModelForDate(final Long accountId, final DateTime dateTimeLocalUTC, final Optional<UUID> uuidForLogger) {
 
         final String dateString = DateTimeUtil.dateToYmdString(dateTimeLocalUTC);
         byte [] protobufData = null;
@@ -120,25 +117,20 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
         }
 
 
-        Optional<DeserializedSleepHmmBayesNetWithParams> optionalModel = Optional.absent();
+        Optional<HmmBayesNetData> optionalModel = Optional.absent();
 
         if (protobufData != null) {
             //decode blob if it exists
+            final HmmBayesNetData deserialization = new HmmBayesNetData(uuidForLogger);
 
-            try {
+            deserialization.deserialize(protobufData);
 
+            return deserialization;
 
-                final HmmBayesNetDeserialization deserialization = new HmmBayesNetDeserialization(SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(protobufData),Optional.<UUID>absent());
-
-                optionalModel = Optional.of(deserialization.deserialize());
-
-            }
-            catch (InvalidProtocolBufferException e) {
-                LOGGER.error(e.toString());
-            }
         }
 
-        return optionalModel;
+        //default object will be invalid
+        return new HmmBayesNetData(uuidForLogger);
 
 
     }

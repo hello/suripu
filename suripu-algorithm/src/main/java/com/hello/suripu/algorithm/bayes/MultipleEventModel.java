@@ -11,6 +11,33 @@ import java.util.Map;
 
 /**
  * Created by benjo on 6/16/15.
+ *
+ *  This class maps a state sequence (List 'o integers) into probabilties of class.
+ *  P(class | sequence, model), where the model is P (state_i | class)
+ *
+ *  It will also let you update the model with labeled data.
+ *
+ *
+ * This class is used as follows:
+ * 1) create, giving it the number of discrete probabilties you're modeling (i.e. true-false?  then it's 2)
+ * 2) putModel - add some (most likely) beta-binomial models.
+ *    You can do two things with these:
+ *        - label the data (i.e update the model given the label and state sequence)
+ *        - infer the model parameters (i.e. Bayesian update of model parameters)
+ *
+ * 3) Then, you will get a bunch of state sequences from a bunch of HMMs, which will be put in a map.
+ *   You call this on it:  getProbsFromEventSequence(mapOfStateSequencesWhereIdIsWhichHmmItCameFrom, N)
+ *
+ *   -= Concrete example =-
+ *
+ *  I've added this model:
+ *  beta-binomial 1 maps to  P(state_1 | sleep) = alpha_1 / (alpha_1 + beta_1)
+ *  beta-binomial 2 maps to .... etc. etc.
+ *
+ *  I've got some sensor data, and I decoded ....
+ *
+ *  to be completed later....
+ *
  */
 public class MultipleEventModel {
     private static final Double MINIMUM_PROBABILITY = 5e-2;
@@ -35,7 +62,11 @@ public class MultipleEventModel {
         }
     }
 
-    public void addModel(final String id, List<ModelWithDiscreteProbabiltiesAndEventOccurence> models) {
+    public boolean hasModel(final String id) {
+        return this.models.keySet().contains(id);
+    }
+
+    public void putModel(final String id, List<ModelWithDiscreteProbabiltiesAndEventOccurence> models) {
         this.models.put(id,models);
     }
 

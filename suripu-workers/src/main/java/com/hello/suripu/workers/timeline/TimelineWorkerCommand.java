@@ -175,7 +175,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                        senseColorDAO, priorsDAO);
+                        senseColorDAO, priorsDAO,null);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
