@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -243,7 +244,7 @@ public class InsightsResource extends BaseResource {
      */
     private List<TrendGraph> getAllTrendsGraphs(final Long accountId, final TrendGraph.TimePeriodType scoreOverTimePeriod) {
 
-        final List<TrendGraph> graphs = new ArrayList<>();
+        final List<TrendGraph> graphs = Lists.newArrayList();
 
         final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
         final DateTime startDate = endDate.minusDays(DAY_OF_WEEK_LOOKBACK);
@@ -264,7 +265,7 @@ public class InsightsResource extends BaseResource {
             graphs.add(TrendGraphUtils.getDayOfWeekGraph(TrendGraph.DataType.SLEEP_DURATION, TrendGraph.TimePeriodType.DAY_OF_WEEK, sleepDurationDOWData));
         }
 
-        // Sleep Score vs. Time (can be up to 1 year TODO: evaluate if product needs this)
+        // Sleep Score vs. Time (Default is 1W, max is 90 days)
         // compute date range (now - x days)
         final int numDays = TrendGraph.getTimePeriodDays(scoreOverTimePeriod);
         final DateTime newStartDate = endDate.minusDays(numDays);
@@ -279,16 +280,6 @@ public class InsightsResource extends BaseResource {
                 // we can do this because sleep-stats is sorted reverse chronological
                 break;
             }
-        }
-
-        // we might need more data for over time graph, grab 2nd batch
-        if (numDays > DAY_OF_WEEK_LOOKBACK) {
-            final DateTime newEndDate = startDate.minusDays(1);
-            final ImmutableList<AggregateSleepStats> additionalSleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
-                    DateTimeUtil.dateToYmdString(newStartDate),
-                    DateTimeUtil.dateToYmdString(newEndDate));
-
-            overTimeSleepStats.addAll(additionalSleepStats);
         }
 
         // compute user age to present available time period options
@@ -342,7 +333,7 @@ public class InsightsResource extends BaseResource {
             final DateTime startDate = endDate.minusDays(numDays);
 
             final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-            int daysActive = TrendGraph.PERIOD_TYPE_DAYS.get(TrendGraph.TimePeriodType.OVER_TIME_ALL) + 1;
+            int daysActive = TrendGraph.PERIOD_TYPE_DAYS.get(TrendGraph.TimePeriodType.OVER_TIME_3M) + 1;
             if (optionalAccount.isPresent()) {
                 final DateTime accountCreated = optionalAccount.get().created;
                 daysActive = DateTimeUtil.getDateDiffFromNowInDays(accountCreated) - 1;

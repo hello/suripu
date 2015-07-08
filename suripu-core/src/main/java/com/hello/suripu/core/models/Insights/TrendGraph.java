@@ -20,7 +20,7 @@ public class TrendGraph {
         tmpMap.put(TimePeriodType.OVER_TIME_2W, 14);
         tmpMap.put(TimePeriodType.OVER_TIME_1M, 30);
         tmpMap.put(TimePeriodType.OVER_TIME_3M, 90);
-        tmpMap.put(TimePeriodType.OVER_TIME_ALL, 365);
+        tmpMap.put(TimePeriodType.OVER_TIME_ALL, 90); // force this to be 90 days
         PERIOD_TYPE_DAYS = ImmutableMap.copyOf(tmpMap);
     }
 
@@ -83,8 +83,10 @@ public class TrendGraph {
         public static List<String> getTimeSeriesOptions(final int numDaysActive) {
             final List<String> options = new ArrayList<>();
             for (TimePeriodType periodType : PERIOD_TYPE_DAYS.keySet()) {
-                if (periodType == DAY_OF_WEEK || PERIOD_TYPE_DAYS.get(periodType) > numDaysActive)
+                // don't ever return ALL option
+                if (periodType == DAY_OF_WEEK || PERIOD_TYPE_DAYS.get(periodType) > numDaysActive || periodType == OVER_TIME_ALL) {
                     continue;
+                }
                 options.add(periodType.getValue());
             }
             return options;
