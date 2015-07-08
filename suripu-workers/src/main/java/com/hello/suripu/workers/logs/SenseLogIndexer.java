@@ -38,7 +38,7 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             .put("fault", SenseLogTag.FIRMWARE_CRASH)
             .put("travis", SenseLogTag.FIRMWARE_CRASH)
             .put("xkd", SenseLogTag.FIRMWARE_CRASH)
-            .put("ALERT", SenseLogTag.FIRMWARE_CRASH)
+            .put("ASSERT", SenseLogTag.FIRMWARE_CRASH)
             .put("SSID RSSI UNIQUE", SenseLogTag.WIFI_INFO)
             .put("dust", SenseLogTag.DUST_STATS)
             .build();
