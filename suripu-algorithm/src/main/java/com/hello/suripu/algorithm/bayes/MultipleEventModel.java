@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.core.AlgorithmException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by benjo on 6/16/15.
@@ -44,7 +45,7 @@ public class MultipleEventModel {
     private static final Double MAXIMUM_PROBABILITY = 1.0 - MINIMUM_PROBABILITY;
 
     private final List<Double> discreteProbabilties;
-    private final Map<String,List<ModelWithDiscreteProbabiltiesAndEventOccurence>> models;
+    private final Map<String,List<BetaDiscreteWithEventOutput>> models;
 
     public MultipleEventModel(final int numDiscreteProbs) {
         this.models = Maps.newHashMap();
@@ -66,8 +67,16 @@ public class MultipleEventModel {
         return this.models.keySet().contains(id);
     }
 
-    public void putModel(final String id, List<ModelWithDiscreteProbabiltiesAndEventOccurence> models) {
+    public void putModel(final String id, List<BetaDiscreteWithEventOutput> models) {
         this.models.put(id,models);
+    }
+
+    public Set<String> getModelNames() {
+        return this.models.keySet();
+    }
+
+    public List<BetaDiscreteWithEventOutput> getModel(final String id) {
+        return this.models.get(id);
     }
 
     void setPriorForAllStatesBasedOnOneState(final int iState, final double prior) {
@@ -95,7 +104,7 @@ public class MultipleEventModel {
 
         //process events... go through each matching key from events
         for (final String key : models.keySet()) {
-            final List<ModelWithDiscreteProbabiltiesAndEventOccurence> condProbModels = models.get(key);
+            final List<BetaDiscreteWithEventOutput> condProbModels = models.get(key);
 
             final List<Integer> events = eventsByModel.get(key);
 
@@ -108,7 +117,7 @@ public class MultipleEventModel {
             final Integer event = events.get(t);
 
             //get conditional probability model of event
-            final ModelWithDiscreteProbabiltiesAndEventOccurence condProbModel = condProbModels.get(event);
+            final BetaDiscreteWithEventOutput condProbModel = condProbModels.get(event);
 
             p1 = condProbModel.inferProbabilitiesGivenModel(p1);
         }
@@ -214,10 +223,10 @@ public class MultipleEventModel {
             }
 
             //iterate through each model
-            for (final List<ModelWithDiscreteProbabiltiesAndEventOccurence> myModels : models.values()) {
+            for (final List<BetaDiscreteWithEventOutput> myModels : models.values()) {
 
                 //get the model for this event happening
-                final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = myModels.get(event);
+                final BetaDiscreteWithEventOutput myModel = myModels.get(event);
 
                 //updates state of model
                 myModel.inferModelGivenObservedProbabilities(label);

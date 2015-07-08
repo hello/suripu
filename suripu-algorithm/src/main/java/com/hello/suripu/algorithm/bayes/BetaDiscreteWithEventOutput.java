@@ -71,7 +71,7 @@ import java.util.List;
 
 
  */
-public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabiltiesAndEventOccurence{
+public class BetaDiscreteWithEventOutput {
 
     private static final Double TOL = 1e-7;
     private final List<BetaBinomialBayesModel> continuousDistributionProbabilities;
@@ -80,8 +80,10 @@ public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabilti
         continuousDistributionProbabilities = continuousDistributionPriors;
     }
 
+    public ImmutableList<BetaBinomialBayesModel> getDistribution() {
+        return ImmutableList.copyOf(continuousDistributionProbabilities) ;
+    }
 
-    @Override
     public void inferModelGivenObservedProbabilities(final ImmutableList<Double> discreteProbabilities) {
         for (int iState = 0; iState < discreteProbabilities.size(); iState++) {
             final Double probSuccess = discreteProbabilities.get(iState);
@@ -89,7 +91,6 @@ public class BetaDiscreteWithEventOutput implements  ModelWithDiscreteProbabilti
         }
     }
 
-    @Override
     public ImmutableList<Double> inferProbabilitiesGivenModel(final ImmutableList<Double> prior) {
         List<Double> joints = Lists.newArrayList();
 

@@ -68,7 +68,7 @@ public class BayesTests {
         final BetaDiscreteWithEventOutput bayesElement2 = new BetaDiscreteWithEventOutput(betaDistributions2);
         final BetaDiscreteWithEventOutput bayesElement3 = new BetaDiscreteWithEventOutput(betaDistributions3);
 
-        final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models = Lists.newArrayList();
+        final List<BetaDiscreteWithEventOutput> models = Lists.newArrayList();
 
         models.add(bayesElement1);
         models.add(bayesElement2);

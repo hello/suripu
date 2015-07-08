@@ -17,8 +17,10 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.models.BayesNetHmmModelPrior;
+import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
+import com.hello.suripu.core.models.BayesNetHmmSingleModelPrior;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -35,34 +37,33 @@ import java.util.Map;
 /**
  * Created by benjo on 7/5/15.
  */
-public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
+public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriorsDAO {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(ModelPriorsDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(BayesNetHmmModelPriorsDAODynamoDB.class);
 
     public static final String HASH_KEY = "account_id";
     public static final String RANGE_KEY = "date";
     public static final String PAYLOAD_KEY = "prior";
-    public static final String CURRENT_RANGE_KEY = "current";
 
     private final AmazonDynamoDB dynamoDBClient;
 
     private final String tableName;
 
-    public ModelPriorsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
+    public BayesNetHmmModelPriorsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
 
     @Override
     //this will return the prior for that date, or the "current" model priors
-    public List<BayesNetHmmModelPrior> getModelPriorsByAccountIdAndDate(final Long accountId,final DateTime dateLocalUTC) {
+    public Optional<BayesNetHmmMultipleModelsPriors> getModelPriorsByAccountIdAndDate(final Long accountId,final DateTime dateLocalUTC) {
 
         final String dateString = DateTimeUtil.dateToYmdString(dateLocalUTC);
 
         final Map<Long, byte []> finalResult = new HashMap<>();
         final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
-        final List<BayesNetHmmModelPrior> results = Lists.newArrayList();
+        final List<BayesNetHmmSingleModelPrior> results = Lists.newArrayList();
 
         final List<AttributeValue> attributeValueList = Lists.newArrayList();
         attributeValueList.add(new AttributeValue().withS(dateString));
@@ -105,27 +106,30 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
 
         if (items == null) {
             LOGGER.error("DynamoDB query did not return anything for account_id {} on table {}",accountId,this.tableName);
-            return results;
+            return Optional.absent();
         }
 
 
+        String chosenRangeKey = "";
 
         if (items.size() == 2) {
             //prior already exists for this day
             for(final Map<String, AttributeValue> item : items) {
                 if (!item.keySet().containsAll(targetAttributeSet)) {
                     LOGGER.error("Missing field in item {}", item);
-                    return results;
+                    return Optional.absent();
                 }
 
+                final String rangeKey = item.get(RANGE_KEY).getS();
+
                 //skip current key, use the one for the day
-                if (item.get(RANGE_KEY).equals(CURRENT_RANGE_KEY)) {
+                if (rangeKey.equals(CURRENT_RANGE_KEY)) {
                     continue;
                 }
 
                 final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
-
-                results.addAll(BayesNetHmmModelPrior.createListFromProtbuf(byteBuffer.array()));
+                chosenRangeKey = rangeKey;
+                results.addAll(BayesNetHmmSingleModelPrior.createListFromProtbuf(byteBuffer.array()));
             }
         }
         else if (items.size() == 1) {
@@ -134,14 +138,15 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
 
             if (!item.keySet().containsAll(targetAttributeSet)) {
                 LOGGER.error("Missing field in item {}", item);
-                return results;
+                return Optional.absent();
             }
 
-            final ByteBuffer byteBuffer = item.get(RANGE_KEY).getB();
-            final String rangeKey = item.get(PAYLOAD_KEY).getS();
+            final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
+            final String rangeKey = item.get(RANGE_KEY).getS();
 
             if (rangeKey.equals(CURRENT_RANGE_KEY)) {
-                results.addAll(BayesNetHmmModelPrior.createListFromProtbuf(byteBuffer.array()));
+                results.addAll(BayesNetHmmSingleModelPrior.createListFromProtbuf(byteBuffer.array()));
+                chosenRangeKey = rangeKey;
             }
             else {
                 LOGGER.error("current range key not found when it should have been, instead it was {} for account_id {} requested for date {}",rangeKey,accountId,dateString);
@@ -156,11 +161,11 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
             LOGGER.error("got more than zero, one, or two results for account_id {} requested for date {}",accountId,dateString);
         }
 
-        return results;
+        return Optional.of(new BayesNetHmmMultipleModelsPriors(results,chosenRangeKey));
     }
 
     @Override
-    public boolean updateModelPriorsByAccountIdForDate(final Long accountId,final DateTime dateLocalUTC, final List<BayesNetHmmModelPrior> priors) {
+    public boolean updateModelPriorsByAccountIdForDate(final Long accountId,final DateTime dateLocalUTC, final List<BayesNetHmmSingleModelPrior> priors) {
 
         final String dateString = DateTimeUtil.dateToYmdString(dateLocalUTC);
 
@@ -169,7 +174,7 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
 
         keyValueMap.put(HASH_KEY, new AttributeValue().withN(String.valueOf(accountId)));
         keyValueMap.put(RANGE_KEY, new AttributeValue().withS(dateString));
-        keyValueMap.put(PAYLOAD_KEY, new AttributeValue().withB(ByteBuffer.wrap(BayesNetHmmModelPrior.listToProtobuf(priors))));
+        keyValueMap.put(PAYLOAD_KEY, new AttributeValue().withB(ByteBuffer.wrap(BayesNetHmmSingleModelPrior.listToProtobuf(priors))));
 
         final PutItemRequest request = new PutItemRequest()
                 .withTableName(this.tableName)
@@ -201,8 +206,8 @@ public class ModelPriorsDAODynamoDB implements ModelPriorsDAO {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(ModelPriorsDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(ModelPriorsDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(BayesNetHmmModelPriorsDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(BayesNetHmmModelPriorsDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(

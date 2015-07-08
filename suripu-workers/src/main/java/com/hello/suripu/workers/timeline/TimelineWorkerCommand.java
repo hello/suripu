@@ -25,8 +25,8 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.ModelPriorsDAO;
-import com.hello.suripu.core.db.ModelPriorsDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -112,7 +112,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         /* Priors for bayesnet  */
         final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
-        final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
          /* Models for bayesnet */
         final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();

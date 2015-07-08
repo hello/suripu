@@ -11,7 +11,7 @@ import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.ModelPriorsDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -20,7 +20,8 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
-import com.hello.suripu.core.models.BayesNetHmmModelPrior;
+import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
+import com.hello.suripu.core.models.BayesNetHmmSingleModelPrior;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -85,7 +86,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
     private final SenseColorDAO senseColorDAO;
-    private final ModelPriorsDAO priorsDAO;
+    private final BayesNetHmmModelPriorsDAO priorsDAO;
     private final BayesNetModelDAO bayesNetModelDAO;
     private final Optional<UUID> uuidOptional;
 
@@ -109,7 +110,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final AccountDAO accountDAO,
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                                             final SenseColorDAO senseColorDAO,
-                                                            final ModelPriorsDAO priorsDAO,
+                                                            final BayesNetHmmModelPriorsDAO priorsDAO,
                                                             final BayesNetModelDAO bayesNetModelDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
@@ -136,7 +137,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
-                              final ModelPriorsDAO priorsDAO,
+                              final BayesNetHmmModelPriorsDAO priorsDAO,
                               final BayesNetModelDAO bayesNetModelDAO,
                               final Optional<UUID> uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
@@ -242,15 +243,22 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 if (bayesNetData.isValid()) {
 
                     //get priors from DB
-                    final List<BayesNetHmmModelPrior> modelPriors = priorsDAO.getModelPriorsByAccountIdAndDate(accountId, date);
+                    final Optional<BayesNetHmmMultipleModelsPriors> modelsPriorsOptional = priorsDAO.getModelPriorsByAccountIdAndDate(accountId, date);
 
-                    //update priors
-                    bayesNetData.updateModelPriors(modelPriors);
+                    if (modelsPriorsOptional.isPresent()) {
+                        //update priors
+                        bayesNetData.updateModelPriors(modelsPriorsOptional.get().modelPriorList);
+                    }
+
+                    //save first priors for day
+                    if (!modelsPriorsOptional.isPresent() || modelsPriorsOptional.get().source.equals(priorsDAO.CURRENT_RANGE_KEY)) {
+                        priorsDAO.updateModelPriorsByAccountIdForDate(accountId,date,bayesNetData.getModelPriors());
+                    }
 
                     //get the predictor, which will turn the model output into events via some kind of segmenter
                     final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(bayesNetData.getDeserializedData(), uuidOptional);
 
-                    //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into eventes
+                    //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
                     final List<Event> events = predictor.getBayesNetHmmEvents(targetDate, endDate, currentTime.getMillis(), accountId, sensorData.allSensorSampleList, sensorData.trackerMotions, sensorData.trackerMotions.get(0).offsetMillis);
 
                     /*  NOTE THAT THIS ONLY DOES SLEEP RIGHT NOW, NOT ON-BED */

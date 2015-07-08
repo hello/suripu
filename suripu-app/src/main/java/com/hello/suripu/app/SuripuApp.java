@@ -53,8 +53,8 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.ModelPriorsDAO;
-import com.hello.suripu.core.db.ModelPriorsDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
@@ -253,7 +253,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         /* Priors for bayesnet  */
         final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
-        final ModelPriorsDAO priorsDAO = new ModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
         /* Models for bayesnet */
         final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
