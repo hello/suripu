@@ -235,7 +235,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 algorithmWorked = true;
 
             }
-            else if (this.hasBayesNetEnabled(accountId) ) {
+            else if (this.hasBayesNetEnabled(accountId)) {
 
                 //get model from DB
                 final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId,date,uuidOptional);
@@ -259,7 +259,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(bayesNetData.getDeserializedData(), uuidOptional);
 
                     //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
-                    final List<Event> events = predictor.getBayesNetHmmEvents(targetDate, endDate, currentTime.getMillis(), accountId, sensorData.allSensorSampleList, sensorData.trackerMotions, sensorData.trackerMotions.get(0).offsetMillis);
+                    final List<Event> events = predictor.getBayesNetHmmEvents(targetDate, endDate, currentTime.getMillis(), accountId, sensorData.allSensorSampleList, sensorData.trackerMotions,sensorData.partnerMotions,sensorData.trackerMotions.get(0).offsetMillis);
 
                     /*  NOTE THAT THIS ONLY DOES SLEEP RIGHT NOW, NOT ON-BED */
                     if (events.size() >= 2) {

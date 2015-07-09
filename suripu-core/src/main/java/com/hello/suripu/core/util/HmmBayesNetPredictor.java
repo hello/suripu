@@ -52,14 +52,14 @@ public class HmmBayesNetPredictor {
     }
 
     public ImmutableList<Event> getBayesNetHmmEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
-                                                      final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> myMotion,final int timezoneOffset) {
+                                                      final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> myMotion,final List<TrackerMotion> partnerMotion,final int timezoneOffset) {
 
         final Long startTimeUTC = targetDate.minusMillis(timezoneOffset).getMillis();
         final Long endTimeUTC = startTimeUTC + 60000L * 60 * 16;
 
         final List<Event> outputEvents = Lists.newArrayList();
 
-        final Map<String, List<Event>> eventsByOutputId = makePredictions(allSensorSampleList, myMotion, startTimeUTC, endTimeUTC, timezoneOffset);
+        final Map<String, List<Event>> eventsByOutputId = makePredictions(allSensorSampleList, myMotion,partnerMotion, startTimeUTC, endTimeUTC, timezoneOffset);
 
         final List<Event> events = eventsByOutputId.get(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP);
 
@@ -79,11 +79,11 @@ public class HmmBayesNetPredictor {
     }
 
     //returns list of events by output id (the name of the conditional probabilities that produced it)
-    public Map<String,List<Event>> makePredictions(final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> pillData, final long startTimeUTC, final long stopTimeUTC, final int timezoneOffset) {
+    public Map<String,List<Event>> makePredictions(final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> pillData, final List<TrackerMotion> partnerPillData, final long startTimeUTC, final long stopTimeUTC, final int timezoneOffset) {
         Map<String, List<Event>> eventsByOutputId = Maps.newHashMap();
 
         /*  Get the sensor data */
-        final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(allSensorSampleList, pillData, allTheData.params, startTimeUTC, stopTimeUTC, timezoneOffset);
+        final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(allSensorSampleList, pillData,partnerPillData, allTheData.params, startTimeUTC, stopTimeUTC, timezoneOffset);
 
         if (!binnedDataOptional.isPresent()) {
             return eventsByOutputId;
