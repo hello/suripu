@@ -9,6 +9,9 @@
 
     <artifactId>suripu-research</artifactId>
     <version>0.4.59-SNAPSHOT</version>
+    <properties>
+        <dropwizard.version>0.6.2</dropwizard.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -39,6 +42,7 @@
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-jdbi</artifactId>
+            <version>${dropwizard.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.dagger</groupId>

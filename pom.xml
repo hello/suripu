@@ -23,7 +23,6 @@
         <module>suripu-core</module>
         <module>suripu-service</module>
         <module>suripu-app</module>
-        <module>suripu-factory</module>
         <module>suripu-algorithm</module>
         <module>suripu-workers</module>
         <module>suripu-admin</module>

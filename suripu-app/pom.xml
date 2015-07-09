@@ -9,6 +9,10 @@
 
     <artifactId>suripu-app</artifactId>
 
+    <properties>
+        <dropwizard.version>0.6.2</dropwizard.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.hello.suripu</groupId>
@@ -44,6 +48,7 @@
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-jdbi</artifactId>
+            <version>${dropwizard.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.dagger</groupId>
