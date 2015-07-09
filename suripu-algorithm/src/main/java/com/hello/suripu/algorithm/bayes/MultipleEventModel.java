@@ -1,6 +1,7 @@
 package com.hello.suripu.algorithm.bayes;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableListIterator;
@@ -8,16 +9,44 @@ import com.hello.suripu.algorithm.core.AlgorithmException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by benjo on 6/16/15.
+ *
+ *  This class maps a state sequence (List 'o integers) into probabilties of class.
+ *  P(class | sequence, model), where the model is P (state_i | class)
+ *
+ *  It will also let you update the model with labeled data.
+ *
+ *
+ * This class is used as follows:
+ * 1) create, giving it the number of discrete probabilties you're modeling (i.e. true-false?  then it's 2)
+ * 2) putModel - add some (most likely) beta-binomial models.
+ *    You can do two things with these:
+ *        - label the data (i.e update the model given the label and state sequence, "inferring the model parameters")
+ *        - infer the probabilities of the discrete state given the data
+ *
+ * 3) Then, you will get a bunch of state sequences from a bunch of HMMs, which will be put in a map.
+ *   You call this on it:  getProbsFromEventSequence(mapOfStateSequencesWhereIdIsWhichHmmItCameFrom, N)
+ *
+ *   -= Concrete example =-
+ *
+ *  I've added this model:
+ *  beta-binomial 1 maps to  P(state_1 | sleep) = alpha_1 / (alpha_1 + beta_1)
+ *  beta-binomial 2 maps to .... etc. etc.
+ *
+ *  I've got some sensor data, and I decoded ....
+ *
+ *  to be completed later....
+ *
  */
 public class MultipleEventModel {
     private static final Double MINIMUM_PROBABILITY = 5e-2;
     private static final Double MAXIMUM_PROBABILITY = 1.0 - MINIMUM_PROBABILITY;
 
     private final List<Double> discreteProbabilties;
-    private final Map<String,List<ModelWithDiscreteProbabiltiesAndEventOccurence>> models;
+    private final Map<String,List<BetaDiscreteWithEventOutput>> models;
 
     public MultipleEventModel(final int numDiscreteProbs) {
         this.models = Maps.newHashMap();
@@ -35,8 +64,20 @@ public class MultipleEventModel {
         }
     }
 
-    public void addModel(final String id, List<ModelWithDiscreteProbabiltiesAndEventOccurence> models) {
+    public boolean hasModel(final String id) {
+        return this.models.keySet().contains(id);
+    }
+
+    public void putModel(final String id, List<BetaDiscreteWithEventOutput> models) {
         this.models.put(id,models);
+    }
+
+    public ImmutableSet<String> getModelNames() {
+        return ImmutableSet.copyOf(models.keySet());
+    }
+
+    public ImmutableList<BetaDiscreteWithEventOutput> getModel(final String id) {
+        return ImmutableList.copyOf(this.models.get(id));
     }
 
     void setPriorForAllStatesBasedOnOneState(final int iState, final double prior) {
@@ -64,7 +105,7 @@ public class MultipleEventModel {
 
         //process events... go through each matching key from events
         for (final String key : models.keySet()) {
-            final List<ModelWithDiscreteProbabiltiesAndEventOccurence> condProbModels = models.get(key);
+            final List<BetaDiscreteWithEventOutput> condProbModels = models.get(key);
 
             final List<Integer> events = eventsByModel.get(key);
 
@@ -77,7 +118,7 @@ public class MultipleEventModel {
             final Integer event = events.get(t);
 
             //get conditional probability model of event
-            final ModelWithDiscreteProbabiltiesAndEventOccurence condProbModel = condProbModels.get(event);
+            final BetaDiscreteWithEventOutput condProbModel = condProbModels.get(event);
 
             p1 = condProbModel.inferProbabilitiesGivenModel(p1);
         }
@@ -183,10 +224,10 @@ public class MultipleEventModel {
             }
 
             //iterate through each model
-            for (final List<ModelWithDiscreteProbabiltiesAndEventOccurence> myModels : models.values()) {
+            for (final List<BetaDiscreteWithEventOutput> myModels : models.values()) {
 
                 //get the model for this event happening
-                final ModelWithDiscreteProbabiltiesAndEventOccurence myModel = myModels.get(event);
+                final BetaDiscreteWithEventOutput myModel = myModels.get(event);
 
                 //updates state of model
                 myModel.inferModelGivenObservedProbabilities(label);

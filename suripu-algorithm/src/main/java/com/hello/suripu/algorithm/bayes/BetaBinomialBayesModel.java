@@ -16,17 +16,25 @@ public class BetaBinomialBayesModel {
         this.beta = beta;
     }
 
+    public Double getAlpha() {
+        return this.alpha;
+    }
+
+    public Double getBeta() {
+        return this.beta;
+    }
+
     public Double getPrediction() {
         return alpha / (alpha + beta);
     }
 
     public void updateWithInference(final Double probOfSuccess) {
-        updateWithInference(probOfSuccess,1);
+        updateWithInference(probOfSuccess,1.0);
     }
 
-    public void updateWithInference(final Double probOfSuccess, Integer numObs) {
-        alpha += probOfSuccess * numObs.doubleValue();
-        beta += (1.0 - probOfSuccess) * numObs.doubleValue();
+    public void updateWithInference(final Double probOfSuccess, final Double numObs) {
+        alpha += probOfSuccess * numObs;
+        beta += (1.0 - probOfSuccess) * numObs;
 
     }
 

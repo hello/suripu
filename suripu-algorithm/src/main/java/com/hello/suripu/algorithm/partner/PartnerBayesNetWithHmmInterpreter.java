@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.bayes.BetaDiscreteWithEventOutput;
 import com.hello.suripu.algorithm.bayes.BetaBinomialBayesModel;
-import com.hello.suripu.algorithm.bayes.ModelWithDiscreteProbabiltiesAndEventOccurence;
 import com.hello.suripu.algorithm.bayes.MultipleEventModel;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class PartnerBayesNetWithHmmInterpreter {
 
         final List<Double> conditionalProbs = hmm.getConditionalProbabiltiesOfMeBeingInBed();
 
-        final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models = Lists.newArrayList();
+        final List<BetaDiscreteWithEventOutput> models = Lists.newArrayList();
 
         for (final Double prob : conditionalProbs) {
             BetaDiscreteWithEventOutput betaBayesElement = new BetaDiscreteWithEventOutput(
@@ -35,7 +34,7 @@ public class PartnerBayesNetWithHmmInterpreter {
 
         bayesModel = new MultipleEventModel(2);
 
-        bayesModel.addModel("partner_filter",models);
+        bayesModel.putModel("partner_filter", models);
     }
 
 

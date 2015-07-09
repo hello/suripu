@@ -68,7 +68,7 @@ public class SleepHmmBayesNetSensorDataBinning {
     *
     *
     * */
-    static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final List<TrackerMotion> pillData,final HmmBayesNetMeasurementParameters params,
+    static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final List<TrackerMotion> pillData,final List<TrackerMotion> partnerPillData,final HmmBayesNetMeasurementParameters params,
                                                            final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset) {
 
         final List<Sample> light = sensors.get(Sensor.LIGHT);
@@ -205,6 +205,21 @@ public class SleepHmmBayesNetSensorDataBinning {
         }
 
 
+        ///////////////////////////
+        //PARTNER PILL MOTION
+        final Iterator<TrackerMotion> it7 = partnerPillData.iterator();
+        while (it7.hasNext()) {
+            final TrackerMotion m = it7.next();
+
+            double value = m.value;
+
+            //heartbeat value
+            if (value == -1) {
+                continue;
+            }
+
+            addToBin(data, m.timestamp, m.onDurationInSeconds,  SleepHmmBayesNetProtos.MeasType.PARTNER_MOTION_DURATION_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+        }
 
 
         final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));

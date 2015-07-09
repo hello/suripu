@@ -142,6 +142,8 @@ dynamodb:
     ring_time_history: ring_history_by_account
     timezone_history: timezone_history
     alarm_log: alarm
+    hmm_bayesnet_priors: hmm_bayesnet_priors
+    hmm_bayesnet_models: hmm_bayesnet_models
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
@@ -153,7 +155,8 @@ dynamodb:
     ring_time_history: http://dynamodb.us-east-1.amazonaws.com
     timezone_history: http://dynamodb.us-east-1.amazonaws.com
     alarm_log: http://dynamodb.us-east-1.amazonaws.com
-
+    hmm_bayesnet_priors: http://dynamodb.us-east-1.amazonaws.com
+    hmm_bayesnet_models: http://dynamodb.us-east-1.amazonaws.com
 
 aggregate_window_size_min: 10
 
