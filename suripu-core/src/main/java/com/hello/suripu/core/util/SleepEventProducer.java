@@ -6,28 +6,34 @@ import com.hello.suripu.algorithm.bayes.ProbabilitySegment;
 import com.hello.suripu.algorithm.bayes.ProbabilitySegmenter;
 import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.translations.English;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by benjo on 6/24/15.
  */
 public class SleepEventProducer implements EventProducer {
-    private static final Long NUM_MINUTES_IN_MILLIS = 60000L;
 
-    private final Double PROB_THRESHOLD = 0.90;
-    private final Integer MIN_DURATION_OF_SLEEP_IN_MINUTES = 20;
-    private final Integer MAX_WAKEUP_PERIOD_IN_MINUTES = 60; //nobody spends more than this time in bed not sleeping when waking up
-    private final Double MIN_AVG_MOTION_TO_BE_WAKEFUL = 1.0; //per minute
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(SleepEventProducer.class);
+    private final Logger LOGGER;
+
+    private static final Long NUM_MINUTES_IN_MILLIS = 60000L;
 
     private final Double NOMINAL_HOURS_SLEEPING = 8.0;
     private final Double PRE_AND_POST_DURATION_HOURS = 0.5 * (16.0 - NOMINAL_HOURS_SLEEPING);
+
+    public SleepEventProducer(Optional<UUID> uuidOptional) {
+        this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuidOptional);
+    }
+
 
     @Override
     public List<Event> getEventsFromProbabilitySequence(final Map<String,List<List<Double>>> probsByOutputId,
@@ -39,7 +45,7 @@ public class SleepEventProducer implements EventProducer {
         final List<List<Double>> probs = probsByOutputId.get(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP);
 
         if (probs == null) {
-            //TODO LOG ERROR
+            LOGGER.error("cond null probabilities from {}",HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP);
             return events;
         }
 
@@ -49,7 +55,14 @@ public class SleepEventProducer implements EventProducer {
         final int numIntervalsDuring = ((int)(NOMINAL_HOURS_SLEEPING * 60.0))  / numMinutesPerInterval;
         final int numIntervalsPost = ((int)(PRE_AND_POST_DURATION_HOURS * 60.0))  / numMinutesPerInterval;
 
-        final ProbabilitySegment seg = ProbabilitySegmenter.getBestSegment(numIntervalsPre, numIntervalsDuring, numIntervalsPost, sleepProbForwardsOrBackwards);
+        final Optional<ProbabilitySegment> segmentOptional = ProbabilitySegmenter.getBestSegment(numIntervalsPre, numIntervalsDuring, numIntervalsPost, sleepProbForwardsOrBackwards);
+
+        if (!segmentOptional.isPresent()) {
+            LOGGER.info("no segments found, therefore not returning any events");
+            return events;
+        }
+
+        final ProbabilitySegment seg = segmentOptional.get();
 
         final long sleepTimestamp = getTimestamp(seg.i1,t0,timezoneOffset,numMinutesPerInterval);
         final long wakeTimestamp = getTimestamp(seg.i2,t0,timezoneOffset,numMinutesPerInterval);
@@ -67,26 +80,5 @@ public class SleepEventProducer implements EventProducer {
         return t0 + (measPeriodInMinutes*idx*NUM_MINUTES_IN_MILLIS);
     }
 
-    static double getWeightedAverageOfMotionFeatures(final ProbabilitySegment seg, final double[][] sensordata, final int numMinutesPerInterval) {
-        final double [] motionDuration = sensordata[SleepHmmBayesNetProtos.MeasType.MOTION_DURATION_VALUE];
-        final double [] disturbances = sensordata[SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE];
-
-        double motion = 0.0;
-        int numDisturbances = 0;
-        for (int i = seg.i1; i <= seg.i2; i++) {
-            motion += motionDuration[i];
-            if (disturbances[i] > 0.0) {
-                numDisturbances++;
-            }
-        }
-
-        motion += numDisturbances * 30.0;
-
-        final double duration = (seg.i2 - seg.i1 + 1) * numMinutesPerInterval;
-        final double avgmotion = motion / duration;
-
-        return avgmotion;
-
-    }
 
 }

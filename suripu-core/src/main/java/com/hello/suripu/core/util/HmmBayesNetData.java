@@ -17,6 +17,7 @@ import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
+import com.hello.suripu.api.datascience.BetaBinomialProtos;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.BayesNetHmmSingleModelPrior;
@@ -34,7 +35,6 @@ import java.util.UUID;
  * Created by benjo on 6/21/15.
  */
 public class HmmBayesNetData {
-    final static int MAX_NUM_HMM_STATES = 500;
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(HmmBayesNetData.class);
     private final Logger LOGGER;
     /*
@@ -93,7 +93,7 @@ public class HmmBayesNetData {
             final Map<String,String> modelNamesToOutputNames = Maps.newHashMap();
             final Map<String,MultipleEventModel> interpretationByOutputName = Maps.newHashMap();
 
-            for (final SleepHmmBayesNetProtos.CondProbs condProbs : proto.getConditionalProbabilitiesList()) {
+            for (final BetaBinomialProtos.CondProbs condProbs : proto.getConditionalProbabilitiesList()) {
                 final String modelId = condProbs.getModelId();
                 final String outputId = condProbs.getOutputId();
 
@@ -225,9 +225,9 @@ public class HmmBayesNetData {
 
 
     /* convert protobuf data to beta binomial model  */
-    private  List<BetaDiscreteWithEventOutput> getConditionalProbabilityModel(final SleepHmmBayesNetProtos.CondProbs condProbs) {
+    private  List<BetaDiscreteWithEventOutput> getConditionalProbabilityModel(final BetaBinomialProtos.CondProbs condProbs) {
         List<BetaDiscreteWithEventOutput> condProbModel = Lists.newArrayList();
-        for (SleepHmmBayesNetProtos.BetaCondProb betaCondProb : condProbs.getProbsList()) {
+        for (BetaBinomialProtos.BetaCondProb betaCondProb : condProbs.getProbsList()) {
 
             //create binary complementary model (p, not p) and you can do this with the beta distribution by swapping alpha and beta
             final BetaBinomialBayesModel betaBinomialBayesModel = new BetaBinomialBayesModel(betaCondProb.getAlpha(),betaCondProb.getBeta());

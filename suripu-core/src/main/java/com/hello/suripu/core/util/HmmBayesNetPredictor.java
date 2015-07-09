@@ -43,7 +43,7 @@ public class HmmBayesNetPredictor {
 
         //populate factory map
         eventProducers = Maps.newHashMap();
-        eventProducers.put(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP,new SleepEventProducer());
+        eventProducers.put(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP,new SleepEventProducer(uuid));
 
         //later, later
         //eventProducers.put(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_BED,new BedEventProducer());

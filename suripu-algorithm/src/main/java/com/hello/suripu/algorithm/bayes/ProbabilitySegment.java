@@ -14,6 +14,10 @@ public class ProbabilitySegment implements Comparable<ProbabilitySegment> {
         this.tag = tag;
     }
 
+    public int getDuration() {
+        return i2 - i1 + 1;
+    }
+
     @Override
     public int compareTo(ProbabilitySegment o) {
         if (o.i1 > i2) {

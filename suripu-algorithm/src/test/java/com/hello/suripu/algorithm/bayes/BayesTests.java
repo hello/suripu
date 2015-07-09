@@ -1,5 +1,6 @@
 package com.hello.suripu.algorithm.bayes;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -144,10 +145,12 @@ public class BayesTests {
             probs.add(0.6);
         }
 
-        final ProbabilitySegment seg = ProbabilitySegmenter.getBestSegment(40, 20, 20, probs);
+        final Optional<ProbabilitySegment> seg = ProbabilitySegmenter.getBestSegment(40, 20, 20, probs);
 
-        TestCase.assertEquals(40,seg.i1,2);
-        TestCase.assertEquals(60,seg.i2,2);
+        TestCase.assertTrue(seg.isPresent());
+
+        TestCase.assertEquals(40,seg.get().i1,2);
+        TestCase.assertEquals(60,seg.get().i2,2);
 
     }
 }
