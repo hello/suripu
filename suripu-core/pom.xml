@@ -22,15 +22,6 @@
             <version>0.4.59-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-auth</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
@@ -95,6 +86,11 @@
             <groupId>com.intellij</groupId>
             <artifactId>annotations</artifactId>
             <version>12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi</artifactId>
+            <version>2.62</version>
         </dependency>
     </dependencies>
 </project>

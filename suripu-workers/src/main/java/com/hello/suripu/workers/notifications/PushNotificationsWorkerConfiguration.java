@@ -2,9 +2,10 @@ package com.hello.suripu.workers.notifications;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Sets;
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
+
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 import org.hibernate.validator.constraints.NotEmpty;
 

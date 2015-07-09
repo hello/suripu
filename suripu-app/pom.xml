@@ -16,6 +16,11 @@
             <version>0.4.59-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>com.hello.suripu</groupId>
+            <artifactId>suripu-coredw</artifactId>
+            <version>0.4.59-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.2-1004-jdbc4</version>
@@ -35,6 +40,10 @@
                     <artifactId>dropwizard-core</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.dropwizard</groupId>
+            <artifactId>dropwizard-jdbi</artifactId>
         </dependency>
         <dependency>
             <groupId>com.squareup.dagger</groupId>

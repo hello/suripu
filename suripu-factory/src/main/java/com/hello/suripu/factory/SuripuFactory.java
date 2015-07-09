@@ -10,7 +10,7 @@ import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.health.DynamoDbHealthCheck;
-import com.hello.suripu.core.managers.DynamoDBClientManaged;
+import com.hello.suripu.coredw.managers.DynamoDBClientManaged;
 import com.hello.suripu.factory.cli.CreateTableCommand;
 import com.hello.suripu.factory.configuration.SuripuFactoryConfiguration;
 import com.hello.suripu.factory.resources.FactoryResource;

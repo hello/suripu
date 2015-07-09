@@ -1,9 +1,9 @@
 package com.hello.suripu.workers.logs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.configuration.DynamoDBConfiguration;
-import com.hello.suripu.core.configuration.RedisConfiguration;
-import com.hello.suripu.core.configuration.SearchifyConfiguration;
+import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
+import com.hello.suripu.coredw.configuration.RedisConfiguration;
+import com.hello.suripu.coredw.configuration.SearchifyConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 

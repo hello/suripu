@@ -16,6 +16,11 @@
             <version>0.4.59-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>com.hello.suripu</groupId>
+            <artifactId>suripu-coredw</artifactId>
+            <version>0.4.59-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.2-1004-jdbc4</version>
@@ -35,6 +40,11 @@
                     <groupId>joda-time</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.dropwizard</groupId>
+            <artifactId>dropwizard-db</artifactId>
+            <version>${dropwizard.version}</version>
         </dependency>
     </dependencies>
     <build>

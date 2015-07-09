@@ -15,7 +15,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
