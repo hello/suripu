@@ -2,8 +2,10 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.MotionScore;
+import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.insights.SleepDuration;
+import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,6 +140,34 @@ public class SleepScoreUtils {
         return motionScore;
     }
 
+    public static float getSensorSamplesAverage(final List<Sample> samples) {
+        float sum = 0;
+        for (Sample sample : samples) {
+            sum += sample.value;
+        }
+        return sum / samples.size();
+    }
+
+    public static float getTemperatureScore(final List<Sample> samples) {
+        float average = getSensorSamplesAverage(samples);
+        if (average >= TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS && average <= TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
+            return 0.5f;
+        } else {
+            return 1f;
+        }
+    }
+
+    public static float getHumidityScore(final List<Sample> samples) {
+        float average = getSensorSamplesAverage(samples);
+        if (average <= TemperatureHumidity.ALERT_HUMIDITY_LOW && average >= TemperatureHumidity.ALERT_HUMIDITY_HIGH) {
+            return 0.5f;
+        } else {
+            return 1f;
+        }
+    }
+
+
+
     public static Optional<MotionScore> getSleepMotionScoreMaybe(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         try {
             return Optional.of(getSleepMotionScore(targetDate, trackerMotions, fallAsleepTimestamp, wakeUpTimestamp));
@@ -152,12 +182,12 @@ public class SleepScoreUtils {
 
     /**
      * Computes an aggregated score
-     * @param motionScore 70%
-     * @param durationScore 20%
-     * @param environmentScore 10%
+     * @param motionScore 50%
+     * @param durationScore 25%
+     * @param environmentScore 25%
      * @return
      */
     public static Integer aggregateSleepScore(final Integer motionScore, final Integer durationScore, final Integer environmentScore) {
-        return Math.round(0.7f * motionScore + 0.2f * durationScore + 0.1f * environmentScore);
+        return Math.round(0.5f * motionScore + 0.25f * durationScore + 0.25f * environmentScore);
     }
 }

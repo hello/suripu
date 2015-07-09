@@ -604,7 +604,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
@@ -954,7 +954,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
      * @param sleepStats
      * @return
      */
-    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
+    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions,
+                                             final int numberSoundEvents,
+                                             final AllSensorSampleList sensors,
+                                             final DateTime targetDate,
+                                             final Long accountId,
+                                             final SleepStats sleepStats) {
 
         // Movement score
         final MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
@@ -971,8 +976,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
         final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
 
-        // TODO: Environment score
-        final Integer environmentScore = 100;
+        // Environment score
+        final float soundScore = Math.max(0f, 1f - (numberSoundEvents * 0.2f));
+        final float temperatureScore = SleepScoreUtils.getTemperatureScore(sensors.get(Sensor.TEMPERATURE));
+        final float humidityScore = SleepScoreUtils.getHumidityScore(sensors.get(Sensor.HUMIDITY));
+        final Integer environmentScore = (
+                Math.round(25f * temperatureScore) +
+                Math.round(25f * humidityScore) +
+                Math.round(50f * soundScore)
+        );
 
         // Aggregate all scores
         final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore.score, durationScore, environmentScore);
