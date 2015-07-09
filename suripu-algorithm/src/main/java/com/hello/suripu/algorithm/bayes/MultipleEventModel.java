@@ -23,8 +23,8 @@ import java.util.Set;
  * 1) create, giving it the number of discrete probabilties you're modeling (i.e. true-false?  then it's 2)
  * 2) putModel - add some (most likely) beta-binomial models.
  *    You can do two things with these:
- *        - label the data (i.e update the model given the label and state sequence)
- *        - infer the model parameters (i.e. Bayesian update of model parameters)
+ *        - label the data (i.e update the model given the label and state sequence, "inferring the model parameters")
+ *        - infer the probabilities of the discrete state given the data
  *
  * 3) Then, you will get a bunch of state sequences from a bunch of HMMs, which will be put in a map.
  *   You call this on it:  getProbsFromEventSequence(mapOfStateSequencesWhereIdIsWhichHmmItCameFrom, N)
