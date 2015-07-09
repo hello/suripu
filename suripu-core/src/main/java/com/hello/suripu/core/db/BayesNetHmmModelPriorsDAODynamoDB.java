@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.text.html.Option;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,9 +50,51 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
 
     private final String tableName;
 
+    private final Collection<String> targetAttributeSet;
+
     public BayesNetHmmModelPriorsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
+
+        //put all attributes that you want back from the server in this thing
+        targetAttributeSet = new HashSet<String>();
+
+        Collections.addAll(targetAttributeSet,
+                HASH_KEY,
+                RANGE_KEY,
+                PAYLOAD_KEY
+        );
+    }
+
+    private QueryResult doQuery(final Long accountId,List<AttributeValue> matchKeys) {
+
+        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
+
+        final Condition selectAccountIdCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+
+        final Condition selectRangeCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ.toString())
+                .withAttributeValueList(matchKeys);
+
+        queryConditions.put(HASH_KEY, selectAccountIdCondition);
+        queryConditions.put(RANGE_KEY, selectRangeCondition);
+
+
+
+
+
+        // Perform query
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributeSet)
+                .withLimit(1);
+
+
+        return this.dynamoDBClient.query(queryRequest);
+
     }
 
     @Override
@@ -61,107 +104,58 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
         final String dateString = DateTimeUtil.dateToYmdString(dateLocalUTC);
 
         final Map<Long, byte []> finalResult = new HashMap<>();
-        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
 
         final List<BayesNetHmmSingleModelPrior> results = Lists.newArrayList();
 
-        final List<AttributeValue> attributeValueList = Lists.newArrayList();
-        attributeValueList.add(new AttributeValue().withS(dateString));
-        attributeValueList.add(new AttributeValue().withS(CURRENT_RANGE_KEY));
+        final List<AttributeValue> attributeValueListForDateMatch = Lists.newArrayList();
+        attributeValueListForDateMatch.add(new AttributeValue().withS(dateString));
 
-
-        final Condition selectModelConditions = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(attributeValueList);
-
-        queryConditions.put(RANGE_KEY, selectModelConditions);
-
-        // AND account_id = :account_id
-        final Condition selectAccountIdCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
-        queryConditions.put(HASH_KEY, selectAccountIdCondition);
-
-        //put all attributes that you want back from the server in this thing
-        final Collection<String> targetAttributeSet = new HashSet<String>();
-
-        Collections.addAll(targetAttributeSet,
-                HASH_KEY,
-                RANGE_KEY,
-                PAYLOAD_KEY
-        );
+        final List<AttributeValue> attributeValueListForCurrentMatch = Lists.newArrayList();
+        attributeValueListForCurrentMatch.add(new AttributeValue().withS(CURRENT_RANGE_KEY));
 
 
 
-        // Perform query
-        final QueryRequest queryRequest = new QueryRequest()
-                .withTableName(this.tableName)
-                .withKeyConditions(queryConditions)
-                .withAttributesToGet(targetAttributeSet)
-                .withLimit(2);
+        final QueryResult queryResult = doQuery(accountId,attributeValueListForDateMatch);
 
+        Map<String,AttributeValue> item = null;
 
-        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+        //did initial query by date return anything?
+        if (queryResult.getCount() == 0) {
 
-        if (items == null) {
-            LOGGER.error("DynamoDB query did not return anything for account_id {} on table {}",accountId,this.tableName);
-            return Optional.absent();
-        }
+            //nope.  so let's query for the "current" model for this user
+            final QueryResult queryResultForCurrent = doQuery(accountId,attributeValueListForCurrentMatch);
 
-
-        String chosenRangeKey = "";
-
-        if (items.size() == 2) {
-            //prior already exists for this day
-            for(final Map<String, AttributeValue> item : items) {
-                if (!item.keySet().containsAll(targetAttributeSet)) {
-                    LOGGER.error("Missing field in item {}", item);
-                    return Optional.absent();
-                }
-
-                final String rangeKey = item.get(RANGE_KEY).getS();
-
-                //skip current key, use the one for the day
-                if (rangeKey.equals(CURRENT_RANGE_KEY)) {
-                    continue;
-                }
-
-                final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
-                chosenRangeKey = rangeKey;
-                results.addAll(BayesNetHmmSingleModelPrior.createListFromProtbuf(byteBuffer.array()));
-            }
-        }
-        else if (items.size() == 1) {
-            //only current exists for this day
-            final Map<String, AttributeValue> item = items.get(0);
-
-            if (!item.keySet().containsAll(targetAttributeSet)) {
-                LOGGER.error("Missing field in item {}", item);
+            if (queryResultForCurrent.getCount() == 0) {
+                //found nothing.  could be the first time ever for this user.
+                LOGGER.info("did not find current nor date prior for user {} on date {}", accountId, dateString);
                 return Optional.absent();
             }
 
-            final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
-            final String rangeKey = item.get(RANGE_KEY).getS();
+            item = queryResultForCurrent.getItems().iterator().next();
 
-            if (rangeKey.equals(CURRENT_RANGE_KEY)) {
-                results.addAll(BayesNetHmmSingleModelPrior.createListFromProtbuf(byteBuffer.array()));
-                chosenRangeKey = rangeKey;
-            }
-            else {
-                LOGGER.error("current range key not found when it should have been, instead it was {} for account_id {} requested for date {}",rangeKey,accountId,dateString);
-            }
-        }
-        else if (items.size() == 0) {
-            //first time ever for this user
-            LOGGER.info("no model prior retrieved for account_id {} for date {}",accountId,dateString);
         }
         else {
-            //this should never happen
-            LOGGER.error("got more than zero, one, or two results for account_id {} requested for date {}",accountId,dateString);
+            item = queryResult.getItems().iterator().next();
         }
 
-        return Optional.of(new BayesNetHmmMultipleModelsPriors(results,chosenRangeKey));
+        if (item == null) {
+            LOGGER.error("something impossible happened: item was null");
+            return Optional.absent();
+        }
+
+        if (!item.keySet().containsAll(targetAttributeSet)) {
+            LOGGER.error("Missing field in item {}", item);
+            return Optional.absent();
+        }
+
+        final String rangeKey = item.get(RANGE_KEY).getS();
+        final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
+
+        results.addAll(BayesNetHmmSingleModelPrior.createListFromProtbuf(byteBuffer.array()));
+
+        return Optional.of(new BayesNetHmmMultipleModelsPriors(results,rangeKey));
+
+
     }
 
     @Override
