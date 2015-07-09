@@ -13,12 +13,13 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
-import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
 import com.hello.suripu.core.models.BayesNetHmmSingleModelPrior;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -26,12 +27,10 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.html.Option;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +56,7 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
         this.tableName = tableName;
 
         //put all attributes that you want back from the server in this thing
-        targetAttributeSet = new HashSet<String>();
+        targetAttributeSet = Sets.newHashSet();
 
         Collections.addAll(targetAttributeSet,
                 HASH_KEY,
@@ -68,7 +67,7 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
 
     private QueryResult doQuery(final Long accountId,List<AttributeValue> matchKeys) {
 
-        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
 
         final Condition selectAccountIdCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -80,9 +79,6 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
 
         queryConditions.put(HASH_KEY, selectAccountIdCondition);
         queryConditions.put(RANGE_KEY, selectRangeCondition);
-
-
-
 
 
         // Perform query
@@ -103,8 +99,6 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
 
         final String dateString = DateTimeUtil.dateToYmdString(dateLocalUTC);
 
-        final Map<Long, byte []> finalResult = new HashMap<>();
-
         final List<BayesNetHmmSingleModelPrior> results = Lists.newArrayList();
 
         final List<AttributeValue> attributeValueListForDateMatch = Lists.newArrayList();
@@ -117,7 +111,7 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
 
         final QueryResult queryResult = doQuery(accountId,attributeValueListForDateMatch);
 
-        Map<String,AttributeValue> item = null;
+        Map<String,AttributeValue> item; //this will get assigned no matter what
 
         //did initial query by date return anything?
         if (queryResult.getCount() == 0) {
@@ -164,7 +158,7 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
         final String dateString = DateTimeUtil.dateToYmdString(dateLocalUTC);
 
 
-        final HashMap<String, AttributeValue> keyValueMap = new HashMap<>();
+        final HashMap<String, AttributeValue> keyValueMap = Maps.newHashMap();
 
         keyValueMap.put(HASH_KEY, new AttributeValue().withN(String.valueOf(accountId)));
         keyValueMap.put(RANGE_KEY, new AttributeValue().withS(dateString));
@@ -175,8 +169,9 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
                 .withItem(keyValueMap);
 
         try {
-            final PutItemResult result = this.dynamoDBClient.putItem(request);
-        } catch (AmazonServiceException awsException) {
+            this.dynamoDBClient.putItem(request);
+        }
+        catch (AmazonServiceException awsException) {
             LOGGER.error("Server exception {} while saving {} result for account {}",
                     awsException.getMessage(),
                     dateLocalUTC,
@@ -215,7 +210,6 @@ public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriors
                 .withReadCapacityUnits(5L)
                 .withWriteCapacityUnits(5L));
 
-        final CreateTableResult result = dynamoDBClient.createTable(request);
-        return result;
+        return dynamoDBClient.createTable(request);
     }
 }

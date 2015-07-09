@@ -14,47 +14,25 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.models.Timeline;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.HmmBayesNetData;
-import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Created by benjo on 2/24/15.
- */
 
-/*
-   dynamo db table has
-   account_id, model_create_date, model_protobuf_blob
-
-   Hash Attribute Name: account_id
-   Range Attribute Name: model_create_date
-
-
-
-
-
-
-
- */
 
 public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
 
@@ -70,17 +48,10 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
 
     private static final long DEFAULT_ACCOUNT_HASH_RANGE = 5;
 
-    private final String JSON_CHARSET = "UTF-8";
-
-    private static ObjectMapper mapper = new ObjectMapper();
 
     public BayesNetHmmModelDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
-
-        mapper.registerModule(new GuavaModule());
-        mapper.registerModule(new GuavaExtrasModule());
-        mapper.registerModule(new JodaModule());
     }
 
     //return range between -1 and -DEFAULT_ACCOUNT_HASH_RANGE
@@ -117,8 +88,6 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
         }
 
 
-        Optional<HmmBayesNetData> optionalModel = Optional.absent();
-
         if (protobufData != null) {
             //decode blob if it exists
             final HmmBayesNetData deserialization = new HmmBayesNetData(uuidForLogger);
@@ -141,7 +110,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
     private ImmutableMap<Long, byte []> getLatestModelForDateInternal(long accountId, final String dateString){
 
         final Map<Long, byte []> finalResult = new HashMap<>();
-        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
 
         final Condition selectDateCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.LE.toString())
@@ -149,14 +118,13 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
 
         queryConditions.put(RANGE_KEY, selectDateCondition);
 
-        // AND account_id = :account_id
         final Condition selectAccountIdCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
         queryConditions.put(HASH_KEY, selectAccountIdCondition);
 
         //put all attributes that you want back from the server in this thing
-        final Collection<String> targetAttributeSet = new HashSet<String>();
+        final Collection<String> targetAttributeSet = Sets.newHashSet();
 
         Collections.addAll(targetAttributeSet,
                 HASH_KEY,
@@ -190,10 +158,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
                 continue;
             }
 
-            final Long dateInMillis = DateTimeUtil.ymdStringToDateTime(item.get(RANGE_KEY).getS()).getMillis();
             final Long accountID = Long.valueOf(item.get(HASH_KEY).getN());
-
-            final ArrayList<Timeline> eventsWithAllTypes = new ArrayList<>();
 
             final ByteBuffer byteBuffer = item.get(PAYLOAD_KEY).getB();
             final byte[] protoData = byteBuffer.array();
@@ -224,7 +189,6 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
                 .withReadCapacityUnits(5L)
                 .withWriteCapacityUnits(1L));
 
-        final CreateTableResult result = dynamoDBClient.createTable(request);
-        return result;
+        return dynamoDBClient.createTable(request);
     }
 }

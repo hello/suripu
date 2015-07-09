@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -49,7 +50,7 @@ public class HmmBayesNetData {
 
     private  Optional<DeserializedSleepHmmBayesNetWithParams> deserializedData;
 
-    public HmmBayesNetData(Optional<UUID> uuid) {
+    public HmmBayesNetData(final Optional<UUID> uuid) {
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid);
         deserializedData = Optional.absent();
     }
@@ -180,7 +181,7 @@ public class HmmBayesNetData {
 
 
             for (final String modelId : multipleEventModel.getModelNames()) {
-                final List<BetaDiscreteWithEventOutput> model = multipleEventModel.getModel(modelId);
+                final ImmutableList<BetaDiscreteWithEventOutput> model = multipleEventModel.getModel(modelId);
                 final List<BetaBinomialBayesModel> priorFromModel = Lists.newArrayList(); //populate this
 
                 for (final BetaDiscreteWithEventOutput betaDiscreteWithEventOutput : model) {

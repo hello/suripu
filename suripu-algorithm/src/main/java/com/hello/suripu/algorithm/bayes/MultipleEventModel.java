@@ -1,6 +1,7 @@
 package com.hello.suripu.algorithm.bayes;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableListIterator;
@@ -71,12 +72,12 @@ public class MultipleEventModel {
         this.models.put(id,models);
     }
 
-    public Set<String> getModelNames() {
-        return this.models.keySet();
+    public ImmutableSet<String> getModelNames() {
+        return ImmutableSet.copyOf(models.keySet());
     }
 
-    public List<BetaDiscreteWithEventOutput> getModel(final String id) {
-        return this.models.get(id);
+    public ImmutableList<BetaDiscreteWithEventOutput> getModel(final String id) {
+        return ImmutableList.copyOf(this.models.get(id));
     }
 
     void setPriorForAllStatesBasedOnOneState(final int iState, final double prior) {
