@@ -978,10 +978,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         // Environment score
         final Integer environmentScore;
-        if (hasEnvironmentInTimelineScore(accountId)) {
+        if (hasEnvironmentInTimelineScore(accountId) && sleepStats.sleepTime > 0L && sleepStats.wakeTime > 0L) {
             final float soundScore = SleepScoreUtils.getSoundScore(numberSoundEvents);
-            final float temperatureScore = SleepScoreUtils.getTemperatureScore(sensors.get(Sensor.TEMPERATURE));
-            final float humidityScore = SleepScoreUtils.getHumidityScore(sensors.get(Sensor.HUMIDITY));
+            final float temperatureScore = SleepScoreUtils.getTemperatureScore(sensors.get(Sensor.TEMPERATURE), sleepStats.sleepTime, sleepStats.wakeTime);
+            final float humidityScore = SleepScoreUtils.getHumidityScore(sensors.get(Sensor.HUMIDITY), sleepStats.sleepTime, sleepStats.wakeTime);
             environmentScore = SleepScoreUtils.getEnvironmentScore(soundScore, temperatureScore, humidityScore);
         } else {
             environmentScore = 100;

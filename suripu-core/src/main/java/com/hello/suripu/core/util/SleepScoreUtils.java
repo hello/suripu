@@ -144,16 +144,19 @@ public class SleepScoreUtils {
         return Math.max(0f, 1f - (numberSoundEvents * 0.2f));
     }
 
-    public static float getSensorSamplesAverage(final List<Sample> samples) {
+    public static float calculateSensorAverageInTimeRange(final List<Sample> samples, final Long startTime, final Long endTime) {
         float sum = 0;
         for (Sample sample : samples) {
-            sum += sample.value;
+            final Integer offsetMillis = sample.offsetMillis;
+            if (offsetMillis >= startTime && offsetMillis <= endTime) {
+                sum += sample.value;
+            }
         }
         return sum / samples.size();
     }
 
-    public static float getTemperatureScore(final List<Sample> samples) {
-        float average = getSensorSamplesAverage(samples);
+    public static float getTemperatureScore(final List<Sample> samples, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+        float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
         if (average > TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             return 0.5f;
         } else if (average > TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
@@ -167,8 +170,8 @@ public class SleepScoreUtils {
         }
     }
 
-    public static float getHumidityScore(final List<Sample> samples) {
-        float average = getSensorSamplesAverage(samples);
+    public static float getHumidityScore(final List<Sample> samples, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
+        float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
         if (average < TemperatureHumidity.ALERT_HUMIDITY_LOW) {
             return 0.5f;
         } else if (average < TemperatureHumidity.IDEAL_HUMIDITY_MIN) {
