@@ -140,6 +140,10 @@ public class SleepScoreUtils {
         return motionScore;
     }
 
+    public static float getSoundScore(final int numberSoundEvents) {
+        return Math.max(0f, 1f - (numberSoundEvents * 0.2f));
+    }
+
     public static float getSensorSamplesAverage(final List<Sample> samples) {
         float sum = 0;
         for (Sample sample : samples) {
@@ -150,8 +154,14 @@ public class SleepScoreUtils {
 
     public static float getTemperatureScore(final List<Sample> samples) {
         float average = getSensorSamplesAverage(samples);
-        if (average >= TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS && average <= TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
+        if (average > TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             return 0.5f;
+        } else if (average > TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
+            return 0.75f;
+        } else if (average < TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS) {
+            return 0.5f;
+        } else if (average < TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS) {
+            return 0.75f;
         } else {
             return 1f;
         }
@@ -159,11 +169,23 @@ public class SleepScoreUtils {
 
     public static float getHumidityScore(final List<Sample> samples) {
         float average = getSensorSamplesAverage(samples);
-        if (average <= TemperatureHumidity.ALERT_HUMIDITY_LOW && average >= TemperatureHumidity.ALERT_HUMIDITY_HIGH) {
+        if (average < TemperatureHumidity.ALERT_HUMIDITY_LOW) {
             return 0.5f;
+        } else if (average < TemperatureHumidity.IDEAL_HUMIDITY_MIN) {
+            return 0.75f;
+        } else if (average > TemperatureHumidity.ALERT_HUMIDITY_HIGH) {
+            return 0.5f;
+        } else if (average > TemperatureHumidity.IDEAL_HUMIDITY_MAX) {
+            return 0.75f;
         } else {
             return 1f;
         }
+    }
+
+    public static int getEnvironmentScore(float soundScore, float temperatureScore, float humidityScore) {
+        return (Math.round(25f * temperatureScore) +
+                Math.round(25f * humidityScore) +
+                Math.round(50f * soundScore));
     }
 
 
