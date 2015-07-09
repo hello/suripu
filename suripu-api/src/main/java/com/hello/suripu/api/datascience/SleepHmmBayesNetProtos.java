@@ -37,6 +37,22 @@ public final class SleepHmmBayesNetProtos {
      * <code>LOG_SOUND = 4;</code>
      */
     LOG_SOUND(4, 4),
+    /**
+     * <code>PARTNER_MOTION_DURATION = 5;</code>
+     */
+    PARTNER_MOTION_DURATION(5, 5),
+    /**
+     * <code>WAVE_DISTURBANCE = 6;</code>
+     */
+    WAVE_DISTURBANCE(6, 6),
+    /**
+     * <code>LIGHT_INCREASE_DISTURBANCE = 7;</code>
+     */
+    LIGHT_INCREASE_DISTURBANCE(7, 7),
+    /**
+     * <code>SOUND_INCREASE_DISTURBANCE = 8;</code>
+     */
+    SOUND_INCREASE_DISTURBANCE(8, 8),
     ;
 
     /**
@@ -59,6 +75,22 @@ public final class SleepHmmBayesNetProtos {
      * <code>LOG_SOUND = 4;</code>
      */
     public static final int LOG_SOUND_VALUE = 4;
+    /**
+     * <code>PARTNER_MOTION_DURATION = 5;</code>
+     */
+    public static final int PARTNER_MOTION_DURATION_VALUE = 5;
+    /**
+     * <code>WAVE_DISTURBANCE = 6;</code>
+     */
+    public static final int WAVE_DISTURBANCE_VALUE = 6;
+    /**
+     * <code>LIGHT_INCREASE_DISTURBANCE = 7;</code>
+     */
+    public static final int LIGHT_INCREASE_DISTURBANCE_VALUE = 7;
+    /**
+     * <code>SOUND_INCREASE_DISTURBANCE = 8;</code>
+     */
+    public static final int SOUND_INCREASE_DISTURBANCE_VALUE = 8;
 
 
     public final int getNumber() { return value; }
@@ -70,6 +102,10 @@ public final class SleepHmmBayesNetProtos {
         case 2: return PILL_MAGNITUDE_DISTURBANCE;
         case 3: return NATURAL_LIGHT;
         case 4: return LOG_SOUND;
+        case 5: return PARTNER_MOTION_DURATION;
+        case 6: return WAVE_DISTURBANCE;
+        case 7: return LIGHT_INCREASE_DISTURBANCE;
+        case 8: return SOUND_INCREASE_DISTURBANCE;
         default: return null;
       }
     }
@@ -7672,12 +7708,14 @@ public final class SleepHmmBayesNetProtos {
       "_parameters\030\001 \002(\0132\030.hello.MeasurementPar" +
       "ams\0222\n\020independent_hmms\030\002 \003(\0132\030.hello.Hi" +
       "ddenMarkovModel\0223\n\031conditional_probabili",
-      "ties\030\003 \003(\0132\020.hello.CondProbs*p\n\010MeasType" +
-      "\022\r\n\tLOG_LIGHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\036\n\032" +
-      "PILL_MAGNITUDE_DISTURBANCE\020\002\022\021\n\rNATURAL_" +
-      "LIGHT\020\003\022\r\n\tLOG_SOUND\020\004B:\n com.hello.suri" +
-      "pu.api.datascienceB\026SleepHmmBayesNetProt" +
-      "os"
+      "ties\030\003 \003(\0132\020.hello.CondProbs*\343\001\n\010MeasTyp" +
+      "e\022\r\n\tLOG_LIGHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\036\n" +
+      "\032PILL_MAGNITUDE_DISTURBANCE\020\002\022\021\n\rNATURAL" +
+      "_LIGHT\020\003\022\r\n\tLOG_SOUND\020\004\022\033\n\027PARTNER_MOTIO" +
+      "N_DURATION\020\005\022\024\n\020WAVE_DISTURBANCE\020\006\022\036\n\032LI" +
+      "GHT_INCREASE_DISTURBANCE\020\007\022\036\n\032SOUND_INCR" +
+      "EASE_DISTURBANCE\020\010B:\n com.hello.suripu.a" +
+      "pi.datascienceB\026SleepHmmBayesNetProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
