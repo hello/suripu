@@ -76,10 +76,16 @@ public class RoomConditionsResource extends BaseResource {
             return CurrentRoomState.empty();
         }
 
+        Integer thresholdInMinutes = 15;
+        Integer mostRecentLookBackMinutes = 30;
+        if (this.hasDelayCurrentRoomStateThreshold(token.accountId)) {
+            thresholdInMinutes = 45;
+            mostRecentLookBackMinutes = 45;
+        }
 
-
-
-        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceIdPair.get().internalDeviceId, DateTime.now(DateTimeZone.UTC).plusMinutes(2), DateTime.now(DateTimeZone.UTC).minusMinutes(30));
+        final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceIdPair.get().internalDeviceId,
+                DateTime.now(DateTimeZone.UTC).plusMinutes(2),
+                DateTime.now(DateTimeZone.UTC).minusMinutes(mostRecentLookBackMinutes));
 
 
         if(!data.isPresent()) {
@@ -97,7 +103,8 @@ public class RoomConditionsResource extends BaseResource {
 
 
         LOGGER.debug("Last device data in db = {}", deviceData);
-        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), 15, unit);
+
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit);
         return roomState;
     }
 
