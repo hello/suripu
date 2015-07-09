@@ -74,5 +74,4 @@ public class FeatureFlippedProcessor {
     protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
     }
-
 }
