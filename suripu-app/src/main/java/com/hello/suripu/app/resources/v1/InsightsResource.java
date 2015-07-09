@@ -42,7 +42,6 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -158,7 +157,6 @@ public class InsightsResource extends BaseResource {
         final TrendGraph.DataType graphDataType = TrendGraph.DataType.fromString(dataType);
 
         Optional<TrendGraph> graphOptional = getGraph(accessToken.accountId, timePeriodType, graphDataType);
-
 
         if (graphOptional.isPresent()) {
             graphs.add(graphOptional.get());
@@ -292,9 +290,8 @@ public class InsightsResource extends BaseResource {
 
         // construct the graph
         if (overTimeSleepStats.size() >= MIN_DATAPOINTS) {
-            final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
             Collections.sort(overTimeSleepStats); // chronologically ascending
-            graphs.add(TrendGraphUtils.getScoresOverTimeGraph(scoreOverTimePeriod, overTimeSleepStats, userOffsetMillis, daysActive));
+            graphs.add(TrendGraphUtils.getScoresOverTimeGraph(scoreOverTimePeriod, overTimeSleepStats, daysActive));
         }
 
         return graphs;
@@ -352,8 +349,7 @@ public class InsightsResource extends BaseResource {
                 }
 
                 // scores table has no offset, pull timezone offset from tracker-motion
-                final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
-                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, sleepStats, userOffsetMillis, daysActive));
+                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, sleepStats, daysActive));
 
             } else {
                 // sleep duration over time, up to 365 days
@@ -366,17 +362,6 @@ public class InsightsResource extends BaseResource {
 
         }
 
-    }
-
-    // map keys in UTC
-    private Map<DateTime, Integer> getUserTimeZoneOffsetsUTC(final long accountId, final DateTime startDate, final DateTime endDate) {
-        final long daysDiff = (endDate.getMillis() - startDate.getMillis()) / DAY_IN_MILLIS;
-
-        final List<DateTime> dates = new ArrayList<>();
-        for (int i = 0; i < (int) daysDiff; i++) {
-            dates.add(startDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusDays(i));
-        }
-        return trackerMotionDAO.getOffsetMillisForDates(accountId, dates);
     }
 
     private Boolean checkTrendsEligibility(final Long accountId) {

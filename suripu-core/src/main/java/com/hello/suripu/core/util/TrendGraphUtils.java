@@ -57,7 +57,6 @@ public class TrendGraphUtils {
 
     public static TrendGraph getScoresOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType,
                                                     final List<AggregateSleepStats> stats,
-                                                    final Map<DateTime, Integer> userOffsetMillis,
                                                     final int numDaysActive) {
         // aggregate
         final List<GraphSample> dataPoints = new ArrayList<>();
@@ -66,13 +65,7 @@ public class TrendGraphUtils {
             final float value = (float) stat.sleepScore;
             final TrendGraph.DataLabel label = TrendGraph.getDataLabel(TrendGraph.DataType.SLEEP_SCORE, value);
             final DateTime date = stat.dateTime;
-
-            int offsetMillis = 0;
-            if (userOffsetMillis.containsKey(date)) {
-                offsetMillis = userOffsetMillis.get(date);
-            }
-
-            dataPoints.add(new GraphSample(date.getMillis(), value, offsetMillis, label));
+            dataPoints.add(new GraphSample(date.getMillis(), value, stat.offsetMillis, label));
         }
 
         final List<String> timeSeriesOptions = TrendGraph.TimePeriodType.getTimeSeriesOptions(numDaysActive);
