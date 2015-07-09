@@ -109,14 +109,14 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient,
                 configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ALARM_INFO));
 
-        /* Priors for bayesnet  */
+       /* Priors for bayesnet  */
         final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
         final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
-         /* Models for bayesnet */
+        /* Models for bayesnet */
         final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(modelDbTableName);
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
         final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(

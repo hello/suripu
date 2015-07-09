@@ -100,15 +100,15 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 configuration.getSleepStatsVersion()
         );
 
-          /* Priors for bayesnet  */
+       /* Priors for bayesnet  */
         final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
         final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
-        /* Models for bayesnet  */
-        final String modelsDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(modelsDbTableName);
-        final BayesNetModelDAO modelsDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelsDbTableName);
+        /* Models for bayesnet */
+        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
+        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
 
 
         /* data for ye olde HMM */
@@ -132,7 +132,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                senseColorDAO, priorsDAO,modelsDAO);
+                senseColorDAO, priorsDAO,modelDAO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);

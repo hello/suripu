@@ -252,12 +252,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         /* Priors for bayesnet  */
         final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(priorDbTableName);
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
         final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
 
         /* Models for bayesnet */
         final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(modelDbTableName);
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
         final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
