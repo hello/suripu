@@ -280,9 +280,15 @@ public class ReceiveResource extends BaseResource {
                         2);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
+                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState);
+                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState);
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
-                                    RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal()));
+                                    roomConditions.ordinal()));
+
+                    responseBuilder.setRoomConditionsLightsOff(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    roomConditionsLightsOff.ordinal()));
                 }else {
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
