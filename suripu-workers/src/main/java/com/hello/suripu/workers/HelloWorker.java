@@ -1,6 +1,6 @@
 package com.hello.suripu.workers;
 
-import com.hello.suripu.core.bundles.KinesisLoggerBundle;
+import com.hello.suripu.coredw.bundles.KinesisLoggerBundle;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.workers.alarm.AlarmWorkerCommand;
 import com.hello.suripu.workers.framework.WorkerConfiguration;

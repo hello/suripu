@@ -59,14 +59,14 @@ import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TeamStoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
-import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
-import com.hello.suripu.core.db.TimelineLogDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
@@ -81,8 +81,8 @@ import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
 import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
-import com.hello.suripu.core.oauth.OAuthAuthenticator;
-import com.hello.suripu.core.oauth.OAuthProvider;
+import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
+import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
@@ -357,7 +357,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 priorsDAO,
                 modelDAO);
 
-        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
+        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));

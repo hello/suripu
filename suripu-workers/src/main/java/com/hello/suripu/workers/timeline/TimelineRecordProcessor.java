@@ -13,7 +13,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TimelineResult;
