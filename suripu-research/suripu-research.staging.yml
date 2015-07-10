@@ -143,3 +143,14 @@ kinesis_logger:
   enabled : true
   buffer_size: 100
   origin: suripu-research
+
+
+hmm_bayesnet_priors:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: hmm_bayesnet_priors
+
+hmm_bayesnet_models:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: hmm_bayesnet_models

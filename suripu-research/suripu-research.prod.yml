@@ -165,3 +165,14 @@ timeline_log_db:
   endpoint: http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_timeline_log
+
+
+hmm_bayesnet_priors:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: hmm_bayesnet_priors
+
+hmm_bayesnet_models:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: hmm_bayesnet_models
