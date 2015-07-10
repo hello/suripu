@@ -2439,13 +2439,17 @@ public final class SleepHmmBayesNetProtos {
     int getStateIndex();
 
     /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
      */
-    boolean hasMeasType();
+    java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> getMeasTypeList();
     /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
      */
-    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType();
+    int getMeasTypeCount();
+    /**
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType(int index);
 
     /**
      * <code>optional .hello.ChiSquareModel chisquare = 5;</code>
@@ -2596,15 +2600,37 @@ public final class SleepHmmBayesNetProtos {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(2, rawValue);
-              } else {
-                bitField0_ |= 0x00000002;
-                measType_ = value;
+                } else {
+                if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                  measType_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType>();
+                  mutable_bitField0_ |= 0x00000002;
+                }
+                measType_.add(value);
               }
+              break;
+            }
+            case 18: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(2, rawValue);
+                  } else {
+                  if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                    measType_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType>();
+                    mutable_bitField0_ |= 0x00000002;
+                  }
+                  measType_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
               break;
             }
             case 42: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = chisquare_.toBuilder();
               }
               chisquare_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.PARSER, extensionRegistry);
@@ -2612,12 +2638,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(chisquare_);
                 chisquare_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000004;
+              bitField0_ |= 0x00000002;
               break;
             }
             case 50: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = gaussian_.toBuilder();
               }
               gaussian_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.PARSER, extensionRegistry);
@@ -2625,12 +2651,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(gaussian_);
                 gaussian_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000004;
               break;
             }
             case 58: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = gamma_.toBuilder();
               }
               gamma_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.PARSER, extensionRegistry);
@@ -2638,12 +2664,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(gamma_);
                 gamma_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000008;
               break;
             }
             case 66: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000020) == 0x00000020)) {
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = poisson_.toBuilder();
               }
               poisson_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel.PARSER, extensionRegistry);
@@ -2651,12 +2677,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(poisson_);
                 poisson_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000010;
               break;
             }
             case 74: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+              if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 subBuilder = alphabet_.toBuilder();
               }
               alphabet_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel.PARSER, extensionRegistry);
@@ -2664,16 +2690,16 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(alphabet_);
                 alphabet_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000020;
               break;
             }
             case 161: {
-              bitField0_ |= 0x00000080;
+              bitField0_ |= 0x00000040;
               weight_ = input.readDouble();
               break;
             }
             case 168: {
-              bitField0_ |= 0x00000100;
+              bitField0_ |= 0x00000080;
               numFreeParams_ = input.readInt32();
               break;
             }
@@ -2685,6 +2711,9 @@ public final class SleepHmmBayesNetProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          measType_ = java.util.Collections.unmodifiableList(measType_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -2741,18 +2770,24 @@ public final class SleepHmmBayesNetProtos {
     }
 
     public static final int MEAS_TYPE_FIELD_NUMBER = 2;
-    private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType measType_;
+    private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> measType_;
     /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
      */
-    public boolean hasMeasType() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+    public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> getMeasTypeList() {
+      return measType_;
     }
     /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
      */
-    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType() {
-      return measType_;
+    public int getMeasTypeCount() {
+      return measType_.size();
+    }
+    /**
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType(int index) {
+      return measType_.get(index);
     }
 
     public static final int CHISQUARE_FIELD_NUMBER = 5;
@@ -2761,7 +2796,7 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional .hello.ChiSquareModel chisquare = 5;</code>
      */
     public boolean hasChisquare() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <code>optional .hello.ChiSquareModel chisquare = 5;</code>
@@ -2782,7 +2817,7 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional .hello.OneDimensionalGaussianModel gaussian = 6;</code>
      */
     public boolean hasGaussian() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <code>optional .hello.OneDimensionalGaussianModel gaussian = 6;</code>
@@ -2803,7 +2838,7 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional .hello.GammaModel gamma = 7;</code>
      */
     public boolean hasGamma() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
      * <code>optional .hello.GammaModel gamma = 7;</code>
@@ -2824,7 +2859,7 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional .hello.PoissonModel poisson = 8;</code>
      */
     public boolean hasPoisson() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
      * <code>optional .hello.PoissonModel poisson = 8;</code>
@@ -2845,7 +2880,7 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional .hello.DiscreteAlphabetModel alphabet = 9;</code>
      */
     public boolean hasAlphabet() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional .hello.DiscreteAlphabetModel alphabet = 9;</code>
@@ -2866,7 +2901,7 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional double weight = 20;</code>
      */
     public boolean hasWeight() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <code>optional double weight = 20;</code>
@@ -2881,7 +2916,7 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional int32 num_free_params = 21;</code>
      */
     public boolean hasNumFreeParams() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <code>optional int32 num_free_params = 21;</code>
@@ -2892,7 +2927,7 @@ public final class SleepHmmBayesNetProtos {
 
     private void initFields() {
       stateIndex_ = 0;
-      measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
+      measType_ = java.util.Collections.emptyList();
       chisquare_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.getDefaultInstance();
       gaussian_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.getDefaultInstance();
       gamma_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.getDefaultInstance();
@@ -2908,10 +2943,6 @@ public final class SleepHmmBayesNetProtos {
       if (isInitialized == 0) return false;
 
       if (!hasStateIndex()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasMeasType()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -2949,28 +2980,28 @@ public final class SleepHmmBayesNetProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt32(1, stateIndex_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeEnum(2, measType_.getNumber());
+      for (int i = 0; i < measType_.size(); i++) {
+        output.writeEnum(2, measType_.get(i).getNumber());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(5, chisquare_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(6, gaussian_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeMessage(7, gamma_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeMessage(8, poisson_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeMessage(9, alphabet_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeDouble(20, weight_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeInt32(21, numFreeParams_);
       }
       getUnknownFields().writeTo(output);
@@ -2986,35 +3017,40 @@ public final class SleepHmmBayesNetProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, stateIndex_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(2, measType_.getNumber());
+      {
+        int dataSize = 0;
+        for (int i = 0; i < measType_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(measType_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 1 * measType_.size();
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, chisquare_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, gaussian_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, gamma_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, poisson_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, alphabet_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(20, weight_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(21, numFreeParams_);
       }
@@ -3146,7 +3182,7 @@ public final class SleepHmmBayesNetProtos {
         super.clear();
         stateIndex_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
-        measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
+        measType_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
         if (chisquareBuilder_ == null) {
           chisquare_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.getDefaultInstance();
@@ -3214,12 +3250,13 @@ public final class SleepHmmBayesNetProtos {
           to_bitField0_ |= 0x00000001;
         }
         result.stateIndex_ = stateIndex_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          measType_ = java.util.Collections.unmodifiableList(measType_);
+          bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.measType_ = measType_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
+          to_bitField0_ |= 0x00000002;
         }
         if (chisquareBuilder_ == null) {
           result.chisquare_ = chisquare_;
@@ -3227,7 +3264,7 @@ public final class SleepHmmBayesNetProtos {
           result.chisquare_ = chisquareBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
+          to_bitField0_ |= 0x00000004;
         }
         if (gaussianBuilder_ == null) {
           result.gaussian_ = gaussian_;
@@ -3235,7 +3272,7 @@ public final class SleepHmmBayesNetProtos {
           result.gaussian_ = gaussianBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
+          to_bitField0_ |= 0x00000008;
         }
         if (gammaBuilder_ == null) {
           result.gamma_ = gamma_;
@@ -3243,7 +3280,7 @@ public final class SleepHmmBayesNetProtos {
           result.gamma_ = gammaBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
+          to_bitField0_ |= 0x00000010;
         }
         if (poissonBuilder_ == null) {
           result.poisson_ = poisson_;
@@ -3251,7 +3288,7 @@ public final class SleepHmmBayesNetProtos {
           result.poisson_ = poissonBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000040;
+          to_bitField0_ |= 0x00000020;
         }
         if (alphabetBuilder_ == null) {
           result.alphabet_ = alphabet_;
@@ -3259,11 +3296,11 @@ public final class SleepHmmBayesNetProtos {
           result.alphabet_ = alphabetBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
-          to_bitField0_ |= 0x00000080;
+          to_bitField0_ |= 0x00000040;
         }
         result.weight_ = weight_;
         if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
-          to_bitField0_ |= 0x00000100;
+          to_bitField0_ |= 0x00000080;
         }
         result.numFreeParams_ = numFreeParams_;
         result.bitField0_ = to_bitField0_;
@@ -3285,8 +3322,15 @@ public final class SleepHmmBayesNetProtos {
         if (other.hasStateIndex()) {
           setStateIndex(other.getStateIndex());
         }
-        if (other.hasMeasType()) {
-          setMeasType(other.getMeasType());
+        if (!other.measType_.isEmpty()) {
+          if (measType_.isEmpty()) {
+            measType_ = other.measType_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureMeasTypeIsMutable();
+            measType_.addAll(other.measType_);
+          }
+          onChanged();
         }
         if (other.hasChisquare()) {
           mergeChisquare(other.getChisquare());
@@ -3315,10 +3359,6 @@ public final class SleepHmmBayesNetProtos {
 
       public final boolean isInitialized() {
         if (!hasStateIndex()) {
-          
-          return false;
-        }
-        if (!hasMeasType()) {
           
           return false;
         }
@@ -3416,37 +3456,74 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
-      private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
-      /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
-       */
-      public boolean hasMeasType() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+      private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> measType_ =
+        java.util.Collections.emptyList();
+      private void ensureMeasTypeIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          measType_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType>(measType_);
+          bitField0_ |= 0x00000002;
+        }
       }
       /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
        */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType() {
-        return measType_;
+      public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> getMeasTypeList() {
+        return java.util.Collections.unmodifiableList(measType_);
       }
       /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
        */
-      public Builder setMeasType(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value) {
+      public int getMeasTypeCount() {
+        return measType_.size();
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType(int index) {
+        return measType_.get(index);
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public Builder setMeasType(
+          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value) {
         if (value == null) {
           throw new NullPointerException();
         }
-        bitField0_ |= 0x00000002;
-        measType_ = value;
+        ensureMeasTypeIsMutable();
+        measType_.set(index, value);
         onChanged();
         return this;
       }
       /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public Builder addMeasType(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureMeasTypeIsMutable();
+        measType_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public Builder addAllMeasType(
+          java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> values) {
+        ensureMeasTypeIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, measType_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
        */
       public Builder clearMeasType() {
+        measType_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
-        measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
         onChanged();
         return this;
       }
@@ -7685,7 +7762,7 @@ public final class SleepHmmBayesNetProtos {
       "\022\016\n\006stddev\030\002 \002(\001\"\036\n\016ChiSquareModel\022\014\n\004me" +
       "an\030\001 \002(\001\";\n\033OneDimensionalGaussianModel\022" +
       "\014\n\004mean\030\001 \002(\001\022\016\n\006stddev\030\002 \002(\001\"\304\002\n\010ObsMod" +
-      "el\022\023\n\013state_index\030\001 \002(\005\022\"\n\tmeas_type\030\002 \002" +
+      "el\022\023\n\013state_index\030\001 \002(\005\022\"\n\tmeas_type\030\002 \003" +
       "(\0162\017.hello.MeasType\022(\n\tchisquare\030\005 \001(\0132\025" +
       ".hello.ChiSquareModel\0224\n\010gaussian\030\006 \001(\0132",
       "\".hello.OneDimensionalGaussianModel\022 \n\005g" +

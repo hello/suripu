@@ -336,7 +336,7 @@ public class HmmBayesNetData {
     /* get a single pdf from obs model -- this is just a factory method */
     private  Optional<HmmPdfInterface> getPdfFromObsModel(final SleepHmmBayesNetProtos.ObsModel obsModel) {
 
-        final int measNumber = obsModel.getMeasType().getNumber();
+        final int measNumber = obsModel.getMeasType(0).getNumber();
 
         if (obsModel.hasGaussian()) {
             return Optional.of((HmmPdfInterface)new GaussianPdf(obsModel.getGaussian().getMean(),obsModel.getGaussian().getStddev(),measNumber));
