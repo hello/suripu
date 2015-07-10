@@ -214,12 +214,12 @@ public class SleepScoreUtils {
 
     /**
      * Computes an aggregated score
-     * @param motionScore 50%
-     * @param durationScore 25%
-     * @param environmentScore 25%
+     * @param motionScore 70%
+     * @param durationScore 20%
+     * @param environmentScore 10%
      * @return
      */
     public static Integer aggregateSleepScore(final Integer motionScore, final Integer durationScore, final Integer environmentScore) {
-        return Math.round(0.5f * motionScore + 0.25f * durationScore + 0.25f * environmentScore);
+        return Math.round(0.7f * motionScore + 0.2f * durationScore + 0.1f * environmentScore);
     }
 }
