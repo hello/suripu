@@ -15,7 +15,8 @@ public class RoomConditionUtil {
     private static final int BAD_PERCENTAGE = 30;
 
     public static CurrentRoomState.State.Condition getGeneralRoomCondition(final CurrentRoomState currentRoomState) {
-        float totalScore = 3 * 100;  // Temp, humid, dust
+        float numberOfModality = 3;
+        float totalScore = numberOfModality * 100;
         float currentScore = 0;
 
         currentScore += FULL_SCORE * getIdealCountFromSate(currentRoomState.humidity);
@@ -39,6 +40,60 @@ public class RoomConditionUtil {
             return CurrentRoomState.State.Condition.ALERT;
         }
 
+    }
+
+
+    public static CurrentRoomState.State.Condition getGeneralRoomConditionV2(final CurrentRoomState currentRoomState) {
+        float numberOfModality = 5;
+        float warningCount = 0;
+        float idealCount = 0;
+        float alertCount = 0;
+
+        idealCount += getIdealCountFromSate(currentRoomState.humidity);
+        idealCount += getIdealCountFromSate(currentRoomState.particulates);
+        idealCount += getIdealCountFromSate(currentRoomState.temperature);
+        idealCount += getIdealCountFromSate(currentRoomState.light);
+        idealCount += getIdealCountFromSate(currentRoomState.sound);
+
+        warningCount += getWarningCountFromSate(currentRoomState.humidity);
+        warningCount += getWarningCountFromSate(currentRoomState.particulates);
+        warningCount += getWarningCountFromSate(currentRoomState.temperature);
+        warningCount += getWarningCountFromSate(currentRoomState.light);
+        warningCount += getWarningCountFromSate(currentRoomState.sound);
+
+        alertCount += getAlertCountFromSate(currentRoomState.humidity);
+        alertCount += getAlertCountFromSate(currentRoomState.particulates);
+        alertCount += getAlertCountFromSate(currentRoomState.temperature);
+        alertCount += getAlertCountFromSate(currentRoomState.light);
+        alertCount += getAlertCountFromSate(currentRoomState.sound);
+
+
+        // decision tree :)
+        //
+        //  Left child is true, right child is false
+        //
+        //          bad_count > 1 ?
+        //            /         \
+        //         alert    ideal_count > 50% ?
+        //                      /           \
+        //              warn_count > 1 ?    alert
+        //                 /       \
+        //              warning   ideal
+        //
+
+        if(alertCount <= 1){
+            if(idealCount / numberOfModality > 0.5f) {
+                if(warningCount > 1) {
+                    return CurrentRoomState.State.Condition.WARNING;
+                }else{
+                    return CurrentRoomState.State.Condition.IDEAL;
+                }
+            }else{
+                return CurrentRoomState.State.Condition.ALERT;
+            }
+        }else{
+            return CurrentRoomState.State.Condition.ALERT;
+        }
     }
 
     private static int getIdealCountFromSate(CurrentRoomState.State state) {

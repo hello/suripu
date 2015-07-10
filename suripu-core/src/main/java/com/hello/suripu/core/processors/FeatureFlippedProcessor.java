@@ -47,6 +47,10 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.VOTING_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasBayesNetEnabled(final Long accountId) {
+        return  featureFlipper.userFeatureActive(FeatureFlipper.BAYES_NET_ALGORITHM,accountId,Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasPartnerFilterEnabled(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
     }
@@ -70,5 +74,4 @@ public class FeatureFlippedProcessor {
     protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
     }
-
 }

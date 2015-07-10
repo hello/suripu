@@ -44,8 +44,7 @@ public class SleepMotion {
 
         final ImmutableList<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId,
                 DateTimeUtil.dateToYmdString(queryStartTime),
-                DateTimeUtil.dateToYmdString(queryEndTime),
-                numDays);
+                DateTimeUtil.dateToYmdString(queryEndTime));
 
         // get sleep movement from sleep_score
         final Optional<InsightCard> card = processData(accountId, sleepStats, isNewUser);

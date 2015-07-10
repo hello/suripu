@@ -35,4 +35,9 @@ public class PoissonPdf implements  HmmPdfInterface {
 
         return result;
     }
+
+    @Override
+    public int getNumFreeParams() {
+        return 1;
+    }
 }

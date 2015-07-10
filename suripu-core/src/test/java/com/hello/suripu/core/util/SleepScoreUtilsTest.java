@@ -99,8 +99,9 @@ public class SleepScoreUtilsTest {
     public void testNoNegativeScores() {
 //        final List<Integer> sleepDurationMinutes = ContiguousSet.create(Range.closed(1, 2000), DiscreteDomain.integers()).asList();
         final List<TrackerMotion> trackerMotionList = trackerMotionList("fixtures/tracker_motion/2015-05-08.csv");
-//        final MotionScore  score = SleepScoreUtils.getSleepMotionScore(new DateTime(2015, 5, 8, 20, 0,0), trackerMotionList, 1431179880000L, 1431180000000L);
-        final MotionScore  score = SleepScoreUtils.getSleepMotionScore(new DateTime(2015, 5, 8, 20, 0,0), trackerMotionList, 0L, 0L);
+        MotionScore  score = SleepScoreUtils.getSleepMotionScore(new DateTime(2015, 5, 8, 20, 0,0), trackerMotionList, 1431179880000L, 1431180000000L);
+        assertThat(score.score  >= 0, is(Boolean.TRUE));
+        score = SleepScoreUtils.getSleepMotionScore(new DateTime(2015, 5, 8, 20, 0,0), trackerMotionList, 0L, 0L);
         assertThat(score.score  >= 0, is(Boolean.TRUE));
     }
 

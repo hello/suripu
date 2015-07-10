@@ -65,6 +65,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -585,6 +586,36 @@ public class DeviceResources {
     }
 
 
+
+
+    @GET
+    @Path("/color/missing")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> missingColors(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken){
+        final List<String> deviceIdsMissingColor = senseColorDAO.missing();
+        return deviceIdsMissingColor;
+    }
+
+
+    @POST
+    @Path("/color/{sense_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Integer updateColorsForMissingSense(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                                    @PathParam("sense_id") final String senseId){
+
+        final Optional<DeviceKeyStoreRecord> deviceKeyStoreRecordOptional = senseKeyStore.getKeyStoreRecord(senseId);
+        if(!deviceKeyStoreRecordOptional.isPresent()) {
+            LOGGER.warn("Couldn't KeyStoreRecord for deviceId {}", senseId);
+            return 0;
+        }
+
+        final Optional<Device.Color> colorOptional = serialNumberToColor(deviceKeyStoreRecordOptional.get().metadata, deviceKeyStoreRecordOptional.get().key);
+        if(colorOptional.isPresent()) {
+            return senseColorDAO.saveColorForSense(senseId, colorOptional.get().name());
+        }
+        return 0;
+    }
+
     @GET
     @Path("/color/{sense_id}")
     public String getColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
@@ -604,7 +635,7 @@ public class DeviceResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Response setColor(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
                            @PathParam("sense_id") final String senseId,
-                           @PathParam("color") final String color){
+                           @PathParam("color") final String color) {
 
         final Device.Color senseColor = Device.Color.valueOf(color);
 
@@ -721,6 +752,42 @@ public class DeviceResources {
         }
     }
 
+    @GET
+    @Timed
+    @Path("/invalid/sense")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Set<String> getInvalidActiveSenses(@Scope(OAuthScope.ADMINISTRATION_READ) final AccessToken accessToken,
+                                                     @QueryParam("start_ts") final Long startTs,
+                                                     @QueryParam("end_ts") final Long endTs) {
+
+        if (startTs == null || endTs == null) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Require start_ts & end_ts").build());
+        }
+
+        final Jedis jedis = jedisPool.getResource();
+        final Set<String> allSeenSenses = new HashSet<>();
+        final Set<String> allValidSeenSenses = new HashSet<>();
+
+        try {
+            final Pipeline pipe = jedis.pipelined();
+            final redis.clients.jedis.Response<Set<String>> allDevs = pipe.zrangeByScore(ActiveDevicesTrackerConfiguration.ALL_DEVICES_SEEN_SET_KEY, startTs, endTs);
+            final redis.clients.jedis.Response<Set<String>> allValid = pipe.zrangeByScore(ActiveDevicesTrackerConfiguration.SENSE_ACTIVE_SET_KEY, startTs, endTs);
+            pipe.sync();
+
+            allSeenSenses.addAll(allDevs.get());
+            allValidSeenSenses.addAll(allValid.get());
+        } catch (Exception e) {
+            LOGGER.error("Failed retrieving invalid active senses.", e.getMessage());
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+
+        //Returns all the devices that did not get paired account info or had no timezone in the sense save worker
+        allSeenSenses.removeAll(allValidSeenSenses);
+        return allSeenSenses;
+    }
+
     // Helpers
     private List<DeviceAdmin> getSensesByAccountId(final Long accountId) {
         final ImmutableList<DeviceAccountPair> senseAccountPairs = deviceDAO.getSensesForAccountId(accountId);
@@ -748,7 +815,7 @@ public class DeviceResources {
             Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
             if (!pillStatusOptional.isPresent()){
                 LOGGER.warn("Failed to get heartbeat for account id {} on pill internal id: {} - external id: {}, looking into tracker motion", accountId, pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId);
-                pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId);
+                pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId, accountId);
             }
             if (!pillStatusOptional.isPresent()){
                 pills.add(DeviceAdmin.create(pillAccountPair));
@@ -789,5 +856,24 @@ public class DeviceResources {
             return Optional.absent();
         }
         return Optional.of(new TimeZoneHistory(dateTimeZoneOptional.get().getOffset(eventDateTime), dateTimeZoneOptional.get().getID()));
+    }
+
+    private Optional<Device.Color> serialNumberToColor(final String serialNumber, final String deviceId) {
+        final String SENSE_US_PREFIX_WHITE = "91000008W";
+        final String SENSE_US_PREFIX_BLACK = "91000008B";
+
+        if(serialNumber.length() < SENSE_US_PREFIX_WHITE.length()) {
+            LOGGER.error("SN {} is too short for device_id = {}", serialNumber, deviceId);
+            return Optional.absent();
+        }
+        final String snPrefix = serialNumber.substring(0, SENSE_US_PREFIX_WHITE.length());
+        if(snPrefix.toUpperCase().equals(SENSE_US_PREFIX_WHITE)) {
+            return Optional.of(Device.Color.WHITE);
+        } else if (snPrefix.toUpperCase().equals(SENSE_US_PREFIX_BLACK)) {
+            return Optional.of(Device.Color.BLACK);
+        }
+
+        LOGGER.error("Can't get color for SN {}, {}", serialNumber, deviceId);
+        return Optional.absent();
     }
 }

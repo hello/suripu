@@ -1,12 +1,15 @@
 package com.hello.suripu.algorithm.bayes;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 6/16/15.
@@ -16,24 +19,24 @@ public class BayesTests {
     @Test
     public void testBetaDist() {
 
-        final List<BetaDistribution> betaDistributions = BetaDistribution.createBinaryComplementaryBetaDistributions(0.8,10);
+        final List<BetaBinomialBayesModel> betaBinomialBayesModels = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.8, 10);
 
-        TestCase.assertEquals(betaDistributions.get(0).getExpectation(), 0.8, 1e-6);
-        TestCase.assertEquals(betaDistributions.get(1).getExpectation(),0.2,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(0).getPrediction(), 0.8, 1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(1).getPrediction(),0.2,1e-6);
 
 
-        betaDistributions.get(0).updateWithInference(1.0);
-        betaDistributions.get(1).updateWithInference(0.0);
+        betaBinomialBayesModels.get(0).updateWithInference(1.0);
+        betaBinomialBayesModels.get(1).updateWithInference(0.0);
 
-        TestCase.assertEquals(betaDistributions.get(0).getExpectation(),9.0 / 11.0,1e-6);
-        TestCase.assertEquals(betaDistributions.get(1).getExpectation(),2.0 / 11.0,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(0).getPrediction(),9.0 / 11.0,1e-6);
+        TestCase.assertEquals(betaBinomialBayesModels.get(1).getPrediction(),2.0 / 11.0,1e-6);
     }
 
     @Test
     public void testBayesRule() {
-        final List<BetaDistribution> betaDistributions = BetaDistribution.createBinaryComplementaryBetaDistributions(0.8,10);
+        final List<BetaBinomialBayesModel> betaBinomialBayesModels = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.8, 10);
 
-        final BetaDiscreteWithEventOutput bayesElement = new BetaDiscreteWithEventOutput(betaDistributions);
+        final BetaDiscreteWithEventOutput bayesElement = new BetaDiscreteWithEventOutput(betaBinomialBayesModels);
 
         final List<Double> p1 = Lists.newArrayList();
         p1.add(0.6);
@@ -58,21 +61,22 @@ public class BayesTests {
 
     @Test
     public void TestSequentialBayes() {
-        final List<BetaDistribution> betaDistributions1 = BetaDistribution.createBinaryComplementaryBetaDistributions(0.8,1);
-        final List<BetaDistribution> betaDistributions2 = BetaDistribution.createBinaryComplementaryBetaDistributions(0.2,1);
-        final List<BetaDistribution> betaDistributions3 = BetaDistribution.createBinaryComplementaryBetaDistributions(0.5,1);
+        final List<BetaBinomialBayesModel> betaDistributions1 = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.8, 1);
+        final List<BetaBinomialBayesModel> betaDistributions2 = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.2, 1);
+        final List<BetaBinomialBayesModel> betaDistributions3 = BetaBinomialBayesModel.createBinaryComplementaryBetaDistributions(0.5, 1);
 
         final BetaDiscreteWithEventOutput bayesElement1 = new BetaDiscreteWithEventOutput(betaDistributions1);
         final BetaDiscreteWithEventOutput bayesElement2 = new BetaDiscreteWithEventOutput(betaDistributions2);
         final BetaDiscreteWithEventOutput bayesElement3 = new BetaDiscreteWithEventOutput(betaDistributions3);
 
-        final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models = Lists.newArrayList();
+        final List<BetaDiscreteWithEventOutput> models = Lists.newArrayList();
 
         models.add(bayesElement1);
         models.add(bayesElement2);
         models.add(bayesElement3);
 
-        final MultipleEventModel multipleEventModel = new MultipleEventModel(models,2);
+        final MultipleEventModel multipleEventModel = new MultipleEventModel(2);
+        multipleEventModel.putModel("foobars", models);
 
 
         multipleEventModel.setPriorForAllStatesBasedOnOneState(0,0.70);
@@ -82,18 +86,34 @@ public class BayesTests {
         final Integer [] e3 = {2,2,2,2,2,2,2,2,2,2,2};
         final Integer [] e4 = {2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2};
 
-        final List<Integer> events1 = Arrays.asList(e1);
-        final List<Integer> events2 = Arrays.asList(e2);
-        final List<Integer> events3 = Arrays.asList(e3);
-        final List<Integer> events4 = Arrays.asList(e4);
+        final ImmutableList<Integer> events1 = ImmutableList.copyOf(Arrays.asList(e1));
+        final ImmutableList<Integer> events2 = ImmutableList.copyOf(Arrays.asList(e2));
+        final ImmutableList<Integer> events3 = ImmutableList.copyOf(Arrays.asList(e3));
+        final ImmutableList<Integer> events4 = ImmutableList.copyOf(Arrays.asList(e4));
 
-        final List<Double> probs1 = getFirstElement(multipleEventModel.getProbsFromEventSequence(ImmutableList.copyOf(events1)));
 
-        final List<Double> probs2 = getFirstElement(multipleEventModel.getProbsFromEventSequence(ImmutableList.copyOf(events2)));
+        final Map<String,ImmutableList<Integer>> eventsByModel1 = Maps.newHashMap();
+        eventsByModel1.put("foobars",events1);
 
-        final List<Double> probs3 = getFirstElement(multipleEventModel.getProbsFromEventSequence(ImmutableList.copyOf(events3)));
+        final Map<String,ImmutableList<Integer>> eventsByModel2 = Maps.newHashMap();
+        eventsByModel2.put("foobars",events2);
 
-        final List<Double> probs4 = getFirstElement(multipleEventModel.getJointOfForwardsAndBackwards(ImmutableList.copyOf(events4)));
+        final Map<String,ImmutableList<Integer>> eventsByModel3 = Maps.newHashMap();
+        eventsByModel3.put("foobars",events3);
+
+        final Map<String,ImmutableList<Integer>> eventsByModel4 = Maps.newHashMap();
+        eventsByModel4.put("foobars",events4);
+
+
+        multipleEventModel.setPriorForAllStatesBasedOnOneState(0,0.95);
+
+        final List<Double> probs1 = getFirstElement(multipleEventModel.getProbsFromEventSequence(eventsByModel1,events1.size(),true));
+
+        final List<Double> probs2 = getFirstElement(multipleEventModel.getProbsFromEventSequence(eventsByModel2,events2.size(),true));
+
+        final List<Double> probs3 = getFirstElement(multipleEventModel.getProbsFromEventSequence(eventsByModel3,events3.size(),true));
+
+        final List<Double> probs4 = getFirstElement(multipleEventModel.getJointOfForwardsAndBackwards(eventsByModel4,events4.size()));
 
         //sanity check only
         TestCase.assertTrue(probs4.get(12) > 0.90);
@@ -102,6 +122,35 @@ public class BayesTests {
         TestCase.assertEquals(probs4.get(39),probs4.get(40),0.01);
         TestCase.assertEquals(probs4.get(54),probs4.get(53),0.01);
 
+
+    }
+
+    @Test
+    public void testHmmSegmenter() {
+        List<Double> probs = Lists.newArrayList();
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.2);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.5);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.9);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            probs.add(0.6);
+        }
+
+        final Optional<ProbabilitySegment> seg = ProbabilitySegmenter.getBestSegment(40, 20, 20, probs);
+
+        TestCase.assertTrue(seg.isPresent());
+
+        TestCase.assertEquals(40,seg.get().i1,2);
+        TestCase.assertEquals(60,seg.get().i2,2);
 
     }
 }
