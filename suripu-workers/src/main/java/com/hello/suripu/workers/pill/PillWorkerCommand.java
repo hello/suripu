@@ -25,7 +25,6 @@ import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
-import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSource;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
@@ -36,7 +35,6 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPool;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -123,8 +121,6 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         final AmazonDynamoDB pillDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_LAST_SEEN);
         final PillViewsDynamoDB pillViewsDynamoDB = new PillViewsDynamoDB(pillDynamoDB, "", tableNames.get(DynamoDBTableName.PILL_LAST_SEEN));
 
-        final JedisPool jedisPool = new JedisPool(configuration.getRedisConfiguration().getHost(), configuration.getRedisConfiguration().getPort());
-        final ActiveDevicesTracker activeDevicesTracker = new ActiveDevicesTracker(jedisPool);
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(
                 trackerMotionDAO,
                 configuration.getBatchSize(),
@@ -132,7 +128,6 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
                 heartBeatDAO,
                 pillKeyStore,
                 deviceDAO,
-                activeDevicesTracker,
                 pillViewsDynamoDB
         );
         final Worker worker = new Worker(factory, kinesisConfig);

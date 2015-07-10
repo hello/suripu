@@ -9,12 +9,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.suripu.admin.cli.CreateDynamoDBTables;
+import com.hello.suripu.admin.cli.ManageKinesisStreams;
 import com.hello.suripu.admin.cli.PopulateColors;
 import com.hello.suripu.admin.cli.ScanFWVersion;
 import com.hello.suripu.admin.cli.ScanSerialNumbers;
 import com.hello.suripu.admin.configuration.SuripuAdminConfiguration;
-import com.hello.suripu.admin.resources.v1.TokenResources;
-import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.admin.resources.v1.AccountResources;
 import com.hello.suripu.admin.resources.v1.AlarmResources;
 import com.hello.suripu.admin.resources.v1.ApplicationResources;
@@ -28,10 +27,9 @@ import com.hello.suripu.admin.resources.v1.InspectionResources;
 import com.hello.suripu.admin.resources.v1.OnBoardingLogResource;
 import com.hello.suripu.admin.resources.v1.PCHResources;
 import com.hello.suripu.admin.resources.v1.TeamsResources;
-import com.hello.suripu.core.bundles.KinesisLoggerBundle;
+import com.hello.suripu.admin.resources.v1.TokenResources;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
-import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
@@ -64,6 +62,7 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -113,12 +112,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         bootstrap.addCommand(new ScanSerialNumbers());
         bootstrap.addCommand(new ScanFWVersion());
         bootstrap.addCommand(new PopulateColors());
-        bootstrap.addBundle(new KinesisLoggerBundle<SuripuAdminConfiguration>() {
-            @Override
-            public KinesisLoggerConfiguration getConfiguration(final SuripuAdminConfiguration configuration) {
-                return configuration.getKinesisLoggerConfiguration();
-            }
-        });
+        bootstrap.addCommand(new ManageKinesisStreams());
     }
 
     @Override
@@ -323,6 +317,6 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         environment.addResource(new AlarmResources(mergedUserInfoDynamoDB, deviceDAO, accountDAO));
         environment.addResource(new DiagnosticResources(diagnosticDAO, accountDAO, deviceDAO, trackingDAO));
-        environment.addResource(new TokenResources(accessTokenStore, applicationStore, accountDAO));
+        environment.addResource(new TokenResources(accessTokenStore, applicationStore, accessTokenDAO, accountDAO));
     }
 }

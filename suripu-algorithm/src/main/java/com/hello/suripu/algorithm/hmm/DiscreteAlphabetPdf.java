@@ -43,4 +43,9 @@ public class DiscreteAlphabetPdf implements HmmPdfInterface {
     @JsonProperty
     final int obsNum;
     final double [] probs;
+
+    @Override
+    public int getNumFreeParams() {
+        return probs.length;
+    }
 }

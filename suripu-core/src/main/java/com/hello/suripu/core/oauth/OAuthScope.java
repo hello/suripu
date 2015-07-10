@@ -38,7 +38,8 @@ public enum OAuthScope {
     TIMEZONE_READ(27),
     PCH_READ(28),
     IMPLICIT_TOKEN(29),
-    ZENDESK_EXTENSION(30);
+    ZENDESK_EXTENSION(30),
+    SUPPORT(31);
 
     private int value;
 

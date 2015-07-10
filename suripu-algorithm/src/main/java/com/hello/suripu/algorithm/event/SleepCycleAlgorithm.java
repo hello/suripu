@@ -25,6 +25,8 @@ import java.util.Random;
  */
 public class SleepCycleAlgorithm {
     private final static Logger LOGGER = LoggerFactory.getLogger(SleepCycleAlgorithm.class);
+    private final static int AWAKE_AMPLITUDE_THRESHOLD_MILLIG = 5000;
+    private final static int AWAKE_KICKOFF_THRESHOLD = 5;
 
     private DataSource<AmplitudeData> dataSource;
     private int slidingWindowSizeInMinutes = 15;
@@ -107,7 +109,7 @@ public class SleepCycleAlgorithm {
     public static DateTime getSmartAlarmTimeUTC(final List<Segment> sleepCycles,
                                          long dataCollectionMoment, long minAlarmTimeUTC, long alarmDeadlineUTC){
 
-        if(minAlarmTimeUTC >= alarmDeadlineUTC){
+        if(minAlarmTimeUTC >= alarmDeadlineUTC || sleepCycles.size() == 0){
             return new DateTime(alarmDeadlineUTC);
         }
         
@@ -116,7 +118,7 @@ public class SleepCycleAlgorithm {
 
         DateTime smartAlarmTime = new DateTime(alarmDeadlineUTC, DateTimeZone.UTC);
 
-        final int possibleSpanInMinutes = (int)(deepSleepMoment - dataCollectionMoment) / DateTimeConstants.MILLIS_PER_MINUTE;
+        final int possibleSpanInMinutes = possibleSpanInMinutes(deepSleepMoment, dataCollectionMoment);
         final Random random = new Random();
 
         if(possibleSpanInMinutes > 0) {
@@ -137,14 +139,32 @@ public class SleepCycleAlgorithm {
                 smartAlarmTime = new DateTime(nextLightSleepMoment, DateTimeZone.UTC);
             }else {
                 // Give fallback random more space, so it doesn't always ring near the end
-                final int fakeSmartSpanMin = (int)(alarmDeadlineUTC - minAlarmTimeUTC) / 2 / DateTimeConstants.MILLIS_PER_MINUTE;
-                smartAlarmTime = smartAlarmTime.minusMinutes(fakeSmartSpanMin).plusMinutes(random.nextInt(fakeSmartSpanMin) + 1);
+                smartAlarmTime = fakeSmartAlarm(minAlarmTimeUTC, alarmDeadlineUTC);
             }
         }
 
         LOGGER.debug("Smart alarm time: " + smartAlarmTime);
 
         return smartAlarmTime;
+    }
+
+    protected static int possibleSpanInMinutes(final long deepSleepMomentMillis, final long dataCollectionMomentMillis){
+        LOGGER.debug("deep sleep {}, data collection {}", deepSleepMomentMillis, dataCollectionMomentMillis);
+        final int possibleSpanInMinutes = (int)(deepSleepMomentMillis - dataCollectionMomentMillis) / DateTimeConstants.MILLIS_PER_MINUTE;
+        return possibleSpanInMinutes;
+    }
+
+    protected static DateTime fakeSmartAlarm(final long minAlarmTimeMillis, final long alarmSetTimeMillis){
+        final int fakeSmartSpanMin = (int)(alarmSetTimeMillis - minAlarmTimeMillis) / 2 / DateTimeConstants.MILLIS_PER_MINUTE;
+        if(fakeSmartSpanMin <= 0){
+            return new DateTime(alarmSetTimeMillis, DateTimeZone.UTC);
+        }
+        final Random random = new Random();
+        LOGGER.debug("Fake span {}", fakeSmartSpanMin);
+        final DateTime fakeSmartAlarmTime = new DateTime(alarmSetTimeMillis, DateTimeZone.UTC)
+                .minusMinutes(fakeSmartSpanMin)
+                .plusMinutes(random.nextInt(fakeSmartSpanMin));
+        return fakeSmartAlarmTime;
     }
 
 
@@ -228,5 +248,37 @@ public class SleepCycleAlgorithm {
         }
 
         return segments;
+    }
+
+    /*
+    * Check if the user is awake in the data's duration by following criteria:
+    * If the amplitude is larger than certain threshold for >= 2 minutes, or
+    * In a certain minute, the user moves more than [certain threshold] times.
+     */
+    public static boolean isUserAwakeInGivenDataSpan(final List<AmplitudeData> maxAmplitude,
+                                                     final List<AmplitudeData> kickOffCounts){
+        if(maxAmplitude.size() != kickOffCounts.size()) {
+            return false;
+        }
+
+        for(final AmplitudeData kickOff:kickOffCounts){
+            if(kickOff.amplitude > AWAKE_KICKOFF_THRESHOLD){
+                return true;
+            }
+        }
+
+        int count = 0;
+        for(final AmplitudeData amplitude:maxAmplitude){
+            if(amplitude.amplitude > AWAKE_AMPLITUDE_THRESHOLD_MILLIG){
+                count++;
+            }
+
+            if(count == 2){
+                return true;
+            }
+        }
+
+        return false;
+
     }
 }

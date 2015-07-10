@@ -52,4 +52,9 @@ public class GammaPdf implements HmmPdfInterface {
 
         return result;
     }
+
+    @Override
+    public int getNumFreeParams() {
+        return 2;
+    }
 }

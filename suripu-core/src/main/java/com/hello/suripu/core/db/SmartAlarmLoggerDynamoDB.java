@@ -48,6 +48,7 @@ public class SmartAlarmLoggerDynamoDB {
 
     public static final String EXPECTED_RING_TIME_ATTRIBUTE_NAME = "expected_ring_time";
     public static final String SMART_RING_TIME_ATTRIBUTE_NAME = "smart_ring_time";
+    public static final String PROGRESSIVE_SMART_RING_TIME_ATTRIBUTE_NAME = "progressive_smart_ring_time";
     public static final String LAST_SLEEP_CYCLE_ATTRIBUTE_NAME = "last_sleep_cycle_time";
     public static final String CURRENT_TIME_ATTRIBUTE_NAME = "current_time";
     public static final String TIMEZONE_ID_ATTRIBUTE_NAME = "timezone_id";
@@ -66,6 +67,7 @@ public class SmartAlarmLoggerDynamoDB {
     public void log(final Long accountId, final DateTime lastSleepCycleEnd, final DateTime now,
                     final DateTime nextRingTimeWithLocalTimeZone,
                     final DateTime nextRegularRingTimeWithLocalTimeZone,
+                    final Optional<DateTime> progressiveRingTimeOptional,
                     final DateTimeZone userTimeZone){
         final Map<String, AttributeValue> items = new HashMap<>();
         items.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
@@ -73,8 +75,11 @@ public class SmartAlarmLoggerDynamoDB {
         items.put(EXPECTED_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(nextRegularRingTimeWithLocalTimeZone.toString(DATETIME_FORMAT)));
         items.put(SMART_RING_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(nextRingTimeWithLocalTimeZone.toString(DATETIME_FORMAT)));
         items.put(LAST_SLEEP_CYCLE_ATTRIBUTE_NAME, new AttributeValue().withS(lastSleepCycleEnd.toString(DATETIME_FORMAT)));
+        if(progressiveRingTimeOptional.isPresent()){
+            items.put(PROGRESSIVE_SMART_RING_TIME_ATTRIBUTE_NAME,
+                    new AttributeValue().withS(progressiveRingTimeOptional.get().toString(DATETIME_FORMAT)));
+        }
         items.put(TIMEZONE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(userTimeZone.getID()));
-
         final PutItemRequest putItemRequest = new PutItemRequest(this.tableName, items);
         try {
             final PutItemResult result = this.dynamoDBClient.putItem(putItemRequest);

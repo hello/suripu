@@ -30,4 +30,11 @@ public class SearchifyConfiguration extends Configuration {
     public String backupIndexName() {
         return backupIndexName;
     }
+
+    @JsonProperty("bulk_size")
+    private Integer bulkSize = 50;
+
+    public Integer bulkSize() {
+        return bulkSize;
+    }
 }

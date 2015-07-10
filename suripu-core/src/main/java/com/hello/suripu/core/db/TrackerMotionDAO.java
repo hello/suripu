@@ -64,8 +64,12 @@ public abstract class TrackerMotionDAO {
 
     @RegisterMapper(DeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
-    @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime from tracker_motion_master WHERE tracker_id = :pill_id AND local_utc_ts > now() - interval '15 days' ORDER BY id DESC LIMIT 1;")
-    public abstract Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId);
+    @SqlQuery("SELECT id, tracker_id AS pill_id, '1' AS firmware_version, 100 AS battery_level, ts AS last_seen, 0 AS uptime " +
+            "FROM tracker_motion_master WHERE local_utc_ts > now() - interval '15 days' AND " +
+            "tracker_id = :pill_id AND " +
+            "account_id = :account_id ORDER BY local_utc_ts DESC LIMIT 1;")
+    public abstract Optional<DeviceStatus> pillStatus(@Bind("pill_id") final Long pillId,
+                                                      @Bind("account_id") final Long accountId);
 
 
     @RegisterMapper(GroupedTrackerMotionMapper.class)

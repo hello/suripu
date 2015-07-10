@@ -108,4 +108,13 @@ public class BaseResource {
     protected Boolean isTrendsViewUnavailable(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.VIEW_TRENDS_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean isTimelineV2Enabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_V2_AVAILABLE, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasDelayCurrentRoomStateThreshold(final Long accountId) {
+        return  featureFlipper.userFeatureActive(FeatureFlipper.DELAY_CURRENT_ROOM_STATE_THRESHOLD,accountId,Collections.EMPTY_LIST);
+    }
+
 }

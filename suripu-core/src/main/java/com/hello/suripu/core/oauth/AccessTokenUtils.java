@@ -1,6 +1,9 @@
 package com.hello.suripu.core.oauth;
 
 import com.google.common.base.Optional;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,5 +59,9 @@ public class AccessTokenUtils {
         }
 
         return Optional.absent();
+    }
+
+    public static Integer expiresInDays(final AccessToken accessToken) {
+        return Days.daysBetween(DateTime.now(DateTimeZone.UTC), accessToken.createdAt.plusSeconds((int)(long) accessToken.expiresIn)).getDays();
     }
 }

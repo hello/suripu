@@ -35,6 +35,6 @@ public class LogIndexerProcessorFactory implements IRecordProcessorFactory {
 
         final JedisPool jedisPool = new JedisPool(config.redisConfiguration().getHost(), config.redisConfiguration().getPort());
 
-        return LogIndexerProcessor.create(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, senseEventsDAO, this.onBoardingLogDAO, jedisPool);
+        return LogIndexerProcessor.create(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, senseEventsDAO, this.onBoardingLogDAO, jedisPool, config.senseLogs().bulkSize());
     }
 }

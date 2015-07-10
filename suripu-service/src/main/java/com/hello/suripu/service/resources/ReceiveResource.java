@@ -197,7 +197,8 @@ public class ReceiveResource extends BaseResource {
             final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
             batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
         } catch (Exception e) {
-            LOGGER.error("Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+            LOGGER.error("IMPORTANT Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
+            return plainTextError(Response.Status.SERVICE_UNAVAILABLE, "");
         }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
@@ -278,9 +279,15 @@ public class ReceiveResource extends BaseResource {
                         DateTime.now(),
                         2);
 
-                responseBuilder.setRoomConditions(
-                        OutputProtos.SyncResponse.RoomConditions.valueOf(
-                                RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
+                    responseBuilder.setRoomConditions(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal()));
+                }else {
+                    responseBuilder.setRoomConditions(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
+                }
 
             }
         }
@@ -346,9 +353,9 @@ public class ReceiveResource extends BaseResource {
                 responseBuilder.setBatchSize(1);
             } else {
 
-                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration);
+                final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
+                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
                 responseBuilder.setBatchSize(uploadCycle);
-
             }
 
             if(shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())){
@@ -390,11 +397,11 @@ public class ReceiveResource extends BaseResource {
     }
 
 
-    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration){
+    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration, final Boolean isReducedInterval){
         int uploadInterval = 1;
         final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
         // Alter upload cycles based on date-time
-        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration);
+        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration, isReducedInterval);
 
         // Boost upload cycle based on expected alarm deadline.
         final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
@@ -422,6 +429,7 @@ public class ReceiveResource extends BaseResource {
     public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle){
         final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
         if(isNextUploadCrossRingBound(nextRingTime, now)){
+            //If an alarm will ring in the next 2 minutes, push the batch upload out 2 mins after the alarm ring time.
             final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 2;
             return uploadCycleThatPassRingTime;
         }

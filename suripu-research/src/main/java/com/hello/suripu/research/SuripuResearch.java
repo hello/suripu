@@ -91,7 +91,6 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
         final DBI researchDB = factory.build(environment, configuration.getResearchDB(), "postgresql");
 
-
         sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
         sensorsDB.registerContainerFactory(new OptionalContainerFactory());
         sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
@@ -120,7 +119,6 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
         // TODO: create research DB DAOs here
-
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -185,6 +183,7 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
 
         environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,feedbackDAO,timelineProcessor,senseColorDAO));
         environment.addResource(new AccountInfoResource(accountDAO, deviceDAO));
+
 
     }
 }

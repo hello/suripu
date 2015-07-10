@@ -61,13 +61,15 @@ public class SleepHmmDAODynamoDB implements SleepHmmDAO {
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
-    public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
-    public static final String CREATED_DATE_ATTRIBUTE_NAME = "create_date";
-    public static final String DATA_BLOB_ATTRIBUTE_NAME = "model";
+    private static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
+    private static final String CREATED_DATE_ATTRIBUTE_NAME = "create_date";
+    private static final String DATA_BLOB_ATTRIBUTE_NAME = "model";
 
-    public static final long DEFAULT_ACCOUNT_ID = -1;
+    private static final long DEFAULT_ACCOUNT_ID = -1;
 
-    public final String JSON_CHARSET = "UTF-8";
+    private static final long DEFAULT_ACCOUNT_HASH_RANGE = 5;
+
+    private final String JSON_CHARSET = "UTF-8";
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -78,6 +80,12 @@ public class SleepHmmDAODynamoDB implements SleepHmmDAO {
         mapper.registerModule(new GuavaModule());
         mapper.registerModule(new GuavaExtrasModule());
         mapper.registerModule(new JodaModule());
+    }
+
+    //return range between -1 and -DEFAULT_ACCOUNT_HASH_RANGE
+    //most users will be on default account, so this is how we spread out the load on the queries
+    private static long getDefaultAccountId(final long accountId) {
+        return DEFAULT_ACCOUNT_ID - (accountId % DEFAULT_ACCOUNT_HASH_RANGE);
     }
 
     @Override
@@ -93,10 +101,15 @@ public class SleepHmmDAODynamoDB implements SleepHmmDAO {
         }
         else {
             //if that failed, then try with default account ID
-            queryResult = this.getLatestModelForDateInternal(DEFAULT_ACCOUNT_ID,timeOfInterestMillis);
+            final long defaultAccountId = getDefaultAccountId(accountId);
 
-            if (queryResult.containsKey(DEFAULT_ACCOUNT_ID)) {
-                sleepHmmBlob = queryResult.get(DEFAULT_ACCOUNT_ID);
+            LOGGER.info("attempting to get hmm for default account {} from account {}",defaultAccountId,accountId);
+
+            queryResult = this.getLatestModelForDateInternal(defaultAccountId,timeOfInterestMillis);
+
+            if (queryResult.containsKey(defaultAccountId)) {
+                sleepHmmBlob = queryResult.get(defaultAccountId);
+                LOGGER.info("got hmm for default account {} from account {}",defaultAccountId,accountId);
             }
         }
 

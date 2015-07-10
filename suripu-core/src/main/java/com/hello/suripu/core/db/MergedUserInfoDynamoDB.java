@@ -249,7 +249,7 @@ public class MergedUserInfoDynamoDB {
         }
 
         if(availableColor.isEmpty()){
-            LOGGER.error("Too much pills registered, failed to assign color for pill {}, sense {}", pillId, senseId);
+            LOGGER.error("Too many pills registered, failed to assign color for pill {}, sense {}", pillId, senseId);
             return Optional.absent();
         }
 
@@ -259,7 +259,7 @@ public class MergedUserInfoDynamoDB {
             this.setPillColor(senseId, accountId, pillId, pillColor);
             return Optional.of(pillColor);
         }catch (AmazonServiceException ase){
-            LOGGER.error("Set pill {} color for sense {} faile: {}", pillId, senseId, ase.getErrorMessage());
+            LOGGER.error("Set pill {} color for sense {} failed: {}", pillId, senseId, ase.getErrorMessage());
         }
 
         return Optional.absent();

@@ -128,7 +128,3 @@ kinesis_logger:
   buffer_size: 100
   origin: suripu-workers
   min_log_level : INFO
-
-redis:
-  host: localhost
-  port: 6379

@@ -248,3 +248,13 @@ sense_last_seen:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: sense_last_seen
+
+hmm_bayesnet_priors:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: hmm_bayesnet_priors
+
+hmm_bayesnet_models:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: hmm_bayesnet_models

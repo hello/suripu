@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.4.40-SNAPSHOT</version>
+        <version>0.4.62-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -13,12 +13,12 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-api</artifactId>
-            <version>0.4.40-SNAPSHOT</version>
+            <version>0.4.62-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-core</artifactId>
-            <version>0.4.40-SNAPSHOT</version>
+            <version>0.4.62-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -60,7 +60,7 @@
         <dependency>
             <groupId>com.indextank</groupId>
             <artifactId>indextank-java</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.9</version>
         </dependency>
     </dependencies>
     <build>
