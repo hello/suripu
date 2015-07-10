@@ -161,10 +161,10 @@ public class RingProcessor {
 
     protected static boolean isRingTimeFromNextSmartAlarm(final DateTime currentTimeAlignedToStartOfMinute,
                                                           final RingTime nextRingTimeFromWorker){
-        final boolean alarmNotYetRing = currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+        final boolean isNextSmartAlarm = currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
         final boolean isProcessedSmartAlarm = nextRingTimeFromWorker.processed();
 
-        return alarmNotYetRing && isProcessedSmartAlarm;
+        return isNextSmartAlarm && isProcessedSmartAlarm;
     }
 
     protected static boolean isCurrentTimeBetweenActualRingTimeAndExpectedRingTime(final DateTime currentTimeAlignedToStartOfMinute,
