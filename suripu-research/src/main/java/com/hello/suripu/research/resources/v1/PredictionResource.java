@@ -8,6 +8,8 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.sleep.Vote;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
+import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
@@ -16,6 +18,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -35,6 +38,8 @@ import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.HmmBayesNetData;
+import com.hello.suripu.core.util.HmmBayesNetPredictor;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
@@ -65,6 +70,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by benjo on 3/6/15.
@@ -76,6 +82,7 @@ public class PredictionResource extends BaseResource {
     private static final String ALGORITHM_SLEEP_SCORED = "sleep_score";
     private static final String ALGORITHM_VOTING = "voting";
     private static final String ALGORITHM_HIDDEN_MARKOV = "hmm";
+    private static final String ALGORITHM_BAYESNETHMM = "bayes";
 
     private static final Integer MISSING_DATA_DEFAULT_VALUE = 0;
     private static final Integer SLOT_DURATION_MINUTES = 1;
@@ -91,7 +98,8 @@ public class PredictionResource extends BaseResource {
     private final TimelineProcessor timelineProcessor;
     private final TimelineUtils timelineUtils;
     private final SenseColorDAO senseColorDAO;
-
+    private final BayesNetModelDAO modelDAO;
+    private final BayesNetHmmModelPriorsDAO priorsDAO;
 
     public PredictionResource(final AccountDAO accountDAO,
                               final TrackerMotionDAO trackerMotionDAO,
@@ -101,7 +109,9 @@ public class PredictionResource extends BaseResource {
                               final SleepHmmDAO sleepHmmDAO,
                               final FeedbackDAO feedbackDAO,
                               final TimelineProcessor timelineProcessor,
-                              final SenseColorDAO senseColorDAO) {
+                              final SenseColorDAO senseColorDAO,
+                              final BayesNetModelDAO modelDAO,
+                              final BayesNetHmmModelPriorsDAO priorsDAO) {
 
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
@@ -113,6 +123,8 @@ public class PredictionResource extends BaseResource {
         this.timelineUtils = new TimelineUtils();
         this.feedbackDAO = feedbackDAO;
         this.senseColorDAO = senseColorDAO;
+        this.modelDAO = modelDAO;
+        this.priorsDAO = priorsDAO;
     }
 
 
@@ -126,6 +138,39 @@ public class PredictionResource extends BaseResource {
         return Collections.EMPTY_LIST;
     }
 
+    private ImmutableList<Event> getBayesEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
+                                              final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> myMotion, final List<TrackerMotion> partnerMotion) {
+
+        //get model from DB
+        final HmmBayesNetData bayesNetData = modelDAO.getLatestModelForDate(accountId, targetDate, Optional.<UUID>absent());
+
+        if (bayesNetData.isValid()) {
+
+            //get priors from DB
+            final Optional<BayesNetHmmMultipleModelsPriors> modelsPriorsOptional = priorsDAO.getModelPriorsByAccountIdAndDate(accountId, targetDate);
+
+            if (modelsPriorsOptional.isPresent()) {
+                //update priors
+                bayesNetData.updateModelPriors(modelsPriorsOptional.get().modelPriorList);
+            }
+
+            //save first priors for day
+            if (!modelsPriorsOptional.isPresent() || modelsPriorsOptional.get().source.equals(priorsDAO.CURRENT_RANGE_KEY)) {
+                priorsDAO.updateModelPriorsByAccountIdForDate(accountId,targetDate,bayesNetData.getModelPriors());
+            }
+
+            //get the predictor, which will turn the model output into events via some kind of segmenter
+            final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(bayesNetData.getDeserializedData(), Optional.<UUID>absent());
+
+            //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
+            final List<Event> events = predictor.getBayesNetHmmEvents(targetDate, endDate, currentTimeMillis, accountId, allSensorSampleList, myMotion,partnerMotion,myMotion.get(0).offsetMillis);
+
+            return ImmutableList.copyOf(events);
+        }
+
+        return ImmutableList.copyOf(Collections.EMPTY_LIST);
+
+    }
 
     /*  Get sleep/wake events from the hidden markov model  */
     private ImmutableList<Event> getHmmEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
@@ -431,6 +476,10 @@ public class PredictionResource extends BaseResource {
                 events = getHmmEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,motions,hmmDAO);
                 break;
 
+            case ALGORITHM_BAYESNETHMM:
+                events = getBayesEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,motions,partnerMotions);
+                break;
+            
             default:
                 throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                         .entity(new JsonError(204, "bad alg specified")).build());
