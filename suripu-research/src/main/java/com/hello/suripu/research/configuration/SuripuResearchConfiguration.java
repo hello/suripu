@@ -116,5 +116,19 @@ public class SuripuResearchConfiguration extends Configuration {
         return this.timelineLogDBConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_priors")
+    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
+        return this.hmmBayesnetPriorsConfiguration;
+    }
 
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_models")
+    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
+        return this.hmmBayesnetModelsConfiguration;
+    }
 }
