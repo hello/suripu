@@ -3,6 +3,7 @@ package com.hello.suripu.research.resources.v1;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -29,9 +30,11 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.HmmBayesNetMeasurementParameters;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.NamedSleepHmmModel;
 import com.hello.suripu.core.util.PartnerDataUtils;
+import com.hello.suripu.core.util.SleepHmmBayesNetSensorDataBinning;
 import com.hello.suripu.core.util.SleepHmmSensorDataBinning;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
@@ -78,6 +81,9 @@ public class DataScienceResource extends BaseResource {
     private final TimelineLogDAO timelineLogDAO;
     private final LabelDAO labelDAO;
     private final SenseColorDAO senseColorDAO;
+
+    public static final String BINNING_SOURCE_SLEEPHMM = "hmm";
+    public static final String BINNING_SOURCE_BAYES = "bayes";
 
     public DataScienceResource(final AccountDAO accountDAO,
                                final TrackerMotionDAO trackerMotionDAO,
@@ -549,6 +555,21 @@ public class DataScienceResource extends BaseResource {
     }
 
 
+    private static List<List<Double>> getMatrix(double [][] x) {
+        List<List<Double>> matrix = Lists.newArrayList();
+        for (int j = 0; j < x.length; j++) {
+            final double [] row = x[j];
+            final List<Double> rowList = Lists.newArrayList();
+            for (int i = 0; i < x[0].length; i++) {
+                rowList.add(row[i]);
+            }
+
+            matrix.add(rowList);
+        }
+
+        return matrix;
+    }
+
     @GET
     @Path("/binneddata")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -562,7 +583,8 @@ public class DataScienceResource extends BaseResource {
                                                                   @QueryParam("sound_threshold_db") Double soundThreshold,
                                                                   @QueryParam("nat_light_start_hour") Double naturalLightStartHour,
                                                                   @QueryParam("nat_light_stop_hour") Double naturalLightStopHour,
-                                                                  @QueryParam("meas_period") Integer numMinutesInMeasPeriod
+                                                                  @QueryParam("meas_period") Integer numMinutesInMeasPeriod,
+                                                                  @DefaultValue(BINNING_SOURCE_BAYES) @QueryParam("source") String binningSource
     ) {
 
 
@@ -578,8 +600,11 @@ public class DataScienceResource extends BaseResource {
         int numMinutesInMeasPeriod,
         boolean isUsingIntervalSearch) */
 
-        NamedSleepHmmModel model = new NamedSleepHmmModel(null,"dummy", ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableList.copyOf(Collections.EMPTY_LIST),
+        final NamedSleepHmmModel model = new NamedSleepHmmModel(null,"dummy", ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableList.copyOf(Collections.EMPTY_LIST),
                 soundThreshold,pillThreshold,naturalLightStartHour,naturalLightStopHour,numMinutesInMeasPeriod,false,1.0,0.0);
+
+        final HmmBayesNetMeasurementParameters bayesNetMeasurementParameters = new HmmBayesNetMeasurementParameters(false,0.0,1.0,pillThreshold,naturalLightStartHour,naturalLightStopHour,true,numMinutesInMeasPeriod);
+
 
         if ( (email == null && accountId == null) || fromTimestamp == null) {
             throw new WebApplicationException(Response.status(400).entity(new JsonError(400,
@@ -592,7 +617,7 @@ public class DataScienceResource extends BaseResource {
         }
 
         // GET ACCOUNT ID VIA EMAIL OR DIRECTLY
-        Optional<Account> optionalAccount;
+        final Optional<Account> optionalAccount;
         if (email != null) {
             optionalAccount = accountDAO.getByEmail(email);
         } else {
@@ -637,6 +662,19 @@ public class DataScienceResource extends BaseResource {
                     .entity(new JsonError(500,"No data on this day")).build());
         }
 
+        final Optional<Long> optionalPartnerAccountId = this.deviceDAO.getPartnerAccountId(accountId);
+
+        List<TrackerMotion> filteredPartnerData = Lists.newArrayList();
+
+        if (optionalPartnerAccountId.isPresent()) {
+            final Long partnerAccountId = optionalPartnerAccountId.get();
+            LOGGER.debug("partner account {}", partnerAccountId);
+            ImmutableList<TrackerMotion> partnerMotions = this.trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, startTs, endTs);
+
+            filteredPartnerData = TrackerMotionUtils.removeDuplicatesAndInvalidValues(partnerMotions.asList());
+
+        }
+
         final List<TrackerMotion> filteredTrackerData = TrackerMotionUtils.removeDuplicatesAndInvalidValues(motionData.asList());
 
         final int timezoneOffset = filteredTrackerData.get(0).offsetMillis;
@@ -658,42 +696,71 @@ public class DataScienceResource extends BaseResource {
 
         final long startTimeUTC = startTs.getMillis() - timezoneOffset;
         final long stopTimeUTC = endTs.getMillis() - timezoneOffset;
-        Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = Optional.absent();
-        try {
-            optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTimeUTC, stopTimeUTC, timezoneOffset);
 
-        }
-        catch (Exception e) {
-            LOGGER.debug(e.toString());
 
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new JsonError(500, "something failed when getting the binned sensor data.  go check the logs")).build());
-        }
+        switch (binningSource) {
 
-        if (!optionalBinnedData.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new JsonError(500,"failed to get binned data")).build());
-        }
+            case BINNING_SOURCE_SLEEPHMM:
+            {
+                Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = Optional.absent();
+                try {
+                    optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTimeUTC, stopTimeUTC, timezoneOffset);
+                } catch (Exception e) {
+                    LOGGER.debug(e.toString());
 
-        final SleepHmmSensorDataBinning.BinnedData result = optionalBinnedData.get();
-        List<List<Double>> matrix = new ArrayList<>();
-        for (int j = 0; j < result.data.length; j++) {
-            final double [] row = result.data[j];
-            final List<Double> rowList = new ArrayList<>();
-            for (int i = 0; i < result.data[0].length; i++) {
-                rowList.add(row[i]);
+                    throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                            .entity(new JsonError(204, "something failed when getting the binned sensor data.  go check the logs")).build());
+                }
+
+                if (!optionalBinnedData.isPresent()) {
+                    throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                            .entity(new JsonError(204, "failed to get binned data")).build());
+                }
+
+
+                final SleepHmmSensorDataBinning.BinnedData result = optionalBinnedData.get();
+
+                final List<List<Double>> matrix = getMatrix(result.data);
+
+                List<Long> times = Lists.newArrayList();
+                for (int i = 0; i < result.data[0].length; i++) {
+                    times.add(startTimeUTC + i * numMinutesInMeasPeriod * 60000L);
+                }
+                return new BinnedSensorData(accountId,matrix,times,timezoneOffset);
+
             }
 
-            matrix.add(rowList);
+
+            case BINNING_SOURCE_BAYES:
+            default:
+            {
+                final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, filteredPartnerData, bayesNetMeasurementParameters, startTimeUTC, stopTimeUTC, timezoneOffset);
+
+                if (!binnedDataOptional.isPresent()) {
+                    throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                            .entity(new JsonError(204, "failed to get binned data")).build());
+                }
+
+                final SleepHmmBayesNetSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
+
+                final List<List<Double>> matrix = getMatrix(binnedData.data);
+
+                List<Long> times = Lists.newArrayList();
+                for (int i = 0; i < binnedData.data[0].length; i++) {
+                    times.add(startTimeUTC + i * numMinutesInMeasPeriod * 60000L);
+                }
+
+                return new BinnedSensorData(accountId, matrix, times, timezoneOffset);
+            }
+
         }
 
-        List<Long> times = new ArrayList<>();
-        for (int i = 0; i < result.data[0].length; i++) {
-            times.add(startTimeUTC + i*numMinutesInMeasPeriod*60000L);
-        }
 
-        return new BinnedSensorData(accountId,matrix,times,timezoneOffset);
 
+        /*
+        throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(new JsonError(500, "failed to get binned data")).build());
+        */
 
 
 
