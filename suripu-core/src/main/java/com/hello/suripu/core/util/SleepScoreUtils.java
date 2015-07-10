@@ -24,6 +24,11 @@ public class SleepScoreUtils {
     private static float MOTION_SCORE_RANGE = 80.0f; // max score is 90
     private static float MIN_ASLEEP_MINUTES_REQUIRED = 60.0f; // need to be asleep for at least 60 minutes
 
+    public static final int PENALTY_PER_SOUND_EVENT = 20;
+    public static final int SENSOR_IDEAL_SCORE = 100;
+    public static final int SENSOR_WARNING_SCORE = 75;
+    public static final int SENSOR_ALERT_SCORE = 50;
+
     public static Float DURATION_SCORE_SCALE = (float) (DURATION_MAX_SCORE - DURATION_MIN_SCORE);
     public static Integer TOO_LITTLE_SLEEP_ALLOWANCE = 1;
     public static Integer TOO_MUCH_SLEEP_ALLOWANCE = 4; // allow too much sleep recommendation to exceed by 4 hours
@@ -140,55 +145,57 @@ public class SleepScoreUtils {
         return motionScore;
     }
 
-    public static float getSoundScore(final int numberSoundEvents) {
-        return Math.max(0f, 1f - (numberSoundEvents * 0.2f));
+    public static int calculateSoundScore(final int numberSoundEvents) {
+        return Math.max(0, 100 - (numberSoundEvents * PENALTY_PER_SOUND_EVENT));
     }
 
-    public static float calculateSensorAverageInTimeRange(final List<Sample> samples, final Long startTime, final Long endTime) {
+    public static float calculateSensorAverageInTimeRange(final List<Sample> samples, final long startTime, final long endTime) {
         float sum = 0;
+        int total = 0;
         for (Sample sample : samples) {
-            final Integer offsetMillis = sample.offsetMillis;
-            if (offsetMillis >= startTime && offsetMillis <= endTime) {
+            final long dateTime = sample.dateTime;
+            if (dateTime >= startTime && dateTime <= endTime) {
                 sum += sample.value;
+                total++;
             }
         }
-        return sum / samples.size();
+        return sum / total;
     }
 
-    public static float getTemperatureScore(final List<Sample> samples, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
-        float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
+    public static int calculateTemperatureScore(final List<Sample> samples, final long fallAsleepTimestamp, final long wakeUpTimestamp) {
+        final float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
         if (average > TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
-            return 0.5f;
+            return SENSOR_ALERT_SCORE;
         } else if (average > TemperatureHumidity.IDEAL_TEMP_MAX_CELSIUS) {
-            return 0.75f;
+            return SENSOR_WARNING_SCORE;
         } else if (average < TemperatureHumidity.ALERT_TEMP_MIN_CELSIUS) {
-            return 0.5f;
+            return SENSOR_ALERT_SCORE;
         } else if (average < TemperatureHumidity.IDEAL_TEMP_MIN_CELSIUS) {
-            return 0.75f;
+            return SENSOR_WARNING_SCORE;
         } else {
-            return 1f;
+            return SENSOR_IDEAL_SCORE;
         }
     }
 
-    public static float getHumidityScore(final List<Sample> samples, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
-        float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
+    public static int calculateHumidityScore(final List<Sample> samples, final long fallAsleepTimestamp, final long wakeUpTimestamp) {
+        final float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
         if (average < TemperatureHumidity.ALERT_HUMIDITY_LOW) {
-            return 0.5f;
+            return SENSOR_ALERT_SCORE;
         } else if (average < TemperatureHumidity.IDEAL_HUMIDITY_MIN) {
-            return 0.75f;
+            return SENSOR_WARNING_SCORE;
         } else if (average > TemperatureHumidity.ALERT_HUMIDITY_HIGH) {
-            return 0.5f;
+            return SENSOR_ALERT_SCORE;
         } else if (average > TemperatureHumidity.IDEAL_HUMIDITY_MAX) {
-            return 0.75f;
+            return SENSOR_WARNING_SCORE;
         } else {
-            return 1f;
+            return SENSOR_IDEAL_SCORE;
         }
     }
 
-    public static int getEnvironmentScore(float soundScore, float temperatureScore, float humidityScore) {
-        return (Math.round(25f * temperatureScore) +
-                Math.round(25f * humidityScore) +
-                Math.round(50f * soundScore));
+    public static int calculateAggregateEnvironmentScore(int soundScore, int temperatureScore, int humidityScore) {
+        return (Math.round(0.25f * temperatureScore) +
+                Math.round(0.25f * humidityScore) +
+                Math.round(0.50f * soundScore));
     }
 
 
