@@ -9,15 +9,14 @@ import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.models.Event;
-import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.util.HmmBayesNetDeserialization;
+import com.hello.suripu.core.util.HmmBayesNetData;
 import com.hello.suripu.core.util.HmmBayesNetMeasurementParameters;
 import com.hello.suripu.core.util.HmmBayesNetPredictor;
-import com.hello.suripu.core.util.SleepEventProducer;
 import junit.framework.TestCase;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 
+import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -89,60 +88,54 @@ public class BayesNetTest {
     public void testEverything() {
         final byte [] decodedBytes = Base64.decodeBase64(this.protobuf1);
 
-        try {
-            final SleepHmmBayesNetProtos.HmmBayesNet bayesNet = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(decodedBytes);
 
-            final HmmBayesNetDeserialization deserialization = new HmmBayesNetDeserialization(bayesNet,Optional.<UUID>absent());
-            final HmmBayesNetDeserialization.DeserializedSleepHmmBayesNetWithParams deserializedSleepHmmBayesNetWithParams = deserialization.Deserialize();
-            final SensorDataReductionAndInterpretation stuff = deserializedSleepHmmBayesNetWithParams.sensorDataReductionAndInterpretation;
+        HmmBayesNetData deserialization = new  HmmBayesNetData(Optional.<UUID>absent());
+        deserialization.deserialize(decodedBytes);
 
-            final Integer [] endStates = new Integer[1];
-            endStates[0] = 0;
-            final HmmDecodedResult motionResult = stuff.hmmByModelName.get("motion").decode(sensordata,endStates);
-            final HmmDecodedResult lightResult = stuff.hmmByModelName.get("light2").decode(sensordata,endStates);
-            final HmmDecodedResult disturbanceResult = stuff.hmmByModelName.get("disturbances").decode(sensordata,endStates);
-            final HmmDecodedResult soundResult = stuff.hmmByModelName.get("sound2").decode(sensordata,endStates);
-
-            //check motion
-            checkPath(referencePaths[0],motionResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
-
-            //check light
-            checkPath(referencePaths[1],lightResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
-
-            //check disturbance
-            checkPath(referencePaths[2],disturbanceResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
-
-            //check sound
-            checkPath(referencePaths[3],soundResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
+        TestCase.assertTrue(deserialization.isValid());
 
 
-            final Map<String,List<List<Double>>> probMapByOutputId = stuff.inferProbabilitiesFromModelAndSensorData(sensordata);
+        final SensorDataReductionAndInterpretation stuff = deserialization.getDeserializedData().sensorDataReductionAndInterpretation;
 
-            final List<Double> probs = SensorDataReductionAndInterpretation.getInverseOfNthElement(probMapByOutputId.get("p_state_given_sleep"),1);
+        final Integer [] endStates = new Integer[1];
+        endStates[0] = 0;
+        final HmmDecodedResult motionResult = stuff.hmmByModelName.get("motion").decode(sensordata,endStates);
+        final HmmDecodedResult lightResult = stuff.hmmByModelName.get("light2").decode(sensordata,endStates);
+        final HmmDecodedResult disturbanceResult = stuff.hmmByModelName.get("disturbances").decode(sensordata,endStates);
+        final HmmDecodedResult soundResult = stuff.hmmByModelName.get("sound2").decode(sensordata,endStates);
 
-            checkProbs(refProbs,probs,0.1,10);
+        //check motion
+        checkPath(referencePaths[0],motionResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
 
-            final Optional<HmmBayesNetPredictor> predictorOptional = HmmBayesNetPredictor.createHmmBayesNetPredictor(Optional.of(deserializedSleepHmmBayesNetWithParams), Optional.<UUID>absent());
+        //check light
+        checkPath(referencePaths[1],lightResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
 
-            TestCase.assertTrue(predictorOptional.isPresent());
+        //check disturbance
+        checkPath(referencePaths[2],disturbanceResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
 
-            final HmmBayesNetPredictor predictor = predictorOptional.get();
+        //check sound
+        checkPath(referencePaths[3],soundResult.bestPath,ALLOWED_NUMBER_OF_ERRORS_IN_PATH);
 
-            final Map<String,List<Event>> eventsByCondProb = predictor.makePredictions(sensordata, 0, 0);
 
-            final List<Event> sleepEvents = eventsByCondProb.get(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP);
+        final Map<String,List<List<Double>>> probMapByOutputId = stuff.inferProbabilitiesFromModelAndSensorData(sensordata);
 
-            //basic sanity check
-            TestCase.assertTrue(sleepEvents.size() == 2);
-            TestCase.assertTrue(sleepEvents.get(0).getStartTimestamp() < sleepEvents.get(1).getStartTimestamp());
-            TestCase.assertTrue(sleepEvents.get(0).getType() == Event.Type.SLEEP);
-            TestCase.assertTrue(sleepEvents.get(1).getType() == Event.Type.WAKE_UP);
+        final List<Double> probs = SensorDataReductionAndInterpretation.getInverseOfNthElement(probMapByOutputId.get("p_state_given_sleep"),1);
 
-        }
-        catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
-            TestCase.assertTrue(false);
-        }
+        checkProbs(refProbs,probs,0.1,10);
+
+        final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(deserialization.getDeserializedData(), Optional.<UUID>absent());
+
+        final Map<String,List<Event>> eventsByCondProb = predictor.makePredictions(sensordata, 0, 0);
+
+        final List<Event> sleepEvents = eventsByCondProb.get(HmmBayesNetMeasurementParameters.CONDITIONAL_PROBABILITY_OF_SLEEP);
+
+        //basic sanity check
+        TestCase.assertTrue(sleepEvents.size() == 2);
+        TestCase.assertTrue(sleepEvents.get(0).getStartTimestamp() < sleepEvents.get(1).getStartTimestamp());
+        TestCase.assertTrue(sleepEvents.get(0).getType() == Event.Type.SLEEP);
+        TestCase.assertTrue(sleepEvents.get(1).getType() == Event.Type.WAKE_UP);
+
+
 
     }
 

@@ -354,4 +354,22 @@ public class SuripuAppConfiguration extends Configuration {
     public DynamoDBConfiguration getSenseLastSeenConfiguration(){
         return this.senseLastSeenConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_priors")
+    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
+        return this.hmmBayesnetPriorsConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_models")
+    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
+        return this.hmmBayesnetModelsConfiguration;
+    }
+
+
 }

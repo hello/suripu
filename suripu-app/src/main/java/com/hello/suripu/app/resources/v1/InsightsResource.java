@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -9,7 +10,6 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
@@ -28,6 +28,7 @@ import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,6 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -158,7 +158,6 @@ public class InsightsResource extends BaseResource {
 
         Optional<TrendGraph> graphOptional = getGraph(accessToken.accountId, timePeriodType, graphDataType);
 
-
         if (graphOptional.isPresent()) {
             graphs.add(graphOptional.get());
         }
@@ -207,7 +206,6 @@ public class InsightsResource extends BaseResource {
         }
 
         final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
-        final List<TrendGraph> graphs = new ArrayList<>();
 
         if (optionalAccount.isPresent()) {
             final Account account = optionalAccount.get();
@@ -216,25 +214,11 @@ public class InsightsResource extends BaseResource {
             final boolean eligible = checkTrendsEligibility(accountId);
 
             if (eligible) {
-                // add all the default graphs
-                final Optional<TrendGraph> sleepScoreDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_SCORE);
-                if (sleepScoreDayOfWeek.isPresent()) {
-                    graphs.add(sleepScoreDayOfWeek.get());
-                }
-
-                final Optional<TrendGraph> sleepDurationDayOfWeek = getGraph(accountId, TrendGraph.TimePeriodType.DAY_OF_WEEK, TrendGraph.DataType.SLEEP_DURATION);
-                if (sleepDurationDayOfWeek.isPresent()) {
-                    graphs.add(sleepDurationDayOfWeek.get());
-                }
-
-                final Optional<TrendGraph> sleepScoreOverTime = getGraph(accountId, scoreOverTimePeriod, TrendGraph.DataType.SLEEP_SCORE);
-                if (sleepScoreOverTime.isPresent()) {
-                    graphs.add(sleepScoreOverTime.get());
-                }
+                return getAllTrendsGraphs(accountId, scoreOverTimePeriod);
             }
         }
 
-        return graphs;
+        return Collections.EMPTY_LIST;
     }
 
     /**
@@ -248,6 +232,69 @@ public class InsightsResource extends BaseResource {
             cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category)));
         }
         return cardsWithPreview;
+    }
+
+    /**
+     * get all the graphs for the app's Trends view
+     * @param accountId
+     * @param scoreOverTimePeriod
+     * @return
+     */
+    private List<TrendGraph> getAllTrendsGraphs(final Long accountId, final TrendGraph.TimePeriodType scoreOverTimePeriod) {
+
+        final List<TrendGraph> graphs = Lists.newArrayList();
+
+        final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
+        final DateTime startDate = endDate.minusDays(DAY_OF_WEEK_LOOKBACK);
+
+        final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
+                DateTimeUtil.dateToYmdString(startDate),
+                DateTimeUtil.dateToYmdString(endDate));
+
+        // Sleep Score vs. Day of Week (always use last 30 days)
+        final List<DowSample> sleepScoreDOWData = TrendGraphUtils.aggregateDOWData(sleepStats, TrendGraph.DataType.SLEEP_SCORE);
+        if (sleepScoreDOWData.size() >= MIN_DATAPOINTS) {
+            graphs.add(TrendGraphUtils.getDayOfWeekGraph(TrendGraph.DataType.SLEEP_SCORE, TrendGraph.TimePeriodType.DAY_OF_WEEK, sleepScoreDOWData));
+        }
+
+        // Sleep Duration vs. Day of Week (always use last 30 days)
+        final List<DowSample> sleepDurationDOWData = TrendGraphUtils.aggregateDOWData(sleepStats, TrendGraph.DataType.SLEEP_DURATION);
+        if (sleepDurationDOWData.size() >= MIN_DATAPOINTS) {
+            graphs.add(TrendGraphUtils.getDayOfWeekGraph(TrendGraph.DataType.SLEEP_DURATION, TrendGraph.TimePeriodType.DAY_OF_WEEK, sleepDurationDOWData));
+        }
+
+        // Sleep Score vs. Time (Default is 1W, max is 90 days)
+        // compute date range (now - x days)
+        final int numDays = TrendGraph.getTimePeriodDays(scoreOverTimePeriod);
+        final DateTime newStartDate = endDate.minusDays(numDays);
+
+        // get relevant data from first batch
+        final Interval interval = new Interval(newStartDate, endDate);
+        final List<AggregateSleepStats> overTimeSleepStats = Lists.newArrayList();
+        for (final AggregateSleepStats stat: sleepStats.reverse()) {
+            if (interval.contains(stat.dateTime)) {
+                overTimeSleepStats.add(stat);
+            } else {
+                // we can do this because sleep-stats is sorted reverse chronological
+                break;
+            }
+        }
+
+        // compute user age to present available time period options
+        final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+        int daysActive = TrendGraph.PERIOD_TYPE_DAYS.get(TrendGraph.TimePeriodType.OVER_TIME_1W) + 1;
+        if (optionalAccount.isPresent()) {
+            final DateTime accountCreated = optionalAccount.get().created;
+            daysActive = DateTimeUtil.getDateDiffFromNowInDays(accountCreated) - 1;
+        }
+
+        // construct the graph
+        if (overTimeSleepStats.size() >= MIN_DATAPOINTS) {
+            Collections.sort(overTimeSleepStats); // chronologically ascending
+            graphs.add(TrendGraphUtils.getScoresOverTimeGraph(scoreOverTimePeriod, overTimeSleepStats, daysActive));
+        }
+
+        return graphs;
     }
 
     /**
@@ -265,8 +312,7 @@ public class InsightsResource extends BaseResource {
 
             final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
                     DateTimeUtil.dateToYmdString(startDate),
-                    DateTimeUtil.dateToYmdString(endDate),
-                    DAY_OF_WEEK_LOOKBACK);
+                    DateTimeUtil.dateToYmdString(endDate));
 
             final List<DowSample> rawData = TrendGraphUtils.aggregateDOWData(sleepStats, graphType);
 
@@ -284,7 +330,7 @@ public class InsightsResource extends BaseResource {
             final DateTime startDate = endDate.minusDays(numDays);
 
             final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-            int daysActive = TrendGraph.PERIOD_TYPE_DAYS.get(TrendGraph.TimePeriodType.OVER_TIME_ALL) + 1;
+            int daysActive = TrendGraph.PERIOD_TYPE_DAYS.get(TrendGraph.TimePeriodType.OVER_TIME_3M) + 1;
             if (optionalAccount.isPresent()) {
                 final DateTime accountCreated = optionalAccount.get().created;
                 daysActive = DateTimeUtil.getDateDiffFromNowInDays(accountCreated) - 1;
@@ -292,20 +338,10 @@ public class InsightsResource extends BaseResource {
 
             final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
                     DateTimeUtil.dateToYmdString(startDate),
-                    DateTimeUtil.dateToYmdString(endDate),
-                    numDays);
+                    DateTimeUtil.dateToYmdString(endDate));
 
             if (graphType == TrendGraph.DataType.SLEEP_SCORE) {
-                // sleep score over time, up to 365 days
-                final List<AggregateScore> scores = new ArrayList<>();
-                for (final AggregateSleepStats stat : sleepStats) {
-                    scores.add(new AggregateScore(accountId,
-                            stat.sleepScore,
-                            DateTimeUtil.dateToYmdString(stat.dateTime),
-                            "sleep", stat.version));
-                }
-
-                if (scores.size() < MIN_DATAPOINTS) {
+                if (sleepStats.size() < MIN_DATAPOINTS) {
                     final List<String> timeSeriesOptions = TrendGraph.TimePeriodType.getTimeSeriesOptions(daysActive);
                     return Optional.of(new TrendGraph(
                             TrendGraph.DataType.SLEEP_SCORE, TrendGraph.GraphType.TIME_SERIES_LINE,
@@ -313,9 +349,7 @@ public class InsightsResource extends BaseResource {
                 }
 
                 // scores table has no offset, pull timezone offset from tracker-motion
-                final Map<DateTime, Integer> userOffsetMillis = getUserTimeZoneOffsetsUTC(accountId, startDate, endDate);
-
-                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, scores, userOffsetMillis, daysActive));
+                return Optional.of(TrendGraphUtils.getScoresOverTimeGraph(timePeriod, sleepStats, daysActive));
 
             } else {
                 // sleep duration over time, up to 365 days
@@ -330,17 +364,6 @@ public class InsightsResource extends BaseResource {
 
     }
 
-    // map keys in UTC
-    private Map<DateTime, Integer> getUserTimeZoneOffsetsUTC(final long accountId, final DateTime startDate, final DateTime endDate) {
-        final long daysDiff = (endDate.getMillis() - startDate.getMillis()) / DAY_IN_MILLIS;
-
-        final List<DateTime> dates = new ArrayList<>();
-        for (int i = 0; i < (int) daysDiff; i++) {
-            dates.add(startDate.withZone(DateTimeZone.UTC).withTimeAtStartOfDay().plusDays(i));
-        }
-        return trackerMotionDAO.getOffsetMillisForDates(accountId, dates);
-    }
-
     private Boolean checkTrendsEligibility(final Long accountId) {
         // look back two weeks from now to make sure that user has at least 7 days of data
         final DateTime endDate = DateTime.now().withTimeAtStartOfDay();
@@ -348,8 +371,7 @@ public class InsightsResource extends BaseResource {
 
         final ImmutableList<AggregateSleepStats> sleepStats = this.sleepStatsDAODynamoDB.getBatchStats(accountId,
                 DateTimeUtil.dateToYmdString(startDate),
-                DateTimeUtil.dateToYmdString(endDate),
-                TRENDS_AVAILABLE_AFTER_DAYS);
+                DateTimeUtil.dateToYmdString(endDate));
 
         if (sleepStats.size() < TRENDS_AVAILABLE_AFTER_DAYS) {
             return false;

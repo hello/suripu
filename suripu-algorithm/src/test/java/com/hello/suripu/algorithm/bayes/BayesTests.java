@@ -1,5 +1,6 @@
 package com.hello.suripu.algorithm.bayes;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -68,14 +69,14 @@ public class BayesTests {
         final BetaDiscreteWithEventOutput bayesElement2 = new BetaDiscreteWithEventOutput(betaDistributions2);
         final BetaDiscreteWithEventOutput bayesElement3 = new BetaDiscreteWithEventOutput(betaDistributions3);
 
-        final List<ModelWithDiscreteProbabiltiesAndEventOccurence> models = Lists.newArrayList();
+        final List<BetaDiscreteWithEventOutput> models = Lists.newArrayList();
 
         models.add(bayesElement1);
         models.add(bayesElement2);
         models.add(bayesElement3);
 
         final MultipleEventModel multipleEventModel = new MultipleEventModel(2);
-        multipleEventModel.addModel("foobars",models);
+        multipleEventModel.putModel("foobars", models);
 
 
         multipleEventModel.setPriorForAllStatesBasedOnOneState(0,0.70);
@@ -144,10 +145,12 @@ public class BayesTests {
             probs.add(0.6);
         }
 
-        final ProbabilitySegment seg = ProbabilitySegmenter.getBestSegment(40, 20, 20, probs);
+        final Optional<ProbabilitySegment> seg = ProbabilitySegmenter.getBestSegment(40, 20, 20, probs);
 
-        TestCase.assertEquals(40,seg.i1,2);
-        TestCase.assertEquals(60,seg.i2,2);
+        TestCase.assertTrue(seg.isPresent());
+
+        TestCase.assertEquals(40,seg.get().i1,2);
+        TestCase.assertEquals(60,seg.get().i2,2);
 
     }
 }

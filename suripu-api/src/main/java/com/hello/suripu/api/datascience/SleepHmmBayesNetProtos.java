@@ -37,6 +37,22 @@ public final class SleepHmmBayesNetProtos {
      * <code>LOG_SOUND = 4;</code>
      */
     LOG_SOUND(4, 4),
+    /**
+     * <code>PARTNER_MOTION_DURATION = 5;</code>
+     */
+    PARTNER_MOTION_DURATION(5, 5),
+    /**
+     * <code>WAVE_DISTURBANCE = 6;</code>
+     */
+    WAVE_DISTURBANCE(6, 6),
+    /**
+     * <code>LIGHT_INCREASE_DISTURBANCE = 7;</code>
+     */
+    LIGHT_INCREASE_DISTURBANCE(7, 7),
+    /**
+     * <code>SOUND_INCREASE_DISTURBANCE = 8;</code>
+     */
+    SOUND_INCREASE_DISTURBANCE(8, 8),
     ;
 
     /**
@@ -59,6 +75,22 @@ public final class SleepHmmBayesNetProtos {
      * <code>LOG_SOUND = 4;</code>
      */
     public static final int LOG_SOUND_VALUE = 4;
+    /**
+     * <code>PARTNER_MOTION_DURATION = 5;</code>
+     */
+    public static final int PARTNER_MOTION_DURATION_VALUE = 5;
+    /**
+     * <code>WAVE_DISTURBANCE = 6;</code>
+     */
+    public static final int WAVE_DISTURBANCE_VALUE = 6;
+    /**
+     * <code>LIGHT_INCREASE_DISTURBANCE = 7;</code>
+     */
+    public static final int LIGHT_INCREASE_DISTURBANCE_VALUE = 7;
+    /**
+     * <code>SOUND_INCREASE_DISTURBANCE = 8;</code>
+     */
+    public static final int SOUND_INCREASE_DISTURBANCE_VALUE = 8;
 
 
     public final int getNumber() { return value; }
@@ -70,6 +102,10 @@ public final class SleepHmmBayesNetProtos {
         case 2: return PILL_MAGNITUDE_DISTURBANCE;
         case 3: return NATURAL_LIGHT;
         case 4: return LOG_SOUND;
+        case 5: return PARTNER_MOTION_DURATION;
+        case 6: return WAVE_DISTURBANCE;
+        case 7: return LIGHT_INCREASE_DISTURBANCE;
+        case 8: return SOUND_INCREASE_DISTURBANCE;
         default: return null;
       }
     }
@@ -4070,1582 +4106,6 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.ObsModel)
   }
 
-  public interface BetaCondProbOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.BetaCondProb)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required double alpha = 1;</code>
-     *
-     * <pre>
-     *prior 
-     * </pre>
-     */
-    boolean hasAlpha();
-    /**
-     * <code>required double alpha = 1;</code>
-     *
-     * <pre>
-     *prior 
-     * </pre>
-     */
-    double getAlpha();
-
-    /**
-     * <code>required double beta = 2;</code>
-     *
-     * <pre>
-     *prior
-     * </pre>
-     */
-    boolean hasBeta();
-    /**
-     * <code>required double beta = 2;</code>
-     *
-     * <pre>
-     *prior
-     * </pre>
-     */
-    double getBeta();
-  }
-  /**
-   * Protobuf type {@code hello.BetaCondProb}
-   */
-  public static final class BetaCondProb extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.BetaCondProb)
-      BetaCondProbOrBuilder {
-    // Use BetaCondProb.newBuilder() to construct.
-    private BetaCondProb(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-      super(builder);
-      this.unknownFields = builder.getUnknownFields();
-    }
-    private BetaCondProb(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final BetaCondProb defaultInstance;
-    public static BetaCondProb getDefaultInstance() {
-      return defaultInstance;
-    }
-
-    public BetaCondProb getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
-    }
-    private BetaCondProb(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 9: {
-              bitField0_ |= 0x00000001;
-              alpha_ = input.readDouble();
-              break;
-            }
-            case 17: {
-              bitField0_ |= 0x00000002;
-              beta_ = input.readDouble();
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_BetaCondProb_descriptor;
-    }
-
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_BetaCondProb_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.class, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder.class);
-    }
-
-    public static com.google.protobuf.Parser<BetaCondProb> PARSER =
-        new com.google.protobuf.AbstractParser<BetaCondProb>() {
-      public BetaCondProb parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new BetaCondProb(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<BetaCondProb> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    public static final int ALPHA_FIELD_NUMBER = 1;
-    private double alpha_;
-    /**
-     * <code>required double alpha = 1;</code>
-     *
-     * <pre>
-     *prior 
-     * </pre>
-     */
-    public boolean hasAlpha() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required double alpha = 1;</code>
-     *
-     * <pre>
-     *prior 
-     * </pre>
-     */
-    public double getAlpha() {
-      return alpha_;
-    }
-
-    public static final int BETA_FIELD_NUMBER = 2;
-    private double beta_;
-    /**
-     * <code>required double beta = 2;</code>
-     *
-     * <pre>
-     *prior
-     * </pre>
-     */
-    public boolean hasBeta() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required double beta = 2;</code>
-     *
-     * <pre>
-     *prior
-     * </pre>
-     */
-    public double getBeta() {
-      return beta_;
-    }
-
-    private void initFields() {
-      alpha_ = 0D;
-      beta_ = 0D;
-    }
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasAlpha()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasBeta()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeDouble(1, alpha_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeDouble(2, beta_);
-      }
-      getUnknownFields().writeTo(output);
-    }
-
-    private int memoizedSerializedSize = -1;
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeDoubleSize(1, alpha_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeDoubleSize(2, beta_);
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-
-    public static Builder newBuilder() { return Builder.create(); }
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code hello.BetaCondProb}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.BetaCondProb)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_BetaCondProb_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_BetaCondProb_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.class, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder.class);
-      }
-
-      // Construct using com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-        }
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-
-      public Builder clear() {
-        super.clear();
-        alpha_ = 0D;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        beta_ = 0D;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_BetaCondProb_descriptor;
-      }
-
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb getDefaultInstanceForType() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.getDefaultInstance();
-      }
-
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb build() {
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb buildPartial() {
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb result = new com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.alpha_ = alpha_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.beta_ = beta_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb) {
-          return mergeFrom((com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb other) {
-        if (other == com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.getDefaultInstance()) return this;
-        if (other.hasAlpha()) {
-          setAlpha(other.getAlpha());
-        }
-        if (other.hasBeta()) {
-          setBeta(other.getBeta());
-        }
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-
-      public final boolean isInitialized() {
-        if (!hasAlpha()) {
-          
-          return false;
-        }
-        if (!hasBeta()) {
-          
-          return false;
-        }
-        return true;
-      }
-
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb) e.getUnfinishedMessage();
-          throw e;
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private double alpha_ ;
-      /**
-       * <code>required double alpha = 1;</code>
-       *
-       * <pre>
-       *prior 
-       * </pre>
-       */
-      public boolean hasAlpha() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required double alpha = 1;</code>
-       *
-       * <pre>
-       *prior 
-       * </pre>
-       */
-      public double getAlpha() {
-        return alpha_;
-      }
-      /**
-       * <code>required double alpha = 1;</code>
-       *
-       * <pre>
-       *prior 
-       * </pre>
-       */
-      public Builder setAlpha(double value) {
-        bitField0_ |= 0x00000001;
-        alpha_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required double alpha = 1;</code>
-       *
-       * <pre>
-       *prior 
-       * </pre>
-       */
-      public Builder clearAlpha() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        alpha_ = 0D;
-        onChanged();
-        return this;
-      }
-
-      private double beta_ ;
-      /**
-       * <code>required double beta = 2;</code>
-       *
-       * <pre>
-       *prior
-       * </pre>
-       */
-      public boolean hasBeta() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required double beta = 2;</code>
-       *
-       * <pre>
-       *prior
-       * </pre>
-       */
-      public double getBeta() {
-        return beta_;
-      }
-      /**
-       * <code>required double beta = 2;</code>
-       *
-       * <pre>
-       *prior
-       * </pre>
-       */
-      public Builder setBeta(double value) {
-        bitField0_ |= 0x00000002;
-        beta_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required double beta = 2;</code>
-       *
-       * <pre>
-       *prior
-       * </pre>
-       */
-      public Builder clearBeta() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        beta_ = 0D;
-        onChanged();
-        return this;
-      }
-
-      // @@protoc_insertion_point(builder_scope:hello.BetaCondProb)
-    }
-
-    static {
-      defaultInstance = new BetaCondProb(true);
-      defaultInstance.initFields();
-    }
-
-    // @@protoc_insertion_point(class_scope:hello.BetaCondProb)
-  }
-
-  public interface CondProbsOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.CondProbs)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required string model_id = 1;</code>
-     */
-    boolean hasModelId();
-    /**
-     * <code>required string model_id = 1;</code>
-     */
-    java.lang.String getModelId();
-    /**
-     * <code>required string model_id = 1;</code>
-     */
-    com.google.protobuf.ByteString
-        getModelIdBytes();
-
-    /**
-     * <code>required string output_id = 2;</code>
-     */
-    boolean hasOutputId();
-    /**
-     * <code>required string output_id = 2;</code>
-     */
-    java.lang.String getOutputId();
-    /**
-     * <code>required string output_id = 2;</code>
-     */
-    com.google.protobuf.ByteString
-        getOutputIdBytes();
-
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb> 
-        getProbsList();
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb getProbs(int index);
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    int getProbsCount();
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder> 
-        getProbsOrBuilderList();
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder getProbsOrBuilder(
-        int index);
-  }
-  /**
-   * Protobuf type {@code hello.CondProbs}
-   */
-  public static final class CondProbs extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.CondProbs)
-      CondProbsOrBuilder {
-    // Use CondProbs.newBuilder() to construct.
-    private CondProbs(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-      super(builder);
-      this.unknownFields = builder.getUnknownFields();
-    }
-    private CondProbs(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final CondProbs defaultInstance;
-    public static CondProbs getDefaultInstance() {
-      return defaultInstance;
-    }
-
-    public CondProbs getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
-    }
-    private CondProbs(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              modelId_ = bs;
-              break;
-            }
-            case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000002;
-              outputId_ = bs;
-              break;
-            }
-            case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                probs_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb>();
-                mutable_bitField0_ |= 0x00000004;
-              }
-              probs_.add(input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.PARSER, extensionRegistry));
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-          probs_ = java.util.Collections.unmodifiableList(probs_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_CondProbs_descriptor;
-    }
-
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_CondProbs_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.class, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder.class);
-    }
-
-    public static com.google.protobuf.Parser<CondProbs> PARSER =
-        new com.google.protobuf.AbstractParser<CondProbs>() {
-      public CondProbs parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CondProbs(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CondProbs> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    public static final int MODEL_ID_FIELD_NUMBER = 1;
-    private java.lang.Object modelId_;
-    /**
-     * <code>required string model_id = 1;</code>
-     */
-    public boolean hasModelId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required string model_id = 1;</code>
-     */
-    public java.lang.String getModelId() {
-      java.lang.Object ref = modelId_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          modelId_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string model_id = 1;</code>
-     */
-    public com.google.protobuf.ByteString
-        getModelIdBytes() {
-      java.lang.Object ref = modelId_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        modelId_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int OUTPUT_ID_FIELD_NUMBER = 2;
-    private java.lang.Object outputId_;
-    /**
-     * <code>required string output_id = 2;</code>
-     */
-    public boolean hasOutputId() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required string output_id = 2;</code>
-     */
-    public java.lang.String getOutputId() {
-      java.lang.Object ref = outputId_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          outputId_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string output_id = 2;</code>
-     */
-    public com.google.protobuf.ByteString
-        getOutputIdBytes() {
-      java.lang.Object ref = outputId_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        outputId_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int PROBS_FIELD_NUMBER = 3;
-    private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb> probs_;
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb> getProbsList() {
-      return probs_;
-    }
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder> 
-        getProbsOrBuilderList() {
-      return probs_;
-    }
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    public int getProbsCount() {
-      return probs_.size();
-    }
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb getProbs(int index) {
-      return probs_.get(index);
-    }
-    /**
-     * <code>repeated .hello.BetaCondProb probs = 3;</code>
-     */
-    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder getProbsOrBuilder(
-        int index) {
-      return probs_.get(index);
-    }
-
-    private void initFields() {
-      modelId_ = "";
-      outputId_ = "";
-      probs_ = java.util.Collections.emptyList();
-    }
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasModelId()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasOutputId()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      for (int i = 0; i < getProbsCount(); i++) {
-        if (!getProbs(i).isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getModelIdBytes());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, getOutputIdBytes());
-      }
-      for (int i = 0; i < probs_.size(); i++) {
-        output.writeMessage(3, probs_.get(i));
-      }
-      getUnknownFields().writeTo(output);
-    }
-
-    private int memoizedSerializedSize = -1;
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getModelIdBytes());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getOutputIdBytes());
-      }
-      for (int i = 0; i < probs_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, probs_.get(i));
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-
-    public static Builder newBuilder() { return Builder.create(); }
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code hello.CondProbs}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.CondProbs)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_CondProbs_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_CondProbs_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.class, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder.class);
-      }
-
-      // Construct using com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          getProbsFieldBuilder();
-        }
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-
-      public Builder clear() {
-        super.clear();
-        modelId_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        outputId_ = "";
-        bitField0_ = (bitField0_ & ~0x00000002);
-        if (probsBuilder_ == null) {
-          probs_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
-        } else {
-          probsBuilder_.clear();
-        }
-        return this;
-      }
-
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_CondProbs_descriptor;
-      }
-
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs getDefaultInstanceForType() {
-        return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.getDefaultInstance();
-      }
-
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs build() {
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs buildPartial() {
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs result = new com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.modelId_ = modelId_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.outputId_ = outputId_;
-        if (probsBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
-            probs_ = java.util.Collections.unmodifiableList(probs_);
-            bitField0_ = (bitField0_ & ~0x00000004);
-          }
-          result.probs_ = probs_;
-        } else {
-          result.probs_ = probsBuilder_.build();
-        }
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs) {
-          return mergeFrom((com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs other) {
-        if (other == com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.getDefaultInstance()) return this;
-        if (other.hasModelId()) {
-          bitField0_ |= 0x00000001;
-          modelId_ = other.modelId_;
-          onChanged();
-        }
-        if (other.hasOutputId()) {
-          bitField0_ |= 0x00000002;
-          outputId_ = other.outputId_;
-          onChanged();
-        }
-        if (probsBuilder_ == null) {
-          if (!other.probs_.isEmpty()) {
-            if (probs_.isEmpty()) {
-              probs_ = other.probs_;
-              bitField0_ = (bitField0_ & ~0x00000004);
-            } else {
-              ensureProbsIsMutable();
-              probs_.addAll(other.probs_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.probs_.isEmpty()) {
-            if (probsBuilder_.isEmpty()) {
-              probsBuilder_.dispose();
-              probsBuilder_ = null;
-              probs_ = other.probs_;
-              bitField0_ = (bitField0_ & ~0x00000004);
-              probsBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getProbsFieldBuilder() : null;
-            } else {
-              probsBuilder_.addAllMessages(other.probs_);
-            }
-          }
-        }
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-
-      public final boolean isInitialized() {
-        if (!hasModelId()) {
-          
-          return false;
-        }
-        if (!hasOutputId()) {
-          
-          return false;
-        }
-        for (int i = 0; i < getProbsCount(); i++) {
-          if (!getProbs(i).isInitialized()) {
-            
-            return false;
-          }
-        }
-        return true;
-      }
-
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs) e.getUnfinishedMessage();
-          throw e;
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private java.lang.Object modelId_ = "";
-      /**
-       * <code>required string model_id = 1;</code>
-       */
-      public boolean hasModelId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required string model_id = 1;</code>
-       */
-      public java.lang.String getModelId() {
-        java.lang.Object ref = modelId_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            modelId_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>required string model_id = 1;</code>
-       */
-      public com.google.protobuf.ByteString
-          getModelIdBytes() {
-        java.lang.Object ref = modelId_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          modelId_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>required string model_id = 1;</code>
-       */
-      public Builder setModelId(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        modelId_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string model_id = 1;</code>
-       */
-      public Builder clearModelId() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        modelId_ = getDefaultInstance().getModelId();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string model_id = 1;</code>
-       */
-      public Builder setModelIdBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        modelId_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object outputId_ = "";
-      /**
-       * <code>required string output_id = 2;</code>
-       */
-      public boolean hasOutputId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required string output_id = 2;</code>
-       */
-      public java.lang.String getOutputId() {
-        java.lang.Object ref = outputId_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            outputId_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>required string output_id = 2;</code>
-       */
-      public com.google.protobuf.ByteString
-          getOutputIdBytes() {
-        java.lang.Object ref = outputId_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          outputId_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>required string output_id = 2;</code>
-       */
-      public Builder setOutputId(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        outputId_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string output_id = 2;</code>
-       */
-      public Builder clearOutputId() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        outputId_ = getDefaultInstance().getOutputId();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string output_id = 2;</code>
-       */
-      public Builder setOutputIdBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        outputId_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb> probs_ =
-        java.util.Collections.emptyList();
-      private void ensureProbsIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
-          probs_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb>(probs_);
-          bitField0_ |= 0x00000004;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder> probsBuilder_;
-
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb> getProbsList() {
-        if (probsBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(probs_);
-        } else {
-          return probsBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public int getProbsCount() {
-        if (probsBuilder_ == null) {
-          return probs_.size();
-        } else {
-          return probsBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb getProbs(int index) {
-        if (probsBuilder_ == null) {
-          return probs_.get(index);
-        } else {
-          return probsBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder setProbs(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb value) {
-        if (probsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureProbsIsMutable();
-          probs_.set(index, value);
-          onChanged();
-        } else {
-          probsBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder setProbs(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder builderForValue) {
-        if (probsBuilder_ == null) {
-          ensureProbsIsMutable();
-          probs_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          probsBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder addProbs(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb value) {
-        if (probsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureProbsIsMutable();
-          probs_.add(value);
-          onChanged();
-        } else {
-          probsBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder addProbs(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb value) {
-        if (probsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureProbsIsMutable();
-          probs_.add(index, value);
-          onChanged();
-        } else {
-          probsBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder addProbs(
-          com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder builderForValue) {
-        if (probsBuilder_ == null) {
-          ensureProbsIsMutable();
-          probs_.add(builderForValue.build());
-          onChanged();
-        } else {
-          probsBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder addProbs(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder builderForValue) {
-        if (probsBuilder_ == null) {
-          ensureProbsIsMutable();
-          probs_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          probsBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder addAllProbs(
-          java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb> values) {
-        if (probsBuilder_ == null) {
-          ensureProbsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, probs_);
-          onChanged();
-        } else {
-          probsBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder clearProbs() {
-        if (probsBuilder_ == null) {
-          probs_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
-          onChanged();
-        } else {
-          probsBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public Builder removeProbs(int index) {
-        if (probsBuilder_ == null) {
-          ensureProbsIsMutable();
-          probs_.remove(index);
-          onChanged();
-        } else {
-          probsBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder getProbsBuilder(
-          int index) {
-        return getProbsFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder getProbsOrBuilder(
-          int index) {
-        if (probsBuilder_ == null) {
-          return probs_.get(index);  } else {
-          return probsBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder> 
-           getProbsOrBuilderList() {
-        if (probsBuilder_ != null) {
-          return probsBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(probs_);
-        }
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder addProbsBuilder() {
-        return getProbsFieldBuilder().addBuilder(
-            com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder addProbsBuilder(
-          int index) {
-        return getProbsFieldBuilder().addBuilder(
-            index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .hello.BetaCondProb probs = 3;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder> 
-           getProbsBuilderList() {
-        return getProbsFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder> 
-          getProbsFieldBuilder() {
-        if (probsBuilder_ == null) {
-          probsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProb.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.BetaCondProbOrBuilder>(
-                  probs_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
-                  getParentForChildren(),
-                  isClean());
-          probs_ = null;
-        }
-        return probsBuilder_;
-      }
-
-      // @@protoc_insertion_point(builder_scope:hello.CondProbs)
-    }
-
-    static {
-      defaultInstance = new CondProbs(true);
-      defaultInstance.initFields();
-    }
-
-    // @@protoc_insertion_point(class_scope:hello.CondProbs)
-  }
-
   public interface HiddenMarkovModelOrBuilder extends
       // @@protoc_insertion_point(interface_extends:hello.HiddenMarkovModel)
       com.google.protobuf.MessageOrBuilder {
@@ -7948,12 +6408,12 @@ public final class SleepHmmBayesNetProtos {
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs> 
+    java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> 
         getConditionalProbabilitiesList();
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs getConditionalProbabilities(int index);
+    com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs getConditionalProbabilities(int index);
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
@@ -7961,12 +6421,12 @@ public final class SleepHmmBayesNetProtos {
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder> 
+    java.util.List<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
         getConditionalProbabilitiesOrBuilderList();
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
+    com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
         int index);
   }
   /**
@@ -8044,10 +6504,10 @@ public final class SleepHmmBayesNetProtos {
             }
             case 26: {
               if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                conditionalProbabilities_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs>();
+                conditionalProbabilities_ = new java.util.ArrayList<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs>();
                 mutable_bitField0_ |= 0x00000004;
               }
-              conditionalProbabilities_.add(input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.PARSER, extensionRegistry));
+              conditionalProbabilities_.add(input.readMessage(com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.PARSER, extensionRegistry));
               break;
             }
           }
@@ -8153,17 +6613,17 @@ public final class SleepHmmBayesNetProtos {
     }
 
     public static final int CONDITIONAL_PROBABILITIES_FIELD_NUMBER = 3;
-    private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs> conditionalProbabilities_;
+    private java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> conditionalProbabilities_;
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs> getConditionalProbabilitiesList() {
+    public java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> getConditionalProbabilitiesList() {
       return conditionalProbabilities_;
     }
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder> 
+    public java.util.List<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
         getConditionalProbabilitiesOrBuilderList() {
       return conditionalProbabilities_;
     }
@@ -8176,13 +6636,13 @@ public final class SleepHmmBayesNetProtos {
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs getConditionalProbabilities(int index) {
+    public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs getConditionalProbabilities(int index) {
       return conditionalProbabilities_.get(index);
     }
     /**
      * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
      */
-    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
+    public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
         int index) {
       return conditionalProbabilities_.get(index);
     }
@@ -8913,22 +7373,22 @@ public final class SleepHmmBayesNetProtos {
         return independentHmmsBuilder_;
       }
 
-      private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs> conditionalProbabilities_ =
+      private java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> conditionalProbabilities_ =
         java.util.Collections.emptyList();
       private void ensureConditionalProbabilitiesIsMutable() {
         if (!((bitField0_ & 0x00000004) == 0x00000004)) {
-          conditionalProbabilities_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs>(conditionalProbabilities_);
+          conditionalProbabilities_ = new java.util.ArrayList<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs>(conditionalProbabilities_);
           bitField0_ |= 0x00000004;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder> conditionalProbabilitiesBuilder_;
+          com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> conditionalProbabilitiesBuilder_;
 
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs> getConditionalProbabilitiesList() {
+      public java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> getConditionalProbabilitiesList() {
         if (conditionalProbabilitiesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(conditionalProbabilities_);
         } else {
@@ -8948,7 +7408,7 @@ public final class SleepHmmBayesNetProtos {
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs getConditionalProbabilities(int index) {
+      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs getConditionalProbabilities(int index) {
         if (conditionalProbabilitiesBuilder_ == null) {
           return conditionalProbabilities_.get(index);
         } else {
@@ -8959,7 +7419,7 @@ public final class SleepHmmBayesNetProtos {
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
       public Builder setConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs value) {
+          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs value) {
         if (conditionalProbabilitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8976,7 +7436,7 @@ public final class SleepHmmBayesNetProtos {
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
       public Builder setConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder builderForValue) {
+          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder builderForValue) {
         if (conditionalProbabilitiesBuilder_ == null) {
           ensureConditionalProbabilitiesIsMutable();
           conditionalProbabilities_.set(index, builderForValue.build());
@@ -8989,7 +7449,7 @@ public final class SleepHmmBayesNetProtos {
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public Builder addConditionalProbabilities(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs value) {
+      public Builder addConditionalProbabilities(com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs value) {
         if (conditionalProbabilitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -9006,7 +7466,7 @@ public final class SleepHmmBayesNetProtos {
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
       public Builder addConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs value) {
+          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs value) {
         if (conditionalProbabilitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -9023,7 +7483,7 @@ public final class SleepHmmBayesNetProtos {
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
       public Builder addConditionalProbabilities(
-          com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder builderForValue) {
+          com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder builderForValue) {
         if (conditionalProbabilitiesBuilder_ == null) {
           ensureConditionalProbabilitiesIsMutable();
           conditionalProbabilities_.add(builderForValue.build());
@@ -9037,7 +7497,7 @@ public final class SleepHmmBayesNetProtos {
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
       public Builder addConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder builderForValue) {
+          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder builderForValue) {
         if (conditionalProbabilitiesBuilder_ == null) {
           ensureConditionalProbabilitiesIsMutable();
           conditionalProbabilities_.add(index, builderForValue.build());
@@ -9051,7 +7511,7 @@ public final class SleepHmmBayesNetProtos {
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
       public Builder addAllConditionalProbabilities(
-          java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs> values) {
+          java.lang.Iterable<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> values) {
         if (conditionalProbabilitiesBuilder_ == null) {
           ensureConditionalProbabilitiesIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -9091,14 +7551,14 @@ public final class SleepHmmBayesNetProtos {
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder getConditionalProbabilitiesBuilder(
+      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder getConditionalProbabilitiesBuilder(
           int index) {
         return getConditionalProbabilitiesFieldBuilder().getBuilder(index);
       }
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
+      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
           int index) {
         if (conditionalProbabilitiesBuilder_ == null) {
           return conditionalProbabilities_.get(index);  } else {
@@ -9108,7 +7568,7 @@ public final class SleepHmmBayesNetProtos {
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder> 
+      public java.util.List<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
            getConditionalProbabilitiesOrBuilderList() {
         if (conditionalProbabilitiesBuilder_ != null) {
           return conditionalProbabilitiesBuilder_.getMessageOrBuilderList();
@@ -9119,31 +7579,31 @@ public final class SleepHmmBayesNetProtos {
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder addConditionalProbabilitiesBuilder() {
+      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder addConditionalProbabilitiesBuilder() {
         return getConditionalProbabilitiesFieldBuilder().addBuilder(
-            com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.getDefaultInstance());
+            com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.getDefaultInstance());
       }
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder addConditionalProbabilitiesBuilder(
+      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder addConditionalProbabilitiesBuilder(
           int index) {
         return getConditionalProbabilitiesFieldBuilder().addBuilder(
-            index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.getDefaultInstance());
+            index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.getDefaultInstance());
       }
       /**
        * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
        */
-      public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder> 
+      public java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder> 
            getConditionalProbabilitiesBuilderList() {
         return getConditionalProbabilitiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder> 
+          com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
           getConditionalProbabilitiesFieldBuilder() {
         if (conditionalProbabilitiesBuilder_ == null) {
           conditionalProbabilitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbs.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.CondProbsOrBuilder>(
+              com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder>(
                   conditionalProbabilities_,
                   ((bitField0_ & 0x00000004) == 0x00000004),
                   getParentForChildren(),
@@ -9195,16 +7655,6 @@ public final class SleepHmmBayesNetProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_ObsModel_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_hello_BetaCondProb_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_hello_BetaCondProb_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_hello_CondProbs_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_hello_CondProbs_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_HiddenMarkovModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -9228,44 +7678,44 @@ public final class SleepHmmBayesNetProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\030sleep_hmm_bayesnet.proto\022\005hello\"\034\n\014Poi" +
-      "ssonModel\022\014\n\004mean\030\001 \002(\001\".\n\025DiscreteAlpha" +
-      "betModel\022\025\n\rprobabilities\030\001 \003(\001\"*\n\nGamma" +
-      "Model\022\014\n\004mean\030\001 \002(\001\022\016\n\006stddev\030\002 \002(\001\"\036\n\016C" +
-      "hiSquareModel\022\014\n\004mean\030\001 \002(\001\";\n\033OneDimens" +
-      "ionalGaussianModel\022\014\n\004mean\030\001 \002(\001\022\016\n\006stdd" +
-      "ev\030\002 \002(\001\"\304\002\n\010ObsModel\022\023\n\013state_index\030\001 \002" +
-      "(\005\022\"\n\tmeas_type\030\002 \002(\0162\017.hello.MeasType\022(" +
-      "\n\tchisquare\030\005 \001(\0132\025.hello.ChiSquareModel" +
-      "\0224\n\010gaussian\030\006 \001(\0132\".hello.OneDimensiona",
-      "lGaussianModel\022 \n\005gamma\030\007 \001(\0132\021.hello.Ga" +
-      "mmaModel\022$\n\007poisson\030\010 \001(\0132\023.hello.Poisso" +
-      "nModel\022.\n\010alphabet\030\t \001(\0132\034.hello.Discret" +
-      "eAlphabetModel\022\016\n\006weight\030\024 \001(\001\022\027\n\017num_fr" +
-      "ee_params\030\025 \001(\005\"+\n\014BetaCondProb\022\r\n\005alpha" +
-      "\030\001 \002(\001\022\014\n\004beta\030\002 \002(\001\"T\n\tCondProbs\022\020\n\010mod" +
-      "el_id\030\001 \002(\t\022\021\n\toutput_id\030\002 \002(\t\022\"\n\005probs\030" +
-      "\003 \003(\0132\023.hello.BetaCondProb\"\225\001\n\021HiddenMar" +
-      "kovModel\022\n\n\002id\030\001 \002(\t\022\023\n\013description\030\002 \001(" +
-      "\t\022*\n\021observation_model\030\003 \003(\0132\017.hello.Obs",
-      "Model\022\037\n\027state_transition_matrix\030\004 \003(\001\022\022" +
-      "\n\nnum_states\030\005 \002(\005\"\252\002\n\021MeasurementParams" +
-      "\022\"\n\032num_minutes_in_meas_period\030\001 \001(\005\022\036\n\026" +
-      "enable_interval_search\030\002 \001(\010\022\'\n\037natural_" +
-      "light_filter_start_hour\030\003 \001(\001\022&\n\036natural" +
-      "_light_filter_stop_hour\030\004 \001(\001\022\034\n\024light_p" +
-      "re_multiplier\030\005 \001(\001\022\027\n\017light_floor_lux\030\006" +
-      " \001(\001\022\"\n\032use_waves_for_disturbances\030\007 \001(\010" +
-      "\022%\n\035motion_count_for_disturbances\030\010 \001(\001\"" +
-      "\260\001\n\013HmmBayesNet\0228\n\026measurement_parameter",
-      "s\030\001 \002(\0132\030.hello.MeasurementParams\0222\n\020ind" +
-      "ependent_hmms\030\002 \003(\0132\030.hello.HiddenMarkov" +
-      "Model\0223\n\031conditional_probabilities\030\003 \003(\013" +
-      "2\020.hello.CondProbs*p\n\010MeasType\022\r\n\tLOG_LI" +
-      "GHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\036\n\032PILL_MAGNI" +
-      "TUDE_DISTURBANCE\020\002\022\021\n\rNATURAL_LIGHT\020\003\022\r\n" +
-      "\tLOG_SOUND\020\004B:\n com.hello.suripu.api.dat" +
-      "ascienceB\026SleepHmmBayesNetProtos"
+      "\n\030sleep_hmm_bayesnet.proto\022\005hello\032\023beta_" +
+      "binomial.proto\"\034\n\014PoissonModel\022\014\n\004mean\030\001" +
+      " \002(\001\".\n\025DiscreteAlphabetModel\022\025\n\rprobabi" +
+      "lities\030\001 \003(\001\"*\n\nGammaModel\022\014\n\004mean\030\001 \002(\001" +
+      "\022\016\n\006stddev\030\002 \002(\001\"\036\n\016ChiSquareModel\022\014\n\004me" +
+      "an\030\001 \002(\001\";\n\033OneDimensionalGaussianModel\022" +
+      "\014\n\004mean\030\001 \002(\001\022\016\n\006stddev\030\002 \002(\001\"\304\002\n\010ObsMod" +
+      "el\022\023\n\013state_index\030\001 \002(\005\022\"\n\tmeas_type\030\002 \002" +
+      "(\0162\017.hello.MeasType\022(\n\tchisquare\030\005 \001(\0132\025" +
+      ".hello.ChiSquareModel\0224\n\010gaussian\030\006 \001(\0132",
+      "\".hello.OneDimensionalGaussianModel\022 \n\005g" +
+      "amma\030\007 \001(\0132\021.hello.GammaModel\022$\n\007poisson" +
+      "\030\010 \001(\0132\023.hello.PoissonModel\022.\n\010alphabet\030" +
+      "\t \001(\0132\034.hello.DiscreteAlphabetModel\022\016\n\006w" +
+      "eight\030\024 \001(\001\022\027\n\017num_free_params\030\025 \001(\005\"\225\001\n" +
+      "\021HiddenMarkovModel\022\n\n\002id\030\001 \002(\t\022\023\n\013descri" +
+      "ption\030\002 \001(\t\022*\n\021observation_model\030\003 \003(\0132\017" +
+      ".hello.ObsModel\022\037\n\027state_transition_matr" +
+      "ix\030\004 \003(\001\022\022\n\nnum_states\030\005 \002(\005\"\252\002\n\021Measure" +
+      "mentParams\022\"\n\032num_minutes_in_meas_period",
+      "\030\001 \001(\005\022\036\n\026enable_interval_search\030\002 \001(\010\022\'" +
+      "\n\037natural_light_filter_start_hour\030\003 \001(\001\022" +
+      "&\n\036natural_light_filter_stop_hour\030\004 \001(\001\022" +
+      "\034\n\024light_pre_multiplier\030\005 \001(\001\022\027\n\017light_f" +
+      "loor_lux\030\006 \001(\001\022\"\n\032use_waves_for_disturba" +
+      "nces\030\007 \001(\010\022%\n\035motion_count_for_disturban" +
+      "ces\030\010 \001(\001\"\260\001\n\013HmmBayesNet\0228\n\026measurement" +
+      "_parameters\030\001 \002(\0132\030.hello.MeasurementPar" +
+      "ams\0222\n\020independent_hmms\030\002 \003(\0132\030.hello.Hi" +
+      "ddenMarkovModel\0223\n\031conditional_probabili",
+      "ties\030\003 \003(\0132\020.hello.CondProbs*\343\001\n\010MeasTyp" +
+      "e\022\r\n\tLOG_LIGHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\036\n" +
+      "\032PILL_MAGNITUDE_DISTURBANCE\020\002\022\021\n\rNATURAL" +
+      "_LIGHT\020\003\022\r\n\tLOG_SOUND\020\004\022\033\n\027PARTNER_MOTIO" +
+      "N_DURATION\020\005\022\024\n\020WAVE_DISTURBANCE\020\006\022\036\n\032LI" +
+      "GHT_INCREASE_DISTURBANCE\020\007\022\036\n\032SOUND_INCR" +
+      "EASE_DISTURBANCE\020\010B:\n com.hello.suripu.a" +
+      "pi.datascienceB\026SleepHmmBayesNetProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -9278,6 +7728,7 @@ public final class SleepHmmBayesNetProtos {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          com.hello.suripu.api.datascience.BetaBinomialProtos.getDescriptor(),
         }, assigner);
     internal_static_hello_PoissonModel_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -9315,36 +7766,25 @@ public final class SleepHmmBayesNetProtos {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_hello_ObsModel_descriptor,
         new java.lang.String[] { "StateIndex", "MeasType", "Chisquare", "Gaussian", "Gamma", "Poisson", "Alphabet", "Weight", "NumFreeParams", });
-    internal_static_hello_BetaCondProb_descriptor =
-      getDescriptor().getMessageTypes().get(6);
-    internal_static_hello_BetaCondProb_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_BetaCondProb_descriptor,
-        new java.lang.String[] { "Alpha", "Beta", });
-    internal_static_hello_CondProbs_descriptor =
-      getDescriptor().getMessageTypes().get(7);
-    internal_static_hello_CondProbs_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_CondProbs_descriptor,
-        new java.lang.String[] { "ModelId", "OutputId", "Probs", });
     internal_static_hello_HiddenMarkovModel_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_hello_HiddenMarkovModel_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_hello_HiddenMarkovModel_descriptor,
         new java.lang.String[] { "Id", "Description", "ObservationModel", "StateTransitionMatrix", "NumStates", });
     internal_static_hello_MeasurementParams_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_hello_MeasurementParams_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_hello_MeasurementParams_descriptor,
         new java.lang.String[] { "NumMinutesInMeasPeriod", "EnableIntervalSearch", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "LightPreMultiplier", "LightFloorLux", "UseWavesForDisturbances", "MotionCountForDisturbances", });
     internal_static_hello_HmmBayesNet_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_hello_HmmBayesNet_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_hello_HmmBayesNet_descriptor,
         new java.lang.String[] { "MeasurementParameters", "IndependentHmms", "ConditionalProbabilities", });
+    com.hello.suripu.api.datascience.BetaBinomialProtos.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -15,13 +15,18 @@ import java.util.Map;
  */
 public class SensorDataReductionAndInterpretation {
     public final Map<String,HiddenMarkovModel> hmmByModelName;
-    public final Map<String,MultipleEventModel> interpretationByOutputName;
+    public Map<String,MultipleEventModel> interpretationByOutputName;
     public final Map<String,String> modelNameMappedToOutputName;
 
     public SensorDataReductionAndInterpretation(Map<String, HiddenMarkovModel> hmmByModelName, Map<String, MultipleEventModel> interpretationByOutputName, Map<String, String> modelNameMappedToOutputName) {
         this.hmmByModelName = hmmByModelName;
         this.interpretationByOutputName = interpretationByOutputName;
         this.modelNameMappedToOutputName = modelNameMappedToOutputName;
+    }
+
+    //used when we load the model priors from the individualized models
+    public void updateInterpretationModelPriors(final Map<String,MultipleEventModel> interpretationByOutputName) {
+        this.interpretationByOutputName = interpretationByOutputName;
     }
 
 
