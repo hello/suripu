@@ -154,11 +154,8 @@ public class PredictionResource extends BaseResource {
                 bayesNetData.updateModelPriors(modelsPriorsOptional.get().modelPriorList);
             }
 
-            //save first priors for day
-            if (!modelsPriorsOptional.isPresent() || modelsPriorsOptional.get().source.equals(priorsDAO.CURRENT_RANGE_KEY)) {
-                priorsDAO.updateModelPriorsByAccountIdForDate(accountId,targetDate,bayesNetData.getModelPriors());
-            }
-
+            //do not write priors evar
+            
             //get the predictor, which will turn the model output into events via some kind of segmenter
             final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(bayesNetData.getDeserializedData(), Optional.<UUID>absent());
 
@@ -479,7 +476,7 @@ public class PredictionResource extends BaseResource {
             case ALGORITHM_BAYESNETHMM:
                 events = getBayesEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,motions,partnerMotions);
                 break;
-            
+
             default:
                 throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                         .entity(new JsonError(204, "bad alg specified")).build());
