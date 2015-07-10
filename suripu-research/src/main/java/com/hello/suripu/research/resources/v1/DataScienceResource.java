@@ -702,6 +702,8 @@ public class DataScienceResource extends BaseResource {
 
             case BINNING_SOURCE_SLEEPHMM:
             {
+                LOGGER.debug("GETTING YE OLDE HMM SOURCE");
+
                 Optional<SleepHmmSensorDataBinning.BinnedData> optionalBinnedData = Optional.absent();
                 try {
                     optionalBinnedData = SleepHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, model, startTimeUTC, stopTimeUTC, timezoneOffset);
@@ -726,6 +728,8 @@ public class DataScienceResource extends BaseResource {
                 for (int i = 0; i < result.data[0].length; i++) {
                     times.add(startTimeUTC + i * numMinutesInMeasPeriod * 60000L);
                 }
+
+                LOGGER.debug("returning matrix of {} x {}",matrix.size(),matrix.get(0).size());
                 return new BinnedSensorData(accountId,matrix,times,timezoneOffset);
 
             }
@@ -734,6 +738,7 @@ public class DataScienceResource extends BaseResource {
             case BINNING_SOURCE_BAYES:
             default:
             {
+                LOGGER.debug("GETTING BINNED DATA FROM BAYES SOURCE");
                 final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, filteredPartnerData, bayesNetMeasurementParameters, startTimeUTC, stopTimeUTC, timezoneOffset);
 
                 if (!binnedDataOptional.isPresent()) {
@@ -750,6 +755,7 @@ public class DataScienceResource extends BaseResource {
                     times.add(startTimeUTC + i * numMinutesInMeasPeriod * 60000L);
                 }
 
+                LOGGER.debug("returning matrix of {} x {}",matrix.size(),matrix.get(0).size());
                 return new BinnedSensorData(accountId, matrix, times, timezoneOffset);
             }
 
