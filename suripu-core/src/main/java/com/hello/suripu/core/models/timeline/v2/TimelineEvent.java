@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models.timeline.v2;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -141,9 +142,23 @@ public class TimelineEvent {
 
     public static class TimeAmendment {
         public final String newEventTime;
+        public final Integer timezoneOffset;
 
-        public TimeAmendment(@JsonProperty("new_event_time") String newEventTime) {
+
+        private TimeAmendment(final String newEventTime, final Integer timezoneOffset) {
             this.newEventTime = newEventTime;
+            this.timezoneOffset = timezoneOffset;
+        }
+
+        public static TimeAmendment create(@JsonProperty("new_event_time") final String newEventTime) {
+            return new TimeAmendment(newEventTime, 0);
+        }
+
+        @JsonCreator
+        public static TimeAmendment create(@JsonProperty("new_event_time") final String newEventTime,
+                                           @JsonProperty("timezone_offset") Integer timezoneOffset) {
+            final Integer offset = (timezoneOffset == null) ? 0 : timezoneOffset;
+            return new TimeAmendment(newEventTime, offset);
         }
     }
 }

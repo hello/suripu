@@ -388,6 +388,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));
 
         environment.addResource(new SupportResource(supportDAO));
-        environment.addResource(new com.hello.suripu.app.v2.TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor));
+        environment.addResource(new com.hello.suripu.app.v2.TimelineResource(accountDAO, timelineDAODynamoDB,timelineLogDAO, timelineProcessor, feedbackDAO, trackerMotionDAO));
     }
 }

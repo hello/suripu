@@ -2,9 +2,15 @@ package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
+import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
+import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.timeline.v2.EventType;
 import com.hello.suripu.core.models.timeline.v2.Timeline;
 import com.hello.suripu.core.models.timeline.v2.TimelineEvent;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -17,6 +23,8 @@ import com.hello.suripu.core.util.PATCH;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +40,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/v2/timeline")
 public class TimelineResource extends BaseResource {
@@ -45,15 +54,21 @@ public class TimelineResource extends BaseResource {
     private final AccountDAO accountDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final TimelineLogDAO timelineLogDAO;
+    private final FeedbackDAO feedbackDAO;
+    private final TrackerMotionDAO trackerMotionDAO;
 
     public TimelineResource(final AccountDAO accountDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
                             final TimelineLogDAO timelineLogDAO,
-                            final TimelineProcessor timelineProcessor) {
+                            final TimelineProcessor timelineProcessor,
+                            final FeedbackDAO feedbackDAO,
+                            final TrackerMotionDAO trackerMotionDAO) {
         this.timelineProcessor = timelineProcessor;
         this.timelineLogDAO = timelineLogDAO;
         this.accountDAO = accountDAO;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
+        this.feedbackDAO = feedbackDAO;
+        this.trackerMotionDAO = trackerMotionDAO;
     }
 
     @GET
@@ -83,14 +98,20 @@ public class TimelineResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{date}/events/{type}/{timestamp}")
-    public Response amendTimeOfEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
+    public Timeline amendTimeOfEvent(@Scope(OAuthScope.SLEEP_FEEDBACK) final AccessToken accessToken,
                                      @PathParam("date") String date,
                                      @PathParam("type") String type,
                                      @PathParam("timestamp") long timestamp,
                                      @Valid TimelineEvent.TimeAmendment timeAmendment) {
-        return Response.status(Response.Status.ACCEPTED)
-                       .entity(getTimelineForNight(accessToken, date))
-                       .build();
+
+        final DateTime oldEventDateTime = new DateTime(timestamp * 1000L, DateTimeZone.UTC).plusMillis(timeAmendment.timezoneOffset);
+        final String hourMinute = oldEventDateTime.toString(DateTimeFormat.forPattern("HH:mm"));
+
+        Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
+        final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
+        feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
+        timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
+        return getTimelineForNight(accessToken, date);
     }
 
     @DELETE
@@ -101,6 +122,7 @@ public class TimelineResource extends BaseResource {
                                 @PathParam("date") String date,
                                 @PathParam("type") String type,
                                 @PathParam("timestamp") long timestamp) {
+
         return Response.status(Response.Status.ACCEPTED)
                        .entity(getTimelineForNight(accessToken, date))
                        .build();
@@ -114,6 +136,14 @@ public class TimelineResource extends BaseResource {
                                   @PathParam("date") String date,
                                   @PathParam("type") String type,
                                   @PathParam("timestamp") long timestamp) {
+
+        final DateTime startDateTime = new DateTime(DateTime.parse(date), DateTimeZone.UTC);
+        final DateTime endDateTime = startDateTime.plusHours(12);
+
+        final List<TrackerMotion> trackerMotionList = trackerMotionDAO.getBetween(accessToken.accountId, startDateTime, endDateTime);
+        if(trackerMotionList.isEmpty()) {
+
+        }
         return Response.status(Response.Status.ACCEPTED)
                        .entity(getTimelineForNight(accessToken, date))
                        .build();
