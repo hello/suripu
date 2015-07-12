@@ -13,7 +13,7 @@ sensors_db:
   driverClass: org.postgresql.Driver
   user: sensors
   password: hello-sensors
-  url: jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  url: jdbc:postgresql://sensors-2.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
 
   # any properties specific to your JDBC driver:
   properties:
@@ -293,3 +293,13 @@ sense_last_seen:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_sense_last_seen
+
+hmm_bayesnet_priors:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_hmm_bayesnet_priors
+
+hmm_bayesnet_models:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_hmm_bayesnet_models

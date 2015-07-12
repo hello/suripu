@@ -2,7 +2,6 @@ package com.hello.suripu.core.util;
 
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Account;
-import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Insights.AvailableGraph;
 import com.hello.suripu.core.models.Insights.DowSample;
@@ -57,23 +56,16 @@ public class TrendGraphUtils {
     }
 
     public static TrendGraph getScoresOverTimeGraph(final TrendGraph.TimePeriodType timePeriodType,
-                                                    final List<AggregateScore> scores,
-                                                    final Map<DateTime, Integer> userOffsetMillis,
+                                                    final List<AggregateSleepStats> stats,
                                                     final int numDaysActive) {
         // aggregate
         final List<GraphSample> dataPoints = new ArrayList<>();
 
-        for (final AggregateScore score : scores) {
-            final float value = (float) score.score;
+        for (final AggregateSleepStats stat : stats) {
+            final float value = (float) stat.sleepScore;
             final TrendGraph.DataLabel label = TrendGraph.getDataLabel(TrendGraph.DataType.SLEEP_SCORE, value);
-            final DateTime date = getDateTimeFromString(score.date);
-
-            int offsetMillis = 0;
-            if (userOffsetMillis.containsKey(date)) {
-                offsetMillis = userOffsetMillis.get(date);
-            }
-
-            dataPoints.add(new GraphSample(date.getMillis(), value, offsetMillis, label));
+            final DateTime date = stat.dateTime;
+            dataPoints.add(new GraphSample(date.getMillis(), value, stat.offsetMillis, label));
         }
 
         final List<String> timeSeriesOptions = TrendGraph.TimePeriodType.getTimeSeriesOptions(numDaysActive);

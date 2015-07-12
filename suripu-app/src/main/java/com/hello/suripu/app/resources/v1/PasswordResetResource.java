@@ -2,7 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.configuration.EmailConfiguration;
+import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.oauth.AccessToken;

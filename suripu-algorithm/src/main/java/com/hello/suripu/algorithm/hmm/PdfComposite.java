@@ -1,10 +1,5 @@
 package com.hello.suripu.algorithm.hmm;
 
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -15,19 +10,18 @@ import java.util.Arrays;
 
 public class PdfComposite implements HmmPdfInterface {
 
-    ArrayList<HmmPdfInterface> _pdfs;
+    final ArrayList<HmmPdfInterface> pdfs;
+    int numFreeParams;
 
     public PdfComposite() {
-        _pdfs = new ArrayList<HmmPdfInterface>();
+        numFreeParams = 0;
+        pdfs = new ArrayList<HmmPdfInterface>();
     }
 
 
     public void addPdf(HmmPdfInterface pdf) {
-        _pdfs.add(pdf);
-    }
-
-    public void clear() {
-        _pdfs.clear();
+        pdfs.add(pdf);
+        numFreeParams += pdf.getNumFreeParams();
     }
 
     public double [] getLogLikelihood(final double [][] meas) {
@@ -35,7 +29,7 @@ public class PdfComposite implements HmmPdfInterface {
         Arrays.fill(liks, 0.0);
 
         //multiply out joint
-        for (HmmPdfInterface pdf : _pdfs) {
+        for (HmmPdfInterface pdf : pdfs) {
             double[] liks2 = pdf.getLogLikelihood(meas);
 
             for (int j = 0; j < liks.length; j++) {
@@ -47,8 +41,10 @@ public class PdfComposite implements HmmPdfInterface {
         return liks;
     }
 
-
-
+    @Override
+    public int getNumFreeParams() {
+        return numFreeParams;
+    }
 
 
 }

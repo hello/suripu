@@ -103,8 +103,11 @@ public class HiddenMarkovModel {
     private double getAIC(double pathCost) {
         return 2.0*pathCost + 2.0*this.numFreeParams;
     }
-
     public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates) {
+        return decode(observations,possibleEndStates,HmmPdfInterface.MIN_LIKELIHOOD);
+    }
+
+    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates, final double minLikelihood) {
         /*
 
         returns optimal path given observations and state transition matrix "A"
@@ -132,7 +135,7 @@ public class HiddenMarkovModel {
 
         // init
         for (int i = 0; i < this.numStates; i++) {
-            phi[i][0] = -Math.log(this.initialState[i]+ HmmPdfInterface.MIN_LIKELIHOOD) - logBMap[i][0];
+            phi[i][0] = -Math.log(this.initialState[i]+ minLikelihood) - logBMap[i][0];
         }
 
         //find minimum cost
@@ -163,7 +166,7 @@ public class HiddenMarkovModel {
                 //#"j" mean THIS (the jth) hidden state
                 final double obscost = -logBMap[j][t];
                 for (int i = 0; i < this.numStates; i++) {
-                   cost[i] = -Math.log(this.A[i][j] + HmmPdfInterface.MIN_LIKELIHOOD) + obscost;
+                   cost[i] = -Math.log(this.A[i][j] + minLikelihood) + obscost;
                 }
 
                 for (int i = 0; i < this.numStates; i++) {

@@ -12,7 +12,7 @@ sensors_db:
   driverClass: org.postgresql.Driver
   user: sensors
   password: hello-sensors
-  url: jdbc:postgresql://sensors-1-replica-2.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  url: jdbc:postgresql://sensors-2-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -141,6 +141,8 @@ dynamodb:
     ring_time_history: prod_ring_history_by_account
     timezone_history: prod_timezone_history
     alarm_log: prod_alarm
+    hmm_bayesnet_priors: prod_hmm_bayesnet_priors
+    hmm_bayesnet_models: prod_hmm_bayesnet_models
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
@@ -152,7 +154,8 @@ dynamodb:
     ring_time_history: http://dynamodb.us-east-1.amazonaws.com
     timezone_history: http://dynamodb.us-east-1.amazonaws.com
     alarm_log: http://dynamodb.us-east-1.amazonaws.com
-
+    hmm_bayesnet_priors: http://dynamodb.us-east-1.amazonaws.com
+    hmm_bayesnet_models: http://dynamodb.us-east-1.amazonaws.com
 
 aggregate_window_size_min: 10
 

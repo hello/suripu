@@ -10,4 +10,6 @@ public interface HmmPdfInterface {
     static public final double MIN_LIKELIHOOD = 1e-15;
 
     public double [] getLogLikelihood(final double [][] measurements);
+
+    public int getNumFreeParams();
 }
