@@ -111,7 +111,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         try {
                             final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
                             trackerData.add(trackerMotion);
-                            LOGGER.debug("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
                         } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
                             LOGGER.error("Fail to decrypt tracker motion payload for pill {}, account {}", pair.externalDeviceId, pair.accountId);
                         }
@@ -127,7 +126,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         LOGGER.info("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
                         pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
                         // Best effort saving of the last seen HB
-                        pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
+//                        pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
                     }
                 }
             } catch (InvalidProtocolBufferException e) {
@@ -159,7 +158,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
         if(shutdownReason == ShutdownReason.TERMINATE) {
-            LOGGER.warn("Got Termintate. Attempting to checkpoint.");
+            LOGGER.warn("Got Terminate. Attempting to checkpoint.");
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.warn("Checkpoint successful.");

@@ -19,7 +19,6 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
-import com.hello.suripu.workers.utils.ActiveDevicesTracker;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
@@ -45,19 +44,18 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
-    private final ActiveDevicesTracker activeDevicesTracker;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
     private final Meter clockOutOfSync;
 
+    private String shardId = "";
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final ActiveDevicesTracker activeDevicesTracker, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
-        this.activeDevicesTracker = activeDevicesTracker;
         this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
@@ -66,7 +64,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void initialize(String s) {
-
+        shardId = s;
     }
 
     @Timed
@@ -270,7 +268,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         activeDevicesTracker.trackFirmwares(seenFirmwares);
         */
 
-        LOGGER.info("Seen device: {}", activeSenses.size());
+        LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
     }
 
     @Override
