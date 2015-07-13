@@ -76,6 +76,9 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
         final List<DeviceStatus> heartBeats = Lists.newArrayList();
+
+
+
         for (final Record record : records) {
             try {
                 final SenseCommandProtos.batched_pill_data batched_pill_data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
@@ -130,7 +133,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
 
                         heartBeats.add(new DeviceStatus(0L, pair.internalDeviceId, String.valueOf(firmwareVersion), batteryLevel, lastUpdated, upTimeInSeconds));
-                        pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
+//                        pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
                         // Best effort saving of the last seen HB
                         if(hasPillLastSeenDynamoDBEnabled(data.getDeviceId())) {
                             pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
