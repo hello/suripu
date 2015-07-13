@@ -98,6 +98,8 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("half_date", halfDateString);
             fields.put("date", dateString);
             fields.put("all", "1");
+            fields.put("top_fw_version", log.getTopFwVersion());
+            fields.put("middle_fw_version", log.getMiddleFwVersion());
 
             for (final String tag : tagToField.keySet()) {
                 fields.put(tagToField.get(tag).value, String.valueOf(log.getMessage().contains(tag)));
