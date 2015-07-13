@@ -6,6 +6,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -15,6 +16,7 @@ import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -73,6 +75,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
+        final List<DeviceStatus> heartBeats = Lists.newArrayList();
         for (final Record record : records) {
             try {
                 final SenseCommandProtos.batched_pill_data batched_pill_data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
@@ -111,7 +114,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         try {
                             final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
                             trackerData.add(trackerMotion);
-                            LOGGER.debug("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
+                            LOGGER.trace("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
                         } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
                             LOGGER.error("Fail to decrypt tracker motion payload for pill {}, account {}", pair.externalDeviceId, pair.accountId);
                         }
@@ -124,7 +127,9 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         final int firmwareVersion = data.getFirmwareVersion();
                         final Long ts = data.getTimestamp() * 1000L;
                         final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
-                        LOGGER.info("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
+                        LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
+
+                        heartBeats.add(new DeviceStatus(0L, pair.internalDeviceId, String.valueOf(firmwareVersion), batteryLevel, lastUpdated, upTimeInSeconds));
                         pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
                         // Best effort saving of the last seen HB
                         if(hasPillLastSeenDynamoDBEnabled(data.getDeviceId())) {
@@ -145,6 +150,15 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             this.trackerMotionDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
             batchSaved.mark(trackerData.size());
             LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
+        }
+
+        if (heartBeats.size() > 0) {
+            LOGGER.info("About to batch insert: {} heartbeats", heartBeats.size());
+            this.pillHeartBeatDAO.batchInsert(heartBeats);
+            LOGGER.info("Finished batch insert: {} heartbeats", heartBeats.size());
+        }
+
+        if(!trackerData.isEmpty() || !heartBeats.isEmpty()) {
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.info("Successful checkpoint.");
@@ -154,6 +168,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
             }
         }
+
         messagesProcessed.mark(records.size());
     }
 
