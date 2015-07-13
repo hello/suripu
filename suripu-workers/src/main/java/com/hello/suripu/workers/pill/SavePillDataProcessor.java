@@ -177,7 +177,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 heartBeats.add(new DeviceStatus(0L, pair.internalDeviceId, String.valueOf(firmwareVersion), batteryLevel, lastUpdated, upTimeInSeconds));
 //                        pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
                 // Best effort saving of the last seen HB
-                if(hasPillLastSeenDynamoDBEnabled(data.getDeviceId())) {
+                if(hasPillLastSeenDynamoDBEnabled(senseId)) {
                     pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
                 }
             }
