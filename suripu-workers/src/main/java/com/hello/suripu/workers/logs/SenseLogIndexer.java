@@ -115,6 +115,8 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             categories.put("origin", log.getOrigin());
             categories.put("half_date", halfDateString);
             categories.put("date", dateString);
+            categories.put("top_fw_version", log.getTopFwVersion());
+            categories.put("middle_fw_version", log.getMiddleFwVersion());
 
             documents.add(new IndexTankClient.Document(documentId, fields, variables, categories));
 
