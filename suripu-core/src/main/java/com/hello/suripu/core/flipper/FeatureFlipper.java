@@ -49,4 +49,5 @@ public class FeatureFlipper {
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String BAYES_NET_ALGORITHM = "bayes_net_algorithm";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
+    public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
 }
