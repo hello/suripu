@@ -156,9 +156,13 @@ public class TimelineEvent {
 
         @JsonCreator
         public static TimeAmendment create(@JsonProperty("new_event_time") final String newEventTime,
-                                           @JsonProperty("timezone_offset") Integer timezoneOffset) {
+                                           @JsonProperty("timezone_offset") final Integer timezoneOffset) {
             final Integer offset = (timezoneOffset == null) ? 0 : timezoneOffset;
             return new TimeAmendment(newEventTime, offset);
+        }
+
+        public static TimeAmendment withOffset(final TimeAmendment timeAmendment, final Integer timezoneOffset) {
+            return new TimeAmendment(timeAmendment.newEventTime, timezoneOffset);
         }
     }
 }

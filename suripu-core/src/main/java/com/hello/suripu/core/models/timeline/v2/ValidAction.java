@@ -20,9 +20,9 @@ public enum ValidAction {
     public static List<ValidAction> from(Event.Type type) {
         switch (type) {
             case MOTION:
-                return Lists.newArrayList(ADJUST_TIME, VERIFY, INCORRECT);
-            case SLEEPING:
+            case SLEEP:
             case LIGHTS_OUT:
+            case IN_BED:
             case OUT_OF_BED:
             case WAKE_UP:
                 return Lists.newArrayList(ADJUST_TIME, VERIFY, INCORRECT);

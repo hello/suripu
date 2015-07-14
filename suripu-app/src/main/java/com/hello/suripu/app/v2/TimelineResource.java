@@ -3,7 +3,6 @@ package com.hello.suripu.app.v2;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Event;
@@ -19,7 +18,9 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PATCH;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -104,10 +105,12 @@ public class TimelineResource extends BaseResource {
                                      @PathParam("timestamp") long timestamp,
                                      @Valid TimelineEvent.TimeAmendment timeAmendment) {
 
-        final DateTime oldEventDateTime = new DateTime(timestamp * 1000L, DateTimeZone.UTC).plusMillis(timeAmendment.timezoneOffset);
+
+        final Integer offsetMillis = getOffsetMillis(accessToken.accountId, date, timestamp);
+        final DateTime oldEventDateTime = new DateTime(timestamp, DateTimeZone.UTC).plusMillis(offsetMillis);
         final String hourMinute = oldEventDateTime.toString(DateTimeFormat.forPattern("HH:mm"));
 
-        Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
+        final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
@@ -137,15 +140,40 @@ public class TimelineResource extends BaseResource {
                                   @PathParam("type") String type,
                                   @PathParam("timestamp") long timestamp) {
 
-        final DateTime startDateTime = new DateTime(DateTime.parse(date), DateTimeZone.UTC);
-        final DateTime endDateTime = startDateTime.plusHours(12);
 
-        final List<TrackerMotion> trackerMotionList = trackerMotionDAO.getBetween(accessToken.accountId, startDateTime, endDateTime);
+
+        final Integer offsetMillis = getOffsetMillis(accessToken.accountId, date, timestamp);
+
+        final DateTime correctEvent = new DateTime(timestamp, DateTimeZone.UTC).plusMillis(offsetMillis);
+        final String hourMinute = correctEvent.toString(DateTimeFormat.forPattern("HH:mm"));
+        final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
+
+        // Correct event means feedback = prediction
+        final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
+        feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
+
+        return Response.status(Response.Status.ACCEPTED).build();
+    }
+
+
+    private Integer getOffsetMillis(final Long accountId, final String date, final Long timestamp) {
+        final DateTime startDateTime = DateTimeUtil.ymdStringToDateTime(date);
+        final DateTime endDateTime = startDateTime.plusHours(48);
+
+        final List<TrackerMotion> trackerMotionList = trackerMotionDAO.getBetween(accountId, startDateTime, endDateTime);
         if(trackerMotionList.isEmpty()) {
-
+            LOGGER.error("No tracker motion data");
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(new JsonError(404, "Not found")).build());
         }
-        return Response.status(Response.Status.ACCEPTED)
-                       .entity(getTimelineForNight(accessToken, date))
-                       .build();
+
+        Integer offsetMillis = trackerMotionList.get(0).offsetMillis;
+        for(final TrackerMotion trackerMotion : trackerMotionList) {
+            if(trackerMotion.timestamp >= timestamp) {
+                offsetMillis = trackerMotion.offsetMillis;
+                break;
+            }
+        }
+
+        return offsetMillis;
     }
 }
