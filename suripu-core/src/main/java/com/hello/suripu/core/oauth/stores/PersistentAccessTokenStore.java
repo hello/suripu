@@ -32,7 +32,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
     private final ApplicationStore<Application, ApplicationRegistration> applicationStore;
     private final Long expirationTimeInSeconds;
 
-    private static final Long DEFAULT_EXPIRATION_TIME_IN_SECONDS = 86400L * 90; // 90 days
+    private static final Long DEFAULT_EXPIRATION_TIME_IN_SECONDS = 86400L * 365; // 365 days
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistentAccessTokenStore.class);
 
     final LoadingCache<ClientCredentials, Optional<AccessToken>> cache;
