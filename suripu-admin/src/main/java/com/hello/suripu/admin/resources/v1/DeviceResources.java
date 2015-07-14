@@ -53,6 +53,7 @@ import redis.clients.jedis.exceptions.JedisDataException;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -400,9 +401,11 @@ public class DeviceResources {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/sense/{email}/{sense_id}")
-    public void unregisterSenseByUser(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
-                                      @PathParam("email") final String email,
-                                      @PathParam("sense_id") final String senseId) {
+    public void unregisterSenseByUserAll(@Scope(OAuthScope.ADMINISTRATION_WRITE) final AccessToken accessToken,
+                                         @PathParam("email") final String email,
+                                         @PathParam("sense_id") final String senseId,
+                                         @QueryParam("unlink_all") @DefaultValue("false") final Boolean unlinkAll) {
+
 
         final Optional<Long> accountIdOptional = Util.getAccountIdByEmail(accountDAO, email);
         if (!accountIdOptional.isPresent()) {
@@ -450,18 +453,20 @@ public class DeviceResources {
 //                }
 //            });
 
-        try {
-            deviceDAO.unlinkAllAccountsPairedToSense(senseId);
-            mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
-        }
-        catch (AmazonServiceException awsEx) {
-            LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
-                    accountId,
-                    senseId,
-                    awsEx.getErrorMessage());
-        }catch (UnableToExecuteStatementException sqlExp){
-            LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        if (unlinkAll.equals(Boolean.TRUE)) {
+            try {
+                deviceDAO.unlinkAllAccountsPairedToSense(senseId);
+                mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
+            }
+            catch (AmazonServiceException awsEx) {
+                LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
+                        accountId,
+                        senseId,
+                        awsEx.getErrorMessage());
+            }catch (UnableToExecuteStatementException sqlExp){
+                LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
         }
     }
 
