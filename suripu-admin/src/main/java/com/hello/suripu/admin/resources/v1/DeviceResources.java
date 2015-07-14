@@ -463,6 +463,7 @@ public class DeviceResources {
                         accountId,
                         senseId,
                         awsEx.getErrorMessage());
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }catch (UnableToExecuteStatementException sqlExp){
                 LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
