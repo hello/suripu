@@ -1,20 +1,26 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -22,8 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class KeyStoreDynamoDB implements KeyStore {
 
@@ -102,6 +111,63 @@ public class KeyStoreDynamoDB implements KeyStore {
         // TODO: Log consumed capacity
     }
 
+    @Override
+    public Map<String, Optional<byte[]>> getBatch(final Set<String> deviceIds) {
+
+        final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
+        final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
+
+        for (final String deviceId : deviceIds) {
+            final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
+            attributeValueMap.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+            itemKeys.add(attributeValueMap);
+        }
+
+        final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(DEVICE_ID_ATTRIBUTE_NAME, AES_KEY_ATTRIBUTE_NAME);
+        final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
+        requestItems.put(keyStoreTableName, key);
+
+        batchGetItemRequest.withRequestItems(requestItems);
+
+        try {
+            final BatchGetItemResult batchGetItemResult = dynamoDBClient.batchGetItem(batchGetItemRequest);
+            final Map<String, Optional<byte[]>> results = Maps.newHashMap();
+
+            for (final String item : batchGetItemResult.getResponses().keySet()) {
+                final List<Map<String, AttributeValue>> responses = batchGetItemResult.getResponses().get(item);
+                for (final Map<String, AttributeValue> response : responses) {
+                    final String deviceId = response.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
+                    results.put(deviceId, fromItem(response, deviceId, false));
+                }
+            }
+            return results;
+        } catch (AmazonServiceException ase){
+            LOGGER.error("Failed getting keys.");
+
+        }
+        return Collections.EMPTY_MAP;
+    }
+
+    private Optional<byte[]> fromItem(final Map<String, AttributeValue> item, final String deviceId, final Boolean strict) {
+        if(item == null || !item.containsKey(AES_KEY_ATTRIBUTE_NAME)) {
+            LOGGER.warn("Did not find AES key for device_id = {}.", deviceId);
+            if(strict) {
+                return Optional.absent();
+            }
+            LOGGER.warn("Not in strict mode, returning default AES key instead for device = {}.", deviceId);
+            return Optional.of(DEFAULT_AES_KEY);
+        }
+
+        final String hexEncodedKey = item.get(AES_KEY_ATTRIBUTE_NAME).getS();
+        try {
+            return Optional.of(Hex.decodeHex(hexEncodedKey.toCharArray()));
+        } catch (DecoderException e) {
+            LOGGER.error("Failed to decode key from store");
+        }
+
+        return Optional.absent();
+    }
+
     private Optional<byte[]> getRemotely(final String deviceId, final Boolean strict) {
         if(DEFAULT_FACTORY_DEVICE_ID.equals(deviceId) && strict) {
             LOGGER.warn("Device not properly provisioned, got {} as a deviceId", deviceId);
@@ -116,23 +182,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
-        if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
-            LOGGER.warn("Did not find AES key for device_id = {}.", deviceId);
-            if(strict) {
-                return Optional.absent();
-            }
-            LOGGER.warn("Not in strict mode, returning default AES key instead for device = {}.", deviceId);
-            return Optional.of(DEFAULT_AES_KEY);
-        }
-
-        final String hexEncodedKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
-        try {
-            return Optional.of(Hex.decodeHex(hexEncodedKey.toCharArray()));
-        } catch (DecoderException e) {
-            LOGGER.error("Failed to decode key from store");
-        }
-
-        return Optional.absent();
+        return fromItem(getItemResult.getItem(), deviceId, strict);
 
     }
 

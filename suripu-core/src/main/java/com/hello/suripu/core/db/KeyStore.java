@@ -3,6 +3,9 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
 
+import java.util.Map;
+import java.util.Set;
+
 public interface KeyStore {
 
     /**
@@ -23,4 +26,7 @@ public interface KeyStore {
      */
     void put(String deviceId, String publicKey);
     void put(String deviceId, String publicKey, String metadata);
+
+
+    Map<String, Optional<byte[]>> getBatch(Set<String> deviceIds);
 }
