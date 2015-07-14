@@ -82,7 +82,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         final List<DeviceStatus> heartBeats = Lists.newArrayList();
 
         final List<SenseCommandProtos.pill_data> pillData = Lists.newArrayList();
-
+        final Map<String, Optional<byte[]>> pillKeys = Maps.newHashMap();
         final Map<String, Optional<DeviceAccountPair>> pairs = Maps.newHashMap();
         final Map<String, Optional<UserInfo>> userInfos = Maps.newHashMap();
         final Set<String> pillIds = Sets.newHashSet();
@@ -106,81 +106,90 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             }
         }
 
-        // Fetch data from Dynamo and DB
-        final Map<String, Optional<byte[]>> pillKeys = pillKeyStore.getBatch(pillIds);
-        for(final String pillId : pillIds) {
-            final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(pillId);
-            pairs.put(pillId, optionalPair);
-        }
-
-        for(final String pillId : pillIds) {
-            final String senseId = pillIdToSenseId.get(pillId);
-            final Optional<DeviceAccountPair> pair = pairs.get(pillId);
-            if(pair.isPresent()) {
-                final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, pair.get().accountId);
-                userInfos.put(pillId, userInfoOptional);
-            } else {
-                userInfos.put(pillId, Optional.<UserInfo>absent());
-            }
-        }
-
-        for(final SenseCommandProtos.pill_data data : pillData) {
-            final Optional<byte[]> decryptionKey = pillKeys.get(data.getDeviceId());
-            //TODO: Get the actual decryption key.
-            if(!decryptionKey.isPresent()) {
-                LOGGER.error("Missing decryption key for pill: {}", data.getDeviceId());
-                continue;
+        try {
+            // Fetch data from Dynamo and DB
+            for (final String pillId : pillIds) {
+                final Optional<byte[]> optionalKeys = pillKeyStore.get(pillId);
+                pillKeys.put(pillId, optionalKeys);
             }
 
-            final Optional<DeviceAccountPair> optionalPair = pairs.get(data.getDeviceId());
-            if(!optionalPair.isPresent()) {
-                LOGGER.error("Missing pairing in account tracker map for pill: {}", data.getDeviceId());
-                continue;
+            for (final String pillId : pillIds) {
+                final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(pillId);
+                pairs.put(pillId, optionalPair);
             }
 
-            final String senseId = pillIdToSenseId.get(data.getDeviceId());
-            final DeviceAccountPair pair = optionalPair.get();
-
-            final Optional<UserInfo> userInfoOptional = userInfos.get(data.getDeviceId());
-            if(!userInfoOptional.isPresent()) {
-                LOGGER.error("Missing UserInfo for account: {} and pill_id = {} and sense_id = {}", pair.accountId, pair.externalDeviceId, senseId);
-                continue;
-            }
-
-            final UserInfo userInfo = userInfoOptional.get();
-            final Optional<DateTimeZone> timeZoneOptional = userInfo.timeZone;
-            if(!timeZoneOptional.isPresent()) {
-                LOGGER.error("No timezone for account {} with pill_id = {}", pair.accountId, pair.externalDeviceId);
-                continue;
-            }
-
-
-            if(data.hasMotionDataEntrypted()){
-                try {
-                    final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
-                    trackerData.add(trackerMotion);
-                    LOGGER.trace("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
-                } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
-                    LOGGER.error("Fail to decrypt tracker motion payload for pill {}, account {}", pair.externalDeviceId, pair.accountId);
+            for (final String pillId : pillIds) {
+                final String senseId = pillIdToSenseId.get(pillId);
+                final Optional<DeviceAccountPair> pair = pairs.get(pillId);
+                if (pair.isPresent()) {
+                    final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, pair.get().accountId);
+                    userInfos.put(pillId, userInfoOptional);
+                } else {
+                    userInfos.put(pillId, Optional.<UserInfo>absent());
                 }
             }
 
+            for (final SenseCommandProtos.pill_data data : pillData) {
+                final Optional<byte[]> decryptionKey = pillKeys.get(data.getDeviceId());
+                //TODO: Get the actual decryption key.
+                if (!decryptionKey.isPresent()) {
+                    LOGGER.error("Missing decryption key for pill: {}", data.getDeviceId());
+                    continue;
+                }
 
-            if(data.hasBatteryLevel()){
-                final int batteryLevel = data.getBatteryLevel();
-                final int upTimeInSeconds = data.getUptime();
-                final int firmwareVersion = data.getFirmwareVersion();
-                final Long ts = data.getTimestamp() * 1000L;
-                final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
-                LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
+                final Optional<DeviceAccountPair> optionalPair = pairs.get(data.getDeviceId());
+                if (!optionalPair.isPresent()) {
+                    LOGGER.error("Missing pairing in account tracker map for pill: {}", data.getDeviceId());
+                    continue;
+                }
 
-                heartBeats.add(new DeviceStatus(0L, pair.internalDeviceId, String.valueOf(firmwareVersion), batteryLevel, lastUpdated, upTimeInSeconds));
+                final String senseId = pillIdToSenseId.get(data.getDeviceId());
+                final DeviceAccountPair pair = optionalPair.get();
+
+                final Optional<UserInfo> userInfoOptional = userInfos.get(data.getDeviceId());
+                if (!userInfoOptional.isPresent()) {
+                    LOGGER.error("Missing UserInfo for account: {} and pill_id = {} and sense_id = {}", pair.accountId, pair.externalDeviceId, senseId);
+                    continue;
+                }
+
+                final UserInfo userInfo = userInfoOptional.get();
+                final Optional<DateTimeZone> timeZoneOptional = userInfo.timeZone;
+                if (!timeZoneOptional.isPresent()) {
+                    LOGGER.error("No timezone for account {} with pill_id = {}", pair.accountId, pair.externalDeviceId);
+                    continue;
+                }
+
+
+                if (data.hasMotionDataEntrypted()) {
+                    try {
+                        final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), decryptionKey.get());
+                        trackerData.add(trackerMotion);
+                        LOGGER.trace("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
+                    } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
+                        LOGGER.error("Fail to decrypt tracker motion payload for pill {}, account {}", pair.externalDeviceId, pair.accountId);
+                    }
+                }
+
+
+                if (data.hasBatteryLevel()) {
+                    final int batteryLevel = data.getBatteryLevel();
+                    final int upTimeInSeconds = data.getUptime();
+                    final int firmwareVersion = data.getFirmwareVersion();
+                    final Long ts = data.getTimestamp() * 1000L;
+                    final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
+                    LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
+
+                    heartBeats.add(new DeviceStatus(0L, pair.internalDeviceId, String.valueOf(firmwareVersion), batteryLevel, lastUpdated, upTimeInSeconds));
 //                        pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
-                // Best effort saving of the last seen HB
-                if(hasPillLastSeenDynamoDBEnabled(senseId)) {
-                    pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
+                    // Best effort saving of the last seen HB
+                    if (hasPillLastSeenDynamoDBEnabled(senseId)) {
+                        pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
+                    }
                 }
             }
+        } catch (Exception e) {
+            LOGGER.error("Failed processing pill: {}", e.getMessage());
+            LOGGER.error("Failed processing pill: {}", e);
         }
 
         if (trackerData.size() > 0) {
