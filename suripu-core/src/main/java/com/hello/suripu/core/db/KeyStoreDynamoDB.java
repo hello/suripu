@@ -22,8 +22,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +47,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
+    private final static String CREATED_AT_ATTRIBUTE_NAME = "created_at";
     public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
     private final static String METADATA = "metadata";
 
@@ -78,7 +83,7 @@ public class KeyStoreDynamoDB implements KeyStore {
     }
 
     @Override
-    public Optional<DeviceKeyStoreRecord> getKeyStoreRecord(String deviceId) {
+    public Optional<DeviceKeyStoreRecord> getKeyStoreRecord(final String deviceId) {
         return getRecordRemotely(deviceId);
     }
 
@@ -101,7 +106,8 @@ public class KeyStoreDynamoDB implements KeyStore {
         final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()));
-        attributes.put("metadata", new AttributeValue().withS(metadata));
+        attributes.put(METADATA, new AttributeValue().withS(metadata));
+        attributes.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(DateTime.now(DateTimeZone.UTC).toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))));
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(keyStoreTableName)
@@ -109,6 +115,22 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
         // TODO: Log consumed capacity
+    }
+
+    @Override
+    public void put(String deviceId, String aesKey, String serialNumber, DateTime createdAtUtc) {
+        final Map<String, AttributeValue> attributes = new HashMap<>();
+        attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()));
+        attributes.put(METADATA, new AttributeValue().withS(serialNumber));
+        attributes.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(createdAtUtc.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))));
+
+
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(keyStoreTableName)
+                .withItem(attributes);
+
+        final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
     }
 
     @Override
@@ -226,11 +248,15 @@ public class KeyStoreDynamoDB implements KeyStore {
         }
 
         final String aesKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
+        String createdAt = "";
+        if(getItemResult.getItem().containsKey(CREATED_AT_ATTRIBUTE_NAME)) {
+            createdAt = getItemResult.getItem().get(CREATED_AT_ATTRIBUTE_NAME).getS();
+        }
 
         if (!getItemResult.getItem().containsKey(METADATA)) {
-            return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), "n/a"));
+            return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), "n/a", createdAt));
         }
-        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), getItemResult.getItem().get(METADATA).getS()));
+        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), getItemResult.getItem().get(METADATA).getS(), createdAt));
     }
 
     private String censorKey(final String key) {

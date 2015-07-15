@@ -10,8 +10,12 @@ public class DeviceKeyStoreRecord {
     @JsonProperty("metadata")
     public final String metadata;
 
-    public DeviceKeyStoreRecord(final String key, final String metadata) {
+    @JsonProperty("created_at")
+    public final String createdAt;
+
+    public DeviceKeyStoreRecord(final String key, final String metadata, final String createdAt) {
         this.key = key;
         this.metadata = metadata;
+        this.createdAt = createdAt;
     }
 }
