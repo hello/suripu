@@ -175,9 +175,11 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final TimelineResult result = getTimelinesFromCacheOrReprocess(UUID.randomUUID(), accountId.get(), date);
-
-        return result.timelines;
+        final Optional<TimelineResult> timelineResultOptional = timelineProcessor.retrieveTimelinesFast(accountId.get(), DateTimeUtil.ymdStringToDateTime(date));
+        if (!timelineResultOptional.isPresent()) {
+            return TimelineResult.createEmpty().timelines;
+        }
+        return timelineResultOptional.get().timelines;
     }
 
     @Timed
