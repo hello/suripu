@@ -26,6 +26,8 @@ public enum ValidAction {
             case OUT_OF_BED:
             case WAKE_UP:
                 return Lists.newArrayList(ADJUST_TIME, VERIFY, INCORRECT);
+            case PARTNER_MOTION:
+                return Lists.newArrayList(VERIFY, INCORRECT);
             default:
                 return Lists.newArrayList();
         }
