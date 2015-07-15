@@ -27,8 +27,7 @@ public class SleepHmmBayesNetSensorDataBinning {
 
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
-    final static protected double LIGHT_CHANGE_THRESHOLD_FOR_DISTURBANCE = 1.0;
-    final static protected double SOUND_CHANGE_THRESHOLD_FOR_DISTURBANCE = 3.0;
+
 
 
     static public class BinnedData {
@@ -235,11 +234,11 @@ public class SleepHmmBayesNetSensorDataBinning {
             final double deltaLogLightVec = lightVec[t] - lightVec[t-1];
             final double deltaLogSoundVec = soundVec[t] - soundVec[t-1];
 
-            if (deltaLogLightVec > LIGHT_CHANGE_THRESHOLD_FOR_DISTURBANCE) {
+            if (deltaLogLightVec > params.logLightIncreaseThresholdForDisturbance) {
                 lightDisturbanceVec[t] = 1.0;
             }
 
-            if (deltaLogSoundVec > SOUND_CHANGE_THRESHOLD_FOR_DISTURBANCE) {
+            if (deltaLogSoundVec > params.logSoundIncreaseThresholdForDisturbance) {
                 soundDisturbanceVec[t] = 1.0;
             }
 

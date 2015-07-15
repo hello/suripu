@@ -5525,6 +5525,24 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional double motion_count_for_disturbances = 8;</code>
      */
     double getMotionCountForDisturbances();
+
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    boolean hasLogLightIncreaseForDisturbance();
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    double getLogLightIncreaseForDisturbance();
+
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    boolean hasLogSoundIncreaseForDisturbance();
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    double getLogSoundIncreaseForDisturbance();
   }
   /**
    * Protobuf type {@code hello.MeasurementParams}
@@ -5616,6 +5634,16 @@ public final class SleepHmmBayesNetProtos {
             case 65: {
               bitField0_ |= 0x00000080;
               motionCountForDisturbances_ = input.readDouble();
+              break;
+            }
+            case 73: {
+              bitField0_ |= 0x00000100;
+              logLightIncreaseForDisturbance_ = input.readDouble();
+              break;
+            }
+            case 81: {
+              bitField0_ |= 0x00000200;
+              logSoundIncreaseForDisturbance_ = input.readDouble();
               break;
             }
           }
@@ -5794,6 +5822,36 @@ public final class SleepHmmBayesNetProtos {
       return motionCountForDisturbances_;
     }
 
+    public static final int LOG_LIGHT_INCREASE_FOR_DISTURBANCE_FIELD_NUMBER = 9;
+    private double logLightIncreaseForDisturbance_;
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    public boolean hasLogLightIncreaseForDisturbance() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    public double getLogLightIncreaseForDisturbance() {
+      return logLightIncreaseForDisturbance_;
+    }
+
+    public static final int LOG_SOUND_INCREASE_FOR_DISTURBANCE_FIELD_NUMBER = 10;
+    private double logSoundIncreaseForDisturbance_;
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    public boolean hasLogSoundIncreaseForDisturbance() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    public double getLogSoundIncreaseForDisturbance() {
+      return logSoundIncreaseForDisturbance_;
+    }
+
     private void initFields() {
       numMinutesInMeasPeriod_ = 0;
       enableIntervalSearch_ = false;
@@ -5803,6 +5861,8 @@ public final class SleepHmmBayesNetProtos {
       lightFloorLux_ = 0D;
       useWavesForDisturbances_ = false;
       motionCountForDisturbances_ = 0D;
+      logLightIncreaseForDisturbance_ = 0D;
+      logSoundIncreaseForDisturbance_ = 0D;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5840,6 +5900,12 @@ public final class SleepHmmBayesNetProtos {
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeDouble(8, motionCountForDisturbances_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeDouble(9, logLightIncreaseForDisturbance_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeDouble(10, logSoundIncreaseForDisturbance_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -5881,6 +5947,14 @@ public final class SleepHmmBayesNetProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(8, motionCountForDisturbances_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(9, logLightIncreaseForDisturbance_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(10, logSoundIncreaseForDisturbance_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -6015,6 +6089,10 @@ public final class SleepHmmBayesNetProtos {
         bitField0_ = (bitField0_ & ~0x00000040);
         motionCountForDisturbances_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000080);
+        logLightIncreaseForDisturbance_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        logSoundIncreaseForDisturbance_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -6075,6 +6153,14 @@ public final class SleepHmmBayesNetProtos {
           to_bitField0_ |= 0x00000080;
         }
         result.motionCountForDisturbances_ = motionCountForDisturbances_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.logLightIncreaseForDisturbance_ = logLightIncreaseForDisturbance_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.logSoundIncreaseForDisturbance_ = logSoundIncreaseForDisturbance_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6114,6 +6200,12 @@ public final class SleepHmmBayesNetProtos {
         }
         if (other.hasMotionCountForDisturbances()) {
           setMotionCountForDisturbances(other.getMotionCountForDisturbances());
+        }
+        if (other.hasLogLightIncreaseForDisturbance()) {
+          setLogLightIncreaseForDisturbance(other.getLogLightIncreaseForDisturbance());
+        }
+        if (other.hasLogSoundIncreaseForDisturbance()) {
+          setLogSoundIncreaseForDisturbance(other.getLogSoundIncreaseForDisturbance());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -6426,6 +6518,70 @@ public final class SleepHmmBayesNetProtos {
       public Builder clearMotionCountForDisturbances() {
         bitField0_ = (bitField0_ & ~0x00000080);
         motionCountForDisturbances_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      private double logLightIncreaseForDisturbance_ ;
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public boolean hasLogLightIncreaseForDisturbance() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public double getLogLightIncreaseForDisturbance() {
+        return logLightIncreaseForDisturbance_;
+      }
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public Builder setLogLightIncreaseForDisturbance(double value) {
+        bitField0_ |= 0x00000100;
+        logLightIncreaseForDisturbance_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public Builder clearLogLightIncreaseForDisturbance() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        logLightIncreaseForDisturbance_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      private double logSoundIncreaseForDisturbance_ ;
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public boolean hasLogSoundIncreaseForDisturbance() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public double getLogSoundIncreaseForDisturbance() {
+        return logSoundIncreaseForDisturbance_;
+      }
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public Builder setLogSoundIncreaseForDisturbance(double value) {
+        bitField0_ |= 0x00000200;
+        logSoundIncreaseForDisturbance_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public Builder clearLogSoundIncreaseForDisturbance() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        logSoundIncreaseForDisturbance_ = 0D;
         onChanged();
         return this;
       }
@@ -7773,7 +7929,7 @@ public final class SleepHmmBayesNetProtos {
       "\021HiddenMarkovModel\022\n\n\002id\030\001 \002(\t\022\023\n\013descri" +
       "ption\030\002 \001(\t\022*\n\021observation_model\030\003 \003(\0132\017" +
       ".hello.ObsModel\022\037\n\027state_transition_matr" +
-      "ix\030\004 \003(\001\022\022\n\nnum_states\030\005 \002(\005\"\252\002\n\021Measure" +
+      "ix\030\004 \003(\001\022\022\n\nnum_states\030\005 \002(\005\"\202\003\n\021Measure" +
       "mentParams\022\"\n\032num_minutes_in_meas_period",
       "\030\001 \001(\005\022\036\n\026enable_interval_search\030\002 \001(\010\022\'" +
       "\n\037natural_light_filter_start_hour\030\003 \001(\001\022" +
@@ -7781,18 +7937,21 @@ public final class SleepHmmBayesNetProtos {
       "\034\n\024light_pre_multiplier\030\005 \001(\001\022\027\n\017light_f" +
       "loor_lux\030\006 \001(\001\022\"\n\032use_waves_for_disturba" +
       "nces\030\007 \001(\010\022%\n\035motion_count_for_disturban" +
-      "ces\030\010 \001(\001\"\260\001\n\013HmmBayesNet\0228\n\026measurement" +
-      "_parameters\030\001 \002(\0132\030.hello.MeasurementPar" +
-      "ams\0222\n\020independent_hmms\030\002 \003(\0132\030.hello.Hi" +
-      "ddenMarkovModel\0223\n\031conditional_probabili",
-      "ties\030\003 \003(\0132\020.hello.CondProbs*\343\001\n\010MeasTyp" +
-      "e\022\r\n\tLOG_LIGHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\036\n" +
-      "\032PILL_MAGNITUDE_DISTURBANCE\020\002\022\021\n\rNATURAL" +
-      "_LIGHT\020\003\022\r\n\tLOG_SOUND\020\004\022\033\n\027PARTNER_MOTIO" +
-      "N_DURATION\020\005\022\024\n\020WAVE_DISTURBANCE\020\006\022\036\n\032LI" +
-      "GHT_INCREASE_DISTURBANCE\020\007\022\036\n\032SOUND_INCR" +
-      "EASE_DISTURBANCE\020\010B:\n com.hello.suripu.a" +
-      "pi.datascienceB\026SleepHmmBayesNetProtos"
+      "ces\030\010 \001(\001\022*\n\"log_light_increase_for_dist" +
+      "urbance\030\t \001(\001\022*\n\"log_sound_increase_for_" +
+      "disturbance\030\n \001(\001\"\260\001\n\013HmmBayesNet\0228\n\026mea" +
+      "surement_parameters\030\001 \002(\0132\030.hello.Measur",
+      "ementParams\0222\n\020independent_hmms\030\002 \003(\0132\030." +
+      "hello.HiddenMarkovModel\0223\n\031conditional_p" +
+      "robabilities\030\003 \003(\0132\020.hello.CondProbs*\343\001\n" +
+      "\010MeasType\022\r\n\tLOG_LIGHT\020\000\022\023\n\017MOTION_DURAT" +
+      "ION\020\001\022\036\n\032PILL_MAGNITUDE_DISTURBANCE\020\002\022\021\n" +
+      "\rNATURAL_LIGHT\020\003\022\r\n\tLOG_SOUND\020\004\022\033\n\027PARTN" +
+      "ER_MOTION_DURATION\020\005\022\024\n\020WAVE_DISTURBANCE" +
+      "\020\006\022\036\n\032LIGHT_INCREASE_DISTURBANCE\020\007\022\036\n\032SO" +
+      "UND_INCREASE_DISTURBANCE\020\010B:\n com.hello." +
+      "suripu.api.datascienceB\026SleepHmmBayesNet",
+      "Protos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -7854,7 +8013,7 @@ public final class SleepHmmBayesNetProtos {
     internal_static_hello_MeasurementParams_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_hello_MeasurementParams_descriptor,
-        new java.lang.String[] { "NumMinutesInMeasPeriod", "EnableIntervalSearch", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "LightPreMultiplier", "LightFloorLux", "UseWavesForDisturbances", "MotionCountForDisturbances", });
+        new java.lang.String[] { "NumMinutesInMeasPeriod", "EnableIntervalSearch", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "LightPreMultiplier", "LightFloorLux", "UseWavesForDisturbances", "MotionCountForDisturbances", "LogLightIncreaseForDisturbance", "LogSoundIncreaseForDisturbance", });
     internal_static_hello_HmmBayesNet_descriptor =
       getDescriptor().getMessageTypes().get(8);
     internal_static_hello_HmmBayesNet_fieldAccessorTable = new

@@ -14,6 +14,9 @@ public class HmmBayesNetMeasurementParameters {
     public static Double DEFAULT_NATURAL_LIGHT_FILTER_STOP_HOUR = 4.0;
     public static Boolean DEFAULT_USE_WAVES_AS_DISTURBANCES = true;
     public static Integer DEFAULT_NUM_MINUTES_IN_MEASUREMENT_PERIOD = 5;
+    public static Double DEFAULT_LOG_LIGHT_INCREASE_THRESHOLD = 1.0;
+    public static Double DEFAULT_LOG_SOUND_INCREASE_THRESHOLD = 3.0;
+
 
     public static String CONDITIONAL_PROBABILITY_OF_SLEEP = "p_state_given_sleep";
     public static String CONDITIONAL_PROBABILITY_OF_BED = "p_state_given_bed";
@@ -27,8 +30,11 @@ public class HmmBayesNetMeasurementParameters {
     public final Double natLightStopHour;
     public final Boolean useWavesForDisturbances;
     public final Integer numMinutesInMeasPeriod;
+    public final Double logLightIncreaseThresholdForDisturbance;
+    public final Double logSoundIncreaseThresholdForDisturbance;
 
-    public HmmBayesNetMeasurementParameters(Boolean enableIntervalSearch, Double lightFloorLux, Double lightPreMultiplier, Double pillMagnitudeForDisturbance, Double natLightStartHour, Double natLightStopHour, Boolean useWavesForDisturbances, Integer numMinutesInMeasPeriod) {
+    public HmmBayesNetMeasurementParameters(Boolean enableIntervalSearch, Double lightFloorLux, Double lightPreMultiplier, Double pillMagnitudeForDisturbance, Double natLightStartHour, Double natLightStopHour,
+                                            Boolean useWavesForDisturbances, Integer numMinutesInMeasPeriod,final Double logLightIncreaseThresholdForDisturbance, final Double logSoundIncreaseThresholdForDisturbance) {
         this.enableIntervalSearch = enableIntervalSearch;
         this.lightFloorLux = lightFloorLux;
         this.lightPreMultiplier = lightPreMultiplier;
@@ -37,6 +43,8 @@ public class HmmBayesNetMeasurementParameters {
         this.natLightStopHour = natLightStopHour;
         this.useWavesForDisturbances = useWavesForDisturbances;
         this.numMinutesInMeasPeriod = numMinutesInMeasPeriod;
+        this.logLightIncreaseThresholdForDisturbance = logLightIncreaseThresholdForDisturbance;
+        this.logSoundIncreaseThresholdForDisturbance = logSoundIncreaseThresholdForDisturbance;
     }
 
     static public HmmBayesNetMeasurementParameters createFromProto(SleepHmmBayesNetProtos.MeasurementParams params) {
@@ -80,8 +88,18 @@ public class HmmBayesNetMeasurementParameters {
             numMinutesInMeasPeriod = params.getNumMinutesInMeasPeriod();
         }
 
+        Double logLightIncreaseThresholdForDisturbance = DEFAULT_LOG_LIGHT_INCREASE_THRESHOLD;
+        if (params.hasLogLightIncreaseForDisturbance()) {
+            logLightIncreaseThresholdForDisturbance = params.getLogLightIncreaseForDisturbance();
+        }
 
-        return new HmmBayesNetMeasurementParameters(enableIntervalSearch,lightFloorLux,lightPreMultiplier,pillMagnitudeForDisturbance,natLightStartHour,natLightStopHour,useWavesForDisturbances,numMinutesInMeasPeriod);
+        Double logSoundIncreaseThresholdForDisturbance = DEFAULT_LOG_SOUND_INCREASE_THRESHOLD;
+        if (params.hasLogSoundIncreaseForDisturbance()) {
+            logSoundIncreaseThresholdForDisturbance = params.getLogSoundIncreaseForDisturbance();
+        }
+
+
+        return new HmmBayesNetMeasurementParameters(enableIntervalSearch,lightFloorLux,lightPreMultiplier,pillMagnitudeForDisturbance,natLightStartHour,natLightStopHour,useWavesForDisturbances,numMinutesInMeasPeriod,logLightIncreaseThresholdForDisturbance,logSoundIncreaseThresholdForDisturbance);
     }
 
 }
