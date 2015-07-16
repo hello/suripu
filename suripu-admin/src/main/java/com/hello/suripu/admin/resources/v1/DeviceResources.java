@@ -454,13 +454,15 @@ public class DeviceResources {
 //            });
 
 
+
+        if (unlinkAll.equals(Boolean.TRUE)) {
+            deviceDAO.unlinkAllAccountsPairedToSense(senseId);
+        }
+        else {
+            deviceDAO.deleteSensePairing(senseId, accountId);
+        }
+
         try {
-            if (unlinkAll.equals(Boolean.TRUE)) {
-                deviceDAO.unlinkAllAccountsPairedToSense(senseId);
-            }
-            else {
-                deviceDAO.deleteSensePairing(senseId, accountId);
-            }
             mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
         }
         catch (AmazonServiceException awsEx) {
