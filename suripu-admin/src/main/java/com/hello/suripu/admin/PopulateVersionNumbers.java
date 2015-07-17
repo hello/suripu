@@ -37,7 +37,7 @@ public class PopulateVersionNumbers {
         ObjectListing objectListing;
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                .withBucketName("hello-firmware").withPrefix("sense/0.9.22");
+                .withBucketName("hello-firmware").withPrefix("sense/0.");
 
         final List<String> keys = Lists.newArrayList();
         int i = 0;
