@@ -162,27 +162,26 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
 
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
-                    Optional<DateTimeZone> timeZoneOptional = Optional.absent();
-                    for(final UserInfo userInfo :deviceAccountInfoFromMergeTable){
-                        if(userInfo.accountId == pair.accountId){
-                            if(userInfo.timeZone.isPresent()){
-                                timeZoneOptional = userInfo.timeZone;
-                            }else{
-                                LOGGER.warn("No timezone for device {} account {}", deviceName, userInfo.accountId);
-                                continue;
-                            }
-                        }
-                    }
-
-
-                    if(!timeZoneOptional.isPresent()){
+                    Optional<DateTimeZone> timeZoneOptional = getTimezone(pair.accountId, deviceAccountInfoFromMergeTable);
+                    Optional<DateTimeZone> partnerTimeZoneOptional = Optional.absent();
+                    if (!timeZoneOptional.isPresent()) {
                         LOGGER.warn("No timezone info for account {} paired with device {}, account may already unpaired with device but merge table not updated.",
                                 pair.accountId,
                                 deviceName);
+
+                        final Optional<Long> partnerAccountIdOptional = deviceDAO.getPartnerAccountId(pair.accountId);
+                        if (partnerAccountIdOptional.isPresent()) {
+                            LOGGER.info("Attempt to use partner timezone");
+                            partnerTimeZoneOptional = getTimezone(partnerAccountIdOptional.get(), deviceAccountInfoFromMergeTable);
+                        }
+                    }
+
+                    if(!timeZoneOptional.isPresent() && !partnerTimeZoneOptional.isPresent()) {
                         continue;
                     }
 
-                    final DateTimeZone userTimeZone = timeZoneOptional.get();
+                    final DateTimeZone userTimeZone = timeZoneOptional.or(partnerTimeZoneOptional.get());
+
 
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
@@ -287,5 +286,16 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
         }
 
+    }
+
+    private Optional<DateTimeZone> getTimezone(final Long accountId, final List<UserInfo> deviceAccountInfoFromMergeTable) {
+        Optional<DateTimeZone> dateTimeZoneOptional = Optional.absent();
+        for(final UserInfo userInfo : deviceAccountInfoFromMergeTable){
+            if(userInfo.accountId == accountId){
+                dateTimeZoneOptional = userInfo.timeZone;
+                break;
+            }
+        }
+        return dateTimeZoneOptional;
     }
 }
