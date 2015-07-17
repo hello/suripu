@@ -26,6 +26,10 @@ public enum QueueName {
 
     @JsonCreator
     public QueueName fromString(final String val) {
+        return QueueName.getFromString(val);
+    }
+
+    public static QueueName getFromString(final String val) {
         final QueueName[] queueNames = QueueName.values();
 
         for (final QueueName queueName: queueNames) {
