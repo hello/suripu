@@ -453,21 +453,27 @@ public class DeviceResources {
 //                }
 //            });
 
+
+
         if (unlinkAll.equals(Boolean.TRUE)) {
-            try {
-                deviceDAO.unlinkAllAccountsPairedToSense(senseId);
-                mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
-            }
-            catch (AmazonServiceException awsEx) {
-                LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
-                        accountId,
-                        senseId,
-                        awsEx.getErrorMessage());
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-            }catch (UnableToExecuteStatementException sqlExp){
-                LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-            }
+            deviceDAO.unlinkAllAccountsPairedToSense(senseId);
+        }
+        else {
+            deviceDAO.deleteSensePairing(senseId, accountId);
+        }
+
+        try {
+            mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
+        }
+        catch (AmazonServiceException awsEx) {
+            LOGGER.error("Failed to unlink account {} from Sense {} in merge user info. error {}",
+                    accountId,
+                    senseId,
+                    awsEx.getErrorMessage());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }catch (UnableToExecuteStatementException sqlExp){
+            LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
