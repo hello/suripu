@@ -1,6 +1,7 @@
 package com.hello.suripu.core.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DynamoDBTableName {
 
@@ -35,16 +36,17 @@ public enum DynamoDBTableName {
         this.value = value;
     }
 
+    @JsonValue
     public String getValue() {
         return value;
     }
 
     @JsonCreator
-    public static DynamoDBTableName fromString(final String val) {
+    public DynamoDBTableName fromString(final String val) {
         final DynamoDBTableName[] tableNames = DynamoDBTableName.values();
 
         for (final DynamoDBTableName tableName: tableNames) {
-            if (tableName.value.equals(val)) {
+            if (tableName.value.equalsIgnoreCase(val)) {
                 return tableName;
             }
         }
