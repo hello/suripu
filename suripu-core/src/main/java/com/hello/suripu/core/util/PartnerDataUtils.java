@@ -4,7 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
-import com.hello.suripu.algorithm.partner.PartnerBayesNetWithHmmInterpreter;
+import com.hello.suripu.algorithm.partner.PartnerHmm;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -324,15 +324,17 @@ public class PartnerDataUtils {
         final int durationInIntervals = (int) ((tf - t0) / period);
 
 
-        final Double data [] = new Double[durationInIntervals];
+        final Double myMotionsBinned [] = new Double[durationInIntervals];
+        Arrays.fill(myMotionsBinned,0.0);
 
-        Arrays.fill(data,0.0);
+        final Double partnerMotionsBinned [] = new Double[durationInIntervals];
+        Arrays.fill(partnerMotionsBinned,0.0);
 
-        fillBinsWithTrackerDurations(data,t0,period,myMotionsDeDuped,1,true);
-        fillBinsWithTrackerDurations(data,t0,period,yourMotionsDeDuped,-1,true);
+        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1,true);
+        fillBinsWithTrackerDurations(partnerMotionsBinned,t0,period,yourMotionsDeDuped,1,true);
 
-        final PartnerBayesNetWithHmmInterpreter partnerHmmFilter = new PartnerBayesNetWithHmmInterpreter();
-        final List<Double> probs = partnerHmmFilter.interpretDurationDiff(ImmutableList.copyOf(data));
+        final PartnerHmm partnerHmmFilter = new PartnerHmm();
+        final ImmutableList<Integer> myClassifiedMotions = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, (int) period);
 
         //iterate through my motion and reject
 
@@ -348,15 +350,15 @@ public class PartnerDataUtils {
         while (it.hasNext()) {
             final TrackerMotion m = it.next();
 
-            final int idx = getIndex(m.timestamp,t0,period,probs.size());
+            final int idx = getIndex(m.timestamp, t0, period, myClassifiedMotions.size());
 
             if (idx < 0) {
                 continue;
             }
 
-            final double probItsMine = probs.get(idx);
+            final Integer itsMine = myClassifiedMotions.get(idx);
 
-            if (probItsMine < probThresholdToRejectData) {
+            if (itsMine.equals(0)) {
                 numPointsRejected++;
 
                 if (numPointsRejected < 100) {
