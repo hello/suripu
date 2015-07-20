@@ -334,7 +334,9 @@ public class PartnerDataUtils {
         fillBinsWithTrackerDurations(partnerMotionsBinned,t0,period,yourMotionsDeDuped,1,true);
 
         final PartnerHmm partnerHmmFilter = new PartnerHmm();
-        final ImmutableList<Integer> myClassifiedMotions = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, (int) period);
+        final ImmutableList<Integer> hmmPath = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, (int) period);
+
+        final ImmutableList<Integer> myClassifiedMotions = partnerHmmFilter.interpretPath(hmmPath);
 
         //iterate through my motion and reject
 

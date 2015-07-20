@@ -19,6 +19,8 @@ public class PartnerHmm {
     static final Double SLOP_FACTOR = 3.0;
     static final Double DECISION_FRACTION = 0.2;
     static final int NUM_STATES = 4;
+    static final int NUM_OBS = 6;
+
     static final double MIN_LIKELIHOOD = 1e-100;
 
 
@@ -83,7 +85,7 @@ public class PartnerHmm {
 
     private static  HmmPdfInterface [] getObservationModel() {
         final List<Double> probsOfNobodyOnBed = Lists.newArrayList();
-        for (int i = 0; i < NUM_STATES; i++) {
+        for (int i = 0; i < NUM_OBS; i++) {
             probsOfNobodyOnBed.add(MIN_LIKELIHOOD);
         }
 
@@ -188,6 +190,22 @@ public class PartnerHmm {
 
     }
 
+    public ImmutableList<Integer> interpretPath(final ImmutableList<Integer> path) {
+        final List<Integer> myMotionBins = Lists.newArrayList();
+        //interpret path
+        for (int i = 0; i < path.size(); i++) {
+            final Integer state = path.get(i);
+
+            if (state.equals(0) || state.equals(2)) {
+                myMotionBins.add(0);
+            }
+            else {
+                myMotionBins.add(1);
+            }
+        }
+
+        return ImmutableList.copyOf(myMotionBins);
+    }
 
 
     public ImmutableList<Integer> decodeSensorData(final Double []  myDurations,final Double []  partnerDurations,final int numMinutesInPeriod) {
@@ -217,20 +235,8 @@ public class PartnerHmm {
 
         final HmmDecodedResult result = hmm.decode(x, endStates, MIN_LIKELIHOOD);
 
-        final List<Integer> myMotionBins = Lists.newArrayList();
-        //interpret path
-        for (int i = 0; i < result.bestPath.size(); i++) {
-            final Integer state = result.bestPath.get(i);
+        return result.bestPath;
 
-            if (state.equals(0) || state.equals(2)) {
-                myMotionBins.add(0);
-            }
-            else {
-                myMotionBins.add(1);
-            }
-        }
-
-        return ImmutableList.copyOf(myMotionBins);
     }
 
 
