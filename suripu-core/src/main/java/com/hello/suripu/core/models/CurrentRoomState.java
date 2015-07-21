@@ -210,8 +210,8 @@ public class CurrentRoomState {
 
         }
 
-        State.Condition condition = State.Condition.IDEAL;;
-        String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;;
+        State.Condition condition = State.Condition.IDEAL;
+        String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;
 
         if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             condition = State.Condition.ALERT;

@@ -270,7 +270,7 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
-            // only compute the sate for the most recent conditions
+            // only compute the state for the most recent conditions
             if(i == batch.getDataCount() -1) {
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
@@ -278,11 +278,20 @@ public class ReceiveResource extends BaseResource {
                         data.getFirmwareVersion(),
                         DateTime.now(),
                         2);
+                final CurrentRoomState currentRoomStateNoLight = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), 0, data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
+                        roundedDateTime.getMillis(),
+                        data.getFirmwareVersion(),
+                        DateTime.now(),
+                        2);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
-                    responseBuilder.setRoomConditions(
-                            OutputProtos.SyncResponse.RoomConditions.valueOf(
-                                    RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal()));
+                    final OutputProtos.SyncResponse.RoomConditions roomConditions = OutputProtos.SyncResponse.RoomConditions.valueOf(
+                            RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal());
+                    final OutputProtos.SyncResponse.RoomConditions roomConditionsNoLight = OutputProtos.SyncResponse.RoomConditions.valueOf(
+                            RoomConditionUtil.getGeneralRoomConditionV2(currentRoomStateNoLight).ordinal());
+
+                    responseBuilder.setRoomConditions(roomConditions);
+                    responseBuilder.setRoomConditionsLightsOff(roomConditionsNoLight);
                 }else {
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
