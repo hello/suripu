@@ -127,7 +127,7 @@ public class CurrentRoomState {
                                                                final String tempUnit) {
 
 
-        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}, light = {}, sound = {}", temperature, humidity, particulatesAQI, light, sound);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);

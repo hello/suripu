@@ -22,7 +22,7 @@ public class RoomConditionUtilTest {
 
         final Integer unixTime = (int) (DateTime.now(DateTimeZone.UTC).getMillis() / 1000L);
         final periodic_data.Builder dataBuilder = periodic_data.newBuilder()
-                .setTemperature(2389) //(val - 389) / 100; 26=ALERT (2989); 23=WARNING (2689)
+                .setTemperature(2389) //(val - 389) / 100; >26=ALERT (2989); >23=WARNING (2689)
                 .setHumidity(3092)// 20=ALERT; 30=WARNING
                 .setDustMax(2000) // 301=ALERT; 51=WARNING
                 .setLight(3) //8=ALERT; 3=WARNING
