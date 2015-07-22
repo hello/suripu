@@ -128,7 +128,7 @@ public class CurrentRoomState {
                                                                final String tempUnit) {
 
 
-        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}, light = {}, sound = {}", temperature, humidity, particulatesAQI, light, sound);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
@@ -211,8 +211,8 @@ public class CurrentRoomState {
 
         }
 
-        State.Condition condition = State.Condition.IDEAL;;
-        String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;;
+        State.Condition condition = State.Condition.IDEAL;
+        String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;
 
         if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             condition = State.Condition.ALERT;

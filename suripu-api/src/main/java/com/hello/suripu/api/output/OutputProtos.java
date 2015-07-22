@@ -209,22 +209,44 @@ public final class OutputProtos {
 
     /**
      * <code>optional uint32 upload_log_level = 22;</code>
-     *
-     * <pre>
-     * TODO: settings for snoring detection
-     * TODO: settings for firmware update
-     * </pre>
      */
     boolean hasUploadLogLevel();
     /**
      * <code>optional uint32 upload_log_level = 22;</code>
-     *
-     * <pre>
-     * TODO: settings for snoring detection
-     * TODO: settings for firmware update
-     * </pre>
      */
     int getUploadLogLevel();
+
+    /**
+     * <code>optional uint32 pill_batch_size = 23;</code>
+     */
+    boolean hasPillBatchSize();
+    /**
+     * <code>optional uint32 pill_batch_size = 23;</code>
+     */
+    int getPillBatchSize();
+
+    /**
+     * <code>optional string ring_time_ack = 24;</code>
+     */
+    boolean hasRingTimeAck();
+    /**
+     * <code>optional string ring_time_ack = 24;</code>
+     */
+    java.lang.String getRingTimeAck();
+    /**
+     * <code>optional string ring_time_ack = 24;</code>
+     */
+    com.google.protobuf.ByteString
+        getRingTimeAckBytes();
+
+    /**
+     * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+     */
+    boolean hasRoomConditionsLightsOff();
+    /**
+     * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+     */
+    com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditionsLightsOff();
   }
   /**
    * Protobuf type {@code SyncResponse}
@@ -372,6 +394,28 @@ public final class OutputProtos {
             case 176: {
               bitField0_ |= 0x00000200;
               uploadLogLevel_ = input.readUInt32();
+              break;
+            }
+            case 184: {
+              bitField0_ |= 0x00000400;
+              pillBatchSize_ = input.readUInt32();
+              break;
+            }
+            case 194: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000800;
+              ringTimeAck_ = bs;
+              break;
+            }
+            case 200: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions value = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(25, rawValue);
+              } else {
+                bitField0_ |= 0x00001000;
+                roomConditionsLightsOff_ = value;
+              }
               break;
             }
           }
@@ -7224,25 +7268,87 @@ public final class OutputProtos {
     private int uploadLogLevel_;
     /**
      * <code>optional uint32 upload_log_level = 22;</code>
-     *
-     * <pre>
-     * TODO: settings for snoring detection
-     * TODO: settings for firmware update
-     * </pre>
      */
     public boolean hasUploadLogLevel() {
       return ((bitField0_ & 0x00000200) == 0x00000200);
     }
     /**
      * <code>optional uint32 upload_log_level = 22;</code>
-     *
-     * <pre>
-     * TODO: settings for snoring detection
-     * TODO: settings for firmware update
-     * </pre>
      */
     public int getUploadLogLevel() {
       return uploadLogLevel_;
+    }
+
+    public static final int PILL_BATCH_SIZE_FIELD_NUMBER = 23;
+    private int pillBatchSize_;
+    /**
+     * <code>optional uint32 pill_batch_size = 23;</code>
+     */
+    public boolean hasPillBatchSize() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional uint32 pill_batch_size = 23;</code>
+     */
+    public int getPillBatchSize() {
+      return pillBatchSize_;
+    }
+
+    public static final int RING_TIME_ACK_FIELD_NUMBER = 24;
+    private java.lang.Object ringTimeAck_;
+    /**
+     * <code>optional string ring_time_ack = 24;</code>
+     */
+    public boolean hasRingTimeAck() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional string ring_time_ack = 24;</code>
+     */
+    public java.lang.String getRingTimeAck() {
+      java.lang.Object ref = ringTimeAck_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          ringTimeAck_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string ring_time_ack = 24;</code>
+     */
+    public com.google.protobuf.ByteString
+        getRingTimeAckBytes() {
+      java.lang.Object ref = ringTimeAck_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        ringTimeAck_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int ROOM_CONDITIONS_LIGHTS_OFF_FIELD_NUMBER = 25;
+    private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditionsLightsOff_;
+    /**
+     * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+     */
+    public boolean hasRoomConditionsLightsOff() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+     */
+    public com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditionsLightsOff() {
+      return roomConditionsLightsOff_;
     }
 
     private void initFields() {
@@ -7258,6 +7364,9 @@ public final class OutputProtos {
       pillSettings_ = java.util.Collections.emptyList();
       resetMcu_ = false;
       uploadLogLevel_ = 0;
+      pillBatchSize_ = 0;
+      ringTimeAck_ = "";
+      roomConditionsLightsOff_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -7307,6 +7416,15 @@ public final class OutputProtos {
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeUInt32(22, uploadLogLevel_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeUInt32(23, pillBatchSize_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeBytes(24, getRingTimeAckBytes());
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeEnum(25, roomConditionsLightsOff_.getNumber());
       }
       getUnknownFields().writeTo(output);
     }
@@ -7364,6 +7482,18 @@ public final class OutputProtos {
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(22, uploadLogLevel_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(23, pillBatchSize_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(24, getRingTimeAckBytes());
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(25, roomConditionsLightsOff_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -7531,6 +7661,12 @@ public final class OutputProtos {
         bitField0_ = (bitField0_ & ~0x00000400);
         uploadLogLevel_ = 0;
         bitField0_ = (bitField0_ & ~0x00000800);
+        pillBatchSize_ = 0;
+        bitField0_ = (bitField0_ & ~0x00001000);
+        ringTimeAck_ = "";
+        bitField0_ = (bitField0_ & ~0x00002000);
+        roomConditionsLightsOff_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
+        bitField0_ = (bitField0_ & ~0x00004000);
         return this;
       }
 
@@ -7629,6 +7765,18 @@ public final class OutputProtos {
           to_bitField0_ |= 0x00000200;
         }
         result.uploadLogLevel_ = uploadLogLevel_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.pillBatchSize_ = pillBatchSize_;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.ringTimeAck_ = ringTimeAck_;
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        result.roomConditionsLightsOff_ = roomConditionsLightsOff_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7726,6 +7874,17 @@ public final class OutputProtos {
         }
         if (other.hasUploadLogLevel()) {
           setUploadLogLevel(other.getUploadLogLevel());
+        }
+        if (other.hasPillBatchSize()) {
+          setPillBatchSize(other.getPillBatchSize());
+        }
+        if (other.hasRingTimeAck()) {
+          bitField0_ |= 0x00002000;
+          ringTimeAck_ = other.ringTimeAck_;
+          onChanged();
+        }
+        if (other.hasRoomConditionsLightsOff()) {
+          setRoomConditionsLightsOff(other.getRoomConditionsLightsOff());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -8927,33 +9086,18 @@ public final class OutputProtos {
       private int uploadLogLevel_ ;
       /**
        * <code>optional uint32 upload_log_level = 22;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public boolean hasUploadLogLevel() {
         return ((bitField0_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional uint32 upload_log_level = 22;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public int getUploadLogLevel() {
         return uploadLogLevel_;
       }
       /**
        * <code>optional uint32 upload_log_level = 22;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public Builder setUploadLogLevel(int value) {
         bitField0_ |= 0x00000800;
@@ -8963,15 +9107,153 @@ public final class OutputProtos {
       }
       /**
        * <code>optional uint32 upload_log_level = 22;</code>
-       *
-       * <pre>
-       * TODO: settings for snoring detection
-       * TODO: settings for firmware update
-       * </pre>
        */
       public Builder clearUploadLogLevel() {
         bitField0_ = (bitField0_ & ~0x00000800);
         uploadLogLevel_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int pillBatchSize_ ;
+      /**
+       * <code>optional uint32 pill_batch_size = 23;</code>
+       */
+      public boolean hasPillBatchSize() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional uint32 pill_batch_size = 23;</code>
+       */
+      public int getPillBatchSize() {
+        return pillBatchSize_;
+      }
+      /**
+       * <code>optional uint32 pill_batch_size = 23;</code>
+       */
+      public Builder setPillBatchSize(int value) {
+        bitField0_ |= 0x00001000;
+        pillBatchSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 pill_batch_size = 23;</code>
+       */
+      public Builder clearPillBatchSize() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        pillBatchSize_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object ringTimeAck_ = "";
+      /**
+       * <code>optional string ring_time_ack = 24;</code>
+       */
+      public boolean hasRingTimeAck() {
+        return ((bitField0_ & 0x00002000) == 0x00002000);
+      }
+      /**
+       * <code>optional string ring_time_ack = 24;</code>
+       */
+      public java.lang.String getRingTimeAck() {
+        java.lang.Object ref = ringTimeAck_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            ringTimeAck_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string ring_time_ack = 24;</code>
+       */
+      public com.google.protobuf.ByteString
+          getRingTimeAckBytes() {
+        java.lang.Object ref = ringTimeAck_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          ringTimeAck_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string ring_time_ack = 24;</code>
+       */
+      public Builder setRingTimeAck(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
+        ringTimeAck_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string ring_time_ack = 24;</code>
+       */
+      public Builder clearRingTimeAck() {
+        bitField0_ = (bitField0_ & ~0x00002000);
+        ringTimeAck_ = getDefaultInstance().getRingTimeAck();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string ring_time_ack = 24;</code>
+       */
+      public Builder setRingTimeAckBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
+        ringTimeAck_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions roomConditionsLightsOff_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
+      /**
+       * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+       */
+      public boolean hasRoomConditionsLightsOff() {
+        return ((bitField0_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+       */
+      public com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions getRoomConditionsLightsOff() {
+        return roomConditionsLightsOff_;
+      }
+      /**
+       * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+       */
+      public Builder setRoomConditionsLightsOff(com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00004000;
+        roomConditionsLightsOff_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .SyncResponse.RoomConditions room_conditions_lights_off = 25;</code>
+       */
+      public Builder clearRoomConditionsLightsOff() {
+        bitField0_ = (bitField0_ & ~0x00004000);
+        roomConditionsLightsOff_ = com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions.IDEAL;
         onChanged();
         return this;
       }
@@ -9718,7 +10000,7 @@ public final class OutputProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\023sync_response.proto\032\023audio_control.pro" +
-      "to\"\252\014\n\014SyncResponse\022\"\n\005alarm\030\006 \001(\0132\023.Syn" +
+      "to\"\234\r\n\014SyncResponse\022\"\n\005alarm\030\006 \001(\0132\023.Syn" +
       "cResponse.Alarm\022-\n\013white_noise\030\010 \001(\0132\030.S" +
       "yncResponse.WhiteNoise\022\024\n\014reset_device\030\n" +
       " \001(\010\0225\n\017room_conditions\030\014 \001(\0162\034.SyncResp" +
@@ -9728,39 +10010,42 @@ public final class OutputProtos {
       "ioControl\022\013\n\003mac\030\022 \001(\014\022\022\n\nbatch_size\030\023 \001" +
       "(\005\0221\n\rpill_settings\030\024 \003(\0132\032.SyncResponse",
       ".PillSettings\022\021\n\treset_mcu\030\025 \001(\010\022\030\n\020uplo" +
-      "ad_log_level\030\026 \001(\r\032\205\002\n\014FileDownload\022\014\n\004h" +
-      "ost\030\001 \001(\t\022\013\n\003url\030\002 \001(\t\022\034\n\024copy_to_serial" +
-      "_flash\030\004 \001(\010\022\037\n\027reset_network_processor\030" +
-      "\005 \001(\010\022#\n\033reset_application_processor\030\006 \001" +
-      "(\010\022\035\n\025serial_flash_filename\030\007 \001(\t\022\031\n\021ser" +
-      "ial_flash_path\030\010 \001(\t\022\030\n\020sd_card_filename" +
-      "\030\003 \001(\t\022\024\n\014sd_card_path\030\t \001(\t\022\014\n\004sha1\030\n \001" +
-      "(\014\032\245\001\n\005Alarm\022\022\n\nstart_time\030\001 \001(\r\022\020\n\010end_" +
-      "time\030\002 \001(\r\022\026\n\013ringtone_id\030\003 \001(\005:\0011\022&\n\036ri",
-      "ng_offset_from_now_in_second\030\004 \001(\005\022\037\n\027ri" +
-      "ng_duration_in_second\030\005 \001(\005\022\025\n\rringtone_" +
-      "path\030\006 \001(\t\032w\n\rPairingAction\022\014\n\004ssid\030\001 \001(" +
-      "\t\0224\n\004type\030\002 \001(\0162&.SyncResponse.PairingAc" +
-      "tion.ActionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022" +
-      "\n\n\006UNPAIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030" +
-      "\001 \001(\005\022\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(" +
-      "\005\032\225\001\n\013FlashAction\022\013\n\003red\030\001 \001(\005\022\r\n\005green\030" +
-      "\002 \001(\005\022\014\n\004blue\030\003 \001(\005\022\032\n\022delay_millisecond" +
-      "s\030\004 \001(\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fade_out\030\006 \001",
-      "(\010\022\016\n\006rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001(\005\032\376\001\n\tLE" +
-      "DAction\0223\n\004type\030\001 \001(\0162%.SyncResponse.LED" +
-      "Action.LEDActionType\022\013\n\003url\030\002 \001(\t\022\r\n\005col" +
-      "or\030\003 \001(\r\022\021\n\talt_color\030\004 \001(\r\022\030\n\020duration_" +
-      "seconds\030\006 \001(\005\"s\n\rLEDActionType\022\n\n\006FADEIO" +
-      "\020\000\022\010\n\004GLOW\020\001\022\t\n\005THROB\020\002\022\n\n\006PULSAR\020\003\022\n\n\006D" +
-      "OUBLE\020\004\022\t\n\005SIREN\020\005\022\n\n\006TRIPPY\020\006\022\t\n\005PARTY\020" +
-      "\007\022\007\n\003URL\020\010\0323\n\014PillSettings\022\017\n\007pill_id\030\001 " +
-      "\001(\t\022\022\n\npill_color\030\002 \001(\r\"N\n\016RoomCondition" +
-      "s\022\t\n\005IDEAL\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALERT\020\003\022\031\n\025",
-      "IDEAL_EXCLUDING_LIGHT\020\004\"H\n\023BatchedPillSe" +
-      "ttings\0221\n\rpill_settings\030\001 \003(\0132\032.SyncResp" +
-      "onse.PillSettingsB+\n\033com.hello.suripu.ap" +
-      "i.outputB\014OutputProtos"
+      "ad_log_level\030\026 \001(\r\022\027\n\017pill_batch_size\030\027 " +
+      "\001(\r\022\025\n\rring_time_ack\030\030 \001(\t\022@\n\032room_condi" +
+      "tions_lights_off\030\031 \001(\0162\034.SyncResponse.Ro" +
+      "omConditions\032\205\002\n\014FileDownload\022\014\n\004host\030\001 " +
+      "\001(\t\022\013\n\003url\030\002 \001(\t\022\034\n\024copy_to_serial_flash" +
+      "\030\004 \001(\010\022\037\n\027reset_network_processor\030\005 \001(\010\022" +
+      "#\n\033reset_application_processor\030\006 \001(\010\022\035\n\025" +
+      "serial_flash_filename\030\007 \001(\t\022\031\n\021serial_fl" +
+      "ash_path\030\010 \001(\t\022\030\n\020sd_card_filename\030\003 \001(\t",
+      "\022\024\n\014sd_card_path\030\t \001(\t\022\014\n\004sha1\030\n \001(\014\032\245\001\n" +
+      "\005Alarm\022\022\n\nstart_time\030\001 \001(\r\022\020\n\010end_time\030\002" +
+      " \001(\r\022\026\n\013ringtone_id\030\003 \001(\005:\0011\022&\n\036ring_off" +
+      "set_from_now_in_second\030\004 \001(\005\022\037\n\027ring_dur" +
+      "ation_in_second\030\005 \001(\005\022\025\n\rringtone_path\030\006" +
+      " \001(\t\032w\n\rPairingAction\022\014\n\004ssid\030\001 \001(\t\0224\n\004t" +
+      "ype\030\002 \001(\0162&.SyncResponse.PairingAction.A" +
+      "ctionType\"\"\n\nActionType\022\010\n\004PAIR\020\000\022\n\n\006UNP" +
+      "AIR\020\001\032D\n\nWhiteNoise\022\022\n\nstart_time\030\001 \001(\005\022" +
+      "\020\n\010end_time\030\002 \001(\005\022\020\n\010sound_id\030\003 \001(\005\032\225\001\n\013",
+      "FlashAction\022\013\n\003red\030\001 \001(\005\022\r\n\005green\030\002 \001(\005\022" +
+      "\014\n\004blue\030\003 \001(\005\022\032\n\022delay_milliseconds\030\004 \001(" +
+      "\005\022\017\n\007fade_in\030\005 \001(\010\022\020\n\010fade_out\030\006 \001(\010\022\016\n\006" +
+      "rotate\030\007 \001(\010\022\r\n\005alpha\030\010 \001(\005\032\376\001\n\tLEDActio" +
+      "n\0223\n\004type\030\001 \001(\0162%.SyncResponse.LEDAction" +
+      ".LEDActionType\022\013\n\003url\030\002 \001(\t\022\r\n\005color\030\003 \001" +
+      "(\r\022\021\n\talt_color\030\004 \001(\r\022\030\n\020duration_second" +
+      "s\030\006 \001(\005\"s\n\rLEDActionType\022\n\n\006FADEIO\020\000\022\010\n\004" +
+      "GLOW\020\001\022\t\n\005THROB\020\002\022\n\n\006PULSAR\020\003\022\n\n\006DOUBLE\020" +
+      "\004\022\t\n\005SIREN\020\005\022\n\n\006TRIPPY\020\006\022\t\n\005PARTY\020\007\022\007\n\003U",
+      "RL\020\010\0323\n\014PillSettings\022\017\n\007pill_id\030\001 \001(\t\022\022\n" +
+      "\npill_color\030\002 \001(\r\"N\n\016RoomConditions\022\t\n\005I" +
+      "DEAL\020\001\022\013\n\007WARNING\020\002\022\t\n\005ALERT\020\003\022\031\n\025IDEAL_" +
+      "EXCLUDING_LIGHT\020\004\"H\n\023BatchedPillSettings" +
+      "\0221\n\rpill_settings\030\001 \003(\0132\032.SyncResponse.P" +
+      "illSettingsB+\n\033com.hello.suripu.api.outp" +
+      "utB\014OutputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -9780,7 +10065,7 @@ public final class OutputProtos {
     internal_static_SyncResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_SyncResponse_descriptor,
-        new java.lang.String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "Mac", "BatchSize", "PillSettings", "ResetMcu", "UploadLogLevel", });
+        new java.lang.String[] { "Alarm", "WhiteNoise", "ResetDevice", "RoomConditions", "Files", "ResetToFactoryFw", "AudioControl", "Mac", "BatchSize", "PillSettings", "ResetMcu", "UploadLogLevel", "PillBatchSize", "RingTimeAck", "RoomConditionsLightsOff", });
     internal_static_SyncResponse_FileDownload_descriptor =
       internal_static_SyncResponse_descriptor.getNestedTypes().get(0);
     internal_static_SyncResponse_FileDownload_fieldAccessorTable = new

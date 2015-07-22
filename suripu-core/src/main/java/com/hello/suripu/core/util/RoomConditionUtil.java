@@ -44,16 +44,8 @@ public class RoomConditionUtil {
 
 
     public static CurrentRoomState.State.Condition getGeneralRoomConditionV2(final CurrentRoomState currentRoomState) {
-        float numberOfModality = 5;
         float warningCount = 0;
-        float idealCount = 0;
         float alertCount = 0;
-
-        idealCount += getIdealCountFromSate(currentRoomState.humidity);
-        idealCount += getIdealCountFromSate(currentRoomState.particulates);
-        idealCount += getIdealCountFromSate(currentRoomState.temperature);
-        idealCount += getIdealCountFromSate(currentRoomState.light);
-        idealCount += getIdealCountFromSate(currentRoomState.sound);
 
         warningCount += getWarningCountFromSate(currentRoomState.humidity);
         warningCount += getWarningCountFromSate(currentRoomState.particulates);
@@ -68,32 +60,15 @@ public class RoomConditionUtil {
         alertCount += getAlertCountFromSate(currentRoomState.sound);
 
 
-        // decision tree :)
-        //
-        //  Left child is true, right child is false
-        //
-        //          bad_count > 1 ?
-        //            /         \
-        //         alert    ideal_count > 50% ?
-        //                      /           \
-        //              warn_count > 1 ?    alert
-        //                 /       \
-        //              warning   ideal
-        //
-
-        if(alertCount <= 1){
-            if(idealCount / numberOfModality > 0.5f) {
-                if(warningCount > 1) {
-                    return CurrentRoomState.State.Condition.WARNING;
-                }else{
-                    return CurrentRoomState.State.Condition.IDEAL;
-                }
-            }else{
-                return CurrentRoomState.State.Condition.ALERT;
-            }
-        }else{
+        if(alertCount > 0) {
             return CurrentRoomState.State.Condition.ALERT;
         }
+
+        if(warningCount > 0) {
+            return CurrentRoomState.State.Condition.WARNING;
+        }
+
+        return CurrentRoomState.State.Condition.IDEAL;
     }
 
     private static int getIdealCountFromSate(CurrentRoomState.State state) {
