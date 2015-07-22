@@ -4,8 +4,10 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 /**
@@ -32,8 +34,8 @@ public class SleepScoreTest {
 
         assertThat(sleepScore, notNullValue());
         assertThat(sleepScore.value, is(calculatedWeight));
-        assertThat(sleepScore.value, greaterThan(0));
-        assertThat(sleepScore.value, lessThan(100));
+        assertThat(sleepScore.value, greaterThanOrEqualTo(0));
+        assertThat(sleepScore.value, lessThanOrEqualTo(100));
         assertThat(sleepScore.motionScore, is(fakeMotion));
         assertThat(sleepScore.sleepDurationScore, is(fakeDuration));
         assertThat(sleepScore.environmentalScore, is(fakeEnvironment));
@@ -59,8 +61,8 @@ public class SleepScoreTest {
 
         assertThat(sleepScore, notNullValue());
         assertThat(sleepScore.value, is(calculatedWeight));
-        assertThat(sleepScore.value, greaterThan(0));
-        assertThat(sleepScore.value, lessThan(100));
+        assertThat(sleepScore.value, greaterThanOrEqualTo(0));
+        assertThat(sleepScore.value, lessThanOrEqualTo(100));
         assertThat(sleepScore.motionScore, is(fakeMotion));
         assertThat(sleepScore.sleepDurationScore, is(fakeDuration));
         assertThat(sleepScore.environmentalScore, is(fakeEnvironment));
