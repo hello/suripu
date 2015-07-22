@@ -31,8 +31,8 @@ public class PartnerHmmTest {
         final Double [] noPartnerMotion = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
         final Double [] somePartnerMotion = {0.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0};
 
-        final int [] refPath1 = {0,0,1,1,1,0,0,0};
-        final int [] refPath2 = {0,2,3,3,1,0,0,0};
+        final int [] refPath1 = {0,0,0,1,1,1,0,0};
+        final int [] refPath2 = {0,0,2,3,3,1,0,0};
 
         final ImmutableList<Integer> path1 = partnerHmmThingy.decodeSensorData(myMotionData, noPartnerMotion, 120);
         final ImmutableList<Integer> path2 = partnerHmmThingy.decodeSensorData(myMotionData, somePartnerMotion, 120);

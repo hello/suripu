@@ -28,7 +28,6 @@ public class PartnerDataUtils {
 
     private static final int NUM_SIGNALS = 3;
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
-    final static protected double probThresholdToRejectData  = 0.5;
 
     private final Logger LOGGER;
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(PartnerDataUtils.class);
@@ -330,11 +329,11 @@ public class PartnerDataUtils {
         final Double partnerMotionsBinned [] = new Double[durationInIntervals];
         Arrays.fill(partnerMotionsBinned,0.0);
 
-        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1,true);
+        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1,false);
         fillBinsWithTrackerDurations(partnerMotionsBinned,t0,period,yourMotionsDeDuped,1,true);
 
         final PartnerHmm partnerHmmFilter = new PartnerHmm();
-        final ImmutableList<Integer> hmmPath = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, (int) period);
+        final ImmutableList<Integer> hmmPath = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, 5);
 
         final ImmutableList<Integer> myClassifiedMotions = partnerHmmFilter.interpretPath(hmmPath);
 

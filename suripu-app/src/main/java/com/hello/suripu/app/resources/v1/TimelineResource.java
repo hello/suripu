@@ -98,7 +98,7 @@ public class TimelineResource extends BaseResource {
         //first try to get a cached result
         final Optional<TimelineResult> cachedResult = this.timelineDAODynamoDB.getTimelinesForDate(accountId, targetDate);
 
-        if (cachedResult.isPresent() && !this.hasVotingEnabled(accountId)) {
+        if (cachedResult.isPresent() && !this.hasVotingEnabled(accountId) && false) {
 
             LOGGER.info("{} Found cached timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
