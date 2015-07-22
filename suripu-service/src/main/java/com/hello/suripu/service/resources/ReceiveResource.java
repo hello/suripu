@@ -36,6 +36,7 @@ import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
+import javax.ws.rs.HEAD;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -278,20 +279,17 @@ public class ReceiveResource extends BaseResource {
                         data.getFirmwareVersion(),
                         DateTime.now(),
                         2);
-                final CurrentRoomState currentRoomStateNoLight = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), 0, data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
-                        roundedDateTime.getMillis(),
-                        data.getFirmwareVersion(),
-                        DateTime.now(),
-                        2);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
-                    final OutputProtos.SyncResponse.RoomConditions roomConditions = OutputProtos.SyncResponse.RoomConditions.valueOf(
-                            RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal());
-                    final OutputProtos.SyncResponse.RoomConditions roomConditionsNoLight = OutputProtos.SyncResponse.RoomConditions.valueOf(
-                            RoomConditionUtil.getGeneralRoomConditionV2(currentRoomStateNoLight).ordinal());
+                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState);
+                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState);
+                    responseBuilder.setRoomConditions(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    roomConditions.ordinal()));
 
-                    responseBuilder.setRoomConditions(roomConditions);
-                    responseBuilder.setRoomConditionsLightsOff(roomConditionsNoLight);
+                    responseBuilder.setRoomConditionsLightsOff(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    roomConditionsLightsOff.ordinal()));
                 }else {
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(

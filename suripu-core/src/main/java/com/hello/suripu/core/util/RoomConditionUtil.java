@@ -42,6 +42,19 @@ public class RoomConditionUtil {
 
     }
 
+    public static CurrentRoomState.State.Condition getRoomConditionV2LightOff(final CurrentRoomState currentRoomState){
+        final CurrentRoomState currentRoomStateWithoutLight = new CurrentRoomState(currentRoomState.temperature,
+                currentRoomState.humidity,
+                currentRoomState.particulates,
+                new CurrentRoomState.State(currentRoomState.light.value,
+                        currentRoomState.light.message,
+                        currentRoomState.light.idealConditions,
+                        CurrentRoomState.State.Condition.IDEAL,
+                        currentRoomState.light.lastUpdated,
+                        currentRoomState.light.unit),
+                currentRoomState.sound);
+        return getGeneralRoomConditionV2(currentRoomStateWithoutLight);
+    }
 
     public static CurrentRoomState.State.Condition getGeneralRoomConditionV2(final CurrentRoomState currentRoomState) {
         float warningCount = 0;
