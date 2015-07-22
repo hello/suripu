@@ -163,21 +163,4 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public Integer getMergeUserInfoDynamoDBReadCapacityPerSecondUpperBound(){
         return this.mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound;
     }
-
-    @Valid
-    @NotNull
-    @JsonProperty("hmm_bayesnet_priors")
-    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
-        return this.hmmBayesnetPriorsConfiguration;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("hmm_bayesnet_models")
-    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
-        return this.hmmBayesnetModelsConfiguration;
-    }
-
 }
