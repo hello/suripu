@@ -4,6 +4,8 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.SleepDuration;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import org.joda.time.DateTime;
@@ -192,10 +194,31 @@ public class SleepScoreUtils {
         }
     }
 
-    public static int calculateAggregateEnvironmentScore(int soundScore, int temperatureScore, int humidityScore) {
-        return Math.round((0.25f * temperatureScore) + (0.25f * humidityScore) + (0.50f * soundScore));
+    public static int calculateLightScore(final List<Sample> samples, final long fallAsleepTimestamp, final long wakeUpTimestamp) {
+        final float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
+        if (average > Lights.LIGHT_LEVEL_ALERT) {
+            return SENSOR_ALERT_SCORE;
+        } else if (average > Lights.LIGHT_LEVEL_WARNING) {
+            return SENSOR_WARNING_SCORE;
+        } else {
+            return SENSOR_IDEAL_SCORE;
+        }
     }
 
+    public static int calculateParticulateScore(final List<Sample> samples, final long fallAsleepTimestamp, final long wakeUpTimestamp) {
+        final float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
+        if (average > Particulates.PARTICULATE_AQI_LEVEL_MAX_WARNING) {
+            return SENSOR_ALERT_SCORE;
+        } else if (average > Particulates.PARTICULATE_AQI_LEVEL_MAX_IDEAL) {
+            return SENSOR_WARNING_SCORE;
+        } else {
+            return SENSOR_IDEAL_SCORE;
+        }
+    }
+
+    public static int calculateAggregateEnvironmentScore(final int soundScore, final int temperatureScore, final int humidityScore, final int lightScore, final int particulateScore) {
+        return Math.round((0.2f * temperatureScore) + (0.2f * humidityScore) + (0.2f * soundScore) + (0.2f * lightScore) + (0.2f * particulateScore));
+    }
 
 
     public static Optional<MotionScore> getSleepMotionScoreMaybe(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {

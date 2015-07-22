@@ -218,7 +218,7 @@ timeline_log_db:
 sleep_stats_db:
     endpoint : http://localhost:7777
     region: us-east-1
-    table_name: prod_sleep_stats
+    table_name: sleep_stats
 sleep_stats_version: v_0_2
 
 

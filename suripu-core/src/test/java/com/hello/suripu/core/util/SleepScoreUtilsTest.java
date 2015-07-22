@@ -18,7 +18,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -193,9 +195,23 @@ public class SleepScoreUtilsTest {
 
     @Test
     public void testCalculateAggregateEnvironmentScore() {
-        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 100, 100), is(100));
-        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(50, 100, 100), is(75));
-        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 50, 100), is(88));
-        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 100, 50), is(88));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 100, 100, 100, 100), is(100));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(50, 100, 100, 50, 50), is(70));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 50, 100, 75, 50), is(75));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 75, 100, 50, 75), is(80));
     }
+
+    @Test
+    public void testCalculateAggregateEnvironmentScoreBound() {
+        final int temperatureScore = new Random().nextInt(101);
+        final int humdityScore = new Random().nextInt(101);
+        final int soundScore = new Random().nextInt(101);
+        final int lightScore = new Random().nextInt(101);
+        final int particulateScore = new Random().nextInt(101);
+        final int envScore = SleepScoreUtils.calculateAggregateEnvironmentScore(temperatureScore, humdityScore, soundScore, lightScore, particulateScore);
+        assertThat(envScore > Collections.max(asList(temperatureScore, humdityScore, soundScore, lightScore, particulateScore)), is(false));
+        assertThat(envScore < Collections.min(asList(temperatureScore, humdityScore, soundScore, lightScore, particulateScore)), is(false));
+        assertThat(envScore <= 100 && envScore >=0, is(true));
+    }
+
 }

@@ -7,11 +7,11 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -21,7 +21,6 @@ import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
-import com.hello.suripu.core.models.BayesNetHmmSingleModelPrior;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -1017,7 +1016,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final int soundScore = SleepScoreUtils.calculateSoundScore(numberSoundEvents);
             final int temperatureScore = SleepScoreUtils.calculateTemperatureScore(sensors.get(Sensor.TEMPERATURE), sleepStats.sleepTime, sleepStats.wakeTime);
             final int humidityScore = SleepScoreUtils.calculateHumidityScore(sensors.get(Sensor.HUMIDITY), sleepStats.sleepTime, sleepStats.wakeTime);
-            environmentScore = SleepScoreUtils.calculateAggregateEnvironmentScore(soundScore, temperatureScore, humidityScore);
+            final int lightScore = SleepScoreUtils.calculateLightScore(sensors.get(Sensor.LIGHT), sleepStats.sleepTime, sleepStats.wakeTime);
+            final int particulateScore = SleepScoreUtils.calculateParticulateScore(sensors.get(Sensor.PARTICULATES), sleepStats.sleepTime, sleepStats.wakeTime);
+
+            environmentScore = SleepScoreUtils.calculateAggregateEnvironmentScore(soundScore, temperatureScore, humidityScore, lightScore, particulateScore);
         } else {
             environmentScore = 100;
         }
