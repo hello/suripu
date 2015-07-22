@@ -1,29 +1,42 @@
 package com.hello.suripu.core.db;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class KeyStoreDynamoDB implements KeyStore {
 
@@ -34,6 +47,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
     private final static String DEVICE_ID_ATTRIBUTE_NAME = "device_id";
     private final static String AES_KEY_ATTRIBUTE_NAME = "aes_key";
+    private final static String CREATED_AT_ATTRIBUTE_NAME = "created_at";
     public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
     private final static String METADATA = "metadata";
 
@@ -69,7 +83,7 @@ public class KeyStoreDynamoDB implements KeyStore {
     }
 
     @Override
-    public Optional<DeviceKeyStoreRecord> getKeyStoreRecord(String deviceId) {
+    public Optional<DeviceKeyStoreRecord> getKeyStoreRecord(final String deviceId) {
         return getRecordRemotely(deviceId);
     }
 
@@ -92,7 +106,8 @@ public class KeyStoreDynamoDB implements KeyStore {
         final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
         attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()));
-        attributes.put("metadata", new AttributeValue().withS(metadata));
+        attributes.put(METADATA, new AttributeValue().withS(metadata));
+        attributes.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(DateTime.now(DateTimeZone.UTC).toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))));
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(keyStoreTableName)
@@ -100,6 +115,79 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
         // TODO: Log consumed capacity
+    }
+
+    @Override
+    public void put(String deviceId, String aesKey, String serialNumber, DateTime createdAtUtc) {
+        final Map<String, AttributeValue> attributes = new HashMap<>();
+        attributes.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+        attributes.put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()));
+        attributes.put(METADATA, new AttributeValue().withS(serialNumber));
+        attributes.put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(createdAtUtc.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))));
+
+
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(keyStoreTableName)
+                .withItem(attributes);
+
+        final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
+    }
+
+    @Override
+    public Map<String, Optional<byte[]>> getBatch(final Set<String> deviceIds) {
+
+        final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
+        final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
+
+        for (final String deviceId : deviceIds) {
+            final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
+            attributeValueMap.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+            itemKeys.add(attributeValueMap);
+        }
+
+        final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(DEVICE_ID_ATTRIBUTE_NAME, AES_KEY_ATTRIBUTE_NAME);
+        final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
+        requestItems.put(keyStoreTableName, key);
+
+        batchGetItemRequest.withRequestItems(requestItems);
+
+        try {
+            final BatchGetItemResult batchGetItemResult = dynamoDBClient.batchGetItem(batchGetItemRequest);
+            final Map<String, Optional<byte[]>> results = Maps.newHashMap();
+
+            for (final String item : batchGetItemResult.getResponses().keySet()) {
+                final List<Map<String, AttributeValue>> responses = batchGetItemResult.getResponses().get(item);
+                for (final Map<String, AttributeValue> response : responses) {
+                    final String deviceId = response.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
+                    results.put(deviceId, fromItem(response, deviceId, false));
+                }
+            }
+            return results;
+        } catch (AmazonServiceException ase){
+            LOGGER.error("Failed getting keys.");
+
+        }
+        return Collections.EMPTY_MAP;
+    }
+
+    private Optional<byte[]> fromItem(final Map<String, AttributeValue> item, final String deviceId, final Boolean strict) {
+        if(item == null || !item.containsKey(AES_KEY_ATTRIBUTE_NAME)) {
+            LOGGER.warn("Did not find AES key for device_id = {}.", deviceId);
+            if(strict) {
+                return Optional.absent();
+            }
+            LOGGER.warn("Not in strict mode, returning default AES key instead for device = {}.", deviceId);
+            return Optional.of(DEFAULT_AES_KEY);
+        }
+
+        final String hexEncodedKey = item.get(AES_KEY_ATTRIBUTE_NAME).getS();
+        try {
+            return Optional.of(Hex.decodeHex(hexEncodedKey.toCharArray()));
+        } catch (DecoderException e) {
+            LOGGER.error("Failed to decode key from store");
+        }
+
+        return Optional.absent();
     }
 
     private Optional<byte[]> getRemotely(final String deviceId, final Boolean strict) {
@@ -116,23 +204,7 @@ public class KeyStoreDynamoDB implements KeyStore {
 
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
 
-        if(getItemResult.getItem() == null || !getItemResult.getItem().containsKey(AES_KEY_ATTRIBUTE_NAME)) {
-            LOGGER.warn("Did not find AES key for device_id = {}.", deviceId);
-            if(strict) {
-                return Optional.absent();
-            }
-            LOGGER.warn("Not in strict mode, returning default AES key instead for device = {}.", deviceId);
-            return Optional.of(DEFAULT_AES_KEY);
-        }
-
-        final String hexEncodedKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
-        try {
-            return Optional.of(Hex.decodeHex(hexEncodedKey.toCharArray()));
-        } catch (DecoderException e) {
-            LOGGER.error("Failed to decode key from store");
-        }
-
-        return Optional.absent();
+        return fromItem(getItemResult.getItem(), deviceId, strict);
 
     }
 
@@ -176,11 +248,15 @@ public class KeyStoreDynamoDB implements KeyStore {
         }
 
         final String aesKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
+        String createdAt = "";
+        if(getItemResult.getItem().containsKey(CREATED_AT_ATTRIBUTE_NAME)) {
+            createdAt = getItemResult.getItem().get(CREATED_AT_ATTRIBUTE_NAME).getS();
+        }
 
         if (!getItemResult.getItem().containsKey(METADATA)) {
-            return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), "n/a"));
+            return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), "n/a", createdAt));
         }
-        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), getItemResult.getItem().get(METADATA).getS()));
+        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), getItemResult.getItem().get(METADATA).getS(), createdAt));
     }
 
     private String censorKey(final String key) {

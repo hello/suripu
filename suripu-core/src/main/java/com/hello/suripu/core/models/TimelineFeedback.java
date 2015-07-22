@@ -29,9 +29,10 @@ public class TimelineFeedback {
             @JsonProperty("new_time_of_event") final String newTimeOfEvent,
             @JsonProperty("event_type") final String eventTypeString) {
 
-        final DateTime date = DateTime.parse(dateOfNight).withZone(DateTimeZone.UTC);
+        final DateTime date = DateTime.parse(dateOfNight);
+        final DateTime realDate = new DateTime(date.getMillis(), DateTimeZone.UTC).withTimeAtStartOfDay();
         final Event.Type eventType = Event.Type.fromString(eventTypeString);
-        return new TimelineFeedback(date, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent());
+        return new TimelineFeedback(realDate, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent());
     }
 
     public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType) {
@@ -40,5 +41,10 @@ public class TimelineFeedback {
 
     public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId) {
         return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId));
+    }
+
+    public static TimelineFeedback create(final String dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId) {
+        final DateTime realDate = new DateTime(DateTime.parse(dateOfNight), DateTimeZone.UTC).withTimeAtStartOfDay();
+        return new TimelineFeedback(realDate, oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId));
     }
 }

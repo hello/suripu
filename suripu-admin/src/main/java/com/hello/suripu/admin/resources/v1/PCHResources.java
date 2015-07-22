@@ -60,7 +60,7 @@ public class PCHResources {
             LOGGER.info("Scanning table: {}. Iteration # {}. Store size: {}", senseKeyStoreTableName, i, store.size());
             final ScanRequest scanRequest = new ScanRequest()
                     .withTableName(senseKeyStoreTableName)
-                    .withAttributesToGet("metadata")
+                    .withAttributesToGet("metadata","created_at")
                     .withExclusiveStartKey(lastKeyEvaluated)
                     .withLimit(SCAN_QUERY_LIMIT);
 
@@ -69,7 +69,7 @@ public class PCHResources {
             LOGGER.info("Last key: {}", lastKeyEvaluated);
             for (final Map<String, AttributeValue> map : scanResult.getItems()) {
                 final String metadata = (map.containsKey("metadata")) ? map.get("metadata").getS() : "";
-                if(metadata.startsWith("9")) {
+                if(metadata.startsWith("9") && map.containsKey("created_at")) {
                     store.add(metadata.toUpperCase());
                 }
             }

@@ -36,6 +36,7 @@ import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
+import javax.ws.rs.HEAD;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -270,10 +271,15 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
-            // only compute the sate for the most recent conditions
+            // only compute the state for the most recent conditions
             if(i == batch.getDataCount() -1) {
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
+                        roundedDateTime.getMillis(),
+                        data.getFirmwareVersion(),
+                        DateTime.now(),
+                        2);
+                final CurrentRoomState currentRoomStateNoLight = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), 0, data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
                         roundedDateTime.getMillis(),
                         data.getFirmwareVersion(),
                         DateTime.now(),

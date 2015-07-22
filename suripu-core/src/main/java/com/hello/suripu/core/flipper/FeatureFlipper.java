@@ -16,6 +16,7 @@ public class FeatureFlipper {
     public final static String ALARM_IN_TIMELINE = "alarm_in_timeline";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
+    public final static String ENVIRONMENT_IN_TIMELINE_SCORE = "environment_in_timeline_score";
     public final static String FEEDBACK_IN_TIMELINE = "feedback_in_timeline";
     public final static String IN_OUT_BED_EVENTS = "in_out_bed_events";
     public final static String HMM_ALGORITHM = "hmm_algorithm";
@@ -49,4 +50,5 @@ public class FeatureFlipper {
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String BAYES_NET_ALGORITHM = "bayes_net_algorithm";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
+    public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
 }

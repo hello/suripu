@@ -1,7 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.models.SleepFeedback;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.oauth.AccessToken;

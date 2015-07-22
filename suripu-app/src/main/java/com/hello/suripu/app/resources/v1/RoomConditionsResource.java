@@ -79,8 +79,8 @@ public class RoomConditionsResource extends BaseResource {
         Integer thresholdInMinutes = 15;
         Integer mostRecentLookBackMinutes = 30;
         if (this.hasDelayCurrentRoomStateThreshold(token.accountId)) {
-            thresholdInMinutes = 45;
-            mostRecentLookBackMinutes = 45;
+            thresholdInMinutes = 120;
+            mostRecentLookBackMinutes = 120;
         }
 
         final Optional<DeviceData> data = deviceDataDAO.getMostRecent(token.accountId, deviceIdPair.get().internalDeviceId,
