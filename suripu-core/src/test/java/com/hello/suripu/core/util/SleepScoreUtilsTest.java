@@ -196,9 +196,9 @@ public class SleepScoreUtilsTest {
     @Test
     public void testCalculateAggregateEnvironmentScore() {
         assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 100, 100, 100, 100), is(100));
-        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(50, 100, 100, 50, 50), is(65));
-        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 50, 100, 50, 50), is(73));
-        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 100, 50, 50, 75), is(75));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(50, 100, 100, 50, 50), is(70));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 50, 100, 75, 50), is(75));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 75, 100, 50, 75), is(80));
     }
 
     @Test

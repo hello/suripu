@@ -217,7 +217,7 @@ public class SleepScoreUtils {
     }
 
     public static int calculateAggregateEnvironmentScore(final int soundScore, final int temperatureScore, final int humidityScore, final int lightScore, final int particulateScore) {
-        return Math.round((0.15f * temperatureScore) + (0.15f * humidityScore) + (0.3f * soundScore) + (0.3f * lightScore) + (0.1f * particulateScore));
+        return Math.round((0.2f * temperatureScore) + (0.2f * humidityScore) + (0.2f * soundScore) + (0.2f * lightScore) + (0.2f * particulateScore));
     }
 
 
