@@ -64,6 +64,11 @@ public class SleepScore {
         private MotionScore motionScore;
         private Integer sleepDurationScore;
         private Integer environmentalScore;
+        private Weighting weighting;
+
+        public Builder() {
+            this.weighting = new Weighting(); // default weighting
+        }
 
         public Builder withMotionScore(final MotionScore motionScore) {
             this.motionScore = motionScore;
@@ -80,7 +85,12 @@ public class SleepScore {
             return this;
         }
 
-        public SleepScore build(final Weighting weighting) {
+        public Builder withWeighting(final Weighting weighting) {
+            this.weighting = weighting;
+            return this;
+        }
+
+        public SleepScore build() {
             final Integer value = Math.round(
                       (weighting.motion * motionScore.score)
                     + (weighting.duration * sleepDurationScore)

@@ -1014,7 +1014,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 .withMotionScore(motionScore)
                 .withSleepDurationScore(durationScore)
                 .withEnvironmentalScore(environmentScore)
-                .build(sleepScoreWeighting(accountId));
+                .withWeighting(sleepScoreWeighting(accountId))
+                .build();
 
         // Always update stats and scores to Dynamo
         final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;

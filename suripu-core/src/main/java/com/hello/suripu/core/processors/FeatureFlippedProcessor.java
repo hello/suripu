@@ -29,7 +29,7 @@ public class FeatureFlippedProcessor {
     protected Boolean hasSoundInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
-    protected Boolean hasEnvironmentInTimelineScore(final Long accountId) { 
+    protected Boolean hasEnvironmentInTimelineScore(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, Collections.EMPTY_LIST);
     }
     protected Boolean hasFeedbackInTimeline(final Long accountId) {
