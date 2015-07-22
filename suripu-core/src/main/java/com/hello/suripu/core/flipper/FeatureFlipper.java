@@ -51,4 +51,5 @@ public class FeatureFlipper {
     public final static String BAYES_NET_ALGORITHM = "bayes_net_algorithm";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
+    public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
 }

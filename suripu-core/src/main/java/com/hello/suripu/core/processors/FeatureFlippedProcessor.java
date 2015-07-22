@@ -77,4 +77,8 @@ public class FeatureFlippedProcessor {
     protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasSleepScoreDurationWeighting(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_WEIGHTING, accountId, Collections.EMPTY_LIST);
+    }
 }

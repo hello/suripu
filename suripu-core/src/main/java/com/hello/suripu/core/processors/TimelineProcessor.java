@@ -31,6 +31,7 @@ import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
@@ -1005,12 +1006,39 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return 0;
         }
 
-        // Sleep duration score
+        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats);
+        final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
+
+        // Calculate the sleep score based on the sub scores and weighting
+        final SleepScore sleepScore = new SleepScore.Builder()
+                .withMotionScore(motionScore)
+                .withSleepDurationScore(durationScore)
+                .withEnvironmentalScore(environmentScore)
+                .withWeighting(sleepScoreWeighting(accountId))
+                .build();
+
+        // Always update stats and scores to Dynamo
+        final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
+        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
+                targetDate.withTimeAtStartOfDay(), sleepScore.value, motionScore, sleepStats, userOffsetMillis);
+
+        LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}",
+                updatedStats, accountId, sleepScore, sleepStats);
+
+        return sleepScore.value;
+    }
+
+    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats) {
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
         final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
+        return durationScore;
+    }
 
-        // Environment score
+    private Integer computeEnvironmentScore(final Long accountId,
+                                            final SleepStats sleepStats,
+                                            final int numberSoundEvents,
+                                            final AllSensorSampleList sensors) {
         final Integer environmentScore;
         if (hasEnvironmentInTimelineScore(accountId) && sleepStats.sleepTime > 0L && sleepStats.wakeTime > 0L) {
             final int soundScore = SleepScoreUtils.calculateSoundScore(numberSoundEvents);
@@ -1023,21 +1051,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         } else {
             environmentScore = 100;
         }
-
-        // Aggregate all scores
-        final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore.score, durationScore, environmentScore);
-
-        // Always update stats and scores to Dynamo
-        final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
-        final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
-                targetDate.withTimeAtStartOfDay(), sleepScore, motionScore, sleepStats, userOffsetMillis);
-
-        LOGGER.debug("Updated Stats-score: status {}, account {}, motion {}, duration {}, score {}, stats {}",
-                updatedStats, accountId, motionScore, durationScore, sleepScore, sleepStats);
-
-        return sleepScore;
+        return environmentScore;
     }
 
+    private SleepScore.Weighting sleepScoreWeighting(final Long accountId) {
+        final SleepScore.Weighting weighting;
+        if (hasSleepScoreDurationWeighting(accountId)) {
+            weighting = new SleepScore.DurationHeavyWeighting();
+        } else {
+            weighting = new SleepScore.Weighting();
+        }
+        return weighting;
+    }
 
     private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
 
