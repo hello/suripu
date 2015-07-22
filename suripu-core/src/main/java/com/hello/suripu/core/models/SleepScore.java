@@ -24,14 +24,15 @@ public class SleepScore {
     @Override
     public String toString(){
         final StringBuilder builder = new StringBuilder()
-            .append("motion ")
-            .append(this.motionScore)
+            .append("{motion ")
+            .append(this.motionScore.score)
             .append(", duration ")
             .append(this.sleepDurationScore)
             .append(", environment ")
             .append(this.environmentalScore)
             .append(", sleep score ")
-            .append(this.value);
+            .append(this.value)
+            .append("}");
         return builder.toString();
     }
 
