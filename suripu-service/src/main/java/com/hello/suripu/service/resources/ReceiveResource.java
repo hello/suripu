@@ -279,11 +279,6 @@ public class ReceiveResource extends BaseResource {
                         data.getFirmwareVersion(),
                         DateTime.now(),
                         2);
-                final CurrentRoomState currentRoomStateNoLight = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), 0, data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
-                        roundedDateTime.getMillis(),
-                        data.getFirmwareVersion(),
-                        DateTime.now(),
-                        2);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
                     final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState);
