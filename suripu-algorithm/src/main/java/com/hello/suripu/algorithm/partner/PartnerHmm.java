@@ -148,15 +148,15 @@ public class PartnerHmm {
         //these numbers are made up
         final List<Double> probsOfMeOnBed = Lists.newArrayList();
         probsOfMeOnBed.add(0.3);
-        probsOfMeOnBed.add(0.35);
-        probsOfMeOnBed.add(0.05);
+        probsOfMeOnBed.add(0.39);
+        probsOfMeOnBed.add(0.01);
         probsOfMeOnBed.add(0.3);
 
 
         final List<Double> probsOfYouOnBed = Lists.newArrayList();
         probsOfYouOnBed.add(0.3);
-        probsOfYouOnBed.add(0.05);
-        probsOfYouOnBed.add(0.35);
+        probsOfYouOnBed.add(0.01);
+        probsOfYouOnBed.add(0.39);
         probsOfYouOnBed.add(0.3);
 
         final List<Double> probsItsAParty = Lists.newArrayList();
