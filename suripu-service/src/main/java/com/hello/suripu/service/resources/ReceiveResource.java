@@ -355,15 +355,9 @@ public class ReceiveResource extends BaseResource {
                 audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
             }
 
-
-            if (featureFlipper.deviceFeatureActive(FeatureFlipper.BYPASS_OTA_CHECKS, deviceName, groups) || groups.contains("chris-dev")) {
-                responseBuilder.setBatchSize(1);
-            } else {
-
-                final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
-                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
-                responseBuilder.setBatchSize(uploadCycle);
-            }
+            final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
+            final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
+            responseBuilder.setBatchSize(uploadCycle);
 
             if(shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())){
                 this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, userInfoList, nextRingTime);
