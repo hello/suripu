@@ -154,3 +154,10 @@ kinesis_logger:
   min_log_level : INFO
 
 user_info_max_read_capacity_sec: 200
+
+timelineworker_dev:
+
+teams_db:
+  endpoint: http://localhost:7777
+  region: us-east-1
+  table_name: teams

@@ -11,26 +11,28 @@ import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
@@ -124,6 +126,11 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
         ObjectGraphRoot.getInstance().init(module);
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+
+        final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
+        final TeamStore teamStore = new TeamStore(teamStoreDBClient, configuration.getTeamsDynamoDBConfiguration().getTableName());
+        final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 30);
+
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
@@ -132,7 +139,8 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                senseColorDAO, priorsDAO,modelDAO);
+                senseColorDAO, priorsDAO,modelDAO,
+                groupFlipper);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);
