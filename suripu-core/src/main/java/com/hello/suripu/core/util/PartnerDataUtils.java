@@ -329,7 +329,7 @@ public class PartnerDataUtils {
         final Double partnerMotionsBinned [] = new Double[durationInIntervals];
         Arrays.fill(partnerMotionsBinned,0.0);
 
-        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1,false);
+        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1,true);
         fillBinsWithTrackerDurations(partnerMotionsBinned,t0,period,yourMotionsDeDuped,1,true);
 
         final PartnerHmm partnerHmmFilter = new PartnerHmm();
