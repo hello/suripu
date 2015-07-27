@@ -207,7 +207,7 @@ public class PartnerHmm {
         final Double diff = myDuration - partnerDuration;
         final Double total = myDuration + partnerDuration;
 
-        if (Math.abs(total) < 1e-6) {
+        if (total < 1e-6) {
             return new MeasurementPlusDebugInfo(0.0,0.0,0.0,0.0);
         }
 
