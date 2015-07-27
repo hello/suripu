@@ -27,15 +27,18 @@ public class PartnerHmmTest {
 
         final PartnerHmm partnerHmmThingy = new PartnerHmm();
 
-        final Double [] myMotionData = {0.0,0.0,1.0,1.0,1.0,0.0,0.0,0.0};
-        final Double [] noPartnerMotion = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-        final Double [] somePartnerMotion = {0.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0};
+        final Double [] myMotionData1 = {0.0,0.0,1.0,1.0,1.0,0.0,0.0,0.0};
+        final Double [] noPartnerMotion1 = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
-        final int [] refPath1 = {0,0,0,1,1,1,0,0};
-        final int [] refPath2 = {0,0,2,3,3,1,0,0};
+                                            //--------ME-ME-ME-ME-BOTH-BOTH--YOU-YOU---------------
+        final Double [] myMotionData2 =      {0.0,0.0,1.0,1.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0};
+        final Double [] somePartnerMotion2 = {0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0};
 
-        final ImmutableList<Integer> path1 = partnerHmmThingy.decodeSensorData(myMotionData, noPartnerMotion, 120);
-        final ImmutableList<Integer> path2 = partnerHmmThingy.decodeSensorData(myMotionData, somePartnerMotion, 120);
+        final int [] refPath1 = {0,0,0,1,1,1,6,6};
+        final int [] refPath2 = {0,0,0,1,1,1,3,3,3,5,5,6,6,6};
+
+        final ImmutableList<Integer> path1 = partnerHmmThingy.decodeSensorData(myMotionData1, noPartnerMotion1, 10);
+        final ImmutableList<Integer> path2 = partnerHmmThingy.decodeSensorData(myMotionData2, somePartnerMotion2, 10);
 
 
         checkPath(refPath1,path1);
