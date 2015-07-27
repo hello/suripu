@@ -180,7 +180,7 @@ public class PartnerHmm {
 
     }
 
-    private static class MeasurementPlusDebugInfo {
+    public static class MeasurementPlusDebugInfo {
         public MeasurementPlusDebugInfo(Double diff, Double total, Double frac, Double alphabet) {
             this.diff = diff;
             this.total = total;
@@ -195,7 +195,7 @@ public class PartnerHmm {
 
     }
 
-    private static MeasurementPlusDebugInfo getMeasurementAsAlphabet(final Double myDuration, final Double partnerDuration) {
+    public static MeasurementPlusDebugInfo getMeasurementAsAlphabet(final Double myDuration, final Double partnerDuration) {
 
          /*
           0 - nothing on both
@@ -207,7 +207,7 @@ public class PartnerHmm {
         final Double diff = myDuration - partnerDuration;
         final Double total = myDuration + partnerDuration;
 
-        if (total < 1e-6) {
+        if (Math.abs(total) < 1e-6) {
             return new MeasurementPlusDebugInfo(0.0,0.0,0.0,0.0);
         }
 
