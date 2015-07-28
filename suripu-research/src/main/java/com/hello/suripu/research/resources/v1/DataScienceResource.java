@@ -4,6 +4,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -21,6 +23,7 @@ import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -40,6 +43,7 @@ import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.hello.suripu.research.db.LabelDAO;
 import com.hello.suripu.research.models.BinnedSensorData;
+import com.hello.suripu.research.models.FeedbackUtc;
 import com.hello.suripu.research.models.MatchedFeedback;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -790,6 +794,94 @@ public class DataScienceResource extends BaseResource {
         return labelDAO.getPartnerAccountsThatHadFeedback(targetDate,endDate);
 
 
+    }
+
+
+    private Map<Long,Integer> getTimezonesForAccounts(final Set<Long> accountIds) {
+        final Map<Long,Integer> timezones = Maps.newHashMap();
+
+        for (final Long accountId : accountIds) {
+            final Optional<Account> accountOptional = accountDAO.getById(accountId);
+
+            if (!accountOptional.isPresent()) {
+                continue;
+            }
+
+            timezones.put(accountId,accountOptional.get().tzOffsetMillis);
+        }
+
+        return timezones;
+    }
+
+
+    @GET
+    @Path("/partnerfeedback/{query_date_utc}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<FeedbackUtc> getPartnerFeedbacks(@Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                                     @PathParam("query_date_utc") final String date,
+                                                     @DefaultValue("1") @QueryParam("num_days") final Integer numDays,
+                                                     @DefaultValue("ALL_EVENTS")  @QueryParam("event_type") final String eventType) {
+
+        final DateTime targetDate = DateTime.parse(date, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC);
+
+        final DateTime endDate = targetDate.plusDays(numDays);
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+        List<TimelineFeedback> feedbacks = Lists.newArrayList();
+
+        if (eventType.equals("ALL_EVENTS")) {
+            LOGGER.info("pulling all events");
+            feedbacks = labelDAO.getAllPartnerFeedback(targetDate, endDate);
+        }
+        else {
+            LOGGER.info("pulling events for type {}",eventType);
+
+            feedbacks = labelDAO.getPartnerFeedbackByType(targetDate, endDate, eventType);
+        }
+
+        //get timezones for each account
+        final Set<Long> accountIds = Sets.newHashSet();
+        for (final TimelineFeedback timelineFeedback : feedbacks) {
+            if (!timelineFeedback.accountId.isPresent()) {
+                continue;
+            }
+
+            accountIds.add(timelineFeedback.accountId.get());
+        }
+
+
+        final Map<Long,Integer> timezones = getTimezonesForAccounts(accountIds);
+
+        final List<FeedbackUtc> feedbackUtcs = Lists.newArrayList();
+
+        for (final TimelineFeedback timelineFeedback : feedbacks) {
+            if (!timelineFeedback.accountId.isPresent()) {
+                continue;
+            }
+
+            final Long accountId = timelineFeedback.accountId.get();
+
+            if (timezones.get(accountId) == null) {
+                continue;
+            }
+
+            final Integer tzOffset = timezones.get(accountId);
+
+            final Optional<DateTime> oldTime = FeedbackUtils.convertFeedbackToDateTimeByOldTime(timelineFeedback, tzOffset);
+            final Optional<DateTime> newTime = FeedbackUtils.convertFeedbackToDateTimeByNewTime(timelineFeedback, tzOffset);
+
+
+            if (!oldTime.isPresent() || !newTime.isPresent()) {
+                continue;
+            }
+
+            feedbackUtcs.add(new FeedbackUtc(timelineFeedback.eventType.name(), oldTime.get().getMillis(), newTime.get().getMillis(), accountId));
+
+        }
+
+        return feedbackUtcs;
     }
 
 }
