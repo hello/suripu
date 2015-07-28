@@ -292,7 +292,7 @@ public class PartnerDataUtils {
         return time.toLocalDateTime().toString("MM/dd HH:mm");
     }
 
-    public ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
+    public ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(final DateTime startTimeUTC, final DateTime endTimeUTC, ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
 
         if (yourMotions.isEmpty() || myMotions.isEmpty()) {
             return myMotions;
@@ -305,19 +305,9 @@ public class PartnerDataUtils {
 
 
         //construct 5 minute bins of duration difference
-        Long t0 = myMotionsDeDuped.get(0).timestamp;
-        Long t02 = yourMotionsDeDuped.get(0).timestamp;
+        final Long t0 = startTimeUTC.getMillis();
+        final Long tf = endTimeUTC.getMillis();
 
-        if (t0 > t02) {
-            t0 = t02;
-        }
-
-        Long tf = myMotionsDeDuped.get(myMotionsDeDuped.size() - 1).timestamp;
-        Long tf2 = yourMotionsDeDuped.get(yourMotionsDeDuped.size() - 1).timestamp;
-
-        if (tf < tf2) {
-            tf = tf2;
-        }
 
         final long period = NUMBER_OF_MILLIS_IN_A_MINUTE * 5;
         final int durationInIntervals = (int) ((tf - t0) / period);
