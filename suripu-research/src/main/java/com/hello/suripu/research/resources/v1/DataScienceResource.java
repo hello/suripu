@@ -872,12 +872,13 @@ public class DataScienceResource extends BaseResource {
             final Optional<DateTime> oldTime = FeedbackUtils.convertFeedbackToDateTimeByOldTime(timelineFeedback, tzOffset);
             final Optional<DateTime> newTime = FeedbackUtils.convertFeedbackToDateTimeByNewTime(timelineFeedback, tzOffset);
 
+            ;
 
             if (!oldTime.isPresent() || !newTime.isPresent()) {
                 continue;
             }
 
-            feedbackUtcs.add(new FeedbackUtc(timelineFeedback.eventType.name(), oldTime.get().getMillis(), newTime.get().getMillis(), accountId));
+            feedbackUtcs.add(new FeedbackUtc(timelineFeedback.eventType.name(), oldTime.get().getMillis(), newTime.get().getMillis(), accountId,DateTimeUtil.dateToYmdString(timelineFeedback.dateOfNight)));
 
         }
 

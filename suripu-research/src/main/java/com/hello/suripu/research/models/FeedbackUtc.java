@@ -19,11 +19,15 @@ public class FeedbackUtc {
     @JsonProperty("account_id")
     public final Long accountId;
 
-    public FeedbackUtc(final String eventType,final Long feedbackOldTime,final Long feedbackNewTime,final Long accountId) {
+    @JsonProperty("query_date")
+    public final String queryDate;
+
+    public FeedbackUtc(final String eventType,final Long feedbackOldTime,final Long feedbackNewTime,final Long accountId, final String queryDate) {
         this.eventType = eventType;
         this.feedbackOldTime = feedbackOldTime;
         this.feedbackNewTime = feedbackNewTime;
         this.accountId = accountId;
+        this.queryDate = queryDate;
     }
 
 
