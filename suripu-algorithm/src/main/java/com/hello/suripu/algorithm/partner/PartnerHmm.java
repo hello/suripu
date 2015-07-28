@@ -25,7 +25,7 @@ public class PartnerHmm {
     static final Double DECISION_FRACTION = 0.5;
     static final int NUM_STATES = 7;
     static final int NUM_OBS = 4;
-    static final Double PROB_NOT_ON_BED = 0.99;
+    static final Double PROB_NOT_ON_BED = 0.999;
 
     static final double MIN_LIKELIHOOD = 1e-100;
 
