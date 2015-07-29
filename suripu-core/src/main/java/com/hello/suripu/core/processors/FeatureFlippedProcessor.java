@@ -71,4 +71,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasTestingInsightEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST);
+    }
+
 }
