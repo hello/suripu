@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -17,6 +18,7 @@ import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.processors.insights.*;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.librato.rollout.RolloutClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
@@ -24,11 +26,8 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import javax.inject.Inject;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -36,6 +35,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by kingshy on 10/24/14.
  */
 public class InsightProcessor {
+    @Inject
+    protected RolloutClient featureFlipper;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
 
     private static final int RECENT_DAYS = 10; // last 10 days
@@ -184,9 +186,14 @@ public class InsightProcessor {
 
         switch (dayOfWeek) {
             case 6:
-                LOGGER.debug("setting category to generate as wake variance");
-                categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
-                break;
+                if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
+                    LOGGER.debug("setting category to generate as wake variance");
+                    categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
+                    break;
+            }
+                else {
+                    return;
+                }
             default:
                 return;
         }
