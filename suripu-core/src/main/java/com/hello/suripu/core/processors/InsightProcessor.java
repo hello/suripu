@@ -41,7 +41,7 @@ public class InsightProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
 
     private static final int RECENT_DAYS = 10; // last 10 days
-    private static final int NEW_ACCOUNT_THRESHOLD = 0;
+    private static final int NEW_ACCOUNT_THRESHOLD = 2;
     private static final int DAYS_ONE_WEEK = 7;
 
     private final DeviceDataDAO deviceDataDAO;
@@ -116,7 +116,6 @@ public class InsightProcessor {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        /*
         InsightCard.Category categoryToGenerate;
         switch (accountAge) {
             case 1:
@@ -138,12 +137,6 @@ public class InsightProcessor {
         if (!recentCategories.contains(categoryToGenerate)) {
             generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
-        */
-
-        InsightCard.Category categoryToGenerate;
-        categoryToGenerate = InsightCard.Category.LIGHT;
-        LOGGER.debug("Generating NEW user insight for account id {}", accountId);
-        generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
 
     }
 
@@ -185,7 +178,7 @@ public class InsightProcessor {
         InsightCard.Category categoryToGenerate;
 
         switch (dayOfWeek) {
-            case 6:
+            case 4: //let's make this thursday for now, but I'd like it to be Saturday morning
                 if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
                     LOGGER.debug("setting category to generate as wake variance");
                     categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
@@ -219,11 +212,9 @@ public class InsightProcessor {
         } else if (category == InsightCard.Category.SLEEP_QUALITY) {
             insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
         } else if (category == InsightCard.Category.WAKE_VARIANCE) {
-            //DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
-            DateTime queryEndDate = DateTime.parse("2015-02-20").withTimeAtStartOfDay(); //TODO: delete me
+            DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
             TimelineProcessor timelineProcessor = this.timelineProcessor;
-            //int numDays = DAYS_ONE_WEEK;
-            int numDays = 3; //TODO: delete me
+            int numDays = DAYS_ONE_WEEK;
             insightCardOptional = WakeVariance.getInsights(timelineProcessor, accountId, wakeStdDevData, queryEndDate, numDays);
         }
 

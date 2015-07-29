@@ -93,7 +93,6 @@ public class InsightsGenerator extends HelloBaseRecordProcessor {
             }
         }
 
-        /* //TODO: uncomment me
         try {
             iRecordProcessorCheckpointer.checkpoint();
         } catch (InvalidStateException e) {
@@ -101,7 +100,6 @@ public class InsightsGenerator extends HelloBaseRecordProcessor {
         } catch (ShutdownException e) {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
-        */
     }
 
     @Override
@@ -109,7 +107,6 @@ public class InsightsGenerator extends HelloBaseRecordProcessor {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
         if(shutdownReason == ShutdownReason.TERMINATE) {
             LOGGER.warn("Got Termintate. Attempting to checkpoint.");
-            /* //TODO: uncomment me
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.warn("Checkpoint successful.");
@@ -118,7 +115,6 @@ public class InsightsGenerator extends HelloBaseRecordProcessor {
             } catch (ShutdownException e) {
                 LOGGER.error(e.getMessage());
             }
-            */
         }
     }
 
