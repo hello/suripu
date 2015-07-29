@@ -9,7 +9,6 @@ import java.util.Map;
  * Created by jingyun on 7/25/15.
  */
 public class WakeStdDevData {
-    // see https://s3.amazonaws.com/hello-data/insights-raw-data/blah?
     private static String DISTRIBUTION_DATA = "0,0.00212828625877\n"+
                 "1,0.00433918591846\n"+
                 "2,0.00663476845656\n"+

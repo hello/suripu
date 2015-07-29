@@ -12,23 +12,21 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.AccountDAOImpl;
-import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
-import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.InsightsDAODynamoDB;
-import com.hello.suripu.core.db.QuestionResponseDAO;
-import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
-import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.db.*;
+import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.core.processors.insights.WakeStdDevData;
+import com.hello.suripu.core.processors.TimelineProcessor;
+import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.TimelineDAODynamoDB;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
@@ -169,6 +167,31 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
 
         // external data for insights computation
         final LightData lightData = new LightData(); // lights global distribution
+        final WakeStdDevData wakeStdDevData = new WakeStdDevData();
+
+        //Instantiate timelineProcessor
+        final DBI commonDB = new DBI(managedDataSourceFactory.build(configuration.getCommonDB()));
+        final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
+        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.SLEEP_HMM));
+        final String sleepHmmTableName = configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.SLEEP_HMM);
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
+        final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
+                ringTimeDynamoDBClient,
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.RING_TIME_HISTORY));
+        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+        final TimelineProcessor timelineProcessor =
+                TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
+                        deviceDAO, deviceDataDAO,
+                        ringTimeHistoryDAODynamoDB,
+                        feedbackDAO,
+                        sleepHmmDAODynamoDB,
+                        accountDAO,
+                        sleepStatsDAODynamoDB,
+                        senseColorDAO);
 
         final IRecordProcessorFactory factory = new InsightsGeneratorFactory(
                 accountDAO,
@@ -181,6 +204,8 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 questionResponseDAO,
                 sleepStatsDAODynamoDB,
                 lightData,
+                wakeStdDevData,
+                timelineProcessor,
                 accountPreferencesDynamoDB);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

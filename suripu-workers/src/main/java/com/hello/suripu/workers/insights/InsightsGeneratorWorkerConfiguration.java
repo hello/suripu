@@ -2,6 +2,7 @@ package com.hello.suripu.workers.insights;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.DynamoDBConfiguration;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -96,6 +97,15 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
     private DynamoDBConfiguration featuresDynamoDBConfiguration;
     public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
         return this.featuresDynamoDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("dynamodb")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+
+    public NewDynamoDBConfiguration getDynamoDBConfiguration(){
+        return dynamoDBConfiguration;
     }
 
 }
