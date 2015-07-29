@@ -140,10 +140,11 @@ public class TimeZoneHistoryDAODynamoDB {
                     history.add(timeZoneHistoryOptional.get());
                 }
             }
-
-            LOGGER.warn("Account {} get timezone failed, no data or aws error.", accountId);
         }while (lastEvaluatedKey != null);
 
+        if (history.isEmpty()) {
+            LOGGER.warn("Account {} get timezone failed, no data or aws error.", accountId);
+        }
         return history;
     }
 
@@ -170,7 +171,7 @@ public class TimeZoneHistoryDAODynamoDB {
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
         final DateTime now = DateTime.now();
         final List<TimeZoneHistory> lastTimeZones = getTimeZoneHistory(accountId, now.withTimeAtStartOfDay(), now);
-        if(lastTimeZones.isEmpty()){
+        if(lastTimeZones.isEmpty()) {
             return Optional.absent();
         }
 
