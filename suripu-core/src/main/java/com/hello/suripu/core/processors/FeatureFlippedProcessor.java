@@ -6,6 +6,7 @@ import com.librato.rollout.RolloutClient;
 
 import javax.inject.Inject;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by pangwu on 3/17/15.
@@ -29,8 +30,11 @@ public class FeatureFlippedProcessor {
     protected Boolean hasSoundInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
-    protected Boolean hasEnvironmentInTimelineScore(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, Collections.EMPTY_LIST);
+//    protected Boolean hasEnvironmentInTimelineScore(final Long accountId) {
+//        return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, Collections.EMPTY_LIST);
+//    }
+    protected Boolean hasEnvironmentInTimelineScore(final Long accountId, final List<String> groups) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, groups);
     }
     protected Boolean hasFeedbackInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.FEEDBACK_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
@@ -78,7 +82,7 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasSleepScoreDurationWeighting(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_WEIGHTING, accountId, Collections.EMPTY_LIST);
+    protected Boolean hasSleepScoreDurationWeighting(final Long accountId, final List<String> groups) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_WEIGHTING, accountId, groups);
     }
 }

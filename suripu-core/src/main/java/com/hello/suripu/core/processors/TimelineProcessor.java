@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -89,6 +90,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final BayesNetHmmModelPriorsDAO priorsDAO;
     private final BayesNetModelDAO bayesNetModelDAO;
     private final Optional<UUID> uuidOptional;
+    private final GroupFlipper groupFlipper;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -111,19 +113,19 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                                             final SenseColorDAO senseColorDAO,
                                                             final BayesNetHmmModelPriorsDAO priorsDAO,
-                                                            final BayesNetModelDAO bayesNetModelDAO) {
+                                                            final BayesNetModelDAO bayesNetModelDAO,
+                                                            final GroupFlipper groupFlipper) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(trackerMotionDAO,
                 deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO,bayesNetModelDAO,
-                Optional.<UUID>absent());
+                Optional.<UUID>absent(), groupFlipper);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
-
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,bayesNetModelDAO,Optional.of(uuid));
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,bayesNetModelDAO,Optional.of(uuid), groupFlipper);
     }
 
     //private SessionLogDebug(final String)
@@ -136,10 +138,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final SleepHmmDAO sleepHmmDAO,
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
-                              final SenseColorDAO senseColorDAO,
-                              final BayesNetHmmModelPriorsDAO priorsDAO,
+                            final SenseColorDAO senseColorDAO,
+                            final BayesNetHmmModelPriorsDAO priorsDAO,
                               final BayesNetModelDAO bayesNetModelDAO,
-                              final Optional<UUID> uuid) {
+                              final Optional<UUID> uuid,
+                              final GroupFlipper groupFlipper) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -151,6 +154,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.senseColorDAO = senseColorDAO;
         this.priorsDAO = priorsDAO;
         this.bayesNetModelDAO = bayesNetModelDAO;
+        this.groupFlipper = groupFlipper;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -1014,16 +1018,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             LOGGER.error("No motion score generated for {} on {}", accountId, targetDate);
             return 0;
         }
-
+        final List<String> groups = groupFlipper.getGroups(accountId);
         final Integer durationScore = computeSleepDurationScore(accountId, sleepStats);
-        final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
+        final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors, groups);
 
         // Calculate the sleep score based on the sub scores and weighting
         final SleepScore sleepScore = new SleepScore.Builder()
                 .withMotionScore(motionScore)
                 .withSleepDurationScore(durationScore)
                 .withEnvironmentalScore(environmentScore)
-                .withWeighting(sleepScoreWeighting(accountId))
+                .withWeighting(sleepScoreWeighting(accountId, groups))
                 .build();
 
         // Always update stats and scores to Dynamo
@@ -1047,9 +1051,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private Integer computeEnvironmentScore(final Long accountId,
                                             final SleepStats sleepStats,
                                             final int numberSoundEvents,
-                                            final AllSensorSampleList sensors) {
+                                            final AllSensorSampleList sensors,
+                                            final List<String> groups) {
         final Integer environmentScore;
-        if (hasEnvironmentInTimelineScore(accountId) && sleepStats.sleepTime > 0L && sleepStats.wakeTime > 0L) {
+        if (hasEnvironmentInTimelineScore(accountId, groups) && sleepStats.sleepTime > 0L && sleepStats.wakeTime > 0L) {
             final int soundScore = SleepScoreUtils.calculateSoundScore(numberSoundEvents);
             final int temperatureScore = SleepScoreUtils.calculateTemperatureScore(sensors.get(Sensor.TEMPERATURE), sleepStats.sleepTime, sleepStats.wakeTime);
             final int humidityScore = SleepScoreUtils.calculateHumidityScore(sensors.get(Sensor.HUMIDITY), sleepStats.sleepTime, sleepStats.wakeTime);
@@ -1063,9 +1068,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return environmentScore;
     }
 
-    private SleepScore.Weighting sleepScoreWeighting(final Long accountId) {
+    private SleepScore.Weighting sleepScoreWeighting(final Long accountId, final List<String> groups) {
         final SleepScore.Weighting weighting;
-        if (hasSleepScoreDurationWeighting(accountId)) {
+        if (hasSleepScoreDurationWeighting(accountId, groups)) {
             weighting = new SleepScore.DurationHeavyWeighting();
         } else {
             weighting = new SleepScore.Weighting();

@@ -28,6 +28,8 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.TeamStore;
+import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
@@ -176,6 +178,11 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+
+        final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
+        final TeamStore teamStore = new TeamStore(teamStoreDBClient, configuration.getTeamsDynamoDBConfiguration().getTableName());
+        final GroupFlipper groupFlipper = new GroupFlipper(teamStore, 30);
+
         final TimelineProcessor timelineProcessor =
                 TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
@@ -186,7 +193,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
                 priorsDAO,
-                modelDAO);
+                modelDAO,
+                groupFlipper);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
