@@ -6,7 +6,9 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.google.common.collect.Ordering;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -15,17 +17,17 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Path(("/download"))
 public class DownloadResource {
@@ -38,82 +40,80 @@ public class DownloadResource {
     public DownloadResource(final AmazonS3Client amazonS3Client, final String bucketName) {
         this.amazonS3Client = amazonS3Client;
         this.bucketName = bucketName;
-
     }
+
+
+    private static boolean isValidType(final String type) {
+        return (type.equals("pill") || type.equals("morpheus"));
+    }
+
+    private List<FirmwareUpdate> createFirmwareUpdatesFromListing(final FluentIterable<S3ObjectSummary> listingStream) {
+        final Date expiration = DateTime.now().plusHours(1).toDate();
+        return listingStream
+                .filter(new Predicate<S3ObjectSummary>() {
+                    @Override
+                    public boolean apply(final S3ObjectSummary summary) {
+                        final String key = summary.getKey();
+                        return (key.endsWith(".hex") || key.endsWith(".bin") || key.endsWith(".zip"));
+                    }
+                })
+                .transform(new Function<S3ObjectSummary, FirmwareUpdate>() {
+                    @Override
+                    public
+                    @Nullable
+                    FirmwareUpdate apply(final S3ObjectSummary objectSummary) {
+                        final String key = objectSummary.getKey();
+                        final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key);
+                        generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
+                        generatePresignedUrlRequest.setExpiration(expiration);
+
+                        final URL s = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);
+
+                        LOGGER.debug("Generated url for key = {}", key);
+                        return new FirmwareUpdate(key, s.toExternalForm(), objectSummary.getLastModified().toString());
+                    }
+                })
+                .toSortedList(FirmwareUpdate.createOrdering());
+    }
+
+
     @Path("/{type}/manifest")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FirmwareUpdate> getManifest(@Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken, @PathParam("type") String type) {
+    public List<FirmwareUpdate> getManifestStable(final @Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken,
+                                                  final @PathParam("type") String type) {
+        if (!isValidType(type)) {
+            LOGGER.warn("Unrecognized type '{}' given", type);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
 
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
         listObjectsRequest.withPrefix("stable");
 
         final ObjectListing objectListing = amazonS3Client.listObjects(listObjectsRequest);
-
-        final Map<String, String> metadata = new HashMap<>();
-        final List<String> files = new ArrayList<>();
-
-        for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
-            if(summary.getKey().contains(".hex")) {
-                files.add(summary.getKey());
-                metadata.put(summary.getKey(), summary.getLastModified().toString());
-            }
-        }
-
-        final Date expiration = DateTime.now().plusHours(1).toDate();
-
-        final List<String> sorted = Ordering.natural().sortedCopy(files);
-        final List<FirmwareUpdate> updates = new ArrayList<>();
-        for(final String sortedKey : sorted) {
-            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, sortedKey);
-            generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
-            generatePresignedUrlRequest.setExpiration(expiration);
-
-            final URL s = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);
-
-            updates.add(new FirmwareUpdate(sortedKey, s.toExternalForm(), metadata.get(sortedKey)));
-            LOGGER.debug("Generated url for key = {}", sortedKey);
-        }
-        return updates;
+        final FluentIterable<S3ObjectSummary> listingStream = FluentIterable.from(objectListing.getObjectSummaries())
+                .filter(new Predicate<S3ObjectSummary>() {
+                    @Override
+                    public boolean apply(final S3ObjectSummary objectSummary) {
+                        // Key is of form stable/{type}+{type}_{tag}.(hex|bin|zip)
+                        return objectSummary.getKey().contains("/" + type + "+");
+                    }
+                });
+        return createFirmwareUpdatesFromListing(listingStream);
     }
 
 
     @Path("/latest/manifest")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FirmwareUpdate> getManifestStable(@Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken) {
-
+    public List<FirmwareUpdate> getManifestLatest(@Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken) {
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
         listObjectsRequest.withPrefix("latest");
 
         final ObjectListing objectListing = amazonS3Client.listObjects(listObjectsRequest);
-
-        final Map<String, String> metadata = new HashMap<>();
-        final List<String> files = new ArrayList<>();
-
-        for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
-            if(summary.getKey().contains(".hex")) {
-                files.add(summary.getKey());
-                metadata.put(summary.getKey(), summary.getLastModified().toString());
-            }
-        }
-
-        final Date expiration = DateTime.now().plusHours(1).toDate();
-
-        final List<String> sorted = Ordering.natural().sortedCopy(files);
-        final List<FirmwareUpdate> updates = new ArrayList<>();
-        for(final String sortedKey : sorted) {
-            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, sortedKey);
-            generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
-            generatePresignedUrlRequest.setExpiration(expiration);
-
-            final URL s = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);
-
-            updates.add(new FirmwareUpdate(sortedKey, s.toExternalForm(), metadata.get(sortedKey)));
-            LOGGER.debug("Generated url for key = {}", sortedKey);
-        }
-        return updates;
+        final FluentIterable<S3ObjectSummary> listingStream = FluentIterable.from(objectListing.getObjectSummaries());
+        return createFirmwareUpdatesFromListing(listingStream);
     }
 }
