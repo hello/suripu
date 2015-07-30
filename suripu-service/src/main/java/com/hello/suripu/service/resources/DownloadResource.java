@@ -11,6 +11,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.service.models.FirmwareUpdate;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +61,7 @@ public class DownloadResource {
             }
         }
 
-        final Date expiration = new java.util.Date();
-        long msec = expiration.getTime();
-        msec += 1000 * 60 * 60; // 1 hour.
-        expiration.setTime(msec);
-
-
+        final Date expiration = DateTime.now().plusHours(1).toDate();
 
         final List<String> sorted = Ordering.natural().sortedCopy(files);
         final List<FirmwareUpdate> updates = new ArrayList<>();
@@ -104,12 +100,7 @@ public class DownloadResource {
             }
         }
 
-        final Date expiration = new java.util.Date();
-        long msec = expiration.getTime();
-        msec += 1000 * 60 * 60; // 1 hour.
-        expiration.setTime(msec);
-
-
+        final Date expiration = DateTime.now().plusHours(1).toDate();
 
         final List<String> sorted = Ordering.natural().sortedCopy(files);
         final List<FirmwareUpdate> updates = new ArrayList<>();
