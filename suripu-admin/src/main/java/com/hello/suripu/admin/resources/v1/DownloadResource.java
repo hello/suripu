@@ -1,4 +1,4 @@
-package com.hello.suripu.service.resources;
+package com.hello.suripu.admin.resources.v1;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -9,10 +9,10 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.hello.suripu.admin.models.FirmwareUpdate;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.service.models.FirmwareUpdate;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

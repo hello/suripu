@@ -1,4 +1,4 @@
-package com.hello.suripu.service.models;
+package com.hello.suripu.admin.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
