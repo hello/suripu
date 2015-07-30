@@ -15,10 +15,10 @@ public class FirmwareUpdate {
     public final String url;
 
     @JsonProperty("created")
-    public final String created;
+    public final long created;
 
 
-    public FirmwareUpdate(final String name, final String url, final String created) {
+    public FirmwareUpdate(final String name, final String url, final long created) {
         this.name = name;
         this.url = url;
         this.created = created;

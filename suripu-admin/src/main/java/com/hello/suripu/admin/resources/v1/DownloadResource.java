@@ -29,7 +29,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
-@Path(("/download"))
+@Path(("/v1/download"))
 public class DownloadResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloadResource.class);
@@ -47,14 +47,22 @@ public class DownloadResource {
         return (type.equals("pill") || type.equals("morpheus"));
     }
 
-    private List<FirmwareUpdate> createFirmwareUpdatesFromListing(final FluentIterable<S3ObjectSummary> listingStream) {
+    private List<FirmwareUpdate> createFirmwareUpdatesFromListing(final Iterable<S3ObjectSummary> objectSummaries,
+                                                                  final String type) {
         final Date expiration = DateTime.now().plusHours(1).toDate();
-        return listingStream
+        return FluentIterable.from(objectSummaries)
                 .filter(new Predicate<S3ObjectSummary>() {
                     @Override
                     public boolean apply(final S3ObjectSummary summary) {
                         final String key = summary.getKey();
                         return (key.endsWith(".hex") || key.endsWith(".bin") || key.endsWith(".zip"));
+                    }
+                })
+                .filter(new Predicate<S3ObjectSummary>() {
+                    @Override
+                    public boolean apply(final S3ObjectSummary objectSummary) {
+                        // Key is of form stable/{type}+{type}_{tag}.(hex|bin|zip)
+                        return objectSummary.getKey().contains("/" + type + "+");
                     }
                 })
                 .transform(new Function<S3ObjectSummary, FirmwareUpdate>() {
@@ -69,17 +77,17 @@ public class DownloadResource {
                         final URL s = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);
 
                         LOGGER.debug("Generated url for key = {}", key);
-                        return new FirmwareUpdate(key, s.toExternalForm(), objectSummary.getLastModified().toString());
+                        return new FirmwareUpdate(key, s.toExternalForm(), objectSummary.getLastModified().getTime());
                     }
                 })
                 .toSortedList(FirmwareUpdate.createOrdering());
     }
 
 
-    @Path("/{type}/manifest")
+    @Path("/{type}/firmware/stable")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FirmwareUpdate> getManifestStable(final @Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken,
+    public List<FirmwareUpdate> getStableFirmware(final @Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken,
                                                   final @PathParam("type") String type) {
         if (!isValidType(type)) {
             LOGGER.warn("Unrecognized type '{}' given", type);
@@ -91,28 +99,20 @@ public class DownloadResource {
         listObjectsRequest.withPrefix("stable");
 
         final ObjectListing objectListing = amazonS3Client.listObjects(listObjectsRequest);
-        final FluentIterable<S3ObjectSummary> listingStream = FluentIterable.from(objectListing.getObjectSummaries())
-                .filter(new Predicate<S3ObjectSummary>() {
-                    @Override
-                    public boolean apply(final S3ObjectSummary objectSummary) {
-                        // Key is of form stable/{type}+{type}_{tag}.(hex|bin|zip)
-                        return objectSummary.getKey().contains("/" + type + "+");
-                    }
-                });
-        return createFirmwareUpdatesFromListing(listingStream);
+        return createFirmwareUpdatesFromListing(objectListing.getObjectSummaries(), type);
     }
 
 
-    @Path("/latest/manifest")
+    @Path("/{type}/firmware")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FirmwareUpdate> getManifestLatest(@Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken) {
+    public List<FirmwareUpdate> getLatestFirmware(final @Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken,
+                                                  final @PathParam("type") String type) {
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
         listObjectsRequest.withPrefix("latest");
 
         final ObjectListing objectListing = amazonS3Client.listObjects(listObjectsRequest);
-        final FluentIterable<S3ObjectSummary> listingStream = FluentIterable.from(objectListing.getObjectSummaries());
-        return createFirmwareUpdatesFromListing(listingStream);
+        return createFirmwareUpdatesFromListing(objectListing.getObjectSummaries(), type);
     }
 }
