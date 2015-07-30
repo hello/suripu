@@ -58,10 +58,9 @@ public class DownloadResource {
                     }
                 })
                 .transform(new Function<S3ObjectSummary, FirmwareUpdate>() {
-                    @Override
-                    public
                     @Nullable
-                    FirmwareUpdate apply(final S3ObjectSummary objectSummary) {
+                    @Override
+                    public FirmwareUpdate apply(final S3ObjectSummary objectSummary) {
                         final String key = objectSummary.getKey();
                         final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key);
                         generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
