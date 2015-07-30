@@ -388,6 +388,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty()) {
+
+            final int tzOffsetMillis = originalTrackerMotions.get(0).offsetMillis;
+
             if (this.hasPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using original partner filter");
                 try {
@@ -398,10 +401,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     trackerMotions.addAll(originalTrackerMotions);
                 }
             }
-            else if (this.hasBayesianPartnerFilterEnabled(accountId)) {
+            else if (this.hasHmmPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using bayesian partner filter");
                 try {
-                    trackerMotions.addAll(partnerDataUtils.partnerFilterWithDurationsDiffHmm(ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(partnerMotions)));
+                    trackerMotions.addAll(
+                            partnerDataUtils.partnerFilterWithDurationsDiffHmm(
+                                    targetDate.minusMillis(tzOffsetMillis),
+                                    endDate.minusMillis(tzOffsetMillis),
+                                    ImmutableList.copyOf(originalTrackerMotions),
+                                    ImmutableList.copyOf(partnerMotions)));
+
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
                     trackerMotions.addAll(originalTrackerMotions);

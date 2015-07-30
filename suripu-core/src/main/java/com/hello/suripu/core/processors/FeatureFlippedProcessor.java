@@ -58,8 +58,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasBayesianPartnerFilterEnabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.BAYESIAN_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
+    protected Boolean hasHmmPartnerFilterEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.HMM_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasAllSensorQueryUseUTCTs(final Long accountId) {
