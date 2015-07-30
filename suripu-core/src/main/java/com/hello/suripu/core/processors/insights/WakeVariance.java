@@ -48,9 +48,10 @@ public class WakeVariance {
             stats.addValue(wakeTime);
         }
 
-        double wakeStdDev = 99;
+        int wakeStdDev = 99;
         if (stats.getN() > 2) {
-            wakeStdDev = stats.getStandardDeviation();
+            Double wakeStdDevDouble = stats.getStandardDeviation();
+            wakeStdDev = (int) Math.round(wakeStdDevDouble);
         }
 
         final Integer percentile = wakeStdDevData.getWakeStdDevPercentile(wakeStdDev);
