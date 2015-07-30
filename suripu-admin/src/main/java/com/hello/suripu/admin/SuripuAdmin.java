@@ -5,6 +5,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
@@ -20,6 +21,7 @@ import com.hello.suripu.admin.resources.v1.ApplicationResources;
 import com.hello.suripu.admin.resources.v1.DataResources;
 import com.hello.suripu.admin.resources.v1.DeviceResources;
 import com.hello.suripu.admin.resources.v1.DiagnosticResources;
+import com.hello.suripu.admin.resources.v1.DownloadResource;
 import com.hello.suripu.admin.resources.v1.EventsResources;
 import com.hello.suripu.admin.resources.v1.FeaturesResources;
 import com.hello.suripu.admin.resources.v1.FirmwareResource;
@@ -66,14 +68,14 @@ import com.hello.suripu.core.diagnostic.DiagnosticDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
-import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
-import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
 import com.hello.suripu.core.tracking.TrackingDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
+import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
+import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -154,6 +156,9 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
+
+        final AmazonS3Client s3Client = new AmazonS3Client(awsCredentialsProvider);
+
 
         // Common DB
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
@@ -305,6 +310,7 @@ public class SuripuAdmin extends Service<SuripuAdminConfiguration> {
         environment.addResource(new EventsResources(senseEventsDAO));
         environment.addResource(new InspectionResources(deviceDAOAdmin));
         environment.addResource(new OnBoardingLogResource(accountDAO, onBoardingLogDAO));
+        environment.addResource(new DownloadResource(s3Client, "hello-firmware"));
 
         environment.addResource(
                 new PCHResources(
