@@ -87,7 +87,7 @@ public class DownloadResource {
     @Path("/{type}/firmware/stable")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FirmwareUpdate> getStableFirmware(final @Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken,
+    public List<FirmwareUpdate> getStableFirmware(final @Scope(OAuthScope.FIRMWARE_UPDATE) AccessToken accessToken,
                                                   final @PathParam("type") String type) {
         if (!isValidType(type)) {
             LOGGER.warn("Unrecognized type '{}' given", type);
@@ -106,7 +106,7 @@ public class DownloadResource {
     @Path("/{type}/firmware")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FirmwareUpdate> getLatestFirmware(final @Scope(OAuthScope.SENSORS_BASIC) AccessToken accessToken,
+    public List<FirmwareUpdate> getLatestFirmware(final @Scope(OAuthScope.FIRMWARE_UPDATE) AccessToken accessToken,
                                                   final @PathParam("type") String type) {
         final ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
         listObjectsRequest.withBucketName(bucketName);
