@@ -381,11 +381,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     protected Optional<OneDaysSensorData> getSensorData(final long accountId, final DateTime targetDate, final DateTime endDate) {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
+        LOGGER.debug("Length of originalTrackerMotion: {} for {} on {}", originalTrackerMotions.size(), accountId, targetDate);
 
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
+
+        if (originalTrackerMotions.isEmpty()) {
+            LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, targetDate);
+            return Optional.absent();
+        }
 
         if (!partnerMotions.isEmpty()) {
 
@@ -424,7 +429,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
-        if (trackerMotions.size() == 0) {
+        if (trackerMotions.isEmpty()) {
             LOGGER.debug("No tracker motion data ID for account_id = {} and day = {}", accountId, targetDate);
             return Optional.absent();
         }
