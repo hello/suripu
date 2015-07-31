@@ -22,7 +22,7 @@ public class WakeVarianceInsightsTest {
     public void testNoCardGenerated() {
         final Long accountId = 999L;
         final List<Long> wakeTimeList = new ArrayList<>();
-        Optional<InsightCard> noResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
+        final Optional<InsightCard> noResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
         assertThat(noResult.isPresent(), is(Boolean.FALSE));
     }
 
@@ -30,11 +30,11 @@ public class WakeVarianceInsightsTest {
     public void testVarianceTooHigh() {
         final Long accountId = 999L;
         final List<Long> wakeTimeList = new ArrayList<>();
-        Long spread = 500L;
+        final Long spread = 500L;
         wakeTimeList.add(0L);
         wakeTimeList.add(0L + spread);
         wakeTimeList.add(0L + spread + spread);
-        Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
+        final Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
         assertThat(someResult.isPresent(), is(Boolean.TRUE));
         final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceTooHigh(0, 0).title;
         assertThat(someResult.get().title, is(expectedTitle));
@@ -44,11 +44,11 @@ public class WakeVarianceInsightsTest {
     public void testVarianceLow() {
         final Long accountId = 999L;
         final List<Long> wakeTimeList = new ArrayList<>();
-        Long spread = 1L;
+        final Long spread = 1L;
         wakeTimeList.add(0L);
         wakeTimeList.add(0L + spread);
         wakeTimeList.add(0L + spread + spread);
-        Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
+        final Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
         assertThat(someResult.isPresent(), is(Boolean.TRUE));
         final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceLow(0, 0).title;
         assertThat(someResult.get().title, is(expectedTitle));
@@ -58,11 +58,11 @@ public class WakeVarianceInsightsTest {
     public void testVarianceNotLowEnough() {
         final Long accountId = 999L;
         final List<Long> wakeTimeList = new ArrayList<>();
-        Long spread = 50L;
+        final Long spread = 50L;
         wakeTimeList.add(0L);
         wakeTimeList.add(0L + spread);
         wakeTimeList.add(0L + spread + spread);
-        Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
+        final Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
         assertThat(someResult.isPresent(), is(Boolean.TRUE));
         final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(0,0).title;
         assertThat(someResult.get().title, is(expectedTitle));
