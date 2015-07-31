@@ -266,7 +266,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
-        final DataLogger timelineLogger = kinesisLoggerFactory.get(QueueName.TIMELINE_LOGS);
+        final DataLogger timelineLogger = kinesisLoggerFactory.get(QueueName.LOGS);
 
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();
