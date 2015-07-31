@@ -229,6 +229,7 @@ kinesis:
     encode_audio : encode_audio
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
+    logs : logs
 
 question_configs:
   num_skips : 5
