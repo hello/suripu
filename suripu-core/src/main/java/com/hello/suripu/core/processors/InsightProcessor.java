@@ -16,7 +16,13 @@ import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
-import com.hello.suripu.core.processors.insights.*;
+
+import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.SleepMotion;
+import com.hello.suripu.core.processors.insights.TemperatureHumidity;
+import com.hello.suripu.core.processors.insights.WakeStdDevData;
+import com.hello.suripu.core.processors.insights.WakeVariance;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
 import org.jetbrains.annotations.NotNull;
