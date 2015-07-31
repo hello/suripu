@@ -20,16 +20,30 @@ public class TimelineResult {
     public final ImmutableList<Timeline> timelines;
 
 
-    public final TimelineLogV2 logV2;
+    public final Optional<TimelineLogV2> logV2;
 
     @JsonProperty("logV2")
     public String getTimelineLogV2() {
-        return logV2.toProtobufBase64();
+
+        if (logV2.isPresent()) {
+            return logV2.get().toProtobufBase64();
+        }
+        else {
+            return "";
+        }
+
     }
 
     @JsonCreator
     public static TimelineResult create(@JsonProperty("timelines") final List<Timeline> timelines,
                                         @JsonProperty("logV2") final String log) throws JsonMappingException {
+
+
+        if (log == null || log.equals("")) {
+            //older record.... the v2 information will not be there
+            return new TimelineResult(ImmutableList.copyOf(timelines),Optional.<TimelineLogV2>absent());
+        }
+
 
         try {
             return new TimelineResult(ImmutableList.copyOf(timelines),TimelineLogV2.createFromProtobuf(log));
@@ -64,9 +78,14 @@ public class TimelineResult {
     }
 
 
-    public TimelineResult(ImmutableList<Timeline> timelines, TimelineLogV2 log) {
+    private TimelineResult(ImmutableList<Timeline> timelines, Optional<TimelineLogV2> log) {
         this.timelines = timelines;
         this.logV2 = log;
+    }
+
+    public TimelineResult(ImmutableList<Timeline> timelines, TimelineLogV2 log) {
+        this.timelines = timelines;
+        this.logV2 = Optional.of(log);
 
     }
 }

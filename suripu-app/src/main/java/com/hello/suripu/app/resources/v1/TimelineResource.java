@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.logging.TimelineLogV2;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.Account;
@@ -106,11 +107,14 @@ public class TimelineResource extends BaseResource {
             LOGGER.info("{} Found cached timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
-            timelineLogDAOV1.putTimelineLog(accountId, cachedResult.get().logV2.getAsV1Log());
+            final Optional<TimelineLogV2> logV2 = cachedResult.get().logV2;
 
-            final String partitionKey = cachedResult.get().logV2.getParitionKey();
-            timelineLogDAOV2.putAsync(partitionKey,cachedResult.get().logV2.toProtoBuf());
+            if (logV2.isPresent()) {
+                timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
 
+                final String partitionKey = logV2.get().getParitionKey();
+                timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
+            }
             return cachedResult.get();
         }
         else {
@@ -132,10 +136,16 @@ public class TimelineResource extends BaseResource {
                 cacheTimeline(accountId, targetDate, result.get());
 
                 //log it, too
-                timelineLogDAOV1.putTimelineLog(accountId, result.get().logV2.getAsV1Log());
+                //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
+                final Optional<TimelineLogV2> logV2 = result.get().logV2;
 
-                final String partitionKey = result.get().logV2.getParitionKey();
-                timelineLogDAOV2.putAsync(partitionKey,result.get().logV2.toProtoBuf());
+                if (logV2.isPresent()) {
+                    timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
+
+                    final String partitionKey = logV2.get().getParitionKey();
+                    timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
+                }
+
 
                 return result.get();
 
