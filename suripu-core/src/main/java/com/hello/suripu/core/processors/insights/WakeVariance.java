@@ -1,12 +1,12 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.*;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.WakeVarianceMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
@@ -31,15 +31,15 @@ public class WakeVariance {
         final String queryEndDateString = DateTimeUtil.dateToYmdString(queryEndDate);
         final String queryStartDateString = DateTimeUtil.dateToYmdString(queryStartDate);
 
-        final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartDateString, queryEndDateString, numDays);
+        final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartDateString, queryEndDateString);
         LOGGER.debug("length of sleep stats is {} and sleepStats is {} ", sleepStats.size(), sleepStats);
-        final List<Long> wakeTimeList = new ArrayList<>();
+        final List<Long> wakeTimeList = Lists.newArrayList();
         for (final AggregateSleepStats stat : sleepStats) {
             LOGGER.debug("printing sleepstats.waketime {}", stat.sleepStats.wakeTime);
-            Long wakeTimeStamp = stat.sleepStats.wakeTime;
-            DateTime wakeTimeDateTime = new DateTime(wakeTimeStamp, DateTimeZone.forOffsetMillis(stat.offsetMillis));
-            Long wakeTimeMillis = wakeTimeDateTime.getMillis() - wakeTimeDateTime.withTimeAtStartOfDay().getMillis(); //get difference in millis btwn event and start of day time
-            Long wakeTime = wakeTimeMillis/(60L * 1000L);
+            final Long wakeTimeStamp = stat.sleepStats.wakeTime;
+            final DateTime wakeTimeDateTime = new DateTime(wakeTimeStamp, DateTimeZone.forOffsetMillis(stat.offsetMillis));
+            final Long wakeTimeMillis = wakeTimeDateTime.getMillis() - wakeTimeDateTime.withTimeAtStartOfDay().getMillis(); //get difference in millis btwn event and start of day time
+            final Long wakeTime = wakeTimeMillis/(60L * 1000L);
             wakeTimeList.add(wakeTime);
         }
 
@@ -50,11 +50,11 @@ public class WakeVariance {
     public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final List<Long> wakeTimeList, final WakeStdDevData wakeStdDevData) {
 
         if (wakeTimeList.isEmpty()) {
-//            LOGGER.debug("Got nothing");
+            LOGGER.debug("Got nothing");
             return Optional.absent();
         }
         else if (wakeTimeList.size() <= 2) {
-//            LOGGER.debug("Not more than 2 days");
+            LOGGER.debug("Not more than 2 days");
             return Optional.absent(); //not big enough to calculate variance usefully
         }
 
@@ -64,10 +64,10 @@ public class WakeVariance {
             stats.addValue(wakeTime);
         }
 
-        Double wakeStdDevDouble = stats.getStandardDeviation();
+        final Double wakeStdDevDouble = stats.getStandardDeviation();
         int wakeStdDev = (int) Math.round(wakeStdDevDouble);
 
-//        LOGGER.debug("Wake Std Dev is {}", wakeStdDev);
+        LOGGER.debug("Wake Std Dev is {}", wakeStdDev);
         final Integer percentile = wakeStdDevData.getWakeStdDevPercentile(wakeStdDev);
 
         Text text;

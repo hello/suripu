@@ -132,11 +132,9 @@ public class InsightProcessor {
         }
 
         if (!recentCategories.contains(categoryToGenerate)) {
+            LOGGER.debug("Generating NEW user insight for account id {}", accountId);
             generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
-
-        LOGGER.debug("Generating NEW user insight for account id {}", accountId);
-        generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
 
     }
 
@@ -173,7 +171,7 @@ public class InsightProcessor {
         }
         */
 
-        Integer dayOfWeek = Integer.parseInt(DateTime.now().dayOfWeek().getAsString());
+        Integer dayOfWeek = DateTime.now().getDayOfWeek();
         LOGGER.debug("The day of week is {}", dayOfWeek);
         InsightCard.Category categoryToGenerate;
 
@@ -183,7 +181,7 @@ public class InsightProcessor {
                     LOGGER.debug("setting category to generate as wake variance");
                     categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
                     break;
-            }
+                }
                 else {
                     return;
                 }
@@ -221,12 +219,11 @@ public class InsightProcessor {
         } else if (category == InsightCard.Category.SLEEP_QUALITY) {
             insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
         } else if (category == InsightCard.Category.WAKE_VARIANCE) {
-            DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
+            final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
             //DateTime queryEndDate = DateTime.parse("2015-07-29").withTimeAtStartOfDay(); //TODO: delete me
-            int numDays = DAYS_ONE_WEEK;
 
-            LOGGER.debug("for wake variance calling getInsights with accountId {} and date {} with numDays {}", accountId, queryEndDate, numDays);
-            insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, numDays);
+            LOGGER.debug("for wake variance calling getInsights with accountId {} and date {} with numDays {}", accountId, queryEndDate, DAYS_ONE_WEEK);
+            insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
         }
 
         if (insightCardOptional.isPresent()) {
