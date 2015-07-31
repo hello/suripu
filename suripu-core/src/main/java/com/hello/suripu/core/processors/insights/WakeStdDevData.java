@@ -9,7 +9,7 @@ import java.util.Map;
  * Created by jingyun on 7/25/15.
  */
 public class WakeStdDevData {
-    private static String DISTRIBUTION_DATA = "0,0.00212828625877\n"+
+    private static String DISTRIBUTION_DATA = "0,0.002\n"+
                 "1,0.4\n"+
                 "2,0.6\n"+
                 "3,0.9\n"+

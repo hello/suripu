@@ -71,13 +71,13 @@ public class WakeVariance {
         final Integer percentile = wakeStdDevData.getWakeStdDevPercentile(wakeStdDev);
 
         Text text;
-        if (wakeStdDev <= 36) {
+        if (wakeStdDev <= 50) { //25 percentile
             text = WakeVarianceMsgEN.getWakeVarianceLow(wakeStdDev, percentile);
         }
-        else if (wakeStdDev <= 79) {
+        else if (wakeStdDev <= 79) { //50 percentile
             text = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(wakeStdDev, percentile);
         }
-        else if (wakeStdDev <= 122) {
+        else if (wakeStdDev <= 108) { //75 percentile
             text = WakeVarianceMsgEN.getWakeVarianceHigh(wakeStdDev, percentile);
         }
         else {
