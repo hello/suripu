@@ -96,7 +96,7 @@ public class InsightProcessor {
         this.insightInfoPreview = insightInfoPreview;
     }
 
-    public void generateInsights(final Long accountId, final DateTime accountCreated, RolloutClient featureFlipper) {
+    public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
         this.featureFlipper = featureFlipper;
         final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountCreated);
         if (accountAge < 1) {
