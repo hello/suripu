@@ -35,8 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by kingshy on 10/24/14.
  */
 public class InsightProcessor {
-    @Inject
-    protected RolloutClient featureFlipper;
+
+    private RolloutClient featureFlipper;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
 
@@ -84,7 +84,8 @@ public class InsightProcessor {
         this.insightInfoPreview = insightInfoPreview;
     }
 
-    public void generateInsights(final Long accountId, final DateTime accountCreated) {
+    public void generateInsights(final Long accountId, final DateTime accountCreated, RolloutClient featureFlipper) {
+        this.featureFlipper = featureFlipper;
         final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountCreated);
         if (accountAge < 1) {
             return; // not slept one night yet
@@ -177,23 +178,14 @@ public class InsightProcessor {
 
         switch (dayOfWeek) {
             case 5:
-                if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
-                    LOGGER.debug("setting category to generate as wake variance");
-                    categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
-                    break;
-                }
-                else {
-                    return;
-                }
             case 6:
-                if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
-                    LOGGER.debug("setting category to generate as wake variance");
-                    categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
-                    break;
-                }
-                else {
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
                     return;
                 }
+                LOGGER.debug("setting category to generate as wake variance");
+                categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
+                break;
+
             default:
                 return;
         }
