@@ -266,6 +266,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
+        final DataLogger timelineLogger = kinesisLoggerFactory.get(QueueName.TIMELINE_LOGS);
 
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();
@@ -357,7 +358,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 priorsDAO,
                 modelDAO);
 
-        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO, timelineProcessor));
+        environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO,timelineLogger, timelineProcessor));
 
         environment.addResource(new TimeZoneResource(timeZoneHistoryDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO));
         environment.addResource(new AlarmResource(alarmDAODynamoDB, mergedUserInfoDynamoDB, deviceDAO, amazonS3));

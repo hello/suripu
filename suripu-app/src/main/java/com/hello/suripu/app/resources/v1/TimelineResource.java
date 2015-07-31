@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.Account;
@@ -46,17 +47,19 @@ public class TimelineResource extends BaseResource {
     private final TimelineProcessor timelineProcessor;
     private final AccountDAO accountDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final TimelineLogDAO timelineLogDAO;
-
+    private final TimelineLogDAO timelineLogDAOV1;
+    private final DataLogger timelineLogDAOV2;
 
     public TimelineResource(final AccountDAO accountDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
-                            final TimelineLogDAO timelineLogDAO,
+                            final TimelineLogDAO timelineLogDAOV1,
+                            final DataLogger timelineLogDAOV2,
                             final TimelineProcessor timelineProcessor) {
         this.accountDAO = accountDAO;
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
-        this.timelineLogDAO = timelineLogDAO;
+        this.timelineLogDAOV1 = timelineLogDAOV1;
+        this.timelineLogDAOV2 = timelineLogDAOV2;
     }
 
     private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final TimelineResult result){
@@ -103,7 +106,10 @@ public class TimelineResource extends BaseResource {
             LOGGER.info("{} Found cached timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
-            timelineLogDAO.putTimelineLog(accountId,cachedResult.get().log);
+            timelineLogDAOV1.putTimelineLog(accountId, cachedResult.get().logV2.getAsV1Log());
+
+            final String partitionKey = cachedResult.get().logV2.getParitionKey();
+            timelineLogDAOV2.putAsync(partitionKey,cachedResult.get().logV2.toProtoBuf());
 
             return cachedResult.get();
         }
@@ -126,7 +132,10 @@ public class TimelineResource extends BaseResource {
                 cacheTimeline(accountId, targetDate, result.get());
 
                 //log it, too
-                timelineLogDAO.putTimelineLog(accountId,result.get().log);
+                timelineLogDAOV1.putTimelineLog(accountId, result.get().logV2.getAsV1Log());
+
+                final String partitionKey = result.get().logV2.getParitionKey();
+                timelineLogDAOV2.putAsync(partitionKey,result.get().logV2.toProtoBuf());
 
                 return result.get();
 
@@ -234,7 +243,7 @@ public class TimelineResource extends BaseResource {
     private TimelineLog getAlgorithmFromTimelineLog(final Long accountId, final String date) {
 
         final DateTime dateTime = DateTimeUtil.ymdStringToDateTime(date);
-        final ImmutableList<TimelineLog> timelineLogs = this.timelineLogDAO.getLogsForUserAndDay(accountId, dateTime, Optional.<Integer>absent());
+        final ImmutableList<TimelineLog> timelineLogs = this.timelineLogDAOV1.getLogsForUserAndDay(accountId, dateTime, Optional.<Integer>absent());
 
         if (timelineLogs.isEmpty()) {
             return TimelineLog.createEmpty();

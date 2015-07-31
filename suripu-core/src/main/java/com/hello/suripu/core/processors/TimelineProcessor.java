@@ -18,6 +18,7 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
+import com.hello.suripu.core.logging.TimelineLogV2;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
@@ -40,6 +41,7 @@ import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
+import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.HmmBayesNetData;
@@ -175,10 +177,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
         final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
 
+        final TimelineLogV2 logV2 = new TimelineLogV2(accountId);
+
+        logV2.setCreatedTime(currentTime.getMillis());
+        logV2.setNightOfTimeline(date.getMillis());
+
+        if (uuidOptional.isPresent()) {
+            logV2.setLogUUID(uuidOptional.get());
+        }
+
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
-
-
 
         final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
 
@@ -187,19 +196,19 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
-
-
         final OneDaysSensorData sensorData = sensorDataOptional.get();
         final InvalidNightType discardReason = isValidNight(accountId, sensorData.trackerMotions);
+
+        logV2.addError(discardReason);
 
         switch (discardReason){
             case TIMESPAN_TOO_SHORT:
                 LOGGER.info("Tracker motion span too short for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
+                return Optional.of(TimelineResult.createEmpty(logV2,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
 
             case NOT_ENOUGH_DATA:
                 LOGGER.info("Not enough tracker motion seen for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
+                return Optional.of(TimelineResult.createEmpty(logV2,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
 
             case NO_DATA:
                 LOGGER.info("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
@@ -213,8 +222,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 break;
         }
 
-        String algorithm = TimelineLog.NO_ALGORITHM;
-        String version = TimelineLog.NO_VERSION;
 
         try {
             boolean algorithmWorked = false;
@@ -225,17 +232,26 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             if(this.hasVotingEnabled(accountId)){
                 // Voting algorithm feature
+
+                logV2.setIntendedAlgorithm(AlgorithmType.VOTING);
+                logV2.setUsedAlgorithm(AlgorithmType.VOTING);
+
                 final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
                         sensorData.allSensorSampleList.get(Sensor.SOUND),
                         sensorData.allSensorSampleList.get(Sensor.LIGHT),
                         sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
                 sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
                 extraEvents = votingSleepEventsOptional.get().extraEvents;
-                algorithm = ALGORITHM_NAME_VOTING;
+
+                logV2.setUsedAlgorithm(AlgorithmType.VOTING);
+
                 algorithmWorked = true;
 
             }
             else if (this.hasBayesNetEnabled(accountId)) {
+
+                logV2.setIntendedAlgorithm(AlgorithmType.LAYERED_HMM);
+                logV2.setUsedAlgorithm(AlgorithmType.LAYERED_HMM);
 
                 //get model from DB
                 final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId,date,uuidOptional);
@@ -268,13 +284,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                         sleepEventsFromAlgorithmOptional = Optional.of(sleepEventsFromAlgorithm);
 
-                        algorithm = ALGORITHM_NAME_BAYESNET;
+
                         algorithmWorked = true;
                     }
 
                 }
             }
             else {
+                logV2.setIntendedAlgorithm(AlgorithmType.HMM);
+                logV2.setUsedAlgorithm(AlgorithmType.HMM);
 
                 // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
                 Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
@@ -285,7 +303,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     LOGGER.debug("HMM Suceeded.");
                     sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
                     extraEvents = results.get().allTheOtherWakesAndSleeps.asList();
-                    algorithm = ALGORITHM_NAME_HMM;
 
                     //verify that algorithm produced something useable
                     if (timelineSafeguards.checkIfValidTimeline(
@@ -304,10 +321,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             if (!algorithmWorked) {
                 LOGGER.warn("ALGORITHM FAILED, trying regular algorithm instead");
 
+                logV2.setUsedAlgorithm(AlgorithmType.WUPANG);
+                logV2.addNotUsingIntendedAlgorithmError();
+
                 //reset state
                 extraEvents = Collections.EMPTY_LIST;
-                algorithm = ALGORITHM_NAME_REGULAR;
-                version = VERSION_BACKUP;
 
                 sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
                         sensorData.trackerMotions,
@@ -317,8 +335,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
-                LOGGER.debug("returning empty timeline for account_id = {} and day = {} and algo = {}", accountId, targetDate, algorithm);
+                LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
                 return Optional.absent();
+            }
+
+            final SleepEvents<Optional<Event>> sleepEvents = sleepEventsFromAlgorithmOptional.get();
+
+            if (!sleepEvents.fallAsleep.isPresent() || !sleepEvents.wakeUp.isPresent() || !sleepEvents.goToBed.isPresent() || !sleepEvents.outOfBed.isPresent()) {
+                logV2.addMisingEventsError();
             }
 
             /* FEATURE FLIP EXTRA EVENTS */
@@ -327,11 +351,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = Collections.EMPTY_LIST;
             }
 
-            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
+            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEvents,ImmutableList.copyOf(extraEvents), sensorData);
 
-            final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
-
-            return Optional.of(TimelineResult.create(timelines, log));
+            return Optional.of(new TimelineResult(ImmutableList.copyOf(timelines),logV2));
         }
         catch (Exception e) {
             LOGGER.error(e.toString());

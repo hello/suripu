@@ -1433,6 +1433,31 @@ public final class LoggingProtos {
      */
     com.hello.suripu.api.logging.LoggingProtos.RegistrationLogOrBuilder getRegistrationLogOrBuilder(
         int index);
+
+    // repeated .TimelineLog timeline_log = 6;
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog> 
+        getTimelineLogList();
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    com.hello.suripu.api.logging.LoggingProtos.TimelineLog getTimelineLog(int index);
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    int getTimelineLogCount();
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder> 
+        getTimelineLogOrBuilderList();
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder getTimelineLogOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code BatchLogMessage}
@@ -1522,6 +1547,14 @@ public final class LoggingProtos {
               registrationLog_.add(input.readMessage(com.hello.suripu.api.logging.LoggingProtos.RegistrationLog.PARSER, extensionRegistry));
               break;
             }
+            case 50: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                timelineLog_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.TimelineLog>();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              timelineLog_.add(input.readMessage(com.hello.suripu.api.logging.LoggingProtos.TimelineLog.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1535,6 +1568,9 @@ public final class LoggingProtos {
         }
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           registrationLog_ = java.util.Collections.unmodifiableList(registrationLog_);
+        }
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          timelineLog_ = java.util.Collections.unmodifiableList(timelineLog_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1592,6 +1628,10 @@ public final class LoggingProtos {
        * <code>ONBOARDING_LOG = 4;</code>
        */
       ONBOARDING_LOG(4, 4),
+      /**
+       * <code>TIMELINE_LOG = 5;</code>
+       */
+      TIMELINE_LOG(5, 5),
       ;
 
       /**
@@ -1614,6 +1654,10 @@ public final class LoggingProtos {
        * <code>ONBOARDING_LOG = 4;</code>
        */
       public static final int ONBOARDING_LOG_VALUE = 4;
+      /**
+       * <code>TIMELINE_LOG = 5;</code>
+       */
+      public static final int TIMELINE_LOG_VALUE = 5;
 
 
       public final int getNumber() { return value; }
@@ -1625,6 +1669,7 @@ public final class LoggingProtos {
           case 2: return WORKERS_LOG;
           case 3: return STRUCTURED_SENSE_LOG;
           case 4: return ONBOARDING_LOG;
+          case 5: return TIMELINE_LOG;
           default: return null;
         }
       }
@@ -1824,12 +1869,49 @@ public final class LoggingProtos {
       return registrationLog_.get(index);
     }
 
+    // repeated .TimelineLog timeline_log = 6;
+    public static final int TIMELINE_LOG_FIELD_NUMBER = 6;
+    private java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog> timelineLog_;
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    public java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog> getTimelineLogList() {
+      return timelineLog_;
+    }
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder> 
+        getTimelineLogOrBuilderList() {
+      return timelineLog_;
+    }
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    public int getTimelineLogCount() {
+      return timelineLog_.size();
+    }
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    public com.hello.suripu.api.logging.LoggingProtos.TimelineLog getTimelineLog(int index) {
+      return timelineLog_.get(index);
+    }
+    /**
+     * <code>repeated .TimelineLog timeline_log = 6;</code>
+     */
+    public com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder getTimelineLogOrBuilder(
+        int index) {
+      return timelineLog_.get(index);
+    }
+
     private void initFields() {
       messages_ = java.util.Collections.emptyList();
       appVersion_ = "";
       logType_ = com.hello.suripu.api.logging.LoggingProtos.BatchLogMessage.LogType.APPLICATION_LOG;
       receivedAt_ = 0L;
       registrationLog_ = java.util.Collections.emptyList();
+      timelineLog_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1857,6 +1939,9 @@ public final class LoggingProtos {
       }
       for (int i = 0; i < registrationLog_.size(); i++) {
         output.writeMessage(5, registrationLog_.get(i));
+      }
+      for (int i = 0; i < timelineLog_.size(); i++) {
+        output.writeMessage(6, timelineLog_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -1886,6 +1971,10 @@ public final class LoggingProtos {
       for (int i = 0; i < registrationLog_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, registrationLog_.get(i));
+      }
+      for (int i = 0; i < timelineLog_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, timelineLog_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1997,6 +2086,7 @@ public final class LoggingProtos {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getMessagesFieldBuilder();
           getRegistrationLogFieldBuilder();
+          getTimelineLogFieldBuilder();
         }
       }
       private static Builder create() {
@@ -2022,6 +2112,12 @@ public final class LoggingProtos {
           bitField0_ = (bitField0_ & ~0x00000010);
         } else {
           registrationLogBuilder_.clear();
+        }
+        if (timelineLogBuilder_ == null) {
+          timelineLog_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000020);
+        } else {
+          timelineLogBuilder_.clear();
         }
         return this;
       }
@@ -2080,6 +2176,15 @@ public final class LoggingProtos {
           result.registrationLog_ = registrationLog_;
         } else {
           result.registrationLog_ = registrationLogBuilder_.build();
+        }
+        if (timelineLogBuilder_ == null) {
+          if (((bitField0_ & 0x00000020) == 0x00000020)) {
+            timelineLog_ = java.util.Collections.unmodifiableList(timelineLog_);
+            bitField0_ = (bitField0_ & ~0x00000020);
+          }
+          result.timelineLog_ = timelineLog_;
+        } else {
+          result.timelineLog_ = timelineLogBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -2157,6 +2262,32 @@ public final class LoggingProtos {
                    getRegistrationLogFieldBuilder() : null;
             } else {
               registrationLogBuilder_.addAllMessages(other.registrationLog_);
+            }
+          }
+        }
+        if (timelineLogBuilder_ == null) {
+          if (!other.timelineLog_.isEmpty()) {
+            if (timelineLog_.isEmpty()) {
+              timelineLog_ = other.timelineLog_;
+              bitField0_ = (bitField0_ & ~0x00000020);
+            } else {
+              ensureTimelineLogIsMutable();
+              timelineLog_.addAll(other.timelineLog_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.timelineLog_.isEmpty()) {
+            if (timelineLogBuilder_.isEmpty()) {
+              timelineLogBuilder_.dispose();
+              timelineLogBuilder_ = null;
+              timelineLog_ = other.timelineLog_;
+              bitField0_ = (bitField0_ & ~0x00000020);
+              timelineLogBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getTimelineLogFieldBuilder() : null;
+            } else {
+              timelineLogBuilder_.addAllMessages(other.timelineLog_);
             }
           }
         }
@@ -2808,6 +2939,246 @@ public final class LoggingProtos {
           registrationLog_ = null;
         }
         return registrationLogBuilder_;
+      }
+
+      // repeated .TimelineLog timeline_log = 6;
+      private java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog> timelineLog_ =
+        java.util.Collections.emptyList();
+      private void ensureTimelineLogIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          timelineLog_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.TimelineLog>(timelineLog_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.logging.LoggingProtos.TimelineLog, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder, com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder> timelineLogBuilder_;
+
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog> getTimelineLogList() {
+        if (timelineLogBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(timelineLog_);
+        } else {
+          return timelineLogBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public int getTimelineLogCount() {
+        if (timelineLogBuilder_ == null) {
+          return timelineLog_.size();
+        } else {
+          return timelineLogBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog getTimelineLog(int index) {
+        if (timelineLogBuilder_ == null) {
+          return timelineLog_.get(index);
+        } else {
+          return timelineLogBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder setTimelineLog(
+          int index, com.hello.suripu.api.logging.LoggingProtos.TimelineLog value) {
+        if (timelineLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTimelineLogIsMutable();
+          timelineLog_.set(index, value);
+          onChanged();
+        } else {
+          timelineLogBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder setTimelineLog(
+          int index, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder builderForValue) {
+        if (timelineLogBuilder_ == null) {
+          ensureTimelineLogIsMutable();
+          timelineLog_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          timelineLogBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder addTimelineLog(com.hello.suripu.api.logging.LoggingProtos.TimelineLog value) {
+        if (timelineLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTimelineLogIsMutable();
+          timelineLog_.add(value);
+          onChanged();
+        } else {
+          timelineLogBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder addTimelineLog(
+          int index, com.hello.suripu.api.logging.LoggingProtos.TimelineLog value) {
+        if (timelineLogBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTimelineLogIsMutable();
+          timelineLog_.add(index, value);
+          onChanged();
+        } else {
+          timelineLogBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder addTimelineLog(
+          com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder builderForValue) {
+        if (timelineLogBuilder_ == null) {
+          ensureTimelineLogIsMutable();
+          timelineLog_.add(builderForValue.build());
+          onChanged();
+        } else {
+          timelineLogBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder addTimelineLog(
+          int index, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder builderForValue) {
+        if (timelineLogBuilder_ == null) {
+          ensureTimelineLogIsMutable();
+          timelineLog_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          timelineLogBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder addAllTimelineLog(
+          java.lang.Iterable<? extends com.hello.suripu.api.logging.LoggingProtos.TimelineLog> values) {
+        if (timelineLogBuilder_ == null) {
+          ensureTimelineLogIsMutable();
+          super.addAll(values, timelineLog_);
+          onChanged();
+        } else {
+          timelineLogBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder clearTimelineLog() {
+        if (timelineLogBuilder_ == null) {
+          timelineLog_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000020);
+          onChanged();
+        } else {
+          timelineLogBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public Builder removeTimelineLog(int index) {
+        if (timelineLogBuilder_ == null) {
+          ensureTimelineLogIsMutable();
+          timelineLog_.remove(index);
+          onChanged();
+        } else {
+          timelineLogBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder getTimelineLogBuilder(
+          int index) {
+        return getTimelineLogFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder getTimelineLogOrBuilder(
+          int index) {
+        if (timelineLogBuilder_ == null) {
+          return timelineLog_.get(index);  } else {
+          return timelineLogBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder> 
+           getTimelineLogOrBuilderList() {
+        if (timelineLogBuilder_ != null) {
+          return timelineLogBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(timelineLog_);
+        }
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder addTimelineLogBuilder() {
+        return getTimelineLogFieldBuilder().addBuilder(
+            com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder addTimelineLogBuilder(
+          int index) {
+        return getTimelineLogFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .TimelineLog timeline_log = 6;</code>
+       */
+      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder> 
+           getTimelineLogBuilderList() {
+        return getTimelineLogFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.logging.LoggingProtos.TimelineLog, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder, com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder> 
+          getTimelineLogFieldBuilder() {
+        if (timelineLogBuilder_ == null) {
+          timelineLogBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.logging.LoggingProtos.TimelineLog, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder, com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder>(
+                  timelineLog_,
+                  ((bitField0_ & 0x00000020) == 0x00000020),
+                  getParentForChildren(),
+                  isClean());
+          timelineLog_ = null;
+        }
+        return timelineLogBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:BatchLogMessage)
@@ -9229,6 +9600,1380 @@ public final class LoggingProtos {
     // @@protoc_insertion_point(class_scope:ProvisionRequest)
   }
 
+  public interface TimelineLogOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional int64 account_id = 1;
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    boolean hasAccountId();
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    long getAccountId();
+
+    // optional int64 timestamp_when_log_generated = 2;
+    /**
+     * <code>optional int64 timestamp_when_log_generated = 2;</code>
+     */
+    boolean hasTimestampWhenLogGenerated();
+    /**
+     * <code>optional int64 timestamp_when_log_generated = 2;</code>
+     */
+    long getTimestampWhenLogGenerated();
+
+    // optional int64 night_of_timeline = 3;
+    /**
+     * <code>optional int64 night_of_timeline = 3;</code>
+     */
+    boolean hasNightOfTimeline();
+    /**
+     * <code>optional int64 night_of_timeline = 3;</code>
+     */
+    long getNightOfTimeline();
+
+    // optional .TimelineLog.AlgType intended_algorithm = 4;
+    /**
+     * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+     */
+    boolean hasIntendedAlgorithm();
+    /**
+     * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+     */
+    com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType getIntendedAlgorithm();
+
+    // optional .TimelineLog.AlgType used_algorithm = 5;
+    /**
+     * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+     */
+    boolean hasUsedAlgorithm();
+    /**
+     * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+     */
+    com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType getUsedAlgorithm();
+
+    // repeated .TimelineLog.ErrorType errors = 6;
+    /**
+     * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+     */
+    java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType> getErrorsList();
+    /**
+     * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+     */
+    int getErrorsCount();
+    /**
+     * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+     */
+    com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType getErrors(int index);
+
+    // optional int64 log_uuid_upper = 7;
+    /**
+     * <code>optional int64 log_uuid_upper = 7;</code>
+     *
+     * <pre>
+     *UUID to match this against server logs
+     * </pre>
+     */
+    boolean hasLogUuidUpper();
+    /**
+     * <code>optional int64 log_uuid_upper = 7;</code>
+     *
+     * <pre>
+     *UUID to match this against server logs
+     * </pre>
+     */
+    long getLogUuidUpper();
+
+    // optional int64 log_uuid_lower = 8;
+    /**
+     * <code>optional int64 log_uuid_lower = 8;</code>
+     *
+     * <pre>
+     *UUID to """"
+     * </pre>
+     */
+    boolean hasLogUuidLower();
+    /**
+     * <code>optional int64 log_uuid_lower = 8;</code>
+     *
+     * <pre>
+     *UUID to """"
+     * </pre>
+     */
+    long getLogUuidLower();
+  }
+  /**
+   * Protobuf type {@code TimelineLog}
+   */
+  public static final class TimelineLog extends
+      com.google.protobuf.GeneratedMessage
+      implements TimelineLogOrBuilder {
+    // Use TimelineLog.newBuilder() to construct.
+    private TimelineLog(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private TimelineLog(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final TimelineLog defaultInstance;
+    public static TimelineLog getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public TimelineLog getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private TimelineLog(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              accountId_ = input.readInt64();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              timestampWhenLogGenerated_ = input.readInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              nightOfTimeline_ = input.readInt64();
+              break;
+            }
+            case 32: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType value = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(4, rawValue);
+              } else {
+                bitField0_ |= 0x00000008;
+                intendedAlgorithm_ = value;
+              }
+              break;
+            }
+            case 40: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType value = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(5, rawValue);
+              } else {
+                bitField0_ |= 0x00000010;
+                usedAlgorithm_ = value;
+              }
+              break;
+            }
+            case 48: {
+              int rawValue = input.readEnum();
+              com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType value = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(6, rawValue);
+              } else {
+                if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                  errors_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType>();
+                  mutable_bitField0_ |= 0x00000020;
+                }
+                errors_.add(value);
+              }
+              break;
+            }
+            case 50: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType value = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(6, rawValue);
+                } else {
+                  if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                    errors_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType>();
+                    mutable_bitField0_ |= 0x00000020;
+                  }
+                  errors_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000020;
+              logUuidUpper_ = input.readInt64();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000040;
+              logUuidLower_ = input.readInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          errors_ = java.util.Collections.unmodifiableList(errors_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.logging.LoggingProtos.internal_static_TimelineLog_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.logging.LoggingProtos.internal_static_TimelineLog_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.logging.LoggingProtos.TimelineLog.class, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<TimelineLog> PARSER =
+        new com.google.protobuf.AbstractParser<TimelineLog>() {
+      public TimelineLog parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new TimelineLog(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<TimelineLog> getParserForType() {
+      return PARSER;
+    }
+
+    /**
+     * Protobuf enum {@code TimelineLog.AlgType}
+     */
+    public enum AlgType
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>NONE = 0;</code>
+       */
+      NONE(0, 0),
+      /**
+       * <code>WUPANG = 1;</code>
+       */
+      WUPANG(1, 1),
+      /**
+       * <code>HMM = 2;</code>
+       */
+      HMM(2, 2),
+      /**
+       * <code>VOTING = 3;</code>
+       */
+      VOTING(3, 3),
+      /**
+       * <code>LAYERED_HMM = 4;</code>
+       */
+      LAYERED_HMM(4, 4),
+      ;
+
+      /**
+       * <code>NONE = 0;</code>
+       */
+      public static final int NONE_VALUE = 0;
+      /**
+       * <code>WUPANG = 1;</code>
+       */
+      public static final int WUPANG_VALUE = 1;
+      /**
+       * <code>HMM = 2;</code>
+       */
+      public static final int HMM_VALUE = 2;
+      /**
+       * <code>VOTING = 3;</code>
+       */
+      public static final int VOTING_VALUE = 3;
+      /**
+       * <code>LAYERED_HMM = 4;</code>
+       */
+      public static final int LAYERED_HMM_VALUE = 4;
+
+
+      public final int getNumber() { return value; }
+
+      public static AlgType valueOf(int value) {
+        switch (value) {
+          case 0: return NONE;
+          case 1: return WUPANG;
+          case 2: return HMM;
+          case 3: return VOTING;
+          case 4: return LAYERED_HMM;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<AlgType>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<AlgType>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<AlgType>() {
+              public AlgType findValueByNumber(int number) {
+                return AlgType.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final AlgType[] VALUES = values();
+
+      public static AlgType valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private AlgType(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:TimelineLog.AlgType)
+    }
+
+    /**
+     * Protobuf enum {@code TimelineLog.ErrorType}
+     */
+    public enum ErrorType
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>INTENDED_ALGORITHM_FAILURE = 0;</code>
+       */
+      INTENDED_ALGORITHM_FAILURE(0, 0),
+      /**
+       * <code>TIMESPAN_TOO_SHORT = 1;</code>
+       */
+      TIMESPAN_TOO_SHORT(1, 1),
+      /**
+       * <code>NOT_ENOUGH_DATA = 2;</code>
+       */
+      NOT_ENOUGH_DATA(2, 2),
+      /**
+       * <code>NO_DATA = 3;</code>
+       */
+      NO_DATA(3, 3),
+      /**
+       * <code>LOW_AMPLITUDE_DATA = 4;</code>
+       */
+      LOW_AMPLITUDE_DATA(4, 4),
+      /**
+       * <code>PARTNER_FILTER_REJECTED_MY_DATA = 5;</code>
+       */
+      PARTNER_FILTER_REJECTED_MY_DATA(5, 5),
+      /**
+       * <code>MISSING_KEY_EVENTS = 6;</code>
+       */
+      MISSING_KEY_EVENTS(6, 6),
+      ;
+
+      /**
+       * <code>INTENDED_ALGORITHM_FAILURE = 0;</code>
+       */
+      public static final int INTENDED_ALGORITHM_FAILURE_VALUE = 0;
+      /**
+       * <code>TIMESPAN_TOO_SHORT = 1;</code>
+       */
+      public static final int TIMESPAN_TOO_SHORT_VALUE = 1;
+      /**
+       * <code>NOT_ENOUGH_DATA = 2;</code>
+       */
+      public static final int NOT_ENOUGH_DATA_VALUE = 2;
+      /**
+       * <code>NO_DATA = 3;</code>
+       */
+      public static final int NO_DATA_VALUE = 3;
+      /**
+       * <code>LOW_AMPLITUDE_DATA = 4;</code>
+       */
+      public static final int LOW_AMPLITUDE_DATA_VALUE = 4;
+      /**
+       * <code>PARTNER_FILTER_REJECTED_MY_DATA = 5;</code>
+       */
+      public static final int PARTNER_FILTER_REJECTED_MY_DATA_VALUE = 5;
+      /**
+       * <code>MISSING_KEY_EVENTS = 6;</code>
+       */
+      public static final int MISSING_KEY_EVENTS_VALUE = 6;
+
+
+      public final int getNumber() { return value; }
+
+      public static ErrorType valueOf(int value) {
+        switch (value) {
+          case 0: return INTENDED_ALGORITHM_FAILURE;
+          case 1: return TIMESPAN_TOO_SHORT;
+          case 2: return NOT_ENOUGH_DATA;
+          case 3: return NO_DATA;
+          case 4: return LOW_AMPLITUDE_DATA;
+          case 5: return PARTNER_FILTER_REJECTED_MY_DATA;
+          case 6: return MISSING_KEY_EVENTS;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<ErrorType>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<ErrorType>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<ErrorType>() {
+              public ErrorType findValueByNumber(int number) {
+                return ErrorType.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDescriptor().getEnumTypes().get(1);
+      }
+
+      private static final ErrorType[] VALUES = values();
+
+      public static ErrorType valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private ErrorType(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:TimelineLog.ErrorType)
+    }
+
+    private int bitField0_;
+    // optional int64 account_id = 1;
+    public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
+    private long accountId_;
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    public boolean hasAccountId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    public long getAccountId() {
+      return accountId_;
+    }
+
+    // optional int64 timestamp_when_log_generated = 2;
+    public static final int TIMESTAMP_WHEN_LOG_GENERATED_FIELD_NUMBER = 2;
+    private long timestampWhenLogGenerated_;
+    /**
+     * <code>optional int64 timestamp_when_log_generated = 2;</code>
+     */
+    public boolean hasTimestampWhenLogGenerated() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int64 timestamp_when_log_generated = 2;</code>
+     */
+    public long getTimestampWhenLogGenerated() {
+      return timestampWhenLogGenerated_;
+    }
+
+    // optional int64 night_of_timeline = 3;
+    public static final int NIGHT_OF_TIMELINE_FIELD_NUMBER = 3;
+    private long nightOfTimeline_;
+    /**
+     * <code>optional int64 night_of_timeline = 3;</code>
+     */
+    public boolean hasNightOfTimeline() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int64 night_of_timeline = 3;</code>
+     */
+    public long getNightOfTimeline() {
+      return nightOfTimeline_;
+    }
+
+    // optional .TimelineLog.AlgType intended_algorithm = 4;
+    public static final int INTENDED_ALGORITHM_FIELD_NUMBER = 4;
+    private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType intendedAlgorithm_;
+    /**
+     * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+     */
+    public boolean hasIntendedAlgorithm() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+     */
+    public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType getIntendedAlgorithm() {
+      return intendedAlgorithm_;
+    }
+
+    // optional .TimelineLog.AlgType used_algorithm = 5;
+    public static final int USED_ALGORITHM_FIELD_NUMBER = 5;
+    private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType usedAlgorithm_;
+    /**
+     * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+     */
+    public boolean hasUsedAlgorithm() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+     */
+    public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType getUsedAlgorithm() {
+      return usedAlgorithm_;
+    }
+
+    // repeated .TimelineLog.ErrorType errors = 6;
+    public static final int ERRORS_FIELD_NUMBER = 6;
+    private java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType> errors_;
+    /**
+     * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+     */
+    public java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType> getErrorsList() {
+      return errors_;
+    }
+    /**
+     * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+     */
+    public int getErrorsCount() {
+      return errors_.size();
+    }
+    /**
+     * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+     */
+    public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType getErrors(int index) {
+      return errors_.get(index);
+    }
+
+    // optional int64 log_uuid_upper = 7;
+    public static final int LOG_UUID_UPPER_FIELD_NUMBER = 7;
+    private long logUuidUpper_;
+    /**
+     * <code>optional int64 log_uuid_upper = 7;</code>
+     *
+     * <pre>
+     *UUID to match this against server logs
+     * </pre>
+     */
+    public boolean hasLogUuidUpper() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional int64 log_uuid_upper = 7;</code>
+     *
+     * <pre>
+     *UUID to match this against server logs
+     * </pre>
+     */
+    public long getLogUuidUpper() {
+      return logUuidUpper_;
+    }
+
+    // optional int64 log_uuid_lower = 8;
+    public static final int LOG_UUID_LOWER_FIELD_NUMBER = 8;
+    private long logUuidLower_;
+    /**
+     * <code>optional int64 log_uuid_lower = 8;</code>
+     *
+     * <pre>
+     *UUID to """"
+     * </pre>
+     */
+    public boolean hasLogUuidLower() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional int64 log_uuid_lower = 8;</code>
+     *
+     * <pre>
+     *UUID to """"
+     * </pre>
+     */
+    public long getLogUuidLower() {
+      return logUuidLower_;
+    }
+
+    private void initFields() {
+      accountId_ = 0L;
+      timestampWhenLogGenerated_ = 0L;
+      nightOfTimeline_ = 0L;
+      intendedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+      usedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+      errors_ = java.util.Collections.emptyList();
+      logUuidUpper_ = 0L;
+      logUuidLower_ = 0L;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt64(1, accountId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt64(2, timestampWhenLogGenerated_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt64(3, nightOfTimeline_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeEnum(4, intendedAlgorithm_.getNumber());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeEnum(5, usedAlgorithm_.getNumber());
+      }
+      for (int i = 0; i < errors_.size(); i++) {
+        output.writeEnum(6, errors_.get(i).getNumber());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt64(7, logUuidUpper_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt64(8, logUuidLower_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, accountId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, timestampWhenLogGenerated_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, nightOfTimeline_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(4, intendedAlgorithm_.getNumber());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(5, usedAlgorithm_.getNumber());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < errors_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(errors_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 1 * errors_.size();
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(7, logUuidUpper_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(8, logUuidLower_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.logging.LoggingProtos.TimelineLog parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.logging.LoggingProtos.TimelineLog prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code TimelineLog}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.logging.LoggingProtos.TimelineLogOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_TimelineLog_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_TimelineLog_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.logging.LoggingProtos.TimelineLog.class, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.logging.LoggingProtos.TimelineLog.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        accountId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        timestampWhenLogGenerated_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        nightOfTimeline_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        intendedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        usedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        errors_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        logUuidUpper_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        logUuidLower_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.logging.LoggingProtos.internal_static_TimelineLog_descriptor;
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog getDefaultInstanceForType() {
+        return com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog build() {
+        com.hello.suripu.api.logging.LoggingProtos.TimelineLog result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog buildPartial() {
+        com.hello.suripu.api.logging.LoggingProtos.TimelineLog result = new com.hello.suripu.api.logging.LoggingProtos.TimelineLog(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.accountId_ = accountId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.timestampWhenLogGenerated_ = timestampWhenLogGenerated_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.nightOfTimeline_ = nightOfTimeline_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.intendedAlgorithm_ = intendedAlgorithm_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.usedAlgorithm_ = usedAlgorithm_;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          errors_ = java.util.Collections.unmodifiableList(errors_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.errors_ = errors_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.logUuidUpper_ = logUuidUpper_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.logUuidLower_ = logUuidLower_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.logging.LoggingProtos.TimelineLog) {
+          return mergeFrom((com.hello.suripu.api.logging.LoggingProtos.TimelineLog)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.logging.LoggingProtos.TimelineLog other) {
+        if (other == com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDefaultInstance()) return this;
+        if (other.hasAccountId()) {
+          setAccountId(other.getAccountId());
+        }
+        if (other.hasTimestampWhenLogGenerated()) {
+          setTimestampWhenLogGenerated(other.getTimestampWhenLogGenerated());
+        }
+        if (other.hasNightOfTimeline()) {
+          setNightOfTimeline(other.getNightOfTimeline());
+        }
+        if (other.hasIntendedAlgorithm()) {
+          setIntendedAlgorithm(other.getIntendedAlgorithm());
+        }
+        if (other.hasUsedAlgorithm()) {
+          setUsedAlgorithm(other.getUsedAlgorithm());
+        }
+        if (!other.errors_.isEmpty()) {
+          if (errors_.isEmpty()) {
+            errors_ = other.errors_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureErrorsIsMutable();
+            errors_.addAll(other.errors_);
+          }
+          onChanged();
+        }
+        if (other.hasLogUuidUpper()) {
+          setLogUuidUpper(other.getLogUuidUpper());
+        }
+        if (other.hasLogUuidLower()) {
+          setLogUuidLower(other.getLogUuidLower());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.logging.LoggingProtos.TimelineLog parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.logging.LoggingProtos.TimelineLog) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional int64 account_id = 1;
+      private long accountId_ ;
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public boolean hasAccountId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public long getAccountId() {
+        return accountId_;
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public Builder setAccountId(long value) {
+        bitField0_ |= 0x00000001;
+        accountId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public Builder clearAccountId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        accountId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 timestamp_when_log_generated = 2;
+      private long timestampWhenLogGenerated_ ;
+      /**
+       * <code>optional int64 timestamp_when_log_generated = 2;</code>
+       */
+      public boolean hasTimestampWhenLogGenerated() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int64 timestamp_when_log_generated = 2;</code>
+       */
+      public long getTimestampWhenLogGenerated() {
+        return timestampWhenLogGenerated_;
+      }
+      /**
+       * <code>optional int64 timestamp_when_log_generated = 2;</code>
+       */
+      public Builder setTimestampWhenLogGenerated(long value) {
+        bitField0_ |= 0x00000002;
+        timestampWhenLogGenerated_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 timestamp_when_log_generated = 2;</code>
+       */
+      public Builder clearTimestampWhenLogGenerated() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        timestampWhenLogGenerated_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 night_of_timeline = 3;
+      private long nightOfTimeline_ ;
+      /**
+       * <code>optional int64 night_of_timeline = 3;</code>
+       */
+      public boolean hasNightOfTimeline() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int64 night_of_timeline = 3;</code>
+       */
+      public long getNightOfTimeline() {
+        return nightOfTimeline_;
+      }
+      /**
+       * <code>optional int64 night_of_timeline = 3;</code>
+       */
+      public Builder setNightOfTimeline(long value) {
+        bitField0_ |= 0x00000004;
+        nightOfTimeline_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 night_of_timeline = 3;</code>
+       */
+      public Builder clearNightOfTimeline() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        nightOfTimeline_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional .TimelineLog.AlgType intended_algorithm = 4;
+      private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType intendedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+      /**
+       * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+       */
+      public boolean hasIntendedAlgorithm() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType getIntendedAlgorithm() {
+        return intendedAlgorithm_;
+      }
+      /**
+       * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+       */
+      public Builder setIntendedAlgorithm(com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        intendedAlgorithm_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .TimelineLog.AlgType intended_algorithm = 4;</code>
+       */
+      public Builder clearIntendedAlgorithm() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        intendedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+        onChanged();
+        return this;
+      }
+
+      // optional .TimelineLog.AlgType used_algorithm = 5;
+      private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType usedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+      /**
+       * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+       */
+      public boolean hasUsedAlgorithm() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType getUsedAlgorithm() {
+        return usedAlgorithm_;
+      }
+      /**
+       * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+       */
+      public Builder setUsedAlgorithm(com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000010;
+        usedAlgorithm_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .TimelineLog.AlgType used_algorithm = 5;</code>
+       */
+      public Builder clearUsedAlgorithm() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        usedAlgorithm_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.AlgType.NONE;
+        onChanged();
+        return this;
+      }
+
+      // repeated .TimelineLog.ErrorType errors = 6;
+      private java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType> errors_ =
+        java.util.Collections.emptyList();
+      private void ensureErrorsIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          errors_ = new java.util.ArrayList<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType>(errors_);
+          bitField0_ |= 0x00000020;
+        }
+      }
+      /**
+       * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+       */
+      public java.util.List<com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType> getErrorsList() {
+        return java.util.Collections.unmodifiableList(errors_);
+      }
+      /**
+       * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+       */
+      public int getErrorsCount() {
+        return errors_.size();
+      }
+      /**
+       * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+       */
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType getErrors(int index) {
+        return errors_.get(index);
+      }
+      /**
+       * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+       */
+      public Builder setErrors(
+          int index, com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureErrorsIsMutable();
+        errors_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+       */
+      public Builder addErrors(com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureErrorsIsMutable();
+        errors_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+       */
+      public Builder addAllErrors(
+          java.lang.Iterable<? extends com.hello.suripu.api.logging.LoggingProtos.TimelineLog.ErrorType> values) {
+        ensureErrorsIsMutable();
+        super.addAll(values, errors_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .TimelineLog.ErrorType errors = 6;</code>
+       */
+      public Builder clearErrors() {
+        errors_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+
+      // optional int64 log_uuid_upper = 7;
+      private long logUuidUpper_ ;
+      /**
+       * <code>optional int64 log_uuid_upper = 7;</code>
+       *
+       * <pre>
+       *UUID to match this against server logs
+       * </pre>
+       */
+      public boolean hasLogUuidUpper() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int64 log_uuid_upper = 7;</code>
+       *
+       * <pre>
+       *UUID to match this against server logs
+       * </pre>
+       */
+      public long getLogUuidUpper() {
+        return logUuidUpper_;
+      }
+      /**
+       * <code>optional int64 log_uuid_upper = 7;</code>
+       *
+       * <pre>
+       *UUID to match this against server logs
+       * </pre>
+       */
+      public Builder setLogUuidUpper(long value) {
+        bitField0_ |= 0x00000040;
+        logUuidUpper_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 log_uuid_upper = 7;</code>
+       *
+       * <pre>
+       *UUID to match this against server logs
+       * </pre>
+       */
+      public Builder clearLogUuidUpper() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        logUuidUpper_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 log_uuid_lower = 8;
+      private long logUuidLower_ ;
+      /**
+       * <code>optional int64 log_uuid_lower = 8;</code>
+       *
+       * <pre>
+       *UUID to """"
+       * </pre>
+       */
+      public boolean hasLogUuidLower() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional int64 log_uuid_lower = 8;</code>
+       *
+       * <pre>
+       *UUID to """"
+       * </pre>
+       */
+      public long getLogUuidLower() {
+        return logUuidLower_;
+      }
+      /**
+       * <code>optional int64 log_uuid_lower = 8;</code>
+       *
+       * <pre>
+       *UUID to """"
+       * </pre>
+       */
+      public Builder setLogUuidLower(long value) {
+        bitField0_ |= 0x00000080;
+        logUuidLower_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 log_uuid_lower = 8;</code>
+       *
+       * <pre>
+       *UUID to """"
+       * </pre>
+       */
+      public Builder clearLogUuidLower() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        logUuidLower_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:TimelineLog)
+    }
+
+    static {
+      defaultInstance = new TimelineLog(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:TimelineLog)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_LogMessage_descriptor;
   private static
@@ -9269,6 +11014,11 @@ public final class LoggingProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ProvisionRequest_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_TimelineLog_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_TimelineLog_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -9282,34 +11032,49 @@ public final class LoggingProtos {
       "\006origin\030\001 \001(\t\022\017\n\007message\030\002 \001(\t\022\n\n\002ts\030\003 \001" +
       "(\003\022\031\n\nproduction\030\004 \001(\010:\005false\022\r\n\005level\030\005" +
       " \001(\005\022\021\n\tdevice_id\030\006 \001(\t\022\031\n\021middle_fw_ver" +
-      "sion\030\007 \001(\t\022\026\n\016top_fw_version\030\010 \001(\t\"\240\002\n\017B" +
+      "sion\030\007 \001(\t\022\026\n\016top_fw_version\030\010 \001(\t\"\326\002\n\017B" +
       "atchLogMessage\022\035\n\010messages\030\001 \003(\0132\013.LogMe" +
       "ssage\022\023\n\013app_version\030\002 \001(\t\022*\n\010log_type\030\003" +
       " \001(\0162\030.BatchLogMessage.LogType\022\023\n\013receiv" +
       "ed_at\030\004 \001(\003\022*\n\020registration_log\030\005 \003(\0132\020." +
-      "RegistrationLog\"l\n\007LogType\022\023\n\017APPLICATIO",
-      "N_LOG\020\000\022\r\n\tSENSE_LOG\020\001\022\017\n\013WORKERS_LOG\020\002\022" +
-      "\030\n\024STRUCTURED_SENSE_LOG\020\003\022\022\n\016ONBOARDING_" +
-      "LOG\020\004\"\250\002\n\013HttpRequest\022\014\n\004path\030\001 \001(\t\022\024\n\014a" +
-      "ccess_token\030\002 \001(\t\022\022\n\naccount_id\030\003 \001(\003\022\026\n" +
-      "\016application_id\030\004 \001(\003\022\025\n\rtimestamp_utc\030\005" +
-      " \001(\003\022\027\n\017required_scopes\030\006 \003(\t\022\027\n\017provide" +
-      "d_scopes\030\007 \003(\t\022\037\n\027access_token_created_a" +
-      "t\030\010 \001(\003\022\022\n\nuser_agent\030\t \001(\t\022$\n\007headers\030\n" +
-      " \003(\0132\023.HttpRequest.Header\032%\n\006Header\022\014\n\004n" +
-      "ame\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\\n\014Registration",
-      "\022\021\n\tdevice_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022" +
-      "\n\naccount_id\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\"\235" +
-      "\001\n\017RegistrationLog\022\020\n\010sense_id\030\001 \001(\t\022\021\n\t" +
-      "timestamp\030\002 \001(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\ni" +
-      "p_address\030\004 \001(\t\022\016\n\006action\030\005 \001(\t\022\017\n\007pill_" +
-      "id\030\006 \001(\t\022\016\n\006result\030\007 \001(\t\022\014\n\004info\030\010 \001(\t\"e" +
-      "\n\017DecryptionError\022\021\n\tdevice_id\030\001 \001(\t\022\016\n\006" +
-      "keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024\n\014request_body" +
-      "\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020ProvisionReques" +
-      "t\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_number\030\002 \001(\t\022\n",
-      "\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\tB-\n\034com.he" +
-      "llo.suripu.api.loggingB\rLoggingProtos"
+      "RegistrationLog\022\"\n\014timeline_log\030\006 \003(\0132\014.",
+      "TimelineLog\"~\n\007LogType\022\023\n\017APPLICATION_LO" +
+      "G\020\000\022\r\n\tSENSE_LOG\020\001\022\017\n\013WORKERS_LOG\020\002\022\030\n\024S" +
+      "TRUCTURED_SENSE_LOG\020\003\022\022\n\016ONBOARDING_LOG\020" +
+      "\004\022\020\n\014TIMELINE_LOG\020\005\"\250\002\n\013HttpRequest\022\014\n\004p" +
+      "ath\030\001 \001(\t\022\024\n\014access_token\030\002 \001(\t\022\022\n\naccou" +
+      "nt_id\030\003 \001(\003\022\026\n\016application_id\030\004 \001(\003\022\025\n\rt" +
+      "imestamp_utc\030\005 \001(\003\022\027\n\017required_scopes\030\006 " +
+      "\003(\t\022\027\n\017provided_scopes\030\007 \003(\t\022\037\n\027access_t" +
+      "oken_created_at\030\010 \001(\003\022\022\n\nuser_agent\030\t \001(" +
+      "\t\022$\n\007headers\030\n \003(\0132\023.HttpRequest.Header\032",
+      "%\n\006Header\022\014\n\004name\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\\" +
+      "\n\014Registration\022\021\n\tdevice_id\030\001 \001(\t\022\021\n\ttim" +
+      "estamp\030\002 \001(\003\022\022\n\naccount_id\030\003 \001(\003\022\022\n\nip_a" +
+      "ddress\030\004 \001(\t\"\235\001\n\017RegistrationLog\022\020\n\010sens" +
+      "e_id\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022\022\n\naccount" +
+      "_id\030\003 \001(\003\022\022\n\nip_address\030\004 \001(\t\022\016\n\006action\030" +
+      "\005 \001(\t\022\017\n\007pill_id\030\006 \001(\t\022\016\n\006result\030\007 \001(\t\022\014" +
+      "\n\004info\030\010 \001(\t\"e\n\017DecryptionError\022\021\n\tdevic" +
+      "e_id\030\001 \001(\t\022\016\n\006keyHex\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\024" +
+      "\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020P",
+      "rovisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_" +
+      "number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004" +
+      " \001(\t\"\236\004\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
+      "\022$\n\034timestamp_when_log_generated\030\002 \001(\003\022\031" +
+      "\n\021night_of_timeline\030\003 \001(\003\0220\n\022intended_al" +
+      "gorithm\030\004 \001(\0162\024.TimelineLog.AlgType\022,\n\016u" +
+      "sed_algorithm\030\005 \001(\0162\024.TimelineLog.AlgTyp" +
+      "e\022&\n\006errors\030\006 \003(\0162\026.TimelineLog.ErrorTyp" +
+      "e\022\026\n\016log_uuid_upper\030\007 \001(\003\022\026\n\016log_uuid_lo" +
+      "wer\030\010 \001(\003\"E\n\007AlgType\022\010\n\004NONE\020\000\022\n\n\006WUPANG",
+      "\020\001\022\007\n\003HMM\020\002\022\n\n\006VOTING\020\003\022\017\n\013LAYERED_HMM\020\004" +
+      "\"\272\001\n\tErrorType\022\036\n\032INTENDED_ALGORITHM_FAI" +
+      "LURE\020\000\022\026\n\022TIMESPAN_TOO_SHORT\020\001\022\023\n\017NOT_EN" +
+      "OUGH_DATA\020\002\022\013\n\007NO_DATA\020\003\022\026\n\022LOW_AMPLITUD" +
+      "E_DATA\020\004\022#\n\037PARTNER_FILTER_REJECTED_MY_D" +
+      "ATA\020\005\022\026\n\022MISSING_KEY_EVENTS\020\006B-\n\034com.hel" +
+      "lo.suripu.api.loggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -9327,7 +11092,7 @@ public final class LoggingProtos {
           internal_static_BatchLogMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_BatchLogMessage_descriptor,
-              new java.lang.String[] { "Messages", "AppVersion", "LogType", "ReceivedAt", "RegistrationLog", });
+              new java.lang.String[] { "Messages", "AppVersion", "LogType", "ReceivedAt", "RegistrationLog", "TimelineLog", });
           internal_static_HttpRequest_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_HttpRequest_fieldAccessorTable = new
@@ -9364,6 +11129,12 @@ public final class LoggingProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_ProvisionRequest_descriptor,
               new java.lang.String[] { "Body", "SerialNumber", "Ts", "IpAddress", });
+          internal_static_TimelineLog_descriptor =
+            getDescriptor().getMessageTypes().get(7);
+          internal_static_TimelineLog_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_TimelineLog_descriptor,
+              new java.lang.String[] { "AccountId", "TimestampWhenLogGenerated", "NightOfTimeline", "IntendedAlgorithm", "UsedAlgorithm", "Errors", "LogUuidUpper", "LogUuidLower", });
           return null;
         }
       };
