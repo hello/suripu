@@ -29,7 +29,8 @@ public class InsightCard implements Comparable<InsightCard> {
         DAYTIME_SLEEPINESS(15),
         DAYTIME_ACTIVITIES(16),
         SLEEP_SCORE(17),
-        SLEEP_QUALITY(18); // movement during sleep
+        SLEEP_QUALITY(18), // movement during sleep
+        WAKE_VARIANCE(19);
 
         private int value;
 
@@ -62,6 +63,7 @@ public class InsightCard implements Comparable<InsightCard> {
     }
 
     public static final int RECENT_DAYS = 3;
+    public static final int PAST_WEEK = 7;
 
     public enum TimePeriod {
         NONE(0),
