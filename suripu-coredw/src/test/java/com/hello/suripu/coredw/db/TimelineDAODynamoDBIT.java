@@ -138,7 +138,7 @@ public class TimelineDAODynamoDBIT {
 
         timelinesForDay1.add(this.timeline1);
 
-        TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1), TimelineLog.createEmpty());
+        TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1), "");
 
         long accountId = 1;
 
@@ -146,7 +146,7 @@ public class TimelineDAODynamoDBIT {
         final DateTime startOfDay2 = startOfDay1.plusDays(1);
         final ArrayList<Timeline> timelinesForDay2 = new ArrayList<>();
         timelinesForDay2.add(this.timeline2);
-        TimelineResult resultsForDay2 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay2), TimelineLog.createEmpty());
+        TimelineResult resultsForDay2 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay2), "");
 
 
         final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
@@ -193,8 +193,8 @@ public class TimelineDAODynamoDBIT {
         final ArrayList<Timeline> timelinesForDay2 = new ArrayList<>();
         timelinesForDay2.add(this.timeline2);
 
-        final TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1),TimelineLog.createEmpty());
-        final TimelineResult resultsForDay2 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay2),TimelineLog.createEmpty());
+        final TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1),"");
+        final TimelineResult resultsForDay2 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay2),"");
 
         final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
         dateTimelinesMap.put(startOfDay1, resultsForDay1);
@@ -234,7 +234,7 @@ public class TimelineDAODynamoDBIT {
 
         final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
 
-        final TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1),TimelineLog.createEmpty());
+        final TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1),"");
 
 
         dateTimelinesMap.put(startOfDay1, resultsForDay1);
@@ -282,7 +282,7 @@ public class TimelineDAODynamoDBIT {
         long accountId = 1;
 
 
-        TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1), TimelineLog.createEmpty());
+        TimelineResult resultsForDay1 = TimelineResult.create(ImmutableList.copyOf(timelinesForDay1), "");
 
         final Map<DateTime, TimelineResult> dateTimelinesMap = new HashMap<>();
         dateTimelinesMap.put(startOfDay1, resultsForDay1);

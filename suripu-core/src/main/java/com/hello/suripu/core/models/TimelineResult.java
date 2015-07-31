@@ -36,7 +36,7 @@ public class TimelineResult {
 
     @JsonCreator
     public static TimelineResult create(@JsonProperty("timelines") final List<Timeline> timelines,
-                                        @JsonProperty("logV2") final String log) throws JsonMappingException {
+                                        @JsonProperty("logV2") final String log) {
 
 
         if (log == null || log.equals("")) {
@@ -50,7 +50,7 @@ public class TimelineResult {
 
         }
         catch(InvalidProtocolBufferException exception) {
-            throw new JsonMappingException("could not deserialized stored protobuf");
+            return new TimelineResult(ImmutableList.copyOf(timelines),Optional.<TimelineLogV2>absent());
         }
 
 
