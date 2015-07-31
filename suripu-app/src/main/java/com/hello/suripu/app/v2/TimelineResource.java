@@ -1,10 +1,10 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.TimelineLogDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
@@ -52,24 +52,22 @@ public class TimelineResource extends BaseResource {
     RolloutClient feature;
 
     private final TimelineProcessor timelineProcessor;
-    private final AccountDAO accountDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final TimelineLogDAO timelineLogDAO;
     private final FeedbackDAO feedbackDAO;
     private final TrackerMotionDAO trackerMotionDAO;
+    private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
 
-    public TimelineResource(final AccountDAO accountDAO,
-                            final TimelineDAODynamoDB timelineDAODynamoDB,
-                            final TimelineLogDAO timelineLogDAO,
+
+    public TimelineResource(final TimelineDAODynamoDB timelineDAODynamoDB,
                             final TimelineProcessor timelineProcessor,
                             final FeedbackDAO feedbackDAO,
-                            final TrackerMotionDAO trackerMotionDAO) {
+                            final TrackerMotionDAO trackerMotionDAO,
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         this.timelineProcessor = timelineProcessor;
-        this.timelineLogDAO = timelineLogDAO;
-        this.accountDAO = accountDAO;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.trackerMotionDAO = trackerMotionDAO;
+        this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
     }
 
     @GET
@@ -157,6 +155,15 @@ public class TimelineResource extends BaseResource {
 
 
     private Integer getOffsetMillis(final Long accountId, final String date, final Long timestamp) {
+        final Optional<AggregateSleepStats> aggregateSleepStatsOptional = sleepStatsDAODynamoDB.getSingleStat(accountId, date);
+
+        if(aggregateSleepStatsOptional.isPresent()) {
+            return aggregateSleepStatsOptional.get().offsetMillis;
+        }
+
+        LOGGER.warn("Missing aggregateSleepStats for account_id = {} and date = {}", accountId, date);
+        LOGGER.warn("Querying trackerMotion table for offset for account_id = {} and date = {}", accountId, date);
+
         final DateTime startDateTime = DateTimeUtil.ymdStringToDateTime(date);
         final DateTime endDateTime = startDateTime.plusHours(48);
 
