@@ -16,7 +16,6 @@ public class FeatureFlipper {
     public final static String ALARM_IN_TIMELINE = "alarm_in_timeline";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
-    public final static String ENVIRONMENT_IN_TIMELINE_SCORE = "environment_in_timeline_score";
     public final static String FEEDBACK_IN_TIMELINE = "feedback_in_timeline";
     public final static String IN_OUT_BED_EVENTS = "in_out_bed_events";
     public final static String HMM_ALGORITHM = "hmm_algorithm";
@@ -25,7 +24,6 @@ public class FeatureFlipper {
     public final static String OFFICE_ONLY_OVERRIDE = "office_only_override";
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
     public final static String PCH_SPECIAL_OTA = "pch_special_ota";
-    public final static String PROGRESSIVE_SMART_ALARM = "progressive_smart_alarm";
     public final static String ALLOW_RESPONSE_COMMANDS = "allow_response_commands";
     public final static String ALL_SENSOR_QUERY_USE_UTC_TS = "all_sensor_query_user_utc_ts";
     public final static String NEW_INVALID_NIGHT_FILTER = "new_invalid_night_filter";
@@ -43,13 +41,10 @@ public class FeatureFlipper {
     public final static String STOP_PROCESS_TIMELINE_FROM_WORKER = "stop_process_timeline_from_worker";
     public final static String EXPIRE_TIMELINE_IN_PROCESSING_TIME_SPAN = "expire_timeline_in_processing_time_span";
     public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
-    public final static String HMM_PARTNER_FILTER = "hmm_partner_filter";
+    public final static String BAYESIAN_PARTNER_FILTER = "bayesian_partner_filter";
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";
-    public final static String NEW_ROOM_CONDITION = "new_room_condition";
+
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
-    public final static String BAYES_NET_ALGORITHM = "bayes_net_algorithm";
-    public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
-    public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
-    public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
+    public final static String INSIGHTS_TESTING = "insights_testing";
 }
