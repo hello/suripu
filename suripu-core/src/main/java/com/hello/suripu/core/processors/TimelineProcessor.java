@@ -381,16 +381,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     protected Optional<OneDaysSensorData> getSensorData(final long accountId, final DateTime targetDate, final DateTime endDate) {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        LOGGER.debug("Length of originalTrackerMotion: {} for {} on {}", originalTrackerMotions.size(), accountId, targetDate);
-
-        // get partner tracker motion, if available
-        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
-        final List<TrackerMotion> trackerMotions = new ArrayList<>();
-
         if (originalTrackerMotions.isEmpty()) {
             LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, targetDate);
             return Optional.absent();
         }
+
+        LOGGER.debug("Length of originalTrackerMotion is {} for {} on {}", originalTrackerMotions.size(), accountId, targetDate);
+
+        // get partner tracker motion, if available
+        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty()) {
 
