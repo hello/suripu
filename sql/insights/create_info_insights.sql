@@ -181,10 +181,10 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 
 ALTER TYPE insight_category ADD VALUE 'wake_variance';
 
-INSERT INTO info_insight_cards (category, image_url, title, text)
+INSERT INTO info_insight_cards (category, title, text)
 VALUES
  ---
-('wake_variance', 'https://s3.amazonaws.com/hello-data/insights_images/wake_variance_1.jpeg',
+('wake_variance',
 'Waking up to sleep better',
 'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever you sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
 );

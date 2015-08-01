@@ -185,9 +185,8 @@ public class InsightProcessor {
         InsightCard.Category categoryToGenerate;
 
         switch (dayOfWeek) {
-            case 6://Friday 4PM to Saturday 4PM
-            case 7:
-            case 8:
+            case 1:
+            case 2:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
                     return;
                 }
