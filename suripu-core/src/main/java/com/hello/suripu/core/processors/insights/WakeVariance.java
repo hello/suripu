@@ -32,14 +32,12 @@ public class WakeVariance {
         final String queryStartDateString = DateTimeUtil.dateToYmdString(queryStartDate);
 
         final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, queryStartDateString, queryEndDateString);
-        LOGGER.debug("length of sleep stats is {} and sleepStats is {} ", sleepStats.size(), sleepStats);
-        final List<Long> wakeTimeList = Lists.newArrayList();
+        LOGGER.debug("Account id {} length of sleep stats is {} and sleepStats is {} ", accountId, sleepStats.size(), sleepStats);
+        final List<Integer> wakeTimeList = Lists.newArrayList();
         for (final AggregateSleepStats stat : sleepStats) {
-            LOGGER.debug("printing sleepstats.waketime {}", stat.sleepStats.wakeTime);
             final Long wakeTimeStamp = stat.sleepStats.wakeTime;
             final DateTime wakeTimeDateTime = new DateTime(wakeTimeStamp, DateTimeZone.forOffsetMillis(stat.offsetMillis));
-            final Long wakeTimeMillis = wakeTimeDateTime.getMillis() - wakeTimeDateTime.withTimeAtStartOfDay().getMillis(); //get difference in millis btwn event and start of day time
-            final Long wakeTime = wakeTimeMillis/(60L * 1000L);
+            final int wakeTime = wakeTimeDateTime.getMinuteOfDay();
             wakeTimeList.add(wakeTime);
         }
 
@@ -47,27 +45,27 @@ public class WakeVariance {
         return card;
     }
 
-    public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final List<Long> wakeTimeList, final WakeStdDevData wakeStdDevData) {
+    public static Optional<InsightCard> processWakeVarianceData(final Long accountId, final List<Integer> wakeTimeList, final WakeStdDevData wakeStdDevData) {
 
         if (wakeTimeList.isEmpty()) {
-            LOGGER.debug("Got nothing");
+            LOGGER.debug("Got nothing in wakeTimeList");
             return Optional.absent();
         }
         else if (wakeTimeList.size() <= 2) {
-            LOGGER.debug("Not more than 2 days");
+            LOGGER.debug("Size of wakeTimeList is less than 2 for accountId {}", accountId);
             return Optional.absent(); //not big enough to calculate variance usefully
         }
 
         // compute variance
         final DescriptiveStatistics stats = new DescriptiveStatistics();
-        for (final long wakeTime : wakeTimeList) {
+        for (final int wakeTime : wakeTimeList) {
             stats.addValue(wakeTime);
         }
 
         final Double wakeStdDevDouble = stats.getStandardDeviation();
-        int wakeStdDev = (int) Math.round(wakeStdDevDouble);
+        final int wakeStdDev = (int) Math.round(wakeStdDevDouble);
 
-        LOGGER.debug("Wake Std Dev is {}", wakeStdDev);
+        LOGGER.debug("Wake Std Dev for accountId {} is {}", accountId, wakeStdDev);
         final Integer percentile = wakeStdDevData.getWakeStdDevPercentile(wakeStdDev);
 
         Text text;

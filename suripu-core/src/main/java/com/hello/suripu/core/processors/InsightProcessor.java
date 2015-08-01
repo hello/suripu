@@ -13,7 +13,6 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 
@@ -32,8 +31,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -145,7 +143,7 @@ public class InsightProcessor {
         }
 
         if (!recentCategories.contains(categoryToGenerate)) {
-            LOGGER.debug("Generating NEW user insight for account id {}", accountId);
+            LOGGER.debug("Generating NEW user category {} insight for account id {}", categoryToGenerate, accountId);
             generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
 
@@ -160,7 +158,6 @@ public class InsightProcessor {
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
         // randomly select a card that hasn't been generated recently -- TODO when we have all categories
-        /*
         final List<InsightCard.Category> eligibleCategories = new ArrayList<>();
         for (final InsightCard.Category category : InsightCard.Category.values()) {
             if (!recentCategories.contains(category)) {
@@ -182,9 +179,8 @@ public class InsightProcessor {
         } else if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) { //movement
             this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
         }
-        */
 
-        Integer dayOfWeek = DateTime.now().getDayOfWeek();
+        final Integer dayOfWeek = DateTime.now().getDayOfWeek();
         LOGGER.debug("The day of week is {}", dayOfWeek);
         InsightCard.Category categoryToGenerate;
 
@@ -225,7 +221,6 @@ public class InsightProcessor {
             insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
         } else if (category == InsightCard.Category.WAKE_VARIANCE) {
             final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
-            //DateTime queryEndDate = DateTime.parse("2015-07-29").withTimeAtStartOfDay(); //TODO: delete me
 
             LOGGER.debug("for wake variance calling getInsights with accountId {} and date {} with numDays {}", accountId, queryEndDate, DAYS_ONE_WEEK);
             insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
@@ -233,7 +228,7 @@ public class InsightProcessor {
 
         if (insightCardOptional.isPresent()) {
             // save to dynamo
-            LOGGER.debug("Insight card present, Inserting insight into DynamoDB");
+            LOGGER.debug("Category {} insight card present for account {}, Inserting insight into DynamoDB", category, accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
         }
     }
