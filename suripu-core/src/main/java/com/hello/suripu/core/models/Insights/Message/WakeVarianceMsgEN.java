@@ -7,27 +7,24 @@ package com.hello.suripu.core.models.Insights.Message;
 public class WakeVarianceMsgEN {
     public static Text getWakeVarianceLow(final int wakeStdDev, final int percentile) {
         return new Text("Hello, very regular",
-                String.format("You have very consistent sleep habits. Your wake time variability of %d minutes is low, ", wakeStdDev) +
-                        String.format("it is **lower than** %d%% of all Sense users.", 100 - percentile));
+                String.format("Your wake time is **very consistent**. It varied an average of %d minutes last week, ", wakeStdDev) + String.format("Which is less than %d%% of all Sense users. ", 100 - percentile));
     }
 
     public static Text getWakeVarianceNotLowEnough(final int wakeStdDev, final int percentile) {
         return new Text("Hello, regular",
-                String.format("You have consistent sleep habits. Your wake time variability of %d minutes is low, ", wakeStdDev) +
-                        String.format("it is **lower than** %d%% of all Sense users.", 100 - percentile));
+                String.format("Your wake time is **fairly consistent**. It varied an average of %d minutes last week, ", wakeStdDev) + String.format("which is less than %d%%d of all Sense users. ", 100 - percentile) +
+                        "\n\nTry waking up at roughly the same time every morning");
     }
 
     public static Text getWakeVarianceHigh(final int wakeStdDev, final int percentile) {
         return new Text("Hello, irregular",
-                String.format("Your sleep habits are a bit irregular. Your wake time variability of %d minutes is a bit high, ", wakeStdDev) +
-                        String.format("it is **higher than** %d%% of all Sense users.", percentile) +
-                        "\n\nTry waking up at roughly the same time every morning.");
+                String.format("Your wake time is **a little inconsistent**. It varied an average of %d minutes last week, ", wakeStdDev) + String.format("which is more than %d%d of all Sense users. ", percentile) +
+                        "\n\nTry waking up at roughly the same time each morning.");
     }
 
     public static Text getWakeVarianceTooHigh(final int wakeStdDev, final int percentile) {
         return new Text("Hello, very irregular",
-                String.format("Your sleep habits are irregular. Your wake time variability of %d minutes is high, ", wakeStdDev) +
-                        String.format("it is **higher than** %d%% of all Sense users.", percentile) +
-                        "\n\nTry waking up at roughly the same time every morning.");
+                String.format("Your wake time are **pretty inconsistent**. It varied an average of %d minutes last week, ", wakeStdDev) + String.format("which is more than %d%% of all Sense users.", percentile) +
+                        "\n\nTry waking up at roughly the same time each morning.");
     }
 }
