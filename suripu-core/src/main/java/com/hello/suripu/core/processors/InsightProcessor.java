@@ -239,7 +239,7 @@ public class InsightProcessor {
 
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
         // get all insights from the past week
-        final DateTime aWeekAgo = DateTime.now(DateTimeZone.UTC).minus(7);
+        final DateTime aWeekAgo = DateTime.now(DateTimeZone.UTC).minusDays(7);
         final Boolean chronological = false;
 
         final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, aWeekAgo, chronological, RECENT_DAYS);
