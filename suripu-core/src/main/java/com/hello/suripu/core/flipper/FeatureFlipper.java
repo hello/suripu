@@ -52,5 +52,5 @@ public class FeatureFlipper {
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
     public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
-    public final static String INSIGHTS_TESTING = "insights_testing";
+    public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
 }

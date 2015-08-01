@@ -192,7 +192,7 @@ public class InsightProcessor {
             case 6://Friday 4PM to Saturday 4PM
             case 7:
             case 8:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
                     return;
                 }
                 LOGGER.debug("setting category to generate as wake variance");
