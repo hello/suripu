@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.base.Optional;
@@ -14,6 +15,8 @@ import java.util.List;
 /**
  * Created by benjo on 4/9/15.
  */
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TimelineResult {
 
     @JsonProperty("timelines")
