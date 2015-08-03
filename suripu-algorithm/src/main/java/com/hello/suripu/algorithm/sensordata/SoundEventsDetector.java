@@ -21,7 +21,7 @@ public class SoundEventsDetector {
     private static final Logger LOGGER = LoggerFactory.getLogger(SoundEventsDetector.class);
 
     private static final long MINUTE_IN_MILLIS = 60000L;
-    private static final float PEAK_DISTURBANCE_NOISE_FLOOR = 40.0f;
+    private static final float PEAK_DISTURBANCE_NOISE_FLOOR = 50.0f;
 
     private final int approxQuietTimeStart;
     private final int approxQuietTimeEnd;

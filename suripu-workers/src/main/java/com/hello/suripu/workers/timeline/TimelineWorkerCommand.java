@@ -28,9 +28,9 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TimelineDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
@@ -110,14 +110,16 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ALARM_INFO));
 
        /* Priors for bayesnet  */
-        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
-        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_PRIORS));
+        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(
+                priorsDb,
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.BAYESNET_PRIORS));
 
         /* Models for bayesnet */
-        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
-        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_MODEL));
+        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(
+                modelsDb,
+                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.BAYESNET_MODEL));
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
@@ -133,7 +135,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.SLEEP_HMM));
         final String sleepHmmTableName = configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.SLEEP_HMM);
-        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient, sleepHmmTableName);
 
         final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.SLEEP_STATS));

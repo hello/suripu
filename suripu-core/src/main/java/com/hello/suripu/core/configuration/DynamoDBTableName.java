@@ -1,6 +1,7 @@
 package com.hello.suripu.core.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DynamoDBTableName {
 
@@ -26,24 +27,26 @@ public enum DynamoDBTableName {
     TIMELINE_LOG("timeline_log"),
     TIMEZONE_HISTORY("timezone_history"),
     ALARM_LOG("alarm_log"),
-    SMART_ALARM_LOG("smart_alarm_log");
-
+    SMART_ALARM_LOG("smart_alarm_log"),
+    BAYESNET_PRIORS("hmm_bayesnet_priors"),
+    BAYESNET_MODEL("hmm_bayesnet_models");
     private String value;
 
     private DynamoDBTableName(String value) {
         this.value = value;
     }
 
+    @JsonValue
     public String getValue() {
         return value;
     }
 
     @JsonCreator
-    public static DynamoDBTableName fromString(final String val) {
+    public DynamoDBTableName fromString(final String val) {
         final DynamoDBTableName[] tableNames = DynamoDBTableName.values();
 
         for (final DynamoDBTableName tableName: tableNames) {
-            if (tableName.value.equals(val)) {
+            if (tableName.value.equalsIgnoreCase(val)) {
                 return tableName;
             }
         }

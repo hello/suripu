@@ -36,8 +36,6 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     private static final Map<String, SenseLogTag> tagToField = ImmutableMap.<String, SenseLogTag>builder()
             .put("ALARM RINGING", SenseLogTag.ALARM_RINGING)
             .put("fault", SenseLogTag.FIRMWARE_CRASH)
-            .put("travis", SenseLogTag.FIRMWARE_CRASH)
-            .put("xkd", SenseLogTag.FIRMWARE_CRASH)
             .put("ASSERT", SenseLogTag.FIRMWARE_CRASH)
             .put("SSID RSSI UNIQUE", SenseLogTag.WIFI_INFO)
             .put("dust", SenseLogTag.DUST_STATS)
@@ -98,6 +96,8 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             fields.put("half_date", halfDateString);
             fields.put("date", dateString);
             fields.put("all", "1");
+            fields.put("top_fw_version", log.getTopFwVersion());
+            fields.put("middle_fw_version", log.getMiddleFwVersion());
 
             for (final String tag : tagToField.keySet()) {
                 fields.put(tagToField.get(tag).value, String.valueOf(log.getMessage().contains(tag)));
@@ -113,6 +113,8 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
             categories.put("origin", log.getOrigin());
             categories.put("half_date", halfDateString);
             categories.put("date", dateString);
+            categories.put("top_fw_version", log.getTopFwVersion());
+            categories.put("middle_fw_version", log.getMiddleFwVersion());
 
             documents.add(new IndexTankClient.Document(documentId, fields, variables, categories));
 

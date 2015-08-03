@@ -19,7 +19,7 @@ import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;

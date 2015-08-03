@@ -130,8 +130,7 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
                 deviceDAO,
                 mergedUserInfoDynamoDB,
                 sensorsViewsDynamoDB,
-                deviceDataDAO,
-                jedisPool
+                deviceDataDAO
         );
 
         final Worker worker = new Worker(factory, kinesisConfig);

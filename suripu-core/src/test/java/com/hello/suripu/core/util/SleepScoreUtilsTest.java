@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.MotionScore;
+import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -17,7 +18,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -117,4 +120,98 @@ public class SleepScoreUtilsTest {
         final Optional<MotionScore> score = SleepScoreUtils.getSleepMotionScoreMaybe(new DateTime(2015, 5, 8, 20, 0, 0),trackerMotionList.subList(0,2), 0L, 0L);
         assertThat(score.isPresent(), is(Boolean.TRUE));
     }
+
+
+
+    @Test
+    public void testCalculateSoundScore() {
+        final List<Integer> soundEventCounts = Lists.newArrayList(1, 2, 3, 4, 5, 6);
+        final List<Integer> expectedScores = Lists.newArrayList(80, 60, 40, 20, 0, 0);
+        for (int i = 0, soundEventCountsSize = soundEventCounts.size(); i < soundEventCountsSize; i++) {
+            Integer soundEventCount = soundEventCounts.get(i);
+            Integer expectedScore = expectedScores.get(i);
+            assertThat(SleepScoreUtils.calculateSoundScore(soundEventCount), is(expectedScore));
+        }
+    }
+
+    @Test
+    public void testCalculateSensorAverageInTimeRange() {
+        final List<Sample> samples = Lists.newArrayList(
+            new Sample(50, 30f, 0),
+            new Sample(30, 5f, 0),
+            new Sample(10, 39.3f, 0),
+            new Sample(5, 12f, 0),
+            new Sample(96, 77f, 0),
+            new Sample(40, 9f, 0),
+            new Sample(78, 3f, 0),
+            new Sample(60, 22f, 0),
+            new Sample(30, 1f, 0)
+        );
+        final long startTime = 20L;
+        final long endTime = 70L;
+        final float average = SleepScoreUtils.calculateSensorAverageInTimeRange(samples, startTime, endTime);
+        assertThat(average, is(13.4f));
+    }
+
+    @Test
+    public void testCalculateTemperatureScore() {
+        // The average of the samples is used. So one sample == the value of that sample.
+
+        final List<Sample> good = Lists.newArrayList(new Sample(0, 23f, 0));
+        assertThat(SleepScoreUtils.calculateTemperatureScore(good, 0, 0), is(100));
+
+        final List<Sample> warningHigh = Lists.newArrayList(new Sample(0, 24f, 0));
+        assertThat(SleepScoreUtils.calculateTemperatureScore(warningHigh, 0, 0), is(75));
+
+        final List<Sample> warningLow = Lists.newArrayList(new Sample(0, 14f, 0));
+        assertThat(SleepScoreUtils.calculateTemperatureScore(warningLow, 0, 0), is(75));
+
+        final List<Sample> alertHigh = Lists.newArrayList(new Sample(0, 30f, 0));
+        assertThat(SleepScoreUtils.calculateTemperatureScore(alertHigh, 0, 0), is(50));
+
+        final List<Sample> alertLow = Lists.newArrayList(new Sample(0, 7f, 0));
+        assertThat(SleepScoreUtils.calculateTemperatureScore(alertLow, 0, 0), is(50));
+    }
+
+    @Test
+    public void testCalculateHumidityScore() {
+        // The average of the samples is used. So one sample == the value of that sample.
+
+        final List<Sample> good = Lists.newArrayList(new Sample(0, 40f, 0));
+        assertThat(SleepScoreUtils.calculateHumidityScore(good, 0, 0), is(100));
+
+        final List<Sample> warningHigh = Lists.newArrayList(new Sample(0, 65f, 0));
+        assertThat(SleepScoreUtils.calculateHumidityScore(warningHigh, 0, 0), is(75));
+
+        final List<Sample> warningLow = Lists.newArrayList(new Sample(0, 25f, 0));
+        assertThat(SleepScoreUtils.calculateHumidityScore(warningLow, 0, 0), is(75));
+
+        final List<Sample> alertHigh = Lists.newArrayList(new Sample(0, 80f, 0));
+        assertThat(SleepScoreUtils.calculateHumidityScore(alertHigh, 0, 0), is(50));
+
+        final List<Sample> alertLow = Lists.newArrayList(new Sample(0, 15f, 0));
+        assertThat(SleepScoreUtils.calculateHumidityScore(alertLow, 0, 0), is(50));
+    }
+
+    @Test
+    public void testCalculateAggregateEnvironmentScore() {
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 100, 100, 100, 100), is(100));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(50, 100, 100, 50, 50), is(70));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 50, 100, 75, 50), is(75));
+        assertThat(SleepScoreUtils.calculateAggregateEnvironmentScore(100, 75, 100, 50, 75), is(80));
+    }
+
+    @Test
+    public void testCalculateAggregateEnvironmentScoreBound() {
+        final int temperatureScore = new Random().nextInt(101);
+        final int humdityScore = new Random().nextInt(101);
+        final int soundScore = new Random().nextInt(101);
+        final int lightScore = new Random().nextInt(101);
+        final int particulateScore = new Random().nextInt(101);
+        final int envScore = SleepScoreUtils.calculateAggregateEnvironmentScore(temperatureScore, humdityScore, soundScore, lightScore, particulateScore);
+        assertThat(envScore > Collections.max(asList(temperatureScore, humdityScore, soundScore, lightScore, particulateScore)), is(false));
+        assertThat(envScore < Collections.min(asList(temperatureScore, humdityScore, soundScore, lightScore, particulateScore)), is(false));
+        assertThat(envScore <= 100 && envScore >=0, is(true));
+    }
+
 }
