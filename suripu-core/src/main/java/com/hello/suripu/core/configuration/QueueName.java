@@ -1,6 +1,7 @@
 package com.hello.suripu.core.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum QueueName {
 
@@ -18,16 +19,21 @@ public enum QueueName {
         this.value = value;
     }
 
+    @JsonValue
     public String getValue() {
         return value;
     }
 
     @JsonCreator
-    public static QueueName fromString(final String val) {
+    public QueueName fromString(final String val) {
+        return QueueName.getFromString(val);
+    }
+
+    public static QueueName getFromString(final String val) {
         final QueueName[] queueNames = QueueName.values();
 
         for (final QueueName queueName: queueNames) {
-            if (queueName.value.equals(val)) {
+            if (queueName.value.equalsIgnoreCase(val)) {
                 return queueName;
             }
         }

@@ -91,7 +91,7 @@ public class ProvisionResource {
 
             if(sense.isPresent()) {
                 final SenseProvision senseProvision = sense.get();
-                senseKeyStore.put(senseProvision.deviceIdHex, senseProvision.aesKeyHex, serialNumber);
+                senseKeyStore.put(senseProvision.deviceIdHex, senseProvision.aesKeyHex, serialNumber, DateTime.now(DateTimeZone.UTC));
                 final StringBuilder sb = new StringBuilder();
                 sb.append("OK\n");
                 sb.append(sense.get().deviceIdHex + "\n");

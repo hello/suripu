@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.4.62-SNAPSHOT</version>
+        <version>0.4.80-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,16 +19,7 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-algorithm</artifactId>
-            <version>0.4.62-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-auth</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
+            <version>0.4.80-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -53,7 +44,7 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-api</artifactId>
-            <version>0.4.62-SNAPSHOT</version>
+            <version>0.4.80-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.xerial.snappy</groupId>
@@ -95,6 +86,11 @@
             <groupId>com.intellij</groupId>
             <artifactId>annotations</artifactId>
             <version>12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi</artifactId>
+            <version>2.62</version>
         </dependency>
     </dependencies>
 </project>

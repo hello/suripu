@@ -36,6 +36,7 @@ import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
+import javax.ws.rs.HEAD;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -270,7 +271,7 @@ public class ReceiveResource extends BaseResource {
                 }
             }
 
-            // only compute the sate for the most recent conditions
+            // only compute the state for the most recent conditions
             if(i == batch.getDataCount() -1) {
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
@@ -280,9 +281,15 @@ public class ReceiveResource extends BaseResource {
                         2);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
+                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState);
+                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState);
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
-                                    RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal()));
+                                    roomConditions.ordinal()));
+
+                    responseBuilder.setRoomConditionsLightsOff(
+                            OutputProtos.SyncResponse.RoomConditions.valueOf(
+                                    roomConditionsLightsOff.ordinal()));
                 }else {
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
@@ -348,15 +355,9 @@ public class ReceiveResource extends BaseResource {
                 audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
             }
 
-
-            if (featureFlipper.deviceFeatureActive(FeatureFlipper.BYPASS_OTA_CHECKS, deviceName, groups) || groups.contains("chris-dev")) {
-                responseBuilder.setBatchSize(1);
-            } else {
-
-                final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
-                final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
-                responseBuilder.setBatchSize(uploadCycle);
-            }
+            final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
+            final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
+            responseBuilder.setBatchSize(uploadCycle);
 
             if(shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())){
                 this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, userInfoList, nextRingTime);

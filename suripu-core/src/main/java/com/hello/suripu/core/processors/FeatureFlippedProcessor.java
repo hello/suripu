@@ -29,6 +29,9 @@ public class FeatureFlippedProcessor {
     protected Boolean hasSoundInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SOUND_EVENTS_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
+    protected Boolean hasEnvironmentInTimelineScore(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.ENVIRONMENT_IN_TIMELINE_SCORE, accountId, Collections.EMPTY_LIST);
+    }
     protected Boolean hasFeedbackInTimeline(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.FEEDBACK_IN_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
@@ -55,8 +58,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasBayesianPartnerFilterEnabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.BAYESIAN_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
+    protected Boolean hasHmmPartnerFilterEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.HMM_PARTNER_FILTER, accountId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasAllSensorQueryUseUTCTs(final Long accountId) {
@@ -73,5 +76,9 @@ public class FeatureFlippedProcessor {
 
     protected Boolean hasRemoveGreyOutEvents(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_GREY_OUT_EVENTS, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasSleepScoreDurationWeighting(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_WEIGHTING, accountId, Collections.EMPTY_LIST);
     }
 }
