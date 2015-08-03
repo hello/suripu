@@ -53,6 +53,7 @@ import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.hello.suripu.research.models.AlphabetsAndLabels;
 import com.hello.suripu.research.models.EventsWithLabels;
+import com.hello.suripu.research.models.FeedbackAsIndices;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -509,14 +510,16 @@ public class PredictionResource extends BaseResource {
 
         LOGGER.debug("got {} pieces of feedback",feedbacksAsEvents.size());
 
-        final List<Event> feedbackEvents = Lists.newArrayList();
+        final List<FeedbackAsIndices> feedbackAsIndices = Lists.newArrayList();
 
         for (FeedbackUtils.EventWithTime eventWithTime : feedbacksAsEvents) {
-            feedbackEvents.add(eventWithTime.event);
+            final int updatedIndex = (int)((eventWithTime.event.getStartTimestamp() - binnedData.t0) / (long)binnedData.numMinutesInWindow / 60000L);
+            final int originalIndex = (int)((eventWithTime.time - binnedData.t0) / (long)binnedData.numMinutesInWindow / 60000L);
+            feedbackAsIndices.add(new FeedbackAsIndices(originalIndex,updatedIndex,eventWithTime.event.getType().name()));
         }
 
 
-        return new AlphabetsAndLabels(pathsByModelId,feedbackEvents);
+        return new AlphabetsAndLabels(pathsByModelId,feedbackAsIndices);
 
     }
 

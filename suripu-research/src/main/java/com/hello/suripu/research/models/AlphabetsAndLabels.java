@@ -15,10 +15,10 @@ public class AlphabetsAndLabels {
     final Map<String,List<Integer>> alphabets;
 
     @JsonProperty("feedback")
-    final List<Event> feedback;
+    final List<FeedbackAsIndices> feedback;
 
 
-    public AlphabetsAndLabels(Map<String, List<Integer>> alphabets, List<Event> feedback) {
+    public AlphabetsAndLabels(Map<String, List<Integer>> alphabets, List<FeedbackAsIndices> feedback) {
         this.alphabets = alphabets;
         this.feedback = feedback;
     }
