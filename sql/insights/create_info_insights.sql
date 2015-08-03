@@ -176,3 +176,15 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 
 **Associate your bedroom with sleep**. Avoid non-sleep activities such as watching TV, working, or using the computer when in the bedroom.'
 );
+
+--jyfan 7/29/2015 Adding wake_variance insight category
+
+ALTER TYPE insight_category ADD VALUE 'wake_variance';
+
+INSERT INTO info_insight_cards (category, title, text)
+VALUES
+ ---
+('wake_variance',
+'Waking up to sleep better',
+'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever you sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
+);

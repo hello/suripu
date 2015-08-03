@@ -14,7 +14,9 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.processors.InsightProcessor;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.core.processors.insights.WakeStdDevData;
 
 /**
  * Created by kingshy on 1/6/15.
@@ -30,6 +32,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final QuestionResponseDAO questionResponseDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final LightData lightData;
+    private final WakeStdDevData wakeStdDevData;
     private final AccountPreferencesDAO accountPreferencesDAO;
 
     public InsightsGeneratorFactory(final AccountDAO accountDAO,
@@ -42,6 +45,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final QuestionResponseDAO questionResponseDAO,
                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                     final LightData lightData,
+                                    final WakeStdDevData wakeStdDevData,
                                     final AccountPreferencesDAO accountPreferencesDAO) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -53,6 +57,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
         this.questionResponseDAO = questionResponseDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.lightData = lightData;
+        this.wakeStdDevData = wakeStdDevData;
         this.accountPreferencesDAO = accountPreferencesDAO;
     }
 
@@ -71,6 +76,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                 .withSleepStatsDAODynamoDB(sleepStatsDAODynamoDB)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(lightData)
+                .withWakeStdDevData(wakeStdDevData)
                 .withPreferencesDAO(accountPreferencesDAO);
 
         final InsightProcessor insightProcessor = insightBuilder.build();
