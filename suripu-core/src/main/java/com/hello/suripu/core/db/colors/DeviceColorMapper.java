@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DeviceColorMapper implements ResultSetMapper<Device.Color> {
-    @Override
+
     public Device.Color map(int index, ResultSet r, StatementContext ctx) throws SQLException {
         return Device.Color.valueOf(r.getString("color"));
     }

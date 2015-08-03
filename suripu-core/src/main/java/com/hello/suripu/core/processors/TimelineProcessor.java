@@ -7,11 +7,11 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -21,7 +21,6 @@ import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
-import com.hello.suripu.core.models.BayesNetHmmSingleModelPrior;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -32,6 +31,7 @@ import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
@@ -381,13 +381,21 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     protected Optional<OneDaysSensorData> getSensorData(final long accountId, final DateTime targetDate, final DateTime endDate) {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        LOGGER.debug("Length of trackerMotion: {}", originalTrackerMotions.size());
+        if (originalTrackerMotions.isEmpty()) {
+            LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, targetDate);
+            return Optional.absent();
+        }
+
+        LOGGER.debug("Length of originalTrackerMotion is {} for {} on {}", originalTrackerMotions.size(), accountId, targetDate);
 
         // get partner tracker motion, if available
         final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty()) {
+
+            final int tzOffsetMillis = originalTrackerMotions.get(0).offsetMillis;
+
             if (this.hasPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using original partner filter");
                 try {
@@ -398,10 +406,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     trackerMotions.addAll(originalTrackerMotions);
                 }
             }
-            else if (this.hasBayesianPartnerFilterEnabled(accountId)) {
+            else if (this.hasHmmPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using bayesian partner filter");
                 try {
-                    trackerMotions.addAll(partnerDataUtils.partnerFilterWithDurationsDiffHmm(ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(partnerMotions)));
+                    trackerMotions.addAll(
+                            partnerDataUtils.partnerFilterWithDurationsDiffHmm(
+                                    targetDate.minusMillis(tzOffsetMillis),
+                                    endDate.minusMillis(tzOffsetMillis),
+                                    ImmutableList.copyOf(originalTrackerMotions),
+                                    ImmutableList.copyOf(partnerMotions)));
+
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
                     trackerMotions.addAll(originalTrackerMotions);
@@ -415,7 +429,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             trackerMotions.addAll(originalTrackerMotions);
         }
 
-        if (trackerMotions.size() == 0) {
+        if (trackerMotions.isEmpty()) {
             LOGGER.debug("No tracker motion data ID for account_id = {} and day = {}", accountId, targetDate);
             return Optional.absent();
         }
@@ -639,7 +653,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment> reversed = Lists.reverse(sleepSegments);
 
 
-        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, targetDate, accountId, sleepStats);
+        Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
         if(sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
             LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
@@ -990,7 +1004,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
      * @param sleepStats
      * @return
      */
-    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions, final DateTime targetDate, final Long accountId, final SleepStats sleepStats) {
+    private Integer computeAndMaybeSaveScore(final List<TrackerMotion> trackerMotions,
+                                             final int numberSoundEvents,
+                                             final AllSensorSampleList sensors,
+                                             final DateTime targetDate,
+                                             final Long accountId,
+                                             final SleepStats sleepStats) {
 
         // Movement score
         final MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
@@ -1002,28 +1021,63 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return 0;
         }
 
-        // Sleep duration score
-        final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-        final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-        final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
+        final Integer durationScore = computeSleepDurationScore(accountId, sleepStats);
+        final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
-        // TODO: Environment score
-        final Integer environmentScore = 100;
-
-        // Aggregate all scores
-        final Integer sleepScore = SleepScoreUtils.aggregateSleepScore(motionScore.score, durationScore, environmentScore);
+        // Calculate the sleep score based on the sub scores and weighting
+        final SleepScore sleepScore = new SleepScore.Builder()
+                .withMotionScore(motionScore)
+                .withSleepDurationScore(durationScore)
+                .withEnvironmentalScore(environmentScore)
+                .withWeighting(sleepScoreWeighting(accountId))
+                .build();
 
         // Always update stats and scores to Dynamo
         final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
-                targetDate.withTimeAtStartOfDay(), sleepScore, motionScore, sleepStats, userOffsetMillis);
+                targetDate.withTimeAtStartOfDay(), sleepScore.value, motionScore, sleepStats, userOffsetMillis);
 
-        LOGGER.debug("Updated Stats-score: status {}, account {}, motion {}, duration {}, score {}, stats {}",
-                updatedStats, accountId, motionScore, durationScore, sleepScore, sleepStats);
+        LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}",
+                updatedStats, accountId, sleepScore, sleepStats);
 
-        return sleepScore;
+        return sleepScore.value;
     }
 
+    private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats) {
+        final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+        final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
+        final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
+        return durationScore;
+    }
+
+    private Integer computeEnvironmentScore(final Long accountId,
+                                            final SleepStats sleepStats,
+                                            final int numberSoundEvents,
+                                            final AllSensorSampleList sensors) {
+        final Integer environmentScore;
+        if (hasEnvironmentInTimelineScore(accountId) && sleepStats.sleepTime > 0L && sleepStats.wakeTime > 0L) {
+            final int soundScore = SleepScoreUtils.calculateSoundScore(numberSoundEvents);
+            final int temperatureScore = SleepScoreUtils.calculateTemperatureScore(sensors.get(Sensor.TEMPERATURE), sleepStats.sleepTime, sleepStats.wakeTime);
+            final int humidityScore = SleepScoreUtils.calculateHumidityScore(sensors.get(Sensor.HUMIDITY), sleepStats.sleepTime, sleepStats.wakeTime);
+            final int lightScore = SleepScoreUtils.calculateLightScore(sensors.get(Sensor.LIGHT), sleepStats.sleepTime, sleepStats.wakeTime);
+            final int particulateScore = SleepScoreUtils.calculateParticulateScore(sensors.get(Sensor.PARTICULATES), sleepStats.sleepTime, sleepStats.wakeTime);
+
+            environmentScore = SleepScoreUtils.calculateAggregateEnvironmentScore(soundScore, temperatureScore, humidityScore, lightScore, particulateScore);
+        } else {
+            environmentScore = 100;
+        }
+        return environmentScore;
+    }
+
+    private SleepScore.Weighting sleepScoreWeighting(final Long accountId) {
+        final SleepScore.Weighting weighting;
+        if (hasSleepScoreDurationWeighting(accountId)) {
+            weighting = new SleepScore.DurationHeavyWeighting();
+        } else {
+            weighting = new SleepScore.Weighting();
+        }
+        return weighting;
+    }
 
     private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
 

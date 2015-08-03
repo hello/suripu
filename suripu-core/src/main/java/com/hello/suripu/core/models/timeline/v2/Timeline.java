@@ -12,22 +12,22 @@ import java.util.List;
 public class Timeline {
 
     @JsonProperty("score")
-    final Optional<Integer> score;
+    public final Optional<Integer> score;
 
     @JsonProperty("score_condition")
-    final ScoreCondition scoreCondition;
+    public final ScoreCondition scoreCondition;
 
     @JsonProperty("message")
-    final String message;
+    public final String message;
 
     @JsonProperty("date")
-    final String dateNight;
+    public final String dateNight;
 
     @JsonProperty("events")
-    final List<TimelineEvent> events;
+    public final List<TimelineEvent> events;
 
     @JsonProperty("metrics")
-    final List<SleepMetrics> metrics;
+    public final List<SleepMetrics> metrics;
 
 
     public Timeline(final Optional<Integer> score,

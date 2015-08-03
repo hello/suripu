@@ -420,6 +420,8 @@ public class PredictionResource extends BaseResource {
         }
 
 
+        final int tzOffsetMillis = myMotions.get(0).offsetMillis;
+
 
         List<TrackerMotion> motions = new ArrayList<>();
 
@@ -428,7 +430,7 @@ public class PredictionResource extends BaseResource {
                 PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
 
                 final ImmutableList<TrackerMotion> myFilteredMotions =
-                        partnerDataUtils.partnerFilterWithDurationsDiffHmm(ImmutableList.copyOf(myMotions), ImmutableList.copyOf(partnerMotions));
+                        partnerDataUtils.partnerFilterWithDurationsDiffHmm(targetDate.minusMillis(tzOffsetMillis),endDate.minusMillis(tzOffsetMillis),ImmutableList.copyOf(myMotions), ImmutableList.copyOf(partnerMotions));
 
                 motions.addAll(myFilteredMotions);
             }
@@ -451,7 +453,6 @@ public class PredictionResource extends BaseResource {
 
 
 
-        final int tzOffsetMillis = myMotions.get(0).offsetMillis;
 
         allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 targetDate.minusMillis(tzOffsetMillis).getMillis(),

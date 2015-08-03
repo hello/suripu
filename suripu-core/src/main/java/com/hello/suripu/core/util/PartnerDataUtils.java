@@ -4,7 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
-import com.hello.suripu.algorithm.partner.PartnerBayesNetWithHmmInterpreter;
+import com.hello.suripu.algorithm.partner.PartnerHmm;
 import com.hello.suripu.algorithm.signals.TwoPillsClassifier;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -28,7 +28,6 @@ public class PartnerDataUtils {
 
     private static final int NUM_SIGNALS = 3;
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
-    final static protected double probThresholdToRejectData  = 0.5;
 
     private final Logger LOGGER;
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(PartnerDataUtils.class);
@@ -293,7 +292,7 @@ public class PartnerDataUtils {
         return time.toLocalDateTime().toString("MM/dd HH:mm");
     }
 
-    public ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
+    public ImmutableList<TrackerMotion> partnerFilterWithDurationsDiffHmm(final DateTime startTimeUTC, final DateTime endTimeUTC, ImmutableList<TrackerMotion> myMotions, ImmutableList<TrackerMotion> yourMotions) {
 
         if (yourMotions.isEmpty() || myMotions.isEmpty()) {
             return myMotions;
@@ -306,33 +305,27 @@ public class PartnerDataUtils {
 
 
         //construct 5 minute bins of duration difference
-        Long t0 = myMotionsDeDuped.get(0).timestamp;
-        Long t02 = yourMotionsDeDuped.get(0).timestamp;
+        final Long t0 = startTimeUTC.getMillis();
+        final Long tf = endTimeUTC.getMillis();
 
-        if (t0 > t02) {
-            t0 = t02;
-        }
-
-        Long tf = myMotionsDeDuped.get(myMotionsDeDuped.size() - 1).timestamp;
-        Long tf2 = yourMotionsDeDuped.get(yourMotionsDeDuped.size() - 1).timestamp;
-
-        if (tf < tf2) {
-            tf = tf2;
-        }
 
         final long period = NUMBER_OF_MILLIS_IN_A_MINUTE * 5;
         final int durationInIntervals = (int) ((tf - t0) / period);
 
 
-        final Double data [] = new Double[durationInIntervals];
+        final Double myMotionsBinned [] = new Double[durationInIntervals];
+        Arrays.fill(myMotionsBinned,0.0);
 
-        Arrays.fill(data,0.0);
+        final Double partnerMotionsBinned [] = new Double[durationInIntervals];
+        Arrays.fill(partnerMotionsBinned,0.0);
 
-        fillBinsWithTrackerDurations(data,t0,period,myMotionsDeDuped,1,true);
-        fillBinsWithTrackerDurations(data,t0,period,yourMotionsDeDuped,-1,true);
+        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1,true);
+        fillBinsWithTrackerDurations(partnerMotionsBinned,t0,period,yourMotionsDeDuped,1,true);
 
-        final PartnerBayesNetWithHmmInterpreter partnerHmmFilter = new PartnerBayesNetWithHmmInterpreter();
-        final List<Double> probs = partnerHmmFilter.interpretDurationDiff(ImmutableList.copyOf(data));
+        final PartnerHmm partnerHmmFilter = new PartnerHmm();
+        final ImmutableList<Integer> hmmPath = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, 5);
+
+        final ImmutableList<Integer> myClassifiedMotions = partnerHmmFilter.interpretPath(hmmPath);
 
         //iterate through my motion and reject
 
@@ -348,15 +341,15 @@ public class PartnerDataUtils {
         while (it.hasNext()) {
             final TrackerMotion m = it.next();
 
-            final int idx = getIndex(m.timestamp,t0,period,probs.size());
+            final int idx = getIndex(m.timestamp, t0, period, myClassifiedMotions.size());
 
             if (idx < 0) {
                 continue;
             }
 
-            final double probItsMine = probs.get(idx);
+            final Integer itsMine = myClassifiedMotions.get(idx);
 
-            if (probItsMine < probThresholdToRejectData) {
+            if (itsMine.equals(0)) {
                 numPointsRejected++;
 
                 if (numPointsRejected < 100) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DataUtils;
@@ -127,7 +128,7 @@ public class CurrentRoomState {
                                                                final String tempUnit) {
 
 
-        LOGGER.debug("temp = {}, humidity = {}, particulates = {}", temperature, humidity, particulatesAQI);
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}, light = {}, sound = {}", temperature, humidity, particulatesAQI, light, sound);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
@@ -210,8 +211,8 @@ public class CurrentRoomState {
 
         }
 
-        State.Condition condition = State.Condition.IDEAL;;
-        String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;;
+        State.Condition condition = State.Condition.IDEAL;
+        String message = (preSleep) ? English.IDEAL_TEMPERATURE_PRE_SLEEP_MESSAGE: English.IDEAL_TEMPERATURE_MESSAGE;
 
         if (temperature > (float) TemperatureHumidity.ALERT_TEMP_MAX_CELSIUS) {
             condition = State.Condition.ALERT;
@@ -274,10 +275,10 @@ public class CurrentRoomState {
         State.Condition condition = State.Condition.ALERT;;
         String message = (preSleep) ? English.VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE: English.VERY_HIGH_PARTICULATES_MESSAGE;;
 
-        if (particulatesAQI <= 50.0) {
+        if (particulatesAQI <= Particulates.PARTICULATE_AQI_LEVEL_MAX_IDEAL) {
             condition = State.Condition.IDEAL;
             message = (preSleep) ? English.IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE : English.IDEAL_PARTICULATES_MESSAGE;
-        } else if (particulatesAQI <= 300.0) {
+        } else if (particulatesAQI <= Particulates.PARTICULATE_AQI_LEVEL_MAX_WARNING) {
             condition = State.Condition.WARNING;
             message = (preSleep) ? English.HIGH_PARTICULATES_PRE_SLEEP_MESSAGE : English.HIGH_PARTICULATES_MESSAGE;
         }

@@ -54,7 +54,6 @@ common_db:
 
   # the maximum number of connections to keep open
   maxSize: 8
-
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
 
@@ -142,7 +141,6 @@ kinesis_logger:
   enabled : true
   buffer_size: 100
   origin: suripu-research
-
 sleephmm_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1

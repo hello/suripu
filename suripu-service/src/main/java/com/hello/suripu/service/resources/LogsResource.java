@@ -82,13 +82,19 @@ public class LogsResource {
             return;
         }
 
+        final String middleFWVersion = (request.getHeader(HelloHttpHeader.MIDDLE_FW_VERSION) == null) ? "" : request.getHeader(HelloHttpHeader.MIDDLE_FW_VERSION);
+        final String topFWVersion = (request.getHeader(HelloHttpHeader.TOP_FW_VERSION) == null) ? "" : request.getHeader(HelloHttpHeader.TOP_FW_VERSION);
+
         final LoggingProtos.LogMessage logMessage = LoggingProtos.LogMessage.newBuilder()
                 .setMessage(log.getText())
                 .setOrigin("sense")
                 .setTs(log.getUnixTime())
                 .setDeviceId(log.getDeviceId())
                 .setProduction(isProd)
+                .setMiddleFwVersion(middleFWVersion)
+                .setTopFwVersion(topFWVersion)
                 .build();
+
 
         // This is confusing, but somewhat required to avoid bringing too much code into FW
         // We manually map one type of log to another
