@@ -187,6 +187,7 @@ public class InsightProcessor {
         switch (dayOfWeek) {
             case 1:
             case 2:
+            case 3:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
                     return;
                 }
