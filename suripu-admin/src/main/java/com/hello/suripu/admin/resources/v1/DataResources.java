@@ -173,6 +173,10 @@ public class DataResources {
                 slotDurationInMinutes = 5;
                 limitDays = 1;
                 break;
+            case "minute":
+                slotDurationInMinutes = 1;
+                limitDays = 1;
+                break;
             default:
                 slotDurationInMinutes = 60;
                 limitDays = 1;
