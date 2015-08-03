@@ -3,7 +3,10 @@ package com.hello.suripu.research.resources.v1;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.sleep.Vote;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
@@ -43,10 +46,12 @@ import com.hello.suripu.core.util.HmmBayesNetPredictor;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
+import com.hello.suripu.core.util.SleepHmmBayesNetSensorDataBinning;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SoundUtils;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
+import com.hello.suripu.research.models.AlphabetsAndLabels;
 import com.hello.suripu.research.models.EventsWithLabels;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -351,6 +356,169 @@ public class PredictionResource extends BaseResource {
         return result.get().timelines;
     }
 
+
+    public static class SensorData {
+        public final AllSensorSampleList senseSensorData;
+        public final List<TrackerMotion> myMotion;
+        public final List<TrackerMotion> partnerMotion;
+        public final List<TrackerMotion> myMotionFiltered;
+
+        public SensorData(AllSensorSampleList senseSensorData, List<TrackerMotion> myMotion, List<TrackerMotion> partnerMotion, List<TrackerMotion> myMotionFiltered) {
+            this.senseSensorData = senseSensorData;
+            this.myMotion = myMotion;
+            this.partnerMotion = partnerMotion;
+            this.myMotionFiltered = myMotionFiltered;
+        }
+    }
+
+
+    public SensorData getSensorData(final DateTime targetDate,final DateTime endDate, final Long accountId, boolean usePartnerFilter) {
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+
+        if (!deviceIdPair.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "no sense found")).build());
+        }
+
+        /* Get "Pill" data  */
+        final List<TrackerMotion> myMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
+        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+
+        LOGGER.debug("Length of trackerMotion: {}, partnerTrackerMotion: {}", myMotions.size(),partnerMotions.size());
+
+
+        if (myMotions.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "no motion data found")).build());
+        }
+
+
+        final int tzOffsetMillis = myMotions.get(0).offsetMillis;
+
+
+        final List<TrackerMotion> motions = new ArrayList<>();
+
+        if (!partnerMotions.isEmpty() && usePartnerFilter ) {
+            try {
+                PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
+
+                final ImmutableList<TrackerMotion> myFilteredMotions =
+                        partnerDataUtils.partnerFilterWithDurationsDiffHmm(targetDate.minusMillis(tzOffsetMillis),endDate.minusMillis(tzOffsetMillis),ImmutableList.copyOf(myMotions), ImmutableList.copyOf(partnerMotions));
+
+                motions.addAll(myFilteredMotions);
+            }
+            catch (Exception e) {
+                LOGGER.error(e.getMessage());
+                motions.addAll(myMotions);
+            }
+        }
+        else {
+            motions.addAll(myMotions);
+        }
+
+
+        // get all sensor data, used for light and sound disturbances, and presleep-insights
+        AllSensorSampleList sensorData = new AllSensorSampleList();
+
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+
+
+        sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                endDate.minusMillis(tzOffsetMillis).getMillis(),
+                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color);
+
+
+        return new SensorData(sensorData,myMotions,partnerMotions,motions);
+
+    }
+
+    @GET
+    @Path("/alphabet/{accound_id}/{query_date_local_utc}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    /*  Returns HMM Bayesnet model interpretations  */
+    public AlphabetsAndLabels getAlphabetsByUser(  @Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                                         @PathParam("account_id") final  Long accountId,
+                                                         @PathParam("query_date_local_utc") final String strTargetDate,
+                                                         @DefaultValue("true") @QueryParam("partner_filter") final Boolean usePartnerFilter
+    ) {
+
+
+           /*  Time stuff */
+        final long  currentTimeMillis = DateTime.now().withZone(DateTimeZone.UTC).getMillis();
+
+        final DateTime dateOfNight = DateTime.parse(strTargetDate, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(0);
+        final DateTime targetDate = DateTime.parse(strTargetDate, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(20);
+        final DateTime endDate = targetDate.plusHours(16);
+
+        LOGGER.debug("Target date: {}", targetDate);
+        LOGGER.debug("End date: {}", endDate);
+
+
+        final SensorData allData = getSensorData(targetDate,endDate,accountId,usePartnerFilter);
+
+        if (allData.myMotion.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "no motion data for this user")).build());
+        }
+
+        final int tzOffset = allData.myMotion.get(0).offsetMillis;
+
+        final Long startTimeUtc = targetDate.minusMillis(tzOffset).getMillis();
+        final Long endTimeUTc = endDate.minusMillis(tzOffset).getMillis();
+
+
+        final Map<String,List<Integer>> pathsByModelId = Maps.newHashMap();
+
+        //get model from DB
+        final HmmBayesNetData bayesNetData = modelDAO.getLatestModelForDate(accountId, targetDate, Optional.<UUID>absent());
+
+        if (!bayesNetData.isValid()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "model data was not valid")).build());
+        }
+
+        final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(allData.senseSensorData,allData.myMotionFiltered,allData.partnerMotion,
+                bayesNetData.getDeserializedData().params,startTimeUtc,endTimeUTc,tzOffset);
+
+        if (!binnedDataOptional.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "unable to get binned data")).build());
+        }
+
+        SleepHmmBayesNetSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
+        final Integer [] possibleEndStates = {0};
+
+
+        final Map<String,HiddenMarkovModel> hmmByModelName = bayesNetData.getDeserializedData().sensorDataReductionAndInterpretation.hmmByModelName;
+        //DECODE ALL SENSOR DATA INTO DISCRETE "CLASSIFICATIONS"
+        for (final String modelName : hmmByModelName.keySet()) {
+
+            final HmmDecodedResult hmmDecodedResult = hmmByModelName.get(modelName).decode(binnedData.data, possibleEndStates);
+
+            pathsByModelId.put(modelName, hmmDecodedResult.bestPath);
+        }
+
+        //get feedback for this day
+        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
+
+        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsInOriginalTimeMap(feedbacks.asList(),tzOffset);
+
+        LOGGER.debug("got {} pieces of feedback",feedbacksAsEvents.size());
+
+        final List<Event> feedbackEvents = Lists.newArrayList();
+
+        for (FeedbackUtils.EventWithTime eventWithTime : feedbacksAsEvents) {
+            feedbackEvents.add(eventWithTime.event);
+        }
+
+
+        return new AlphabetsAndLabels(pathsByModelId,feedbackEvents);
+
+    }
 
 
     @GET
