@@ -3,6 +3,7 @@ package com.hello.suripu.coredw.db;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.document.ScanFilter;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
@@ -18,6 +19,8 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -39,6 +42,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by benjo on 4/6/15.
@@ -58,6 +62,7 @@ public class TimelineLogDAODynamoDB implements TimelineLogDAO {
     public static final String VERSION_ATTRIBUTE_NAME = "version";
     public static final String CREATEDATE_ATTRIBUTE_NAME = "created_date";
     public static final int RETURNED_ITEM_LIMIT = 1000;
+    public static final int MAX_LIMIT_OF_SCAN_RESULTS = 10000;
     
 
     public final String JSON_CHARSET = "UTF-8";
@@ -73,9 +78,67 @@ public class TimelineLogDAODynamoDB implements TimelineLogDAO {
         mapper.registerModule(new JodaModule());
     }
 
+    /* THIS IS EXPENSIVE -- ONLY FOR RESEARCH!!!! */
+    @Override
+    public ImmutableList<Long> getActiveUers(final DateTime day,final Optional<Integer> numDaysAfterday) {
+        //get strings for start day and end day
+        final String dayString = DateTimeUtil.dateToYmdString(day);
+        String tomorrowString = DateTimeUtil.dateToYmdString(day.plusDays(1));
+
+        if (numDaysAfterday.isPresent()) {
+            tomorrowString = DateTimeUtil.dateToYmdString(day.plusDays(numDaysAfterday.get()));
+        }
+
+        final Map<String, Condition> scanConditions = new HashMap<String, Condition>();
+
+
+        //date_and_alg, really just date range
+        final Condition selectDateCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withAttributeValueList(new AttributeValue().withS(dayString),
+                        new AttributeValue().withS(tomorrowString));
+
+        scanConditions.put(DATEALG_ATTRIBUTE_NAME, selectDateCondition);
+
+        
+        ScanResult scanResult = null;
+        final Set<Long> ids = new HashSet<>();
+
+        do {
+
+            final ScanRequest scanRequest = new ScanRequest()
+                    .withTableName(this.tableName)
+                    .withScanFilter(scanConditions)
+                    .withLimit(MAX_LIMIT_OF_SCAN_RESULTS);
+
+            if (scanResult != null) {
+                scanRequest.setExclusiveStartKey(scanResult.getLastEvaluatedKey());
+            }
+
+            scanResult = this.dynamoDBClient.scan(scanRequest);
+
+            final List<Map<String, AttributeValue>> items = scanResult.getItems();
+
+
+            for (final Map<String, AttributeValue> item : items) {
+                final Long resultAccountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
+                ids.add(resultAccountId);
+            }
+        }
+        while(scanResult.getLastEvaluatedKey() != null);
+
+        final List<Long> idsAsList = new ArrayList<>();
+
+        for (final Long account : ids) {
+            idsAsList.add(account);
+        }
+
+        return ImmutableList.copyOf(idsAsList);
+
+    }
 
     @Override
-    public ImmutableList<TimelineLog> getLogsForUserAndDay(long accountId, DateTime day,Optional<Integer> numDaysAfterday) {
+    public ImmutableList<TimelineLog> getLogsForUserAndDay(long accountId, final DateTime day,final Optional<Integer> numDaysAfterday) {
 
 
         final Map<Long, byte []> finalResult = new HashMap<>();

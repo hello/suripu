@@ -75,4 +75,60 @@ public class SuripuResearchConfiguration extends Configuration {
     public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
         return kinesisLoggerConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleephmm_db")
+    private DynamoDBConfiguration sleepHmmDBConfiguration;
+    public DynamoDBConfiguration getSleepHmmDBConfiguration(){
+        return this.sleepHmmDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("ring_history_db")
+    private DynamoDBConfiguration ringTimeHistoryDBConfiguration;
+    public DynamoDBConfiguration getRingTimeHistoryDBConfiguration(){
+        return this.ringTimeHistoryDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_stats_db")
+    private DynamoDBConfiguration sleepStatsDynamoDBConfiguration;
+    public DynamoDBConfiguration getSleepStatsDynamoConfiguration(){
+        return this.sleepStatsDynamoDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_stats_version")
+    private String sleepStatsVersion;
+    public String getSleepStatsVersion() {
+        return this.sleepStatsVersion;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_log_db")
+    private DynamoDBConfiguration timelineLogDBConfiguration;
+    public DynamoDBConfiguration getTimelineLogDBConfiguration(){
+        return this.timelineLogDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_priors")
+    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
+        return this.hmmBayesnetPriorsConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("hmm_bayesnet_models")
+    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
+    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
+        return this.hmmBayesnetModelsConfiguration;
+    }
 }

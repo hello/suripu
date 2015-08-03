@@ -206,7 +206,7 @@ public class FeedbackUtils {
 
 
 
-    private static class EventWithTime {
+    public static class EventWithTime {
         enum Type {
             NONE,
             MAIN,

@@ -4,8 +4,8 @@ sensors_db:
   driverClass: org.postgresql.Driver
   user: sensors
   password: hello-sensors
-  url: jdbc:postgresql://sensors-1-replica-2.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
-
+  url: jdbc:postgresql://sensors-2-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+#jdbc:postgresql://sensors-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
   # any properties specific to your JDBC driver:
   properties:
     charSet: UTF-8
@@ -20,7 +20,7 @@ sensors_db:
   minSize: 2
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 16
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -54,6 +54,7 @@ common_db:
 
   # the maximum number of connections to keep open
   maxSize: 8
+
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
 
@@ -103,11 +104,11 @@ http:
   # Because Java cannot drop privileges in a POSIX system, these
   # ports cannot be in the range 1-1024. A port value of 0 will
   # make the OS use an arbitrary unused port.
-  port: 9997
+  port: 9987
 
   # The port on which the HTTP server listens for administrative
   # requests. Subject to the same limitations as "port".
-  adminPort: 9996
+  adminPort: 9986
 
 # Logging settings.
 logging:
@@ -141,6 +142,7 @@ kinesis_logger:
   enabled : true
   buffer_size: 100
   origin: suripu-research
+
 sleephmm_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
