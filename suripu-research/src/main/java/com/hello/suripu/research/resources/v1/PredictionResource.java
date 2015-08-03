@@ -472,7 +472,6 @@ public class PredictionResource extends BaseResource {
         final Long endTimeUTc = endDate.minusMillis(tzOffset).getMillis();
 
 
-        final Map<String,List<Integer>> pathsByModelId = Maps.newHashMap();
 
         //get model from DB
         final HmmBayesNetData bayesNetData = modelDAO.getLatestModelForDate(accountId, targetDate, Optional.<UUID>absent());
@@ -493,12 +492,17 @@ public class PredictionResource extends BaseResource {
         SleepHmmBayesNetSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
         final Integer [] possibleEndStates = {0};
 
+        final Map<String,List<Integer>> pathsByModelId = Maps.newHashMap();
+        final Map<String,Integer> numStates = Maps.newHashMap();
 
         final Map<String,HiddenMarkovModel> hmmByModelName = bayesNetData.getDeserializedData().sensorDataReductionAndInterpretation.hmmByModelName;
         //DECODE ALL SENSOR DATA INTO DISCRETE "CLASSIFICATIONS"
         for (final String modelName : hmmByModelName.keySet()) {
 
-            final HmmDecodedResult hmmDecodedResult = hmmByModelName.get(modelName).decode(binnedData.data, possibleEndStates);
+            final HiddenMarkovModel hmm = hmmByModelName.get(modelName);
+
+            numStates.put(modelName,hmm.numStates);
+            final HmmDecodedResult hmmDecodedResult = hmm.decode(binnedData.data, possibleEndStates);
 
             pathsByModelId.put(modelName, hmmDecodedResult.bestPath);
         }
@@ -519,7 +523,7 @@ public class PredictionResource extends BaseResource {
         }
 
 
-        return new AlphabetsAndLabels(pathsByModelId,feedbackAsIndices);
+        return new AlphabetsAndLabels(pathsByModelId,numStates,feedbackAsIndices);
 
     }
 

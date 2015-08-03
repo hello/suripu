@@ -14,12 +14,17 @@ public class AlphabetsAndLabels {
     @JsonProperty("alphabets")
     final Map<String,List<Integer>> alphabets;
 
+    @JsonProperty("state_sizes")
+    final Map<String,Integer> stateSizes;
+
+
     @JsonProperty("feedback")
     final List<FeedbackAsIndices> feedback;
 
 
-    public AlphabetsAndLabels(Map<String, List<Integer>> alphabets, List<FeedbackAsIndices> feedback) {
+    public AlphabetsAndLabels(Map<String, List<Integer>> alphabets, final Map<String,Integer> stateSizes, List<FeedbackAsIndices> feedback) {
         this.alphabets = alphabets;
+        this.stateSizes = stateSizes;
         this.feedback = feedback;
     }
 }
