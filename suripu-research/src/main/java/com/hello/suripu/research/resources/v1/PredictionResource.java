@@ -435,7 +435,7 @@ public class PredictionResource extends BaseResource {
     }
 
     @GET
-    @Path("/alphabet/{accound_id}/{query_date_local_utc}")
+    @Path("/alphabet/{account_id}/{query_date_local_utc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     /*  Returns HMM Bayesnet model interpretations  */
