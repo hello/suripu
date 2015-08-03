@@ -69,7 +69,7 @@ public class WakeVariance {
         final Integer percentile = wakeStdDevData.getWakeStdDevPercentile(wakeStdDev);
 
         Text text;
-        if (wakeStdDev <= 50) { //25 percentile
+        if (wakeStdDev <= 50) { //25 percentile based on data from 07/25/2015
             text = WakeVarianceMsgEN.getWakeVarianceLow(wakeStdDev, percentile);
         }
         else if (wakeStdDev <= 79) { //50 percentile

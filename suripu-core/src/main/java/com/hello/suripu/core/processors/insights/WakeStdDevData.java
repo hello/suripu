@@ -15,6 +15,7 @@ import java.util.Map;
  * Created by jingyun on 7/25/15.
  */
 public class WakeStdDevData {
+    // see https://s3.amazonaws.com/hello-data/insights-raw-data/wakeStdDev_distribution_2015_07_25.csv
     private static String DISTRIBUTION_DATA = "0,0.002\n"+
                 "1,0.4\n"+
                 "2,0.6\n"+
