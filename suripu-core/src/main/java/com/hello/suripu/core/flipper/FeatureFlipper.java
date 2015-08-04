@@ -53,4 +53,5 @@ public class FeatureFlipper {
     public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
     public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
     public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
+    public final static String PRINT_RAW_PB = "print_raw_pb";
 }
