@@ -36,7 +36,7 @@ import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
-import javax.ws.rs.HEAD;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -165,6 +165,11 @@ public class ReceiveResource extends BaseResource {
         final List<String> groups = groupFlipper.getGroups(deviceId);
         final String ipAddress = getIpAddress(request);
         final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
+
+
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.PRINT_RAW_PB, deviceId, groups)) {
+            LOGGER.debug("RAW_PB for device_id={} {}", deviceId, Hex.encodeHexString(body));
+        }
 
         if(OTAProcessor.isPCH(ipAddress, ipGroups) && !(featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceId, groups))){
             // return 202 to not confuse provisioning script with correct test key
