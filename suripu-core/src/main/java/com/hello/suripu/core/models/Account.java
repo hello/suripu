@@ -315,7 +315,7 @@ public class Account {
     public static Account normalizeWithId(final Account account, final Long accountId) {
         return new Account(
                 Optional.fromNullable(accountId),
-                account.email.toLowerCase(),
+                account.email.toLowerCase().trim(),
                 account.password,
                 account.tzOffsetMillis,
                 account.name,
