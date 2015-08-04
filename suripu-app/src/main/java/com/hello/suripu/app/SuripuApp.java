@@ -59,6 +59,7 @@ import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
+import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
@@ -386,6 +387,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withSleepStatsDAODynamoDB(sleepStatsDAODynamoDB)
                 .withPreferencesDAO(accountPreferencesDAO)
                 .withAccountInfoProcessor(accountInfoProcessor)
+                .withWakeStdDevData(new WakeStdDevData())
                 .withLightData(new LightData());
         final InsightProcessor insightProcessor = insightBuilder.build();
 
