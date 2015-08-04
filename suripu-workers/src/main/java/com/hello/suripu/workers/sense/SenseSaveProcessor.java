@@ -184,12 +184,25 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                     final DateTimeZone userTimeZone = timeZoneOptional.get();
 
+                    final HashMap<String, Integer> rawDustCalibrator = Maps.newHashMap();
+
+                    // source: Ben Peng
+                    final int ADCReference = 523;
+                    rawDustCalibrator.put("06729A91424B1DBE", ADCReference - 391);
+                    rawDustCalibrator.put("0F8B65F82D3D552A", ADCReference - 470);
+                    rawDustCalibrator.put("B0B5357C9CC1143E", ADCReference - 618);
+
+                    int offset = 0;
+                    if (rawDustCalibrator.containsKey(pair.externalDeviceId)) {
+                        offset = rawDustCalibrator.get(pair.externalDeviceId);
+                    }
+
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
-                            .withAmbientAirQuality(periodicData.getDust(), firmwareVersion)
-                            .withAmbientAirQualityRaw(periodicData.getDust())
+                            .withAmbientAirQuality(periodicData.getDust() + offset, firmwareVersion)
+                            .withAmbientAirQualityRaw(periodicData.getDust() + offset)
                             .withAmbientDustVariance(periodicData.getDustVariability())
                             .withAmbientDustMin(periodicData.getDustMin())
                             .withAmbientDustMax(periodicData.getDustMax())
