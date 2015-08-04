@@ -93,7 +93,6 @@ import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
-import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.support.SupportDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
