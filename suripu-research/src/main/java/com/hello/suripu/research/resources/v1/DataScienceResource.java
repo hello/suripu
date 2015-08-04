@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.primitives.Ints;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -284,19 +285,104 @@ public class DataScienceResource extends BaseResource {
     }
 
     @GET
-    @Path("/feedback/{email}")
+    @Path("/feedback/{account_or_email}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<TimelineFeedback> getFeedbackFromUser(@Scope(OAuthScope.RESEARCH) final AccessToken accessToken,
-                                     @PathParam("email") final String email) {
-        final Optional<Long> accountId = getAccountIdByEmail(email);
+                                     @PathParam("account_or_email") final String accountOrEmail) {
+
+        //try accountID first
+        final Integer accountIdAsInt = Ints.tryParse(accountOrEmail);
+
+        Optional<Long> accountId = Optional.absent();
+
+        if (accountIdAsInt == null) {
+            accountId = getAccountIdByEmail(accountOrEmail);
+        }
+        else {
+            accountId = Optional.of(accountIdAsInt.longValue());
+        }
+
+
         if (!accountId.isPresent()) {
-            LOGGER.debug("ID not found for account {}", email);
+            LOGGER.debug("ID not found for account {}", accountOrEmail);
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
         final List<TimelineFeedback> feedback = this.feedbackDAO.getForAccount(accountId.get());
+
+
+
+
         return feedback;
+    }
+
+    @GET
+    @Path("/feedbackutc/{account_or_email}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<FeedbackUtc> getFeedbackFromUserUtc(@Scope(OAuthScope.RESEARCH) final AccessToken accessToken,
+                                                    @PathParam("account_or_email") final String accountOrEmail,
+                                                    @QueryParam("min_date") final String minDateStr) {
+
+        final Integer accountIdAsInt = Ints.tryParse(accountOrEmail);
+
+        Optional<Account> accountOptional = Optional.absent();
+
+        if (accountIdAsInt == null) {
+            final String email = accountOrEmail;
+            accountOptional = accountDAO.getByEmail(email);
+
+        }
+        else {
+            accountOptional = accountDAO.getById(accountIdAsInt.longValue());
+        }
+
+
+        if (!accountOptional.isPresent()) {
+            LOGGER.warn("account for {} not found", accountOrEmail);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final Account account = accountOptional.get();
+
+        if (!account.id.isPresent()) {
+            LOGGER.warn("account for {} had no id", accountOrEmail);
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        final List<TimelineFeedback> feedbacks = Lists.newArrayList();
+
+        DateTime startTime = null;
+
+        if (minDateStr != null) {
+            startTime = DateTimeUtil.ymdStringToDateTime(minDateStr);
+        }
+
+        if (startTime == null) {
+            feedbacks.addAll(this.feedbackDAO.getForAccount(account.id.get()));
+        }
+        else {
+            feedbacks.addAll(this.feedbackDAO.getForGreaterThanTimeForAccount(account.id.get(),startTime));
+        }
+
+
+        final List<FeedbackUtc> feedbackUtcs = Lists.newArrayList();
+
+        for (final TimelineFeedback timelineFeedback : feedbacks) {
+
+            final Optional<DateTime> oldTime = FeedbackUtils.convertFeedbackToDateTimeByOldTime(timelineFeedback, account.tzOffsetMillis);
+            final Optional<DateTime> newTime = FeedbackUtils.convertFeedbackToDateTimeByNewTime(timelineFeedback, account.tzOffsetMillis);
+
+            if (!oldTime.isPresent() || !newTime.isPresent()) {
+                continue;
+            }
+
+            feedbackUtcs.add(new FeedbackUtc(timelineFeedback.eventType.name(), oldTime.get().getMillis(), newTime.get().getMillis(), account.id.get(),DateTimeUtil.dateToYmdString(timelineFeedback.dateOfNight)));
+
+        }
+
+        return feedbackUtcs;
     }
 
     @GET
