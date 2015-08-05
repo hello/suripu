@@ -43,7 +43,7 @@ public class DeviceDataTest {
 
         final DeviceData deviceData = builder.build();
 
-        assertThat(deviceData.ambientAirQuality, is(64924));
+        assertThat(deviceData.ambientAirQuality, is(69517));
     }
 }
 
