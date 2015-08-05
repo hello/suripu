@@ -5,6 +5,7 @@ import com.hello.suripu.core.models.TrackerMotion;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -14,6 +15,7 @@ import java.util.TreeSet;
  */
 public class TrackerMotionUtils {
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
+    final static protected int MIN_SPACING = 55000;
 
     public static List<AmplitudeData> trackerMotionToAmplitudeData(final List<TrackerMotion> trackerMotions){
         final List<AmplitudeData> converted = new ArrayList<>();
@@ -68,5 +70,32 @@ public class TrackerMotionUtils {
         uniqueValues.addAll(trackerMotionSet);
 
         return uniqueValues;
+    }
+
+    static public List<TrackerMotion> removeDuplicatesAndInvalidValuesBySpacing(final List<TrackerMotion> trackerMotions) {
+
+        final List<TrackerMotion> spacedValues = new ArrayList<>();
+
+        TrackerMotion last = null;
+        for (final TrackerMotion m : trackerMotions ) {
+
+            if (last == null) {
+                spacedValues.add(m);
+                last = m;
+                continue;
+            }
+
+            final long deltaTime = m.timestamp - last.timestamp;
+
+            if (deltaTime < MIN_SPACING) {
+                continue;
+            }
+
+            spacedValues.add(m);
+            last = m;
+        }
+
+
+        return spacedValues;
     }
 }
