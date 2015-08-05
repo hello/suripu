@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DataUtils{
     private static final Logger LOGGER = LoggerFactory.getLogger(DataUtils.class);
-    private static final float MAX_DUST_ANALOG_VALUE = 4096;
+    private static final float MAX_DUST_ANALOG_VALUE = 4095;
     public static final float DUST_FLOAT_TO_INT_MULTIPLIER = 1000000f;
     public static final float AUDIO_FLOAT_TO_INT_MULTIPLIER = 1000.0f; // 3 decimal places
     public static final float FLOAT_2_INT_MULTIPLIER = 100;
@@ -66,7 +66,7 @@ public class DataUtils{
         // convert raw counts to milli-gram for dust sensor
         // SHARP GP2Y1010AU0F  PM2.5(see Fig. 3 of spec sheet)
 
-        float voltage = (float) rawCount / MAX_DUST_ANALOG_VALUE * 4.0f;
+        float voltage = (float) rawCount / MAX_DUST_ANALOG_VALUE * 4.1081f;
 
         // TODO: add checks for firmware version when we switch sensor
         final float coeff = 0.5f/2.9f;
