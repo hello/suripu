@@ -21,14 +21,14 @@ public class PartnerHmm {
     private static final Logger LOGGER = LoggerFactory.getLogger(PartnerHmm.class);
 
 
-    static final Double MINUTES_ON_BED = 60.0 * 0.5; //rough order of magnitude, this will limit the number of transitions seen
+    static final Double MINUTES_ON_BED = 60.0 * 0.1; //rough order of magnitude, this will limit the number of transitions seen
     static final Double DECISION_FRACTION = 0.5;
     static final int NUM_STATES = 7;
     static final int NUM_OBS = 4;
     static final Double PROB_NOT_ON_BED = 0.9998;
     static final Double NOT_ME_PENALTY = 1e-3;
     static final double MIN_LIKELIHOOD = 1e-100;
-    static final double NOT_ON_BED_PENALTY = 0.30;
+    static final double NOT_ON_BED_PENALTY = 0.25;
 
 
     private static Double getSelfTermFromDuration(final Double durationInMinutes, final int durationOfPeriodInMinutes) {
