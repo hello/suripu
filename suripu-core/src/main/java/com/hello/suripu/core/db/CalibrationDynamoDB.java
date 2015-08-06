@@ -79,7 +79,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     @Override
     public Map<String, Calibration> getBatch(final Set<String> senseIds) {
         final List<String> senseIdsList = Lists.newArrayList(senseIds);
-        final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, 1);
+        final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, MAX_BATCH_QUERY_SIZE);
         final Map<String, Calibration> calibrationMap = Maps.newHashMap();
         for (final List<String> partitionedSenseIds : partitionedSenseIdsList ) {
             final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
