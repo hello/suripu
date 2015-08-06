@@ -8,8 +8,6 @@ public class Calibration {
     private final static Float DUST_CALIBRATION_BASE = 300f;
     private final static Float DUST_CALIBRATION_K_FACTOR = 1.5f;
 
-
-
     @JsonProperty("sense_id")
     public final String senseId;
 
@@ -27,7 +25,7 @@ public class Calibration {
 
     public final int getCalibratedDustCount(final Integer rawDust) {
         if (this.dustOffset == DEFAULT_DUST_OFFSET_VALUE) {
-            return 0;
+            return rawDust;
         }
         return Math.round(rawDust + (DUST_CALIBRATION_BASE - this.dustOffset * DUST_CALIBRATION_K_FACTOR));
     }
