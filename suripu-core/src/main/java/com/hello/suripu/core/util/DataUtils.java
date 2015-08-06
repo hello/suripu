@@ -52,32 +52,21 @@ public class DataUtils{
     public static float dbIntToFloatDust(final int valueFromDB) {return ((float)valueFromDB) / DUST_FLOAT_TO_INT_MULTIPLIER;}
 
     public static int convertRawDustCountsToAQI(final int rawCount, final int firmwareVersion) {
-        final float dustDensity = convertDustDataFromCountsToDensity(rawCount, firmwareVersion);
+        final float dustDensity = convertDustDataFromCalibratedCountToDensity(rawCount, firmwareVersion);
         return convertDustDensityToAQI(dustDensity);
     }
 
     public static int convertDustDensityToAQI (final float value) {
-        // note, value should be in milli-grams per m-3. do a simple lookup
-        final int roundValue = Math.round(value * 1000.0f); // need to convert to micro-grams
+        // this simply converts dust density from milligram per cubic meter to microgram per cubic meter
+        final int roundValue = Math.round(value * 1000.0f); 
         return DUST_DENSITY_TO_AQI[roundValue];
     }
 
-    public static float convertDustDataFromCountsToDensity(final int rawCount, final int firmwareVersion) {
-        // convert raw counts to milli-gram for dust sensor
-        // SHARP GP2Y1010AU0F  PM2.5(see Fig. 3 of spec sheet)
-
-        float voltage = (float) rawCount / MAX_DUST_ANALOG_VALUE * 4.0f;
-
+    public static float convertDustDataFromCalibratedCountToDensity(final int calibratedDustCount, final int firmwareVersion) {
         // TODO: add checks for firmware version when we switch sensor
-        final float coeff = 0.5f/2.9f;
-        final float intercept = 0.6f * coeff;
-        final float maxVoltage = 3.2f;
-        final float minVoltage = 0.6f;
 
-        voltage = Math.min(voltage, maxVoltage);
-        voltage = Math.max(voltage, minVoltage);
-        final float dustDensity = coeff * voltage - intercept; // milli-gram per m^3
-        return dustDensity; // milli-grams per m-3
+        final float dustDensity = (calibratedDustCount / 4095.0f) * 4.1076f * (0.5f/2.9f);
+        return dustDensity; // milligram per cubic meter
     }
 
     public static float convertLightCountsToLux(final int rawCount) {
