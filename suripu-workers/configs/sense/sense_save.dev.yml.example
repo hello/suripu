@@ -113,11 +113,13 @@ dynamodb:
     features: features
     sense_prefix : sense
     sense_last_seen : sense_last_seen
+    calibration: calibration
   endpoints:
     alarm_info: http://localhost:7777
     features : http://localhost:7777
     sense_prefix : http://localhost:7777
     sense_last_seen : http://localhost:7777
+    calibration: http://localhost:7777
 
 redis:
   host: localhost

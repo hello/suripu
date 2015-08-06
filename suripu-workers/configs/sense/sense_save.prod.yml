@@ -103,11 +103,13 @@ dynamodb:
     features: features
     sense_prefix : prod_sense #not used at the moment but we need it here
     sense_last_seen : prod_sense_last_seen
+    calibration: prod_calibration
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
     sense_prefix: http://dynamodb.us-east-1.amazonaws.com
     sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
+    calibration : http://dynamodb.us-east-1.amazonaws.com
 
 redis:
   host: stats.xoe7je.0001.use1.cache.amazonaws.com
