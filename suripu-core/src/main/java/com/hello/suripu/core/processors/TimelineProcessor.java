@@ -406,7 +406,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     trackerMotions.addAll(originalTrackerMotions);
                 }
             }
-            else if (this.hasHmmPartnerFilterEnabled(accountId) || true) {
+            else if (this.hasHmmPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using bayesian partner filter");
                 try {
                     trackerMotions.addAll(
