@@ -81,7 +81,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                                 return deviceDAO.getAccountIdsForDeviceId(senseId);
                             }
                 });
-        random.setSeed(System.currentTimeMillis());
+        random = new Random(System.currentTimeMillis());
     }
 
     @Override
