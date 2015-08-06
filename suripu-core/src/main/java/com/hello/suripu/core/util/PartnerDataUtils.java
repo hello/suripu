@@ -255,9 +255,10 @@ public class PartnerDataUtils {
     private static class FractionalTrackerMotion {
 
         public FractionalTrackerMotion(final TrackerMotion m) {
-
-            final Double frac2 = ((m.timestamp % NUMBER_OF_MILLIS_IN_A_MINUTE) / (NUMBER_OF_MILLIS_IN_A_MINUTE.doubleValue()));
+            final Long mod = m.timestampNoTruncation % NUMBER_OF_MILLIS_IN_A_MINUTE.longValue();
+            final Double frac2 = ((mod.doubleValue()) / (NUMBER_OF_MILLIS_IN_A_MINUTE.doubleValue()));
             final Double frac1 = 1.0 - frac2;
+
 
             timestamp1 = m.timestamp - NUMBER_OF_MILLIS_IN_A_MINUTE;
             duration1 = frac1 * m.onDurationInSeconds;

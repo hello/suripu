@@ -51,18 +51,45 @@ public class TrackerMotion {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
+    @JsonProperty("timestamp_no_truncation")
+    public final Long timestampNoTruncation;
+
     @JsonCreator
     // TODO: make constructor private and force Builder use to reduce risks on not
     // TODO: converting data properly
     public TrackerMotion(@JsonProperty("id") final long id,
                          @JsonProperty("account_id") final long accountId,
                          @JsonProperty("tracker_id") final Long trackerId,
-                         @JsonProperty("timestamp") final long timestamp,
+                         @JsonProperty("timestamp") final long timestampToTheMinute,
+                         @JsonProperty("timestamp_no_truncation") final long timestampNoTruncation,
                          @JsonProperty("value") final int value,
                          @JsonProperty("timezone_offset") final int timeZoneOffset,
-                         final Long motionRange,
-                         final Long kickOffCounts,
-                         final Long onDurationInSeconds){
+                         @JsonProperty("motion_range") final Long motionRange,
+                         @JsonProperty("kickoff_counts") final Long kickOffCounts,
+                         @JsonProperty("on_duration_seconds") final Long onDurationInSeconds){
+
+        this.id = id;
+        this.accountId = accountId;
+        this.trackerId = trackerId;
+        this.timestamp = timestampToTheMinute;
+        this.value = value;
+        this.offsetMillis = timeZoneOffset;
+        this.motionRange = motionRange;
+        this.kickOffCounts = kickOffCounts;
+        this.onDurationInSeconds = onDurationInSeconds;
+        this.timestampNoTruncation = timestampNoTruncation;
+    }
+
+    //for backwards compatability
+    public TrackerMotion( final long id,
+                          final long accountId,
+                          final Long trackerId,
+                          final long timestamp,
+                          final int value,
+                          final int timeZoneOffset,
+                          final Long motionRange,
+                          final Long kickOffCounts,
+                          final Long onDurationInSeconds){
 
         this.id = id;
         this.accountId = accountId;
@@ -70,11 +97,10 @@ public class TrackerMotion {
         this.timestamp = timestamp;
         this.value = value;
         this.offsetMillis = timeZoneOffset;
-
-
         this.motionRange = motionRange;
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
+        this.timestampNoTruncation = timestamp;
     }
 
 
@@ -87,6 +113,7 @@ public class TrackerMotion {
                 0L,
                 accountPair.accountId,
                 accountPair.internalDeviceId,
+                timestampInMillis,
                 timestampInMillis,
                 Utils.rawToMilliMS2(payloadV2.maxAmplitude),
                 timeZoneOffset,
@@ -172,6 +199,7 @@ public class TrackerMotion {
         private long accountId;
         private Long trackerId;
         private long timestamp;
+        private long timestampWithSeconds;
         private int valueInMilliMS2 = -1;
         private int offsetMillis;
         private Long motionRange = 0L;
@@ -199,6 +227,11 @@ public class TrackerMotion {
 
         public Builder withTimestampMillis(final long timestamp){
             this.timestamp = timestamp;
+            return this;
+        }
+
+        public Builder withTimestampMillisNoTruncation(final long timestamp){
+            this.timestampWithSeconds = timestamp;
             return this;
         }
 
@@ -234,11 +267,13 @@ public class TrackerMotion {
                     this.accountId,
                     this.trackerId,
                     this.timestamp,
+                    this.timestampWithSeconds,
                     this.valueInMilliMS2,
                     this.offsetMillis,
                     this.motionRange,
                     this.kickOffCounts,
-                    this.onDurationInSeconds);
+                    this.onDurationInSeconds
+                    );
         }
 
 

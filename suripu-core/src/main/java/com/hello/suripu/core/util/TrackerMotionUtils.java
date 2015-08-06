@@ -85,7 +85,7 @@ public class TrackerMotionUtils {
                 continue;
             }
 
-            final long deltaTime = m.timestamp - last.timestamp;
+            final long deltaTime = m.timestampNoTruncation - last.timestampNoTruncation;
 
             if (deltaTime < MIN_SPACING) {
                 continue;
