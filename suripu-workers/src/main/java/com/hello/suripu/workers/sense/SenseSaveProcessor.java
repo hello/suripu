@@ -7,6 +7,11 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
@@ -14,6 +19,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.FirmwareInfo;
@@ -28,11 +34,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
@@ -51,6 +59,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final Meter clockOutOfSync;
 
     private String shardId = "";
+    private Random random;
+    private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
     public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
         this.deviceDAO = deviceDAO;
@@ -60,6 +70,18 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
+
+        this.dbCache  = CacheBuilder.newBuilder()
+                .maximumSize(20000)
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .build(
+                        new CacheLoader<String, List<DeviceAccountPair>>() {
+                            @Override
+                            public List<DeviceAccountPair> load(final String senseId) {
+                                return deviceDAO.getAccountIdsForDeviceId(senseId);
+                            }
+                });
+        random.setSeed(System.currentTimeMillis());
     }
 
     @Override
@@ -100,7 +122,14 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             final LinkedList<DeviceData> dataForDevice = deviceDataGroupedByDeviceId.get(deviceName);
 
 
-            final List<DeviceAccountPair> deviceAccountPairs = deviceDAO.getAccountIdsForDeviceId(deviceName);
+            final List<DeviceAccountPair> deviceAccountPairs = Lists.newArrayList();
+
+            if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST)) {
+                deviceAccountPairs.addAll(dbCache.getUnchecked(deviceName));
+            } else {
+                deviceAccountPairs.addAll(deviceDAO.getAccountIdsForDeviceId(deviceName));
+            }
+
 
             // We should not have too many accounts with more than two accounts paired to a sense
             // warn if it is the case
@@ -248,6 +277,16 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         messagesProcessed.mark(records.size());
 
+        if(random.nextInt() % 10 == 0) {
+            final CacheStats stats = dbCache.stats();
+            LOGGER.info("Cache hitrate: {}", stats.hitRate());
+        }
+
+        // This lets us clear the cache remotely by turning on the feature in FeatureFlipper.
+        // DeviceId is not required and thus empty
+        if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_CLEAR_ALL_CACHE, "", Collections.EMPTY_LIST)) {
+            dbCache.invalidateAll();
+        }
 
         try {
             iRecordProcessorCheckpointer.checkpoint();
