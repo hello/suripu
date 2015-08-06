@@ -188,6 +188,10 @@ public class InsightProcessor {
             case 1:
             case 2:
             case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
                     return;
                 }
