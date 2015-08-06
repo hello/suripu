@@ -54,4 +54,17 @@ public class WakeVarianceInsightsTest {
         assertThat(someResult.get().title, is(expectedTitle));
     }
 
+    @Test
+    public void testVarianceNotLowEnough() {
+        final String someTitle = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(0, 0).title;
+        assertThat(someTitle, is(someTitle));
+    }
+
+    @Test
+    public void testVarianceHigh() {
+        final String someTitle = WakeVarianceMsgEN.getWakeVarianceHigh(0, 0).title;
+        assertThat(someTitle, is(someTitle));
+    }
+
+
 }
