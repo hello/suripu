@@ -47,6 +47,7 @@ import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
 import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -335,7 +336,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSenseLastSeenConfiguration().getTableName()
         );
 
-
+        final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
+        final CalibrationDynamoDB calibrationDynamoDB = new CalibrationDynamoDB(
+                calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName()
+        );
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
