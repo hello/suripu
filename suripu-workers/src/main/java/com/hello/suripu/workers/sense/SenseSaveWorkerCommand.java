@@ -13,6 +13,7 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -110,6 +111,9 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(featureDynamoDB, tableNames.get(DynamoDBTableName.FEATURES), featureNamespace);
 
+
+
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
@@ -121,6 +125,9 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
                 tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
         );
 
+        final AmazonDynamoDB calibrationDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.CALIBRATION);
+        final CalibrationDynamoDB calibrationDynamoDB = new CalibrationDynamoDB(calibrationDynamoDBClient, tableNames.get(DynamoDBTableName.CALIBRATION));
+
         final JedisPool jedisPool = new JedisPool(
                 configuration.getRedisConfiguration().getHost(),
                 configuration.getRedisConfiguration().getPort()
@@ -130,7 +137,8 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
                 deviceDAO,
                 mergedUserInfoDynamoDB,
                 sensorsViewsDynamoDB,
-                deviceDataDAO
+                deviceDataDAO,
+                calibrationDynamoDB
         );
 
         final Worker worker = new Worker(factory, kinesisConfig);
