@@ -277,7 +277,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         messagesProcessed.mark(records.size());
 
-        if(random.nextInt() % 10 == 0) {
+        if(random.nextInt(11) % 10 == 0) {
             final CacheStats stats = dbCache.stats();
             LOGGER.info("Cache hitrate: {}", stats.hitRate());
         }
@@ -285,6 +285,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         // This lets us clear the cache remotely by turning on the feature in FeatureFlipper.
         // DeviceId is not required and thus empty
         if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_CLEAR_ALL_CACHE, "", Collections.EMPTY_LIST)) {
+            LOGGER.warn("Clearing all caches");
             dbCache.invalidateAll();
         }
 
