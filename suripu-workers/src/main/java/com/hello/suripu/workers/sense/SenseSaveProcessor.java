@@ -9,6 +9,7 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
@@ -57,7 +59,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final Meter clockOutOfSync;
 
     private String shardId = "";
-
+    private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
     public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
@@ -71,7 +73,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
-                .expireAfterAccess(10, TimeUnit.MINUTES)
+                .expireAfterWrite(10, TimeUnit.MINUTES)
                 .build(
                         new CacheLoader<String, List<DeviceAccountPair>>() {
                             @Override
@@ -79,6 +81,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                                 return deviceDAO.getAccountIdsForDeviceId(senseId);
                             }
                 });
+        random.setSeed(System.currentTimeMillis());
     }
 
     @Override
@@ -274,6 +277,16 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         messagesProcessed.mark(records.size());
 
+        if(random.nextInt() % 10 == 0) {
+            final CacheStats stats = dbCache.stats();
+            LOGGER.info("Cache hitrate: {}", stats.hitRate());
+        }
+
+        // This lets us clear the cache remotely by turning on the feature in FeatureFlipper.
+        // DeviceId is not required and thus empty
+        if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_CLEAR_ALL_CACHE, "", Collections.EMPTY_LIST)) {
+            dbCache.invalidateAll();
+        }
 
         try {
             iRecordProcessorCheckpointer.checkpoint();
