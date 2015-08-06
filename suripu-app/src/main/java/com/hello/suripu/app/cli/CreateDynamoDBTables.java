@@ -70,7 +70,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createFWUpgradePathTable(configuration, awsCredentialsProvider);
         createHmmBayesNetModelPriorTable(configuration,awsCredentialsProvider);
         createHmmBayesNetModelTable(configuration,awsCredentialsProvider);
-        createDustCalibratorTable(configuration, awsCredentialsProvider);
+        CreatedCalibrationTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -452,7 +452,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
     }
 
 
-    private void createDustCalibratorTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+    private void CreatedCalibrationTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
         final DynamoDBConfiguration config = configuration.getCalibrationConfiguration();
         final String tableName = config.getTableName();
