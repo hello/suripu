@@ -217,21 +217,18 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                     final DateTimeZone userTimeZone = timeZoneOptional.get();
 
-                    Integer dustOffset = 0;
 
-                    if (senseCalibrationMap.containsKey(pair.externalDeviceId)) {
-                        dustOffset = senseCalibrationMap.get(pair.externalDeviceId).dustOffset;
-                    }
+                    final Calibration calibration = senseCalibrationMap.get(pair.externalDeviceId);
 
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
-                            .withAmbientAirQuality(periodicData.getDust() + dustOffset, firmwareVersion)
-                            .withAmbientAirQualityRaw(periodicData.getDust() + dustOffset)
+                            .withAmbientAirQuality(periodicData.getDust() + calibration.dustOffset, firmwareVersion)
+                            .withAmbientAirQualityRaw(periodicData.getDust() + calibration.dustOffset)
                             .withAmbientDustVariance(periodicData.getDustVariability())
-                            .withAmbientDustMin(periodicData.getDustMin() + dustOffset)
-                            .withAmbientDustMax(periodicData.getDustMax() + dustOffset)
+                            .withAmbientDustMin(periodicData.getDustMin() + calibration.dustOffset)
+                            .withAmbientDustMax(periodicData.getDustMax() + calibration.dustOffset)
                             .withAmbientHumidity(periodicData.getHumidity())
                             .withAmbientLight(periodicData.getLight())
                             .withAmbientLightVariance(periodicData.getLightVariability())

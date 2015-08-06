@@ -55,9 +55,9 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
         final Map<String, AttributeValue> item = getItemResult.getItem();
         if (item == null) {
-            return Calibration.createWithDefaultDustOffset();
+            return Calibration.createDefault(senseId);
         }
-        return new Calibration(Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()));
+        return new Calibration(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()));
     }
 
     @Override
@@ -78,9 +78,16 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
     @Override
     public Map<String, Calibration> getBatch(final Set<String> senseIds) {
+        final Map<String, Calibration> calibrationMap = Maps.newHashMap();
+
+        for (final String senseId : senseIds) {
+            calibrationMap.put(senseId, Calibration.createDefault(senseId));
+        }
+
         final List<String> senseIdsList = Lists.newArrayList(senseIds);
         final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, MAX_BATCH_QUERY_SIZE);
-        final Map<String, Calibration> calibrationMap = Maps.newHashMap();
+
+
         for (final List<String> partitionedSenseIds : partitionedSenseIdsList ) {
             final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
             final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
@@ -103,11 +110,11 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                     for (final Map<String, AttributeValue> response : responses) {
                         final String senseId = response.get(SENSE_ATTRIBUTE_NAME).getS();
                         final Integer dustOffset = Integer.valueOf(response.get(DUST_OFFSET_ATTRIBUTE_NAME).getN());
-                        calibrationMap.put(senseId, new Calibration(dustOffset));
+                        calibrationMap.put(senseId, new Calibration(senseId, dustOffset));
                     }
                 }
             } catch (AmazonServiceException ase) {
-                LOGGER.error("Failed getting keys.");
+                LOGGER.error("Failed to get calibration for {}", partitionedSenseIds);
             }
         }
         return calibrationMap;
