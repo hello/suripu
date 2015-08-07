@@ -21,6 +21,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.Calibration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     @Override
     public Map<String, Calibration> getBatch(final Set<String> senseIds) {
         final Map<String, Calibration> calibrationMap = Maps.newHashMap();
+        final Set<String> calibratedSenseIds = Sets.newHashSet();
 
         for (final String senseId : senseIds) {
             calibrationMap.put(senseId, Calibration.createDefault(senseId));
@@ -137,11 +139,20 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                         final String senseId = response.get(SENSE_ATTRIBUTE_NAME).getS();
                         final Integer dustOffset = Integer.valueOf(response.get(DUST_OFFSET_ATTRIBUTE_NAME).getN());
                         calibrationMap.put(senseId, Calibration.create(senseId, dustOffset));
+                        calibratedSenseIds.add(senseId);
                     }
                 }
             } catch (AmazonServiceException ase) {
                 LOGGER.error("Failed to get calibration for {}", partitionedSenseIds);
             }
+
+            final Set<String> uncalibratedSenseIds = Sets.difference(senseIds, calibratedSenseIds);
+
+            if (!uncalibratedSenseIds.isEmpty()) {
+                LOGGER.warn("There are {} senses without calibration data", uncalibratedSenseIds.size());
+                LOGGER.debug("Senses without calibration data {}", uncalibratedSenseIds);
+            }
+
         }
         return calibrationMap;
     }
