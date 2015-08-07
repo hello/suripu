@@ -150,7 +150,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
             if (!uncalibratedSenseIds.isEmpty()) {
                 LOGGER.warn("There are {} senses without calibration data", uncalibratedSenseIds.size());
-                LOGGER.debug("Senses without calibration data {}", uncalibratedSenseIds);
+                LOGGER.trace("Senses without calibration data {}", uncalibratedSenseIds);
             }
 
         }
