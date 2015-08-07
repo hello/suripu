@@ -20,7 +20,7 @@ public interface CalibrationDAO {
      *
      * @param senseId String
      */
-    void put(String senseId, Integer offset);
+    void put(String senseId, Integer dustOffset, String metadata);
 
     Map<String, Calibration> getBatch(Set<String> senseIds);
 }

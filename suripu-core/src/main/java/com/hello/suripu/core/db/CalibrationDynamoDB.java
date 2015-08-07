@@ -34,8 +34,11 @@ import java.util.Set;
 public class CalibrationDynamoDB implements CalibrationDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CalibrationDynamoDB.class);
+
     private final static String SENSE_ATTRIBUTE_NAME = "sense_id";
     private final static String DUST_OFFSET_ATTRIBUTE_NAME = "dust_offset";
+    private final static String METADATA_ATTRIBUTE_NAME = "metadata";
+
     private final static Integer MAX_BATCH_QUERY_SIZE = 100;
     public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
 
@@ -83,15 +86,15 @@ public class CalibrationDynamoDB implements CalibrationDAO {
             LOGGER.warn("Not in strict mode, returning default calibration for sense {}", senseId);
             return Optional.of(Calibration.createDefault(senseId));
         }
-        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN())));
+        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()), item.get(METADATA_ATTRIBUTE_NAME).getS()));
     }
 
     @Override
-    public void put(final String senseId, final Integer offset) {
-
+    public void put(final String senseId, final Integer dustOffset, final String metadata) {
         final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
-        attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(offset)));
+        attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(dustOffset)));
+        attributes.put(METADATA_ATTRIBUTE_NAME, new AttributeValue().withS(metadata));
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(calibrationTableName)
@@ -126,7 +129,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                 itemKeys.add(attributeValueMap);
             }
 
-            final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(SENSE_ATTRIBUTE_NAME, DUST_OFFSET_ATTRIBUTE_NAME);
+            final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(SENSE_ATTRIBUTE_NAME, DUST_OFFSET_ATTRIBUTE_NAME, METADATA_ATTRIBUTE_NAME);
             final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
             requestItems.put(calibrationTableName, key);
             batchGetItemRequest.withRequestItems(requestItems);
@@ -138,7 +141,9 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                     for (final Map<String, AttributeValue> response : responses) {
                         final String senseId = response.get(SENSE_ATTRIBUTE_NAME).getS();
                         final Integer dustOffset = Integer.valueOf(response.get(DUST_OFFSET_ATTRIBUTE_NAME).getN());
-                        calibrationMap.put(senseId, Calibration.create(senseId, dustOffset));
+                        final String metadata = response.containsKey(METADATA_ATTRIBUTE_NAME) ? response.get(METADATA_ATTRIBUTE_NAME).getS() : "";
+
+                        calibrationMap.put(senseId, Calibration.create(senseId, dustOffset, metadata));
                         calibratedSenseIds.add(senseId);
                     }
                 }
