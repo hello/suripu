@@ -24,7 +24,7 @@ public class RoomConditionUtilTest {
         final periodic_data.Builder dataBuilder = periodic_data.newBuilder()
                 .setTemperature(2389) //(val - 389) / 100; >26=ALERT (2989); >23=WARNING (2689)
                 .setHumidity(3092)// 20=ALERT; 30=WARNING
-                .setDustMax(2000) // 301=ALERT; 51=WARNING
+                .setDustMax(1000) // 301=ALERT; 51=WARNING
                 .setLight(3) //8=ALERT; 3=WARNING
                 .setAudioPeakBackgroundEnergyDb(0) //rawBackground; Not Taken Into Account
                 .setAudioPeakDisturbanceEnergyDb(200) //rawPeak---> Math.max(peakDB/1024 - 40, 0) + 25; 90=ALERT; 40=WARNING
