@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Calibration;
 
 import java.util.Map;
@@ -12,7 +13,8 @@ public interface CalibrationDAO {
      * @param senseId String
      * @return Integer
      */
-    Calibration get(String senseId);
+    Optional<Calibration> get(String senseId);
+    Optional<Calibration> getStrict(String senseId);
 
     /**
      *

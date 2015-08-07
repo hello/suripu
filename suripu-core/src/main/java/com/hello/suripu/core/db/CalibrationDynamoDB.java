@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Calibration;
@@ -35,6 +36,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static String SENSE_ATTRIBUTE_NAME = "sense_id";
     private final static String DUST_OFFSET_ATTRIBUTE_NAME = "dust_offset";
     private final static Integer MAX_BATCH_QUERY_SIZE = 100;
+    public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String calibrationTableName;
@@ -45,7 +47,25 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     }
 
     @Override
-    public Calibration get(final String senseId) {
+    public Optional<Calibration> get(final String senseId) {
+        return getRemotely(senseId, Boolean.FALSE);
+    }
+
+    @Override
+    public Optional<Calibration> getStrict(final String senseId) {
+        return getRemotely(senseId, Boolean.TRUE);
+    }
+
+    private Optional<Calibration> getRemotely(final String senseId, final Boolean strict) {
+        if(DEFAULT_FACTORY_DEVICE_ID.equals(senseId) ) {
+            if (strict.equals(Boolean.TRUE)) {
+                LOGGER.warn("Factory sense {} needs no calibration", senseId);
+                return Optional.absent();
+            }
+            LOGGER.warn("Not in strict mode, returning default calibration for factory sense");
+            return Optional.of(Calibration.createDefault(senseId));
+
+        }
         final HashMap<String, AttributeValue> key = Maps.newHashMap();
         key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
         final GetItemRequest getItemRequest = new GetItemRequest()
@@ -55,9 +75,14 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
         final Map<String, AttributeValue> item = getItemResult.getItem();
         if (item == null) {
-            return Calibration.createDefault(senseId);
+            if (strict.equals(Boolean.TRUE)) {
+                LOGGER.warn("Sense {} does not have calibration", senseId);
+                return Optional.absent();
+            }
+            LOGGER.warn("Not in strict mode, returning default calibration for sense {}", senseId);
+            return Optional.of(Calibration.createDefault(senseId));
         }
-        return new Calibration(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()));
+        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN())));
     }
 
     @Override
@@ -92,6 +117,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
             final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
             final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
 
+
             for (final String senseId : partitionedSenseIds) {
                 final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
                 attributeValueMap.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
@@ -110,7 +136,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                     for (final Map<String, AttributeValue> response : responses) {
                         final String senseId = response.get(SENSE_ATTRIBUTE_NAME).getS();
                         final Integer dustOffset = Integer.valueOf(response.get(DUST_OFFSET_ATTRIBUTE_NAME).getN());
-                        calibrationMap.put(senseId, new Calibration(senseId, dustOffset));
+                        calibrationMap.put(senseId, Calibration.create(senseId, dustOffset));
                     }
                 }
             } catch (AmazonServiceException ase) {

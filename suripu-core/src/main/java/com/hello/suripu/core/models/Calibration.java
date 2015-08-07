@@ -14,10 +14,15 @@ public class Calibration {
     @JsonProperty("dust_calibration_delta")
     public final Integer dustCalibrationDelta;
 
-    public Calibration(final String senseId, final Integer dustOffset) {
+    private Calibration(final String senseId, final Integer dustCalibrationDelta) {
         this.senseId = senseId;
-        this.dustCalibrationDelta = Math.round(DUST_CALIBRATION_BASE - dustOffset * DUST_CALIBRATION_K_FACTOR);
+        this.dustCalibrationDelta = dustCalibrationDelta;
     }
+
+    public static Calibration create(final String senseId, final Integer dustOffset)     {
+        return new Calibration(senseId, Math.round(DUST_CALIBRATION_BASE - dustOffset * DUST_CALIBRATION_K_FACTOR));
+    }
+
 
     public static final Calibration createDefault(final String senseId) {
         return new Calibration(senseId, DEFAULT_DUST_CALIBRATION_DELTA);
