@@ -38,6 +38,9 @@ public class WakeVarianceInsightsTest {
         assertThat(someResult.isPresent(), is(Boolean.TRUE));
         final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceTooHigh(0, 0).title;
         assertThat(someResult.get().title, is(expectedTitle));
+        
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceTooHigh(0,0).message;
+        assertThat(someMessage, is(someMessage));
     }
 
     @Test
@@ -52,18 +55,21 @@ public class WakeVarianceInsightsTest {
         assertThat(someResult.isPresent(), is(Boolean.TRUE));
         final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceLow(0, 0).title;
         assertThat(someResult.get().title, is(expectedTitle));
+
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceLow(0,0).message;
+        assertThat(someMessage, is(someMessage));
     }
 
     @Test
     public void testVarianceNotLowEnough() {
-        final String someTitle = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(0, 0).title;
-        assertThat(someTitle, is(someTitle));
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(0, 0).message;
+        assertThat(someMessage, is(someMessage));
     }
 
     @Test
     public void testVarianceHigh() {
-        final String someTitle = WakeVarianceMsgEN.getWakeVarianceHigh(0, 0).title;
-        assertThat(someTitle, is(someTitle));
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceHigh(0, 0).message;
+        assertThat(someMessage, is(someMessage));
     }
 
 
