@@ -16,7 +16,7 @@ public class DataUtilsTest {
     @Test
     public void testDustConversion() {
         final int values[] = new int[] {1179, 1570};
-        final int correct[] = new int[] {171, 211};
+        final int correct[] = new int[] {254, 322};
         for (int i = 0; i < values.length; i++) {
             final int AQI = DataUtils.convertRawDustCountsToAQI(values[i], 1);
             LOGGER.debug("value {} -> {}", values[i], AQI);

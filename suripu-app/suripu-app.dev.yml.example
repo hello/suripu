@@ -258,3 +258,8 @@ hmm_bayesnet_models:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: hmm_bayesnet_models
+
+calibration:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: calibration

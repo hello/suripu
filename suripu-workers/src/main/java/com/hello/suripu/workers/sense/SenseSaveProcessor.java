@@ -15,11 +15,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.FirmwareInfo;
@@ -53,6 +55,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
+    private final CalibrationDynamoDB calibrationDynamoDB;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
@@ -62,11 +65,13 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final CalibrationDynamoDB calibrationDynamoDB) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
+        this.calibrationDynamoDB = calibrationDynamoDB;
+
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
@@ -80,7 +85,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             public List<DeviceAccountPair> load(final String senseId) {
                                 return deviceDAO.getAccountIdsForDeviceId(senseId);
                             }
-                });
+                        });
         random = new Random(System.currentTimeMillis());
     }
 
@@ -165,6 +170,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             //LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
 
+            final Map<String, Calibration> senseCalibrationMap = calibrationDynamoDB.getBatch(deviceDataGroupedByDeviceId.keySet());
+
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
 
                 // To validate that the firmware is sending a correct unix timestamp
@@ -186,9 +193,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 final Integer firmwareVersion = (batchPeriodicDataWorker.getData().hasFirmwareVersion())
                         ? batchPeriodicDataWorker.getData().getFirmwareVersion()
                         : periodicData.getFirmwareVersion();
-
-
-
 
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     Optional<DateTimeZone> timeZoneOptional = Optional.absent();
@@ -213,15 +217,18 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                     final DateTimeZone userTimeZone = timeZoneOptional.get();
 
+
+                    final Calibration calibration = senseCalibrationMap.get(pair.externalDeviceId);
+
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
-                            .withAmbientAirQuality(periodicData.getDust(), firmwareVersion)
-                            .withAmbientAirQualityRaw(periodicData.getDust())
+                            .withAmbientAirQuality(periodicData.getDust() + calibration.dustCalibrationDelta, firmwareVersion)
+                            .withAmbientAirQualityRaw(periodicData.getDust() + calibration.dustCalibrationDelta)
                             .withAmbientDustVariance(periodicData.getDustVariability())
-                            .withAmbientDustMin(periodicData.getDustMin())
-                            .withAmbientDustMax(periodicData.getDustMax())
+                            .withAmbientDustMin(periodicData.getDustMin() + calibration.dustCalibrationDelta)
+                            .withAmbientDustMax(periodicData.getDustMax() + calibration.dustCalibrationDelta)
                             .withAmbientHumidity(periodicData.getHumidity())
                             .withAmbientLight(periodicData.getLight())
                             .withAmbientLightVariance(periodicData.getLightVariability())
@@ -246,8 +253,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 //TODO: Eventually break out metrics to their own worker
                 seenFirmwares.put(deviceName, new FirmwareInfo(firmwareVersion.toString(), deviceName, timestampMillis));
             }
-
-
         }
 
         for(final String deviceId: deviceDataGroupedByDeviceId.keySet()){

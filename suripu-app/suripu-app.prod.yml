@@ -303,3 +303,8 @@ hmm_bayesnet_models:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_hmm_bayesnet_models
+
+calibration:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_calibration
