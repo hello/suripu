@@ -291,6 +291,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
      * @return
      */
     public Map<Long, DateTimeZone> getTimezonesByUser(final String deviceName, final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker, final List<Long> accountsList) {
+
+
         final Map<Long, DateTimeZone> map = Maps.newHashMap();
         for(final DataInputProtos.AccountMetadata accountMetadata : batchPeriodicDataWorker.getTimezonesList()) {
             map.put(accountMetadata.getAccountId(), DateTimeZone.forID(accountMetadata.getTimezone()));
@@ -304,7 +306,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         // Kinesis, DynamoDB and Postgres have a consistent view of accounts
         // move on
-        if(!map.isEmpty() && map.size() == accountsList.size()) {
+        if(!map.isEmpty() && map.size() == accountsList.size() && hasKinesisTimezonesEnabled(deviceName)) {
             return map;
         }
 
