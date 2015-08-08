@@ -71,6 +71,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
                 .expireAfterWrite(10, TimeUnit.MINUTES)
+                .recordStats()
                 .build(
                         new CacheLoader<String, List<DeviceAccountPair>>() {
                             @Override
