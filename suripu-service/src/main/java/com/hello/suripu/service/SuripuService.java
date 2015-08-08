@@ -217,8 +217,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
 
         final AmazonDynamoDB configDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.CONFIGURATIONS);
-        final ConfigurationDAODynamoDB senseUploadConfigDAO = new ConfigurationDAODynamoDB(configuration.getSenseUploadConfiguration(), configDynamoDBClient, tableNames.get(DynamoDBTableName.CONFIGURATIONS), namespace);
-        final DynamicConfiguration senseUploadDynamicConfig = new DynamicConfiguration(senseUploadConfigDAO, 10);
+        final ConfigurationDAODynamoDB senseUploadConfigDAO = new ConfigurationDAODynamoDB(configuration.getSenseUploadConfiguration(), configDynamoDBClient, tableNames.get(DynamoDBTableName.CONFIGURATIONS), "service_" + namespace);
+        final DynamicConfiguration senseUploadDynamicConfig = new DynamicConfiguration(senseUploadConfigDAO, 30);
 
         final RolloutModule module = new RolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);

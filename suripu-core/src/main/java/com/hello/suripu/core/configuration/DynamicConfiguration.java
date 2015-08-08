@@ -1,21 +1,7 @@
 package com.hello.suripu.core.configuration;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hello.suripu.core.db.ConfigurationDAODynamoDB;
-import com.hello.suripu.core.db.TeamStore;
-import com.hello.suripu.core.models.Team;
 import com.yammer.dropwizard.config.Configuration;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -52,14 +38,14 @@ public class DynamicConfiguration {
     }
 
     public void start() {
-        LOGGER.info("Starting polling config");
+        LOGGER.info("Starting polling config: {}", configDAO.configuration.getClass().getSimpleName());
         configuration = getData();
         startPolling();
     }
 
     public void stop() {
         scheduledFuture.cancel(true);
-        LOGGER.info("Stopped polling config");
+        LOGGER.info("Stopped polling config: {}", configDAO.configuration.getClass().getSimpleName());
         executorService.shutdown();
         LOGGER.info("ThreadPool shutdown");
     }
@@ -69,19 +55,14 @@ public class DynamicConfiguration {
     }
 
     synchronized private Configuration getData() {
-        LOGGER.debug("Calling getData");
+        LOGGER.debug("Polling dynamic config: {}", configDAO.configuration.getClass().getSimpleName());
 
         try {
             final Configuration config = configDAO.getData();
-            LOGGER.debug(config.toString());
             return config;
         } catch (Exception e) {
-            //TODO: REMOVE THIS DEBUG CODE
-            final String jsonString = "{\"non_peak_hour_upper_bound\": \"20\", \"week_days_only\": \"true\", \"long_interval\": \"7\", \"short_interval\": \"5\"}";
-            configDAO.put(jsonString);
-            LOGGER.debug(jsonString);
+            LOGGER.error("Dynamic Config DAO method 'getData()' failed.");
         }
-
-        return new Configuration();
+        return configuration;
     }
 }

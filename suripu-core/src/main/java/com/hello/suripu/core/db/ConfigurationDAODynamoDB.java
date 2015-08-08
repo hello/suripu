@@ -15,9 +15,13 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.yammer.dropwizard.config.Configuration;
 import java.io.IOException;
 import org.slf4j.Logger;
@@ -41,7 +45,7 @@ public class ConfigurationDAODynamoDB {
     public ConfigurationDAODynamoDB(final Configuration configuration, final AmazonDynamoDB amazonDynamoDB, final String tableName, final String namespace) {
         this.configuration = configuration;
         this.table = new DynamoDB(amazonDynamoDB).getTable(tableName);
-        this.namespace =  "service_" + namespace;
+        this.namespace =  namespace;
     }
 
     public Configuration getData() {
@@ -51,22 +55,34 @@ public class ConfigurationDAODynamoDB {
                 .withPrimaryKey("ns", namespace, "name", configuration.getClass().getSimpleName());
         spec.withProjectionExpression(VALUE_ATTRIBUTE_NAME);
 
-        final String storedConfigString = table.getItem(spec).getJSON(VALUE_ATTRIBUTE_NAME);
         final ObjectMapper mapper = new ObjectMapper();
-
         try
         {
+            final String storedConfigString = table.getItem(spec).getJSON(VALUE_ATTRIBUTE_NAME);
             final ObjectReader reader = mapper.reader(configuration.getClass());
             return reader.readValue(storedConfigString);
-        } catch (JsonGenerationException e)
-        {
-            e.printStackTrace();
-        } catch (JsonMappingException e)
-        {
-            e.printStackTrace();
-        } catch (IOException e)
-        {
-            e.printStackTrace();
+        } catch (JsonGenerationException e) {
+            LOGGER.error("Failed to get data.");
+        } catch (IOException ioe) {
+            LOGGER.error("Failed to get data.");
+        } catch (NullPointerException npe) {
+            LOGGER.error("getData() failed. NPE.");
+        }
+
+        //No stored config exists, persist the loaded config to DynamoDB
+        LOGGER.info("Configuration read from Dynamo failed. Attempting to persist loaded configuration values.");
+
+        final String[] ignorableFieldNames = { "httpConfiguration", "loggingConfiguration", "http", "logging" };
+        FilterProvider filters = new SimpleFilterProvider()
+                .addFilter("filter properties by name",
+                        SimpleBeanPropertyFilter.serializeAllExcept(
+                                ignorableFieldNames));
+        final ObjectWriter objWriter = mapper.writer(filters);
+        try {
+            final String configJSON  = objWriter.writeValueAsString(configuration);
+            put(configJSON);
+        } catch (JsonProcessingException jpe) {
+            LOGGER.error("Failed to serialize configuration.");
         }
 
         return configuration;
