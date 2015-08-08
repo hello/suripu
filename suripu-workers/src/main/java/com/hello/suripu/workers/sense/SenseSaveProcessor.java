@@ -21,7 +21,6 @@ import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.models.FirmwareInfo;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
@@ -93,8 +92,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
-        final Map<String, FirmwareInfo> seenFirmwares = new HashMap<>(records.size());
-        final Map<String, Long> allSeenSenses = new HashMap<>(records.size());
 
         final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
 
@@ -110,16 +107,11 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             final String deviceName = batchPeriodicDataWorker.getData().getDeviceId();
 
-            //Logging seen device before attempting account pairing
-            allSeenSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
-
             if(!deviceDataGroupedByDeviceId.containsKey(deviceName)){
                 deviceDataGroupedByDeviceId.put(deviceName, new LinkedList<DeviceData>());
             }
 
             final LinkedList<DeviceData> dataForDevice = deviceDataGroupedByDeviceId.get(deviceName);
-
-
             final List<DeviceAccountPair> deviceAccountPairs = Lists.newArrayList();
 
             if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST)) {
@@ -137,7 +129,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             // Compare Postgres views with DynamoDB views.
             final List<Long> accounts = Lists.newArrayList();
-            for (DeviceAccountPair deviceAccountPair : deviceAccountPairs) {
+            for (final DeviceAccountPair deviceAccountPair : deviceAccountPairs) {
                 accounts.add(deviceAccountPair.accountId);
             }
 
@@ -270,13 +262,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
-        // Commenting this out, it is causing production failures
-        /*
-        activeDevicesTracker.trackAllSeenSenses(allSeenSenses);
-        activeDevicesTracker.trackSenses(activeSenses);
-        activeDevicesTracker.trackFirmwares(seenFirmwares);
-        */
-
         LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
     }
 
@@ -319,7 +304,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         // Kinesis, DynamoDB and Postgres have a consistent view of accounts
         // move on
-        if(map.size() == accountsList.size()) {
+        if(!map.isEmpty() && map.size() == accountsList.size()) {
             return map;
         }
 
