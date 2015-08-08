@@ -6,7 +6,6 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
@@ -33,7 +32,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -137,27 +135,15 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 LOGGER.warn("Found too many pairs ({}) for device = {}", deviceAccountPairs.size(), deviceName);
             }
 
-            // This is the default timezone.
-            final List<UserInfo> deviceAccountInfoFromMergeTable = new ArrayList<>();
-            int retries = 2;
-            for(int i = 0; i < retries; i++) {
-                try {
-                    deviceAccountInfoFromMergeTable.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get everything by one hit
-                    break;
-                } catch (AmazonClientException exception) {
-                    LOGGER.error("Failed getting info from DynamoDB for device = {}", deviceName);
-                }
-
-                try {
-                    LOGGER.warn("Sleeping for 1 sec");
-                    Thread.sleep(1000);
-                } catch (InterruptedException e1) {
-                    LOGGER.warn("Thread sleep interrupted");
-                }
-                retries++;
+            // Compare Postgres views with DynamoDB views.
+            final List<Long> accounts = Lists.newArrayList();
+            for (DeviceAccountPair deviceAccountPair : deviceAccountPairs) {
+                accounts.add(deviceAccountPair.accountId);
             }
 
-            if(deviceAccountInfoFromMergeTable.isEmpty()) {
+            final Map<Long, DateTimeZone> timezonesByUser = getTimezonesByUser(deviceName, batchPeriodicDataWorker, accounts);
+
+            if(timezonesByUser.isEmpty()) {
                 LOGGER.warn("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
             } else { // track only for sense paired to accounts
                 activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
@@ -188,30 +174,15 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         : periodicData.getFirmwareVersion();
 
 
-
-
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
-                    Optional<DateTimeZone> timeZoneOptional = Optional.absent();
-                    for(final UserInfo userInfo :deviceAccountInfoFromMergeTable){
-                        if(userInfo.accountId == pair.accountId){
-                            if(userInfo.timeZone.isPresent()){
-                                timeZoneOptional = userInfo.timeZone;
-                            }else{
-                                LOGGER.warn("No timezone for device {} account {}", deviceName, userInfo.accountId);
-                                continue;
-                            }
-                        }
-                    }
-
-
-                    if(!timeZoneOptional.isPresent()){
+                    if(!timezonesByUser.containsKey(pair.accountId)) {
                         LOGGER.warn("No timezone info for account {} paired with device {}, account may already unpaired with device but merge table not updated.",
                                 pair.accountId,
                                 deviceName);
                         continue;
                     }
 
-                    final DateTimeZone userTimeZone = timeZoneOptional.get();
+                    final DateTimeZone userTimeZone = timezonesByUser.get(pair.accountId);
 
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
@@ -243,8 +214,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                     dataForDevice.add(deviceData);
                 }
-                //TODO: Eventually break out metrics to their own worker
-                seenFirmwares.put(deviceName, new FirmwareInfo(firmwareVersion.toString(), deviceName, timestampMillis));
             }
 
 
@@ -327,5 +296,60 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
         }
 
+    }
+
+
+    /**
+     *
+     * @param deviceName
+     * @param batchPeriodicDataWorker
+     * @return
+     */
+    public Map<Long, DateTimeZone> getTimezonesByUser(final String deviceName, final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker, final List<Long> accountsList) {
+        final Map<Long, DateTimeZone> map = Maps.newHashMap();
+        for(final DataInputProtos.AccountMetadata accountMetadata : batchPeriodicDataWorker.getTimezonesList()) {
+            map.put(accountMetadata.getAccountId(), DateTimeZone.forID(accountMetadata.getTimezone()));
+        }
+
+        for(final Long accountId : accountsList) {
+            if(!map.containsKey(accountId)) {
+                LOGGER.warn("Found account_id {} in account_device_map but not in alarm_info for device_id {}", accountId, deviceName);
+            }
+        }
+
+        // Kinesis, DynamoDB and Postgres have a consistent view of accounts
+        // move on
+        if(map.size() == accountsList.size()) {
+            return map;
+        }
+
+
+        // At this point we need to go to dynamoDB
+        LOGGER.warn("Querying dynamoDB. One or several timezones not found in Kinesis message for device_id = {}.", deviceName);
+
+        int retries = 2;
+        for(int i = 0; i < retries; i++) {
+            try {
+                final List<UserInfo> userInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);
+                for(UserInfo userInfo : userInfoList) {
+                    if(userInfo.timeZone.isPresent()) {
+                        map.put(userInfo.accountId, userInfo.timeZone.get());
+                    }
+                }
+                break;
+            } catch (AmazonClientException exception) {
+                LOGGER.error("Failed getting info from DynamoDB for device = {}", deviceName);
+            }
+
+            try {
+                LOGGER.warn("Sleeping for 1 sec");
+                Thread.sleep(1000);
+            } catch (InterruptedException e1) {
+                LOGGER.warn("Thread sleep interrupted");
+            }
+            retries++;
+        }
+
+        return map;
     }
 }
