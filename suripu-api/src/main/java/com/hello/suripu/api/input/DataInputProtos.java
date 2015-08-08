@@ -3838,6 +3838,558 @@ public final class DataInputProtos {
     // @@protoc_insertion_point(class_scope:batched_periodic_data)
   }
 
+  public interface AccountMetadataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional int64 account_id = 1;
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    boolean hasAccountId();
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    long getAccountId();
+
+    // optional string timezone = 2;
+    /**
+     * <code>optional string timezone = 2;</code>
+     */
+    boolean hasTimezone();
+    /**
+     * <code>optional string timezone = 2;</code>
+     */
+    java.lang.String getTimezone();
+    /**
+     * <code>optional string timezone = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getTimezoneBytes();
+  }
+  /**
+   * Protobuf type {@code AccountMetadata}
+   */
+  public static final class AccountMetadata extends
+      com.google.protobuf.GeneratedMessage
+      implements AccountMetadataOrBuilder {
+    // Use AccountMetadata.newBuilder() to construct.
+    private AccountMetadata(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private AccountMetadata(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final AccountMetadata defaultInstance;
+    public static AccountMetadata getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public AccountMetadata getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AccountMetadata(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              accountId_ = input.readInt64();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              timezone_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.input.DataInputProtos.AccountMetadata.class, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<AccountMetadata> PARSER =
+        new com.google.protobuf.AbstractParser<AccountMetadata>() {
+      public AccountMetadata parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AccountMetadata(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AccountMetadata> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional int64 account_id = 1;
+    public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
+    private long accountId_;
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    public boolean hasAccountId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int64 account_id = 1;</code>
+     */
+    public long getAccountId() {
+      return accountId_;
+    }
+
+    // optional string timezone = 2;
+    public static final int TIMEZONE_FIELD_NUMBER = 2;
+    private java.lang.Object timezone_;
+    /**
+     * <code>optional string timezone = 2;</code>
+     */
+    public boolean hasTimezone() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string timezone = 2;</code>
+     */
+    public java.lang.String getTimezone() {
+      java.lang.Object ref = timezone_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          timezone_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string timezone = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTimezoneBytes() {
+      java.lang.Object ref = timezone_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        timezone_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      accountId_ = 0L;
+      timezone_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt64(1, accountId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getTimezoneBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, accountId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getTimezoneBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.input.DataInputProtos.AccountMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.input.DataInputProtos.AccountMetadata prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code AccountMetadata}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.input.DataInputProtos.AccountMetadata.class, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.input.DataInputProtos.AccountMetadata.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        accountId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        timezone_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.input.DataInputProtos.internal_static_AccountMetadata_descriptor;
+      }
+
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadata getDefaultInstanceForType() {
+        return com.hello.suripu.api.input.DataInputProtos.AccountMetadata.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadata build() {
+        com.hello.suripu.api.input.DataInputProtos.AccountMetadata result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadata buildPartial() {
+        com.hello.suripu.api.input.DataInputProtos.AccountMetadata result = new com.hello.suripu.api.input.DataInputProtos.AccountMetadata(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.accountId_ = accountId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.timezone_ = timezone_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.input.DataInputProtos.AccountMetadata) {
+          return mergeFrom((com.hello.suripu.api.input.DataInputProtos.AccountMetadata)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.input.DataInputProtos.AccountMetadata other) {
+        if (other == com.hello.suripu.api.input.DataInputProtos.AccountMetadata.getDefaultInstance()) return this;
+        if (other.hasAccountId()) {
+          setAccountId(other.getAccountId());
+        }
+        if (other.hasTimezone()) {
+          bitField0_ |= 0x00000002;
+          timezone_ = other.timezone_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.input.DataInputProtos.AccountMetadata parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.input.DataInputProtos.AccountMetadata) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional int64 account_id = 1;
+      private long accountId_ ;
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public boolean hasAccountId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public long getAccountId() {
+        return accountId_;
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public Builder setAccountId(long value) {
+        bitField0_ |= 0x00000001;
+        accountId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 account_id = 1;</code>
+       */
+      public Builder clearAccountId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        accountId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional string timezone = 2;
+      private java.lang.Object timezone_ = "";
+      /**
+       * <code>optional string timezone = 2;</code>
+       */
+      public boolean hasTimezone() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string timezone = 2;</code>
+       */
+      public java.lang.String getTimezone() {
+        java.lang.Object ref = timezone_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          timezone_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string timezone = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTimezoneBytes() {
+        java.lang.Object ref = timezone_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          timezone_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string timezone = 2;</code>
+       */
+      public Builder setTimezone(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        timezone_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string timezone = 2;</code>
+       */
+      public Builder clearTimezone() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        timezone_ = getDefaultInstance().getTimezone();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string timezone = 2;</code>
+       */
+      public Builder setTimezoneBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        timezone_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:AccountMetadata)
+    }
+
+    static {
+      defaultInstance = new AccountMetadata(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:AccountMetadata)
+  }
+
   public interface BatchPeriodicDataWorkerOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -3890,20 +4442,30 @@ public final class DataInputProtos {
      */
     int getUptimeInSecond();
 
-    // optional string timezone = 5;
+    // repeated .AccountMetadata timezones = 5;
     /**
-     * <code>optional string timezone = 5;</code>
+     * <code>repeated .AccountMetadata timezones = 5;</code>
      */
-    boolean hasTimezone();
+    java.util.List<com.hello.suripu.api.input.DataInputProtos.AccountMetadata> 
+        getTimezonesList();
     /**
-     * <code>optional string timezone = 5;</code>
+     * <code>repeated .AccountMetadata timezones = 5;</code>
      */
-    java.lang.String getTimezone();
+    com.hello.suripu.api.input.DataInputProtos.AccountMetadata getTimezones(int index);
     /**
-     * <code>optional string timezone = 5;</code>
+     * <code>repeated .AccountMetadata timezones = 5;</code>
      */
-    com.google.protobuf.ByteString
-        getTimezoneBytes();
+    int getTimezonesCount();
+    /**
+     * <code>repeated .AccountMetadata timezones = 5;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder> 
+        getTimezonesOrBuilderList();
+    /**
+     * <code>repeated .AccountMetadata timezones = 5;</code>
+     */
+    com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder getTimezonesOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code BatchPeriodicDataWorker}
@@ -3985,8 +4547,11 @@ public final class DataInputProtos {
               break;
             }
             case 42: {
-              bitField0_ |= 0x00000010;
-              timezone_ = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                timezones_ = new java.util.ArrayList<com.hello.suripu.api.input.DataInputProtos.AccountMetadata>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              timezones_.add(input.readMessage(com.hello.suripu.api.input.DataInputProtos.AccountMetadata.PARSER, extensionRegistry));
               break;
             }
           }
@@ -3997,6 +4562,9 @@ public final class DataInputProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          timezones_ = java.util.Collections.unmodifiableList(timezones_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -4126,47 +4694,40 @@ public final class DataInputProtos {
       return uptimeInSecond_;
     }
 
-    // optional string timezone = 5;
-    public static final int TIMEZONE_FIELD_NUMBER = 5;
-    private java.lang.Object timezone_;
+    // repeated .AccountMetadata timezones = 5;
+    public static final int TIMEZONES_FIELD_NUMBER = 5;
+    private java.util.List<com.hello.suripu.api.input.DataInputProtos.AccountMetadata> timezones_;
     /**
-     * <code>optional string timezone = 5;</code>
+     * <code>repeated .AccountMetadata timezones = 5;</code>
      */
-    public boolean hasTimezone() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+    public java.util.List<com.hello.suripu.api.input.DataInputProtos.AccountMetadata> getTimezonesList() {
+      return timezones_;
     }
     /**
-     * <code>optional string timezone = 5;</code>
+     * <code>repeated .AccountMetadata timezones = 5;</code>
      */
-    public java.lang.String getTimezone() {
-      java.lang.Object ref = timezone_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          timezone_ = s;
-        }
-        return s;
-      }
+    public java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder> 
+        getTimezonesOrBuilderList() {
+      return timezones_;
     }
     /**
-     * <code>optional string timezone = 5;</code>
+     * <code>repeated .AccountMetadata timezones = 5;</code>
      */
-    public com.google.protobuf.ByteString
-        getTimezoneBytes() {
-      java.lang.Object ref = timezone_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        timezone_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public int getTimezonesCount() {
+      return timezones_.size();
+    }
+    /**
+     * <code>repeated .AccountMetadata timezones = 5;</code>
+     */
+    public com.hello.suripu.api.input.DataInputProtos.AccountMetadata getTimezones(int index) {
+      return timezones_.get(index);
+    }
+    /**
+     * <code>repeated .AccountMetadata timezones = 5;</code>
+     */
+    public com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder getTimezonesOrBuilder(
+        int index) {
+      return timezones_.get(index);
     }
 
     private void initFields() {
@@ -4174,7 +4735,7 @@ public final class DataInputProtos {
       ipAddress_ = "";
       receivedAt_ = 0L;
       uptimeInSecond_ = 0;
-      timezone_ = "";
+      timezones_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4206,8 +4767,8 @@ public final class DataInputProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeInt32(4, uptimeInSecond_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, getTimezoneBytes());
+      for (int i = 0; i < timezones_.size(); i++) {
+        output.writeMessage(5, timezones_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -4234,9 +4795,9 @@ public final class DataInputProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, uptimeInSecond_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      for (int i = 0; i < timezones_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, getTimezoneBytes());
+          .computeMessageSize(5, timezones_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4347,6 +4908,7 @@ public final class DataInputProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getDataFieldBuilder();
+          getTimezonesFieldBuilder();
         }
       }
       private static Builder create() {
@@ -4367,8 +4929,12 @@ public final class DataInputProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         uptimeInSecond_ = 0;
         bitField0_ = (bitField0_ & ~0x00000008);
-        timezone_ = "";
-        bitField0_ = (bitField0_ & ~0x00000010);
+        if (timezonesBuilder_ == null) {
+          timezones_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          timezonesBuilder_.clear();
+        }
         return this;
       }
 
@@ -4417,10 +4983,15 @@ public final class DataInputProtos {
           to_bitField0_ |= 0x00000008;
         }
         result.uptimeInSecond_ = uptimeInSecond_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
+        if (timezonesBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+            timezones_ = java.util.Collections.unmodifiableList(timezones_);
+            bitField0_ = (bitField0_ & ~0x00000010);
+          }
+          result.timezones_ = timezones_;
+        } else {
+          result.timezones_ = timezonesBuilder_.build();
         }
-        result.timezone_ = timezone_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4451,10 +5022,31 @@ public final class DataInputProtos {
         if (other.hasUptimeInSecond()) {
           setUptimeInSecond(other.getUptimeInSecond());
         }
-        if (other.hasTimezone()) {
-          bitField0_ |= 0x00000010;
-          timezone_ = other.timezone_;
-          onChanged();
+        if (timezonesBuilder_ == null) {
+          if (!other.timezones_.isEmpty()) {
+            if (timezones_.isEmpty()) {
+              timezones_ = other.timezones_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+            } else {
+              ensureTimezonesIsMutable();
+              timezones_.addAll(other.timezones_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.timezones_.isEmpty()) {
+            if (timezonesBuilder_.isEmpty()) {
+              timezonesBuilder_.dispose();
+              timezonesBuilder_ = null;
+              timezones_ = other.timezones_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+              timezonesBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getTimezonesFieldBuilder() : null;
+            } else {
+              timezonesBuilder_.addAllMessages(other.timezones_);
+            }
+          }
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4746,78 +5338,244 @@ public final class DataInputProtos {
         return this;
       }
 
-      // optional string timezone = 5;
-      private java.lang.Object timezone_ = "";
-      /**
-       * <code>optional string timezone = 5;</code>
-       */
-      public boolean hasTimezone() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+      // repeated .AccountMetadata timezones = 5;
+      private java.util.List<com.hello.suripu.api.input.DataInputProtos.AccountMetadata> timezones_ =
+        java.util.Collections.emptyList();
+      private void ensureTimezonesIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          timezones_ = new java.util.ArrayList<com.hello.suripu.api.input.DataInputProtos.AccountMetadata>(timezones_);
+          bitField0_ |= 0x00000010;
+         }
       }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.DataInputProtos.AccountMetadata, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder, com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder> timezonesBuilder_;
+
       /**
-       * <code>optional string timezone = 5;</code>
+       * <code>repeated .AccountMetadata timezones = 5;</code>
        */
-      public java.lang.String getTimezone() {
-        java.lang.Object ref = timezone_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          timezone_ = s;
-          return s;
+      public java.util.List<com.hello.suripu.api.input.DataInputProtos.AccountMetadata> getTimezonesList() {
+        if (timezonesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(timezones_);
         } else {
-          return (java.lang.String) ref;
+          return timezonesBuilder_.getMessageList();
         }
       }
       /**
-       * <code>optional string timezone = 5;</code>
+       * <code>repeated .AccountMetadata timezones = 5;</code>
        */
-      public com.google.protobuf.ByteString
-          getTimezoneBytes() {
-        java.lang.Object ref = timezone_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          timezone_ = b;
-          return b;
+      public int getTimezonesCount() {
+        if (timezonesBuilder_ == null) {
+          return timezones_.size();
         } else {
-          return (com.google.protobuf.ByteString) ref;
+          return timezonesBuilder_.getCount();
         }
       }
       /**
-       * <code>optional string timezone = 5;</code>
+       * <code>repeated .AccountMetadata timezones = 5;</code>
        */
-      public Builder setTimezone(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000010;
-        timezone_ = value;
-        onChanged();
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadata getTimezones(int index) {
+        if (timezonesBuilder_ == null) {
+          return timezones_.get(index);
+        } else {
+          return timezonesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public Builder setTimezones(
+          int index, com.hello.suripu.api.input.DataInputProtos.AccountMetadata value) {
+        if (timezonesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTimezonesIsMutable();
+          timezones_.set(index, value);
+          onChanged();
+        } else {
+          timezonesBuilder_.setMessage(index, value);
+        }
         return this;
       }
       /**
-       * <code>optional string timezone = 5;</code>
+       * <code>repeated .AccountMetadata timezones = 5;</code>
        */
-      public Builder clearTimezone() {
-        bitField0_ = (bitField0_ & ~0x00000010);
-        timezone_ = getDefaultInstance().getTimezone();
-        onChanged();
+      public Builder setTimezones(
+          int index, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder builderForValue) {
+        if (timezonesBuilder_ == null) {
+          ensureTimezonesIsMutable();
+          timezones_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          timezonesBuilder_.setMessage(index, builderForValue.build());
+        }
         return this;
       }
       /**
-       * <code>optional string timezone = 5;</code>
+       * <code>repeated .AccountMetadata timezones = 5;</code>
        */
-      public Builder setTimezoneBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000010;
-        timezone_ = value;
-        onChanged();
+      public Builder addTimezones(com.hello.suripu.api.input.DataInputProtos.AccountMetadata value) {
+        if (timezonesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTimezonesIsMutable();
+          timezones_.add(value);
+          onChanged();
+        } else {
+          timezonesBuilder_.addMessage(value);
+        }
         return this;
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public Builder addTimezones(
+          int index, com.hello.suripu.api.input.DataInputProtos.AccountMetadata value) {
+        if (timezonesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTimezonesIsMutable();
+          timezones_.add(index, value);
+          onChanged();
+        } else {
+          timezonesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public Builder addTimezones(
+          com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder builderForValue) {
+        if (timezonesBuilder_ == null) {
+          ensureTimezonesIsMutable();
+          timezones_.add(builderForValue.build());
+          onChanged();
+        } else {
+          timezonesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public Builder addTimezones(
+          int index, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder builderForValue) {
+        if (timezonesBuilder_ == null) {
+          ensureTimezonesIsMutable();
+          timezones_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          timezonesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public Builder addAllTimezones(
+          java.lang.Iterable<? extends com.hello.suripu.api.input.DataInputProtos.AccountMetadata> values) {
+        if (timezonesBuilder_ == null) {
+          ensureTimezonesIsMutable();
+          super.addAll(values, timezones_);
+          onChanged();
+        } else {
+          timezonesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public Builder clearTimezones() {
+        if (timezonesBuilder_ == null) {
+          timezones_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+          onChanged();
+        } else {
+          timezonesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public Builder removeTimezones(int index) {
+        if (timezonesBuilder_ == null) {
+          ensureTimezonesIsMutable();
+          timezones_.remove(index);
+          onChanged();
+        } else {
+          timezonesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder getTimezonesBuilder(
+          int index) {
+        return getTimezonesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder getTimezonesOrBuilder(
+          int index) {
+        if (timezonesBuilder_ == null) {
+          return timezones_.get(index);  } else {
+          return timezonesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder> 
+           getTimezonesOrBuilderList() {
+        if (timezonesBuilder_ != null) {
+          return timezonesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(timezones_);
+        }
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder addTimezonesBuilder() {
+        return getTimezonesFieldBuilder().addBuilder(
+            com.hello.suripu.api.input.DataInputProtos.AccountMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder addTimezonesBuilder(
+          int index) {
+        return getTimezonesFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .AccountMetadata timezones = 5;</code>
+       */
+      public java.util.List<com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder> 
+           getTimezonesBuilderList() {
+        return getTimezonesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.input.DataInputProtos.AccountMetadata, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder, com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder> 
+          getTimezonesFieldBuilder() {
+        if (timezonesBuilder_ == null) {
+          timezonesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.input.DataInputProtos.AccountMetadata, com.hello.suripu.api.input.DataInputProtos.AccountMetadata.Builder, com.hello.suripu.api.input.DataInputProtos.AccountMetadataOrBuilder>(
+                  timezones_,
+                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  getParentForChildren(),
+                  isClean());
+          timezones_ = null;
+        }
+        return timezonesBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:BatchPeriodicDataWorker)
@@ -4846,6 +5604,11 @@ public final class DataInputProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_batched_periodic_data_wifi_access_point_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_AccountMetadata_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_AccountMetadata_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_BatchPeriodicDataWorker_descriptor;
   private static
@@ -4878,12 +5641,14 @@ public final class DataInputProtos {
       "wifi_access_point\022\014\n\004ssid\030\001 \001(\t\022\014\n\004rssi\030" +
       "\002 \001(\005\022E\n\007antenna\030\003 \001(\01624.batched_periodi" +
       "c_data.wifi_access_point.AntennaType\"\037\n\013" +
-      "AntennaType\022\007\n\003IFA\020\001\022\007\n\003PCB\020\002\"\224\001\n\027BatchP" +
-      "eriodicDataWorker\022$\n\004data\030\001 \001(\0132\026.batche",
-      "d_periodic_data\022\022\n\nip_address\030\002 \001(\t\022\023\n\013r" +
-      "eceived_at\030\003 \001(\003\022\030\n\020uptime_in_second\030\004 \001" +
-      "(\005\022\020\n\010timezone\030\005 \001(\tB-\n\032com.hello.suripu" +
-      ".api.inputB\017DataInputProtos"
+      "AntennaType\022\007\n\003IFA\020\001\022\007\n\003PCB\020\002\"7\n\017Account" +
+      "Metadata\022\022\n\naccount_id\030\001 \001(\003\022\020\n\010timezone",
+      "\030\002 \001(\t\"\247\001\n\027BatchPeriodicDataWorker\022$\n\004da" +
+      "ta\030\001 \001(\0132\026.batched_periodic_data\022\022\n\nip_a" +
+      "ddress\030\002 \001(\t\022\023\n\013received_at\030\003 \001(\003\022\030\n\020upt" +
+      "ime_in_second\030\004 \001(\005\022#\n\ttimezones\030\005 \003(\0132\020" +
+      ".AccountMetadataB-\n\032com.hello.suripu.api" +
+      ".inputB\017DataInputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4908,12 +5673,18 @@ public final class DataInputProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_batched_periodic_data_wifi_access_point_descriptor,
               new java.lang.String[] { "Ssid", "Rssi", "Antenna", });
-          internal_static_BatchPeriodicDataWorker_descriptor =
+          internal_static_AccountMetadata_descriptor =
             getDescriptor().getMessageTypes().get(2);
+          internal_static_AccountMetadata_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_AccountMetadata_descriptor,
+              new java.lang.String[] { "AccountId", "Timezone", });
+          internal_static_BatchPeriodicDataWorker_descriptor =
+            getDescriptor().getMessageTypes().get(3);
           internal_static_BatchPeriodicDataWorker_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_BatchPeriodicDataWorker_descriptor,
-              new java.lang.String[] { "Data", "IpAddress", "ReceivedAt", "UptimeInSecond", "Timezone", });
+              new java.lang.String[] { "Data", "IpAddress", "ReceivedAt", "UptimeInSecond", "Timezones", });
           return null;
         }
       };
