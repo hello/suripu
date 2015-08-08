@@ -1,6 +1,8 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -201,15 +203,20 @@ public class ReceiveResource extends BaseResource {
         }
         LOGGER.debug("Found {} pairs for device_id = {}", userInfoList.size(), data.getDeviceId());
 
-        final Optional<DateTimeZone> dateTimeZoneOptional = getUserTimeZone(userInfoList);
+        final Map<Long, DateTimeZone> accountTimezones = getUserTimeZones(userInfoList);
         final DataInputProtos.BatchPeriodicDataWorker.Builder batchPeriodicDataWorkerMessageBuilder = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
                 .setData(data)
                 .setReceivedAt(DateTime.now().getMillis())
                 .setIpAddress(ipAddress)
                 .setUptimeInSecond(data.getUptimeInSecond());
 
-        if(dateTimeZoneOptional.isPresent()) {
-            batchPeriodicDataWorkerMessageBuilder.setTimezone(dateTimeZoneOptional.get().getID());
+
+        for(final Long accountId : accountTimezones.keySet()) {
+            final DataInputProtos.AccountMetadata metadata = DataInputProtos.AccountMetadata.newBuilder()
+                    .setAccountId(accountId)
+                    .setTimezone(accountTimezones.get(accountId).getID())
+                    .build();
+            batchPeriodicDataWorkerMessageBuilder.addTimezones(metadata);
         }
 
         try {
@@ -525,6 +532,21 @@ public class ReceiveResource extends BaseResource {
         return Optional.absent();
     }
 
+
+    /**
+     * Maps account to timezones
+     * @param userInfoList
+     * @return
+     */
+    private Map<Long, DateTimeZone> getUserTimeZones(final List<UserInfo> userInfoList) {
+        final Map<Long, DateTimeZone> map = Maps.newHashMap();
+        for(final UserInfo info: userInfoList){
+            if(info.timeZone.isPresent()){
+                map.put(info.accountId, info.timeZone.get());
+            }
+        }
+        return ImmutableMap.copyOf(map);
+    }
 
     /**
      * Performs all OTA availability checks and produces an update file list
