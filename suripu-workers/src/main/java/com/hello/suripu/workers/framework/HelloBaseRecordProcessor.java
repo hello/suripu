@@ -45,4 +45,8 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         return flipper.deviceFeatureActive(FeatureFlipper.PILL_LAST_SEEN_DYNAMODB,senseId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasKinesisTimezonesEnabled(final String senseId) {
+        return flipper.deviceFeatureActive(FeatureFlipper.WORKER_KINESIS_TIMEZONES, senseId, Collections.EMPTY_LIST);
+    }
+
 }

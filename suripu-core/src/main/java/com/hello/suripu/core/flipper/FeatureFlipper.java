@@ -58,4 +58,5 @@ public class FeatureFlipper {
 
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";
+    public final static String WORKER_KINESIS_TIMEZONES = "worker_kinesis_timezones";
 }
