@@ -227,7 +227,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 int inserted = deviceDataDAO.batchInsertWithFailureFallback(data);
 
                 if(inserted == data.size()) {
-                    LOGGER.info("Batch saved {} data to DB for device {}", data.size(), deviceId);
+                    LOGGER.trace("Batch saved {} data to DB for device {}", data.size(), deviceId);
                 }else{
                     LOGGER.warn("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
                 }
@@ -246,7 +246,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         if(random.nextInt(11) % 10 == 0) {
             final CacheStats stats = dbCache.stats();
-            LOGGER.info("Cache hitrate: {}", stats.hitRate());
+            LOGGER.info("{} - Cache hitrate: {}", this.shardId, stats.hitRate());
         }
 
         // This lets us clear the cache remotely by turning on the feature in FeatureFlipper.

@@ -82,7 +82,7 @@ kinesis:
 
 app_name: SenseSaveConsumerProd
 
-max_records: 100
+max_records: 300
 
 # Logging settings.
 logging:
@@ -115,7 +115,7 @@ redis:
 
 kinesis_logger:
   stream_name: logs
-  enabled : true
+  enabled : false
   buffer_size: 100
   origin: suripu-workers
   min_log_level : INFO
