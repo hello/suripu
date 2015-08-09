@@ -12,20 +12,23 @@ public class SenseSaveProcessorFactory implements IRecordProcessorFactory {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final DeviceDataDAO deviceDataDAO;
+    private final Integer maxRecords;
 
     public SenseSaveProcessorFactory(
             final DeviceDAO deviceDAO,
             final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
-            final DeviceDataDAO deviceDataDAO) {
+            final DeviceDataDAO deviceDataDAO,
+            final Integer maxRecords) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
+        this.maxRecords = maxRecords;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new SenseSaveProcessor(deviceDAO, mergedUserInfoDynamoDB, deviceDataDAO, sensorsViewsDynamoDB);
+        return new SenseSaveProcessor(deviceDAO, mergedUserInfoDynamoDB, deviceDataDAO, sensorsViewsDynamoDB, maxRecords);
     }
 }
