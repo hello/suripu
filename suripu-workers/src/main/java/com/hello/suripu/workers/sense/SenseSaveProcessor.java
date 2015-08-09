@@ -52,25 +52,31 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
+    private final Integer maxRecords;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
     private final Meter clockOutOfSync;
     private final Timer fetchTimezones;
+    private final Meter capacity;
+
 
     private String shardId = "";
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
+        this.maxRecords = maxRecords;
+
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
         this.fetchTimezones = Metrics.defaultRegistry().newTimer(SenseSaveProcessor.class, "fetch-timezones");
+        this.capacity = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
 
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
@@ -227,7 +233,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 int inserted = deviceDataDAO.batchInsertWithFailureFallback(data);
 
                 if(inserted == data.size()) {
-                    LOGGER.info("Batch saved {} data to DB for device {}", data.size(), deviceId);
+                    LOGGER.trace("Batch saved {} data to DB for device {}", data.size(), deviceId);
                 }else{
                     LOGGER.warn("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
                 }
@@ -246,7 +252,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         if(random.nextInt(11) % 10 == 0) {
             final CacheStats stats = dbCache.stats();
-            LOGGER.info("Cache hitrate: {}", stats.hitRate());
+            LOGGER.info("{} - Cache hitrate: {}", this.shardId, stats.hitRate());
         }
 
         // This lets us clear the cache remotely by turning on the feature in FeatureFlipper.
@@ -268,7 +274,10 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
+        final int batchCapacity = Math.round(activeSenses.size() / maxRecords * 100) ;
         LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
+        LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
+        capacity.mark(batchCapacity);
     }
 
     @Override
