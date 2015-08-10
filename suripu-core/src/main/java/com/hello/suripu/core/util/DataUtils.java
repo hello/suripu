@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +52,14 @@ public class DataUtils{
 
     public static float dbIntToFloatDust(final int valueFromDB) {return ((float)valueFromDB) / DUST_FLOAT_TO_INT_MULTIPLIER;}
 
-    public static int convertRawDustCountsToAQI(final int rawCount, final int firmwareVersion) {
-        final float dustDensity = convertDustDataFromCalibratedCountToDensity(rawCount, firmwareVersion);
+    public static int convertRawDustCountsToAQI(final int rawDustCount, final Calibration calibration, final int firmwareVersion) {
+        final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibration);
+        final float dustDensity = convertDustDataFromCalibratedCountToDensity(calibratedRawDustCount, firmwareVersion);
         return convertDustDensityToAQI(dustDensity);
+    }
+
+    public static int calibrateRawDustCount(final int rawDustCount, final Calibration calibration) {
+        return rawDustCount + calibration.dustCalibrationDelta;
     }
 
     public static int convertDustDensityToAQI (final float value) {

@@ -206,14 +206,13 @@ public class DeviceData {
             return this;
         }
 
-        public Builder withAmbientAirQuality(final int calibratedAmbientAirQuality, final int firmwareVersion){
-            final float dustDensity = DataUtils.convertDustDataFromCalibratedCountToDensity(calibratedAmbientAirQuality, firmwareVersion); // milligrams
-            this.ambientAirQuality = DataUtils.floatToDbIntDust(dustDensity); // multiplier to save as Int
+        public Builder withAmbientAirQuality(final int ambientAirQuality){
+            this.ambientAirQuality  = ambientAirQuality;
             return this;
         }
 
-        public Builder withAmbientAirQualityRaw(final int ambientAirQuality) {
-            this.ambientAirQualityRaw = ambientAirQuality;
+        public Builder withAmbientAirQualityRaw(final int ambientAirQualityRaw){
+            this.ambientAirQualityRaw  = ambientAirQualityRaw;
             return this;
         }
 

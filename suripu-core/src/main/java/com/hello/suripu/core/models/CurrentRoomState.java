@@ -115,7 +115,7 @@ public class CurrentRoomState {
 
         final float humidity = DataUtils.calibrateHumidity(rawTemperature, rawHumidity);
         final float temperature = DataUtils.calibrateTemperature(rawTemperature);
-        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
+        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, Calibration.createDefaultWithArbitrarySenseId(), firmwareVersion));
         final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), DataUtils.convertAudioRawToDB(rawPeakNoise));
         return fromTempHumidDustLightSound(temperature, humidity, particulatesAQI, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
@@ -153,14 +153,14 @@ public class CurrentRoomState {
      * @param data
      * @return
      */
-    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit) {
+    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit, final Calibration calibration) {
 
         final float temp = DataUtils.calibrateTemperature(data.ambientTemperature);
         final float humidity = DataUtils.calibrateHumidity(data.ambientTemperature, data.ambientHumidity);
         final float light = data.ambientLight; // dvt units values are already converted to lux
         final float sound = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(data.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(data.audioPeakDisturbancesDB));
         // max value is in raw counts, conversion needed
-        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientAirQualityRaw, data.firmwareVersion));
+        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientAirQualityRaw, calibration, data.firmwareVersion));
         return fromTempHumidDustLightSound(temp, humidity, particulatesAQI, light, sound, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
