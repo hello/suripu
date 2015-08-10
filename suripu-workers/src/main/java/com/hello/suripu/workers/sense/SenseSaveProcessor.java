@@ -274,7 +274,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
-        final int batchCapacity = Math.round(activeSenses.size() / maxRecords * 100) ;
+        final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f) ;
         LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);
