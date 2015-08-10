@@ -36,4 +36,8 @@ public class Calibration {
     public static final Calibration createDefault(final String senseId) {
         return new Calibration(senseId, DEFAULT_DUST_OFFSET, DEFAULT_DUST_CALIBRATION_DELTA, DEFAULT_METADATA);
     }
+
+    public static final Calibration createDefaultWithArbitrarySenseId() {
+        return new Calibration("dummy-sense", DEFAULT_DUST_OFFSET, DEFAULT_DUST_CALIBRATION_DELTA, DEFAULT_METADATA);
+    }
 }
