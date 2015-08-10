@@ -1,6 +1,8 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -192,23 +194,41 @@ public class ReceiveResource extends BaseResource {
         }
 
 
-        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
+        final List<UserInfo> userInfoList = new ArrayList<>();
+
+        try {
+            userInfoList.addAll(this.mergedInfoDynamoDB.getInfo(data.getDeviceId()));  // get alarm related info from DynamoDB "cache".
+        }catch (Exception ex){
+            LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", data.getDeviceId(), ex.getMessage());
+        }
+        LOGGER.debug("Found {} pairs for device_id = {}", userInfoList.size(), data.getDeviceId());
+
+        final Map<Long, DateTimeZone> accountTimezones = getUserTimeZones(userInfoList);
+        final DataInputProtos.BatchPeriodicDataWorker.Builder batchPeriodicDataWorkerMessageBuilder = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
                 .setData(data)
                 .setReceivedAt(DateTime.now().getMillis())
                 .setIpAddress(ipAddress)
-                .setUptimeInSecond(data.getUptimeInSecond())
-                .build();
+                .setUptimeInSecond(data.getUptimeInSecond());
+
+
+        for(final Long accountId : accountTimezones.keySet()) {
+            final DataInputProtos.AccountMetadata metadata = DataInputProtos.AccountMetadata.newBuilder()
+                    .setAccountId(accountId)
+                    .setTimezone(accountTimezones.get(accountId).getID())
+                    .build();
+            batchPeriodicDataWorkerMessageBuilder.addTimezones(metadata);
+        }
 
         try {
             final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-            batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+            batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessageBuilder.build().toByteArray());
         } catch (Exception e) {
             LOGGER.error("IMPORTANT Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
             return plainTextError(Response.Status.SERVICE_UNAVAILABLE, "");
         }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
-        return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
+        return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data, userInfoList);
     }
 
 
@@ -239,19 +259,11 @@ public class ReceiveResource extends BaseResource {
     private byte[] generateSyncResponse(final String deviceName,
                                         final int firmwareVersion,
                                         final byte[] encryptionKey,
-                                        final DataInputProtos.batched_periodic_data batch) {
+                                        final DataInputProtos.batched_periodic_data batch,
+                                        final List<UserInfo> userInfoList) {
         // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
-
-        final List<UserInfo> userInfoList = new ArrayList<>();
-
-        try {
-            userInfoList.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get alarm related info from DynamoDB "cache".
-        }catch (Exception ex){
-            LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", deviceName, ex.getMessage());
-        }
-        LOGGER.debug("Found {} pairs", userInfoList.size());
 
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
@@ -520,6 +532,21 @@ public class ReceiveResource extends BaseResource {
         return Optional.absent();
     }
 
+
+    /**
+     * Maps account to timezones
+     * @param userInfoList
+     * @return
+     */
+    private Map<Long, DateTimeZone> getUserTimeZones(final List<UserInfo> userInfoList) {
+        final Map<Long, DateTimeZone> map = Maps.newHashMap();
+        for(final UserInfo info: userInfoList){
+            if(info.timeZone.isPresent()){
+                map.put(info.accountId, info.timeZone.get());
+            }
+        }
+        return ImmutableMap.copyOf(map);
+    }
 
     /**
      * Performs all OTA availability checks and produces an update file list

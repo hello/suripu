@@ -60,14 +60,13 @@ public class RoomConditionUtil {
         float warningCount = 0;
         float alertCount = 0;
 
+        //TODO: Add particulate values back into room condition after it becomes visible to the user
         warningCount += getWarningCountFromSate(currentRoomState.humidity);
-        warningCount += getWarningCountFromSate(currentRoomState.particulates);
         warningCount += getWarningCountFromSate(currentRoomState.temperature);
         warningCount += getWarningCountFromSate(currentRoomState.light);
         warningCount += getWarningCountFromSate(currentRoomState.sound);
 
         alertCount += getAlertCountFromSate(currentRoomState.humidity);
-        alertCount += getAlertCountFromSate(currentRoomState.particulates);
         alertCount += getAlertCountFromSate(currentRoomState.temperature);
         alertCount += getAlertCountFromSate(currentRoomState.light);
         alertCount += getAlertCountFromSate(currentRoomState.sound);

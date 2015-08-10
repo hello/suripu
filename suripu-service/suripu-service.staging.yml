@@ -1,5 +1,5 @@
 metrics_enabled : false
-debug : false
+debug : true
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
@@ -85,7 +85,7 @@ logging:
   loggers:
 
     # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu: INFO 
+    com.hello.suripu: DEBUG
 http:
     port: 5555
     adminPort: 5556
