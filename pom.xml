@@ -25,7 +25,6 @@
         <module>suripu-app</module>
         <module>suripu-algorithm</module>
         <module>suripu-workers</module>
-        <module>suripu-admin</module>
         <module>suripu-research</module>
         <module>suripu-coredw</module>
     </modules>
