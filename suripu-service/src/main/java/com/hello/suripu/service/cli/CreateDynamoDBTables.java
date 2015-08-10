@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
+import com.hello.suripu.core.db.ConfigurationDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
@@ -26,6 +27,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuConfiguration>
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         createRingTimeHistoryTable(configuration, awsCredentialsProvider);
+        createServiceConfigurationTable(configuration, awsCredentialsProvider);
     }
 
 
@@ -44,6 +46,27 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuConfiguration>
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = RingTimeHistoryDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(tableName + ": " + description.getTableStatus());
+        }
+    }
+
+    private void createServiceConfigurationTable(final SuripuConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
+        final NewDynamoDBConfiguration config = configuration.dynamoDBConfiguration();
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
+        final ImmutableMap<DynamoDBTableName, String> endpoints = configuration.dynamoDBConfiguration().endpoints();
+
+        final String tableName = tableNames.get(DynamoDBTableName.CONFIGURATIONS);
+        final String endpoint = endpoints.get(DynamoDBTableName.CONFIGURATIONS);
+
+        client.setEndpoint(endpoint);
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = ConfigurationDAODynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(tableName + ": " + description.getTableStatus());
         }
