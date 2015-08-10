@@ -240,7 +240,7 @@ timeline_db:
 
 email:
    api_key: XnAIQfmDpMYIapDWGigfwA
-   link_host: https://account.hello.is/password_update
+   link_host: http://account-staging-zpbsmunavw.elasticbeanstalk.com/password_update
 
 ring_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
