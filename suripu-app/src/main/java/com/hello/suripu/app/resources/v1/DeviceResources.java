@@ -4,12 +4,14 @@ import com.amazonaws.AmazonServiceException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
@@ -30,16 +32,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Path("/v1/devices")
 public class DeviceResources extends BaseResource {
@@ -54,6 +64,8 @@ public class DeviceResources extends BaseResource {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final PillHeartBeatDAO pillHeartBeatDAO;
+    private final CalibrationDAO calibrationDAO;
+
 
     @Inject
     RolloutClient feature;
@@ -63,13 +75,15 @@ public class DeviceResources extends BaseResource {
                            final TrackerMotionDAO trackerMotionDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final PillHeartBeatDAO pillHeartBeatDAO,
-                           final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+                           final SensorsViewsDynamoDB sensorsViewsDynamoDB,
+                           final CalibrationDAO calibrationDAO) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
+        this.calibrationDAO = calibrationDAO;
     }
 
     @GET
@@ -176,6 +190,34 @@ public class DeviceResources extends BaseResource {
             LOGGER.error("Failed to factory reset Sense {}, error {}", senseId, sqlExp.getMessage());
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
+    }
+
+
+    @PUT
+    @Path("/calibration/{sense_id}")
+    public void putDustCalibration(@PathParam("sense_id") final String senseId,
+                               @QueryParam("dust_offset") final Integer dustOffset,
+                               @QueryParam("metadata") final String metadata) {
+        calibrationDAO.put(senseId, dustOffset, metadata);
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/calibration/{sense_id}")
+    public Calibration getCalibration(@PathParam("sense_id") final String senseId) {
+        final Optional<Calibration> calibrationOptional = calibrationDAO.getStrict(senseId);
+        if (!calibrationOptional.isPresent()) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return calibrationOptional.get();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/calibration")
+    public Map<String, Calibration> getCalibrationBatch(@Valid @NotNull Set<String> senseIds) {
+        return  calibrationDAO.getBatch(senseIds);
     }
 
 

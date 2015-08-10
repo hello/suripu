@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.admin.Util;
 import com.hello.suripu.admin.models.UserInteraction;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
@@ -13,6 +14,7 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.SenseLogTag;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.Device;
@@ -60,6 +62,7 @@ public class DataResources {
     private final TrackerMotionDAO trackerMotionDAO;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final SenseColorDAO senseColorDAO;
+    private final CalibrationDAO calibrationDAO;
 
     public DataResources(final DeviceDataDAO deviceDataDAO,
                          final DeviceDAO deviceDAO,
@@ -67,7 +70,8 @@ public class DataResources {
                          final UserLabelDAO userLabelDAO,
                          final TrackerMotionDAO trackerMotionDAO,
                          final SensorsViewsDynamoDB sensorsViewsDynamoDB,
-                         final SenseColorDAO senseColorDAO) {
+                         final SenseColorDAO senseColorDAO,
+                         final CalibrationDAO calibrationDAO) {
 
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -76,6 +80,7 @@ public class DataResources {
         this.trackerMotionDAO = trackerMotionDAO;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
         this.senseColorDAO = senseColorDAO;
+        this.calibrationDAO = calibrationDAO;
     }
 
     @GET
@@ -188,8 +193,12 @@ public class DataResources {
          */
         final long queryStartTimeInUTC = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC).minusDays(limitDays).getMillis();
 
+
+        final Optional<Calibration> optionalCalibration = calibrationDAO.getStrict(deviceIdPair.get().externalDeviceId);
+        final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(deviceIdPair.get().externalDeviceId);
+
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, 0, color);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, 0, color, calibration);
     }
 
 
@@ -313,6 +322,9 @@ public class DataResources {
 
         final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceAccountPairOptional.get().externalDeviceId);
 
+        final Optional<Calibration> optionalCalibration = calibrationDAO.getStrict(deviceAccountPairOptional.get().externalDeviceId);
+        final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(deviceAccountPairOptional.get().externalDeviceId);
+
         final AllSensorSampleList sensorSamples = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 startTimestamp,
                 endTimestamp,
@@ -320,7 +332,8 @@ public class DataResources {
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
                 missingDataDefaultValue,
-                color
+                color,
+                calibration
         );
 
         final List<UserInteraction> userInteractions = new ArrayList<>();
@@ -364,7 +377,9 @@ public class DataResources {
         if(!deviceDataOptional.isPresent()) {
             return CurrentRoomState.empty();
         }
-        return CurrentRoomState.fromDeviceData(deviceDataOptional.get().withCalibratedLight(senseColorDAO.getColorForSense(senseId)), DateTime.now(), 15, "c");
+        final Optional<Calibration> optionalCalibration = calibrationDAO.getStrict(senseId);
+        final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(senseId);
+        return CurrentRoomState.fromDeviceData(deviceDataOptional.get().withCalibratedLight(senseColorDAO.getColorForSense(senseId)), DateTime.now(), 15, "c", calibration);
     }
 
     @Timed
