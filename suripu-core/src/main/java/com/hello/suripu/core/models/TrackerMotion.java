@@ -79,7 +79,7 @@ public class TrackerMotion {
 
 
     public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
-        final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey);
+        final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey, accountPair.externalDeviceId);
         final Long timestampInMillis = Utils.convertTimestampInSecondsToTimestampInMillis(pill_data.getTimestamp());
         final Integer timeZoneOffset = timeZone.getOffset(timestampInMillis);
 
@@ -97,7 +97,7 @@ public class TrackerMotion {
     }
 
 
-    public static PillPayloadV2 data(SenseCommandProtos.pill_data data, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
+    public static PillPayloadV2 data(SenseCommandProtos.pill_data data, final byte[] encryptionKey, final String pillId) throws InvalidEncryptedPayloadException{
         if(data.hasMotionDataEntrypted()) {
             switch(data.getFirmwareVersion()) {
                 case 0:
@@ -108,7 +108,8 @@ public class TrackerMotion {
             }
         }
 
-        throw new IllegalArgumentException("No motion data present or bad firmware version. Is this a hearbeat?");
+        final String message = String.format("%s No motion data present or bad firmware version. Is this a hearbeat?", pillId);
+        throw new IllegalArgumentException(message);
     }
 
 
