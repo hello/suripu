@@ -353,11 +353,13 @@ public class ReceiveResource extends BaseResource {
                     .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
             responseBuilder.setAlarm(alarmBuilder.build());
             // End generate protobuf for alarm
-            
-            //Perform all OTA checks and compute the update file list (if necessary)
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
-            if(!fileDownloadList.isEmpty()) {
-                responseBuilder.addAllFiles(fileDownloadList);
+
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
+                //Perform all OTA checks and compute the update file list (if necessary)
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
+                if (!fileDownloadList.isEmpty()) {
+                    responseBuilder.addAllFiles(fileDownloadList);
+                }
             }
 
             final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
@@ -385,9 +387,11 @@ public class ReceiveResource extends BaseResource {
             setPillColors(userInfoList, responseBuilder);
         }else{
             LOGGER.error("NO TIMEZONE IS A BIG DEAL.");
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
-            if(!fileDownloadList.isEmpty()) {
-                responseBuilder.addAllFiles(fileDownloadList);
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
+                if (!fileDownloadList.isEmpty()) {
+                    responseBuilder.addAllFiles(fileDownloadList);
+                }
             }
         }
 
