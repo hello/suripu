@@ -104,6 +104,7 @@ public class TrackerMotion {
                 case 1:
                     return Utils.encryptedToRaw(encryptionKey, data.getMotionDataEntrypted().toByteArray());
                 case 2:
+                case 3: // cleans up error code, new interrupt
                     return Utils.encryptedToRawVersion2(encryptionKey, data.getMotionDataEntrypted().toByteArray());
             }
         }

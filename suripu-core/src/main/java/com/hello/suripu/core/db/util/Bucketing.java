@@ -114,10 +114,12 @@ public class Bucketing {
                 sensorValue = deviceData.ambientDustMin;
             } else if(sensorName.equals("dust_max")) {
                 sensorValue = deviceData.ambientDustMax;
+            } else if(sensorName.equals("dust_raw")) {
+                sensorValue = deviceData.ambientAirQualityRaw;
             } else if(sensorName.equals("dust_variance")) {
                 sensorValue = deviceData.ambientDustVariance;
             } else {
-                LOGGER.warn("Sensor {} is not supported for account_id: {}. Returning early", sensorName);
+                LOGGER.warn("Sensor {} is not supported. Returning early", sensorName);
                 return Optional.absent();
             }
 
