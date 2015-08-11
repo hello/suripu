@@ -5,6 +5,7 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
+import com.hello.suripu.core.preferences.PreferenceName;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -26,7 +27,7 @@ public class AccountPreferencesResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<AccountPreference.EnabledPreference, Boolean> get(@Scope(OAuthScope.PREFERENCES) final AccessToken accessToken) {
+    public Map<PreferenceName, Boolean> get(@Scope(OAuthScope.PREFERENCES) final AccessToken accessToken) {
         return preferencesDAO.get(accessToken.accountId);
     }
 
