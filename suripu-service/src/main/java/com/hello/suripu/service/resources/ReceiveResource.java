@@ -356,13 +356,9 @@ public class ReceiveResource extends BaseResource {
 
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
                 //Perform all OTA checks and compute the update file list (if necessary)
-                try {
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
-                    if (!fileDownloadList.isEmpty()) {
-                        responseBuilder.addAllFiles(fileDownloadList);
-                    }
-                } catch (Exception ex) {
-                    LOGGER.error("Exception thrown during OTA processing.");
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
+                if (!fileDownloadList.isEmpty()) {
+                    responseBuilder.addAllFiles(fileDownloadList);
                 }
             }
 
@@ -392,13 +388,9 @@ public class ReceiveResource extends BaseResource {
         }else{
             LOGGER.error("NO TIMEZONE IS A BIG DEAL.");
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
-                try {
-                    final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
-                    if (!fileDownloadList.isEmpty()) {
-                        responseBuilder.addAllFiles(fileDownloadList);
-                    }
-                } catch (Exception ex) {
-                    LOGGER.error("Exception thrown during OTA processing.");
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
+                if (!fileDownloadList.isEmpty()) {
+                    responseBuilder.addAllFiles(fileDownloadList);
                 }
             }
         }
