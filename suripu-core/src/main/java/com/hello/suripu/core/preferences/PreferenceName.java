@@ -7,7 +7,9 @@ public enum PreferenceName {
     TEMP_CELSIUS("temp_celsius"),
     TIME_TWENTY_FOUR_HOUR("time_twenty_four_hour"),
     PUSH_SCORE("push_score"),
-    PUSH_ALERT_CONDITIONS("push_alert_conditions");
+    PUSH_ALERT_CONDITIONS("push_alert_conditions"),
+    WEIGHT_METRIC("weight_metric"),
+    HEIGHT_METRIC("height_metric");
 
     private String value;
 

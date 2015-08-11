@@ -41,7 +41,8 @@ public class AccountPreferenceTest {
         assertThat(accountPrefs.get(PreferenceName.TEMP_CELSIUS), is(Boolean.FALSE));
 
         assertThat(accountPrefs.get(PreferenceName.PUSH_SCORE), is(Boolean.TRUE));
-
+        assertThat(accountPrefs.get(PreferenceName.WEIGHT_METRIC), is(Boolean.FALSE));
+        assertThat(accountPrefs.get(PreferenceName.HEIGHT_METRIC), is(Boolean.FALSE));
     }
 
     @Test
