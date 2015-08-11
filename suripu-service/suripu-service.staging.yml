@@ -144,6 +144,7 @@ dynamodb:
     sense_key_store : key_store
     sync_response_commands : response_commands
     teams : teams
+    calibration: calibration
 
   endpoints:
       alarm_info : http://dynamodb.us-east-1.amazonaws.com
@@ -156,3 +157,4 @@ dynamodb:
       sense_key_store : http://dynamodb.us-east-1.amazonaws.com
       sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
       teams : http://dynamodb.us-east-1.amazonaws.com
+      calibration: http://dynamodb.us-east-1.amazonaws.com
