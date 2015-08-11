@@ -59,7 +59,7 @@ public class Account {
     @JsonIgnore
     public final String password;
 
-    @JsonIgnore
+    @JsonProperty("created")
     public final DateTime created;
 
     @JsonProperty("last_modified")
@@ -240,7 +240,7 @@ public class Account {
             return this;
         }
 
-        @JsonIgnore
+        @JsonProperty("created")
         public Builder withCreated(final DateTime created) {
             this.created = created;
             return this;
