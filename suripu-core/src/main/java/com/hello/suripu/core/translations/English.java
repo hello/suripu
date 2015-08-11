@@ -156,7 +156,7 @@ public class English {
 
 
     // TIMELINE
-    public final static String TIMELINE_NO_SLEEP_DATA = " No sleep data recorded";
+    public final static String TIMELINE_NO_SLEEP_DATA = "There was no sleep data recorded for this night.";
     public final static String TIMELINE_NOT_ENOUGH_SLEEP_DATA = "Some sleep data was recorded, but not enough to generate a Sleep Timeline for this night.";
 
     // Trends
