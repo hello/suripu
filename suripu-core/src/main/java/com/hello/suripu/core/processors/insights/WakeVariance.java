@@ -83,7 +83,7 @@ public class WakeVariance {
         }
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
-                InsightCard.Category.WAKE_VARIANCE, InsightCard.TimePeriod.RECENTLY,
+                InsightCard.Category.WAKE_VARIANCE, InsightCard.TimePeriod.WEEKLY,
                 DateTime.now(DateTimeZone.UTC)));
 
     }
