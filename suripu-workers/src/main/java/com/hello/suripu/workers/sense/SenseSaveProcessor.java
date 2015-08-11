@@ -88,7 +88,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             public List<DeviceAccountPair> load(final String senseId) {
                                 return deviceDAO.getAccountIdsForDeviceId(senseId);
                             }
-                });
+                        });
         random = new Random(System.currentTimeMillis());
 
     }
@@ -178,7 +178,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         ? batchPeriodicDataWorker.getData().getFirmwareVersion()
                         : periodicData.getFirmwareVersion();
 
-
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     if(!timezonesByUser.containsKey(pair.accountId)) {
                         LOGGER.warn("No timezone info for account {} paired with device {}, account may already unpaired with device but merge table not updated.",
@@ -189,11 +188,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                     final DateTimeZone userTimeZone = timezonesByUser.get(pair.accountId);
 
+
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
-                            .withAmbientAirQuality(periodicData.getDust(), firmwareVersion)
+                            .withAmbientAirQuality(periodicData.getDust())
                             .withAmbientAirQualityRaw(periodicData.getDust())
                             .withAmbientDustVariance(periodicData.getDustVariability())
                             .withAmbientDustMin(periodicData.getDustMin())
