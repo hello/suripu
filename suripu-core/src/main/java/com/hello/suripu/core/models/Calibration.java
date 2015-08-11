@@ -30,7 +30,7 @@ public class Calibration {
     }
 
     public static Calibration create(final String senseId, final Integer dustOffset, final String metadata) {
-        return new Calibration(senseId, dustOffset, Math.round(DUST_CALIBRATION_BASE - dustOffset * DUST_CALIBRATION_K_FACTOR), metadata);
+        return new Calibration(senseId, dustOffset, Math.round(DUST_CALIBRATION_BASE - (float)dustOffset * DUST_CALIBRATION_K_FACTOR), metadata);
     }
 
     public static final Calibration createDefault(final String senseId) {
