@@ -40,7 +40,6 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static String METADATA_ATTRIBUTE_NAME = "metadata";
 
     private final static Integer MAX_BATCH_QUERY_SIZE = 100;
-    public final static String DEFAULT_FACTORY_DEVICE_ID = "0000000000000000";
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String calibrationTableName;
@@ -61,15 +60,6 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     }
 
     private Optional<Calibration> getRemotely(final String senseId, final Boolean strict) {
-        if(DEFAULT_FACTORY_DEVICE_ID.equals(senseId) ) {
-            if (strict.equals(Boolean.TRUE)) {
-                LOGGER.warn("Factory sense {} needs no calibration", senseId);
-                return Optional.absent();
-            }
-            LOGGER.warn("Not in strict mode, returning default calibration for factory sense");
-            return Optional.of(Calibration.createDefault(senseId));
-
-        }
         final HashMap<String, AttributeValue> key = Maps.newHashMap();
         key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
         final GetItemRequest getItemRequest = new GetItemRequest()
@@ -105,14 +95,27 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         // TODO: Log consumed capacity
     }
 
+
     @Override
     public Map<String, Calibration> getBatch(final Set<String> senseIds) {
+        return getBatchRemotely(senseIds, Boolean.FALSE);
+    }
+
+    @Override
+    public Map<String, Calibration> getBatchStrict(final Set<String> senseIds) {
+        return getBatchRemotely(senseIds, Boolean.TRUE);
+    }
+
+    private Map<String, Calibration> getBatchRemotely(final Set<String> senseIds, final Boolean strict) {
         final Map<String, Calibration> calibrationMap = Maps.newHashMap();
         final Set<String> calibratedSenseIds = Sets.newHashSet();
 
-        for (final String senseId : senseIds) {
-            calibrationMap.put(senseId, Calibration.createDefault(senseId));
+        if (strict.equals(Boolean.TRUE)) {
+            for (final String senseId : senseIds) {
+                calibrationMap.put(senseId, Calibration.createDefault(senseId));
+            }
         }
+
 
         final List<String> senseIdsList = Lists.newArrayList(senseIds);
         final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, MAX_BATCH_QUERY_SIZE);

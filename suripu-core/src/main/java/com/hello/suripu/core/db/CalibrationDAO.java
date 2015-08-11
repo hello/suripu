@@ -9,9 +9,9 @@ import java.util.Set;
 
 public interface CalibrationDAO {
     /**
-     * Retrieves an integer offset to help calibrate incoming dust data
+     * Retrieves calibration per sense
      * @param senseId String
-     * @return Integer
+     * @return Calibration
      */
     Optional<Calibration> get(String senseId);
     Optional<Calibration> getStrict(String senseId);
@@ -22,5 +22,11 @@ public interface CalibrationDAO {
      */
     void put(String senseId, Integer dustOffset, String metadata);
 
+    /**
+     * Retrieves a map of sense Id to calibration object
+     * @param senseIds Set<String>
+     * @return Map<String, Calibration>
+     */
     Map<String, Calibration> getBatch(Set<String> senseIds);
+    Map<String, Calibration> getBatchStrict(Set<String> senseIds);
 }
