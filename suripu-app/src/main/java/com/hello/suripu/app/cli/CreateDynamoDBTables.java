@@ -70,7 +70,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createFWUpgradePathTable(configuration, awsCredentialsProvider);
         createHmmBayesNetModelPriorTable(configuration,awsCredentialsProvider);
         createHmmBayesNetModelTable(configuration,awsCredentialsProvider);
-        CreatedCalibrationTable(configuration, awsCredentialsProvider);
+        createdCalibrationTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
