@@ -371,5 +371,10 @@ public class SuripuAppConfiguration extends Configuration {
         return this.hmmBayesnetModelsConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("calibration")
+    private DynamoDBConfiguration calibrationConfiguration;
+    public DynamoDBConfiguration getCalibrationConfiguration() {return this.calibrationConfiguration;}
 
 }
