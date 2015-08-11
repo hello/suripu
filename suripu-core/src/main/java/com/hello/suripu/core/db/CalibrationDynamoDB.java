@@ -69,7 +69,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
         final Map<String, AttributeValue> item = getItemResult.getItem();
         if (item == null) {
-            if (strict.equals(Boolean.TRUE)) {
+            if (strict) {
                 LOGGER.warn("Sense {} does not have calibration", senseId);
                 return Optional.absent();
             }
@@ -110,7 +110,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         final Map<String, Calibration> calibrationMap = Maps.newHashMap();
         final Set<String> calibratedSenseIds = Sets.newHashSet();
 
-        if (strict.equals(Boolean.TRUE)) {
+        if (strict) {
             for (final String senseId : senseIds) {
                 calibrationMap.put(senseId, Calibration.createDefault(senseId));
             }
