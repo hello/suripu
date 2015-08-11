@@ -59,6 +59,20 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
     }
 
     @Override
+    public Map<AccountPreference.EnabledPreference, Boolean> putAll(Long accountId, Map<AccountPreference.EnabledPreference, Boolean> changes) {
+        final UpdateItemRequest updateItemRequest = new UpdateItemRequest();
+        updateItemRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+        for (Map.Entry<AccountPreference.EnabledPreference, Boolean> entry : changes.entrySet()) {
+            final AttributeValueUpdate update = new AttributeValueUpdate();
+            update.setValue(new AttributeValue().withBOOL(entry.getValue()));
+            updateItemRequest.addAttributeUpdatesEntry(entry.getKey().toString(), update);
+        }
+        updateItemRequest.setTableName(tableName);
+        dynamoDB.updateItem(updateItemRequest);
+        return changes;
+    }
+
+    @Override
     public Map<AccountPreference.EnabledPreference, Boolean> get(final Long accountId) {
         final GetItemRequest getItemRequest = new GetItemRequest();
         getItemRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));

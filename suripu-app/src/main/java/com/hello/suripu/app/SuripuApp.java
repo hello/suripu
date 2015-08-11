@@ -407,5 +407,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new SupportResource(supportDAO));
         environment.addResource(new com.hello.suripu.app.v2.TimelineResource(timelineDAODynamoDB, timelineProcessor, feedbackDAO, trackerMotionDAO, sleepStatsDAODynamoDB));
+        environment.addResource(new com.hello.suripu.app.v2.AccountPreferencesResource(accountPreferencesDAO));
     }
 }
