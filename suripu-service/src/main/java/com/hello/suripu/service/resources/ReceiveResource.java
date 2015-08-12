@@ -295,10 +295,9 @@ public class ReceiveResource extends BaseResource {
 
             // only compute the state for the most recent conditions
 
-
-            final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.getStrict(deviceName) : Optional.<Calibration>absent();
-            final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(deviceName);
             if(i == batch.getDataCount() -1) {
+                final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.getStrict(deviceName) : Optional.<Calibration>absent();
+                final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(deviceName);
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
                         roundedDateTime.getMillis(),
