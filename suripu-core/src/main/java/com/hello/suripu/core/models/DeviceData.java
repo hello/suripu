@@ -11,8 +11,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DeviceData {
 
-
-
+    private final static int DEFAULT_AMBIENT_AIR_QUALITY = 0; // Because we are now saving only raw data to the database
 
     @JsonProperty("account_id")
     public final Long accountId;
@@ -168,7 +167,6 @@ public class DeviceData {
         private Long deviceId;
         private int ambientTemperature;
         private int ambientHumidity;
-        private int ambientAirQuality;
         private int ambientAirQualityRaw;
         private int ambientDustVariance;
         private int ambientDustMin;
@@ -203,11 +201,6 @@ public class DeviceData {
 
         public Builder withAmbientHumidity(final int ambientHumidity){
             this.ambientHumidity = ambientHumidity;
-            return this;
-        }
-
-        public Builder withAmbientAirQuality(final int ambientAirQuality){
-            this.ambientAirQuality  = ambientAirQuality;
             return this;
         }
 
@@ -305,7 +298,7 @@ public class DeviceData {
 
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
-                    this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
+                    DEFAULT_AMBIENT_AIR_QUALITY, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
                     this.ambientLight,this.ambientLightFloat, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
                     this.firmwareVersion, this.waveCount, this.holdCount,
                     this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB);
