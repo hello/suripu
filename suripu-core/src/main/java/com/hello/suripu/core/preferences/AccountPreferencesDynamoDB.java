@@ -26,9 +26,9 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
     private final AmazonDynamoDB dynamoDB;
     private final String tableName;
-    private final Set<AccountPreference.EnabledPreference> optOuts;
+    private final Set<PreferenceName> optOuts;
 
-    private AccountPreferencesDynamoDB(final AmazonDynamoDB amazonDynamoDB, final String tableName, final Set<AccountPreference.EnabledPreference> optOuts) {
+    private AccountPreferencesDynamoDB(final AmazonDynamoDB amazonDynamoDB, final String tableName, final Set<PreferenceName> optOuts) {
         this.dynamoDB = amazonDynamoDB;
         this.tableName = tableName;
         this.optOuts = ImmutableSet.copyOf(optOuts);
@@ -36,7 +36,10 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
 
     public static AccountPreferencesDynamoDB create(final AmazonDynamoDB amazonDynamoDB, final String tableName) {
-        final Set<AccountPreference.EnabledPreference> optOuts = Sets.newHashSet(AccountPreference.EnabledPreference.PUSH_SCORE, AccountPreference.EnabledPreference.PUSH_ALERT_CONDITIONS);
+        final Set<PreferenceName> optOuts = Sets.newHashSet(PreferenceName.PUSH_SCORE,
+                PreferenceName.PUSH_ALERT_CONDITIONS,
+                PreferenceName.HEIGHT_METRIC,
+                PreferenceName.WEIGHT_METRIC);
         return new AccountPreferencesDynamoDB(amazonDynamoDB, tableName, optOuts);
     }
 
@@ -59,7 +62,21 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
     }
 
     @Override
-    public Map<AccountPreference.EnabledPreference, Boolean> get(final Long accountId) {
+    public Map<PreferenceName, Boolean> putAll(Long accountId, Map<PreferenceName, Boolean> changes) {
+        final UpdateItemRequest updateItemRequest = new UpdateItemRequest();
+        updateItemRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
+        for (Map.Entry<PreferenceName, Boolean> entry : changes.entrySet()) {
+            final AttributeValueUpdate update = new AttributeValueUpdate();
+            update.setValue(new AttributeValue().withBOOL(entry.getValue()));
+            updateItemRequest.addAttributeUpdatesEntry(entry.getKey().toString(), update);
+        }
+        updateItemRequest.setTableName(tableName);
+        dynamoDB.updateItem(updateItemRequest);
+        return changes;
+    }
+
+    @Override
+    public Map<PreferenceName, Boolean> get(final Long accountId) {
         final GetItemRequest getItemRequest = new GetItemRequest();
         getItemRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(accountId.toString()));
         getItemRequest.setTableName(tableName);
@@ -68,9 +85,9 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
         return itemToPreferences(result.getItem(), optOuts);
     }
 
-    public static Map<AccountPreference.EnabledPreference, Boolean> itemToPreferences(final Map<String, AttributeValue> item, final Set<AccountPreference.EnabledPreference> optOuts) {
-        final Map<AccountPreference.EnabledPreference, Boolean> temp = Maps.newHashMap();
-        for(final AccountPreference.EnabledPreference pref : AccountPreference.EnabledPreference.values()) {
+    public static Map<PreferenceName, Boolean> itemToPreferences(final Map<String, AttributeValue> item, final Set<PreferenceName> optOuts) {
+        final Map<PreferenceName, Boolean> temp = Maps.newHashMap();
+        for(final PreferenceName pref : PreferenceName.values()) {
             temp.put(pref, optOuts.contains(pref)); // TRUE if in opt outs otherwise it's opt-in so, FALSE by default
         }
 
@@ -78,7 +95,7 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
             return temp;
         }
 
-        for(final AccountPreference.EnabledPreference pref : AccountPreference.EnabledPreference.values()) {
+        for(final PreferenceName pref : PreferenceName.values()) {
             if(item.containsKey(pref.toString())) {
                 temp.put(pref, item.get(pref.toString()).getBOOL());
             }
@@ -107,8 +124,8 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
     }
 
 
-    public Boolean isEnabled(final Long accountId, final AccountPreference.EnabledPreference preference) {
-        final Map<AccountPreference.EnabledPreference, Boolean> prefs = this.get(accountId);
+    public Boolean isEnabled(final Long accountId, final PreferenceName preference) {
+        final Map<PreferenceName, Boolean> prefs = this.get(accountId);
         return prefs.containsKey(preference) && prefs.get(preference);
     }
 }

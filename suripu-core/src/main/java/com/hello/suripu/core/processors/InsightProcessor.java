@@ -13,9 +13,10 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 
+import com.hello.suripu.core.preferences.PreferenceName;
+import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.SleepMotion;
@@ -218,7 +219,7 @@ public class InsightProcessor {
 
         } else if (category == InsightCard.Category.TEMPERATURE) {
             final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
-            final AccountPreference.TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
+            final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
             insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
 
         } else if (category == InsightCard.Category.SLEEP_QUALITY) {
@@ -255,16 +256,16 @@ public class InsightProcessor {
         return seenCategories;
     }
 
-    private AccountPreference.TemperatureUnit getTemperatureUnitString(final Long accountId) {
-        final Map<AccountPreference.EnabledPreference, Boolean> preferences = this.preferencesDAO.get(accountId);
-        if (preferences.containsKey(AccountPreference.EnabledPreference.TEMP_CELSIUS)) {
-            final Boolean isCelsius = preferences.get(AccountPreference.EnabledPreference.TEMP_CELSIUS);
+    private TemperatureUnit getTemperatureUnitString(final Long accountId) {
+        final Map<PreferenceName, Boolean> preferences = this.preferencesDAO.get(accountId);
+        if (preferences.containsKey(PreferenceName.TEMP_CELSIUS)) {
+            final Boolean isCelsius = preferences.get(PreferenceName.TEMP_CELSIUS);
             if (isCelsius) {
-                return AccountPreference.TemperatureUnit.CELSIUS;
+                return TemperatureUnit.CELSIUS;
             }
         }
         // set default to fahrenheit for now. TODO: Use location
-        return AccountPreference.TemperatureUnit.FAHRENHEIT;
+        return TemperatureUnit.FAHRENHEIT;
     }
 
     /**

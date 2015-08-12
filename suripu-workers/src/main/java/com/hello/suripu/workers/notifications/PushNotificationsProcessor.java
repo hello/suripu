@@ -14,8 +14,8 @@ import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.notifications.HelloPushMessage;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
-import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
+import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import org.joda.time.DateTime;
@@ -105,7 +105,7 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                 continue;
             }
 
-            if(!accountPreferencesDynamoDB.isEnabled(userInfo.accountId, AccountPreference.EnabledPreference.PUSH_ALERT_CONDITIONS)) {
+            if(!accountPreferencesDynamoDB.isEnabled(userInfo.accountId, PreferenceName.PUSH_ALERT_CONDITIONS)) {
                 continue;
             }
 

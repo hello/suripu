@@ -1,9 +1,8 @@
-package com.hello.suripu.app.resources.v1;
+package com.hello.suripu.app.v2;
 
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 
@@ -16,9 +15,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
 
-@Path("/v1/preferences")
+@Path("/v2/account/preferences")
 public class AccountPreferencesResource {
-
     private final AccountPreferencesDAO preferencesDAO;
 
     public AccountPreferencesResource(final AccountPreferencesDAO preferencesDAO) {
@@ -34,9 +32,9 @@ public class AccountPreferencesResource {
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public AccountPreference put(
+    public Map<PreferenceName, Boolean> put(
             @Scope(OAuthScope.PREFERENCES) final AccessToken accessToken,
-            @Valid final AccountPreference accountPreference) {
-        return preferencesDAO.put(accessToken.accountId, accountPreference);
+            @Valid final Map<PreferenceName, Boolean> accountPreference) {
+        return preferencesDAO.putAll(accessToken.accountId, accountPreference);
     }
 }
