@@ -37,9 +37,7 @@ public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
 
     public static AccountPreferencesDynamoDB create(final AmazonDynamoDB amazonDynamoDB, final String tableName) {
         final Set<PreferenceName> optOuts = Sets.newHashSet(PreferenceName.PUSH_SCORE,
-                PreferenceName.PUSH_ALERT_CONDITIONS,
-                PreferenceName.HEIGHT_METRIC,
-                PreferenceName.WEIGHT_METRIC);
+                PreferenceName.PUSH_ALERT_CONDITIONS);
         return new AccountPreferencesDynamoDB(amazonDynamoDB, tableName, optOuts);
     }
 
