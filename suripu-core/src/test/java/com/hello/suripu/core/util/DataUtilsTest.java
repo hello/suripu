@@ -20,7 +20,7 @@ public class DataUtilsTest {
         final int expectedAQI[] = new int[] {254, 322};
         for (int i = 0; i < raw_dust.length; i++) {
             final int calculatedAQI = DataUtils.convertRawDustCountsToAQIWithCalibration(raw_dust[i], Calibration.createDefault("dummy-sense"), 1);
-            LOGGER.debug("Under zero calibration, raw_dust {} -> aqi {}", raw_dust[i], calculatedAQI);
+            LOGGER.trace("Under zero calibration, raw_dust {} -> aqi {}", raw_dust[i], calculatedAQI);
             assertThat(calculatedAQI, is(expectedAQI[i]));
         }
     }
@@ -28,11 +28,11 @@ public class DataUtilsTest {
     @Test
     public void testDustConversionWithSignificantCalibration() {
         final int raw_dust[] = new int[] {1179, 1570};
-        final int expected_aqi[] = new int[] {260, 328};
+        final int expectedAQI[] = new int[] {260, 328};
         for (int i = 0; i < raw_dust.length; i++) {
             final int calculatedAQI = DataUtils.convertRawDustCountsToAQIWithCalibration(raw_dust[i], Calibration.create("dummy-sense", 175, "dummy-metadata"), 1);
-            LOGGER.debug("Under calibration of ADC_offset = 175, raw_dust {} -> aqi {}", raw_dust[i], calculatedAQI);
-            assertThat(calculatedAQI, is(expected_aqi[i]));
+            LOGGER.trace("Under calibration of ADC_offset = 175, raw_dust {} -> aqi {}", raw_dust[i], calculatedAQI);
+            assertThat(calculatedAQI, is(expectedAQI[i]));
         }
     }
 }
