@@ -9,6 +9,8 @@ import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -38,6 +40,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static String SENSE_ATTRIBUTE_NAME = "sense_id";
     private final static String DUST_OFFSET_ATTRIBUTE_NAME = "dust_offset";
     private final static String METADATA_ATTRIBUTE_NAME = "metadata";
+    private final static String TESTED_AT_ATTRIBUTE_NAME = "tested_at";
 
     private final static Integer MAX_BATCH_QUERY_SIZE = 100;
 
@@ -50,8 +53,8 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     }
 
     @Override
-    public Optional<Calibration> get(final String senseId) {
-        return getRemotely(senseId, Boolean.FALSE);
+    public Calibration get(final String senseId) {
+        return getRemotely(senseId, Boolean.FALSE).get();
     }
 
     @Override
@@ -76,15 +79,33 @@ public class CalibrationDynamoDB implements CalibrationDAO {
             LOGGER.warn("Not in strict mode, returning default calibration for sense {}", senseId);
             return Optional.of(Calibration.createDefault(senseId));
         }
-        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()), item.get(METADATA_ATTRIBUTE_NAME).getS()));
+        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()), item.get(METADATA_ATTRIBUTE_NAME).getS(), Long.valueOf(item.get(TESTED_AT_ATTRIBUTE_NAME).getN())));
     }
 
     @Override
-    public void put(final String senseId, final Integer dustOffset, final String metadata) {
+    public int putForce(final Calibration calibration) {
+        return putRemotely(calibration, Boolean.TRUE);
+    }
+
+    @Override
+    public int put(final Calibration calibration) {
+        return putRemotely(calibration, Boolean.FALSE);
+    }
+
+    private int putRemotely(final Calibration calibration, final Boolean force) {
+        if (!force) {
+            final Optional<Calibration> currentCalibrationOptional = getStrict(calibration.senseId);
+            if (currentCalibrationOptional.isPresent()) {
+                if (currentCalibrationOptional.get().testedAt > calibration.testedAt) {
+                    return 0;
+                }
+            }
+        }
         final Map<String, AttributeValue> attributes = new HashMap<>();
-        attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
-        attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(dustOffset)));
-        attributes.put(METADATA_ATTRIBUTE_NAME, new AttributeValue().withS(metadata));
+        attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
+        attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.dustOffset)));
+        attributes.put(METADATA_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.metadata));
+        attributes.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.testedAt)));
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(calibrationTableName)
@@ -92,7 +113,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
         final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
         LOGGER.debug("{}", putItemResult);
-        // TODO: Log consumed capacity
+        return 1;
     }
 
 
@@ -145,8 +166,9 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                         final String senseId = response.get(SENSE_ATTRIBUTE_NAME).getS();
                         final Integer dustOffset = Integer.valueOf(response.get(DUST_OFFSET_ATTRIBUTE_NAME).getN());
                         final String metadata = response.containsKey(METADATA_ATTRIBUTE_NAME) ? response.get(METADATA_ATTRIBUTE_NAME).getS() : "";
+                        final Long testedAt = Long.valueOf(response.get(TESTED_AT_ATTRIBUTE_NAME).getN());
 
-                        calibrationMap.put(senseId, Calibration.create(senseId, dustOffset, metadata));
+                        calibrationMap.put(senseId, Calibration.create(senseId, dustOffset, metadata, testedAt));
                         calibratedSenseIds.add(senseId);
                     }
                 }
@@ -183,5 +205,16 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
+    }
+
+    @Override
+    public void remove(String senseId) {
+        final HashMap<String, AttributeValue> key = Maps.newHashMap();
+        key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
+        final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
+                .withTableName(calibrationTableName)
+                .withKey(key);
+        final DeleteItemResult deleteItemResult = dynamoDBClient.deleteItem(deleteItemRequest);
+        LOGGER.debug("{}", deleteItemResult);
     }
 }

@@ -2,6 +2,8 @@ package com.hello.suripu.core.models;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class Calibration {
     private final static Integer DEFAULT_DUST_OFFSET = 0;
@@ -22,18 +24,22 @@ public class Calibration {
     @JsonProperty("metadata")
     public final String metadata;
 
-    private Calibration(final String senseId, final Integer dustOffset, final Integer dustCalibrationDelta, final String metadata) {
+    @JsonProperty("tested_at")
+    public final Long testedAt;
+
+    private Calibration(final String senseId, final Integer dustOffset, final Integer dustCalibrationDelta, final String metadata, final Long testedAt) {
         this.senseId = senseId;
         this.dustOffset = dustOffset;
         this.dustCalibrationDelta = dustCalibrationDelta;
         this.metadata = metadata;
+        this.testedAt = testedAt;
     }
 
-    public static Calibration create(final String senseId, final Integer dustOffset, final String metadata) {
-        return new Calibration(senseId, dustOffset, Math.round(DUST_CALIBRATION_BASE - (float)dustOffset * DUST_CALIBRATION_K_FACTOR), metadata);
+    public static Calibration create(final String senseId, final Integer dustOffset, final String metadata, final Long testedAt) {
+        return new Calibration(senseId, dustOffset, Math.round(DUST_CALIBRATION_BASE - (float)dustOffset * DUST_CALIBRATION_K_FACTOR), metadata, testedAt);
     }
 
     public static final Calibration createDefault(final String senseId) {
-        return new Calibration(senseId, DEFAULT_DUST_OFFSET, DEFAULT_DUST_CALIBRATION_DELTA, DEFAULT_METADATA);
+        return new Calibration(senseId, DEFAULT_DUST_OFFSET, DEFAULT_DUST_CALIBRATION_DELTA, DEFAULT_METADATA, DateTime.now(DateTimeZone.UTC).getMillis());
     }
 }

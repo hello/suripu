@@ -1,6 +1,8 @@
 package com.hello.suripu.core.util;
 
 import com.hello.suripu.core.models.Calibration;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,7 @@ public class DataUtilsTest {
         final int raw_dust[] = new int[] {1179, 1570};
         final int expectedAQI[] = new int[] {260, 328};
         for (int i = 0; i < raw_dust.length; i++) {
-            final int calculatedAQI = DataUtils.convertRawDustCountsToAQIWithCalibration(raw_dust[i], Calibration.create("dummy-sense", 175, "dummy-metadata"), 1);
+            final int calculatedAQI = DataUtils.convertRawDustCountsToAQIWithCalibration(raw_dust[i], Calibration.create("dummy-sense", 175, "dummy-metadata", DateTime.now(DateTimeZone.UTC).getMillis()), 1);
             LOGGER.trace("Under calibration of ADC_offset = 175, raw_dust {} -> aqi {}", raw_dust[i], calculatedAQI);
             assertThat(calculatedAQI, is(expectedAQI[i]));
         }
