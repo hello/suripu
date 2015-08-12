@@ -173,11 +173,11 @@ public class InsightProcessor {
         // for now, we only have these two categories
         if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
             LOGGER.debug("Light has not been generated recently, will now generate by category");
-            generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT); //
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT); //
         } else if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
-            generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
         } else if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) { //movement
-            generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
         }
 
         final Integer dayOfWeek = DateTime.now().getDayOfWeek();
@@ -204,7 +204,7 @@ public class InsightProcessor {
         }
 
         if (!recentCategories.contains(categoryToGenerate)) {
-            generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
+            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
 
     }
