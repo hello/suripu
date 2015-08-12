@@ -39,13 +39,12 @@ public class KeyStoreUtils {
     }
 
     public static KeyStoreUtils build(final AmazonS3 s3, final String bucket, final String key) {
-        return null;
-//        final Optional<PrivateKey> privateKeyOptional = getPrivateKeyFromS3(s3, bucket, key);
-//        if(!privateKeyOptional.isPresent()) {
-//            throw new RuntimeException("Unable to get private key from s3");
-//        }
-//
-//        return new KeyStoreUtils(privateKeyOptional.get());
+        final Optional<PrivateKey> privateKeyOptional = getPrivateKeyFromS3(s3, bucket, key);
+        if(!privateKeyOptional.isPresent()) {
+            throw new RuntimeException("Unable to get private key from s3");
+        }
+
+        return new KeyStoreUtils(privateKeyOptional.get());
     }
 
     private static byte[] append(byte[] prefix, byte[] suffix){
