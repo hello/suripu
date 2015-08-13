@@ -46,7 +46,6 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
     private final static String SENSE_ATTRIBUTE_NAME = "sense_id";
     private final static String DUST_OFFSET_ATTRIBUTE_NAME = "dust_offset";
-    private final static String METADATA_ATTRIBUTE_NAME = "metadata";
     private final static String TESTED_AT_ATTRIBUTE_NAME = "tested_at";
 
     private final static Integer MAX_BATCH_QUERY_SIZE = 100;
@@ -86,7 +85,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
             LOGGER.warn("Not in strict mode, returning default calibration for sense {}", senseId);
             return Optional.of(Calibration.createDefault(senseId));
         }
-        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()), item.get(METADATA_ATTRIBUTE_NAME).getS(), Long.valueOf(item.get(TESTED_AT_ATTRIBUTE_NAME).getN())));
+        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()), Long.valueOf(item.get(TESTED_AT_ATTRIBUTE_NAME).getN())));
     }
 
     @Override
@@ -117,7 +116,6 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
         attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.dustOffset)));
-        attributes.put(METADATA_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.metadata));
         attributes.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.testedAt)));
 
         PutItemRequest putItemRequest = new PutItemRequest()
@@ -155,9 +153,6 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         attributeUpdates.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
                 .withValue(new AttributeValue().withN(String.valueOf(calibration.dustOffset))));
-        attributeUpdates.put(METADATA_ATTRIBUTE_NAME, new AttributeValueUpdate()
-                .withAction(AttributeAction.PUT)
-                .withValue(new AttributeValue().withS(calibration.metadata)));
         attributeUpdates.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
                 .withValue(new AttributeValue().withN(String.valueOf(calibration.testedAt))));
@@ -222,7 +217,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                 itemKeys.add(attributeValueMap);
             }
 
-            final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(SENSE_ATTRIBUTE_NAME, DUST_OFFSET_ATTRIBUTE_NAME, METADATA_ATTRIBUTE_NAME, TESTED_AT_ATTRIBUTE_NAME);
+            final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(SENSE_ATTRIBUTE_NAME, DUST_OFFSET_ATTRIBUTE_NAME, TESTED_AT_ATTRIBUTE_NAME);
             final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
             requestItems.put(calibrationTableName, key);
             batchGetItemRequest.withRequestItems(requestItems);
@@ -234,10 +229,9 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                     for (final Map<String, AttributeValue> response : responses) {
                         final String senseId = response.get(SENSE_ATTRIBUTE_NAME).getS();
                         final Integer dustOffset = Integer.valueOf(response.get(DUST_OFFSET_ATTRIBUTE_NAME).getN());
-                        final String metadata = response.containsKey(METADATA_ATTRIBUTE_NAME) ? response.get(METADATA_ATTRIBUTE_NAME).getS() : "";
                         final Long testedAt = Long.valueOf(response.get(TESTED_AT_ATTRIBUTE_NAME).getN());
 
-                        calibrationMap.put(senseId, Calibration.create(senseId, dustOffset, metadata, testedAt));
+                        calibrationMap.put(senseId, Calibration.create(senseId, dustOffset, testedAt));
                         calibratedSenseIds.add(senseId);
                     }
                 }
