@@ -181,7 +181,7 @@ public class InsightProcessor {
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
             }
         }
-        else if (dayOfMonth == 13) {
+        else if (dayOfMonth == 10) {
             if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
                 LOGGER.debug("generating insight temperature");
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
