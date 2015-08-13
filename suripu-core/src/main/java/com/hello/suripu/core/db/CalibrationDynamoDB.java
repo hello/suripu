@@ -3,14 +3,19 @@ package com.hello.suripu.core.db;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -20,6 +25,8 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -83,37 +90,100 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     }
 
     @Override
-    public int putForce(final Calibration calibration) {
+    public Boolean putForce(final Calibration calibration) {
         return putRemotely(calibration, Boolean.TRUE);
     }
 
     @Override
-    public int put(final Calibration calibration) {
+    public Boolean put(final Calibration calibration) {
         return putRemotely(calibration, Boolean.FALSE);
     }
 
-    private int putRemotely(final Calibration calibration, final Boolean force) {
-        if (!force) {
-            final Optional<Calibration> currentCalibrationOptional = getStrict(calibration.senseId);
-            if (currentCalibrationOptional.isPresent()) {
-                if (currentCalibrationOptional.get().testedAt > calibration.testedAt) {
-                    return 0;
-                }
-            }
+    private Boolean putRemotely(final Calibration calibration, final Boolean force) {
+        if (force) {
+            final Boolean hasPutItem = putWithoutComparation(calibration, false);
+            return hasPutItem;
         }
+
+        final Boolean hasAddedItem = putWithoutComparation(calibration, true);
+        if (!hasAddedItem) {
+            final Boolean hasUpdatedItem = putWithComparationIfExist(calibration);
+            return hasUpdatedItem;
+        }
+        return hasAddedItem;
+    }
+
+    private Boolean putWithoutComparation(final Calibration calibration, final Boolean checkExist) {
         final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
         attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.dustOffset)));
         attributes.put(METADATA_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.metadata));
         attributes.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.testedAt)));
 
-        final PutItemRequest putItemRequest = new PutItemRequest()
+        PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(calibrationTableName)
                 .withItem(attributes);
 
-        final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
-        LOGGER.debug("{}", putItemResult);
-        return 1;
+        if (checkExist) {
+            final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
+            putConditions.put(SENSE_ATTRIBUTE_NAME, new ExpectedAttributeValue(false));
+
+            putItemRequest = new PutItemRequest()
+                    .withTableName(calibrationTableName)
+                    .withItem(attributes)
+                    .withExpected(putConditions);
+        }
+        PutItemResult putItemResult = null;
+        try {
+            putItemResult = dynamoDBClient.putItem(putItemRequest);
+        }
+        catch (ConditionalCheckFailedException cce) {
+            LOGGER.info("Put condition failed for sense_id {} - tested_at {}", calibration.senseId, calibration.testedAt);
+        }
+        catch (AmazonServiceException ase) {
+            LOGGER.error(ase.getMessage());
+        }
+
+        return putItemResult != null;
+    }
+
+    private Boolean putWithComparationIfExist(final Calibration calibration) {
+        final HashMap<String, AttributeValue> key = Maps.newHashMap();
+        key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
+
+        final Map<String, AttributeValueUpdate> attributeUpdates = new HashMap<>();
+        attributeUpdates.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(calibration.dustOffset))));
+        attributeUpdates.put(METADATA_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withS(calibration.metadata)));
+        attributeUpdates.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValueUpdate()
+                .withAction(AttributeAction.PUT)
+                .withValue(new AttributeValue().withN(String.valueOf(calibration.testedAt))));
+
+        final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
+        putConditions.put(TESTED_AT_ATTRIBUTE_NAME, new ExpectedAttributeValue()
+                .withComparisonOperator(ComparisonOperator.LT)
+                .withValue(new AttributeValue().withN(String.valueOf(calibration.testedAt))));
+
+        final UpdateItemRequest updateItemRequest = new UpdateItemRequest()
+                .withTableName(calibrationTableName)
+                .withKey(key)
+                .withAttributeUpdates(attributeUpdates)
+                .withExpected(putConditions);
+
+        UpdateItemResult updateItemResult = null;
+        try {
+            updateItemResult = dynamoDBClient.updateItem(updateItemRequest);
+        }
+        catch (ConditionalCheckFailedException cce) {
+            LOGGER.info("Update condition failed for sense_id {} - tested_at {}", calibration.senseId, calibration.testedAt);
+        }
+        catch (AmazonServiceException ase) {
+            LOGGER.error(ase.getMessage());
+        }
+        return updateItemResult != null;
     }
 
 
@@ -131,12 +201,11 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         final Map<String, Calibration> calibrationMap = Maps.newHashMap();
         final Set<String> calibratedSenseIds = Sets.newHashSet();
 
-        if (strict) {
+        if (!strict) {
             for (final String senseId : senseIds) {
                 calibrationMap.put(senseId, Calibration.createDefault(senseId));
             }
         }
-
 
         final List<String> senseIdsList = Lists.newArrayList(senseIds);
         final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, MAX_BATCH_QUERY_SIZE);
@@ -153,7 +222,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                 itemKeys.add(attributeValueMap);
             }
 
-            final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(SENSE_ATTRIBUTE_NAME, DUST_OFFSET_ATTRIBUTE_NAME, METADATA_ATTRIBUTE_NAME);
+            final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(SENSE_ATTRIBUTE_NAME, DUST_OFFSET_ATTRIBUTE_NAME, METADATA_ATTRIBUTE_NAME, TESTED_AT_ATTRIBUTE_NAME);
             final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
             requestItems.put(calibrationTableName, key);
             batchGetItemRequest.withRequestItems(requestItems);
@@ -186,7 +255,24 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         }
         return calibrationMap;
     }
-    
+
+    @Override
+    public Boolean delete(String senseId) {
+        final HashMap<String, AttributeValue> key = Maps.newHashMap();
+        key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
+        final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
+                .withTableName(calibrationTableName)
+                .withKey(key);
+        DeleteItemResult deleteItemResult = null;
+        try {
+            deleteItemResult = dynamoDBClient.deleteItem(deleteItemRequest);
+        }
+        catch (AmazonServiceException ase) {
+            LOGGER.error(ase.getMessage());
+        }
+        return deleteItemResult != null;
+    }
+
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
@@ -205,16 +291,5 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
-    }
-
-    @Override
-    public void remove(String senseId) {
-        final HashMap<String, AttributeValue> key = Maps.newHashMap();
-        key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
-        final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
-                .withTableName(calibrationTableName)
-                .withKey(key);
-        final DeleteItemResult deleteItemResult = dynamoDBClient.deleteItem(deleteItemRequest);
-        LOGGER.debug("{}", deleteItemResult);
     }
 }

@@ -21,8 +21,8 @@ public interface CalibrationDAO {
      * @param calibration Calibration
      * @return int
      */
-    int putForce(Calibration calibration);
-    int put(Calibration calibration);
+    Boolean putForce(Calibration calibration);
+    Boolean put(Calibration calibration);
 
 
     /**
@@ -34,8 +34,8 @@ public interface CalibrationDAO {
     Map<String, Calibration> getBatchStrict(Set<String> senseIds);
 
     /**
-     * Remove an entry by senseId
+     * Delete an entry by senseId
      * @param senseId String
      */
-     void remove(String senseId);
+     Boolean delete(String senseId);
 }
