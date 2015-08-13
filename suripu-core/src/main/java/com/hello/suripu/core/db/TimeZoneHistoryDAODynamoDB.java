@@ -95,7 +95,7 @@ public class TimeZoneHistoryDAODynamoDB {
 
 
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start) {
-        return getTimeZoneHistory(accountId, start, HELLO_EPOCH, DEFAULT_LIMIT);
+        return getTimeZoneHistory(accountId, HELLO_EPOCH, start, DEFAULT_LIMIT);
     }
 
     public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end) {
