@@ -171,41 +171,46 @@ public class InsightProcessor {
             return;
         }
 
-        // for now, we only have these two categories
-        if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
-            LOGGER.debug("Light has not been generated recently, will now generate by category");
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT); //
-        } else if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
-        } else if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) { //movement
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
-        }
-
         final Integer dayOfWeek = DateTime.now().getDayOfWeek();
         LOGGER.debug("The day of week is {}", dayOfWeek);
-        InsightCard.Category categoryToGenerate;
 
         switch (dayOfWeek) {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
             case 6:
-            case 7:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
                     return;
                 }
+                else if (recentCategories.contains(InsightCard.Category.WAKE_VARIANCE)) {
+                    return;
+                }
                 LOGGER.debug("setting category to generate as wake variance");
-                categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.WAKE_VARIANCE);
                 break;
 
             default:
                 return;
         }
 
-        if (!recentCategories.contains(categoryToGenerate)) {
-            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
+        final Integer dayOfMonth = DateTime.now().getDayOfMonth();
+
+        switch (dayOfMonth) {
+            case 1:
+                if (recentCategories.contains(InsightCard.Category.LIGHT)) {
+                    return;
+                }
+                LOGGER.debug("Day of the month is {}. Light has not been generated in the last week, will now generate by cateogry", dayOfMonth);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
+            case 10:
+                if (recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+                    return;
+                }
+                LOGGER.debug("Day of the month is {}. Temperature has not been generated in the last week, will now generate by cateogry", dayOfMonth);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
+            case 19:
+                if (recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
+                    return;
+                }
+                LOGGER.debug("Day of the month is {}. Sleep quality (movement) has not been generated in the last week, will now generate by cateogry", dayOfMonth);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
         }
 
     }
