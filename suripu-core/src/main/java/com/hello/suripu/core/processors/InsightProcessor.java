@@ -177,19 +177,19 @@ public class InsightProcessor {
 
         if (dayOfMonth == 1) {
             if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
-                LOGGER.debug("generating insight light");
+                LOGGER.debug("generating insight light for accountid {}", accountId);
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
             }
         }
         else if (dayOfMonth == 10) {
             if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
-                LOGGER.debug("generating insight temperature");
+                LOGGER.debug("generating insight temperature for accountid {}", accountId);
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
             }
         }
         else if (dayOfMonth == 19) {
             if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
-                LOGGER.debug("generating insight sleep quality (movement)");
+                LOGGER.debug("generating insight sleep quality (movement) for accountid {}", accountId);
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
             }
         }
