@@ -76,4 +76,22 @@ public class WakeVarianceInsightsTest {
         System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
+
+    @Test
+    public void testMinHourConversion() {
+        final int minOne = 30;
+        final float hrOne = (float) minOne/60;
+        final String stringOne = String.format("%.1f", hrOne);
+        assertThat(stringOne, is("0.5"));
+
+        final int minTwo = 60;
+        final float hrTwo = (float) minTwo/60;
+        final String stringTwo = String.format("%.1f", hrTwo);
+        assertThat(stringTwo, is("1.0"));
+
+        final int minThree = 90;
+        final float hrThree = (float) minThree/60;
+        final String stringThree = String.format("%.1f", hrThree);
+        assertThat(stringThree, is("1.5"));
+    }
 }
