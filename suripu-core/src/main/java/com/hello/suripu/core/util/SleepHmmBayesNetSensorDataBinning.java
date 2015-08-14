@@ -27,6 +27,9 @@ public class SleepHmmBayesNetSensorDataBinning {
 
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
+    final static protected double LIGHT_INCREASE_THRESHOLD = 1.0;
+    final static protected double LIGHT_DECREASE_THRESHOLD = -1.0;
+
     static public class BinnedData {
         public final double[][] data;
         public final int numMinutesInWindow;
@@ -118,14 +121,39 @@ public class SleepHmmBayesNetSensorDataBinning {
         /////////////////////////////////////////////
         //LOG OF LIGHT, CONTINUOUS
         final Iterator<Sample> it1 = light.iterator();
+        Sample prev = null;
         while (it1.hasNext()) {
             final Sample sample = it1.next();
             double value = sample.value - params.lightFloorLux;
-            if (value < 0) {
+            if (value < 0.0) {
                 value = 0.0;
             }
+
+            if (prev == null) {
+                prev = sample;
+            }
+
+            double prevvalue = prev.value - params.lightFloorLux;
+
+            if (prevvalue < 0.0) {
+                prevvalue = 0.0;
+            }
+
             //add so we can average later
             addToBin(data, sample.dateTime, value, SleepHmmBayesNetProtos.MeasType.LOG_LIGHT_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+
+            final double v2 = Math.log(value * params.lightPreMultiplier + 1.0) / Math.log(2.0);
+            final double v1 = Math.log(prevvalue * params.lightPreMultiplier + 1.0) / Math.log(2.0);
+
+            if (v2 - v1 > LIGHT_INCREASE_THRESHOLD) {
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.LIGHT_INCREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            if (v2 - v1 < LIGHT_DECREASE_THRESHOLD) {
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.LIGHT_DECREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            prev = sample;
         }
 
         //computing average light in bin, so divide by bin size
@@ -167,20 +195,33 @@ public class SleepHmmBayesNetSensorDataBinning {
 
             //either wave happened or it didn't.. value can be 1.0 or 0.0
             if (value > 0.0 && params.useWavesForDisturbances) {
-                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.WAVE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
 
         //SOUND COUNTS
         final Iterator<Sample> it5 = soundCounts.iterator();
+        prev = null;
         while (it5.hasNext()) {
             final Sample sample = it5.next();
+
+            if (prev == null) {
+                prev = sample;
+            }
 
             //accumulate
             if (sample.value > 0.0) {
                 addToBin(data, sample.dateTime, sample.value, SleepHmmBayesNetProtos.MeasType.LOG_SOUND_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
+
+            double logratio = Math.log(sample.value / (prev.value + 1.0)) / Math.log(2.0);
+
+            if (logratio > 2.0 && sample.value > 10) {
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.SOUND_INCREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            prev = sample;
 
         }
 
@@ -202,6 +243,21 @@ public class SleepHmmBayesNetSensorDataBinning {
             if (sample.value > 0.0) {
                 maxInBin(data,sample.dateTime,1.0,SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE,startTimeMillisInUTC,numMinutesInWindow);
             }
+        }
+
+        //output only artificial light
+        for (int t = 0; t < data[0].length; t++) {
+            if (data[SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE][t] == 0.0) {
+                //no light in the morning
+                data[SleepHmmBayesNetProtos.MeasType.LOG_LIGHT_VALUE][t] = 0.0;
+            }
+            else {
+                //at night before bed do not have any "lights on" events
+                data[SleepHmmBayesNetProtos.MeasType.LIGHT_INCREASE_DISTURBANCE_VALUE][t] = 0.0;
+            }
+
+            data[SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE][t] = 0.0;
+
         }
 
 
