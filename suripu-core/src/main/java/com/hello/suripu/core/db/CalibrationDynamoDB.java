@@ -131,9 +131,10 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                     .withItem(attributes)
                     .withExpected(putConditions);
         }
-        PutItemResult putItemResult = null;
+
         try {
-            putItemResult = dynamoDBClient.putItem(putItemRequest);
+            final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
+            return putItemResult != null;
         }
         catch (ConditionalCheckFailedException cce) {
             LOGGER.info("Put condition failed for sense_id {} - tested_at {}", calibration.senseId, calibration.testedAt);
@@ -142,7 +143,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
             LOGGER.error(ase.getMessage());
         }
 
-        return putItemResult != null;
+        return Boolean.FALSE;
     }
 
     private Boolean putWithComparationIfExist(final Calibration calibration) {
@@ -168,9 +169,9 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                 .withAttributeUpdates(attributeUpdates)
                 .withExpected(putConditions);
 
-        UpdateItemResult updateItemResult = null;
         try {
-            updateItemResult = dynamoDBClient.updateItem(updateItemRequest);
+            final UpdateItemResult updateItemResult = dynamoDBClient.updateItem(updateItemRequest);
+            return updateItemResult != null;
         }
         catch (ConditionalCheckFailedException cce) {
             LOGGER.info("Update condition failed for sense_id {} - tested_at {}", calibration.senseId, calibration.testedAt);
@@ -178,7 +179,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         catch (AmazonServiceException ase) {
             LOGGER.error(ase.getMessage());
         }
-        return updateItemResult != null;
+        return Boolean.FALSE;
     }
 
 
@@ -257,14 +258,14 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
                 .withTableName(calibrationTableName)
                 .withKey(key);
-        DeleteItemResult deleteItemResult = null;
         try {
-            deleteItemResult = dynamoDBClient.deleteItem(deleteItemRequest);
+            final DeleteItemResult deleteItemResult = dynamoDBClient.deleteItem(deleteItemRequest);
+            return deleteItemResult != null;
         }
         catch (AmazonServiceException ase) {
             LOGGER.error(ase.getMessage());
         }
-        return deleteItemResult != null;
+        return Boolean.FALSE;
     }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
