@@ -48,6 +48,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);
 
     public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
+    private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 24 * 3600;
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
@@ -80,7 +81,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
-                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .expireAfterWrite(5, TimeUnit.MINUTES)
                 .recordStats()
                 .build(
                         new CacheLoader<String, List<DeviceAccountPair>>() {
@@ -126,10 +127,10 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             final LinkedList<DeviceData> dataForDevice = deviceDataGroupedByDeviceId.get(deviceName);
             final List<DeviceAccountPair> deviceAccountPairs = Lists.newArrayList();
 
-            if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST)) {
-                deviceAccountPairs.addAll(dbCache.getUnchecked(deviceName));
-            } else {
+            if(!flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST) || batchPeriodicDataWorker.getUptimeInSecond() < MIN_UPTIME_IN_SECONDS_FOR_CACHING) {
                 deviceAccountPairs.addAll(deviceDAO.getAccountIdsForDeviceId(deviceName));
+            } else {
+                deviceAccountPairs.addAll(dbCache.getUnchecked(deviceName));
             }
 
 

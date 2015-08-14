@@ -142,7 +142,7 @@ public class ReceiveResource extends BaseResource {
             debugSenseId = "";
         }
 
-        LOGGER.info("DebugSenseId device_id = {}", debugSenseId);
+        LOGGER.debug("DebugSenseId device_id = {}", debugSenseId);
 
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
@@ -382,7 +382,7 @@ public class ReceiveResource extends BaseResource {
                 this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, userInfoList, nextRingTime);
             }
 
-            LOGGER.info("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
+            LOGGER.debug("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
             responseBuilder.setAudioControl(audioControl);
             setPillColors(userInfoList, responseBuilder);
         }else{
