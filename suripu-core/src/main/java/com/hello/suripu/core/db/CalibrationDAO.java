@@ -13,14 +13,17 @@ public interface CalibrationDAO {
      * @param senseId String
      * @return Calibration
      */
-    Optional<Calibration> get(String senseId);
+    Calibration get(String senseId);
     Optional<Calibration> getStrict(String senseId);
 
     /**
      *
-     * @param senseId String
+     * @param calibration Calibration
+     * @return int
      */
-    void put(String senseId, Integer dustOffset, String metadata);
+    Boolean putForce(Calibration calibration);
+    Boolean put(Calibration calibration);
+
 
     /**
      * Retrieves a map of sense Id to calibration object
@@ -29,4 +32,10 @@ public interface CalibrationDAO {
      */
     Map<String, Calibration> getBatch(Set<String> senseIds);
     Map<String, Calibration> getBatchStrict(Set<String> senseIds);
+
+    /**
+     * Delete an entry by senseId
+     * @param senseId String
+     */
+     Boolean delete(String senseId);
 }
