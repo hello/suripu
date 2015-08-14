@@ -171,43 +171,53 @@ public class InsightProcessor {
             return;
         }
 
-        // for now, we only have these two categories
-        if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
-            LOGGER.debug("Light has not been generated recently, will now generate by category");
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT); //
-        } else if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
-        } else if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) { //movement
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
+        //Generate some Insights based on day of month - once every 9 days
+        final Integer dayOfMonth = DateTime.now().getDayOfMonth();
+        LOGGER.debug("The day of the month is {}", dayOfMonth);
+
+        if (dayOfMonth == 1) {
+            if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
+                LOGGER.debug("generating insight light for accountid {}", accountId);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.LIGHT);
+            }
+        }
+        else if (dayOfMonth == 10) {
+            if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+                LOGGER.debug("generating insight temperature for accountid {}", accountId);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.TEMPERATURE);
+            }
+        }
+        else if (dayOfMonth == 19) {
+            if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
+                LOGGER.debug("generating insight sleep quality (movement) for accountid {}", accountId);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
+            }
         }
 
+
+        //Generate some Insights weekly
         final Integer dayOfWeek = DateTime.now().getDayOfWeek();
         LOGGER.debug("The day of week is {}", dayOfWeek);
-        InsightCard.Category categoryToGenerate;
+        InsightCard.Category categoryToGenerateWeek;
 
         switch (dayOfWeek) {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
             case 6:
-            case 7:
                 if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
                     return;
                 }
+                else if (recentCategories.contains(InsightCard.Category.WAKE_VARIANCE)) {
+                    return;
+                }
                 LOGGER.debug("setting category to generate as wake variance");
-                categoryToGenerate = InsightCard.Category.WAKE_VARIANCE;
+                categoryToGenerateWeek = InsightCard.Category.WAKE_VARIANCE;
                 break;
-
             default:
                 return;
         }
 
-        if (!recentCategories.contains(categoryToGenerate)) {
-            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
+        if (recentCategories.contains(categoryToGenerateWeek)) {
+            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerateWeek);
         }
-
     }
 
     public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
