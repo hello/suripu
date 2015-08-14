@@ -29,7 +29,6 @@ public class DeviceDataTest {
                 .withAccountId(accountId)
                 .withDeviceId(251278L)
                 .withAmbientTemperature(temp)
-                .withAmbientAirQuality(dust, 1)
                 .withAmbientAirQualityRaw(dust)
                 .withAmbientDustVariance(0)
                 .withAmbientDustMin(0)
@@ -43,7 +42,7 @@ public class DeviceDataTest {
 
         final DeviceData deviceData = builder.build();
 
-        assertThat(deviceData.ambientAirQuality, is(64924));
+        assertThat(deviceData.ambientAirQualityRaw, is(1000));
     }
 }
 

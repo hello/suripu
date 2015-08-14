@@ -74,6 +74,11 @@ preferences_db:
   region: us-east-1
   table_name: prod_preferences
 
+calibration:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_calibration
+
 push_notifications:
   arns:
     ios: arn:aws:sns:us-east-1:053216739513:app/APNS/hello-sense-ios-dev

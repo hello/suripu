@@ -8,6 +8,8 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -66,7 +68,10 @@ public class PushNotificationsProcessorFactory implements IRecordProcessorFactor
             final AmazonDynamoDB accountPreferencesDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getAccountPreferences().getEndpoint());
             final AccountPreferencesDynamoDB accountPreferencesDynamoDB = AccountPreferencesDynamoDB.create(accountPreferencesDynamoDBClient, configuration.getAccountPreferences().getTableName());
 
-            return new PushNotificationsProcessor(pushNotificationProcessor, mergedUserInfoDynamoDB, accountPreferencesDynamoDB, configuration.getActiveHours());
+            final AmazonDynamoDB calibrationDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getCalibrationDynamoDBConfiguration().getEndpoint());
+            final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getCalibrationDynamoDBConfiguration().getTableName());
+
+            return new PushNotificationsProcessor(pushNotificationProcessor, mergedUserInfoDynamoDB, accountPreferencesDynamoDB, configuration.getActiveHours(), calibrationDAO);
 
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e.getMessage());

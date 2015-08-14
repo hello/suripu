@@ -81,6 +81,11 @@ preferences_db:
   region: us-east-1
   table_name: preferences
 
+calibration:
+  endpoint: http://localhost:7777
+  region: us-east-1
+  table_name: calibration
+
 push_notifications:
   arns:
     ios: arn:aws:sns:us-east-1:053216739513:app/APNS/hello-sense-ios-dev
