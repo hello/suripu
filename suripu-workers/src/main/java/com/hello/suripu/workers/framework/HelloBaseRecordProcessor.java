@@ -49,4 +49,8 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         return flipper.deviceFeatureActive(FeatureFlipper.WORKER_KINESIS_TIMEZONES, senseId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasCalibrationEnabled(final String senseId) {
+        return flipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
+    }
+
 }
