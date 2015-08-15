@@ -130,54 +130,82 @@ fp.write("\n\n-- %s-%s shard for tracker_motion\n\n" % (year, month))
 # Create monthly shard for tracker Motion
 YYYY_MM = datetime.strftime(start_sharding_date, "%Y_%m")
 
-fp.write("CREATE TABLE IF NOT EXISTS tracker_motion_par_%s() INHERITS (tracker_motion_master);\n" % YYYY_MM)
 
-fp.write("CREATE UNIQUE INDEX tracker_motion_par_%s_uniq_tracker_ts on tracker_motion_par_%s(tracker_id, ts);\n" %
-        (YYYY_MM, YYYY_MM))
+# create the tables for the whole month
+t_create_table_str = "CREATE TABLE IF NOT EXISTS tracker_motion_par_%s() INHERITS (tracker_motion_master);"
 
-fp.write("CREATE UNIQUE INDEX tracker_motion_par_%s_uniq_tracker_id_account_id_ts on tracker_motion_par_%s(tracker_id, account_id, ts);\n" %
-        (YYYY_MM, YYYY_MM))
+t_unique_index_ts_str = "CREATE UNIQUE INDEX " + \
+        "tracker_motion_par_%s_uniq_tracker_ts ON " + \
+        "tracker_motion_par_%s(tracker_id, ts);"
 
-fp.write("CREATE INDEX tracker_motion_par_%s_local_utc_ts on tracker_motion_par_%s(local_utc_ts);\n" %
-        (YYYY_MM, YYYY_MM))
+t_unique_index_all_str = "CREATE UNIQUE INDEX " + \
+        "tracker_motion_par_%s_uniq_tracker_id_account_id_ts ON " + \
+        "tracker_motion_par_%s(tracker_id, account_id, ts);"
 
-fp.write("ALTER TABLE tracker_motion_par_%s ADD CHECK (local_utc_ts >= '%s 00:00:00' AND local_utc_ts < '%s 00:00:00');\n" %
-        (YYYY_MM, datetime.strftime(start_sharding_date, "%Y-%m-%d"),
-        datetime.strftime((end_sharding_date + timedelta(1)), "%Y-%m-%d"))
-    )
+t_index_str = "CREATE INDEX tracker_motion_par_%s_local_utc_ts ON tracker_motion_par_%s(local_utc_ts);"
 
-fp.write("\n" + """CREATE OR REPLACE FUNCTION tracker_motion_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
+t_check_str = "ALTER TABLE tracker_motion_par_%s ADD CHECK " + \
+        "(local_utc_ts >= '%s 00:00:00' AND local_utc_ts < '%s 00:00:00');"
+
+for i in range(num_days):
+    date = start_sharding_date + timedelta(i)
+    date_string = datetime.strftime(date, "%Y_%m_%d")
+
+    fp.write(t_create_table_str % (date_string) + "\n")
+    fp.write(t_unique_index_ts_str % (date_string, date_string) + "\n")
+    fp.write(t_unique_index_all_str % (date_string, date_string) + "\n")
+    fp.write(t_index_str % (date_string, date_string) + "\n")
+
+    # add date checks
+    gte = datetime.strftime(date, "%Y-%m-%d")
+    lt = datetime.strftime(date + timedelta(1), "%Y-%m-%d")
+    fp.write(t_check_str % (date_string, gte, lt) + "\n")
+    fp.write("\n")
+
+fp.write("\n")
+
+
+
+# create tracker_motion_master trigger function
+start_trigger_str = """
+CREATE OR REPLACE FUNCTION tracker_motion_master_insert_function() RETURNS TRIGGER LANGUAGE plpgsql AS
 $BODY$
 DECLARE
     table_name text;
-BEGIN""" + "\n")
+BEGIN"""
+fp.write("\n" + start_trigger_str + "\n")
+
+
+trigger_condition = "NEW.local_utc_ts >= '%s 00:00:00' AND NEW.local_utc_ts < '%s 00:00:00' THEN"
 
 n = 0
-start_date = datetime(year=2015, month=5, day = 1)
-end_date = datetime(year=int(year), month=int(month)+1, day=1)
-tracker_trigger_str = "NEW.local_utc_ts >= '%s 00:00:00' AND NEW.local_utc_ts < '%s 00:00:00' THEN\n";
+for current_date in date_range(DAILY_SHARDING_START, end_sharding_date):
+    gte_str = datetime.strftime(current_date, "%Y-%m-%d")
+    lt_str = datetime.strftime(current_date + timedelta(1), "%Y-%m-%d")
 
-for prev_date, current_date in get_year_months(start_date, end_date):
     if n == 0:
-        fp.write("    IF ")
+        fp.write("    IF " + trigger_condition % (gte_str, lt_str) + "\n")
     else:
-        fp.write("    ELSIF ")
+        fp.write("    ELSIF " + trigger_condition % (gte_str, lt_str) + "\n")
 
-    fp.write(tracker_trigger_str % 
-            (datetime.strftime(prev_date, "%Y-%m-%d"),
-            datetime.strftime(current_date, "%Y-%m-%d")))
-            
-        
-    fp.write("        INSERT INTO tracker_motion_par_%s VALUES (NEW.*);\n" %
-        datetime.strftime(current_date - timedelta(1), "%Y_%m"))
+    table_name = "tracker_motion_par_%s" % datetime.strftime(current_date, "%Y_%m_%d") 
+    fp.write("        INSERT INTO %s VALUES (NEW.*);" % table_name + "\n")
     n += 1
+    
 
-
-fp.write("""    ELSE
+remaining_str = """
+    ELSIF NEW.local_utc_ts >= '2015-08-01 00:00:00' AND NEW.local_utc_ts < '2015-09-01 00:00:00' THEN
+        INSERT INTO tracker_motion_par_2015_08 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-07-01 00:00:00' AND NEW.local_utc_ts < '2015-08-01 00:00:00' THEN
+        INSERT INTO tracker_motion_par_2015_07 VALUES (NEW.*);
+    ELSE
         INSERT INTO tracker_motion_par_default VALUES (NEW.*);
     END IF;
     RETURN NULL;
 END
-$BODY$;""")
+$BODY$;"""
+
+
+fp.write(remaining_str + "\n")
 
 fp.close()
