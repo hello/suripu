@@ -215,7 +215,7 @@ public class InsightProcessor {
                 return;
         }
 
-        if (recentCategories.contains(categoryToGenerateWeek)) {
+        if (!recentCategories.contains(categoryToGenerateWeek)) {
             this.generateInsightsByCategory(accountId, deviceId, categoryToGenerateWeek);
         }
     }
