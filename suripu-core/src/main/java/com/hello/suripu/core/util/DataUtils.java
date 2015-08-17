@@ -70,7 +70,18 @@ public class DataUtils{
 
     public static int convertDustDensityToAQI (final float value) {
         // this simply converts dust density from milligram per cubic meter to microgram per cubic meter
-        final int roundValue = Math.round(value * 1000.0f); 
+        final int roundValue = Math.round(value * 1000.0f);
+
+        if(roundValue >= DUST_DENSITY_TO_AQI.length) {
+            LOGGER.error("Dust density {} is beyond maximum convertible value", roundValue);
+            return DUST_DENSITY_TO_AQI[DUST_DENSITY_TO_AQI.length - 1];
+        }
+
+        if(roundValue < 0) {
+            LOGGER.error("Dust density {} is less than minimum convertible value", roundValue);
+            return DUST_DENSITY_TO_AQI[0];
+        }
+
         return DUST_DENSITY_TO_AQI[roundValue];
     }
 
