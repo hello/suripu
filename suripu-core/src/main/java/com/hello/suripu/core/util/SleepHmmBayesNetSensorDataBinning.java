@@ -27,6 +27,9 @@ public class SleepHmmBayesNetSensorDataBinning {
 
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
+
+
+
     static public class BinnedData {
         public final double[][] data;
         public final int numMinutesInWindow;
@@ -166,8 +169,8 @@ public class SleepHmmBayesNetSensorDataBinning {
             double value = sample.value;
 
             //either wave happened or it didn't.. value can be 1.0 or 0.0
-            if (value > 0.0 && params.useWavesForDisturbances) {
-                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+            if (value > 0.0) {
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.WAVE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
@@ -220,6 +223,28 @@ public class SleepHmmBayesNetSensorDataBinning {
 
             addToBin(data, m.timestamp, m.onDurationInSeconds,  SleepHmmBayesNetProtos.MeasType.PARTNER_MOTION_DURATION_VALUE, startTimeMillisInUTC, numMinutesInWindow);
         }
+
+        //compute disturbances due to increases in sensor values
+        final double [] lightVec = data[SleepHmmBayesNetProtos.MeasType.LOG_LIGHT_VALUE];
+        final double [] lightDisturbanceVec = data[SleepHmmBayesNetProtos.MeasType.LIGHT_INCREASE_DISTURBANCE_VALUE];
+        final double [] soundVec = data[SleepHmmBayesNetProtos.MeasType.LOG_SOUND_VALUE];
+        final double [] soundDisturbanceVec = data[SleepHmmBayesNetProtos.MeasType.SOUND_INCREASE_DISTURBANCE_VALUE];
+
+        for (int t = 1; t < dataLength; t++) {
+            final double deltaLogLightVec = lightVec[t] - lightVec[t-1];
+            final double deltaLogSoundVec = soundVec[t] - soundVec[t-1];
+
+            if (deltaLogLightVec > params.logLightIncreaseThresholdForDisturbance) {
+                lightDisturbanceVec[t] = 1.0;
+            }
+
+            if (deltaLogSoundVec > params.logSoundIncreaseThresholdForDisturbance) {
+                soundDisturbanceVec[t] = 1.0;
+            }
+
+        }
+
+
 
 
         final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
