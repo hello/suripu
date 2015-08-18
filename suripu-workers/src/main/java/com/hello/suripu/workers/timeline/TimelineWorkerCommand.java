@@ -18,15 +18,14 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
-import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
-import com.hello.suripu.core.db.BayesNetModelDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
+import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -111,13 +110,11 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
 
        /* Priors for bayesnet  */
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_PRIORS));
-        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(
-                priorsDb,
-                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.BAYESNET_PRIORS));
+        final OnlineHmmPriorsDAO priorsDAO = null;
 
         /* Models for bayesnet */
         final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_MODEL));
-        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(
+        final FeatureExtractionModelsDAO modelDAO = new FeatureExtractionModelsDAODynamoDB(
                 modelsDb,
                 configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.BAYESNET_MODEL));
 

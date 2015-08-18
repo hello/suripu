@@ -9,6 +9,6 @@ import java.util.UUID;
 /**
  * Created by benjo on 7/7/15.
  */
-public interface BayesNetModelDAO {
+public interface FeatureExtractionModelsDAO {
     public HmmBayesNetData getLatestModelForDate(Long accountId, DateTime dateTimeLocalUTC, Optional<UUID> uuidForLogger);
 }

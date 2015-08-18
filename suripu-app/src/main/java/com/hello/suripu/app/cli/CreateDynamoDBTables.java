@@ -10,8 +10,7 @@ import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
-import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
@@ -68,8 +67,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createOTAHistoryTable(configuration, awsCredentialsProvider);
         createResponseCommandsTable(configuration, awsCredentialsProvider);
         createFWUpgradePathTable(configuration, awsCredentialsProvider);
-        createHmmBayesNetModelPriorTable(configuration,awsCredentialsProvider);
-        createHmmBayesNetModelTable(configuration,awsCredentialsProvider);
+        createFeatureExtractionModelsTable(configuration, awsCredentialsProvider);
         createCalibrationTable(configuration, awsCredentialsProvider);
     }
 
@@ -419,23 +417,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
     }
 
 
-    private void createHmmBayesNetModelPriorTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
-        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
-        final DynamoDBConfiguration config = configuration.getHmmBayesnetPriorsConfiguration();
-        final String tableName = config.getTableName();
-        client.setEndpoint(config.getEndpoint());
-
-        try {
-            client.describeTable(tableName);
-            System.out.println(String.format("%s already exists.", tableName));
-        } catch (AmazonServiceException exception) {
-            final CreateTableResult result = BayesNetHmmModelPriorsDAODynamoDB.createTable(tableName, client);
-            final TableDescription description = result.getTableDescription();
-            System.out.println(description.getTableStatus());
-        }
-    }
-
-    private void createHmmBayesNetModelTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+    private void createFeatureExtractionModelsTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
         final DynamoDBConfiguration config = configuration.getHmmBayesnetModelsConfiguration();
         final String tableName = config.getTableName();
@@ -445,7 +427,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             client.describeTable(tableName);
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
-            final CreateTableResult result = BayesNetHmmModelDAODynamoDB.createTable(tableName, client);
+            final CreateTableResult result = FeatureExtractionModelsDAODynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }

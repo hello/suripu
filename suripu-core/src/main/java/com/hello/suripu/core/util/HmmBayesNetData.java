@@ -1,14 +1,10 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.algorithm.bayes.BetaDiscreteWithEventOutput;
-import com.hello.suripu.algorithm.bayes.BetaBinomialBayesModel;
-import com.hello.suripu.algorithm.bayes.MultipleEventModel;
-import com.hello.suripu.algorithm.bayes.SensorDataReductionAndInterpretation;
+import com.hello.suripu.algorithm.bayes.SensorDataReduction;
 import com.hello.suripu.algorithm.hmm.ChiSquarePdf;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
@@ -17,16 +13,13 @@ import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
-import com.hello.suripu.api.datascience.BetaBinomialProtos;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
-import com.hello.suripu.core.models.BayesNetHmmSingleModelPrior;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -89,163 +82,16 @@ public class HmmBayesNetData {
                 hmmMapById.put(model.getId(),getHmm(model));
             }
 
-        /* SECOND, MAKE THE CONDITIONAL PROBABILITY MODELS  */
-            final Map<String,String> modelNamesToOutputNames = Maps.newHashMap();
-            final Map<String,MultipleEventModel> interpretationByOutputName = Maps.newHashMap();
-
-            for (final BetaBinomialProtos.CondProbs condProbs : proto.getConditionalProbabilitiesList()) {
-                final String modelId = condProbs.getModelId();
-                final String outputId = condProbs.getOutputId();
-
-                //map of input to output
-                modelNamesToOutputNames.put(modelId, outputId);
-
-
-                //deserialize beta distributions (representing conditional probabilities)
-                final List<BetaDiscreteWithEventOutput> condProbsByEvent = getConditionalProbabilityModel(condProbs);
-
-                //populate defaults
-                if (interpretationByOutputName.get(outputId) == null) {
-                    interpretationByOutputName.put(outputId,new MultipleEventModel(2)); //binary distriubtions -- 2 discrete probs
-                }
-
-                interpretationByOutputName.get(outputId).putModel(modelId, condProbsByEvent);
-            }
-
         /* LAST, EXTRACT THE MEAUREMENT PARAMS OF THIS MODEL */
 
             deserializedData = Optional.of( new DeserializedSleepHmmBayesNetWithParams(
-                    new SensorDataReductionAndInterpretation(hmmMapById,interpretationByOutputName,modelNamesToOutputNames),
+                    new SensorDataReduction(hmmMapById),
                     HmmBayesNetMeasurementParameters.createFromProto(proto.getMeasurementParameters())));
 
         } catch (InvalidProtocolBufferException e) {
             LOGGER.error(e.toString());
         }
     }
-
-
-
-
-
-
-
-
-
-    /* map database representation of priors to beta binomial  */
-    public void updateModelPriors(final List<BayesNetHmmSingleModelPrior> priors) {
-
-        if (!deserializedData.isPresent()) {
-            LOGGER.error("tried to update priors of model that was not deserialized properly");
-            return;
-        }
-
-        //replace the priors that match the required (i.e. already-existing) models
-        for (final BayesNetHmmSingleModelPrior prior : priors) {
-
-            //does outputId match?
-            final MultipleEventModel joinerOfMultipleHmmOutputs = deserializedData.get().sensorDataReductionAndInterpretation.interpretationByOutputName.get(prior.outputId);
-
-            if (joinerOfMultipleHmmOutputs == null) {
-                continue;
-            }
-
-            //does modelId match?
-            if (joinerOfMultipleHmmOutputs.hasModel(prior.modelId)) {
-
-                //transform the priors from the database into something the joinerOfMultipleModels can understand
-                final List<BetaDiscreteWithEventOutput> newBetaBinomials = getConditionalProbabilityModel(prior.priors);
-
-                //replacing the beta binomial models
-                joinerOfMultipleHmmOutputs.putModel(prior.modelId, newBetaBinomials);
-            }
-        }
-    }
-
-
-
-    /*  map betabinomial to database representation  */
-    public final List<BayesNetHmmSingleModelPrior> getModelPriors() {
-        if (!deserializedData.isPresent()) {
-            LOGGER.error("tried to get priors of model that was not deserialized properly");
-            return Collections.EMPTY_LIST;
-        }
-
-        final List<BayesNetHmmSingleModelPrior> priors = Lists.newArrayList();
-
-        //models by outputID
-        final Map<String,MultipleEventModel> multipleEventModelMap = deserializedData.get().sensorDataReductionAndInterpretation.interpretationByOutputName;
-
-        //models by model ID
-        for (final String outputId : multipleEventModelMap.keySet()) {
-            final MultipleEventModel multipleEventModel = multipleEventModelMap.get(outputId);
-
-
-            for (final String modelId : multipleEventModel.getModelNames()) {
-                final ImmutableList<BetaDiscreteWithEventOutput> model = multipleEventModel.getModel(modelId);
-                final List<BetaBinomialBayesModel> priorFromModel = Lists.newArrayList(); //populate this
-
-                for (final BetaDiscreteWithEventOutput betaDiscreteWithEventOutput : model) {
-                    final BetaBinomialBayesModel modelComponent = betaDiscreteWithEventOutput.getDistribution().get(0); //alpha == true
-                    priorFromModel.add(modelComponent);
-                }
-
-                priors.add(new BayesNetHmmSingleModelPrior(modelId,outputId,priorFromModel));
-
-            }
-        }
-
-        return priors;
-    }
-
-
-
-
-
-
-    /* convert prior data to a beta binomial model  */
-    private  List<BetaDiscreteWithEventOutput> getConditionalProbabilityModel(final List<BetaBinomialBayesModel> priors) {
-        List<BetaDiscreteWithEventOutput> condProbModel = Lists.newArrayList();
-        for (final BetaBinomialBayesModel model : priors) {
-
-            //create binary complementary model (p, not p) and you can do this with the beta distribution by swapping alpha and beta
-            final BetaBinomialBayesModel betaBinomialBayesModel = new BetaBinomialBayesModel(model.getAlpha(),model.getBeta());
-            final BetaBinomialBayesModel betaBinomialBayesModelComplementary = new BetaBinomialBayesModel(model.getBeta(),model.getAlpha()); //note alpha and beta are swapped intentionally
-            final BetaDiscreteWithEventOutput betaDiscreteWithEventOutput = new BetaDiscreteWithEventOutput(Lists.newArrayList(betaBinomialBayesModel, betaBinomialBayesModelComplementary));
-
-            condProbModel.add(betaDiscreteWithEventOutput);
-        }
-
-
-        return condProbModel;
-
-    }
-
-
-
-
-
-    /* convert protobuf data to beta binomial model  */
-    private  List<BetaDiscreteWithEventOutput> getConditionalProbabilityModel(final BetaBinomialProtos.CondProbs condProbs) {
-        List<BetaDiscreteWithEventOutput> condProbModel = Lists.newArrayList();
-        for (BetaBinomialProtos.BetaCondProb betaCondProb : condProbs.getProbsList()) {
-
-            //create binary complementary model (p, not p) and you can do this with the beta distribution by swapping alpha and beta
-            final BetaBinomialBayesModel betaBinomialBayesModel = new BetaBinomialBayesModel(betaCondProb.getAlpha(),betaCondProb.getBeta());
-            final BetaBinomialBayesModel betaBinomialBayesModelComplementary = new BetaBinomialBayesModel(betaCondProb.getBeta(),betaCondProb.getAlpha());
-            final BetaDiscreteWithEventOutput betaDiscreteWithEventOutput = new BetaDiscreteWithEventOutput(Lists.newArrayList(betaBinomialBayesModel, betaBinomialBayesModelComplementary));
-
-            condProbModel.add(betaDiscreteWithEventOutput);
-        }
-
-
-        return condProbModel;
-
-    }
-
-
-
-
-
 
 
     /* create HMM from protobuf   */
@@ -336,7 +182,12 @@ public class HmmBayesNetData {
     /* get a single pdf from obs model -- this is just a factory method */
     private  Optional<HmmPdfInterface> getPdfFromObsModel(final SleepHmmBayesNetProtos.ObsModel obsModel) {
 
-        final int measNumber = obsModel.getMeasType().getNumber();
+        if (obsModel.getMeasTypeCount() == 0) {
+            return Optional.absent();
+        }
+
+        //for now just get the first one, later we may have vector measurements
+        final int measNumber = obsModel.getMeasType(0).getNumber();
 
         if (obsModel.hasGaussian()) {
             return Optional.of((HmmPdfInterface)new GaussianPdf(obsModel.getGaussian().getMean(),obsModel.getGaussian().getStddev(),measNumber));

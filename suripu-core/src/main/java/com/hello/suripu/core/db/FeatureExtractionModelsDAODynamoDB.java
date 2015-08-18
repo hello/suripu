@@ -34,9 +34,9 @@ import java.util.UUID;
 
 
 
-public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
+public class FeatureExtractionModelsDAODynamoDB implements FeatureExtractionModelsDAO {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(BayesNetHmmModelDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(FeatureExtractionModelsDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
@@ -49,7 +49,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
     private static final long DEFAULT_ACCOUNT_HASH_RANGE = 5;
 
 
-    public BayesNetHmmModelDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
+    public FeatureExtractionModelsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
@@ -174,13 +174,13 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(BayesNetHmmModelDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(BayesNetHmmModelDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(FeatureExtractionModelsDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(FeatureExtractionModelsDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(BayesNetHmmModelDAODynamoDB.HASH_KEY).withAttributeType(ScalarAttributeType.N),
-                new AttributeDefinition().withAttributeName(BayesNetHmmModelDAODynamoDB.RANGE_KEY).withAttributeType(ScalarAttributeType.S)
+                new AttributeDefinition().withAttributeName(FeatureExtractionModelsDAODynamoDB.HASH_KEY).withAttributeType(ScalarAttributeType.N),
+                new AttributeDefinition().withAttributeName(FeatureExtractionModelsDAODynamoDB.RANGE_KEY).withAttributeType(ScalarAttributeType.S)
 
         );
 

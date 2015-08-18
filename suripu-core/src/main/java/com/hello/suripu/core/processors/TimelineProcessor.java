@@ -7,11 +7,11 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetModelDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -20,7 +20,6 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
-import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -42,8 +41,6 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.HmmBayesNetData;
-import com.hello.suripu.core.util.HmmBayesNetPredictor;
 import com.hello.suripu.core.util.InvalidNightType;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
@@ -86,8 +83,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final FeedbackUtils feedbackUtils;
     private final PartnerDataUtils partnerDataUtils;
     private final SenseColorDAO senseColorDAO;
-    private final BayesNetHmmModelPriorsDAO priorsDAO;
-    private final BayesNetModelDAO bayesNetModelDAO;
+    private final OnlineHmmPriorsDAO priorsDAO;
+    private final FeatureExtractionModelsDAO featureExtractionModelsDAO;
     private final Optional<UUID> uuidOptional;
 
     final private static int SLOT_DURATION_MINUTES = 1;
@@ -110,20 +107,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final AccountDAO accountDAO,
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                                             final SenseColorDAO senseColorDAO,
-                                                            final BayesNetHmmModelPriorsDAO priorsDAO,
-                                                            final BayesNetModelDAO bayesNetModelDAO) {
+                                                            final OnlineHmmPriorsDAO priorsDAO,
+                                                            final FeatureExtractionModelsDAO featureExtractionModelsDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(trackerMotionDAO,
                 deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
-                senseColorDAO,priorsDAO,bayesNetModelDAO,
+                senseColorDAO,priorsDAO, featureExtractionModelsDAO,
                 Optional.<UUID>absent());
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,bayesNetModelDAO,Optional.of(uuid));
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO, featureExtractionModelsDAO,Optional.of(uuid));
     }
 
     //private SessionLogDebug(final String)
@@ -137,8 +134,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             final AccountDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
-                              final BayesNetHmmModelPriorsDAO priorsDAO,
-                              final BayesNetModelDAO bayesNetModelDAO,
+                              final OnlineHmmPriorsDAO priorsDAO,
+                              final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                               final Optional<UUID> uuid) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
@@ -150,7 +147,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.senseColorDAO = senseColorDAO;
         this.priorsDAO = priorsDAO;
-        this.bayesNetModelDAO = bayesNetModelDAO;
+        this.featureExtractionModelsDAO = featureExtractionModelsDAO;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -235,10 +232,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 algorithmWorked = true;
 
             }
+            /*
             else if (this.hasBayesNetEnabled(accountId)) {
 
                 //get model from DB
-                final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId,date,uuidOptional);
+                final HmmBayesNetData bayesNetData = featureExtractionModelsDAO.getLatestModelForDate(accountId,date,uuidOptional);
 
                 if (bayesNetData.isValid()) {
 
@@ -261,7 +259,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
                     final List<Event> events = predictor.getBayesNetHmmEvents(targetDate, endDate, currentTime.getMillis(), accountId, sensorData.allSensorSampleList, sensorData.trackerMotions,sensorData.partnerMotions,sensorData.trackerMotions.get(0).offsetMillis);
 
-                    /*  NOTE THAT THIS ONLY DOES SLEEP RIGHT NOW, NOT ON-BED */
+                    //  NOTE THAT THIS ONLY DOES SLEEP RIGHT NOW, NOT ON-BED //
                     if (events.size() >= 2) {
 
                         final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.<Optional<Event>>create(Optional.<Event>absent(), Optional.of(events.get(0)), Optional.of(events.get(1)), Optional.<Event>absent());
@@ -274,6 +272,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                 }
             }
+            */
             else {
 
                 // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
