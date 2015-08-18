@@ -151,7 +151,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
             int hasScore = 0;
             for (int i = 0; i < numDays; i++) {
                 final DateTime targetDate = startTargetDate.plusDays(i);
-                final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+                final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,false);
 
                 if (!result.isPresent()) {
                     continue;

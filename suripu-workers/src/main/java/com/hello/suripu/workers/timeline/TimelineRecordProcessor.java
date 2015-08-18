@@ -188,7 +188,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
                 this.timelineReadyToProcess.mark(1);
                 try {
-                    final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC);
+                    final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC,false);
                     if(!result.isPresent()){
                         this.emptyTimelineAfterProcess.mark(1);
                         continue;

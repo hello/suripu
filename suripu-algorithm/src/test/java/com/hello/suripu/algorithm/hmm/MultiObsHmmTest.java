@@ -86,7 +86,7 @@ public class MultiObsHmmTest {
 
         final double [][] alphabet = hmm.getAlphabetMatrices().get("foo1");
 
-        
+
         double tol = 2e-2;
         TestCase.assertEquals(transitionMatrix[0][0], 0.98,tol);
         TestCase.assertEquals(transitionMatrix[0][1], 0.02, tol);

@@ -112,7 +112,7 @@ public class TimelineResource extends BaseResource {
             LOGGER.info("{} No cached timeline, reprocess timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //generate timeline from one of our many algorithms
-            final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+            final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,true);
 
             //if it was successful,
             if (result.isPresent()) {
@@ -175,7 +175,7 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final Optional<TimelineResult> timelineResultOptional = timelineProcessor.retrieveTimelinesFast(accountId.get(), DateTimeUtil.ymdStringToDateTime(date));
+        final Optional<TimelineResult> timelineResultOptional = timelineProcessor.retrieveTimelinesFast(accountId.get(), DateTimeUtil.ymdStringToDateTime(date),true);
         if (!timelineResultOptional.isPresent()) {
             return TimelineResult.createEmpty().timelines;
         }
