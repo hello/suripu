@@ -26,6 +26,25 @@ public class LogMath {
         }
     }
 
+    public static double [][] eln(final double [][] x) {
+        algorithmAssert(x.length > 0, "no rows in matrix");
+        algorithmAssert(x[0].length > 0, "no columns in matrix");
+
+
+        int j, i;
+        final double[][] z = new double[x.length][0];
+        for (j = 0; j < x.length; j++) {
+            z[j] = x[j].clone();
+        }
+
+        for (j = 0; j < x.length; j++) {
+            for (i = 0; i < x[0].length; i++) {
+                z[j][i] = eln(z[j][i]);
+            }
+        }
+        return z;
+    }
+
     public static double eexp(final double x) {
         if (x == LOGZERO) {
             return 0.0;
@@ -66,10 +85,9 @@ public class LogMath {
     }
 
     public static double [][] elnAddMatrix(final double [][] logx, final double [][] logy) {
-        assert (logy.length == logx.length);
-        assert (logy.length > 0);
-        assert (logy[0].length == logx[0].length);
-
+        algorithmAssert (logy.length == logx.length,"number of rows do not match");
+        algorithmAssert (logy.length > 0,"no rows in matrix");
+        algorithmAssert (logy[0].length == logx[0].length,"number of columns do not match");
 
         final int m = logy.length;
         final int n = logy[0].length;

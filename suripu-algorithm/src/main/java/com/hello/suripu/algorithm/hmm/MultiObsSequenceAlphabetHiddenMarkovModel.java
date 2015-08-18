@@ -210,12 +210,6 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         final double [] logDenominator = getLogDenominator(alphaBeta, numStates, numObs);
 
-
-        this.logANumerator = LogMath.elnAddMatrix(logANumerator, logANumerator);
-        this.logDenominator = LogMath.elnAddVector(logDenominator, logDenominator);
-
-
-
         for (final String key : rawdata.keySet()) {
 
             if (this.logAlphabetNumerator.get(key) == null) {
@@ -230,6 +224,9 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
             this.logAlphabetNumerator.put(key, LogMath.elnAddMatrix(this.logAlphabetNumerator.get(key), logAlphabetNumerator));
         }
+
+        this.logANumerator = LogMath.elnAddMatrix(this.logANumerator, logANumerator);
+        this.logDenominator = LogMath.elnAddVector(this.logDenominator, logDenominator);
 
         if (priorWeightAsNumberOfSamples > 0) {
             final double scaleFactor = (double)priorWeightAsNumberOfSamples / (priorWeightAsNumberOfSamples + 1);
@@ -282,7 +279,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return (int)label;
     }
 
-    private AlphaBetaResult getAlphaAndBeta(final int numObs,final double []  pi, final double [][]  logbmap, final double [][]  A,final int numStates,final Map<Integer,Integer> labels, final Multimap<Integer,MultiObsSequence.Transition>  forbiddenTransitions) {
+    static private AlphaBetaResult getAlphaAndBeta(final int numObs,final double []  pi, final double [][]  logbmap, final double [][]  A,final int numStates,final Map<Integer,Integer> labels, final Multimap<Integer,MultiObsSequence.Transition>  forbiddenTransitions) {
 
     /*
      Calculates 'alpha' the forward variable.
@@ -402,7 +399,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
     }
 
-    double [][] getLogANumerator(final double [][] originalA, final AlphaBetaResult alphabeta,final double [][]logbmap,final Multimap<Integer,MultiObsSequence.Transition> forbiddenTransitions,final int numObs, final int numStates) {
+    static double [][] getLogANumerator(final double [][] originalA, final AlphaBetaResult alphabeta,final double [][]logbmap,final Multimap<Integer,MultiObsSequence.Transition> forbiddenTransitions,final int numObs, final int numStates) {
 
         int i,j,t;
         final double [][] logANumerator = getLogZeroedMatrix(numStates, numStates);
@@ -455,7 +452,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
     }
 
-    double [][] getLogAlphabetNumerator(final AlphaBetaResult alphabeta, final double [] rawdata, final int numStates, final int numObs, final int alphabetSize ) {
+    static double [][] getLogAlphabetNumerator(final AlphaBetaResult alphabeta, final double [] rawdata, final int numStates, final int numObs, final int alphabetSize ) {
 
         int iState,iAlphabet,t;
 
@@ -488,19 +485,20 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
     }
 
-    double [] getLogDenominator(final AlphaBetaResult alphabeta, final int numStates, final int numObs) {
+    static double [] getLogDenominator(final AlphaBetaResult alphabeta, final int numStates, final int numObs) {
 
         int iState,t;
 
         final double [] logDenominator = new double[numStates];
-        Arrays.fill(logDenominator,0.0);
+        Arrays.fill(logDenominator,LogMath.LOGZERO);
 
         final double [][] logalpha = alphabeta.logalpha;
         final double [][] logbeta = alphabeta.logbeta;
 
         for (iState = 0; iState < numStates; iState++) {
             for (t = 0; t < numObs; t++) {
-                logDenominator[iState] = LogMath.elnsum(logDenominator[iState], LogMath.elnproduct(logalpha[iState][t], logbeta[iState][t]));
+                final double tempval = LogMath.elnproduct(logalpha[iState][t], logbeta[iState][t]);
+                logDenominator[iState] = LogMath.elnsum(logDenominator[iState], tempval); //sum
             }
 
             logDenominator[iState] = LogMath.elnproduct(logDenominator[iState], -alphabeta.modelLikelihood);
@@ -510,14 +508,16 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
     }
 
 
-    void scalePriors(final double scaleFactor) {
+    public void scalePriors(final double scaleFactor) {
+
+        final double logScaleFactor = LogMath.eln(scaleFactor);
 
         for (final String key : logAlphabetNumerator.keySet()) {
-            logAlphabetNumerator.put(key, LogMath.elnMatrixScalarProduct(logAlphabetNumerator.get(key),scaleFactor));
+            logAlphabetNumerator.put(key, LogMath.elnMatrixScalarProduct(logAlphabetNumerator.get(key),logScaleFactor));
         }
 
-        logANumerator = LogMath.elnMatrixScalarProduct(logANumerator,scaleFactor);
-        logDenominator = LogMath.elnVectorScalarProduct(logDenominator,scaleFactor);
+        logANumerator = LogMath.elnMatrixScalarProduct(logANumerator,logScaleFactor);
+        logDenominator = LogMath.elnVectorScalarProduct(logDenominator,logScaleFactor);
     }
 
 }
