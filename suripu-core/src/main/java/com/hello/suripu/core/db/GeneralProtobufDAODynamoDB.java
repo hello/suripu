@@ -41,20 +41,19 @@ public class GeneralProtobufDAODynamoDB {
     private final String tableName;
     private final String hashKeyColumnName;
     private final Optional<String> rangeKeyColumnName;
-    private final String payloadColumnName;
+    private final List<String> payloadColumnNames;
     private final Logger logger;
 
-    public GeneralProtobufDAODynamoDB(Logger logger, final AmazonDynamoDB dynamoDBClient, final String tableName, final String hashKeyColumnName, final Optional<String> rangeKeyColumnName, final String payloadColumnName) {
+    public GeneralProtobufDAODynamoDB(Logger logger, final AmazonDynamoDB dynamoDBClient, final String tableName, final String hashKeyColumnName, final Optional<String> rangeKeyColumnName, final List<String> payloadColumnNames) {
         this.logger = logger;
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
         this.hashKeyColumnName = hashKeyColumnName;
         this.rangeKeyColumnName = rangeKeyColumnName;
-        this.payloadColumnName = payloadColumnName;
+        this.payloadColumnNames = payloadColumnNames;
     }
 
-    public boolean put(final String key, final String rangeKey, final byte[] payload) {
-        final ByteBuffer data = ByteBuffer.wrap(payload);
+    public boolean put(final String key, final String rangeKey,final Map<String,byte[]> payloadByColumn) {
 
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
         final DateTime now = DateTime.now();
@@ -65,7 +64,11 @@ public class GeneralProtobufDAODynamoDB {
         if (rangeKeyColumnName.isPresent()) {
             keyValueMap.put(rangeKeyColumnName.get(), new AttributeValue().withS(rangeKey));
         }
-        keyValueMap.put(payloadColumnName, new AttributeValue().withB(data));
+
+
+        for (final String payloadColumnName : payloadByColumn.keySet()) {
+            keyValueMap.put(payloadColumnName, new AttributeValue().withB(ByteBuffer.wrap(payloadByColumn.get(payloadColumnName))));
+        }
 
 
         final PutItemRequest request = new PutItemRequest()
@@ -94,14 +97,14 @@ public class GeneralProtobufDAODynamoDB {
 
     }
 
-    public Map<String, byte[]> getBySingleKeyNoRangeKey(final String key) {
+    public Map<String, Map<String,byte[]>> getBySingleKeyNoRangeKey(final String key) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
         return getBySingleKey(key, queryConditions, 1);
 
     }
 
-    public Map<String, byte[]> getBySingleKeyLessThanRangeKey(final String key, final String rangeKey, final int limit) {
+    public Map<String, Map<String,byte[]>> getBySingleKeyLessThanRangeKey(final String key, final String rangeKey, final int limit) {
 
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
@@ -117,7 +120,7 @@ public class GeneralProtobufDAODynamoDB {
         return getBySingleKey(key, queryConditions, limit);
     }
 
-    public Map<String, byte[]> getByMultipleKeysLessThanRangeKey(final List<String> keys, final String rangeKey, final int limit) {
+    public Map<String, Map<String,byte[]>> getByMultipleKeysLessThanRangeKey(final List<String> keys, final String rangeKey, final int limit) {
 
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
@@ -133,7 +136,7 @@ public class GeneralProtobufDAODynamoDB {
         return getByMultipleKeys(keys, queryConditions, limit);
     }
 
-    public Map<String, byte[]> getBySingleKeyBetweenRangeKeys(final String key, final String rangeKey1, final String rangeKey2, final int limit) {
+    public Map<String, Map<String,byte[]>> getBySingleKeyBetweenRangeKeys(final String key, final String rangeKey1, final String rangeKey2, final int limit) {
 
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
@@ -155,7 +158,9 @@ public class GeneralProtobufDAODynamoDB {
     }
 
 
-    public Map<String, byte[]> getByMultipleKeys(final List<String> keys, final Map<String, Condition> queryConditions, final int limit) {
+
+
+    public Map<String, Map<String,byte[]>> getByMultipleKeys(final List<String> keys, final Map<String, Condition> queryConditions, final int limit) {
         final List<AttributeValue> values = Lists.newArrayList();
 
         for (final String key : keys) {
@@ -171,7 +176,8 @@ public class GeneralProtobufDAODynamoDB {
         return get(queryConditions, limit);
     }
 
-    public Map<String, byte[]> getBySingleKey(final String key, final Map<String, Condition> queryConditions, final int limit) {
+
+    public Map<String, Map<String,byte[]>> getBySingleKey(final String key, final Map<String, Condition> queryConditions, final int limit) {
 
 
         final Condition selectHashKeyCondition = new Condition()
@@ -183,21 +189,21 @@ public class GeneralProtobufDAODynamoDB {
     }
 
 
-    public Map<String, byte[]> get(final Map<String, Condition> queryConditions, final int limit) {
+    public Map<String, Map<String,byte[]>> get(final Map<String, Condition> queryConditions, final int limit) {
 
-        final Map<String, byte[]> finalResult = new HashMap<>();
+        final Map<String, Map<String,byte[]>> finalResult = new HashMap<>();
 
         final Collection<String> targetAttributeSet = Sets.newHashSet();
 
         Collections.addAll(targetAttributeSet,
-                hashKeyColumnName,
-                payloadColumnName
+                hashKeyColumnName
         );
 
         if (rangeKeyColumnName.isPresent()) {
             targetAttributeSet.add(rangeKeyColumnName.get());
         }
 
+        targetAttributeSet.addAll(payloadColumnNames);
 
         // Perform query
         final QueryRequest queryRequest = new QueryRequest()
@@ -226,10 +232,22 @@ public class GeneralProtobufDAODynamoDB {
 
             final String thisItemsKey = item.get(hashKeyColumnName).getS();
 
-            final ByteBuffer byteBuffer = item.get(payloadColumnName).getB();
-            final byte[] protoData = byteBuffer.array();
+            final Map<String,byte[]> results = Maps.newHashMap();
+            for (final String payloadColumnName : payloadColumnNames) {
+                final ByteBuffer byteBuffer = item.get(payloadColumnName).getB();
 
-            finalResult.put(thisItemsKey, protoData);
+                if (byteBuffer == null) {
+                    continue;
+                }
+
+                final byte[] protoData = byteBuffer.array();
+
+                results.put(payloadColumnName,protoData);
+
+            }
+
+            finalResult.put(thisItemsKey, results);
+
         }
 
         return finalResult;
