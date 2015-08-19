@@ -232,9 +232,8 @@ public class SensorsViewsDynamoDB {
         final GetItemRequest getItemRequest = new GetItemRequest()
                 .withKey(key)
                 .withTableName(lastSeenTableName);
-        GetItemResult getItemResult;
         try{
-            getItemResult  = dynamoDBClient.getItem(getItemRequest);
+            final GetItemResult getItemResult  = dynamoDBClient.getItem(getItemRequest);
             return fromDynamoDB(getItemResult.getItem(), senseId, accountId, internalSenseId);
         }
         catch (AmazonServiceException ase) {
