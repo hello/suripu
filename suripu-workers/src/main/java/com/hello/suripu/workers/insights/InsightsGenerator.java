@@ -80,7 +80,7 @@ public class InsightsGenerator extends HelloBaseRecordProcessor {
                     }
 
                     if (accountCreated.isPresent()) {
-                        LOGGER.debug("Generating Insight for account: {}", accountId);
+                        LOGGER.debug("Account {} is present, calling Insight Processor", accountId);
                         this.insightProcessor.generateInsights(accountId, accountCreated.get(), flipper);
                     }
 
