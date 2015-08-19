@@ -980,17 +980,37 @@ public final class OnlineHmmProtos {
     com.hello.suripu.api.datascience.OnlineHmmProtos.RealMatrixOrBuilder getLogObservationModelNumeratorOrBuilder(
         int index);
 
-    // repeated double log_denominator = 7;
+    // repeated string log_observation_model_ids = 7;
     /**
-     * <code>repeated double log_denominator = 7;</code>
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    java.util.List<java.lang.String>
+    getLogObservationModelIdsList();
+    /**
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    int getLogObservationModelIdsCount();
+    /**
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    java.lang.String getLogObservationModelIds(int index);
+    /**
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getLogObservationModelIdsBytes(int index);
+
+    // repeated double log_denominator = 8;
+    /**
+     * <code>repeated double log_denominator = 8;</code>
      */
     java.util.List<java.lang.Double> getLogDenominatorList();
     /**
-     * <code>repeated double log_denominator = 7;</code>
+     * <code>repeated double log_denominator = 8;</code>
      */
     int getLogDenominatorCount();
     /**
-     * <code>repeated double log_denominator = 7;</code>
+     * <code>repeated double log_denominator = 8;</code>
      */
     double getLogDenominator(int index);
   }
@@ -1092,20 +1112,28 @@ public final class OnlineHmmProtos {
               logObservationModelNumerator_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.RealMatrix.PARSER, extensionRegistry));
               break;
             }
-            case 57: {
+            case 58: {
               if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
-                logDenominator_ = new java.util.ArrayList<java.lang.Double>();
+                logObservationModelIds_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000040;
+              }
+              logObservationModelIds_.add(input.readBytes());
+              break;
+            }
+            case 65: {
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                logDenominator_ = new java.util.ArrayList<java.lang.Double>();
+                mutable_bitField0_ |= 0x00000080;
               }
               logDenominator_.add(input.readDouble());
               break;
             }
-            case 58: {
+            case 66: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080) && input.getBytesUntilLimit() > 0) {
                 logDenominator_ = new java.util.ArrayList<java.lang.Double>();
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000080;
               }
               while (input.getBytesUntilLimit() > 0) {
                 logDenominator_.add(input.readDouble());
@@ -1125,6 +1153,9 @@ public final class OnlineHmmProtos {
           logObservationModelNumerator_ = java.util.Collections.unmodifiableList(logObservationModelNumerator_);
         }
         if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+          logObservationModelIds_ = new com.google.protobuf.UnmodifiableLazyStringList(logObservationModelIds_);
+        }
+        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
           logDenominator_ = java.util.Collections.unmodifiableList(logDenominator_);
         }
         this.unknownFields = unknownFields.build();
@@ -1308,24 +1339,54 @@ public final class OnlineHmmProtos {
       return logObservationModelNumerator_.get(index);
     }
 
-    // repeated double log_denominator = 7;
-    public static final int LOG_DENOMINATOR_FIELD_NUMBER = 7;
+    // repeated string log_observation_model_ids = 7;
+    public static final int LOG_OBSERVATION_MODEL_IDS_FIELD_NUMBER = 7;
+    private com.google.protobuf.LazyStringList logObservationModelIds_;
+    /**
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    public java.util.List<java.lang.String>
+        getLogObservationModelIdsList() {
+      return logObservationModelIds_;
+    }
+    /**
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    public int getLogObservationModelIdsCount() {
+      return logObservationModelIds_.size();
+    }
+    /**
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    public java.lang.String getLogObservationModelIds(int index) {
+      return logObservationModelIds_.get(index);
+    }
+    /**
+     * <code>repeated string log_observation_model_ids = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getLogObservationModelIdsBytes(int index) {
+      return logObservationModelIds_.getByteString(index);
+    }
+
+    // repeated double log_denominator = 8;
+    public static final int LOG_DENOMINATOR_FIELD_NUMBER = 8;
     private java.util.List<java.lang.Double> logDenominator_;
     /**
-     * <code>repeated double log_denominator = 7;</code>
+     * <code>repeated double log_denominator = 8;</code>
      */
     public java.util.List<java.lang.Double>
         getLogDenominatorList() {
       return logDenominator_;
     }
     /**
-     * <code>repeated double log_denominator = 7;</code>
+     * <code>repeated double log_denominator = 8;</code>
      */
     public int getLogDenominatorCount() {
       return logDenominator_.size();
     }
     /**
-     * <code>repeated double log_denominator = 7;</code>
+     * <code>repeated double log_denominator = 8;</code>
      */
     public double getLogDenominator(int index) {
       return logDenominator_.get(index);
@@ -1338,6 +1399,7 @@ public final class OnlineHmmProtos {
       dateUpdatedUtc_ = 0L;
       logStateTransitionNumerator_ = com.hello.suripu.api.datascience.OnlineHmmProtos.RealMatrix.getDefaultInstance();
       logObservationModelNumerator_ = java.util.Collections.emptyList();
+      logObservationModelIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       logDenominator_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
@@ -1382,8 +1444,11 @@ public final class OnlineHmmProtos {
       for (int i = 0; i < logObservationModelNumerator_.size(); i++) {
         output.writeMessage(6, logObservationModelNumerator_.get(i));
       }
+      for (int i = 0; i < logObservationModelIds_.size(); i++) {
+        output.writeBytes(7, logObservationModelIds_.getByteString(i));
+      }
       for (int i = 0; i < logDenominator_.size(); i++) {
-        output.writeDouble(7, logDenominator_.get(i));
+        output.writeDouble(8, logDenominator_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -1417,6 +1482,15 @@ public final class OnlineHmmProtos {
       for (int i = 0; i < logObservationModelNumerator_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, logObservationModelNumerator_.get(i));
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < logObservationModelIds_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(logObservationModelIds_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getLogObservationModelIdsList().size();
       }
       {
         int dataSize = 0;
@@ -1562,8 +1636,10 @@ public final class OnlineHmmProtos {
         } else {
           logObservationModelNumeratorBuilder_.clear();
         }
-        logDenominator_ = java.util.Collections.emptyList();
+        logObservationModelIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000040);
+        logDenominator_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -1626,8 +1702,14 @@ public final class OnlineHmmProtos {
           result.logObservationModelNumerator_ = logObservationModelNumeratorBuilder_.build();
         }
         if (((bitField0_ & 0x00000040) == 0x00000040)) {
-          logDenominator_ = java.util.Collections.unmodifiableList(logDenominator_);
+          logObservationModelIds_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              logObservationModelIds_);
           bitField0_ = (bitField0_ & ~0x00000040);
+        }
+        result.logObservationModelIds_ = logObservationModelIds_;
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          logDenominator_ = java.util.Collections.unmodifiableList(logDenominator_);
+          bitField0_ = (bitField0_ & ~0x00000080);
         }
         result.logDenominator_ = logDenominator_;
         result.bitField0_ = to_bitField0_;
@@ -1689,10 +1771,20 @@ public final class OnlineHmmProtos {
             }
           }
         }
+        if (!other.logObservationModelIds_.isEmpty()) {
+          if (logObservationModelIds_.isEmpty()) {
+            logObservationModelIds_ = other.logObservationModelIds_;
+            bitField0_ = (bitField0_ & ~0x00000040);
+          } else {
+            ensureLogObservationModelIdsIsMutable();
+            logObservationModelIds_.addAll(other.logObservationModelIds_);
+          }
+          onChanged();
+        }
         if (!other.logDenominator_.isEmpty()) {
           if (logDenominator_.isEmpty()) {
             logDenominator_ = other.logDenominator_;
-            bitField0_ = (bitField0_ & ~0x00000040);
+            bitField0_ = (bitField0_ & ~0x00000080);
           } else {
             ensureLogDenominatorIsMutable();
             logDenominator_.addAll(other.logDenominator_);
@@ -2271,35 +2363,128 @@ public final class OnlineHmmProtos {
         return logObservationModelNumeratorBuilder_;
       }
 
-      // repeated double log_denominator = 7;
-      private java.util.List<java.lang.Double> logDenominator_ = java.util.Collections.emptyList();
-      private void ensureLogDenominatorIsMutable() {
+      // repeated string log_observation_model_ids = 7;
+      private com.google.protobuf.LazyStringList logObservationModelIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureLogObservationModelIdsIsMutable() {
         if (!((bitField0_ & 0x00000040) == 0x00000040)) {
-          logDenominator_ = new java.util.ArrayList<java.lang.Double>(logDenominator_);
+          logObservationModelIds_ = new com.google.protobuf.LazyStringArrayList(logObservationModelIds_);
           bitField0_ |= 0x00000040;
          }
       }
       /**
-       * <code>repeated double log_denominator = 7;</code>
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public java.util.List<java.lang.String>
+          getLogObservationModelIdsList() {
+        return java.util.Collections.unmodifiableList(logObservationModelIds_);
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public int getLogObservationModelIdsCount() {
+        return logObservationModelIds_.size();
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public java.lang.String getLogObservationModelIds(int index) {
+        return logObservationModelIds_.get(index);
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getLogObservationModelIdsBytes(int index) {
+        return logObservationModelIds_.getByteString(index);
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public Builder setLogObservationModelIds(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureLogObservationModelIdsIsMutable();
+        logObservationModelIds_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public Builder addLogObservationModelIds(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureLogObservationModelIdsIsMutable();
+        logObservationModelIds_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public Builder addAllLogObservationModelIds(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureLogObservationModelIdsIsMutable();
+        super.addAll(values, logObservationModelIds_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public Builder clearLogObservationModelIds() {
+        logObservationModelIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string log_observation_model_ids = 7;</code>
+       */
+      public Builder addLogObservationModelIdsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureLogObservationModelIdsIsMutable();
+        logObservationModelIds_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated double log_denominator = 8;
+      private java.util.List<java.lang.Double> logDenominator_ = java.util.Collections.emptyList();
+      private void ensureLogDenominatorIsMutable() {
+        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+          logDenominator_ = new java.util.ArrayList<java.lang.Double>(logDenominator_);
+          bitField0_ |= 0x00000080;
+         }
+      }
+      /**
+       * <code>repeated double log_denominator = 8;</code>
        */
       public java.util.List<java.lang.Double>
           getLogDenominatorList() {
         return java.util.Collections.unmodifiableList(logDenominator_);
       }
       /**
-       * <code>repeated double log_denominator = 7;</code>
+       * <code>repeated double log_denominator = 8;</code>
        */
       public int getLogDenominatorCount() {
         return logDenominator_.size();
       }
       /**
-       * <code>repeated double log_denominator = 7;</code>
+       * <code>repeated double log_denominator = 8;</code>
        */
       public double getLogDenominator(int index) {
         return logDenominator_.get(index);
       }
       /**
-       * <code>repeated double log_denominator = 7;</code>
+       * <code>repeated double log_denominator = 8;</code>
        */
       public Builder setLogDenominator(
           int index, double value) {
@@ -2309,7 +2494,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double log_denominator = 7;</code>
+       * <code>repeated double log_denominator = 8;</code>
        */
       public Builder addLogDenominator(double value) {
         ensureLogDenominatorIsMutable();
@@ -2318,7 +2503,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double log_denominator = 7;</code>
+       * <code>repeated double log_denominator = 8;</code>
        */
       public Builder addAllLogDenominator(
           java.lang.Iterable<? extends java.lang.Double> values) {
@@ -2328,11 +2513,11 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated double log_denominator = 7;</code>
+       * <code>repeated double log_denominator = 8;</code>
        */
       public Builder clearLogDenominator() {
         logDenominator_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000080);
         onChanged();
         return this;
       }
@@ -3916,20 +4101,21 @@ public final class OnlineHmmProtos {
     java.lang.String[] descriptorData = {
       "\n\020online_hmm.proto\022\005hello\"J\n\nRealMatrix\022" +
       "\020\n\010num_rows\030\001 \002(\005\022\020\n\010num_cols\030\002 \002(\005\022\014\n\004d" +
-      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"\206\002\n\020AlphabetHmmPri" +
+      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"\251\002\n\020AlphabetHmmPri" +
       "or\022\n\n\002id\030\001 \001(\t\022\"\n\toutput_id\030\002 \001(\0162\017.hell" +
       "o.OutputId\022\030\n\020date_created_utc\030\003 \001(\003\022\030\n\020" +
       "date_updated_utc\030\004 \001(\003\0229\n\036log_state_tran" +
       "sition_numerator\030\005 \001(\0132\021.hello.RealMatri" +
       "x\022:\n\037log_observation_model_numerator\030\006 \003" +
-      "(\0132\021.hello.RealMatrix\022\027\n\017log_denominator" +
-      "\030\007 \003(\001\"z\n\025AlphabetHmmScratchPad\022\034\n\024last_",
-      "update_time_utc\030\001 \001(\003\022\024\n\014date_created\030\002 " +
-      "\001(\003\022-\n\014model_deltas\030\003 \003(\0132\027.hello.Alphab" +
-      "etHmmPrior\"?\n\024AlphabetHmmUserModel\022\'\n\006mo" +
-      "dels\030\002 \003(\0132\027.hello.AlphabetHmmPrior*\036\n\010O" +
-      "utputId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hello" +
-      ".suripu.api.datascienceB\017OnlineHmmProtos"
+      "(\0132\021.hello.RealMatrix\022!\n\031log_observation" +
+      "_model_ids\030\007 \003(\t\022\027\n\017log_denominator\030\010 \003(",
+      "\001\"z\n\025AlphabetHmmScratchPad\022\034\n\024last_updat" +
+      "e_time_utc\030\001 \001(\003\022\024\n\014date_created\030\002 \001(\003\022-" +
+      "\n\014model_deltas\030\003 \003(\0132\027.hello.AlphabetHmm" +
+      "Prior\"?\n\024AlphabetHmmUserModel\022\'\n\006models\030" +
+      "\002 \003(\0132\027.hello.AlphabetHmmPrior*\036\n\010Output" +
+      "Id\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hello.suri" +
+      "pu.api.datascienceB\017OnlineHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3947,7 +4133,7 @@ public final class OnlineHmmProtos {
           internal_static_hello_AlphabetHmmPrior_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmPrior_descriptor,
-              new java.lang.String[] { "Id", "OutputId", "DateCreatedUtc", "DateUpdatedUtc", "LogStateTransitionNumerator", "LogObservationModelNumerator", "LogDenominator", });
+              new java.lang.String[] { "Id", "OutputId", "DateCreatedUtc", "DateUpdatedUtc", "LogStateTransitionNumerator", "LogObservationModelNumerator", "LogObservationModelIds", "LogDenominator", });
           internal_static_hello_AlphabetHmmScratchPad_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_hello_AlphabetHmmScratchPad_fieldAccessorTable = new

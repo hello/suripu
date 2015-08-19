@@ -54,6 +54,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
+import com.hello.suripu.core.db.OnlineHmmPriorsDAODynamoDB;
 import com.hello.suripu.core.db.OnlineHmmScratchpadDAO;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
@@ -254,7 +255,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         /* Priors for bayesnet  */
         final String priorDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
-        final OnlineHmmPriorsDAO priorsDAO = null;
+        final OnlineHmmPriorsDAO priorsDAO = new OnlineHmmPriorsDAODynamoDB(priorsDb,priorDbTableName);
         final OnlineHmmScratchpadDAO scratchpadDAO = null;
 
         /* Models for bayesnet */
