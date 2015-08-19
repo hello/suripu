@@ -68,6 +68,16 @@ public class PushNotificationsWorkerConfiguration extends WorkerConfiguration {
         return this.featuresDynamoDBConfiguration;
     }
 
+
+    @Valid
+    @NotNull
+    @JsonProperty("calibration")
+    private DynamoDBConfiguration calibrationDynamoDBConfiguration;
+    public DynamoDBConfiguration getCalibrationDynamoDBConfiguration(){
+        return this.calibrationDynamoDBConfiguration;
+    }
+
+
     @Valid
     @NotEmpty
     @JsonProperty("active_hours")
