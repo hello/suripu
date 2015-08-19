@@ -419,7 +419,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
 
     private void createFeatureExtractionModelsTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
-        final DynamoDBConfiguration config = configuration.getHmmBayesnetModelsConfiguration();
+        final DynamoDBConfiguration config = configuration.getFeatureExtractionModelsConfiguration();
         final String tableName = config.getTableName();
         client.setEndpoint(config.getEndpoint());
 

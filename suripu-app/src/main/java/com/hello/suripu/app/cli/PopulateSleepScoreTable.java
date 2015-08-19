@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
+import com.hello.suripu.core.db.OnlineHmmScratchpadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -100,13 +101,14 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
         );
 
        /* Priors for bayesnet  */
-        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
+        //final String priorDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        //final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
+        final OnlineHmmScratchpadDAO scratchpadDAO = null;
         final OnlineHmmPriorsDAO priorsDAO = null;
 
         /* Models for bayesnet */
-        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
+        final String modelDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
         final FeatureExtractionModelsDAO modelDAO = new FeatureExtractionModelsDAODynamoDB(modelsDb,modelDbTableName);
 
 
@@ -131,7 +133,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                senseColorDAO, priorsDAO,modelDAO);
+                senseColorDAO, priorsDAO,scratchpadDAO,modelDAO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);

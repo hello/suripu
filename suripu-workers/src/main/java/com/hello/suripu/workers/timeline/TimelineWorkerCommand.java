@@ -26,6 +26,7 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
+import com.hello.suripu.core.db.OnlineHmmScratchpadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -111,6 +112,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
        /* Priors for bayesnet  */
         final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_PRIORS));
         final OnlineHmmPriorsDAO priorsDAO = null;
+        final OnlineHmmScratchpadDAO scratchpadDAO = null;
 
         /* Models for bayesnet */
         final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_MODEL));
@@ -183,6 +185,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
                 priorsDAO,
+                scratchpadDAO,
                 modelDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();

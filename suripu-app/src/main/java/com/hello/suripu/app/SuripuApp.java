@@ -54,6 +54,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
+import com.hello.suripu.core.db.OnlineHmmScratchpadDAO;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
@@ -251,13 +252,14 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
         /* Priors for bayesnet  */
-        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
+        final String priorDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
         final OnlineHmmPriorsDAO priorsDAO = null;
+        final OnlineHmmScratchpadDAO scratchpadDAO = null;
 
         /* Models for bayesnet */
-        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
+        final String modelDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
         final FeatureExtractionModelsDAO modelDAO = new FeatureExtractionModelsDAODynamoDB(modelsDb,modelDbTableName);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
@@ -355,6 +357,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
                 priorsDAO,
+                scratchpadDAO,
                 modelDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO, timelineProcessor));
