@@ -101,9 +101,19 @@ logging:
     timeZone: UTC
 
 http:
-    port: 5555
-    adminPort: 5556
-    minThreads: 2
+  port: 5555
+  adminPort: 5556
+  minThreads: 2
+  # HTTP request log settings.
+  requestLog:
+    file:
+      enabled: true
+      timeZone: UTC
+      currentLogFilename: /var/log/suripu-service/suripu-service-access.log
+      archive: true
+      archivedLogFilenamePattern: /var/log/suripu-service/suripu-service-access-%d{yyyy-MM-dd}.log.gz
+      archivedFileCount: 7
+
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
