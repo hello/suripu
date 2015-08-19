@@ -18,6 +18,8 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.ApplicationsDAO;
+import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
@@ -216,6 +218,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
         final RolloutModule module = new RolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
+        final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.CALIBRATION);
+        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, tableNames.get(DynamoDBTableName.CALIBRATION));
+
         final ReceiveResource receiveResource = new ReceiveResource(
                 senseKeyStore,
                 kinesisLoggerFactory,
@@ -227,7 +232,8 @@ public class SuripuService extends Service<SuripuConfiguration> {
                 configuration.getSenseUploadConfiguration(),
                 configuration.getOTAConfiguration(),
                 respCommandsDAODynamoDB,
-                configuration.getRingDuration()
+                configuration.getRingDuration(),
+                calibrationDAO
         );
 
 

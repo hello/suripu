@@ -117,4 +117,8 @@ public class BaseResource {
         return  featureFlipper.userFeatureActive(FeatureFlipper.DELAY_CURRENT_ROOM_STATE_THRESHOLD,accountId,Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasCalibrationEnabled(final String senseId) {
+        return featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
+    }
+
 }
