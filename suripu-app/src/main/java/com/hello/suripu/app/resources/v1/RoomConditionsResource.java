@@ -65,15 +65,19 @@ public class RoomConditionsResource extends BaseResource {
     public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
                                     @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
-        if(isSensorsViewUnavailable(token.accountId)) {
-            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", token.accountId);
-            return CurrentRoomState.empty();
-        }
 
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(token.accountId);
+
         if(!deviceIdPair.isPresent()) {
             LOGGER.warn("Did not find any device_id for account_id = {}", token.accountId);
-            return CurrentRoomState.empty();
+            return CurrentRoomState.empty(false); // at this stage we don't have a Sense id, so we can't use FF.
+        }
+
+        final Boolean hasDust = hasCalibrationEnabled(deviceIdPair.get().externalDeviceId);
+
+        if(isSensorsViewUnavailable(token.accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", token.accountId);
+            return CurrentRoomState.empty(hasDust);
         }
 
         Integer thresholdInMinutes = 15;
@@ -89,7 +93,7 @@ public class RoomConditionsResource extends BaseResource {
 
 
         if(!data.isPresent()) {
-            return CurrentRoomState.empty();
+            return CurrentRoomState.empty(hasDust);
         }
 
         //default -- return the usual
@@ -105,7 +109,7 @@ public class RoomConditionsResource extends BaseResource {
         LOGGER.debug("Last device data in db = {}", deviceData);
 
         final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit);
-        return roomState;
+        return roomState.withDust(hasDust);
     }
 
 
