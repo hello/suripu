@@ -26,22 +26,6 @@ public class WakeVarianceInsightsTest {
         assertThat(noResult.isPresent(), is(Boolean.FALSE));
     }
 
-    @Test
-    public void testVarianceTooHigh() {
-        final Long accountId = 999L;
-        final List<Integer> wakeTimeList = new ArrayList<>();
-        final Integer spread = 500;
-        wakeTimeList.add(0);
-        wakeTimeList.add(0 + spread);
-        wakeTimeList.add(0 + spread + spread);
-        final Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
-        assertThat(someResult.isPresent(), is(Boolean.TRUE));
-        final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceTooHigh(0, 0).title;
-        assertThat(someResult.get().title, is(expectedTitle));
-        
-        final String someMessage = WakeVarianceMsgEN.getWakeVarianceTooHigh(0,0).message;
-        assertThat(someMessage, is(someMessage));
-    }
 
     @Test
     public void testVarianceLow() {
@@ -56,21 +40,58 @@ public class WakeVarianceInsightsTest {
         final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceLow(0, 0).title;
         assertThat(someResult.get().title, is(expectedTitle));
 
-        final String someMessage = WakeVarianceMsgEN.getWakeVarianceLow(0,0).message;
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceLow(27,25).message;
+        System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
 
     @Test
     public void testVarianceNotLowEnough() {
-        final String someMessage = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(0, 0).message;
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(50, 50).message;
+        System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
 
     @Test
     public void testVarianceHigh() {
-        final String someMessage = WakeVarianceMsgEN.getWakeVarianceHigh(0, 0).message;
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceHigh(79, 75).message;
+        System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
 
+    @Test
+    public void testVarianceTooHigh() {
+        final Long accountId = 999L;
+        final List<Integer> wakeTimeList = new ArrayList<>();
+        final Integer spread = 500;
+        wakeTimeList.add(0);
+        wakeTimeList.add(0 + spread);
+        wakeTimeList.add(0 + spread + spread);
+        final Optional<InsightCard> someResult = WakeVariance.processWakeVarianceData(accountId, wakeTimeList, new WakeStdDevData());
+        assertThat(someResult.isPresent(), is(Boolean.TRUE));
+        final String expectedTitle = WakeVarianceMsgEN.getWakeVarianceTooHigh(0, 0).title;
+        assertThat(someResult.get().title, is(expectedTitle));
 
+        final String someMessage = WakeVarianceMsgEN.getWakeVarianceTooHigh(200,99).message;
+        System.out.print(someMessage);
+        assertThat(someMessage, is(someMessage));
+    }
+
+    @Test
+    public void testMinHourConversion() {
+        final int minOne = 30;
+        final float hrOne = (float) minOne/60;
+        final String stringOne = String.format("%.1f", hrOne);
+        assertThat(stringOne, is("0.5"));
+
+        final int minTwo = 60;
+        final float hrTwo = (float) minTwo/60;
+        final String stringTwo = String.format("%.1f", hrTwo);
+        assertThat(stringTwo, is("1.0"));
+
+        final int minThree = 90;
+        final float hrThree = (float) minThree/60;
+        final String stringThree = String.format("%.1f", hrThree);
+        assertThat(stringThree, is("1.5"));
+    }
 }
