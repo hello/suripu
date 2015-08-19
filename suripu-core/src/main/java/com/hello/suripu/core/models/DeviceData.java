@@ -168,7 +168,7 @@ public class DeviceData {
         private Long deviceId;
         private int ambientTemperature;
         private int ambientHumidity;
-        private int ambientAirQuality;
+        private int ambientAirQuality = 0;
         private int ambientAirQualityRaw;
         private int ambientDustVariance;
         private int ambientDustMin;
