@@ -11,14 +11,11 @@ import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hello.suripu.core.models.TimelineLog;
-import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
@@ -35,11 +32,11 @@ public class GeneralProtobufDAODynamoDB {
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
     private final String hashKeyColumnName;
-    private final String rangeKeyColumnName;
+    private final Optional<String> rangeKeyColumnName;
     private final String payloadColumnName;
     private final Logger logger;
 
-    public GeneralProtobufDAODynamoDB(Logger logger, final AmazonDynamoDB dynamoDBClient, final String tableName, final String hashKeyColumnName, final String rangeKeyColumnName, final String payloadColumnName) {
+    public GeneralProtobufDAODynamoDB(Logger logger, final AmazonDynamoDB dynamoDBClient, final String tableName, final String hashKeyColumnName, final Optional<String> rangeKeyColumnName, final String payloadColumnName) {
         this.logger = logger;
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
@@ -48,7 +45,7 @@ public class GeneralProtobufDAODynamoDB {
         this.payloadColumnName = payloadColumnName;
     }
 
-    public boolean put(final String key,final String rangeKey,final byte [] payload) {
+    public boolean put(final String key, final String rangeKey, final byte[] payload) {
         final ByteBuffer data = ByteBuffer.wrap(payload);
 
         final Map<String, AttributeValueUpdate> items = new HashMap<>();
@@ -57,7 +54,9 @@ public class GeneralProtobufDAODynamoDB {
 
         final HashMap<String, AttributeValue> keyValueMap = new HashMap<>();
         keyValueMap.put(hashKeyColumnName, new AttributeValue().withS(key));
-        keyValueMap.put(rangeKeyColumnName, new AttributeValue().withS(rangeKey));
+        if (rangeKeyColumnName.isPresent()) {
+            keyValueMap.put(rangeKeyColumnName.get(), new AttributeValue().withS(rangeKey));
+        }
         keyValueMap.put(payloadColumnName, new AttributeValue().withB(data));
 
 
@@ -67,13 +66,13 @@ public class GeneralProtobufDAODynamoDB {
 
         try {
             final PutItemResult result = this.dynamoDBClient.putItem(request);
-        }catch (AmazonServiceException awsException){
+        } catch (AmazonServiceException awsException) {
             logger.error("Server exception {} result for key {}, rangekey {}",
                     awsException.getMessage(),
                     key,
                     rangeKey);
             return false;
-        }catch (AmazonClientException acExp){
+        } catch (AmazonClientException acExp) {
 
             logger.error("AmazonClientException exception {} result for key {}, rangekey {}",
                     acExp.getMessage(),
@@ -87,32 +86,102 @@ public class GeneralProtobufDAODynamoDB {
 
     }
 
+    public Map<String, byte[]> getBySingleKeyLessThanRangeKey(final String key, final String rangeKey, final int limit) {
 
-    Map<String, byte []> getAllAfterAndIncluding(final String key,final String rangeKey, final int limit) {
-
-        final Map<String, byte []> finalResult = new HashMap<>();
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
-        final Condition selectDateCondition = new Condition()
-                .withComparisonOperator(ComparisonOperator.LE.toString())
-                .withAttributeValueList(new AttributeValue().withS(rangeKey));
+        if (rangeKeyColumnName.isPresent()) {
 
-        queryConditions.put(rangeKeyColumnName, selectDateCondition);
+            final Condition selectRangeKeyCondition = new Condition()
+                    .withComparisonOperator(ComparisonOperator.LE.toString())
+                    .withAttributeValueList(new AttributeValue().withS(rangeKey));
 
-        final Condition selectAccountIdCondition = new Condition()
+            queryConditions.put(rangeKeyColumnName.get(), selectRangeKeyCondition);
+        }
+
+        return getBySingleKey(key, queryConditions, limit);
+    }
+
+    public Map<String, byte[]> getByMultipleKeysLessThanRangeKey(final List<String> keys, final String rangeKey, final int limit) {
+
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+
+        if (rangeKeyColumnName.isPresent()) {
+
+            final Condition selectRangeKeyCondition = new Condition()
+                    .withComparisonOperator(ComparisonOperator.LE.toString())
+                    .withAttributeValueList(new AttributeValue().withS(rangeKey));
+
+            queryConditions.put(rangeKeyColumnName.get(), selectRangeKeyCondition);
+        }
+
+        return getByMultipleKeys(keys, queryConditions, limit);
+    }
+
+    public Map<String, byte[]> getBySingleKeyBetweenRangeKeys(final String key, final String rangeKey1, final String rangeKey2, final int limit) {
+
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+
+        if (rangeKeyColumnName.isPresent()) {
+
+            final List<AttributeValue> values = Lists.newArrayList();
+
+            values.add(new AttributeValue().withS(rangeKey1));
+            values.add(new AttributeValue().withS(rangeKey2));
+
+            final Condition selectRangeKeyCondition = new Condition()
+                    .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                    .withAttributeValueList(values);
+
+            queryConditions.put(rangeKeyColumnName.get(), selectRangeKeyCondition);
+        }
+
+        return getBySingleKey(key, queryConditions, limit);
+    }
+
+
+    public Map<String, byte[]> getByMultipleKeys(final List<String> keys, final Map<String, Condition> queryConditions, final int limit) {
+        final List<AttributeValue> values = Lists.newArrayList();
+
+        for (final String key : keys) {
+            values.add(new AttributeValue().withS(key));
+        }
+
+        final Condition selectHashKeyCondition = new Condition()
+                .withComparisonOperator(ComparisonOperator.IN)
+                .withAttributeValueList(values);
+
+        queryConditions.put(hashKeyColumnName, selectHashKeyCondition);
+
+        return get(queryConditions, limit);
+    }
+
+    public Map<String, byte[]> getBySingleKey(final String key, final Map<String, Condition> queryConditions, final int limit) {
+
+
+        final Condition selectHashKeyCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withS(String.valueOf(key)));
-        queryConditions.put(hashKeyColumnName, selectAccountIdCondition);
+        queryConditions.put(hashKeyColumnName, selectHashKeyCondition);
 
-        //put all attributes that you want back from the server in this thing
+        return get(queryConditions, limit);
+    }
+
+
+    public Map<String, byte[]> get(final Map<String, Condition> queryConditions, final int limit) {
+
+        final Map<String, byte[]> finalResult = new HashMap<>();
+
         final Collection<String> targetAttributeSet = Sets.newHashSet();
 
         Collections.addAll(targetAttributeSet,
                 hashKeyColumnName,
-                rangeKeyColumnName,
                 payloadColumnName
         );
 
+        if (rangeKeyColumnName.isPresent()) {
+            targetAttributeSet.add(rangeKeyColumnName.get());
+        }
 
 
         // Perform query
@@ -128,13 +197,13 @@ public class GeneralProtobufDAODynamoDB {
 
 
         if (items == null) {
-            logger.error("DynamoDB query did not return anything for account_id {} on table {}",key,this.tableName);
+            logger.error("DynamoDB query did not return anything for query {} on table {}", queryRequest, this.tableName);
             return finalResult;
         }
 
 
         //iterate through items
-        for(final Map<String, AttributeValue> item : items) {
+        for (final Map<String, AttributeValue> item : items) {
             if (!item.keySet().containsAll(targetAttributeSet)) {
                 logger.warn("Missing field in item {}", item);
                 continue;
@@ -145,13 +214,10 @@ public class GeneralProtobufDAODynamoDB {
             final ByteBuffer byteBuffer = item.get(payloadColumnName).getB();
             final byte[] protoData = byteBuffer.array();
 
-            finalResult.put(thisItemsKey,protoData);
+            finalResult.put(thisItemsKey, protoData);
         }
 
         return finalResult;
 
     }
-
-
-
 }
