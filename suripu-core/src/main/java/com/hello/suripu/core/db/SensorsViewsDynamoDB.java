@@ -232,8 +232,15 @@ public class SensorsViewsDynamoDB {
         final GetItemRequest getItemRequest = new GetItemRequest()
                 .withKey(key)
                 .withTableName(lastSeenTableName);
-        final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
-        return fromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
+        GetItemResult getItemResult;
+        try{
+            getItemResult  = dynamoDBClient.getItem(getItemRequest);
+            return fromDynamoDB(getItemResult.getItem(), senseId, accountId, internalSenseId);
+        }
+        catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to get last seen for sense {} because {}", senseId, ase.getMessage());
+        }
+        return Optional.absent();
     }
 
     public Optional<List<FirmwareInfo>> lastSeenFirmwareBatch(final Set<String> deviceIds) {
