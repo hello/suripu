@@ -409,6 +409,11 @@ public class ReceiveResource extends BaseResource {
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
+        final int responseLength = signedResponse.get().length;
+        if(responseLength > 2048) {
+            LOGGER.warn("response_size too large ({}) for device_id= {}", responseLength, deviceName);
+        }
+
         return signedResponse.get();
     }
 
