@@ -3,14 +3,22 @@ package com.hello.suripu.core.db;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
+import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
+import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -83,6 +91,13 @@ public class GeneralProtobufDAODynamoDB {
         }
 
         return true;
+
+    }
+
+    public Map<String, byte[]> getBySingleKeyNoRangeKey(final String key) {
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+
+        return getBySingleKey(key, queryConditions, 1);
 
     }
 
@@ -219,5 +234,40 @@ public class GeneralProtobufDAODynamoDB {
 
         return finalResult;
 
+    }
+
+    public static CreateTableResult createTable(final String tableName,final String hashKeyColumnName, final Optional<String> rangeKeyColumnName, final AmazonDynamoDBClient dynamoDBClient, final int readThroughput, final int writeThroughput){
+        final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
+
+        if (rangeKeyColumnName.isPresent()) {
+            request.withKeySchema(
+                    new KeySchemaElement().withAttributeName(hashKeyColumnName).withKeyType(KeyType.HASH),
+                    new KeySchemaElement().withAttributeName(rangeKeyColumnName.get()).withKeyType(KeyType.RANGE)
+            );
+
+            request.withAttributeDefinitions(
+                    new AttributeDefinition().withAttributeName(hashKeyColumnName).withAttributeType(ScalarAttributeType.S),
+                    new AttributeDefinition().withAttributeName(rangeKeyColumnName.get()).withAttributeType(ScalarAttributeType.S)
+
+            );
+
+        }
+        else {
+            request.withKeySchema(
+                    new KeySchemaElement().withAttributeName(hashKeyColumnName).withKeyType(KeyType.HASH)
+            );
+
+            request.withAttributeDefinitions(
+                    new AttributeDefinition().withAttributeName(hashKeyColumnName).withAttributeType(ScalarAttributeType.S)
+
+            );
+        }
+
+
+        request.setProvisionedThroughput(new ProvisionedThroughput()
+                .withReadCapacityUnits((long)readThroughput)
+                .withWriteCapacityUnits((long) writeThroughput));
+
+        return dynamoDBClient.createTable(request);
     }
 }
