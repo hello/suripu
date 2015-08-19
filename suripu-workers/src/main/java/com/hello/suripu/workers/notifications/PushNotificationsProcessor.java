@@ -8,7 +8,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.UserInfo;
@@ -38,16 +40,19 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
     private final AccountPreferencesDynamoDB accountPreferencesDynamoDB;
     private final ImmutableSet<Integer> activeHours;
     private final Set<String> sent = Sets.newHashSet();
+    private final CalibrationDAO calibrationDAO;
 
     public PushNotificationsProcessor(
             final MobilePushNotificationProcessor mobilePushNotificationProcessor,
             final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
             final AccountPreferencesDynamoDB accountPreferencesDynamoDB,
-            final Set<Integer> activeHours) {
+            final Set<Integer> activeHours,
+            final CalibrationDAO calibrationDAO) {
         this.mobilePushNotificationProcessor = mobilePushNotificationProcessor;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.accountPreferencesDynamoDB = accountPreferencesDynamoDB;
         this.activeHours = ImmutableSet.copyOf(activeHours);
+        this.calibrationDAO = calibrationDAO;
     }
 
     @Override
@@ -109,6 +114,8 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                 continue;
             }
 
+            final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(userInfo.deviceId) ? calibrationDAO.getStrict(userInfo.deviceId) : Optional.<Calibration>absent();
+            final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(userInfo.deviceId);
             // TODO: write to cache to avoid sending multiple notifications
             for(DataInputProtos.periodic_data data: batched_periodic_data.getDataList()) {
                 final Long timestampMillis = data.getUnixTime() * 1000L;
@@ -118,7 +125,8 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                         roundedDateTime.getMillis(),
                         data.getFirmwareVersion(),
                         now,
-                        10); // TODO: adjust threshold
+                        10,
+                        calibration); // TODO: adjust threshold
                 final Optional<HelloPushMessage> messageOptional = getMostImportantSensorState(currentRoomState);
                 if(messageOptional.isPresent()) {
                     LOGGER.info("Sending push notifications to user: {}. Message: {}", userInfo.accountId, messageOptional.get());
