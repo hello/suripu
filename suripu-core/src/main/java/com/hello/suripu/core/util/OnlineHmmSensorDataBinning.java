@@ -13,7 +13,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -22,8 +21,8 @@ import java.util.List;
 /**
  * Created by benjo on 3/20/15.
  */
-public class SleepHmmBayesNetSensorDataBinning {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmBayesNetSensorDataBinning.class);
+public class OnlineHmmSensorDataBinning {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OnlineHmmSensorDataBinning.class);
 
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
