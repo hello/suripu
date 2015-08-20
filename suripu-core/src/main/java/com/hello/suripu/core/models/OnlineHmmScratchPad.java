@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
 
 import java.util.Map;
@@ -73,7 +74,19 @@ public class OnlineHmmScratchPad {
     }
 
     public byte [] serializeToProtobuf() {
-        return  null;
+
+        final AlphabetHmmScratchPad.Builder builder = AlphabetHmmScratchPad.newBuilder();
+
+        for (final String key : paramsByOutputId.keySet()) {
+            final AlphabetHmmPrior protobuf = OnlineHmmPriors.protobufFromParams(paramsByOutputId.get(key));
+            builder.addModelDeltas(protobuf);
+        }
+
+        builder.setDateCreated(createdTimeUtc);
+        builder.setLastUpdateTimeUtc(lastUpdateTimeUtc);
+
+
+        return  builder.build().toByteArray();
     }
 
 }

@@ -6,7 +6,6 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -150,7 +149,7 @@ public class  OnlineHmmPriors {
         return list;
     }
 
-    private static AlphabetHmmPrior priorFromParams(final OnlineHmmModelParams params) {
+    public static AlphabetHmmPrior protobufFromParams(final OnlineHmmModelParams params) {
 
         OutputId outputId = null;
 
@@ -194,7 +193,7 @@ public class  OnlineHmmPriors {
             final List<OnlineHmmModelParams> paramsList = modelsByOutputId.get(key);
 
             for (final OnlineHmmModelParams params : paramsList) {
-                builder.addModels(priorFromParams(params));
+                builder.addModels(protobufFromParams(params));
             }
         }
 
