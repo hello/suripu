@@ -194,7 +194,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
-                            .withAmbientAirQuality(periodicData.getDust(), firmwareVersion)
                             .withAmbientAirQualityRaw(periodicData.getDust())
                             .withAmbientDustVariance(periodicData.getDustVariability())
                             .withAmbientDustMin(periodicData.getDustMin())

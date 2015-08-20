@@ -20,6 +20,8 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
 import com.hello.suripu.core.db.BayesNetModelDAO;
+import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
@@ -176,6 +178,9 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+        final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.CALIBRATION));
+        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
+
         final TimelineProcessor timelineProcessor =
                 TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
@@ -186,7 +191,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
                 priorsDAO,
-                modelDAO);
+                modelDAO,
+                calibrationDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

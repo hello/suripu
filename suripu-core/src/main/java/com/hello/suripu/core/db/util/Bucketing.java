@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.AllSensorSampleMap;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
@@ -60,7 +61,7 @@ public class Bucketing {
      * @param sensorName
      * @return
      */
-    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,final Optional<Device.Color> optionalColor) {
+    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,final Optional<Device.Color> optionalColor, final Calibration calibration) {
 
         if(deviceDataList == null) {
             LOGGER.error("deviceDataList is null for sensor {}", sensorName);
@@ -91,7 +92,7 @@ public class Bucketing {
             } else if(sensorName.equals("temperature")) {
                 sensorValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             } else if (sensorName.equals("particulates")) {
-                sensorValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientAirQualityRaw, deviceData.firmwareVersion);
+                sensorValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientAirQualityRaw, calibration, deviceData.firmwareVersion);
             } else if (sensorName.equals("light")) {
                 sensorValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             } else if (sensorName.equals("sound")) {
@@ -111,9 +112,9 @@ public class Bucketing {
             } else if(sensorName.equals("light_peakiness")) {
                 sensorValue = deviceData.ambientLightPeakiness;
             } else if(sensorName.equals("dust_min")) {
-                sensorValue = deviceData.ambientDustMin;
+                sensorValue = DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMin, calibration, deviceData.firmwareVersion);
             } else if(sensorName.equals("dust_max")) {
-                sensorValue = deviceData.ambientDustMax;
+                sensorValue = DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, calibration, deviceData.firmwareVersion);
             } else if(sensorName.equals("dust_raw")) {
                 sensorValue = deviceData.ambientAirQualityRaw;
             } else if(sensorName.equals("dust_variance")) {
@@ -134,7 +135,7 @@ public class Bucketing {
 
 
 
-    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor) {
+    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor, final Calibration calibration) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
 
@@ -156,7 +157,7 @@ public class Bucketing {
             final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
-            final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientAirQualityRaw, deviceData.firmwareVersion);
+            final float particulatesValue = (float) DataUtils.convertRawDustCountsToAQI(deviceData.ambientAirQualityRaw, calibration, deviceData.firmwareVersion);
             final int waveCount = deviceData.waveCount;
             final int holdCount = deviceData.holdCount;
             final float soundNumDisturbances = (float) deviceData.audioNumDisturbances;
