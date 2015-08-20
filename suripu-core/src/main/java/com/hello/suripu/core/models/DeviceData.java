@@ -13,8 +13,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DeviceData {
 
-    private static final int DEFAULT_AMBIENT_AIR_QUALITY = 0;
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceData.class);
+    private final static int DEFAULT_AMBIENT_AIR_QUALITY = 0; // Because we are now saving only raw data to the database
 
     @JsonProperty("account_id")
     public final Long accountId;
@@ -215,8 +215,8 @@ public class DeviceData {
             return this;
         }
 
-        public Builder withAmbientAirQualityRaw(final int ambientAirQuality) {
-            this.ambientAirQualityRaw = ambientAirQuality;
+        public Builder withAmbientAirQualityRaw(final int ambientAirQualityRaw){
+            this.ambientAirQualityRaw  = ambientAirQualityRaw;
             return this;
         }
 
