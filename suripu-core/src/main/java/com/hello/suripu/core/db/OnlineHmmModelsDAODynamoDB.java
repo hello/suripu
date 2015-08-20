@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
@@ -19,16 +18,16 @@ import java.util.Map;
 /**
  * Created by benjo on 8/18/15.
  */
-public class OnlineHmmPriorsDAODynamoDB implements OnlineHmmPriorsDAO {
+public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     private final static String HASH_KEY = "account_id";
     private final static String PAYLOAD_KEY_FOR_PARAMS = "model_params";
     private final static String PAYLOAD_KEY_FOR_SCRATCHPAD = "scratchpad";
-    private final static Logger LOGGER = LoggerFactory.getLogger(OnlineHmmPriorsDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(OnlineHmmModelsDAODynamoDB.class);
 
     private final GeneralProtobufDAODynamoDB dbDAO;
 
 
-    public OnlineHmmPriorsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
+    public OnlineHmmModelsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         final List<String> payloadColumnNames = Lists.newArrayList();
         payloadColumnNames.add(PAYLOAD_KEY_FOR_PARAMS);
         payloadColumnNames.add(PAYLOAD_KEY_FOR_SCRATCHPAD);

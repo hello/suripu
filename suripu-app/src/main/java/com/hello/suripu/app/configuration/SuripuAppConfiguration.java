@@ -359,9 +359,17 @@ public class SuripuAppConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("feature_extraction_models")
-    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
+    private DynamoDBConfiguration hmmFeatureExtractionModelsConfiguration;
     public DynamoDBConfiguration getFeatureExtractionModelsConfiguration() {
-        return this.hmmBayesnetModelsConfiguration;
+        return this.hmmFeatureExtractionModelsConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("online_hmm_models")
+    private DynamoDBConfiguration onlineHmmModelsConfiguration;
+    public DynamoDBConfiguration getOnlineHmmModelsConfiguration() {
+        return this.onlineHmmModelsConfiguration;
     }
 
     @Valid

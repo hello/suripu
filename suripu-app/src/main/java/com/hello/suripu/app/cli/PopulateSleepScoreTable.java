@@ -16,8 +16,8 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
-import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
-import com.hello.suripu.core.db.OnlineHmmScratchpadDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -100,16 +100,15 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 configuration.getSleepStatsVersion()
         );
 
-       /* Priors for bayesnet  */
-        //final String priorDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
-        //final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
-        final OnlineHmmScratchpadDAO scratchpadDAO = null;
-        final OnlineHmmPriorsDAO priorsDAO = null;
+          /* priors models per user  */
+        final String onlineHmmModelsTableName = configuration.getOnlineHmmModelsConfiguration().getTableName();
+        final AmazonDynamoDB onlineHmmModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getOnlineHmmModelsConfiguration().getEndpoint());
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = new OnlineHmmModelsDAODynamoDB(onlineHmmModelsDb,onlineHmmModelsTableName);
 
-        /* Models for bayesnet */
-        final String modelDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
-        final FeatureExtractionModelsDAO modelDAO = new FeatureExtractionModelsDAODynamoDB(modelsDb,modelDbTableName);
+        /* feature extraction layer (generally NOT per-user, we could just cache this in memory) */
+        final String featureExtractionModelsTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
+        final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
 
         /* data for ye olde HMM */
@@ -133,7 +132,9 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 sleepHmmDAODynamoDB,
                 accountDAO,
                 sleepStatsDAODynamoDB,
-                senseColorDAO, priorsDAO,scratchpadDAO,modelDAO);
+                senseColorDAO,
+                onlineHmmModelsDAO,
+                featureExtractionDAO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);

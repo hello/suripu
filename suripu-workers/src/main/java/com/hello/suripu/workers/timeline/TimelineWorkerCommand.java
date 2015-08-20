@@ -25,8 +25,8 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
-import com.hello.suripu.core.db.OnlineHmmScratchpadDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -110,15 +110,12 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ALARM_INFO));
 
        /* Priors for bayesnet  */
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_PRIORS));
-        final OnlineHmmPriorsDAO priorsDAO = null;
-        final OnlineHmmScratchpadDAO scratchpadDAO = null;
+        final AmazonDynamoDB onlineModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.ONLINE_HMM_MODELS));
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = new OnlineHmmModelsDAODynamoDB(onlineModelsDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ONLINE_HMM_MODELS));
 
-        /* Models for bayesnet */
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_MODEL));
-        final FeatureExtractionModelsDAO modelDAO = new FeatureExtractionModelsDAODynamoDB(
-                modelsDb,
-                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.BAYESNET_MODEL));
+        /* Models for feature extraction */
+        final AmazonDynamoDB featureExtractionDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
+        final FeatureExtractionModelsDAO featureExtractionModelsDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
@@ -184,9 +181,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 accountDAO,
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
-                priorsDAO,
-                scratchpadDAO,
-                modelDAO);
+                onlineHmmModelsDAO,
+                featureExtractionModelsDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

@@ -53,9 +53,8 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.OnlineHmmPriorsDAO;
-import com.hello.suripu.core.db.OnlineHmmPriorsDAODynamoDB;
-import com.hello.suripu.core.db.OnlineHmmScratchpadDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
@@ -252,16 +251,15 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
-        /* Priors for bayesnet  */
-        final String priorDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
-        final OnlineHmmPriorsDAO priorsDAO = new OnlineHmmPriorsDAODynamoDB(priorsDb,priorDbTableName);
-        final OnlineHmmScratchpadDAO scratchpadDAO = null;
+        /* priors models per user  */
+        final String onlineHmmModelsTableName = configuration.getOnlineHmmModelsConfiguration().getTableName();
+        final AmazonDynamoDB onlineHmmModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getOnlineHmmModelsConfiguration().getEndpoint());
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = new OnlineHmmModelsDAODynamoDB(onlineHmmModelsDb,onlineHmmModelsTableName);
 
-        /* Models for bayesnet */
-        final String modelDbTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
-        final FeatureExtractionModelsDAO modelDAO = new FeatureExtractionModelsDAODynamoDB(modelsDb,modelDbTableName);
+        /* feature extraction layer (generally NOT per-user, we could just cache this in memory) */
+        final String featureExtractionModelsTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
+        final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
@@ -357,9 +355,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 accountDAO,
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
-                priorsDAO,
-                scratchpadDAO,
-                modelDAO);
+                onlineHmmModelsDAO,
+                featureExtractionDAO);
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO, timelineProcessor));
 

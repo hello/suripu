@@ -8,7 +8,7 @@ import com.hello.suripu.core.models.OnlineHmmScratchPad;
 /**
  * Created by benjo on 8/18/15.
  */
-public interface OnlineHmmPriorsDAO {
+public interface OnlineHmmModelsDAO {
     OnlineHmmData getModelDataByAccountId(final Long accountId);
     boolean updateModelPriors(final Long accountId, final OnlineHmmPriors priors);
     boolean updateScratchpad(final Long accountId, final OnlineHmmScratchPad scratchPad);
