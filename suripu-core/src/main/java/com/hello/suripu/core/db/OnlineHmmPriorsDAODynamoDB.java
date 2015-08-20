@@ -7,7 +7,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.datascience.OnlineHmmProtos;
+import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
+import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,26 +37,31 @@ public class OnlineHmmPriorsDAODynamoDB implements OnlineHmmPriorsDAO {
 
 
     @Override
-    public Optional<OnlineHmmPriors> getModelPriorsByAccountId(Long accountId) {
+    public OnlineHmmData getModelDataByAccountId(Long accountId) {
         final Map<String, Map<String,byte[]>> results = dbDAO.getBySingleKeyNoRangeKey(accountId.toString());
 
         final Map<String,byte[]> allColumns = results.get(accountId.toString());
 
+        Optional<OnlineHmmPriors> priors = Optional.absent();
+        Optional<OnlineHmmScratchPad> scratchPad = Optional.absent();
+
         if (allColumns == null) {
-            //TODO logging
-            return Optional.absent();
+            return new OnlineHmmData(priors,scratchPad);
         }
 
-        final byte [] data = allColumns.get(PAYLOAD_KEY_FOR_PARAMS);
+        final byte [] priorProtobufData = allColumns.get(PAYLOAD_KEY_FOR_PARAMS);
 
-        if (data == null) {
-            //TODO logging
-            return Optional.absent();
+        if (priorProtobufData != null) {
+            priors = OnlineHmmPriors.createFromProtoBuf(priorProtobufData);
         }
 
+        final byte [] scratchPadProtobufData = allColumns.get(PAYLOAD_KEY_FOR_SCRATCHPAD);
 
-        return OnlineHmmPriors.createFromProtoBuf(data);
+        if (scratchPadProtobufData != null) {
+            scratchPad = OnlineHmmScratchPad.createFromProtobuf(scratchPadProtobufData);
+        }
 
+        return new OnlineHmmData(priors,scratchPad);
     }
 
     @Override
@@ -65,6 +72,17 @@ public class OnlineHmmPriorsDAODynamoDB implements OnlineHmmPriorsDAO {
 
         return dbDAO.put(accountId.toString(),"",payloads);
     }
+
+    @Override
+    public boolean updateScratchpad(final Long accountId, final OnlineHmmScratchPad scratchPad) {
+        final Map<String,byte []> payloads = Maps.newHashMap();
+
+        payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,scratchPad.serializeToProtobuf());
+
+        return dbDAO.put(accountId.toString(),"",payloads);
+
+    }
+
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient) {
         return GeneralProtobufDAODynamoDB.createTable(tableName, HASH_KEY, Optional.<String>absent(), dynamoDBClient, 1, 1);

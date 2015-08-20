@@ -13,34 +13,12 @@ import java.util.Map;
 /**
  * Created by benjo on 8/18/15.
  */
-public class OnlineHmmPriors {
-    public static final String OUTPUT_MODEL_BED = "BED";
-    public static final String OUTPUT_MODEL_SLEEP = "SLEEP";
+public class  OnlineHmmPriors {
 
-    static public class ModelParams  {
-        public final Map<String,double [][]> logAlphabetNumerators;
-        public final double [][] logTransitionMatrixNumerator;
-        public final double [] logDenominator;
-        public final long timeCreatedUtc;
-        public final long timeUpdatedUtc;
-        public final String id;
-        public final String outputId;
-
-        public ModelParams(final Map<String, double[][]> logAlphabetNumerators, final double[][] logTransitionMatrixNumerator, final double[] logDenominator,final long timeCreatedUtc, final long timeUpdatedUtc, final String id, final String outputId) {
-            this.logAlphabetNumerators = logAlphabetNumerators;
-            this.logTransitionMatrixNumerator = logTransitionMatrixNumerator;
-            this.logDenominator = logDenominator;
-            this.timeCreatedUtc = timeCreatedUtc;
-            this.timeUpdatedUtc = timeUpdatedUtc;
-            this.id = id;
-            this.outputId = outputId;
-        }
-    }
-
-    public final Map<String,List<ModelParams>> modelsByOutputId;
+    public final Map<String,List<OnlineHmmModelParams>> modelsByOutputId;
 
 
-    private OnlineHmmPriors(Map<String, List<ModelParams>> modelsByOutputId) {
+    private OnlineHmmPriors(Map<String, List<OnlineHmmModelParams>> modelsByOutputId) {
         this.modelsByOutputId = modelsByOutputId;
     }
 
@@ -73,7 +51,7 @@ public class OnlineHmmPriors {
         return RealMatrix.newBuilder().addAllData(vec).setNumRows(numRows).setNumCols(numCols).build();
     }
 
-    private static Optional<ModelParams> protobufToParams(final AlphabetHmmPrior protobuf) {
+    public static Optional<OnlineHmmModelParams> protobufToParams(final AlphabetHmmPrior protobuf) {
 
         //things that aren't really optional
         if (!protobuf.hasOutputId() ||
@@ -117,15 +95,15 @@ public class OnlineHmmPriors {
         switch (protobuf.getOutputId()) {
 
             case SLEEP:
-                outputId = OUTPUT_MODEL_SLEEP;
+                outputId = OnlineHmmData.OUTPUT_MODEL_SLEEP;
                 break;
 
             case BED:
-                outputId = OUTPUT_MODEL_BED;
+                outputId = OnlineHmmData.OUTPUT_MODEL_BED;
                 break;
         }
 
-        return Optional.of(new ModelParams(logAlphabetNumerators,logStateTransition,logDenominator,timeCreated,timeUpdated,protobuf.getId(),outputId));
+        return Optional.of(new OnlineHmmModelParams(logAlphabetNumerators,logStateTransition,logDenominator,timeCreated,timeUpdated,protobuf.getId(),outputId));
 
     }
 
@@ -133,19 +111,19 @@ public class OnlineHmmPriors {
         try {
             final AlphabetHmmUserModel protobuf = AlphabetHmmUserModel.parseFrom(data);
 
-            final Map<String,List<ModelParams>> modelsByOutputId = Maps.newHashMap();
+            final Map<String,List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
             for (final AlphabetHmmPrior prior : protobuf.getModelsList()) {
-                final Optional<ModelParams> paramsOptional = protobufToParams(prior);
+                final Optional<OnlineHmmModelParams> paramsOptional = protobufToParams(prior);
 
                 if (!paramsOptional.isPresent()) {
                     continue;
                 }
 
-                final ModelParams params = paramsOptional.get();
+                final OnlineHmmModelParams params = paramsOptional.get();
 
                 if (modelsByOutputId.get(params.outputId) == null) {
-                    modelsByOutputId.put(params.outputId, Lists.<ModelParams>newArrayList());
+                    modelsByOutputId.put(params.outputId, Lists.<OnlineHmmModelParams>newArrayList());
                 }
 
                 modelsByOutputId.get(params.outputId).add(params);
@@ -172,14 +150,14 @@ public class OnlineHmmPriors {
         return list;
     }
 
-    private static AlphabetHmmPrior priorFromParams(final ModelParams params) {
+    private static AlphabetHmmPrior priorFromParams(final OnlineHmmModelParams params) {
 
         OutputId outputId = null;
 
-        if (params.id.equals(OUTPUT_MODEL_BED)) {
+        if (params.id.equals(OnlineHmmData.OUTPUT_MODEL_BED)) {
             outputId = OutputId.BED;
         }
-        else if (params.id.equals(OUTPUT_MODEL_SLEEP)) {
+        else if (params.id.equals(OnlineHmmData.OUTPUT_MODEL_SLEEP)) {
             outputId = OutputId.SLEEP;
         }
 
@@ -213,9 +191,9 @@ public class OnlineHmmPriors {
         final AlphabetHmmUserModel.Builder builder = AlphabetHmmUserModel.newBuilder();
 
         for (final String key : modelsByOutputId.keySet()) {
-            final List<ModelParams> paramsList = modelsByOutputId.get(key);
+            final List<OnlineHmmModelParams> paramsList = modelsByOutputId.get(key);
 
-            for (final ModelParams params : paramsList) {
+            for (final OnlineHmmModelParams params : paramsList) {
                 builder.addModels(priorFromParams(params));
             }
         }
