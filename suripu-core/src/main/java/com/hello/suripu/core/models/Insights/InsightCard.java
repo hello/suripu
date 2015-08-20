@@ -30,7 +30,8 @@ public class InsightCard implements Comparable<InsightCard> {
         DAYTIME_ACTIVITIES(16),
         SLEEP_SCORE(17),
         SLEEP_QUALITY(18), // movement during sleep
-        WAKE_VARIANCE(19);
+        WAKE_VARIANCE(19),
+        BED_LIGHT_DURATION(20);
 
         private int value;
 
