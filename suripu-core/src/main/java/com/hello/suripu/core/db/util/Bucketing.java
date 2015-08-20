@@ -112,9 +112,9 @@ public class Bucketing {
             } else if(sensorName.equals("light_peakiness")) {
                 sensorValue = deviceData.ambientLightPeakiness;
             } else if(sensorName.equals("dust_min")) {
-                sensorValue = DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMin, calibration, deviceData.firmwareVersion);
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMin, calibration, deviceData.firmwareVersion);
             } else if(sensorName.equals("dust_max")) {
-                sensorValue = DataUtils.convertRawDustCountsToAQI(deviceData.ambientDustMax, calibration, deviceData.firmwareVersion);
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMax, calibration, deviceData.firmwareVersion);
             } else if(sensorName.equals("dust_raw")) {
                 sensorValue = deviceData.ambientAirQualityRaw;
             } else if(sensorName.equals("dust_variance")) {

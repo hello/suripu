@@ -64,6 +64,12 @@ public class DataUtils{
         return convertDustDensityToAQI(dustDensity);
     }
 
+    public static float convertRawDustCountsToDensity(final int rawDustCount, final Calibration calibration, final int firmwareVersion) {
+        // Expected output unit: microgram per cubic meter
+        final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibration);
+        return convertDustDataFromCountsToDensity(calibratedRawDustCount, firmwareVersion) * 1000.0f;
+    }
+
     public static int calibrateRawDustCount(final int rawDustCount, final Calibration calibration) {
         return rawDustCount + calibration.dustCalibrationDelta;
     }
