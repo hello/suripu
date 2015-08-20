@@ -43,7 +43,8 @@ public class DeviceDataTest {
 
         final DeviceData deviceData = builder.build();
 
-        assertThat(deviceData.ambientAirQuality, is(172944));
+        assertThat(deviceData.ambientAirQuality, is(0));
+        assertThat(deviceData.ambientAirQualityRaw, is(dust));
     }
 }
 
