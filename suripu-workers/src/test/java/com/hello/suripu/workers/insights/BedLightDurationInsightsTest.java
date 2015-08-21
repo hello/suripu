@@ -91,6 +91,26 @@ public class BedLightDurationInsightsTest {
     }
 
     @Test
+    public void testOneDayThresholdEdge1() {
+        final Long accountId = 999L;
+        final Long deviceId = 999L;
+
+        final int light = 2;
+        final int zeroLight = 0;
+        final int offsetMillis = -28800000;
+        final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
+        final int offMinuteThreshold = 45;
+
+        final List<DeviceData> data = new ArrayList<>();
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(50), offsetMillis, 1, 1, 1, 0, 0, 0));
+
+        final Optional<Integer> calculatedLightDurationList = BedLightDuration.processLightDataOneDay(data, offMinuteThreshold);
+        final Optional<Integer> expectedLightDurationList = Optional.of(0);
+        assertThat(calculatedLightDurationList, is(expectedLightDurationList));
+    }
+
+    @Test
     public void testOneDayDivide() {
         final Long accountId = 999L;
         final Long deviceId = 999L;
