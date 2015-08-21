@@ -10,6 +10,12 @@ public final class OnlineHmmProtos {
   }
   /**
    * Protobuf enum {@code hello.OutputId}
+   *
+   * <pre>
+   *this maps to a interpretation layer factory in the suripu
+   *if you are going to create a new user model type (i.e. not SLEEP or BED)
+   *you must update this factory in suripu
+   * </pre>
    */
   public enum OutputId
       implements com.google.protobuf.ProtocolMessageEnum {
@@ -3497,47 +3503,37 @@ public final class OnlineHmmProtos {
   public interface AlphabetHmmScratchPadOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // optional int64 last_update_time_utc = 1;
+    // optional int64 last_date_updated_utc = 1;
     /**
-     * <code>optional int64 last_update_time_utc = 1;</code>
+     * <code>optional int64 last_date_updated_utc = 1;</code>
      */
-    boolean hasLastUpdateTimeUtc();
+    boolean hasLastDateUpdatedUtc();
     /**
-     * <code>optional int64 last_update_time_utc = 1;</code>
+     * <code>optional int64 last_date_updated_utc = 1;</code>
      */
-    long getLastUpdateTimeUtc();
+    long getLastDateUpdatedUtc();
 
-    // optional int64 date_created = 2;
+    // repeated .hello.AlphabetHmmPrior model_deltas = 2;
     /**
-     * <code>optional int64 date_created = 2;</code>
-     */
-    boolean hasDateCreated();
-    /**
-     * <code>optional int64 date_created = 2;</code>
-     */
-    long getDateCreated();
-
-    // repeated .hello.AlphabetHmmPrior model_deltas = 3;
-    /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> 
         getModelDeltasList();
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior getModelDeltas(int index);
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     int getModelDeltasCount();
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> 
         getModelDeltasOrBuilderList();
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelDeltasOrBuilder(
         int index);
@@ -3595,18 +3591,13 @@ public final class OnlineHmmProtos {
             }
             case 8: {
               bitField0_ |= 0x00000001;
-              lastUpdateTimeUtc_ = input.readInt64();
+              lastDateUpdatedUtc_ = input.readInt64();
               break;
             }
-            case 16: {
-              bitField0_ |= 0x00000002;
-              dateCreated_ = input.readInt64();
-              break;
-            }
-            case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                 modelDeltas_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior>();
-                mutable_bitField0_ |= 0x00000004;
+                mutable_bitField0_ |= 0x00000002;
               }
               modelDeltas_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.PARSER, extensionRegistry));
               break;
@@ -3619,7 +3610,7 @@ public final class OnlineHmmProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           modelDeltas_ = java.util.Collections.unmodifiableList(modelDeltas_);
         }
         this.unknownFields = unknownFields.build();
@@ -3654,68 +3645,52 @@ public final class OnlineHmmProtos {
     }
 
     private int bitField0_;
-    // optional int64 last_update_time_utc = 1;
-    public static final int LAST_UPDATE_TIME_UTC_FIELD_NUMBER = 1;
-    private long lastUpdateTimeUtc_;
+    // optional int64 last_date_updated_utc = 1;
+    public static final int LAST_DATE_UPDATED_UTC_FIELD_NUMBER = 1;
+    private long lastDateUpdatedUtc_;
     /**
-     * <code>optional int64 last_update_time_utc = 1;</code>
+     * <code>optional int64 last_date_updated_utc = 1;</code>
      */
-    public boolean hasLastUpdateTimeUtc() {
+    public boolean hasLastDateUpdatedUtc() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional int64 last_update_time_utc = 1;</code>
+     * <code>optional int64 last_date_updated_utc = 1;</code>
      */
-    public long getLastUpdateTimeUtc() {
-      return lastUpdateTimeUtc_;
+    public long getLastDateUpdatedUtc() {
+      return lastDateUpdatedUtc_;
     }
 
-    // optional int64 date_created = 2;
-    public static final int DATE_CREATED_FIELD_NUMBER = 2;
-    private long dateCreated_;
-    /**
-     * <code>optional int64 date_created = 2;</code>
-     */
-    public boolean hasDateCreated() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional int64 date_created = 2;</code>
-     */
-    public long getDateCreated() {
-      return dateCreated_;
-    }
-
-    // repeated .hello.AlphabetHmmPrior model_deltas = 3;
-    public static final int MODEL_DELTAS_FIELD_NUMBER = 3;
+    // repeated .hello.AlphabetHmmPrior model_deltas = 2;
+    public static final int MODEL_DELTAS_FIELD_NUMBER = 2;
     private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> modelDeltas_;
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> getModelDeltasList() {
       return modelDeltas_;
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> 
         getModelDeltasOrBuilderList() {
       return modelDeltas_;
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     public int getModelDeltasCount() {
       return modelDeltas_.size();
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior getModelDeltas(int index) {
       return modelDeltas_.get(index);
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+     * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
      */
     public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelDeltasOrBuilder(
         int index) {
@@ -3723,8 +3698,7 @@ public final class OnlineHmmProtos {
     }
 
     private void initFields() {
-      lastUpdateTimeUtc_ = 0L;
-      dateCreated_ = 0L;
+      lastDateUpdatedUtc_ = 0L;
       modelDeltas_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
@@ -3746,13 +3720,10 @@ public final class OnlineHmmProtos {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt64(1, lastUpdateTimeUtc_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt64(2, dateCreated_);
+        output.writeInt64(1, lastDateUpdatedUtc_);
       }
       for (int i = 0; i < modelDeltas_.size(); i++) {
-        output.writeMessage(3, modelDeltas_.get(i));
+        output.writeMessage(2, modelDeltas_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -3765,15 +3736,11 @@ public final class OnlineHmmProtos {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(1, lastUpdateTimeUtc_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(2, dateCreated_);
+          .computeInt64Size(1, lastDateUpdatedUtc_);
       }
       for (int i = 0; i < modelDeltas_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, modelDeltas_.get(i));
+          .computeMessageSize(2, modelDeltas_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3892,13 +3859,11 @@ public final class OnlineHmmProtos {
 
       public Builder clear() {
         super.clear();
-        lastUpdateTimeUtc_ = 0L;
+        lastDateUpdatedUtc_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000001);
-        dateCreated_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000002);
         if (modelDeltasBuilder_ == null) {
           modelDeltas_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           modelDeltasBuilder_.clear();
         }
@@ -3933,15 +3898,11 @@ public final class OnlineHmmProtos {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.lastUpdateTimeUtc_ = lastUpdateTimeUtc_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.dateCreated_ = dateCreated_;
+        result.lastDateUpdatedUtc_ = lastDateUpdatedUtc_;
         if (modelDeltasBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
             modelDeltas_ = java.util.Collections.unmodifiableList(modelDeltas_);
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000002);
           }
           result.modelDeltas_ = modelDeltas_;
         } else {
@@ -3963,17 +3924,14 @@ public final class OnlineHmmProtos {
 
       public Builder mergeFrom(com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmScratchPad other) {
         if (other == com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmScratchPad.getDefaultInstance()) return this;
-        if (other.hasLastUpdateTimeUtc()) {
-          setLastUpdateTimeUtc(other.getLastUpdateTimeUtc());
-        }
-        if (other.hasDateCreated()) {
-          setDateCreated(other.getDateCreated());
+        if (other.hasLastDateUpdatedUtc()) {
+          setLastDateUpdatedUtc(other.getLastDateUpdatedUtc());
         }
         if (modelDeltasBuilder_ == null) {
           if (!other.modelDeltas_.isEmpty()) {
             if (modelDeltas_.isEmpty()) {
               modelDeltas_ = other.modelDeltas_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
             } else {
               ensureModelDeltasIsMutable();
               modelDeltas_.addAll(other.modelDeltas_);
@@ -3986,7 +3944,7 @@ public final class OnlineHmmProtos {
               modelDeltasBuilder_.dispose();
               modelDeltasBuilder_ = null;
               modelDeltas_ = other.modelDeltas_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
               modelDeltasBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getModelDeltasFieldBuilder() : null;
@@ -4028,79 +3986,46 @@ public final class OnlineHmmProtos {
       }
       private int bitField0_;
 
-      // optional int64 last_update_time_utc = 1;
-      private long lastUpdateTimeUtc_ ;
+      // optional int64 last_date_updated_utc = 1;
+      private long lastDateUpdatedUtc_ ;
       /**
-       * <code>optional int64 last_update_time_utc = 1;</code>
+       * <code>optional int64 last_date_updated_utc = 1;</code>
        */
-      public boolean hasLastUpdateTimeUtc() {
+      public boolean hasLastDateUpdatedUtc() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional int64 last_update_time_utc = 1;</code>
+       * <code>optional int64 last_date_updated_utc = 1;</code>
        */
-      public long getLastUpdateTimeUtc() {
-        return lastUpdateTimeUtc_;
+      public long getLastDateUpdatedUtc() {
+        return lastDateUpdatedUtc_;
       }
       /**
-       * <code>optional int64 last_update_time_utc = 1;</code>
+       * <code>optional int64 last_date_updated_utc = 1;</code>
        */
-      public Builder setLastUpdateTimeUtc(long value) {
+      public Builder setLastDateUpdatedUtc(long value) {
         bitField0_ |= 0x00000001;
-        lastUpdateTimeUtc_ = value;
+        lastDateUpdatedUtc_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int64 last_update_time_utc = 1;</code>
+       * <code>optional int64 last_date_updated_utc = 1;</code>
        */
-      public Builder clearLastUpdateTimeUtc() {
+      public Builder clearLastDateUpdatedUtc() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        lastUpdateTimeUtc_ = 0L;
+        lastDateUpdatedUtc_ = 0L;
         onChanged();
         return this;
       }
 
-      // optional int64 date_created = 2;
-      private long dateCreated_ ;
-      /**
-       * <code>optional int64 date_created = 2;</code>
-       */
-      public boolean hasDateCreated() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional int64 date_created = 2;</code>
-       */
-      public long getDateCreated() {
-        return dateCreated_;
-      }
-      /**
-       * <code>optional int64 date_created = 2;</code>
-       */
-      public Builder setDateCreated(long value) {
-        bitField0_ |= 0x00000002;
-        dateCreated_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int64 date_created = 2;</code>
-       */
-      public Builder clearDateCreated() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        dateCreated_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      // repeated .hello.AlphabetHmmPrior model_deltas = 3;
+      // repeated .hello.AlphabetHmmPrior model_deltas = 2;
       private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> modelDeltas_ =
         java.util.Collections.emptyList();
       private void ensureModelDeltasIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
           modelDeltas_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior>(modelDeltas_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000002;
          }
       }
 
@@ -4108,7 +4033,7 @@ public final class OnlineHmmProtos {
           com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> modelDeltasBuilder_;
 
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> getModelDeltasList() {
         if (modelDeltasBuilder_ == null) {
@@ -4118,7 +4043,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public int getModelDeltasCount() {
         if (modelDeltasBuilder_ == null) {
@@ -4128,7 +4053,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior getModelDeltas(int index) {
         if (modelDeltasBuilder_ == null) {
@@ -4138,7 +4063,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder setModelDeltas(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior value) {
@@ -4155,7 +4080,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder setModelDeltas(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder builderForValue) {
@@ -4169,7 +4094,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder addModelDeltas(com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior value) {
         if (modelDeltasBuilder_ == null) {
@@ -4185,7 +4110,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder addModelDeltas(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior value) {
@@ -4202,7 +4127,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder addModelDeltas(
           com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder builderForValue) {
@@ -4216,7 +4141,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder addModelDeltas(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder builderForValue) {
@@ -4230,7 +4155,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder addAllModelDeltas(
           java.lang.Iterable<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> values) {
@@ -4244,12 +4169,12 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder clearModelDeltas() {
         if (modelDeltasBuilder_ == null) {
           modelDeltas_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
           onChanged();
         } else {
           modelDeltasBuilder_.clear();
@@ -4257,7 +4182,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public Builder removeModelDeltas(int index) {
         if (modelDeltasBuilder_ == null) {
@@ -4270,14 +4195,14 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder getModelDeltasBuilder(
           int index) {
         return getModelDeltasFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelDeltasOrBuilder(
           int index) {
@@ -4287,7 +4212,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> 
            getModelDeltasOrBuilderList() {
@@ -4298,14 +4223,14 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder addModelDeltasBuilder() {
         return getModelDeltasFieldBuilder().addBuilder(
             com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.getDefaultInstance());
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder addModelDeltasBuilder(
           int index) {
@@ -4313,7 +4238,7 @@ public final class OnlineHmmProtos {
             index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.getDefaultInstance());
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 3;</code>
+       * <code>repeated .hello.AlphabetHmmPrior model_deltas = 2;</code>
        */
       public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder> 
            getModelDeltasBuilderList() {
@@ -4326,7 +4251,7 @@ public final class OnlineHmmProtos {
           modelDeltasBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder>(
                   modelDeltas_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000002) == 0x00000002),
                   getParentForChildren(),
                   isClean());
           modelDeltas_ = null;
@@ -5451,15 +5376,15 @@ public final class OnlineHmmProtos {
       "(\0132\021.hello.RealMatrix\022!\n\031log_observation",
       "_model_ids\030\007 \003(\t\022\027\n\017log_denominator\030\010 \003(" +
       "\001\022\n\n\002pi\030\t \003(\001\022\022\n\nend_states\030\n \003(\005\022\037\n\027min" +
-      "imum_state_durations\030\013 \003(\005\"z\n\025AlphabetHm" +
-      "mScratchPad\022\034\n\024last_update_time_utc\030\001 \001(" +
-      "\003\022\024\n\014date_created\030\002 \001(\003\022-\n\014model_deltas\030" +
-      "\003 \003(\0132\027.hello.AlphabetHmmPrior\"z\n\024Alphab" +
-      "etHmmUserModel\022\'\n\006models\030\001 \003(\0132\027.hello.A" +
-      "lphabetHmmPrior\0229\n\036forbiddeden_motion_tr" +
-      "ansitions\030\002 \003(\0132\021.hello.Transition*\036\n\010Ou" +
-      "tputId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hello.",
-      "suripu.api.datascienceB\017OnlineHmmProtos"
+      "imum_state_durations\030\013 \003(\005\"e\n\025AlphabetHm" +
+      "mScratchPad\022\035\n\025last_date_updated_utc\030\001 \001" +
+      "(\003\022-\n\014model_deltas\030\002 \003(\0132\027.hello.Alphabe" +
+      "tHmmPrior\"z\n\024AlphabetHmmUserModel\022\'\n\006mod" +
+      "els\030\001 \003(\0132\027.hello.AlphabetHmmPrior\0229\n\036fo" +
+      "rbiddeden_motion_transitions\030\002 \003(\0132\021.hel" +
+      "lo.Transition*\036\n\010OutputId\022\t\n\005SLEEP\020\000\022\007\n\003" +
+      "BED\020\001B3\n com.hello.suripu.api.datascienc",
+      "eB\017OnlineHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5489,7 +5414,7 @@ public final class OnlineHmmProtos {
           internal_static_hello_AlphabetHmmScratchPad_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmScratchPad_descriptor,
-              new java.lang.String[] { "LastUpdateTimeUtc", "DateCreated", "ModelDeltas", });
+              new java.lang.String[] { "LastDateUpdatedUtc", "ModelDeltas", });
           internal_static_hello_AlphabetHmmUserModel_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_hello_AlphabetHmmUserModel_fieldAccessorTable = new

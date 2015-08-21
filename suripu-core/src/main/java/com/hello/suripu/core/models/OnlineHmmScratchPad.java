@@ -13,15 +13,13 @@ import java.util.Map;
  */
 public class OnlineHmmScratchPad {
 
-    public OnlineHmmScratchPad(Map<String, OnlineHmmModelParams> paramsByOutputId, long lastUpdateTimeUtc, long createdTimeUtc) {
+    public OnlineHmmScratchPad(Map<String, OnlineHmmModelParams> paramsByOutputId, long lastUpdateTimeUtc) {
         this.paramsByOutputId = paramsByOutputId;
         this.lastUpdateTimeUtc = lastUpdateTimeUtc;
-        this.createdTimeUtc = createdTimeUtc;
     }
 
     public final Map<String,OnlineHmmModelParams> paramsByOutputId;
     public final long lastUpdateTimeUtc;
-    public final long createdTimeUtc;
 
     public static Optional<OnlineHmmScratchPad> createFromProtobuf(final byte [] data) {
 
@@ -54,17 +52,12 @@ public class OnlineHmmScratchPad {
             }
 
             long lastUpdateTimeUtc = 0;
-            if (protobuf.hasLastUpdateTimeUtc()) {
-                lastUpdateTimeUtc = protobuf.getLastUpdateTimeUtc();
-            }
-
-            long createdTimeUtc = 0;
-            if (protobuf.hasDateCreated()) {
-                createdTimeUtc = protobuf.getDateCreated();
+            if (protobuf.hasLastDateUpdatedUtc()) {
+                lastUpdateTimeUtc = protobuf.getLastDateUpdatedUtc();
             }
 
 
-            return Optional.of(new OnlineHmmScratchPad(paramsByOutputId,lastUpdateTimeUtc,createdTimeUtc));
+            return Optional.of(new OnlineHmmScratchPad(paramsByOutputId,lastUpdateTimeUtc));
 
 
         } catch (InvalidProtocolBufferException e) {
@@ -82,8 +75,7 @@ public class OnlineHmmScratchPad {
             builder.addModelDeltas(protobuf);
         }
 
-        builder.setDateCreated(createdTimeUtc);
-        builder.setLastUpdateTimeUtc(lastUpdateTimeUtc);
+        builder.setLastDateUpdatedUtc(lastUpdateTimeUtc);
 
 
         return  builder.build().toByteArray();

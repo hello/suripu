@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.OnlineHmmData;
+import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -16,6 +17,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -85,7 +87,34 @@ public class OnlineHmm {
 
             //check to see if this scratchpad is old enough
             //old enough == it was created yesterday or earlier
-            //if (scratchPad.createdTimeUtc < startTimeUtc - 60000L * 60L
+            if (scratchPad.lastUpdateTimeUtc < startTimeUtc) {
+
+                //go through each and every model, first matching by outputid
+                for (final String outputId : scratchPad.paramsByOutputId.keySet()) {
+                    final OnlineHmmModelParams param = scratchPad.paramsByOutputId.get(outputId);
+
+                    //find the existing model params with this id
+                    final List<OnlineHmmModelParams> models = modelPriors.modelsByOutputId.get(outputId);
+
+                    //linear search?  dafuq. fine.
+                    for (final OnlineHmmModelParams modelToUpdate : models) {
+                        if (modelToUpdate.id.equals(param.id)) {
+                            //winnar winnar chicken dinnar
+
+                            //UPDATE THE FUCKING MODEL
+                           //TODO update this shit
+                           // modelToUpdate.update(param);
+
+                        }
+                    }
+
+
+                }
+
+                //UPDATE THE FUCKING MODEL IN DYNAMO
+                userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,modelPriors);
+
+            }
 
 
         }

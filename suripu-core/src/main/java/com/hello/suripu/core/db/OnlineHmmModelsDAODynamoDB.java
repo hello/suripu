@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
@@ -81,6 +82,17 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
         return dbDAO.put(accountId.toString(),"",payloads);
 
     }
+
+    @Override
+    public boolean updateModelPriorsAndZeroOutScratchpad(final Long accountId, final OnlineHmmPriors priors) {
+        final Map<String,byte []> payloads = Maps.newHashMap();
+
+        payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
+        payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,OnlineHmmProtos.AlphabetHmmScratchPad.newBuilder().build().toByteArray());
+
+        return dbDAO.put(accountId.toString(),"",payloads);
+    }
+
 
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient) {
