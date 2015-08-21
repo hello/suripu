@@ -27,8 +27,8 @@ import java.util.UUID;
 /**
  * Created by benjo on 6/21/15.
  */
-public class HmmBayesNetData {
-    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(HmmBayesNetData.class);
+public class FeatureExtractionModelData {
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(FeatureExtractionModelData.class);
     private final Logger LOGGER;
     /*
     *  Goal is to create a bunch of HMMs, which decode some sensor data.
@@ -41,14 +41,14 @@ public class HmmBayesNetData {
     *
     * */
 
-    private  Optional<DeserializedSleepHmmBayesNetWithParams> deserializedData;
+    private  Optional<DeserializedFeatureExtractionWithParams> deserializedData;
 
-    public HmmBayesNetData(final Optional<UUID> uuid) {
+    public FeatureExtractionModelData(final Optional<UUID> uuid) {
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid);
         deserializedData = Optional.absent();
     }
 
-    public DeserializedSleepHmmBayesNetWithParams getDeserializedData() {
+    public DeserializedFeatureExtractionWithParams getDeserializedData() {
         return deserializedData.get();
     }
 
@@ -84,9 +84,9 @@ public class HmmBayesNetData {
 
         /* LAST, EXTRACT THE MEAUREMENT PARAMS OF THIS MODEL */
 
-            deserializedData = Optional.of( new DeserializedSleepHmmBayesNetWithParams(
+            deserializedData = Optional.of( new DeserializedFeatureExtractionWithParams(
                     new SensorDataReduction(hmmMapById),
-                    HmmBayesNetMeasurementParameters.createFromProto(proto.getMeasurementParameters())));
+                    OnlineHmmMeasurementParameters.createFromProto(proto.getMeasurementParameters())));
 
         } catch (InvalidProtocolBufferException e) {
             LOGGER.error(e.toString());

@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.hello.suripu.algorithm.hmm.MultiObsSequence;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
 
 import java.util.List;
@@ -15,10 +16,11 @@ import java.util.Map;
 public class  OnlineHmmPriors {
 
     public final Map<String,List<OnlineHmmModelParams>> modelsByOutputId;
+    public final List<com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions;
 
-
-    private OnlineHmmPriors(Map<String, List<OnlineHmmModelParams>> modelsByOutputId) {
+    private OnlineHmmPriors(Map<String, List<OnlineHmmModelParams>> modelsByOutputId,final List<com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions) {
         this.modelsByOutputId = modelsByOutputId;
+        this.forbiddenMotionTransitions = forbiddenMotionTransitions;
     }
 
     private static double [][] getMatrix(final RealMatrix protobuf) {
@@ -57,7 +59,9 @@ public class  OnlineHmmPriors {
                 !protobuf.hasOutputId() ||
                 !protobuf.hasLogStateTransitionNumerator() ||
                 protobuf.getLogDenominatorCount() == 0 ||
-                protobuf.getLogObservationModelNumeratorCount() == 0) {
+                protobuf.getLogObservationModelNumeratorCount() == 0||
+                protobuf.getPiCount() == 0 ||
+                protobuf.getEndStatesCount() == 0) {
             return Optional.absent();
         }
 
@@ -80,6 +84,20 @@ public class  OnlineHmmPriors {
             logDenominator[i] = protobuf.getLogDenominator(i);
         }
 
+        final double [] pi = new double[protobuf.getPiCount()];
+        for (int i = 0; i < protobuf.getPiCount(); i++) {
+            pi[i] = protobuf.getPi(i);
+        }
+
+        final int [] endStates = new int[protobuf.getEndStatesCount()];
+        for (int i = 0; i < protobuf.getEndStatesCount(); i++) {
+            endStates[i] = protobuf.getEndStates(i);
+        }
+
+        final int [] minStateDurations = new int[protobuf.getMinimumStateDurationsCount()];
+        for (int i = 0; i < protobuf.getMinimumStateDurationsCount(); i++) {
+            minStateDurations[i] = protobuf.getMinimumStateDurations(i);
+        }
 
         final Map<String, double[][]> logAlphabetNumerators = Maps.newHashMap();
 
@@ -102,7 +120,7 @@ public class  OnlineHmmPriors {
                 break;
         }
 
-        return Optional.of(new OnlineHmmModelParams(logAlphabetNumerators,logStateTransition,logDenominator,timeCreated,timeUpdated,protobuf.getId(),outputId));
+        return Optional.of(new OnlineHmmModelParams(logAlphabetNumerators,logStateTransition,logDenominator,pi,endStates,minStateDurations,timeCreated,timeUpdated,protobuf.getId(),outputId));
 
     }
 
@@ -129,7 +147,13 @@ public class  OnlineHmmPriors {
 
             }
 
-            return Optional.of(new OnlineHmmPriors(modelsByOutputId));
+
+            List<com.hello.suripu.algorithm.hmm.Transition> transitions = Lists.newArrayList();
+            for (final Transition transition : protobuf.getForbiddedenMotionTransitionsList()) {
+                transitions.add(new com.hello.suripu.algorithm.hmm.Transition(transition.getFrom(),transition.getTo()));
+            }
+
+            return Optional.of(new OnlineHmmPriors(modelsByOutputId,transitions));
 
 
         }

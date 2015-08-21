@@ -893,6 +893,499 @@ public final class OnlineHmmProtos {
     // @@protoc_insertion_point(class_scope:hello.RealMatrix)
   }
 
+  public interface TransitionOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required int32 from = 1;
+    /**
+     * <code>required int32 from = 1;</code>
+     */
+    boolean hasFrom();
+    /**
+     * <code>required int32 from = 1;</code>
+     */
+    int getFrom();
+
+    // required int32 to = 2;
+    /**
+     * <code>required int32 to = 2;</code>
+     */
+    boolean hasTo();
+    /**
+     * <code>required int32 to = 2;</code>
+     */
+    int getTo();
+  }
+  /**
+   * Protobuf type {@code hello.Transition}
+   */
+  public static final class Transition extends
+      com.google.protobuf.GeneratedMessage
+      implements TransitionOrBuilder {
+    // Use Transition.newBuilder() to construct.
+    private Transition(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Transition(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Transition defaultInstance;
+    public static Transition getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Transition getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Transition(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              from_ = input.readInt32();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              to_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_Transition_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_Transition_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.class, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Transition> PARSER =
+        new com.google.protobuf.AbstractParser<Transition>() {
+      public Transition parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Transition(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Transition> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // required int32 from = 1;
+    public static final int FROM_FIELD_NUMBER = 1;
+    private int from_;
+    /**
+     * <code>required int32 from = 1;</code>
+     */
+    public boolean hasFrom() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int32 from = 1;</code>
+     */
+    public int getFrom() {
+      return from_;
+    }
+
+    // required int32 to = 2;
+    public static final int TO_FIELD_NUMBER = 2;
+    private int to_;
+    /**
+     * <code>required int32 to = 2;</code>
+     */
+    public boolean hasTo() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required int32 to = 2;</code>
+     */
+    public int getTo() {
+      return to_;
+    }
+
+    private void initFields() {
+      from_ = 0;
+      to_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasFrom()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTo()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, from_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, to_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, from_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, to_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.Transition}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_Transition_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_Transition_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.class, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        from_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        to_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_Transition_descriptor;
+      }
+
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getDefaultInstanceForType() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition build() {
+        com.hello.suripu.api.datascience.OnlineHmmProtos.Transition result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition buildPartial() {
+        com.hello.suripu.api.datascience.OnlineHmmProtos.Transition result = new com.hello.suripu.api.datascience.OnlineHmmProtos.Transition(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.from_ = from_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.to_ = to_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.datascience.OnlineHmmProtos.Transition) {
+          return mergeFrom((com.hello.suripu.api.datascience.OnlineHmmProtos.Transition)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition other) {
+        if (other == com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance()) return this;
+        if (other.hasFrom()) {
+          setFrom(other.getFrom());
+        }
+        if (other.hasTo()) {
+          setTo(other.getTo());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasFrom()) {
+          
+          return false;
+        }
+        if (!hasTo()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.datascience.OnlineHmmProtos.Transition parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.datascience.OnlineHmmProtos.Transition) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // required int32 from = 1;
+      private int from_ ;
+      /**
+       * <code>required int32 from = 1;</code>
+       */
+      public boolean hasFrom() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 from = 1;</code>
+       */
+      public int getFrom() {
+        return from_;
+      }
+      /**
+       * <code>required int32 from = 1;</code>
+       */
+      public Builder setFrom(int value) {
+        bitField0_ |= 0x00000001;
+        from_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 from = 1;</code>
+       */
+      public Builder clearFrom() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        from_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // required int32 to = 2;
+      private int to_ ;
+      /**
+       * <code>required int32 to = 2;</code>
+       */
+      public boolean hasTo() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required int32 to = 2;</code>
+       */
+      public int getTo() {
+        return to_;
+      }
+      /**
+       * <code>required int32 to = 2;</code>
+       */
+      public Builder setTo(int value) {
+        bitField0_ |= 0x00000002;
+        to_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 to = 2;</code>
+       */
+      public Builder clearTo() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        to_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.Transition)
+    }
+
+    static {
+      defaultInstance = new Transition(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.Transition)
+  }
+
   public interface AlphabetHmmPriorOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -1013,6 +1506,48 @@ public final class OnlineHmmProtos {
      * <code>repeated double log_denominator = 8;</code>
      */
     double getLogDenominator(int index);
+
+    // repeated double pi = 9;
+    /**
+     * <code>repeated double pi = 9;</code>
+     */
+    java.util.List<java.lang.Double> getPiList();
+    /**
+     * <code>repeated double pi = 9;</code>
+     */
+    int getPiCount();
+    /**
+     * <code>repeated double pi = 9;</code>
+     */
+    double getPi(int index);
+
+    // repeated int32 end_states = 10;
+    /**
+     * <code>repeated int32 end_states = 10;</code>
+     */
+    java.util.List<java.lang.Integer> getEndStatesList();
+    /**
+     * <code>repeated int32 end_states = 10;</code>
+     */
+    int getEndStatesCount();
+    /**
+     * <code>repeated int32 end_states = 10;</code>
+     */
+    int getEndStates(int index);
+
+    // repeated int32 minimum_state_durations = 11;
+    /**
+     * <code>repeated int32 minimum_state_durations = 11;</code>
+     */
+    java.util.List<java.lang.Integer> getMinimumStateDurationsList();
+    /**
+     * <code>repeated int32 minimum_state_durations = 11;</code>
+     */
+    int getMinimumStateDurationsCount();
+    /**
+     * <code>repeated int32 minimum_state_durations = 11;</code>
+     */
+    int getMinimumStateDurations(int index);
   }
   /**
    * Protobuf type {@code hello.AlphabetHmmPrior}
@@ -1141,6 +1676,69 @@ public final class OnlineHmmProtos {
               input.popLimit(limit);
               break;
             }
+            case 73: {
+              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+                pi_ = new java.util.ArrayList<java.lang.Double>();
+                mutable_bitField0_ |= 0x00000100;
+              }
+              pi_.add(input.readDouble());
+              break;
+            }
+            case 74: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100) && input.getBytesUntilLimit() > 0) {
+                pi_ = new java.util.ArrayList<java.lang.Double>();
+                mutable_bitField0_ |= 0x00000100;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                pi_.add(input.readDouble());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 80: {
+              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+                endStates_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000200;
+              }
+              endStates_.add(input.readInt32());
+              break;
+            }
+            case 82: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200) && input.getBytesUntilLimit() > 0) {
+                endStates_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000200;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                endStates_.add(input.readInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 88: {
+              if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+                minimumStateDurations_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000400;
+              }
+              minimumStateDurations_.add(input.readInt32());
+              break;
+            }
+            case 90: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000400) == 0x00000400) && input.getBytesUntilLimit() > 0) {
+                minimumStateDurations_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000400;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                minimumStateDurations_.add(input.readInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1157,6 +1755,15 @@ public final class OnlineHmmProtos {
         }
         if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
           logDenominator_ = java.util.Collections.unmodifiableList(logDenominator_);
+        }
+        if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+          pi_ = java.util.Collections.unmodifiableList(pi_);
+        }
+        if (((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+          endStates_ = java.util.Collections.unmodifiableList(endStates_);
+        }
+        if (((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+          minimumStateDurations_ = java.util.Collections.unmodifiableList(minimumStateDurations_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1392,6 +1999,75 @@ public final class OnlineHmmProtos {
       return logDenominator_.get(index);
     }
 
+    // repeated double pi = 9;
+    public static final int PI_FIELD_NUMBER = 9;
+    private java.util.List<java.lang.Double> pi_;
+    /**
+     * <code>repeated double pi = 9;</code>
+     */
+    public java.util.List<java.lang.Double>
+        getPiList() {
+      return pi_;
+    }
+    /**
+     * <code>repeated double pi = 9;</code>
+     */
+    public int getPiCount() {
+      return pi_.size();
+    }
+    /**
+     * <code>repeated double pi = 9;</code>
+     */
+    public double getPi(int index) {
+      return pi_.get(index);
+    }
+
+    // repeated int32 end_states = 10;
+    public static final int END_STATES_FIELD_NUMBER = 10;
+    private java.util.List<java.lang.Integer> endStates_;
+    /**
+     * <code>repeated int32 end_states = 10;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getEndStatesList() {
+      return endStates_;
+    }
+    /**
+     * <code>repeated int32 end_states = 10;</code>
+     */
+    public int getEndStatesCount() {
+      return endStates_.size();
+    }
+    /**
+     * <code>repeated int32 end_states = 10;</code>
+     */
+    public int getEndStates(int index) {
+      return endStates_.get(index);
+    }
+
+    // repeated int32 minimum_state_durations = 11;
+    public static final int MINIMUM_STATE_DURATIONS_FIELD_NUMBER = 11;
+    private java.util.List<java.lang.Integer> minimumStateDurations_;
+    /**
+     * <code>repeated int32 minimum_state_durations = 11;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getMinimumStateDurationsList() {
+      return minimumStateDurations_;
+    }
+    /**
+     * <code>repeated int32 minimum_state_durations = 11;</code>
+     */
+    public int getMinimumStateDurationsCount() {
+      return minimumStateDurations_.size();
+    }
+    /**
+     * <code>repeated int32 minimum_state_durations = 11;</code>
+     */
+    public int getMinimumStateDurations(int index) {
+      return minimumStateDurations_.get(index);
+    }
+
     private void initFields() {
       id_ = "";
       outputId_ = com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId.SLEEP;
@@ -1401,6 +2077,9 @@ public final class OnlineHmmProtos {
       logObservationModelNumerator_ = java.util.Collections.emptyList();
       logObservationModelIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       logDenominator_ = java.util.Collections.emptyList();
+      pi_ = java.util.Collections.emptyList();
+      endStates_ = java.util.Collections.emptyList();
+      minimumStateDurations_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1450,6 +2129,15 @@ public final class OnlineHmmProtos {
       for (int i = 0; i < logDenominator_.size(); i++) {
         output.writeDouble(8, logDenominator_.get(i));
       }
+      for (int i = 0; i < pi_.size(); i++) {
+        output.writeDouble(9, pi_.get(i));
+      }
+      for (int i = 0; i < endStates_.size(); i++) {
+        output.writeInt32(10, endStates_.get(i));
+      }
+      for (int i = 0; i < minimumStateDurations_.size(); i++) {
+        output.writeInt32(11, minimumStateDurations_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1497,6 +2185,30 @@ public final class OnlineHmmProtos {
         dataSize = 8 * getLogDenominatorList().size();
         size += dataSize;
         size += 1 * getLogDenominatorList().size();
+      }
+      {
+        int dataSize = 0;
+        dataSize = 8 * getPiList().size();
+        size += dataSize;
+        size += 1 * getPiList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < endStates_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeInt32SizeNoTag(endStates_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getEndStatesList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < minimumStateDurations_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeInt32SizeNoTag(minimumStateDurations_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getMinimumStateDurationsList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1640,6 +2352,12 @@ public final class OnlineHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000040);
         logDenominator_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000080);
+        pi_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000100);
+        endStates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000200);
+        minimumStateDurations_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000400);
         return this;
       }
 
@@ -1712,6 +2430,21 @@ public final class OnlineHmmProtos {
           bitField0_ = (bitField0_ & ~0x00000080);
         }
         result.logDenominator_ = logDenominator_;
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          pi_ = java.util.Collections.unmodifiableList(pi_);
+          bitField0_ = (bitField0_ & ~0x00000100);
+        }
+        result.pi_ = pi_;
+        if (((bitField0_ & 0x00000200) == 0x00000200)) {
+          endStates_ = java.util.Collections.unmodifiableList(endStates_);
+          bitField0_ = (bitField0_ & ~0x00000200);
+        }
+        result.endStates_ = endStates_;
+        if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          minimumStateDurations_ = java.util.Collections.unmodifiableList(minimumStateDurations_);
+          bitField0_ = (bitField0_ & ~0x00000400);
+        }
+        result.minimumStateDurations_ = minimumStateDurations_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1788,6 +2521,36 @@ public final class OnlineHmmProtos {
           } else {
             ensureLogDenominatorIsMutable();
             logDenominator_.addAll(other.logDenominator_);
+          }
+          onChanged();
+        }
+        if (!other.pi_.isEmpty()) {
+          if (pi_.isEmpty()) {
+            pi_ = other.pi_;
+            bitField0_ = (bitField0_ & ~0x00000100);
+          } else {
+            ensurePiIsMutable();
+            pi_.addAll(other.pi_);
+          }
+          onChanged();
+        }
+        if (!other.endStates_.isEmpty()) {
+          if (endStates_.isEmpty()) {
+            endStates_ = other.endStates_;
+            bitField0_ = (bitField0_ & ~0x00000200);
+          } else {
+            ensureEndStatesIsMutable();
+            endStates_.addAll(other.endStates_);
+          }
+          onChanged();
+        }
+        if (!other.minimumStateDurations_.isEmpty()) {
+          if (minimumStateDurations_.isEmpty()) {
+            minimumStateDurations_ = other.minimumStateDurations_;
+            bitField0_ = (bitField0_ & ~0x00000400);
+          } else {
+            ensureMinimumStateDurationsIsMutable();
+            minimumStateDurations_.addAll(other.minimumStateDurations_);
           }
           onChanged();
         }
@@ -2518,6 +3281,204 @@ public final class OnlineHmmProtos {
       public Builder clearLogDenominator() {
         logDenominator_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000080);
+        onChanged();
+        return this;
+      }
+
+      // repeated double pi = 9;
+      private java.util.List<java.lang.Double> pi_ = java.util.Collections.emptyList();
+      private void ensurePiIsMutable() {
+        if (!((bitField0_ & 0x00000100) == 0x00000100)) {
+          pi_ = new java.util.ArrayList<java.lang.Double>(pi_);
+          bitField0_ |= 0x00000100;
+         }
+      }
+      /**
+       * <code>repeated double pi = 9;</code>
+       */
+      public java.util.List<java.lang.Double>
+          getPiList() {
+        return java.util.Collections.unmodifiableList(pi_);
+      }
+      /**
+       * <code>repeated double pi = 9;</code>
+       */
+      public int getPiCount() {
+        return pi_.size();
+      }
+      /**
+       * <code>repeated double pi = 9;</code>
+       */
+      public double getPi(int index) {
+        return pi_.get(index);
+      }
+      /**
+       * <code>repeated double pi = 9;</code>
+       */
+      public Builder setPi(
+          int index, double value) {
+        ensurePiIsMutable();
+        pi_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated double pi = 9;</code>
+       */
+      public Builder addPi(double value) {
+        ensurePiIsMutable();
+        pi_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated double pi = 9;</code>
+       */
+      public Builder addAllPi(
+          java.lang.Iterable<? extends java.lang.Double> values) {
+        ensurePiIsMutable();
+        super.addAll(values, pi_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated double pi = 9;</code>
+       */
+      public Builder clearPi() {
+        pi_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000100);
+        onChanged();
+        return this;
+      }
+
+      // repeated int32 end_states = 10;
+      private java.util.List<java.lang.Integer> endStates_ = java.util.Collections.emptyList();
+      private void ensureEndStatesIsMutable() {
+        if (!((bitField0_ & 0x00000200) == 0x00000200)) {
+          endStates_ = new java.util.ArrayList<java.lang.Integer>(endStates_);
+          bitField0_ |= 0x00000200;
+         }
+      }
+      /**
+       * <code>repeated int32 end_states = 10;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getEndStatesList() {
+        return java.util.Collections.unmodifiableList(endStates_);
+      }
+      /**
+       * <code>repeated int32 end_states = 10;</code>
+       */
+      public int getEndStatesCount() {
+        return endStates_.size();
+      }
+      /**
+       * <code>repeated int32 end_states = 10;</code>
+       */
+      public int getEndStates(int index) {
+        return endStates_.get(index);
+      }
+      /**
+       * <code>repeated int32 end_states = 10;</code>
+       */
+      public Builder setEndStates(
+          int index, int value) {
+        ensureEndStatesIsMutable();
+        endStates_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 end_states = 10;</code>
+       */
+      public Builder addEndStates(int value) {
+        ensureEndStatesIsMutable();
+        endStates_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 end_states = 10;</code>
+       */
+      public Builder addAllEndStates(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureEndStatesIsMutable();
+        super.addAll(values, endStates_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 end_states = 10;</code>
+       */
+      public Builder clearEndStates() {
+        endStates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000200);
+        onChanged();
+        return this;
+      }
+
+      // repeated int32 minimum_state_durations = 11;
+      private java.util.List<java.lang.Integer> minimumStateDurations_ = java.util.Collections.emptyList();
+      private void ensureMinimumStateDurationsIsMutable() {
+        if (!((bitField0_ & 0x00000400) == 0x00000400)) {
+          minimumStateDurations_ = new java.util.ArrayList<java.lang.Integer>(minimumStateDurations_);
+          bitField0_ |= 0x00000400;
+         }
+      }
+      /**
+       * <code>repeated int32 minimum_state_durations = 11;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getMinimumStateDurationsList() {
+        return java.util.Collections.unmodifiableList(minimumStateDurations_);
+      }
+      /**
+       * <code>repeated int32 minimum_state_durations = 11;</code>
+       */
+      public int getMinimumStateDurationsCount() {
+        return minimumStateDurations_.size();
+      }
+      /**
+       * <code>repeated int32 minimum_state_durations = 11;</code>
+       */
+      public int getMinimumStateDurations(int index) {
+        return minimumStateDurations_.get(index);
+      }
+      /**
+       * <code>repeated int32 minimum_state_durations = 11;</code>
+       */
+      public Builder setMinimumStateDurations(
+          int index, int value) {
+        ensureMinimumStateDurationsIsMutable();
+        minimumStateDurations_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 minimum_state_durations = 11;</code>
+       */
+      public Builder addMinimumStateDurations(int value) {
+        ensureMinimumStateDurationsIsMutable();
+        minimumStateDurations_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 minimum_state_durations = 11;</code>
+       */
+      public Builder addAllMinimumStateDurations(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureMinimumStateDurationsIsMutable();
+        super.addAll(values, minimumStateDurations_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 minimum_state_durations = 11;</code>
+       */
+      public Builder clearMinimumStateDurations() {
+        minimumStateDurations_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000400);
         onChanged();
         return this;
       }
@@ -3387,29 +4348,54 @@ public final class OnlineHmmProtos {
   public interface AlphabetHmmUserModelOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // repeated .hello.AlphabetHmmPrior models = 2;
+    // repeated .hello.AlphabetHmmPrior models = 1;
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> 
         getModelsList();
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior getModels(int index);
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     int getModelsCount();
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> 
         getModelsOrBuilderList();
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelsOrBuilder(
+        int index);
+
+    // repeated .hello.Transition forbiddeden_motion_transitions = 2;
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> 
+        getForbiddedenMotionTransitionsList();
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index);
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    int getForbiddedenMotionTransitionsCount();
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+        getForbiddedenMotionTransitionsOrBuilderList();
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
         int index);
   }
   /**
@@ -3463,12 +4449,20 @@ public final class OnlineHmmProtos {
               }
               break;
             }
-            case 18: {
+            case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 models_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior>();
                 mutable_bitField0_ |= 0x00000001;
               }
               models_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.PARSER, extensionRegistry));
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                forbiddedenMotionTransitions_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              forbiddedenMotionTransitions_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.PARSER, extensionRegistry));
               break;
             }
           }
@@ -3481,6 +4475,9 @@ public final class OnlineHmmProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           models_ = java.util.Collections.unmodifiableList(models_);
+        }
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          forbiddedenMotionTransitions_ = java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -3513,44 +4510,81 @@ public final class OnlineHmmProtos {
       return PARSER;
     }
 
-    // repeated .hello.AlphabetHmmPrior models = 2;
-    public static final int MODELS_FIELD_NUMBER = 2;
+    // repeated .hello.AlphabetHmmPrior models = 1;
+    public static final int MODELS_FIELD_NUMBER = 1;
     private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> models_;
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> getModelsList() {
       return models_;
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> 
         getModelsOrBuilderList() {
       return models_;
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     public int getModelsCount() {
       return models_.size();
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior getModels(int index) {
       return models_.get(index);
     }
     /**
-     * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+     * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
      */
     public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelsOrBuilder(
         int index) {
       return models_.get(index);
     }
 
+    // repeated .hello.Transition forbiddeden_motion_transitions = 2;
+    public static final int FORBIDDEDEN_MOTION_TRANSITIONS_FIELD_NUMBER = 2;
+    private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> forbiddedenMotionTransitions_;
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> getForbiddedenMotionTransitionsList() {
+      return forbiddedenMotionTransitions_;
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+        getForbiddedenMotionTransitionsOrBuilderList() {
+      return forbiddedenMotionTransitions_;
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public int getForbiddedenMotionTransitionsCount() {
+      return forbiddedenMotionTransitions_.size();
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index) {
+      return forbiddedenMotionTransitions_.get(index);
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
+        int index) {
+      return forbiddedenMotionTransitions_.get(index);
+    }
+
     private void initFields() {
       models_ = java.util.Collections.emptyList();
+      forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3563,6 +4597,12 @@ public final class OnlineHmmProtos {
           return false;
         }
       }
+      for (int i = 0; i < getForbiddedenMotionTransitionsCount(); i++) {
+        if (!getForbiddedenMotionTransitions(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -3571,7 +4611,10 @@ public final class OnlineHmmProtos {
                         throws java.io.IOException {
       getSerializedSize();
       for (int i = 0; i < models_.size(); i++) {
-        output.writeMessage(2, models_.get(i));
+        output.writeMessage(1, models_.get(i));
+      }
+      for (int i = 0; i < forbiddedenMotionTransitions_.size(); i++) {
+        output.writeMessage(2, forbiddedenMotionTransitions_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -3584,7 +4627,11 @@ public final class OnlineHmmProtos {
       size = 0;
       for (int i = 0; i < models_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, models_.get(i));
+          .computeMessageSize(1, models_.get(i));
+      }
+      for (int i = 0; i < forbiddedenMotionTransitions_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, forbiddedenMotionTransitions_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3695,6 +4742,7 @@ public final class OnlineHmmProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getModelsFieldBuilder();
+          getForbiddedenMotionTransitionsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -3708,6 +4756,12 @@ public final class OnlineHmmProtos {
           bitField0_ = (bitField0_ & ~0x00000001);
         } else {
           modelsBuilder_.clear();
+        }
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          forbiddedenMotionTransitionsBuilder_.clear();
         }
         return this;
       }
@@ -3744,6 +4798,15 @@ public final class OnlineHmmProtos {
           result.models_ = models_;
         } else {
           result.models_ = modelsBuilder_.build();
+        }
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            forbiddedenMotionTransitions_ = java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.forbiddedenMotionTransitions_ = forbiddedenMotionTransitions_;
+        } else {
+          result.forbiddedenMotionTransitions_ = forbiddedenMotionTransitionsBuilder_.build();
         }
         onBuilt();
         return result;
@@ -3786,6 +4849,32 @@ public final class OnlineHmmProtos {
             }
           }
         }
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (!other.forbiddedenMotionTransitions_.isEmpty()) {
+            if (forbiddedenMotionTransitions_.isEmpty()) {
+              forbiddedenMotionTransitions_ = other.forbiddedenMotionTransitions_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureForbiddedenMotionTransitionsIsMutable();
+              forbiddedenMotionTransitions_.addAll(other.forbiddedenMotionTransitions_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.forbiddedenMotionTransitions_.isEmpty()) {
+            if (forbiddedenMotionTransitionsBuilder_.isEmpty()) {
+              forbiddedenMotionTransitionsBuilder_.dispose();
+              forbiddedenMotionTransitionsBuilder_ = null;
+              forbiddedenMotionTransitions_ = other.forbiddedenMotionTransitions_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              forbiddedenMotionTransitionsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getForbiddedenMotionTransitionsFieldBuilder() : null;
+            } else {
+              forbiddedenMotionTransitionsBuilder_.addAllMessages(other.forbiddedenMotionTransitions_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -3793,6 +4882,12 @@ public final class OnlineHmmProtos {
       public final boolean isInitialized() {
         for (int i = 0; i < getModelsCount(); i++) {
           if (!getModels(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        for (int i = 0; i < getForbiddedenMotionTransitionsCount(); i++) {
+          if (!getForbiddedenMotionTransitions(i).isInitialized()) {
             
             return false;
           }
@@ -3819,7 +4914,7 @@ public final class OnlineHmmProtos {
       }
       private int bitField0_;
 
-      // repeated .hello.AlphabetHmmPrior models = 2;
+      // repeated .hello.AlphabetHmmPrior models = 1;
       private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> models_ =
         java.util.Collections.emptyList();
       private void ensureModelsIsMutable() {
@@ -3833,7 +4928,7 @@ public final class OnlineHmmProtos {
           com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> modelsBuilder_;
 
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> getModelsList() {
         if (modelsBuilder_ == null) {
@@ -3843,7 +4938,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public int getModelsCount() {
         if (modelsBuilder_ == null) {
@@ -3853,7 +4948,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior getModels(int index) {
         if (modelsBuilder_ == null) {
@@ -3863,7 +4958,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder setModels(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior value) {
@@ -3880,7 +4975,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder setModels(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder builderForValue) {
@@ -3894,7 +4989,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder addModels(com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior value) {
         if (modelsBuilder_ == null) {
@@ -3910,7 +5005,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder addModels(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior value) {
@@ -3927,7 +5022,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder addModels(
           com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder builderForValue) {
@@ -3941,7 +5036,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder addModels(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder builderForValue) {
@@ -3955,7 +5050,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder addAllModels(
           java.lang.Iterable<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior> values) {
@@ -3969,7 +5064,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder clearModels() {
         if (modelsBuilder_ == null) {
@@ -3982,7 +5077,7 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public Builder removeModels(int index) {
         if (modelsBuilder_ == null) {
@@ -3995,14 +5090,14 @@ public final class OnlineHmmProtos {
         return this;
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder getModelsBuilder(
           int index) {
         return getModelsFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelsOrBuilder(
           int index) {
@@ -4012,7 +5107,7 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder> 
            getModelsOrBuilderList() {
@@ -4023,14 +5118,14 @@ public final class OnlineHmmProtos {
         }
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder addModelsBuilder() {
         return getModelsFieldBuilder().addBuilder(
             com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.getDefaultInstance());
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder addModelsBuilder(
           int index) {
@@ -4038,7 +5133,7 @@ public final class OnlineHmmProtos {
             index, com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.getDefaultInstance());
       }
       /**
-       * <code>repeated .hello.AlphabetHmmPrior models = 2;</code>
+       * <code>repeated .hello.AlphabetHmmPrior models = 1;</code>
        */
       public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.Builder> 
            getModelsBuilderList() {
@@ -4059,6 +5154,246 @@ public final class OnlineHmmProtos {
         return modelsBuilder_;
       }
 
+      // repeated .hello.Transition forbiddeden_motion_transitions = 2;
+      private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> forbiddedenMotionTransitions_ =
+        java.util.Collections.emptyList();
+      private void ensureForbiddedenMotionTransitionsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          forbiddedenMotionTransitions_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition>(forbiddedenMotionTransitions_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> forbiddedenMotionTransitionsBuilder_;
+
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> getForbiddedenMotionTransitionsList() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
+        } else {
+          return forbiddedenMotionTransitionsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public int getForbiddedenMotionTransitionsCount() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return forbiddedenMotionTransitions_.size();
+        } else {
+          return forbiddedenMotionTransitionsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return forbiddedenMotionTransitions_.get(index);
+        } else {
+          return forbiddedenMotionTransitionsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder setForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.set(index, value);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder setForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(value);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(index, value);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(
+          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(builderForValue.build());
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addAllForbiddedenMotionTransitions(
+          java.lang.Iterable<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> values) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          super.addAll(values, forbiddedenMotionTransitions_);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder clearForbiddedenMotionTransitions() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder removeForbiddedenMotionTransitions(int index) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.remove(index);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder getForbiddedenMotionTransitionsBuilder(
+          int index) {
+        return getForbiddedenMotionTransitionsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
+          int index) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return forbiddedenMotionTransitions_.get(index);  } else {
+          return forbiddedenMotionTransitionsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+           getForbiddedenMotionTransitionsOrBuilderList() {
+        if (forbiddedenMotionTransitionsBuilder_ != null) {
+          return forbiddedenMotionTransitionsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder addForbiddedenMotionTransitionsBuilder() {
+        return getForbiddedenMotionTransitionsFieldBuilder().addBuilder(
+            com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder addForbiddedenMotionTransitionsBuilder(
+          int index) {
+        return getForbiddedenMotionTransitionsFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder> 
+           getForbiddedenMotionTransitionsBuilderList() {
+        return getForbiddedenMotionTransitionsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+          getForbiddedenMotionTransitionsFieldBuilder() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          forbiddedenMotionTransitionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder>(
+                  forbiddedenMotionTransitions_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          forbiddedenMotionTransitions_ = null;
+        }
+        return forbiddedenMotionTransitionsBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.AlphabetHmmUserModel)
     }
 
@@ -4075,6 +5410,11 @@ public final class OnlineHmmProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_RealMatrix_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_Transition_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_Transition_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_AlphabetHmmPrior_descriptor;
   private static
@@ -4101,21 +5441,25 @@ public final class OnlineHmmProtos {
     java.lang.String[] descriptorData = {
       "\n\020online_hmm.proto\022\005hello\"J\n\nRealMatrix\022" +
       "\020\n\010num_rows\030\001 \002(\005\022\020\n\010num_cols\030\002 \002(\005\022\014\n\004d" +
-      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"\251\002\n\020AlphabetHmmPri" +
+      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"&\n\nTransition\022\014\n\004f" +
+      "rom\030\001 \002(\005\022\n\n\002to\030\002 \002(\005\"\352\002\n\020AlphabetHmmPri" +
       "or\022\n\n\002id\030\001 \001(\t\022\"\n\toutput_id\030\002 \001(\0162\017.hell" +
       "o.OutputId\022\030\n\020date_created_utc\030\003 \001(\003\022\030\n\020" +
       "date_updated_utc\030\004 \001(\003\0229\n\036log_state_tran" +
       "sition_numerator\030\005 \001(\0132\021.hello.RealMatri" +
       "x\022:\n\037log_observation_model_numerator\030\006 \003" +
-      "(\0132\021.hello.RealMatrix\022!\n\031log_observation" +
-      "_model_ids\030\007 \003(\t\022\027\n\017log_denominator\030\010 \003(",
-      "\001\"z\n\025AlphabetHmmScratchPad\022\034\n\024last_updat" +
-      "e_time_utc\030\001 \001(\003\022\024\n\014date_created\030\002 \001(\003\022-" +
-      "\n\014model_deltas\030\003 \003(\0132\027.hello.AlphabetHmm" +
-      "Prior\"?\n\024AlphabetHmmUserModel\022\'\n\006models\030" +
-      "\002 \003(\0132\027.hello.AlphabetHmmPrior*\036\n\010Output" +
-      "Id\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hello.suri" +
-      "pu.api.datascienceB\017OnlineHmmProtos"
+      "(\0132\021.hello.RealMatrix\022!\n\031log_observation",
+      "_model_ids\030\007 \003(\t\022\027\n\017log_denominator\030\010 \003(" +
+      "\001\022\n\n\002pi\030\t \003(\001\022\022\n\nend_states\030\n \003(\005\022\037\n\027min" +
+      "imum_state_durations\030\013 \003(\005\"z\n\025AlphabetHm" +
+      "mScratchPad\022\034\n\024last_update_time_utc\030\001 \001(" +
+      "\003\022\024\n\014date_created\030\002 \001(\003\022-\n\014model_deltas\030" +
+      "\003 \003(\0132\027.hello.AlphabetHmmPrior\"z\n\024Alphab" +
+      "etHmmUserModel\022\'\n\006models\030\001 \003(\0132\027.hello.A" +
+      "lphabetHmmPrior\0229\n\036forbiddeden_motion_tr" +
+      "ansitions\030\002 \003(\0132\021.hello.Transition*\036\n\010Ou" +
+      "tputId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hello.",
+      "suripu.api.datascienceB\017OnlineHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4128,24 +5472,30 @@ public final class OnlineHmmProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_RealMatrix_descriptor,
               new java.lang.String[] { "NumRows", "NumCols", "Data", "Id", });
-          internal_static_hello_AlphabetHmmPrior_descriptor =
+          internal_static_hello_Transition_descriptor =
             getDescriptor().getMessageTypes().get(1);
+          internal_static_hello_Transition_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_Transition_descriptor,
+              new java.lang.String[] { "From", "To", });
+          internal_static_hello_AlphabetHmmPrior_descriptor =
+            getDescriptor().getMessageTypes().get(2);
           internal_static_hello_AlphabetHmmPrior_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmPrior_descriptor,
-              new java.lang.String[] { "Id", "OutputId", "DateCreatedUtc", "DateUpdatedUtc", "LogStateTransitionNumerator", "LogObservationModelNumerator", "LogObservationModelIds", "LogDenominator", });
+              new java.lang.String[] { "Id", "OutputId", "DateCreatedUtc", "DateUpdatedUtc", "LogStateTransitionNumerator", "LogObservationModelNumerator", "LogObservationModelIds", "LogDenominator", "Pi", "EndStates", "MinimumStateDurations", });
           internal_static_hello_AlphabetHmmScratchPad_descriptor =
-            getDescriptor().getMessageTypes().get(2);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_hello_AlphabetHmmScratchPad_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmScratchPad_descriptor,
               new java.lang.String[] { "LastUpdateTimeUtc", "DateCreated", "ModelDeltas", });
           internal_static_hello_AlphabetHmmUserModel_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_hello_AlphabetHmmUserModel_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmUserModel_descriptor,
-              new java.lang.String[] { "Models", });
+              new java.lang.String[] { "Models", "ForbiddedenMotionTransitions", });
           return null;
         }
       };

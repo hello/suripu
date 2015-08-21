@@ -5,11 +5,11 @@ import com.hello.suripu.algorithm.bayes.SensorDataReduction;
 /**
  * Created by benjo on 7/7/15.
  */
-public class DeserializedSleepHmmBayesNetWithParams {
+public class DeserializedFeatureExtractionWithParams {
     public final SensorDataReduction sensorDataReduction;
-    public final HmmBayesNetMeasurementParameters params;
+    public final OnlineHmmMeasurementParameters params;
 
-    public DeserializedSleepHmmBayesNetWithParams(SensorDataReduction sensorDataReduction, HmmBayesNetMeasurementParameters params) {
+    public DeserializedFeatureExtractionWithParams(SensorDataReduction sensorDataReduction, OnlineHmmMeasurementParameters params) {
         this.sensorDataReduction = sensorDataReduction;
         this.params = params;
     }

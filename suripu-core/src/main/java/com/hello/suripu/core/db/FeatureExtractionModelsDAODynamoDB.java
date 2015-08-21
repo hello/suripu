@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.hello.suripu.core.util.HmmBayesNetData;
+import com.hello.suripu.core.util.FeatureExtractionModelData;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class FeatureExtractionModelsDAODynamoDB implements FeatureExtractionMode
     }
 
     @Override
-    public HmmBayesNetData getLatestModelForDate(final Long accountId, final DateTime dateTimeLocalUTC, final Optional<UUID> uuidForLogger) {
+    public FeatureExtractionModelData getLatestModelForDate(final Long accountId, final DateTime dateTimeLocalUTC, final Optional<UUID> uuidForLogger) {
 
         final String dateString = DateTimeUtil.dateToYmdString(dateTimeLocalUTC);
         byte [] protobufData = null;
@@ -90,7 +90,7 @@ public class FeatureExtractionModelsDAODynamoDB implements FeatureExtractionMode
 
         if (protobufData != null) {
             //decode blob if it exists
-            final HmmBayesNetData deserialization = new HmmBayesNetData(uuidForLogger);
+            final FeatureExtractionModelData deserialization = new FeatureExtractionModelData(uuidForLogger);
 
             deserialization.deserialize(protobufData);
 
@@ -99,7 +99,7 @@ public class FeatureExtractionModelsDAODynamoDB implements FeatureExtractionMode
         }
 
         //default object will be invalid
-        return new HmmBayesNetData(uuidForLogger);
+        return new FeatureExtractionModelData(uuidForLogger);
 
 
     }

@@ -40,7 +40,7 @@ public class MultiObsHmmTest {
 
         final Map<String, double[][]> rawmeasurements = Maps.newHashMap();
         final Map<Integer, Integer> labels = Maps.newHashMap();
-        final Multimap<Integer,MultiObsSequence.Transition> forbiddenTransitions = ArrayListMultimap.create();
+        final Multimap<Integer,Transition> forbiddenTransitions = ArrayListMultimap.create();
 
 
 

@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -176,14 +177,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         LOGGER.debug("End date: {}", endDate);
 
 
-
+        /*  GET SENSOR DATA  */
         final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
 
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
             return Optional.absent();
         }
-
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
@@ -361,20 +361,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return timelineUtils.getAlarmEvents(ringTimes, startQueryTime, endQueryTime, offsetMillis, DateTime.now(DateTimeZone.UTC));
     }
 
-    static protected class OneDaysSensorData {
-        final AllSensorSampleList allSensorSampleList;
-        final ImmutableList<TrackerMotion> trackerMotions;
-        final ImmutableList<TrackerMotion> partnerMotions;
-
-        public OneDaysSensorData(AllSensorSampleList allSensorSampleList, ImmutableList<TrackerMotion> trackerMotions, ImmutableList<TrackerMotion> partnerMotions) {
-            this.allSensorSampleList = allSensorSampleList;
-            this.trackerMotions = trackerMotions;
-            this.partnerMotions = partnerMotions;
-        }
-    }
-
-
-
 
 
 
@@ -433,7 +419,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
-
+        final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
 
@@ -457,7 +443,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             // query dates in utc_ts (table has an index for this)
             LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
 
-            final int tzOffsetMillis = trackerMotions.get(0).offsetMillis;
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                     targetDate.minusMillis(tzOffsetMillis).getMillis(),
                     endDate.minusMillis(tzOffsetMillis).getMillis(),
@@ -477,12 +462,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return Optional.absent();
         }
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions)));
+         /*  GET FEEDBACK  */
+        final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, tzOffsetMillis);
+
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),feedbackList));
 
     }
 
 
-    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, final ImmutableList<Event> extraEvents,
+    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate,
+                                           final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, final ImmutableList<Event> extraEvents,
                                            final OneDaysSensorData sensorData) {
 
         // compute lights-out and sound-disturbance events
@@ -492,6 +481,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final ImmutableList<TrackerMotion> trackerMotions = sensorData.trackerMotions;
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
+        final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
 
         if (!allSensorSampleList.isEmpty()) {
 
@@ -534,9 +524,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-
-        //  get the feedback in one form or another
-        final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
 
         //MOVE EVENTS BASED ON FEEDBACK
         final FeedbackUtils.ReprocessedEvents reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents),extraEvents, offsetMillis);
