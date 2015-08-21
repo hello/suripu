@@ -19,4 +19,9 @@ public class Transition {
         this.toState = toState;
         this.idx = idx;
     }
+
+    @Override
+    public Transition clone()  {
+        return new Transition(fromState,toState,idx);
+    }
 }

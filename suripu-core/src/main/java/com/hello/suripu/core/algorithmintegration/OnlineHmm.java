@@ -1,5 +1,8 @@
 package com.hello.suripu.core.algorithmintegration;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.hmm.MultiObsSequenceAlphabetHiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning.*;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -17,6 +20,9 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -25,12 +31,16 @@ import java.util.UUID;
  * Created by benjo on 8/20/15.
  */
 public class OnlineHmm {
+    public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 5;
+    public final static String DEFAULT_MODEL_KEY = "default";
+
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmm.class);
     private final Logger LOGGER;
 
     final FeatureExtractionModelsDAO featureExtractionModelsDAO;
     final OnlineHmmModelsDAO userModelDAO;
     final Optional<UUID> uuid;
+
 
     public OnlineHmm(final FeatureExtractionModelsDAO featureExtractionModelsDAO,final OnlineHmmModelsDAO userModelDAO,final Optional<UUID> uuid) {
         this.featureExtractionModelsDAO = featureExtractionModelsDAO;
@@ -39,6 +49,70 @@ public class OnlineHmm {
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
+    private OnlineHmmPriors updateModelPriors(final OnlineHmmPriors models, final OnlineHmmScratchPad newModel, final long startTimeUtc) {
+        final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
+        final List<Transition> forbiddenMotionTransitions = models.forbiddenMotionTransitions;
+
+
+        final OnlineHmmPriors updatedModels = models.clone();
+
+        //check to see if this scratchpad is old enough
+        //old enough == it was created yesterday or earlier
+        if (newModel.lastUpdateTimeUtc < startTimeUtc) {
+
+            //go through each and every model, first matching by outputid
+            for (final String outputId : newModel.paramsByOutputId.keySet()) {
+                final OnlineHmmModelParams param = newModel.paramsByOutputId.get(outputId);
+
+                //find the existing model params with this id
+                if (!updatedModels.modelsByOutputId.containsKey(outputId)) {
+                    LOGGER.error("did not find models with output id = {}",outputId);
+                    continue;
+                }
+
+                final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList(updatedModels.modelsByOutputId.get(outputId));
+
+
+                //add
+                modelsForThisOutput.add(param);
+
+                //sort by date last used
+                Collections.sort(modelsForThisOutput, new Comparator<OnlineHmmModelParams>() {
+                    @Override
+                    public int compare(final OnlineHmmModelParams o1, final OnlineHmmModelParams o2) {
+                        if (o1.timeUpdatedUtc < o2.timeUpdatedUtc) {
+                            return -1;
+                        }
+
+                        if (o1.timeUpdatedUtc > o2.timeUpdatedUtc) {
+                            return 1;
+                        }
+
+                        return 0;
+                    }
+                });
+
+                //ENFORCE MODEL LIMIT
+                //exceed model count?  trim the oldest
+                for (int i = modelsForThisOutput.size() - 1; i >= 0; i--) {
+
+                    if (modelsForThisOutput.size() <= MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT)  {
+                        break;
+                    }
+
+                    modelsForThisOutput.remove(i);
+                }
+
+                updatedModels.modelsByOutputId.put(outputId,modelsForThisOutput);
+
+            }
+
+        }
+
+        return updatedModels;
+
+
+    }
 
 
     public boolean predict(final long accountId,final DateTime targetDate, final long startTimeUtc, final long endTimeUtc, final int timezoneOffset,
@@ -82,40 +156,20 @@ public class OnlineHmm {
         }
 
         /*  CHECK TO SEE IF THE SCRATCH PAD SHOULD BE ADDED TO THE CURRENT MODEL */
+        /*
+            Here's how this is supposed to work:
+               if scratchpad is old enough (i.e. yesterday's or earlier), then we will add it to the model it was based from
+               we will, however, create a new model
+
+         */
         if (userModelData.scratchPad.isPresent()) {
             final OnlineHmmScratchPad scratchPad = userModelData.scratchPad.get();
 
-            //check to see if this scratchpad is old enough
-            //old enough == it was created yesterday or earlier
-            if (scratchPad.lastUpdateTimeUtc < startTimeUtc) {
+            //MANAGE THE TANGLE OF MODELS
+            final OnlineHmmPriors updatedModelPriors = updateModelPriors(modelPriors,scratchPad,startTimeUtc);
 
-                //go through each and every model, first matching by outputid
-                for (final String outputId : scratchPad.paramsByOutputId.keySet()) {
-                    final OnlineHmmModelParams param = scratchPad.paramsByOutputId.get(outputId);
-
-                    //find the existing model params with this id
-                    final List<OnlineHmmModelParams> models = modelPriors.modelsByOutputId.get(outputId);
-
-                    //linear search?  dafuq. fine.
-                    for (final OnlineHmmModelParams modelToUpdate : models) {
-                        if (modelToUpdate.id.equals(param.id)) {
-                            //winnar winnar chicken dinnar
-
-                            //UPDATE THE FUCKING MODEL
-                           //TODO update this shit
-                           // modelToUpdate.update(param);
-
-                        }
-                    }
-
-
-                }
-
-                //UPDATE THE FUCKING MODEL IN DYNAMO
-                userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,modelPriors);
-
-            }
-
+            //UPDATE THE MODEL IN DYNAMO
+            userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,updatedModelPriors);
 
         }
 

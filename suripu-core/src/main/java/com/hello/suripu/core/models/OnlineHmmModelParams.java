@@ -1,6 +1,12 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hello.suripu.algorithm.hmm.LogMath;
+
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by benjo on 8/19/15.
@@ -29,5 +35,64 @@ public class OnlineHmmModelParams {
         this.id = id;
         this.outputId = outputId;
     }
+
+    public double [][] clone2d (final double [][] x) {
+        final double [][] y = new double[x.length][];
+        for(int i = 0; i < x.length; i++) {
+            y[i] = x[i].clone();
+        }
+
+        return y;
+    }
+
+    public OnlineHmmModelParams clone() {
+        final Map<String,double [][]> logNumerator = Maps.newHashMap();
+
+        for (final String key : logAlphabetNumerators.keySet()) {
+            logNumerator.put(key,clone2d(logAlphabetNumerators.get(key)));
+        }
+
+
+        return new OnlineHmmModelParams(logNumerator,clone2d(logTransitionMatrixNumerator),logDenominator.clone(),pi.clone(),endStates.clone(),minStateDurations.clone(),timeCreatedUtc,timeUpdatedUtc,id,outputId);
+    }
+
+
+    /*
+    public OnlineHmmModelParams update(final OnlineHmmModelParams delta, final long updateTimeUtc, final double newPriorWeight) {
+        //update numerator and denominator
+        final double [][] logTransitionMatrixNumerator = LogMath.elnAddMatrix(this.logTransitionMatrixNumerator, delta.logTransitionMatrixNumerator);
+        final double [] logDenominator = LogMath.elnAddVector(this.logDenominator,delta.logDenominator);
+
+        final Map<String,double [][]> logNumerator = Maps.newHashMap();
+
+        final Set<String> thisKeys = Sets.newHashSet(this.logAlphabetNumerators.keySet());
+        final Set<String> deltaKeys = Sets.newHashSet(this.logAlphabetNumerators.keySet());
+
+        //set differences
+        thisKeys.removeAll(deltaKeys);
+        deltaKeys.removeAll(this.logAlphabetNumerators.keySet());
+
+        //TODO log if there are any differences
+
+
+        for (final String key : this.logAlphabetNumerators.keySet()) {
+            final double [][] thislogAlphabetNumerator = this.logAlphabetNumerators.get(key);
+            final double [][] deltalogAlphabetNumerator = delta.logAlphabetNumerators.get(key);
+
+            //if there is no match in the delta, then just place the original
+            if (deltalogAlphabetNumerator == null) {
+                logNumerator.put(key,thislogAlphabetNumerator);
+                continue;
+            }
+
+            logNumerator.put(key,LogMath.elnAddMatrix(thislogAlphabetNumerator,deltalogAlphabetNumerator));
+        }
+
+
+
+        return new OnlineHmmModelParams(logNumerator,logTransitionMatrixNumerator,logDenominator,pi,endStates,minStateDurations,updateTimeUtc,updateTimeUtc,id,outputId);
+
+    }
+    */
 
 }

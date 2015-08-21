@@ -4,8 +4,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.algorithm.hmm.MultiObsSequence;
+import com.hello.suripu.algorithm.hmm.*;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
+import com.hello.suripu.api.datascience.OnlineHmmProtos.Transition;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,29 @@ public class  OnlineHmmPriors {
         this.modelsByOutputId = modelsByOutputId;
         this.forbiddenMotionTransitions = forbiddenMotionTransitions;
     }
+
+    @Override
+    public OnlineHmmPriors clone() {
+        final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
+
+        for (final String key : modelsByOutputId.keySet()) {
+            final List<OnlineHmmModelParams> myList = Lists.newArrayList();
+            for (final OnlineHmmModelParams params : modelsByOutputId.get(key)) {
+                myList.add(params.clone());
+            }
+
+            modelsByOutputId.put(key,myList);
+        }
+
+        final List<com.hello.suripu.algorithm.hmm.Transition> myList = Lists.newArrayList();
+
+        for (final com.hello.suripu.algorithm.hmm.Transition transition : forbiddenMotionTransitions) {
+            myList.add(transition.clone());
+        }
+
+        return new OnlineHmmPriors(modelsByOutputId,myList);
+    }
+
 
     private static double [][] getMatrix(final RealMatrix protobuf) {
         final double [][] mtx = new double[protobuf.getNumRows()][protobuf.getNumCols()];
