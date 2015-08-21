@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -32,14 +33,14 @@ public class BedLightDuration {
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO) {
 
-        final List<Integer> lightOnList = new ArrayList<>();
+        final List<Integer> lightOnList = Lists.newArrayList();
 
         for (int i = 0; i >= 6; i++) {
             final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).minusDays(i);
             final DateTime queryStartTime = DateTime.now(DateTimeZone.UTC).minusDays(i + 1);
             // get light data > some threshold between the hours of 9pm and 4am
-            List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);
-            Optional<Integer> lightOnDuration = processLightDataOneDay(rows, OFF_MINUTES_THRESHOLD);
+            final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);
+            final Optional<Integer> lightOnDuration = processLightDataOneDay(rows, OFF_MINUTES_THRESHOLD);
             if (lightOnDuration.isPresent()) {
                 lightOnList.add(lightOnDuration.get());
             }
