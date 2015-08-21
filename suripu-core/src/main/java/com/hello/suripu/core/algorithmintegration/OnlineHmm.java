@@ -97,10 +97,43 @@ public class OnlineHmm {
         /*  RUN THE FEATURE EXTRACTION LAYER */
         final Map<String,ImmutableList<Integer>> pathsByModelId = featureExtractionModels.sensorDataReduction.getPathsFromSensorData(binnedData.data);
 
-
+        /*  FIND THE BEST MODELS */
         final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(uuid);
-
         final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId = evaluator.evaluate(modelPriors,pathsByModelId,binnedData.forbiddenTransitions);
+
+        /*  DO SOMETHING WITH THE BEST PREDICTIONS */
+        for (final String outputId : bestDecodedResultsByOutputId.keySet()) {
+            final MultiEvalHmmDecodedResult result = bestDecodedResultsByOutputId.get(outputId);
+
+            if (result.transitions.size() < 2) {
+                LOGGER.info("not enough transitions found for output id {}",outputId);
+                continue;
+            }
+
+            switch (outputId) {
+
+                //TODO replace with a factory
+                case OnlineHmmData.OUTPUT_MODEL_SLEEP:
+                {
+                    final int sleepIdx = result.transitions.get(0).idx;
+                    final int wakeIdx = result.transitions.get(1).idx;
+
+                    //TODO turn this into events
+                    break;
+                }
+
+                case OnlineHmmData.OUTPUT_MODEL_BED:
+                {
+                    final int inBedIdx = result.transitions.get(0).idx;
+                    final int outOfBedIdx = result.transitions.get(1).idx;
+                    //TODO turn this into events
+
+                    break;
+                }
+
+            }
+
+        }
 
        // MultiObsSequenceAlphabetHiddenMarkovModel uberHmm = new MultiObsSequenceAlphabetHiddenMarkovModel()
 

@@ -23,7 +23,7 @@ public class MultiEvalHmmDecodedResult {
 
         for (int t = 0; t < path.length - 1; t++) {
             if (path[t] != path[t+1]) {
-                transitions.add(new Transition(path[t],path[t+1]));
+                transitions.add(new Transition(path[t],path[t+1],t));
             }
         }
     }
