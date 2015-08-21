@@ -361,6 +361,7 @@ public class ReceiveResource extends BaseResource {
                     .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
                     .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
             responseBuilder.setAlarm(alarmBuilder.build());
+            responseBuilder.setRingTimeAck(String.valueOf(nextRingTime.actualRingTimeUTC));
             // End generate protobuf for alarm
 
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
