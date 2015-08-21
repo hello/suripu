@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
+import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.util.DeserializedFeatureExtractionWithParams;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
@@ -55,22 +56,38 @@ public class OnlineHmm {
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
 
          /* GET THE USER-SPECIFIC MODEL PARAMETERS FOR THE ONE HMM TO RULE THEM ALL */
-        final OnlineHmmData uberHmmModelData = userModelDAO.getModelDataByAccountId(accountId);
+        final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId);
 
 
         OnlineHmmPriors modelPriors = null;
 
-        if (!uberHmmModelData.modelPriors.isPresent()) {
+        if (!userModelData.modelPriors.isPresent()) {
             LOGGER.info("creating default model data for account {}",accountId);
 
             //TODO create default model data and store it in dynamo
            // userModelDAO.updateModelPriors(...)
+
+            //TODO compare models used in feature extraction layer vs what's in the model priors
+            //if there's a new model in the feature extraction layer, go get the default for that model
+
+
 
         }
 
         if (modelPriors == null) {
             LOGGER.error("somehow never got model priors for account {}",accountId);
             return false;
+        }
+
+        /*  CHECK TO SEE IF THE SCRATCH PAD SHOULD BE ADDED TO THE CURRENT MODEL */
+        if (userModelData.scratchPad.isPresent()) {
+            final OnlineHmmScratchPad scratchPad = userModelData.scratchPad.get();
+
+            //check to see if this scratchpad is old enough
+            //old enough == it was created yesterday or earlier
+            //if (scratchPad.createdTimeUtc < startTimeUtc - 60000L * 60L
+
+
         }
 
 
@@ -133,6 +150,21 @@ public class OnlineHmm {
 
             }
 
+
+/*
+
+filtering the scratchpad inputs:
+I gave feedback for the previous night—thats okay
+I gave feedback for two days ago — let’s ignore that
+
+ */
+
+            /*
+            if (feedbackHasChanged) {
+                feedbackList.get(0).
+                //MAKE A NEW FUCKING MODEL SCRATCHPAD
+            }
+            */
         }
 
        // MultiObsSequenceAlphabetHiddenMarkovModel uberHmm = new MultiObsSequenceAlphabetHiddenMarkovModel()
