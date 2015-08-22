@@ -921,6 +921,21 @@ public final class OnlineHmmProtos {
      * <code>required int32 to = 2;</code>
      */
     int getTo();
+
+    // optional string output_id = 3;
+    /**
+     * <code>optional string output_id = 3;</code>
+     */
+    boolean hasOutputId();
+    /**
+     * <code>optional string output_id = 3;</code>
+     */
+    java.lang.String getOutputId();
+    /**
+     * <code>optional string output_id = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getOutputIdBytes();
   }
   /**
    * Protobuf type {@code hello.Transition}
@@ -981,6 +996,11 @@ public final class OnlineHmmProtos {
             case 16: {
               bitField0_ |= 0x00000002;
               to_ = input.readInt32();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              outputId_ = input.readBytes();
               break;
             }
           }
@@ -1055,9 +1075,53 @@ public final class OnlineHmmProtos {
       return to_;
     }
 
+    // optional string output_id = 3;
+    public static final int OUTPUT_ID_FIELD_NUMBER = 3;
+    private java.lang.Object outputId_;
+    /**
+     * <code>optional string output_id = 3;</code>
+     */
+    public boolean hasOutputId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string output_id = 3;</code>
+     */
+    public java.lang.String getOutputId() {
+      java.lang.Object ref = outputId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          outputId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string output_id = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getOutputIdBytes() {
+      java.lang.Object ref = outputId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        outputId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       from_ = 0;
       to_ = 0;
+      outputId_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1085,6 +1149,9 @@ public final class OnlineHmmProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeInt32(2, to_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getOutputIdBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1101,6 +1168,10 @@ public final class OnlineHmmProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, to_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getOutputIdBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1222,6 +1293,8 @@ public final class OnlineHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000001);
         to_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
+        outputId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -1258,6 +1331,10 @@ public final class OnlineHmmProtos {
           to_bitField0_ |= 0x00000002;
         }
         result.to_ = to_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.outputId_ = outputId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1279,6 +1356,11 @@ public final class OnlineHmmProtos {
         }
         if (other.hasTo()) {
           setTo(other.getTo());
+        }
+        if (other.hasOutputId()) {
+          bitField0_ |= 0x00000004;
+          outputId_ = other.outputId_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1377,6 +1459,80 @@ public final class OnlineHmmProtos {
       public Builder clearTo() {
         bitField0_ = (bitField0_ & ~0x00000002);
         to_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string output_id = 3;
+      private java.lang.Object outputId_ = "";
+      /**
+       * <code>optional string output_id = 3;</code>
+       */
+      public boolean hasOutputId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string output_id = 3;</code>
+       */
+      public java.lang.String getOutputId() {
+        java.lang.Object ref = outputId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          outputId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string output_id = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getOutputIdBytes() {
+        java.lang.Object ref = outputId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          outputId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string output_id = 3;</code>
+       */
+      public Builder setOutputId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        outputId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string output_id = 3;</code>
+       */
+      public Builder clearOutputId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        outputId_ = getDefaultInstance().getOutputId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string output_id = 3;</code>
+       */
+      public Builder setOutputIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        outputId_ = value;
         onChanged();
         return this;
       }
@@ -5366,25 +5522,25 @@ public final class OnlineHmmProtos {
     java.lang.String[] descriptorData = {
       "\n\020online_hmm.proto\022\005hello\"J\n\nRealMatrix\022" +
       "\020\n\010num_rows\030\001 \002(\005\022\020\n\010num_cols\030\002 \002(\005\022\014\n\004d" +
-      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"&\n\nTransition\022\014\n\004f" +
-      "rom\030\001 \002(\005\022\n\n\002to\030\002 \002(\005\"\352\002\n\020AlphabetHmmPri" +
-      "or\022\n\n\002id\030\001 \001(\t\022\"\n\toutput_id\030\002 \001(\0162\017.hell" +
-      "o.OutputId\022\030\n\020date_created_utc\030\003 \001(\003\022\030\n\020" +
-      "date_updated_utc\030\004 \001(\003\0229\n\036log_state_tran" +
-      "sition_numerator\030\005 \001(\0132\021.hello.RealMatri" +
-      "x\022:\n\037log_observation_model_numerator\030\006 \003" +
-      "(\0132\021.hello.RealMatrix\022!\n\031log_observation",
-      "_model_ids\030\007 \003(\t\022\027\n\017log_denominator\030\010 \003(" +
-      "\001\022\n\n\002pi\030\t \003(\001\022\022\n\nend_states\030\n \003(\005\022\037\n\027min" +
-      "imum_state_durations\030\013 \003(\005\"e\n\025AlphabetHm" +
-      "mScratchPad\022\035\n\025last_date_updated_utc\030\001 \001" +
-      "(\003\022-\n\014model_deltas\030\002 \003(\0132\027.hello.Alphabe" +
-      "tHmmPrior\"z\n\024AlphabetHmmUserModel\022\'\n\006mod" +
-      "els\030\001 \003(\0132\027.hello.AlphabetHmmPrior\0229\n\036fo" +
-      "rbiddeden_motion_transitions\030\002 \003(\0132\021.hel" +
-      "lo.Transition*\036\n\010OutputId\022\t\n\005SLEEP\020\000\022\007\n\003" +
-      "BED\020\001B3\n com.hello.suripu.api.datascienc",
-      "eB\017OnlineHmmProtos"
+      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"9\n\nTransition\022\014\n\004f" +
+      "rom\030\001 \002(\005\022\n\n\002to\030\002 \002(\005\022\021\n\toutput_id\030\003 \001(\t" +
+      "\"\352\002\n\020AlphabetHmmPrior\022\n\n\002id\030\001 \001(\t\022\"\n\tout" +
+      "put_id\030\002 \001(\0162\017.hello.OutputId\022\030\n\020date_cr" +
+      "eated_utc\030\003 \001(\003\022\030\n\020date_updated_utc\030\004 \001(" +
+      "\003\0229\n\036log_state_transition_numerator\030\005 \001(" +
+      "\0132\021.hello.RealMatrix\022:\n\037log_observation_" +
+      "model_numerator\030\006 \003(\0132\021.hello.RealMatrix",
+      "\022!\n\031log_observation_model_ids\030\007 \003(\t\022\027\n\017l" +
+      "og_denominator\030\010 \003(\001\022\n\n\002pi\030\t \003(\001\022\022\n\nend_" +
+      "states\030\n \003(\005\022\037\n\027minimum_state_durations\030" +
+      "\013 \003(\005\"e\n\025AlphabetHmmScratchPad\022\035\n\025last_d" +
+      "ate_updated_utc\030\001 \001(\003\022-\n\014model_deltas\030\002 " +
+      "\003(\0132\027.hello.AlphabetHmmPrior\"z\n\024Alphabet" +
+      "HmmUserModel\022\'\n\006models\030\001 \003(\0132\027.hello.Alp" +
+      "habetHmmPrior\0229\n\036forbiddeden_motion_tran" +
+      "sitions\030\002 \003(\0132\021.hello.Transition*\036\n\010Outp" +
+      "utId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hello.su",
+      "ripu.api.datascienceB\017OnlineHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5402,7 +5558,7 @@ public final class OnlineHmmProtos {
           internal_static_hello_Transition_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_Transition_descriptor,
-              new java.lang.String[] { "From", "To", });
+              new java.lang.String[] { "From", "To", "OutputId", });
           internal_static_hello_AlphabetHmmPrior_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_hello_AlphabetHmmPrior_fieldAccessorTable = new

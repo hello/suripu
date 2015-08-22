@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
@@ -18,9 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 3/20/15.
@@ -36,13 +39,13 @@ public class OnlineHmmSensorDataBinning {
 
     static public class BinnedData {
         public final double[][] data;
-        public final Multimap<Integer, Transition> forbiddenTransitions;
+        public final Map<String,Multimap<Integer, Transition>> forbiddenTransitionsByOutputId;
         public final int numMinutesInWindow;
         public final long t0;
 
-        public BinnedData(double[][] data, final Multimap<Integer, Transition> forbiddenTransitions, int numMinutesInWindow,final long t0) {
+        public BinnedData(double[][] data, final Map<String,Multimap<Integer, Transition>> forbiddenTransitionsByOutputId, int numMinutesInWindow,final long t0) {
             this.data = data;
-            this.forbiddenTransitions = forbiddenTransitions;
+            this.forbiddenTransitionsByOutputId = forbiddenTransitionsByOutputId;
             this.numMinutesInWindow = numMinutesInWindow;
             this.t0 = t0;
         }
@@ -78,7 +81,7 @@ public class OnlineHmmSensorDataBinning {
     *
     * */
     static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final List<TrackerMotion> pillData,final List<TrackerMotion> partnerPillData,final OnlineHmmMeasurementParameters params,
-                                                           final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset,final List<Transition> forbiddenMotionTransitions) {
+                                                           final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset,final Multimap<String,Transition> forbiddenMotionTransitions) {
 
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
@@ -299,20 +302,33 @@ public class OnlineHmmSensorDataBinning {
         //fill out the indices of the FORBIDDEN TRANSITIONS.  FORBIDDEN!
 
         final double [] motion = data[SleepHmmBayesNetProtos.MeasType.MOTION_DURATION_VALUE];
-        final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
+        final Map<String,Multimap<Integer, Transition>> forbiddenTransitionsByOutputId = Maps.newHashMap();
 
-        for (int t = 0; t < motion.length - 1; t++) {
-            //so the rule is, unless I have two consecutive bins of motion,
-            //I can't transition from sleep to wake, or whatever the fuck is specified here
-            if ( !(motion[t] > 0.0 && motion[t+1] > 0.0) ) {
 
-                for (final Transition transition : forbiddenMotionTransitions) {
-                    forbiddenTransitions.put(t,transition);
+        //fuck this is complicated.
+        //at one timestep, for any output, you can have multiple transitions that are forbidden
+        //this blob of code is for applies the rules (outputId == sleep, you can't go from state 1 to state 2 unless there's two conseutive
+        //periods of motion) for each time step
+        for (final String outputId : forbiddenMotionTransitions.keySet()) {
+
+            final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
+            final Collection<Transition> forbiddenTransitionListForThisOutputId = forbiddenMotionTransitions.get(outputId);
+
+            for (int t = 0; t < motion.length - 1; t++) {
+                //so the rule is, unless I have two consecutive bins of motion,
+                //I can't transition from sleep to wake, or whatever the fuck is specified here
+                if (!(motion[t] > 0.0 && motion[t + 1] > 0.0)) {
+
+                    for (final Transition transition : forbiddenTransitionListForThisOutputId) {
+                        forbiddenTransitions.put(t, transition);
+                    }
                 }
             }
+
+            forbiddenTransitionsByOutputId.put(outputId,forbiddenTransitions);
         }
 
-        return Optional.of(new BinnedData(data,forbiddenTransitions,numMinutesInWindow,startTimeMillisInUTC));
+        return Optional.of(new BinnedData(data,forbiddenTransitionsByOutputId,numMinutesInWindow,startTimeMillisInUTC));
     }
 
 

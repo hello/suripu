@@ -1,6 +1,7 @@
 package com.hello.suripu.core.algorithmintegration;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -50,25 +51,39 @@ public class OnlineHmmModelEvaluator {
     }
 
     /* evaluates all models and picks the best  */
-    public Map<String,MultiEvalHmmDecodedResult> evaluate(final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features,final Multimap<Integer, Transition> forbiddenTransition) {
+    public Map<String,MultiEvalHmmDecodedResult> evaluate(final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features,final Map<String,Multimap<Integer, Transition>> forbiddenTransitionByOutputId) {
 
-        final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransition);
 
         final Map<String,MultiEvalHmmDecodedResult> bestModels = Maps.newHashMap();
 
+        //create result for each output Id
         for (final String outputId : priors.modelsByOutputId.keySet()) {
 
+            //get the transitions restrictions by timestep for this outputId
+            Multimap<Integer, Transition> forbiddenTransitions = forbiddenTransitionByOutputId.get(outputId);
+
+            if (forbiddenTransitions == null) {
+                forbiddenTransitions = ArrayListMultimap.create(); //make an empty one
+            }
+
+            //get the measurement sequence with restrictions and labels (the labels will be empty here)
+            final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions);
+
+            //NOW GO THROUGH EACH MODEL IN THE LIST AND EVALUATE THEM
             double bestScore = Double.NEGATIVE_INFINITY;
             MultiObsSequenceAlphabetHiddenMarkovModel.Result bestResult = null;
             String bestModel = null;
 
+            //get the list of models to evaluate
             final List<OnlineHmmModelParams> paramsList = priors.modelsByOutputId.get(outputId);
 
+            //evaluate
             for (final OnlineHmmModelParams params : paramsList) {
                 final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
 
                 final MultiObsSequenceAlphabetHiddenMarkovModel.Result result =  hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);
 
+                //track the best
                 if (result.pathScore > bestScore) {
                     bestScore = result.pathScore;
                     bestResult = result;
@@ -80,6 +95,7 @@ public class OnlineHmmModelEvaluator {
                 throw new AlgorithmException("somehow never evaluated any models");
             }
 
+            //store by outputId
             bestModels.put(outputId,new MultiEvalHmmDecodedResult(bestResult.path,bestResult.pathScore,bestModel));
         }
 

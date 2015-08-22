@@ -57,42 +57,5 @@ public class OnlineHmmModelParams {
     }
 
 
-    /*
-    public OnlineHmmModelParams update(final OnlineHmmModelParams delta, final long updateTimeUtc, final double newPriorWeight) {
-        //update numerator and denominator
-        final double [][] logTransitionMatrixNumerator = LogMath.elnAddMatrix(this.logTransitionMatrixNumerator, delta.logTransitionMatrixNumerator);
-        final double [] logDenominator = LogMath.elnAddVector(this.logDenominator,delta.logDenominator);
-
-        final Map<String,double [][]> logNumerator = Maps.newHashMap();
-
-        final Set<String> thisKeys = Sets.newHashSet(this.logAlphabetNumerators.keySet());
-        final Set<String> deltaKeys = Sets.newHashSet(this.logAlphabetNumerators.keySet());
-
-        //set differences
-        thisKeys.removeAll(deltaKeys);
-        deltaKeys.removeAll(this.logAlphabetNumerators.keySet());
-
-        //TODO log if there are any differences
-
-
-        for (final String key : this.logAlphabetNumerators.keySet()) {
-            final double [][] thislogAlphabetNumerator = this.logAlphabetNumerators.get(key);
-            final double [][] deltalogAlphabetNumerator = delta.logAlphabetNumerators.get(key);
-
-            //if there is no match in the delta, then just place the original
-            if (deltalogAlphabetNumerator == null) {
-                logNumerator.put(key,thislogAlphabetNumerator);
-                continue;
-            }
-
-            logNumerator.put(key,LogMath.elnAddMatrix(thislogAlphabetNumerator,deltalogAlphabetNumerator));
-        }
-
-
-
-        return new OnlineHmmModelParams(logNumerator,logTransitionMatrixNumerator,logDenominator,pi,endStates,minStateDurations,updateTimeUtc,updateTimeUtc,id,outputId);
-
-    }
-    */
 
 }

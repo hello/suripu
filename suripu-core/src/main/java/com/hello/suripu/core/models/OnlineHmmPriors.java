@@ -1,12 +1,16 @@
 package com.hello.suripu.core.models;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.algorithm.hmm.*;
+import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.Transition;
+import org.apache.commons.codec.binary.Base64;
 
 import java.util.List;
 import java.util.Map;
@@ -16,12 +20,12 @@ import java.util.Map;
  */
 public class  OnlineHmmPriors {
 
-    public final Map<String,List<OnlineHmmModelParams>> modelsByOutputId;
-    public final List<com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions;
+    public final Map<String, List<OnlineHmmModelParams>> modelsByOutputId;
+    public final Multimap<String,com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitionsByOutputId;
 
-    private OnlineHmmPriors(Map<String, List<OnlineHmmModelParams>> modelsByOutputId,final List<com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions) {
+    private OnlineHmmPriors(Map<String, List<OnlineHmmModelParams>> modelsByOutputId, final Multimap<String,com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions) {
         this.modelsByOutputId = modelsByOutputId;
-        this.forbiddenMotionTransitions = forbiddenMotionTransitions;
+        this.forbiddenMotionTransitionsByOutputId = forbiddenMotionTransitions;
     }
 
     @Override
@@ -34,21 +38,19 @@ public class  OnlineHmmPriors {
                 myList.add(params.clone());
             }
 
-            modelsByOutputId.put(key,myList);
+            modelsByOutputId.put(key, myList);
         }
 
-        final List<com.hello.suripu.algorithm.hmm.Transition> myList = Lists.newArrayList();
+        final  Multimap<String,com.hello.suripu.algorithm.hmm.Transition> myMap = ArrayListMultimap.create();
 
-        for (final com.hello.suripu.algorithm.hmm.Transition transition : forbiddenMotionTransitions) {
-            myList.add(transition.clone());
-        }
+        myMap.putAll(forbiddenMotionTransitionsByOutputId);
 
-        return new OnlineHmmPriors(modelsByOutputId,myList);
+        return new OnlineHmmPriors(modelsByOutputId, myMap);
     }
 
 
-    private static double [][] getMatrix(final RealMatrix protobuf) {
-        final double [][] mtx = new double[protobuf.getNumRows()][protobuf.getNumCols()];
+    private static double[][] getMatrix(final RealMatrix protobuf) {
+        final double[][] mtx = new double[protobuf.getNumRows()][protobuf.getNumCols()];
 
         int k = 0;
         for (int j = 0; j < protobuf.getNumRows(); j++) {
@@ -61,7 +63,7 @@ public class  OnlineHmmPriors {
         return mtx;
     }
 
-    private static RealMatrix getProtobufMatrix(final double [][] mtx) {
+    private static RealMatrix getProtobufMatrix(final double[][] mtx) {
         final List<Double> vec = Lists.newArrayList();
 
         final int numRows = mtx.length;
@@ -83,7 +85,7 @@ public class  OnlineHmmPriors {
                 !protobuf.hasOutputId() ||
                 !protobuf.hasLogStateTransitionNumerator() ||
                 protobuf.getLogDenominatorCount() == 0 ||
-                protobuf.getLogObservationModelNumeratorCount() == 0||
+                protobuf.getLogObservationModelNumeratorCount() == 0 ||
                 protobuf.getPiCount() == 0 ||
                 protobuf.getEndStatesCount() == 0) {
             return Optional.absent();
@@ -101,24 +103,24 @@ public class  OnlineHmmPriors {
             timeUpdated = protobuf.getDateUpdatedUtc();
         }
 
-        final double [][] logStateTransition = getMatrix(protobuf.getLogStateTransitionNumerator());
+        final double[][] logStateTransition = getMatrix(protobuf.getLogStateTransitionNumerator());
 
-        final double [] logDenominator = new double[protobuf.getLogDenominatorCount()];
+        final double[] logDenominator = new double[protobuf.getLogDenominatorCount()];
         for (int i = 0; i < protobuf.getLogDenominatorCount(); i++) {
             logDenominator[i] = protobuf.getLogDenominator(i);
         }
 
-        final double [] pi = new double[protobuf.getPiCount()];
+        final double[] pi = new double[protobuf.getPiCount()];
         for (int i = 0; i < protobuf.getPiCount(); i++) {
             pi[i] = protobuf.getPi(i);
         }
 
-        final int [] endStates = new int[protobuf.getEndStatesCount()];
+        final int[] endStates = new int[protobuf.getEndStatesCount()];
         for (int i = 0; i < protobuf.getEndStatesCount(); i++) {
             endStates[i] = protobuf.getEndStates(i);
         }
 
-        final int [] minStateDurations = new int[protobuf.getMinimumStateDurationsCount()];
+        final int[] minStateDurations = new int[protobuf.getMinimumStateDurationsCount()];
         for (int i = 0; i < protobuf.getMinimumStateDurationsCount(); i++) {
             minStateDurations[i] = protobuf.getMinimumStateDurations(i);
         }
@@ -126,10 +128,10 @@ public class  OnlineHmmPriors {
         final Map<String, double[][]> logAlphabetNumerators = Maps.newHashMap();
 
         for (int i = 0; i < protobuf.getLogObservationModelNumeratorCount(); i++) {
-            final double [][] mtx = getMatrix(protobuf.getLogObservationModelNumerator(i));
+            final double[][] mtx = getMatrix(protobuf.getLogObservationModelNumerator(i));
             final String modelId = protobuf.getLogObservationModelIds(i);
 
-            logAlphabetNumerators.put(modelId,mtx);
+            logAlphabetNumerators.put(modelId, mtx);
         }
 
         String outputId = "unknown";
@@ -144,15 +146,15 @@ public class  OnlineHmmPriors {
                 break;
         }
 
-        return Optional.of(new OnlineHmmModelParams(logAlphabetNumerators,logStateTransition,logDenominator,pi,endStates,minStateDurations,timeCreated,timeUpdated,protobuf.getId(),outputId));
+        return Optional.of(new OnlineHmmModelParams(logAlphabetNumerators, logStateTransition, logDenominator, pi, endStates, minStateDurations, timeCreated, timeUpdated, protobuf.getId(), outputId));
 
     }
 
-    public static Optional<OnlineHmmPriors> createFromProtoBuf(final byte [] data) {
+    public static Optional<OnlineHmmPriors> createFromProtoBuf(final byte[] data) {
         try {
             final AlphabetHmmUserModel protobuf = AlphabetHmmUserModel.parseFrom(data);
 
-            final Map<String,List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
+            final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
             for (final AlphabetHmmPrior prior : protobuf.getModelsList()) {
                 final Optional<OnlineHmmModelParams> paramsOptional = protobufToParams(prior);
@@ -172,22 +174,21 @@ public class  OnlineHmmPriors {
             }
 
 
-            List<com.hello.suripu.algorithm.hmm.Transition> transitions = Lists.newArrayList();
+            Multimap<String,com.hello.suripu.algorithm.hmm.Transition> transitions = ArrayListMultimap.create();
             for (final Transition transition : protobuf.getForbiddedenMotionTransitionsList()) {
-                transitions.add(new com.hello.suripu.algorithm.hmm.Transition(transition.getFrom(),transition.getTo()));
+                transitions.put(transition.getOutputId(),new com.hello.suripu.algorithm.hmm.Transition(transition.getFrom(), transition.getTo()));
             }
 
-            return Optional.of(new OnlineHmmPriors(modelsByOutputId,transitions));
+            return Optional.of(new OnlineHmmPriors(modelsByOutputId, transitions));
 
 
-        }
-        catch (InvalidProtocolBufferException e) {
+        } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
             return Optional.absent();
         }
     }
 
-    private static List<Double> getDoubleList(final double [] x) {
+    private static List<Double> getDoubleList(final double[] x) {
         List<Double> list = Lists.newArrayList();
 
         for (int i = 0; i < x.length; i++) {
@@ -203,8 +204,7 @@ public class  OnlineHmmPriors {
 
         if (params.id.equals(OnlineHmmData.OUTPUT_MODEL_BED)) {
             outputId = OutputId.BED;
-        }
-        else if (params.id.equals(OnlineHmmData.OUTPUT_MODEL_SLEEP)) {
+        } else if (params.id.equals(OnlineHmmData.OUTPUT_MODEL_SLEEP)) {
             outputId = OutputId.SLEEP;
         }
 
@@ -224,7 +224,7 @@ public class  OnlineHmmPriors {
         builder.addAllLogObservationModelIds(params.logAlphabetNumerators.keySet());
 
         for (final String key : params.logAlphabetNumerators.keySet()) {
-            final double [][] mtx = params.logAlphabetNumerators.get(key);
+            final double[][] mtx = params.logAlphabetNumerators.get(key);
             builder.addLogObservationModelNumerator(getProtobufMatrix(mtx));
         }
 
@@ -233,7 +233,7 @@ public class  OnlineHmmPriors {
         return builder.build();
     }
 
-    public byte [] serializeToProtobuf() {
+    public byte[] serializeToProtobuf() {
 
         final AlphabetHmmUserModel.Builder builder = AlphabetHmmUserModel.newBuilder();
 
@@ -247,4 +247,14 @@ public class  OnlineHmmPriors {
 
         return builder.build().toByteArray();
     }
+
+
+    private static String defaultModel = "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";
+
+
+    public static Optional<OnlineHmmPriors> createDefaultPrior() {
+        return createFromProtoBuf(Base64.decodeBase64(defaultModel));
+    }
 }
+
+
