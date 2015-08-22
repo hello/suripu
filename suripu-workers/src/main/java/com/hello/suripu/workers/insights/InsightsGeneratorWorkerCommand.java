@@ -22,6 +22,7 @@ import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -164,6 +165,10 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 configuration.getSleepStatsDynamoConfiguration().getTableName(),
                 configuration.getSleepStatsVersion());
 
+        final AmazonDynamoDB dynamoDBTimeZoneClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(dynamoDBTimeZoneClient,
+                configuration.getTimeZoneHistoryDynamoDBConfiguration().getTableName());
+
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
@@ -182,6 +187,7 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 trendsInsightsDAO,
                 questionResponseDAO,
                 sleepStatsDAODynamoDB,
+                timeZoneHistoryDAODynamoDB,
                 lightData,
                 wakeStdDevData,
                 accountPreferencesDynamoDB);

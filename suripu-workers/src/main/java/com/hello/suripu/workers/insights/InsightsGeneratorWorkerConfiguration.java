@@ -84,6 +84,12 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
+    @JsonProperty("time_zone_history_db")
+    private DynamoDBConfiguration timeZoneHistoryDynamoDBConfiguration;
+    public DynamoDBConfiguration getTimeZoneHistoryDynamoDBConfiguration() { return this.timeZoneHistoryDynamoDBConfiguration; }
+
+    @Valid
+    @NotNull
     @JsonProperty("sleep_stats_version")
     private String sleepStatsVersion;
     public String getSleepStatsVersion() {
