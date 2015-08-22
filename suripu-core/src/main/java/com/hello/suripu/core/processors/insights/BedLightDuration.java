@@ -38,7 +38,7 @@ public class BedLightDuration {
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
 
         final Optional<TimeZoneHistory> timeZoneHistory = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        if (timeZoneHistory.isPresent() == Boolean.FALSE) {
+        if (!timeZoneHistory.isPresent()) {
             return Optional.absent();
         }
         final Integer timeZoneOffset = timeZoneHistory.get().offsetMillis;
@@ -52,20 +52,21 @@ public class BedLightDuration {
         //List containing period light is on each night last week
         final List<Integer> lightOnList = Lists.newArrayList();
 
-        final List<Integer> dayIndices = Lists.newArrayList();
-        dayIndices.add(0);
+        int deviceDataIndex = 1; //not final
         for (DeviceData deviceData : totalRows) {
-            DeviceData previousDeviceData = totalRows.get(totalRows.indexOf(deviceData) - 1);
+            DeviceData previousDeviceData = totalRows.get(deviceDataIndex - 1);
             boolean sameDay = sameDay(deviceData, previousDeviceData);
             if (sameDay) {
+                deviceDataIndex ++;
                 continue;
             }
-            final Integer startDayTomorrowIndex = totalRows.indexOf(deviceData);
-            List<DeviceData> rows = totalRows.subList(Iterables.getLast(dayIndices), startDayTomorrowIndex);
+            final Integer startDayTomorrowIndex = deviceDataIndex;
+            List<DeviceData> rows = totalRows.subList(deviceDataIndex - 1, startDayTomorrowIndex);
             final Optional<Integer> lightOnDuration = processLightDataOneDay(rows, OFF_MINUTES_THRESHOLD);
             if (lightOnDuration.isPresent()) {
                 lightOnList.add(lightOnDuration.get());
             }
+            deviceDataIndex ++;
         }
 
         final Optional<InsightCard> card = processLightData(lightOnList, accountId);
@@ -75,12 +76,7 @@ public class BedLightDuration {
     public static Boolean sameDay(final DeviceData currentDeviceData, final DeviceData previousDeviceData) {
         final Integer elapsedTime = new Period(previousDeviceData.dateTimeUTC, currentDeviceData.dateTimeUTC).getMinutes();
         final Integer comparisonPeriod = new Period(OFFLINE_HOURS).getMinutes();
-        if (elapsedTime > comparisonPeriod) {
-            return Boolean.FALSE;
-        }
-        else {
-            return Boolean.TRUE;
-        }
+        return elapsedTime < comparisonPeriod;
     }
 
     public static Optional<Integer> processLightDataOneDay(final List<DeviceData> data, final int offMinutesThreshold) {
