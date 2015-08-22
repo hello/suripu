@@ -1,12 +1,15 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.BedLightDurationMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -14,7 +17,6 @@ import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,23 +25,43 @@ import java.util.List;
 public class BedLightDuration {
     private static final Logger LOGGER = LoggerFactory.getLogger(BedLightDuration.class);
 
-    private static final int NIGHT_START_HOUR = 21; // 9pm
-    private static final int NIGHT_END_HOUR = 4; // 4am
+    private static final int NIGHT_START_HOUR_LOCAL = 21; // 9pm
+    private static final int NIGHT_END_HOUR_LOCAL = 4; // 4am
+
+    private static final int OFFLINE_HOURS = 17; // number of hours after night end and before next night start
 
     public static final float LIGHT_LEVEL_WARNING = 5.0f;  // in lux
     public static final float LIGHT_LEVEL_ALERT = 35.0f;  // in lux
 
-    public static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceeding data
+    public static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
 
+        final Optional<TimeZoneHistory> timeZoneHistory = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        if (timeZoneHistory.isPresent() == Boolean.FALSE) {
+            return Optional.absent();
+        }
+        final Integer timeZoneOffset = timeZoneHistory.get().offsetMillis;
+
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(NIGHT_START_HOUR_LOCAL);
+        final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
+
+        //Grab all night-time data for past week
+        final List<DeviceData> totalRows = deviceDataDAO.getLightByBetweenHourDateFast(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+
+        //List containing period light is on each night last week
         final List<Integer> lightOnList = Lists.newArrayList();
 
-        for (int i = 0; i >= 6; i++) {
-            final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).minusDays(i);
-            final DateTime queryStartTime = DateTime.now(DateTimeZone.UTC).minusDays(i + 1);
-            // get light data > some threshold between the hours of 9pm and 4am
-            final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);
+        final List<Integer> dayIndices = Lists.newArrayList();
+        dayIndices.add(0);
+        for (DeviceData deviceData : totalRows) {
+            DeviceData previousDeviceData = totalRows.get(totalRows.indexOf(deviceData) - 1);
+            boolean sameDay = sameDay(deviceData, previousDeviceData);
+            if (sameDay) {
+                continue;
+            }
+            final Integer startDayTomorrowIndex = totalRows.indexOf(deviceData);
+            List<DeviceData> rows = totalRows.subList(Iterables.getLast(dayIndices), startDayTomorrowIndex);
             final Optional<Integer> lightOnDuration = processLightDataOneDay(rows, OFF_MINUTES_THRESHOLD);
             if (lightOnDuration.isPresent()) {
                 lightOnList.add(lightOnDuration.get());
@@ -48,6 +70,17 @@ public class BedLightDuration {
 
         final Optional<InsightCard> card = processLightData(lightOnList, accountId);
         return card;
+    }
+
+    public static Boolean sameDay(final DeviceData currentDeviceData, final DeviceData previousDeviceData) {
+        final Integer elapsedTime = new Period(previousDeviceData.dateTimeUTC, currentDeviceData.dateTimeUTC).getMinutes();
+        final Integer comparisonPeriod = new Period(OFFLINE_HOURS).getMinutes();
+        if (elapsedTime > comparisonPeriod) {
+            return Boolean.FALSE;
+        }
+        else {
+            return Boolean.TRUE;
+        }
     }
 
     public static Optional<Integer> processLightDataOneDay(final List<DeviceData> data, final int offMinutesThreshold) {
