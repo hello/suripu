@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
@@ -15,7 +16,6 @@ import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,20 +37,27 @@ public class BedLightDuration {
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
 
-        final List<DeviceData> deviceData = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneHistoryDAODynamoDB);
+        final Optional<TimeZoneHistory> timeZoneHistory = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        if (!timeZoneHistory.isPresent()) {
+            return Optional.absent();
+        }
+        final Integer timeZoneOffset = timeZoneHistory.get().offsetMillis;
+
+        final List<DeviceData> deviceData = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset);
         if (deviceData == null) {
             return Optional.absent();
         }
 
         final List<List<DeviceData>> deviceDataByDay = splitDeviceDataByDay(deviceData);
 
-        final List<Integer> lightOnDurationList = new ArrayList<Integer>(deviceDataByDay.size());
+
+        final List<Integer> lightOnDurationList = Lists.newArrayList();
 
         for (int i = 0; i < deviceDataByDay.size(); i++) {
             lightOnDurationList.set(i, findLightOnDurationForDay(deviceDataByDay.get(i), OFF_MINUTES_THRESHOLD));
         }
 
-        int avgLightOn;
+        final int avgLightOn;
         if (lightOnDurationList.size() == 0) {
             avgLightOn = 0;
         }
@@ -61,22 +68,17 @@ public class BedLightDuration {
         return scoreCardBedLightDuration(avgLightOn, accountId);
     }
 
-    public static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
-        final Optional<TimeZoneHistory> timeZoneHistory = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        if (!timeZoneHistory.isPresent()) {
-            return null;
-        }
-        final Integer timeZoneOffset = timeZoneHistory.get().offsetMillis;
+    public static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final Integer timeZoneOffset) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(NIGHT_START_HOUR_LOCAL);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
         //Grab all night-time data for past week
-        return deviceDataDAO.getLightByBetweenHourDateFast(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
     }
 
     public static final List<List<DeviceData>> splitDeviceDataByDay(List<DeviceData> data) {
-        List<List<DeviceData>> res = new ArrayList<>();
+        final List<List<DeviceData>> res = Lists.newArrayList();
         int beg = 0;
         for (int i = 0; i < data.size(); i++) {
             if (i > 0 && !sameDay(data.get(i), data.get(i-1))) {
