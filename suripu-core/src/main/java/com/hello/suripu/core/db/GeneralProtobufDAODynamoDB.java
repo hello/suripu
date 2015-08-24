@@ -4,6 +4,7 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
@@ -19,13 +20,17 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
+import com.amazonaws.services.dynamodbv2.model.KeyType;
 
+import javax.management.Attribute;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,30 +58,40 @@ public class GeneralProtobufDAODynamoDB {
         this.payloadColumnNames = payloadColumnNames;
     }
 
-    public boolean put(final String key, final String rangeKey,final Map<String,byte[]> payloadByColumn) {
-
-        final Map<String, AttributeValueUpdate> items = new HashMap<>();
-        final DateTime now = DateTime.now();
 
 
-        final HashMap<String, AttributeValue> keyValueMap = new HashMap<>();
-        keyValueMap.put(hashKeyColumnName, new AttributeValue().withS(key));
-        if (rangeKeyColumnName.isPresent()) {
-            keyValueMap.put(rangeKeyColumnName.get(), new AttributeValue().withS(rangeKey));
-        }
+    public boolean update(final String key, final String rangeKey,final Map<String,byte[]> payloadByColumn) {
 
+        final Map<String, AttributeValueUpdate> itemsToUpdate = new HashMap<>();
 
         for (final String payloadColumnName : payloadByColumn.keySet()) {
-            keyValueMap.put(payloadColumnName, new AttributeValue().withB(ByteBuffer.wrap(payloadByColumn.get(payloadColumnName))));
+            itemsToUpdate.put(payloadColumnName,
+                    new AttributeValueUpdate()
+                            .withValue(new AttributeValue().withB(ByteBuffer.wrap(payloadByColumn.get(payloadColumnName))))
+                            .withAction(AttributeAction.PUT)
+            );
+
         }
 
 
-        final PutItemRequest request = new PutItemRequest()
+
+        final Map<String, AttributeValue> keys = Maps.newHashMap();
+        keys.put(hashKeyColumnName, new AttributeValue(key));
+
+        if (rangeKeyColumnName.isPresent()) {
+            keys.put(rangeKeyColumnName.get(),new AttributeValue(rangeKey));
+        }
+
+
+        final UpdateItemRequest request = new UpdateItemRequest()
                 .withTableName(this.tableName)
-                .withItem(keyValueMap);
+                .withKey(keys)
+                .withAttributeUpdates(itemsToUpdate);
+
 
         try {
-            final PutItemResult result = this.dynamoDBClient.putItem(request);
+            final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+
         } catch (AmazonServiceException awsException) {
             logger.error("Server exception {} result for key {}, rangekey {}",
                     awsException.getMessage(),
@@ -225,16 +240,28 @@ public class GeneralProtobufDAODynamoDB {
 
         //iterate through items
         for (final Map<String, AttributeValue> item : items) {
+
+            /*
+                enforce that all items came in -- but sometimes we won't have all items and that's okay
+                so we're just going to comment this out, maybe put it back in later as an option (strict mode, or something)
+
             if (!item.keySet().containsAll(targetAttributeSet)) {
                 logger.warn("Missing field in item {}", item);
                 continue;
             }
+            */
 
             final String thisItemsKey = item.get(hashKeyColumnName).getS();
 
             final Map<String,byte[]> results = Maps.newHashMap();
             for (final String payloadColumnName : payloadColumnNames) {
-                final ByteBuffer byteBuffer = item.get(payloadColumnName).getB();
+                final AttributeValue payloadReturnedResult = item.get(payloadColumnName);
+
+                if (payloadReturnedResult == null) {
+                    continue;
+                }
+
+                final ByteBuffer byteBuffer = payloadReturnedResult.getB();
 
                 if (byteBuffer == null) {
                     continue;

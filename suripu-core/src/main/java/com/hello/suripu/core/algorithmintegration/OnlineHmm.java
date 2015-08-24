@@ -333,7 +333,7 @@ public class OnlineHmm {
         predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset);
 
         /* PROCESS FEEDBACK  */
-        if (feedbackHasChanged) {
+        if (feedbackHasChanged && !feedbackList.isEmpty()) {
             //1) turn feedback into labels
             final LabelMaker labelMaker = new LabelMaker(uuid);
             final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvent(timezoneOffset,binnedData.t0,endTimeUtc,binnedData.numMinutesInWindow,feedbackList);

@@ -70,7 +70,7 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
 
         payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
 
-        return dbDAO.put(accountId.toString(),"",payloads);
+        return dbDAO.update(accountId.toString(), "", payloads);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
 
         payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,scratchPad.serializeToProtobuf());
 
-        return dbDAO.put(accountId.toString(),"",payloads);
+        return dbDAO.update(accountId.toString(), "", payloads);
 
     }
 
@@ -90,7 +90,7 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
         payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
         payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,OnlineHmmProtos.AlphabetHmmScratchPad.newBuilder().build().toByteArray());
 
-        return dbDAO.put(accountId.toString(),"",payloads);
+        return dbDAO.update(accountId.toString(),"",payloads);
     }
 
 
