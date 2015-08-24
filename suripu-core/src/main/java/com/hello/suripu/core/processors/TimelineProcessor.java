@@ -235,7 +235,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             }
 
-            else if (this.hasBayesNetEnabled(accountId)) {
+            else if (this.hasOnlineHmmEnabled(accountId)) {
 
                 final OnlineHmm onlineHmm = new OnlineHmm(featureExtractionModelsDAO,priorsDAO,uuidOptional);
 
