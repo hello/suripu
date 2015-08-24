@@ -1,8 +1,6 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
@@ -17,6 +15,7 @@ import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,11 +34,37 @@ public class BedLightDuration {
 
     public static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
 
+
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
 
+        final List<DeviceData> deviceData = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneHistoryDAODynamoDB);
+        if (deviceData == null) {
+            return Optional.absent();
+        }
+
+        final List<List<DeviceData>> deviceDataByDay = splitDeviceDataByDay(deviceData);
+
+        final List<Integer> lightOnDurationList = new ArrayList<Integer>(deviceDataByDay.size());
+
+        for (int i = 0; i < deviceDataByDay.size(); i++) {
+            lightOnDurationList.set(i, findLightOnDurationForDay(deviceDataByDay.get(i), OFF_MINUTES_THRESHOLD));
+        }
+
+        int avgLightOn;
+        if (lightOnDurationList.size() == 0) {
+            avgLightOn = 0;
+        }
+        else {
+            avgLightOn = computeAverage(lightOnDurationList);
+        }
+
+        return scoreCardBedLightDuration(avgLightOn, accountId);
+    }
+
+    public static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
         final Optional<TimeZoneHistory> timeZoneHistory = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
         if (!timeZoneHistory.isPresent()) {
-            return Optional.absent();
+            return null;
         }
         final Integer timeZoneOffset = timeZoneHistory.get().offsetMillis;
 
@@ -47,30 +72,19 @@ public class BedLightDuration {
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
         //Grab all night-time data for past week
-        final List<DeviceData> totalRows = deviceDataDAO.getLightByBetweenHourDateFast(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        return deviceDataDAO.getLightByBetweenHourDateFast(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+    }
 
-        //List containing period light is on each night last week
-        final List<Integer> lightOnList = Lists.newArrayList();
-
-        int deviceDataIndex = 1; //not final
-        for (DeviceData deviceData : totalRows) {
-            DeviceData previousDeviceData = totalRows.get(deviceDataIndex - 1);
-            boolean sameDay = sameDay(deviceData, previousDeviceData);
-            if (sameDay) {
-                deviceDataIndex ++;
-                continue;
+    public static final List<List<DeviceData>> splitDeviceDataByDay(List<DeviceData> data) {
+        List<List<DeviceData>> res = new ArrayList<>();
+        int beg = 0;
+        for (int i = 0; i < data.size(); i++) {
+            if (i > 0 && !sameDay(data.get(i), data.get(i-1))) {
+                res.add(data.subList(beg, i));
+                beg = i;
             }
-            final Integer startDayTomorrowIndex = deviceDataIndex;
-            List<DeviceData> rows = totalRows.subList(deviceDataIndex - 1, startDayTomorrowIndex);
-            final Optional<Integer> lightOnDuration = processLightDataOneDay(rows, OFF_MINUTES_THRESHOLD);
-            if (lightOnDuration.isPresent()) {
-                lightOnList.add(lightOnDuration.get());
-            }
-            deviceDataIndex ++;
         }
-
-        final Optional<InsightCard> card = processLightData(lightOnList, accountId);
-        return card;
+        return res;
     }
 
     public static Boolean sameDay(final DeviceData currentDeviceData, final DeviceData previousDeviceData) {
@@ -79,9 +93,9 @@ public class BedLightDuration {
         return elapsedTime < comparisonPeriod;
     }
 
-    public static Optional<Integer> processLightDataOneDay(final List<DeviceData> data, final int offMinutesThreshold) {
+    public static Integer findLightOnDurationForDay(final List<DeviceData> data, final int offMinutesThreshold) {
         if (data.size() <= 1) {
-            return Optional.absent();
+            return 0;
         }
 
         final DateTime lastLightOnTimeStamp = data.get(data.size() - 1).dateTimeUTC;
@@ -96,31 +110,25 @@ public class BedLightDuration {
                 final Period onTimeTruncated = new Period(previousLightOnTimeStamp, lastLightOnTimeStamp);
                 final Integer onMinutesTruncated = onTimeTruncated.getMinutes();
                 LOGGER.debug("on Minutes truncated is {}", onMinutesTruncated);
-                return Optional.of(onMinutesTruncated);
+                return onMinutesTruncated;
             }
         }
 
         final DateTime firstLightOnTimeStamp = data.get(0).dateTimeUTC;
         final Period onTime = new Period(firstLightOnTimeStamp, lastLightOnTimeStamp);
-        final Integer onMinutes = onTime.getMinutes();
-        return Optional.of(onMinutes);
+        return onTime.getMinutes();
     }
 
-    public static Optional<InsightCard> processLightData(final List<Integer> lightOnList, final Long accountId) {
-
-        if (lightOnList.size() == 0) {
-            LOGGER.debug("Light was on for less than 1 second each day for accountId {}", accountId);
-            return Optional.absent();
-        }
-
+    public static final int computeAverage(List<Integer> data) {
         // compute average value
         final DescriptiveStatistics stats = new DescriptiveStatistics();
-        for (final Integer lightOn : lightOnList) {
+        for (final Integer lightOn : data) {
             stats.addValue(lightOn);
         }
+        return (int) stats.getMean();
+    }
 
-        int avgLightOn = (int) stats.getMean();
-
+    public static Optional<InsightCard> scoreCardBedLightDuration(final int avgLightOn, final Long accountId) {
         Text text;
         if (avgLightOn <= 60) {
             return Optional.absent();

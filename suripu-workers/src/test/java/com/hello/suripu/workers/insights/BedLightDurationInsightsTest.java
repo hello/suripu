@@ -25,7 +25,10 @@ public class BedLightDurationInsightsTest {
     public void testNoCardGenerated() {
         final Long accountId = 999L;
         final List<Integer> lightDurationList = new ArrayList<>();
-        final Optional<InsightCard> noResult = BedLightDuration.processLightData(lightDurationList, accountId);
+
+        final int durationAverage = BedLightDuration.computeAverage(lightDurationList);
+
+        final Optional<InsightCard> noResult = BedLightDuration.scoreCardBedLightDuration(durationAverage, accountId);
         assertThat(noResult.isPresent(), is(Boolean.FALSE));
 
         //test size 1 no generation
@@ -40,8 +43,8 @@ public class BedLightDurationInsightsTest {
         final List<DeviceData> data = new ArrayList<>();
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(18), offsetMillis, 1, 1, 1, 0, 0, 0));
 
-        final Optional<Integer> calculatedLightDurationList = BedLightDuration.processLightDataOneDay(data, offMinuteThreshold);
-        assertThat(calculatedLightDurationList.isPresent(), is(Boolean.FALSE));
+        final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
+        assertThat(calculatedLightDurationList, is(0));
     }
 
     @Test
@@ -62,8 +65,8 @@ public class BedLightDurationInsightsTest {
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0));
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0));
 
-        final Optional<Integer> calculatedLightDurationList = BedLightDuration.processLightDataOneDay(data, offMinuteThreshold);
-        final Optional<Integer> expectedLightDurationList = Optional.of(45);
+        final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
+        final Integer expectedLightDurationList = 45;
         assertThat(calculatedLightDurationList, is(expectedLightDurationList));
     }
 
@@ -85,8 +88,8 @@ public class BedLightDurationInsightsTest {
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(52), offsetMillis, 1, 1, 1, 0, 0, 0));
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withMinuteOfHour(55), offsetMillis, 1, 1, 1, 0, 0, 0));
 
-        final Optional<Integer> calculatedLightDurationList = BedLightDuration.processLightDataOneDay(data, offMinuteThreshold);
-        final Optional<Integer> expectedLightDurationList = Optional.of(5);
+        final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
+        final Integer expectedLightDurationList = 5;
         assertThat(calculatedLightDurationList, is(expectedLightDurationList));
     }
 
@@ -105,8 +108,8 @@ public class BedLightDurationInsightsTest {
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0));
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(50), offsetMillis, 1, 1, 1, 0, 0, 0));
 
-        final Optional<Integer> calculatedLightDurationList = BedLightDuration.processLightDataOneDay(data, offMinuteThreshold);
-        final Optional<Integer> expectedLightDurationList = Optional.of(0);
+        final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
+        final Integer expectedLightDurationList = 0;
         assertThat(calculatedLightDurationList, is(expectedLightDurationList));
     }
 
@@ -128,8 +131,8 @@ public class BedLightDurationInsightsTest {
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0));
         data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1, 0, 0, 0));
 
-        final Optional<Integer> calculatedLightDurationList = BedLightDuration.processLightDataOneDay(data, offMinuteThreshold);
-        final Optional<Integer> expectedLightDurationList = Optional.of(light/4);
+        final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
+        final Integer expectedLightDurationList = light/4;
         assertThat(calculatedLightDurationList, is(expectedLightDurationList));
     }
 
@@ -141,7 +144,9 @@ public class BedLightDurationInsightsTest {
         lightDurationList.add(0);
         lightDurationList.add(60);
         lightDurationList.add(10);
-        final Optional<InsightCard> lowResult = BedLightDuration.processLightData(lightDurationList, accountId);
+
+        final int durationAverage = BedLightDuration.computeAverage(lightDurationList);
+        final Optional<InsightCard> lowResult = BedLightDuration.scoreCardBedLightDuration(durationAverage, accountId);
         assertThat(lowResult.isPresent(), is(Boolean.FALSE));
 
         //comments below for if we want to generate Insight for low values
@@ -162,7 +167,9 @@ public class BedLightDurationInsightsTest {
         lightDurationList.add(60);
         lightDurationList.add(120);
         lightDurationList.add(120);
-        final Optional<InsightCard> mediumResult = BedLightDuration.processLightData(lightDurationList, accountId);
+        final int durationAverage = BedLightDuration.computeAverage(lightDurationList);
+
+        final Optional<InsightCard> mediumResult = BedLightDuration.scoreCardBedLightDuration(durationAverage, accountId);
         assertThat(mediumResult.isPresent(), is(Boolean.TRUE));
 
         final String expectedTitle = BedLightDurationMsgEN.getMediumLight().title;
@@ -180,7 +187,9 @@ public class BedLightDurationInsightsTest {
         lightDurationList.add(120);
         lightDurationList.add(200);
         lightDurationList.add(300);
-        final Optional<InsightCard> highResult = BedLightDuration.processLightData(lightDurationList, accountId);
+        final int durationAverage = BedLightDuration.computeAverage(lightDurationList);
+
+        final Optional<InsightCard> highResult = BedLightDuration.scoreCardBedLightDuration(durationAverage, accountId);
         assertThat(highResult.isPresent(), is(Boolean.TRUE));
 
         final String expectedTitle = BedLightDurationMsgEN.getHighLight().title;
