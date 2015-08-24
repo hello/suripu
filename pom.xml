@@ -27,6 +27,7 @@
         <module>suripu-workers</module>
         <module>suripu-research</module>
         <module>suripu-coredw</module>
+        <module>suripu-coredw8</module>
     </modules>
 
     <scm>
