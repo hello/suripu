@@ -17,7 +17,9 @@ import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
+import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DeserializedFeatureExtractionWithParams;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import org.joda.time.DateTime;
@@ -36,6 +38,7 @@ import java.util.UUID;
  * Created by benjo on 8/20/15.
  */
 public class OnlineHmm {
+    private final static long NUM_MILLIS_IN_A_MINUTE = 60000L;
     public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 5;
     public final static String DEFAULT_MODEL_KEY = "default";
 
@@ -186,8 +189,18 @@ public class OnlineHmm {
         return new OnlineHmmData(Optional.of(modelPriors),userModelData.scratchPad);
     }
 
-    private SleepEvents<Optional<Event>> getSleepEventsFromPredictions(final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId) {
+    static private long indexToTimestamp(final long t0, final int periodInMinutes, final int idx) {
+        return idx * periodInMinutes * NUM_MILLIS_IN_A_MINUTE  + t0;
+    }
+
+    private SleepEvents<Optional<Event>> getSleepEventsFromPredictions(final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId, final long t0,final int numMinutesInPeriod, final int tzOffset) {
           /*  DO SOMETHING WITH THE BEST PREDICTIONS */
+
+        Optional<Event> sleep = Optional.absent();
+        Optional<Event> wake = Optional.absent();
+        Optional<Event> inbed = Optional.absent();
+        Optional<Event> outofbed = Optional.absent();
+
         for (final String outputId : bestDecodedResultsByOutputId.keySet()) {
             final MultiEvalHmmDecodedResult result = bestDecodedResultsByOutputId.get(outputId);
 
@@ -204,6 +217,12 @@ public class OnlineHmm {
                     final int sleepIdx = result.transitions.get(0).idx;
                     final int wakeIdx = result.transitions.get(1).idx;
 
+                    final long sleepTime = indexToTimestamp(t0,numMinutesInPeriod,sleepIdx);
+                    final long wakeTime = indexToTimestamp(t0,numMinutesInPeriod,wakeIdx);
+
+                    sleep = Optional.of(Event.createFromType(Event.Type.SLEEP, sleepTime, sleepTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+                    wake = Optional.of(Event.createFromType(Event.Type.WAKE_UP,wakeTime,wakeTime + NUM_MILLIS_IN_A_MINUTE,tzOffset, Optional.of(English.WAKE_UP_MESSAGE),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+
                     //TODO turn this into events
                     break;
                 }
@@ -212,7 +231,13 @@ public class OnlineHmm {
                 {
                     final int inBedIdx = result.transitions.get(0).idx;
                     final int outOfBedIdx = result.transitions.get(1).idx;
-                    //TODO turn this into events
+
+                    final long inBedTime = indexToTimestamp(t0,numMinutesInPeriod,inBedIdx);
+                    final long outOfBedTime = indexToTimestamp(t0,numMinutesInPeriod,outOfBedIdx);
+
+                    inbed = Optional.of(Event.createFromType(Event.Type.SLEEP, inBedTime, inBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+                    outofbed = Optional.of(Event.createFromType(Event.Type.WAKE_UP, outOfBedTime, outOfBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.WAKE_UP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+
 
                     break;
                 }
@@ -221,21 +246,23 @@ public class OnlineHmm {
 
         }
 
-        return SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
+        return SleepEvents.create(inbed,sleep,wake,outofbed);
     }
 
-    public boolean predict(final long accountId,final DateTime targetDate, final long startTimeUtc, final long endTimeUtc, final int timezoneOffset,
+    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime targetDate, final long startTimeUtc, final long endTimeUtc, final int timezoneOffset,
                            OneDaysSensorData oneDaysSensorData,final ImmutableList<TimelineFeedback> feedbackList, boolean feedbackHasChanged) {
 
         /*  GET THE FEATURE EXTRACTION LAYER -- this will be as bunch of HMMs that will classify binned sensor data into discrete classes
         *                                    -- it's the time-series equivalent of finding which cluster a data point belongs to
         */
 
+        SleepEvents<Optional<Event>> predictions = SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
+
         final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, targetDate, uuid);
 
         if (!serializedData.isValid()) {
             LOGGER.error("failed to get feature extraction layer!");
-            return false;
+            return predictions;
         }
 
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
@@ -245,14 +272,14 @@ public class OnlineHmm {
 
         if (!userModelData.modelPriors.isPresent()) {
             LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
-            return false;
+            return predictions;
         }
 
         final OnlineHmmPriors modelPriors = userModelData.modelPriors.get();
 
         if (modelPriors == null) {
             LOGGER.error("somehow never got model priors for account {}",accountId);
-            return false;
+            return predictions;
         }
 
         /*  CHECK TO SEE IF THE SCRATCH PAD SHOULD BE ADDED TO THE CURRENT MODEL */
@@ -282,7 +309,7 @@ public class OnlineHmm {
 
         if (!binnedDataOptional.isPresent()) {
             LOGGER.error("failed to get binned sensor data");
-            return false;
+            return predictions;
         }
 
 
@@ -298,7 +325,7 @@ public class OnlineHmm {
 
 
         /* GET PREDICTIONS  */
-        getSleepEventsFromPredictions(bestDecodedResultsByOutputId);
+        predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset);
 
         /* PROCESS FEEDBACK  */
         if (feedbackHasChanged) {
@@ -319,8 +346,8 @@ public class OnlineHmm {
             userModelDAO.updateScratchpad(accountId,scratchPad);
         }
 
-        
-        return true;
+
+        return predictions;
 
     }
 
