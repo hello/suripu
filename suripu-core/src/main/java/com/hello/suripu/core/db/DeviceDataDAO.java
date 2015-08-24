@@ -169,13 +169,13 @@ public abstract class DeviceDataDAO {
             "AND (CAST(date_part('hour', local_utc_ts) AS integer) >= :start_hour " +
             "OR CAST(date_part('hour', local_utc_ts) AS integer) < :end_hour) " +
             "ORDER BY ts")
-    public abstract ImmutableList<DeviceData> getLightByBetweenHourDateFast(@Bind("account_id") Long accountId,
-                                                                        @Bind("device_id") Long deviceId,
-                                                                        @Bind("light_level") int lightLevel,
-                                                                        @Bind("start_ts") DateTime startTimestamp,
-                                                                        @Bind("end_ts") DateTime endTimestamp,
-                                                                        @Bind("start_hour") int startHour,
-                                                                        @Bind("end_hour") int endHour);
+    public abstract ImmutableList<DeviceData> getLightByBetweenHourDateByTS(@Bind("account_id") Long accountId,
+                                                                            @Bind("device_id") Long deviceId,
+                                                                            @Bind("light_level") int lightLevel,
+                                                                            @Bind("start_ts") DateTime startTimestamp,
+                                                                            @Bind("end_ts") DateTime endTimestamp,
+                                                                            @Bind("start_hour") int startHour,
+                                                                            @Bind("end_hour") int endHour);
 
     @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
