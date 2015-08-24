@@ -13,6 +13,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
+import org.joda.time.PeriodType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,19 +81,22 @@ public class BedLightDuration {
     public static final List<List<DeviceData>> splitDeviceDataByDay(List<DeviceData> data) {
         final List<List<DeviceData>> res = Lists.newArrayList();
         int beg = 0;
-        for (int i = 0; i < data.size(); i++) {
-            if (i > 0 && !sameDay(data.get(i), data.get(i-1))) {
+        for (int i = 1; i < data.size(); i++) {
+            if (!sameDay(data.get(i), data.get(i-1))) {
                 res.add(data.subList(beg, i));
                 beg = i;
+            }
+            else if (i == data.size() - 1) {
+                res.add(data.subList(beg, data.size()));
             }
         }
         return res;
     }
 
     public static Boolean sameDay(final DeviceData currentDeviceData, final DeviceData previousDeviceData) {
-        final Integer elapsedTime = new Period(previousDeviceData.dateTimeUTC, currentDeviceData.dateTimeUTC).getMinutes();
-        final Integer comparisonPeriod = new Period(OFFLINE_HOURS).getMinutes();
-        return elapsedTime < comparisonPeriod;
+        final Integer elapsedMinutes = new Period(previousDeviceData.dateTimeUTC, currentDeviceData.dateTimeUTC, PeriodType.minutes()).getMinutes();
+        final Integer comparisonPeriodMinutes = OFFLINE_HOURS * 60;
+        return elapsedMinutes < comparisonPeriodMinutes;
     }
 
     public static Integer findLightOnDurationForDay(final List<DeviceData> data, final int offMinutesThreshold) {
@@ -105,19 +109,17 @@ public class BedLightDuration {
             final DateTime currentLightOnTimeStamp = data.get(i).dateTimeUTC;
             final DateTime previousLightOnTimeStamp = data.get(i + 1).dateTimeUTC;
             //assertTrue(currentLightOnTimeStamp < previousLightOnTimeStamp);
-            final Period offTime = new Period(currentLightOnTimeStamp, previousLightOnTimeStamp);
-            final int offMinutes = offTime.getMinutes();
+            final Integer offMinutes = new Period(currentLightOnTimeStamp, previousLightOnTimeStamp, PeriodType.minutes()).getMinutes();
 
-            if (offMinutes > offMinutesThreshold) {
+            if (offMinutes >= offMinutesThreshold) {
                 final Period onTimeTruncated = new Period(previousLightOnTimeStamp, lastLightOnTimeStamp);
                 final Integer onMinutesTruncated = onTimeTruncated.getMinutes();
-                LOGGER.debug("on Minutes truncated is {}", onMinutesTruncated);
                 return onMinutesTruncated;
             }
         }
 
         final DateTime firstLightOnTimeStamp = data.get(0).dateTimeUTC;
-        final Period onTime = new Period(firstLightOnTimeStamp, lastLightOnTimeStamp);
+        final Period onTime = new Period(firstLightOnTimeStamp, lastLightOnTimeStamp, PeriodType.minutes());
         return onTime.getMinutes();
     }
 
