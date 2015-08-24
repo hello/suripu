@@ -219,11 +219,11 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         @Override
         public int compareTo(CostWithIndex o) {
             if (this.cost < o.cost) {
-                return -1;
+                return 1;
             }
 
             if (this.cost > o.cost) {
-                return 1;
+                return -1;
             }
 
             return 0;
@@ -251,7 +251,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         final Map<String,double [][]> alphabetProbsMap = getAlphabetMatrices();
         int j,i,t;
 
-        final double [] costs = new double[numStates];
+        final double [] scores = new double[numStates];
 
         final double [][] phi = getLogZeroedMatrix(numStates, numObs);
         final int [][] vindices = new int[numStates][numObs];
@@ -291,22 +291,22 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
                 final double obscost = logbmap[j][t];
 
                 for (i = 0; i < numStates; i++) {
-                    costs[i] = LogMath.elnproduct(logAThisIndex[i][j], obscost);
+                    scores[i] = LogMath.elnproduct(logAThisIndex[i][j], obscost);
                 }
 
                 for (i = 0; i < numStates; i++) {
-                    costs[i] = LogMath.elnproduct(costs[i], phi[i][t - 1]);
+                    scores[i] = LogMath.elnproduct(scores[i], phi[i][t - 1]);
                 }
 
                 final SortedSet<CostWithIndex> costsWithIndex = Sets.newTreeSet();
 
                 for (i = 0; i < numStates; i++) {
-                    costsWithIndex.add(new CostWithIndex(i, costs[i]));
+                    costsWithIndex.add(new CostWithIndex(i, scores[i]));
                 }
 
                 Iterator<CostWithIndex> costIterator = costsWithIndex.iterator();
                 int maxidx = costIterator.next().idx;
-                double maxval = costs[maxidx];
+                double maxval = scores[maxidx];
 
                 //best path is to stay?  increment zeta.
                 if (maxidx == j) {
@@ -327,7 +327,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
                     //next best.... so in theory we should check if this violates the second best state's constraints
                     //TODO check everything
                     maxidx = costIterator.next().idx;
-                    maxval = costs[maxidx];
+                    maxval = scores[maxidx];
 
                     phi[j][t] = maxval;
                     vindices[j][t] = maxidx;
@@ -354,12 +354,12 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
             pathCosts[i] = getPathCost(path,phi);
         }
 
-        double minCost = costs[0];
+        double maxScore = pathCosts[0];
         int minIdx = 0;
         for (i = 1; i < possibleEndStates.length; i++) {
-            if (pathCosts[i] < minCost) {
+            if (pathCosts[i] > maxScore) {
                 minIdx = i;
-                minCost = costs[i];
+                maxScore = scores[i];
             }
         }
 
@@ -370,7 +370,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
             path[t] = vindices[path[t + 1]][t];
         }
 
-        return new Result(path,minCost);
+        return new Result(path,maxScore);
     }
 
     public void reestimate(final MultiObsSequence meas, final double priorWeightAsNumberOfSamples) {

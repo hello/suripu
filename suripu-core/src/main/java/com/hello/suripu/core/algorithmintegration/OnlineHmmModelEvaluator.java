@@ -157,16 +157,25 @@ public class OnlineHmmModelEvaluator {
             for (final Map.Entry<String,OnlineHmmModelParams> paramsEntry : paramsMap.entrySet()) {
                 final OnlineHmmModelParams params = paramsEntry.getValue();
 
-                final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
 
-                final MultiObsSequenceAlphabetHiddenMarkovModel.Result result =  hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);
+                try {
+                    final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
 
-                //track the best
-                if (result.pathScore > bestScore) {
-                    bestScore = result.pathScore;
-                    bestResult = result;
-                    bestModel = params.id;
+                    final MultiObsSequenceAlphabetHiddenMarkovModel.Result result = hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);
+
+                    //track the best
+                    if (result.pathScore > bestScore) {
+                        bestScore = result.pathScore;
+                        bestResult = result;
+                        bestModel = params.id;
+                    }
                 }
+                catch (Exception e) {
+                    int foo  = 3;
+                    foo++;
+                }
+
+
             }
 
             if (bestResult == null) {
