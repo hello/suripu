@@ -303,11 +303,10 @@ public class OnlineHmm {
         /* PROCESS FEEDBACK  */
         if (feedbackHasChanged) {
             //1) turn feedback into labels
+            final LabelMaker labelMaker = new LabelMaker(uuid);
+            final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvent(timezoneOffset,binnedData.t0,endTimeUtc,binnedData.numMinutesInWindow,feedbackList);
 
-            //TODO actually make labels
-            final Map<String,Map<Integer,Integer>> labelsByOutputId = Maps.newHashMap();
-
-            //2) reestimate
+            //2) reestimate on top of the models that were actually used by the user
             final Map<String,String> usedModelsByOutputId = Maps.newHashMap();
 
             for (final Map.Entry<String,MultiEvalHmmDecodedResult> entry : bestDecodedResultsByOutputId.entrySet()) {
@@ -320,9 +319,8 @@ public class OnlineHmm {
             userModelDAO.updateScratchpad(accountId,scratchPad);
         }
 
-
-
-        return false;
+        
+        return true;
 
     }
 
