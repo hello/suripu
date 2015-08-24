@@ -75,13 +75,14 @@ public class OnlineHmm {
                     continue;
                 }
 
-                final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList(updatedModels.modelsByOutputId.get(outputId));
+                final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList();
 
+                //populate a new list (we will need to sort it later) for this output id
+                for (final Map.Entry<String,OnlineHmmModelParams> params : updatedModels.modelsByOutputId.get(outputId).entrySet()) {
+                    modelsForThisOutput.add(params.getValue());
+                }
 
-                //add
-                modelsForThisOutput.add(param);
-
-                //sort by date last used
+                //sort by date last used and then updated
                 Collections.sort(modelsForThisOutput, new Comparator<OnlineHmmModelParams>() {
                     @Override
                     public int compare(final OnlineHmmModelParams o1, final OnlineHmmModelParams o2) {
@@ -98,17 +99,29 @@ public class OnlineHmm {
                 });
 
                 //ENFORCE MODEL LIMIT
-                //exceed model count?  trim the oldest
+                //exceed model count?  trim the oldest used
                 for (int i = modelsForThisOutput.size() - 1; i >= 0; i--) {
 
-                    if (modelsForThisOutput.size() <= MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT)  {
+                    if (i <= MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT)  {
                         break;
+                    }
+
+                    //skip default model
+                    if (modelsForThisOutput.get(i).id.equals(DEFAULT_MODEL_KEY)) {
+                        continue;
                     }
 
                     modelsForThisOutput.remove(i);
                 }
 
-                updatedModels.modelsByOutputId.put(outputId,modelsForThisOutput);
+                //turn back into map by model id
+                final Map<String,OnlineHmmModelParams> trimmedParams = Maps.newHashMap();
+
+                for (final OnlineHmmModelParams params : modelsForThisOutput) {
+                    trimmedParams.put(params.id,params);
+                }
+
+                updatedModels.modelsByOutputId.put(outputId,trimmedParams);
 
             }
 
@@ -288,10 +301,25 @@ public class OnlineHmm {
         getSleepEventsFromPredictions(bestDecodedResultsByOutputId);
 
         /* PROCESS FEEDBACK  */
+        if (feedbackHasChanged) {
+            //1) turn feedback into labels
 
-        //1) turn feedback into labels
+            //TODO actually make labels
+            final Map<String,Map<Integer,Integer>> labelsByOutputId = Maps.newHashMap();
 
-        //2) reestimate
+            //2) reestimate
+            final Map<String,String> usedModelsByOutputId = Maps.newHashMap();
+
+            for (final Map.Entry<String,MultiEvalHmmDecodedResult> entry : bestDecodedResultsByOutputId.entrySet()) {
+                usedModelsByOutputId.put(entry.getKey(),entry.getValue().originatingModel);
+            }
+
+            final OnlineHmmScratchPad scratchPad = evaluator.reestimate(usedModelsByOutputId, modelPriors, pathsByModelId, binnedData.forbiddenTransitionsByOutputId, labelsByOutputId, startTimeUtc);
+
+            //3) update scratchpad in dynamo
+            userModelDAO.updateScratchpad(accountId,scratchPad);
+        }
+
 
 
         return false;

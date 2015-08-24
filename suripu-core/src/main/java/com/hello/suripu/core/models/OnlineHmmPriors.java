@@ -20,25 +20,26 @@ import java.util.Map;
  */
 public class  OnlineHmmPriors {
 
-    public final Map<String, List<OnlineHmmModelParams>> modelsByOutputId;
+    public final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId;
     public final Multimap<String,com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitionsByOutputId;
 
-    private OnlineHmmPriors(Map<String, List<OnlineHmmModelParams>> modelsByOutputId, final Multimap<String,com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions) {
+    private OnlineHmmPriors(Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId, final Multimap<String,com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions) {
         this.modelsByOutputId = modelsByOutputId;
         this.forbiddenMotionTransitionsByOutputId = forbiddenMotionTransitions;
     }
 
     @Override
     public OnlineHmmPriors clone() {
-        final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
+        final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
         for (final String key : modelsByOutputId.keySet()) {
-            final List<OnlineHmmModelParams> myList = Lists.newArrayList();
-            for (final OnlineHmmModelParams params : modelsByOutputId.get(key)) {
-                myList.add(params.clone());
+            final Map<String,OnlineHmmModelParams> myMap = Maps.newHashMap();
+
+            for (final Map.Entry<String,OnlineHmmModelParams> params : modelsByOutputId.get(key).entrySet()) {
+                myMap.put(params.getValue().id, params.getValue().clone());
             }
 
-            modelsByOutputId.put(key, myList);
+            modelsByOutputId.put(key, myMap);
         }
 
         final  Multimap<String,com.hello.suripu.algorithm.hmm.Transition> myMap = ArrayListMultimap.create();
@@ -154,7 +155,7 @@ public class  OnlineHmmPriors {
         try {
             final AlphabetHmmUserModel protobuf = AlphabetHmmUserModel.parseFrom(data);
 
-            final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
+            final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
             for (final AlphabetHmmPrior prior : protobuf.getModelsList()) {
                 final Optional<OnlineHmmModelParams> paramsOptional = protobufToParams(prior);
@@ -166,10 +167,10 @@ public class  OnlineHmmPriors {
                 final OnlineHmmModelParams params = paramsOptional.get();
 
                 if (modelsByOutputId.get(params.outputId) == null) {
-                    modelsByOutputId.put(params.outputId, Lists.<OnlineHmmModelParams>newArrayList());
+                    modelsByOutputId.put(params.outputId, Maps.<String, OnlineHmmModelParams>newHashMap());
                 }
 
-                modelsByOutputId.get(params.outputId).add(params);
+                modelsByOutputId.get(params.outputId).put(params.id, params);
 
             }
 
@@ -238,10 +239,10 @@ public class  OnlineHmmPriors {
         final AlphabetHmmUserModel.Builder builder = AlphabetHmmUserModel.newBuilder();
 
         for (final String key : modelsByOutputId.keySet()) {
-            final List<OnlineHmmModelParams> paramsList = modelsByOutputId.get(key);
+            final Map<String,OnlineHmmModelParams> paramsMap = modelsByOutputId.get(key);
 
-            for (final OnlineHmmModelParams params : paramsList) {
-                builder.addModels(protobufFromParams(params));
+            for (final Map.Entry<String,OnlineHmmModelParams> params : paramsMap.entrySet()) {
+                builder.addModels(protobufFromParams(params.getValue()));
             }
         }
 

@@ -26,6 +26,22 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
     final static double MIN_PROB = 1e-6;
     final static double FORBIDDEN_TRANSITION_PENALTY = -100;
 
+    public Map<String, double[][]> getLogAlphabetNumerator() {
+        return logAlphabetNumerator;
+    }
+
+    public double[][] getLogANumerator() {
+        return logANumerator;
+    }
+
+    public double[] getLogDenominator() {
+        return logDenominator;
+    }
+
+    public double[] getPi() {
+        return pi;
+    }
+
     static public class Result {
         public final int [] path;
         public final double pathScore;
@@ -357,7 +373,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return new Result(path,minCost);
     }
 
-    public void reestimate(final MultiObsSequence meas, final int priorWeightAsNumberOfSamples) {
+    public void reestimate(final MultiObsSequence meas, final double priorWeightAsNumberOfSamples) {
         int iterationNumber;
         int iSequence;
 
@@ -409,7 +425,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         this.logDenominator = LogMath.elnAddVector(this.logDenominator, logDenominator);
 
         if (priorWeightAsNumberOfSamples > 0) {
-            final double scaleFactor = (double)priorWeightAsNumberOfSamples / (priorWeightAsNumberOfSamples + 1);
+            final double scaleFactor = priorWeightAsNumberOfSamples / (priorWeightAsNumberOfSamples + 1);
 
             scalePriors(scaleFactor);
         }
