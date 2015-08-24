@@ -7,6 +7,7 @@ import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -57,6 +58,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -232,47 +234,25 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 algorithmWorked = true;
 
             }
-            /*
+
             else if (this.hasBayesNetEnabled(accountId)) {
 
-                //get model from DB
-                final HmmBayesNetData bayesNetData = featureExtractionModelsDAO.getLatestModelForDate(accountId,date,uuidOptional);
+                final OnlineHmm onlineHmm = new OnlineHmm(featureExtractionModelsDAO,priorsDAO,uuidOptional);
 
-                if (bayesNetData.isValid()) {
 
-                    //get priors from DB
-                    final Optional<BayesNetHmmMultipleModelsPriors> modelsPriorsOptional = priorsDAO.getModelPriorsByAccountIdAndDate(accountId, date);
+                //TODO put in sanity checks for algorithm output and revert to something (voting!) if failure
+                final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(
+                        accountId,
+                        targetDate,
+                        endDate,
+                        sensorData,
+                        feedbackChanged);
 
-                    if (modelsPriorsOptional.isPresent()) {
-                        //update priors
-                        bayesNetData.updateModelPriors(modelsPriorsOptional.get().modelPriorList);
-                    }
+                sleepEventsFromAlgorithmOptional = Optional.of(events);
 
-                    //save first priors for day
-                    if (!modelsPriorsOptional.isPresent() || modelsPriorsOptional.get().source.equals(priorsDAO.CURRENT_RANGE_KEY)) {
-                        priorsDAO.updateModelPriorsByAccountIdForDate(accountId,date,bayesNetData.getModelPriors());
-                    }
+                algorithmWorked = true;
 
-                    //get the predictor, which will turn the model output into events via some kind of segmenter
-                    final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(bayesNetData.getDeserializedData(), uuidOptional);
-
-                    //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
-                    final List<Event> events = predictor.getBayesNetHmmEvents(targetDate, endDate, currentTime.getMillis(), accountId, sensorData.allSensorSampleList, sensorData.trackerMotions,sensorData.partnerMotions,sensorData.trackerMotions.get(0).offsetMillis);
-
-                    //  NOTE THAT THIS ONLY DOES SLEEP RIGHT NOW, NOT ON-BED //
-                    if (events.size() >= 2) {
-
-                        final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.<Optional<Event>>create(Optional.<Event>absent(), Optional.of(events.get(0)), Optional.of(events.get(1)), Optional.<Event>absent());
-
-                        sleepEventsFromAlgorithmOptional = Optional.of(sleepEventsFromAlgorithm);
-
-                        algorithm = ALGORITHM_NAME_BAYESNET;
-                        algorithmWorked = true;
-                    }
-
-                }
             }
-            */
             else {
 
                 // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
@@ -465,7 +445,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
          /*  GET FEEDBACK  */
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, tzOffsetMillis);
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),feedbackList));
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),feedbackList,tzOffsetMillis));
 
     }
 

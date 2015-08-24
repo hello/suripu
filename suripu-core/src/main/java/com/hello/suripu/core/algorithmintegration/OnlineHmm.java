@@ -249,8 +249,8 @@ public class OnlineHmm {
         return SleepEvents.create(inbed,sleep,wake,outofbed);
     }
 
-    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime targetDate, final long startTimeUtc, final long endTimeUtc, final int timezoneOffset,
-                           OneDaysSensorData oneDaysSensorData,final ImmutableList<TimelineFeedback> feedbackList, boolean feedbackHasChanged) {
+    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc,
+                           OneDaysSensorData oneDaysSensorData, boolean feedbackHasChanged) {
 
         /*  GET THE FEATURE EXTRACTION LAYER -- this will be as bunch of HMMs that will classify binned sensor data into discrete classes
         *                                    -- it's the time-series equivalent of finding which cluster a data point belongs to
@@ -258,7 +258,12 @@ public class OnlineHmm {
 
         SleepEvents<Optional<Event>> predictions = SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
 
-        final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, targetDate, uuid);
+        final int timezoneOffset = oneDaysSensorData.timezoneOffsetMillis;
+        final long startTimeUtc = startTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
+        final long endTimeUtc = endTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
+        final ImmutableList<TimelineFeedback> feedbackList = oneDaysSensorData.feedbackList;
+
+        final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, startTimeLocalUtc, uuid);
 
         if (!serializedData.isValid()) {
             LOGGER.error("failed to get feature extraction layer!");
