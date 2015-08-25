@@ -101,16 +101,20 @@ public class  OnlineHmmPriors {
 
     public static Optional<OnlineHmmModelParams> protobufToParams(final AlphabetHmmPrior protobuf) {
 
-        //things that aren't really optional
-        if (!protobuf.hasOutputId() ||
-                !protobuf.hasOutputId() ||
-                !protobuf.hasLogStateTransitionNumerator() ||
-                protobuf.getLogDenominatorCount() == 0 ||
-                protobuf.getLogObservationModelNumeratorCount() == 0 ||
-                protobuf.getPiCount() == 0 ||
-                protobuf.getEndStatesCount() == 0) {
+        final boolean hasOutputId = protobuf.hasOutputId();
+        final boolean hasId = protobuf.hasId();
+        final boolean hasLogANumerator = protobuf.hasLogStateTransitionNumerator();
+        final boolean hasLogDenominator = protobuf.getLogDenominatorCount() > 0;
+        final boolean hasLogAlphabetNumerator = protobuf.getLogObservationModelNumeratorCount() > 0;
+        final boolean hasPi = protobuf.getPiCount() > 0;
+        final boolean hasMinStateDuration = protobuf.getMinimumStateDurationsCount() > 0;
+        final boolean hasEndState = protobuf.getEndStatesCount() > 0;
+
+        if (! (hasOutputId && hasId && hasLogANumerator && hasLogDenominator && hasLogAlphabetNumerator && hasPi && hasMinStateDuration && hasEndState) ) {
             return Optional.absent();
         }
+
+
 
 
         long timeCreated = 0;
@@ -212,9 +216,9 @@ public class  OnlineHmmPriors {
 
         OutputId outputId = null;
 
-        if (params.id.equals(OnlineHmmData.OUTPUT_MODEL_BED)) {
+        if (params.outputId.equals(OnlineHmmData.OUTPUT_MODEL_BED)) {
             outputId = OutputId.BED;
-        } else if (params.id.equals(OnlineHmmData.OUTPUT_MODEL_SLEEP)) {
+        } else if (params.outputId.equals(OnlineHmmData.OUTPUT_MODEL_SLEEP)) {
             outputId = OutputId.SLEEP;
         }
 
@@ -239,6 +243,18 @@ public class  OnlineHmmPriors {
         }
 
         builder.setLogStateTransitionNumerator(getProtobufMatrix(params.logTransitionMatrixNumerator));
+
+        for (int i = 0; i < params.pi.length; i++) {
+            builder.addPi(params.pi[i]);
+        }
+
+        for (int i = 0; i < params.endStates.length; i++) {
+            builder.addEndStates(params.endStates[i]);
+        }
+
+        for (int i = 0; i < params.minStateDurations.length; i++) {
+            builder.addMinimumStateDurations(params.minStateDurations[i]);
+        }
 
         return builder.build();
     }
