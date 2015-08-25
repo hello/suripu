@@ -310,27 +310,33 @@ public class OnlineHmmSensorDataBinning {
         //this blob of code is for applies the rules (outputId == sleep, you can't go from state 1 to state 2 unless there's two conseutive
         //periods of motion) for each time step
         for (final String outputId : forbiddenMotionTransitions.keySet()) {
-
-            final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
-            final Collection<Transition> forbiddenTransitionListForThisOutputId = forbiddenMotionTransitions.get(outputId);
-
-            for (int t = 0; t < motion.length - 1; t++) {
-                //so the rule is, unless I have two consecutive bins of motion,
-                //I can't transition from sleep to wake, or whatever the fuck is specified here
-                if (!(motion[t] > 0.0 && motion[t + 1] > 0.0)) {
-
-                    for (final Transition transition : forbiddenTransitionListForThisOutputId) {
-                        forbiddenTransitions.put(t, transition);
-                    }
-                }
-            }
-
-            forbiddenTransitionsByOutputId.put(outputId,forbiddenTransitions);
+            forbiddenTransitionsByOutputId.put(outputId,getMotionForbiddenTransitions(forbiddenMotionTransitions.get(outputId),motion));
         }
 
         return Optional.of(new BinnedData(data,forbiddenTransitionsByOutputId,numMinutesInWindow,startTimeMillisInUTC));
     }
 
+    static public Multimap<Integer,Transition> getMotionForbiddenTransitions(final Collection<Transition> forbiddenTransitionList,final double [] motion) {
+        final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
+
+        if (forbiddenTransitionList == null) {
+            return forbiddenTransitions;
+        }
+
+        for (int t = 0; t < motion.length - 1; t++) {
+            //so the rule is, unless I have two consecutive bins of motion,
+            //I can't transition from sleep to wake, or whatever the fuck is specified here
+            if (!(motion[t] > 0.0 && motion[t + 1] > 0.0)) {
+
+                for (final Transition transition : forbiddenTransitionList) {
+                    forbiddenTransitions.put(t, transition);
+                }
+            }
+        }
+
+        return forbiddenTransitions;
+
+    }
 
     static protected long getTimeFromBin(int bin, int binWidthMinutes, long t0) {
         long t = bin * binWidthMinutes;
