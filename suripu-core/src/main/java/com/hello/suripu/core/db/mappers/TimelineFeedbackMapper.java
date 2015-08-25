@@ -19,7 +19,7 @@ public class TimelineFeedbackMapper implements ResultSetMapper<TimelineFeedback>
         final Long accountId = r.getLong("account_id");
         final String oldTime = r.getString("old_time");
         final String newTime = r.getString("new_time");
-        final Long created = r.getLong("created");
+        final Long created = r.getTimestamp("created").getTime();
         final Event.Type eventType = Event.Type.fromInteger(r.getInt("event_type"));
 
         return TimelineFeedback.create(
