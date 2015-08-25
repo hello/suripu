@@ -1,4 +1,4 @@
-package com.hello.suripu.coredw8.models;
+package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -17,7 +17,7 @@ public class UserInteraction {
     public final Integer offsetMillis;
 
 
-    public UserInteraction(final Float waveCount, final Float holdCount, final Long timestamp, final Integer offsetMillis ) {
+    public UserInteraction(final Float waveCount, final Float holdCount, final Long timestamp, final Integer offsetMillis) {
         this.waveCount = waveCount;
         this.holdCount = holdCount;
         this.timestamp = timestamp;

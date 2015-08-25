@@ -1,9 +1,6 @@
-package com.hello.suripu.coredw8.models;
+package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hello.suripu.core.models.RingTime;
-import com.hello.suripu.core.models.SmartAlarmHistory;
-import com.hello.suripu.core.models.TimeZoneHistory;
 import java.util.List;
 
 /**
@@ -20,8 +17,8 @@ public class TimeHistory {
     final List<RingTime> ringTimeHistory;
 
     public TimeHistory(final List<TimeZoneHistory> timeZoneHistory,
-                           final List<SmartAlarmHistory> smartAlarmHistory,
-                           final List<RingTime> ringTimeHistory){
+                       final List<SmartAlarmHistory> smartAlarmHistory,
+                       final List<RingTime> ringTimeHistory){
         this.timeZoneHistory = timeZoneHistory;
         this.smartAlarmHistory = smartAlarmHistory;
         this.ringTimeHistory = ringTimeHistory;
