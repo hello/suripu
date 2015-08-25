@@ -22,8 +22,8 @@ public @interface BindStoreFeedback {
                 public void bind(SQLStatement q, BindStoreFeedback bind, StoreFeedback arg) {
 
                     q.bind("account_id", arg.accountId);
-                    q.bind("question", arg.question);
-                    q.bind("response", arg.response);
+                    q.bind("like", arg.like);
+                    q.bind("review", arg.review);
                 }
             };
         }

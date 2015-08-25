@@ -6,26 +6,26 @@ import com.google.common.base.Optional;
 
 public class StoreFeedback {
 
-    public final String question;
-    public final String response;
+    public final String like;
+    public final Boolean review;
     public final Optional<Long> accountId;
 
-    private StoreFeedback(final String question, final String response) {
-        this(question, response, null);
+    private StoreFeedback(final String like, final Boolean review) {
+        this(like, review, null);
     }
 
-    private StoreFeedback(final String question, final String response, final Long accountId) {
-        this.question = question;
-        this.response = response;
+    private StoreFeedback(final String like, final Boolean review, final Long accountId) {
+        this.like = like;
+        this.review = review;
         this.accountId = Optional.fromNullable(accountId);
     }
 
     @JsonCreator
-    public static StoreFeedback create(@JsonProperty("question") final String question, @JsonProperty("response") final String response) {
-        return new StoreFeedback(question, response);
+    public static StoreFeedback create(@JsonProperty("like") final String like, @JsonProperty("review") final Boolean review) {
+        return new StoreFeedback(like, review);
     }
 
     public static StoreFeedback forAccountId(final StoreFeedback storeFeedback, final Long accountId) {
-        return new StoreFeedback(storeFeedback.question, storeFeedback.response, accountId);
+        return new StoreFeedback(storeFeedback.like, storeFeedback.review, accountId);
     }
 }
