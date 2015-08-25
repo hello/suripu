@@ -138,14 +138,14 @@ public class MultiObsHmmIntegrationTest {
                 TestCase.assertFalse(motionList == null);
 
                 double [] motion = new double[motionList.size()];
-                for (int i = 0; i < motionList.size(); i++) {
+                for (int i = 1; i < motionList.size(); i++) {
                     final int state = motionList.get(i);
 
                     if (state == 6 || state == 0) {
-                        motion[i] = 0;
+                        motion[i - 1] = 0;
                     }
                     else {
-                        motion[i] = 1;
+                        motion[i - 1] = 1;
                     }
                 }
 

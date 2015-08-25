@@ -329,7 +329,7 @@ public class OnlineHmmSensorDataBinning {
             if (!(motion[t] > 0.0 && motion[t + 1] > 0.0)) {
 
                 for (final Transition transition : forbiddenTransitionList) {
-                    forbiddenTransitions.put(t, transition);
+                    forbiddenTransitions.put(t+1, transition);
                 }
             }
         }
