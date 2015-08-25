@@ -100,8 +100,8 @@ public class MultiObsHmmIntegrationTest {
                 new Transition(1,2,151),
                 new Transition(1,2,167),
                 new Transition(1,2,142),
-                new Transition(0,1,48),
-                new Transition(0,1,35)};
+                new Transition(1,2,145),
+                new Transition(1,2,159)};
 
         final Transition [] sleeps = {
                 new Transition(0,1,55),
@@ -112,8 +112,8 @@ public class MultiObsHmmIntegrationTest {
                 new Transition(0,1,42),
                 new Transition(0,1,70),
                 new Transition(0,1,73),
-                new Transition(1,2,145),
-                new Transition(1,2,159)};
+                new Transition(0,1,48),
+                new Transition(0,1,35)};
 
 
 
@@ -139,7 +139,14 @@ public class MultiObsHmmIntegrationTest {
 
                 double [] motion = new double[motionList.size()];
                 for (int i = 0; i < motionList.size(); i++) {
-                    motion[i] = motionList.get(i);
+                    final int state = motionList.get(i);
+
+                    if (state == 6 || state == 0) {
+                        motion[i] = 0;
+                    }
+                    else {
+                        motion[i] = 1;
+                    }
                 }
 
                 final Map<String,Multimap<Integer, Transition>> forbiddenTransitionByOutputId = Maps.newHashMap();
