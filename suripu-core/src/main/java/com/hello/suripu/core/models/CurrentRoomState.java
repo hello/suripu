@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @JsonPropertyOrder({"temperature", "humidity", "light", "sound"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CurrentRoomState {
 
 
@@ -93,18 +95,36 @@ public class CurrentRoomState {
     @JsonIgnore
     public final State particulates;
 
+    @JsonProperty("particulates")
+    public State particulates() {
+        return (hasDust) ? particulates : null;
+    }
+
     @JsonProperty("light")
     public final State light;
 
     @JsonProperty("sound")
     public final State sound;
 
+    @JsonIgnore
+    public final Boolean hasDust;
+
     public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound) {
+        this(temperature, humidity, particulates, light, sound, Boolean.FALSE);
+    }
+
+
+    public CurrentRoomState(final State temperature, final State humidity, final State particulates, final State light, final State sound, final Boolean hasDust) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.particulates = particulates;
         this.light = light;
         this.sound = sound;
+        this.hasDust = hasDust;
+    }
+
+    public CurrentRoomState withDust(final Boolean hasDust) {
+        return new CurrentRoomState(temperature, humidity, particulates, light, sound, hasDust);
     }
 
     @Deprecated
@@ -204,13 +224,14 @@ public class CurrentRoomState {
      *
      * @return
      */
-    public static CurrentRoomState empty() {
+    public static CurrentRoomState empty(final Boolean hasDust) {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(null, English.LOADING_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
                 new State(null, English.LOADING_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
-                new State(null, English.LOADING_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI),
+                new State(null, English.LOADING_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.MICRO_G_M3),
                 new State(null, English.LOADING_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.LUX),
-                new State(null, English.LOADING_SOUND_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.DB)
+                new State(null, English.LOADING_SOUND_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.DB),
+                hasDust
         );
 
         return roomState;
@@ -222,7 +243,7 @@ public class CurrentRoomState {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS),
                 new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
-                new State(particulatesAQI, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI),
+                new State(particulatesAQI, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.MICRO_G_M3),
                 new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
                 new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
         );
@@ -315,7 +336,7 @@ public class CurrentRoomState {
             message = (preSleep) ? English.HIGH_PARTICULATES_PRE_SLEEP_MESSAGE : English.HIGH_PARTICULATES_MESSAGE;
         }
 
-        return new State(particulatesAQI, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.AQI);
+        return new State(particulatesAQI, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.MICRO_G_M3);
     }
 
     public static State getLightState(final float light, final DateTime dataTimestampUTC, final Boolean preSleep) {
