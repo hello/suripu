@@ -127,21 +127,6 @@ public class CurrentRoomState {
         return new CurrentRoomState(temperature, humidity, particulates, light, sound, hasDust);
     }
 
-    @Deprecated
-    public static CurrentRoomState fromRawData(final int rawTemperature, final int rawHumidity, final int rawDustMax, final int rawLight, final int rawBackgroundNoise, final int rawPeakNoise,
-                                               final long timestamp,
-                                               final int firmwareVersion,
-                                               final DateTime referenceTime,
-                                               final Integer thresholdInMinutes){
-
-        final float humidity = DataUtils.calibrateHumidity(rawTemperature, rawHumidity);
-        final float temperature = DataUtils.calibrateTemperature(rawTemperature);
-        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, firmwareVersion));
-        final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), DataUtils.convertAudioRawToDB(rawPeakNoise));
-        return fromTempHumidDustLightSound(temperature, humidity, particulatesAQI, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
-
-    }
-
     public static CurrentRoomState fromRawData(final int rawTemperature, final int rawHumidity, final int rawDustMax, final int rawLight, final int rawBackgroundNoise, final int rawPeakNoise,
                                                final long timestamp,
                                                final int firmwareVersion,
@@ -151,57 +136,38 @@ public class CurrentRoomState {
 
         final float humidity = DataUtils.calibrateHumidity(rawTemperature, rawHumidity);
         final float temperature = DataUtils.calibrateTemperature(rawTemperature);
-        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(rawDustMax, calibration, firmwareVersion));
+        final float particulates = DataUtils.convertRawDustCountsToDensity(rawDustMax, calibration, firmwareVersion);
         final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), DataUtils.convertAudioRawToDB(rawPeakNoise));
-        return fromTempHumidDustLightSound(temperature, humidity, particulatesAQI, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
+        return fromTempHumidDustLightSound(temperature, humidity, particulates, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
     }
 
 
 
-    public static CurrentRoomState fromTempHumidDustLightSound(final float temperature, final float humidity, final float particulatesAQI, final float light, final float sound,
+    public static CurrentRoomState fromTempHumidDustLightSound(final float temperature, final float humidity, final float particulates, final float light, final float sound,
                                                                final DateTime dataTimestampUTC,
                                                                final DateTime referenceTime,
                                                                final Integer thresholdInMinutes,
                                                                final String tempUnit) {
 
 
-        LOGGER.debug("temp = {}, humidity = {}, particulates = {}, light = {}, sound = {}", temperature, humidity, particulatesAQI, light, sound);
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}, light = {}, sound = {}", temperature, humidity, particulates, light, sound);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
-            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulatesAQI, light, sound, dataTimestampUTC);
+            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulates, light, sound, dataTimestampUTC);
             return roomState;
         }
 
         // get states
         final State temperatureState = getTemperatureState(temperature, dataTimestampUTC, tempUnit, false);
         final State humidityState = getHumidityState(humidity, dataTimestampUTC, false);
-        final State particulatesState = getParticulatesState(particulatesAQI, dataTimestampUTC, false);
+        final State particulatesState = getParticulatesState(particulates, dataTimestampUTC, false);
         final State lightState = getLightState(light, dataTimestampUTC, false);
         final State soundState = getSoundState(sound, dataTimestampUTC, false);
 
         final CurrentRoomState roomState = new CurrentRoomState(temperatureState, humidityState, particulatesState, lightState, soundState);
         return roomState;
-
-    }
-
-    /**
-     * Converts BatchSensorData to a CurrentRoomState object
-     * @param data
-     * @return
-     */
-
-    @Deprecated
-    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit) {
-
-        final float temp = DataUtils.calibrateTemperature(data.ambientTemperature);
-        final float humidity = DataUtils.calibrateHumidity(data.ambientTemperature, data.ambientHumidity);
-        final float light = data.ambientLight; // dvt units values are already converted to lux
-        final float sound = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(data.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(data.audioPeakDisturbancesDB));
-        // max value is in raw counts, conversion needed
-        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientAirQualityRaw, data.firmwareVersion));
-        return fromTempHumidDustLightSound(temp, humidity, particulatesAQI, light, sound, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
 
@@ -212,8 +178,8 @@ public class CurrentRoomState {
         final float light = data.ambientLight; // dvt units values are already converted to lux
         final float sound = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(data.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(data.audioPeakDisturbancesDB));
         // max value is in raw counts, conversion needed
-        final float particulatesAQI = Float.valueOf(DataUtils.convertRawDustCountsToAQI(data.ambientAirQualityRaw, calibration, data.firmwareVersion));
-        return fromTempHumidDustLightSound(temp, humidity, particulatesAQI, light, sound, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
+        final float particulates = DataUtils.convertRawDustCountsToDensity(data.ambientAirQualityRaw, calibration, data.firmwareVersion);
+        return fromTempHumidDustLightSound(temp, humidity, particulates, light, sound, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
 
@@ -238,12 +204,12 @@ public class CurrentRoomState {
     }
 
     public static CurrentRoomState dataTooOld(final float temperature, final float humidity,
-                                              final float particulatesAQI, final float light, final float sound,
+                                              final float particulates, final float light, final float sound,
                                               final DateTime dataTimestampUTC) {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS),
                 new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
-                new State(particulatesAQI, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.MICRO_G_M3),
+                new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.MICRO_G_M3),
                 new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
                 new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
         );
@@ -321,26 +287,27 @@ public class CurrentRoomState {
         return new State(humidity, message, idealHumidityConditions, condition, dataTimestampUTC, State.Unit.PERCENT);
     }
 
-    public static State getParticulatesState(final float particulatesAQI, final DateTime dataTimestampUTC, final Boolean preSleep) {
+    public static State getParticulatesState(final float particulates, final DateTime dataTimestampUTC, final Boolean preSleep) {
         // see http://www.sparetheair.com/aqi.cfm
 
         final String idealParticulatesConditions = English.PARTICULATES_ADVICE_MESSAGE;
         State.Condition condition = State.Condition.ALERT;;
         String message = (preSleep) ? English.VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE: English.VERY_HIGH_PARTICULATES_MESSAGE;;
 
-        if (particulatesAQI <= Particulates.PARTICULATE_AQI_LEVEL_MAX_IDEAL) {
+        if (particulates <= Particulates.PARTICULATE_DENSITY_MAX_IDEAL) {
             condition = State.Condition.IDEAL;
             message = (preSleep) ? English.IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE : English.IDEAL_PARTICULATES_MESSAGE;
-        } else if (particulatesAQI <= Particulates.PARTICULATE_AQI_LEVEL_MAX_WARNING) {
+        } else if (particulates <= Particulates.PARTICULATE_DENSITY_MAX_WARNING) {
             condition = State.Condition.WARNING;
             message = (preSleep) ? English.HIGH_PARTICULATES_PRE_SLEEP_MESSAGE : English.HIGH_PARTICULATES_MESSAGE;
         }
+
 
         if (condition != State.Condition.IDEAL && !preSleep) {
             message += English.RECOMMENDATION_PARTICULATES_TOO_HIGH;
         }
 
-        return new State(particulatesAQI, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.MICRO_G_M3);
+        return new State(particulates, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.MICRO_G_M3);
     }
 
     public static State getLightState(final float light, final DateTime dataTimestampUTC, final Boolean preSleep) {

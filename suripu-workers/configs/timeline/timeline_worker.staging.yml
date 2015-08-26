@@ -156,6 +156,7 @@ dynamodb:
     alarm_log: alarm
     hmm_bayesnet_priors: hmm_bayesnet_priors
     hmm_bayesnet_models: hmm_bayesnet_models
+    calibration: calibration
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
@@ -169,6 +170,7 @@ dynamodb:
     alarm_log: http://dynamodb.us-east-1.amazonaws.com
     hmm_bayesnet_priors: http://dynamodb.us-east-1.amazonaws.com
     hmm_bayesnet_models: http://dynamodb.us-east-1.amazonaws.com
+    calibration: http://dynamodb.us-east-1.amazonaws.com
 
 aggregate_window_size_min: 10
 
