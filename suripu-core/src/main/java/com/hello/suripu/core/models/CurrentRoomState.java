@@ -144,25 +144,25 @@ public class CurrentRoomState {
 
 
 
-    public static CurrentRoomState fromTempHumidDustLightSound(final float temperature, final float humidity, final float particulatesAQI, final float light, final float sound,
+    public static CurrentRoomState fromTempHumidDustLightSound(final float temperature, final float humidity, final float particulates, final float light, final float sound,
                                                                final DateTime dataTimestampUTC,
                                                                final DateTime referenceTime,
                                                                final Integer thresholdInMinutes,
                                                                final String tempUnit) {
 
 
-        LOGGER.debug("temp = {}, humidity = {}, particulates = {}, light = {}, sound = {}", temperature, humidity, particulatesAQI, light, sound);
+        LOGGER.debug("temp = {}, humidity = {}, particulates = {}, light = {}, sound = {}", temperature, humidity, particulates, light, sound);
 
         if(referenceTime.minusMinutes(thresholdInMinutes).getMillis() > dataTimestampUTC.getMillis()) {
             LOGGER.warn("{} is too old, not returning anything", dataTimestampUTC);
-            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulatesAQI, light, sound, dataTimestampUTC);
+            final CurrentRoomState roomState = dataTooOld(temperature, humidity, particulates, light, sound, dataTimestampUTC);
             return roomState;
         }
 
         // get states
         final State temperatureState = getTemperatureState(temperature, dataTimestampUTC, tempUnit, false);
         final State humidityState = getHumidityState(humidity, dataTimestampUTC, false);
-        final State particulatesState = getParticulatesState(particulatesAQI, dataTimestampUTC, false);
+        final State particulatesState = getParticulatesState(particulates, dataTimestampUTC, false);
         final State lightState = getLightState(light, dataTimestampUTC, false);
         final State soundState = getSoundState(sound, dataTimestampUTC, false);
 
@@ -204,12 +204,12 @@ public class CurrentRoomState {
     }
 
     public static CurrentRoomState dataTooOld(final float temperature, final float humidity,
-                                              final float particulatesAQI, final float light, final float sound,
+                                              final float particulates, final float light, final float sound,
                                               final DateTime dataTimestampUTC) {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS),
                 new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
-                new State(particulatesAQI, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.MICRO_G_M3),
+                new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.MICRO_G_M3),
                 new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
                 new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
         );
