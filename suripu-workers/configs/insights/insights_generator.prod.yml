@@ -175,7 +175,7 @@ sleep_stats_version: v_0_2
 time_zone_history_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: sleep_stats
+  table_name: prod_timezone_history
 
 kinesis_logger:
   stream_name: logs
