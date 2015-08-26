@@ -302,6 +302,11 @@ public class CurrentRoomState {
             message = (preSleep) ? English.HIGH_PARTICULATES_PRE_SLEEP_MESSAGE : English.HIGH_PARTICULATES_MESSAGE;
         }
 
+
+        if (condition != State.Condition.IDEAL && !preSleep) {
+            message += English.RECOMMENDATION_PARTICULATES_TOO_HIGH;
+        }
+
         return new State(particulates, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.MICRO_G_M3);
     }
 
