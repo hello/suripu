@@ -67,6 +67,12 @@ public class MotionTransitionRestriction implements TransitionRestriction {
 
         final ImmutableList<Integer> motionFeatures =  features.get(motionModelId);
 
+        if (motionFeatures == null) {
+            //TODO log this as an error
+            return forbiddenTransitionsByTimeIndex;
+
+        }
+
         for (int t = 0; t < motionFeatures.size() - 1; t++) {
 
             //if not two consecutive motion indicies, then FORBIDDEN!!!!!
