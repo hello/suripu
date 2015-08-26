@@ -9,7 +9,7 @@ public class SleepMotionMsgEN {
         return new Text("Mover and Shaker",
                 String.format("Out of the last %d nights, you moved on average %.1f%% more",
                         numNights, Math.abs(diff)) +
-                        " than the average Sense user. " +
+                        " than the average person using Sense. " +
                         String.format("About **%.1f%% of your sleep** consists of agitated sleep.", percentage)
         );
     }
@@ -18,7 +18,7 @@ public class SleepMotionMsgEN {
         return new Text("Still as the Night",
                 String.format("Out of the last %d nights, you moved on average %.1f%% less",
                         numNights, Math.abs(diff)) +
-                        " than the average Sense user. " +
+                        " than the average person using Sense. " +
                         String.format("About **%.1f%% of your sleep** consists of agitated sleep.", percentage)
         );
     }
@@ -33,7 +33,7 @@ public class SleepMotionMsgEN {
 
         return new Text("The Way You Move",
                 String.format("In each of the last %d nights, ", numNights) +
-                String.format("we noticed that you only moved %.1f%% %s than the average Sense user. ", Math.abs(diff), description) +
+                String.format("we noticed that you only moved %.1f%% %s than the average person using Sense. ", Math.abs(diff), description) +
                 String.format("About **%.1f%% of your sleep** consists of agitated sleep.", percentage));
     }
 }
