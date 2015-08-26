@@ -7,19 +7,19 @@ public class SleepMotionMsgEN {
 
     public static Text moreMovement(final int numNights, final int diff, final int percentage) {
         return new Text("Mover and Shaker",
-                String.format("Out of the last %d nights, you moved on average %.1f%% more",
+                String.format("Out of the last %d nights, you moved on average %d%% more",
                         numNights, Math.abs(diff)) +
                         " than the average person using Sense. " +
-                        String.format("About **%.1f%% of your sleep** consists of agitated sleep.", percentage)
+                        String.format("About **%d%% of your sleep** consists of agitated sleep.", percentage)
         );
     }
 
     public static Text lessMovement(final int numNights, final int diff, final int percentage) {
         return new Text("Still as the Night",
-                String.format("Out of the last %d nights, you moved on average %.1f%% less",
+                String.format("Out of the last %d nights, you moved on average %d%% less",
                         numNights, Math.abs(diff)) +
                         " than the average person using Sense. " +
-                        String.format("About **%.1f%% of your sleep** consists of agitated sleep.", percentage)
+                        String.format("About **%d%% of your sleep** consists of agitated sleep.", percentage)
         );
     }
 
@@ -33,7 +33,7 @@ public class SleepMotionMsgEN {
 
         return new Text("The Way You Move",
                 String.format("In each of the last %d nights, ", numNights) +
-                String.format("we noticed that you only moved %.1f%% %s than the average person using Sense. ", Math.abs(diff), description) +
-                String.format("About **%.1f%% of your sleep** consists of agitated sleep.", percentage));
+                String.format("we noticed that you only moved %d%% %s than the average person using Sense. ", Math.abs(diff), description) +
+                String.format("About **%d%% of your sleep** consists of agitated sleep.", percentage));
     }
 }

@@ -74,14 +74,14 @@ public class SleepMotion {
             return Optional.absent();
         }
 
-        final float averageMotionPercentageFloat = (float) (totMotion / (float) totDuration) * 100.0f;
-        final int averageMotionPercentage = (int) averageMotionPercentageFloat;
-        final float overallDiffFloat = (averageMotionPercentage - AVERAGE_SLEEP_PERC) / AVERAGE_SLEEP_PERC * 100.0f;
+        final float averageMotionPercentageFloat = (float) totMotion / (float) totDuration;
+        final int averageMotionPercentage = (int) (averageMotionPercentageFloat * 100.0f);
+        final float overallDiffFloat = (averageMotionPercentageFloat - AVERAGE_SLEEP_PERC) / AVERAGE_SLEEP_PERC * 100.0f;
         final int overallDiff = (int) overallDiffFloat;
 
         Text text;
-        if (Math.abs(overallDiff) >= SIGNIFICANT_DIFF) {
-            if (overallDiff > 0) {
+        if (Math.abs(overallDiffFloat) >= SIGNIFICANT_DIFF) {
+            if (overallDiffFloat > 0) {
                 text = SleepMotionMsgEN.moreMovement(numDays, overallDiff, averageMotionPercentage);
             } else {
                 text = SleepMotionMsgEN.lessMovement(numDays, overallDiff, averageMotionPercentage);

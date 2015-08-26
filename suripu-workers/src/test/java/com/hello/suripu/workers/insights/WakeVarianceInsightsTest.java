@@ -41,21 +41,18 @@ public class WakeVarianceInsightsTest {
         assertThat(someResult.get().title, is(expectedTitle));
 
         final String someMessage = WakeVarianceMsgEN.getWakeVarianceLow(27,25).message;
-        System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
 
     @Test
     public void testVarianceNotLowEnough() {
         final String someMessage = WakeVarianceMsgEN.getWakeVarianceNotLowEnough(50, 50).message;
-        System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
 
     @Test
     public void testVarianceHigh() {
         final String someMessage = WakeVarianceMsgEN.getWakeVarianceHigh(79, 75).message;
-        System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
 
@@ -73,7 +70,6 @@ public class WakeVarianceInsightsTest {
         assertThat(someResult.get().title, is(expectedTitle));
 
         final String someMessage = WakeVarianceMsgEN.getWakeVarianceTooHigh(200,99).message;
-        System.out.print(someMessage);
         assertThat(someMessage, is(someMessage));
     }
 
