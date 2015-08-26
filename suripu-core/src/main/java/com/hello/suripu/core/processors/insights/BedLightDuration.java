@@ -44,29 +44,27 @@ public class BedLightDuration {
         }
         final Integer timeZoneOffset = timeZoneHistory.get().offsetMillis;
 
-        final List<DeviceData> deviceData = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset);
-        if (deviceData == null) {
+        final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset);
+        if (deviceDatas.isEmpty()) {
             return Optional.absent();
         }
 
-        final List<List<DeviceData>> deviceDataByDay = splitDeviceDataByDay(deviceData);
+        final int avgLightOn = getInsightsHelper(deviceDatas);
+        return scoreCardBedLightDuration(avgLightOn, accountId);
+    }
 
+    public static Integer getInsightsHelper(final List<DeviceData> deviceDatas) {
+
+        final List<List<DeviceData>> deviceDataByDay = splitDeviceDataByDay(deviceDatas);
 
         final List<Integer> lightOnDurationList = Lists.newArrayList();
 
-        for (int i = 0; i < deviceDataByDay.size(); i++) {
-            lightOnDurationList.add(findLightOnDurationForDay(deviceDataByDay.get(i), OFF_MINUTES_THRESHOLD));
+        for (final List<DeviceData> deviceDataDay : deviceDataByDay) {
+            lightOnDurationList.add(findLightOnDurationForDay(deviceDataDay, OFF_MINUTES_THRESHOLD));
         }
 
-        final int avgLightOn;
-        if (lightOnDurationList.size() == 0) {
-            avgLightOn = 0;
-        }
-        else {
-            avgLightOn = computeAverage(lightOnDurationList);
-        }
-
-        return scoreCardBedLightDuration(avgLightOn, accountId);
+        final Integer avgLightOn = computeAverage(lightOnDurationList);
+        return avgLightOn;
     }
 
     public static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final Integer timeZoneOffset) {
@@ -123,7 +121,7 @@ public class BedLightDuration {
         return onTime.getMinutes();
     }
 
-    public static final int computeAverage(List<Integer> data) {
+    public static final int computeAverage(final List<Integer> data) {
         // compute average value
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final Integer lightOn : data) {
@@ -133,7 +131,7 @@ public class BedLightDuration {
     }
 
     public static Optional<InsightCard> scoreCardBedLightDuration(final int avgLightOn, final Long accountId) {
-        Text text;
+        final Text text;
         if (avgLightOn <= 60) {
             return Optional.absent();
 //            text = BedLightDurationMsgEN.getLittleLight();

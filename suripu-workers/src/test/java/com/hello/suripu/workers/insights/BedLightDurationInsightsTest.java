@@ -275,24 +275,7 @@ public class BedLightDurationInsightsTest {
             }
         }
 
-        //below is copy-pasted code from BedLightDuration.getInsights
-        final List<List<DeviceData>> deviceDataByDay = BedLightDuration.splitDeviceDataByDay(deviceData);
-
-        final List<Integer> lightOnDurationList = Lists.newArrayList();
-
-        for (int i = 0; i < deviceDataByDay.size(); i++) { //correct incrementation?
-            lightOnDurationList.add(BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(i), BedLightDuration.OFF_MINUTES_THRESHOLD));// change to add
-        }
-
-        final int avgLightOn;
-
-        if (lightOnDurationList.size() == 0) {
-            avgLightOn = 0;
-        }
-        else {
-            avgLightOn = BedLightDuration.computeAverage(lightOnDurationList);
-        }
-
+        final int avgLightOn = BedLightDuration.getInsightsHelper(deviceData);
         assertThat(avgLightOn, is(26));
 //        return BedLightDuration.scoreCardBedLightDuration(avgLightOn, accountId);
     }
@@ -314,23 +297,7 @@ public class BedLightDurationInsightsTest {
             }
         }
 
-        //below is copy-pasted code from BedLightDuration.getInsights
-        final List<List<DeviceData>> deviceDataByDay = BedLightDuration.splitDeviceDataByDay(deviceData);
-
-        final List<Integer> lightOnDurationList = Lists.newArrayList();
-
-        for (int i = 0; i < deviceDataByDay.size(); i++) { //correct incrementation?
-            lightOnDurationList.add(BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(i), BedLightDuration.OFF_MINUTES_THRESHOLD));// change to add
-        }
-
-        final int avgLightOn;
-
-        if (lightOnDurationList.size() == 0) {
-            avgLightOn = 0;
-        }
-        else {
-            avgLightOn = BedLightDuration.computeAverage(lightOnDurationList);
-        }
+        final int avgLightOn = BedLightDuration.getInsightsHelper(deviceData);
         assertThat(avgLightOn, is(0));
 //        return BedLightDuration.scoreCardBedLightDuration(avgLightOn, accountId);
     }
@@ -352,25 +319,8 @@ public class BedLightDurationInsightsTest {
             }
         }
 
-        //below is copy-pasted code from BedLightDuration.getInsights
-        final List<List<DeviceData>> deviceDataByDay = BedLightDuration.splitDeviceDataByDay(deviceData);
-
-        final List<Integer> lightOnDurationList = Lists.newArrayList();
-
-        for (int i = 0; i < deviceDataByDay.size(); i++) { //correct incrementation?
-            lightOnDurationList.add(BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(i), BedLightDuration.OFF_MINUTES_THRESHOLD));// change to add
-        }
-
-        final int avgLightOn;
-
-        if (lightOnDurationList.size() == 0) {
-            avgLightOn = 0;
-        }
-        else {
-            avgLightOn = BedLightDuration.computeAverage(lightOnDurationList);
-        }
+        final int avgLightOn = BedLightDuration.getInsightsHelper(deviceData);
         assertThat(avgLightOn, is(176));
-//        return BedLightDuration.scoreCardBedLightDuration(avgLightOn, accountId);
     }
 
     private static DeviceData createNewDeviceData(final Integer lightValue, final DateTime timestamp) {

@@ -162,7 +162,7 @@ sleep_stats_version: v_0_2
 time_zone_history_db:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: prod_sleep_stats
+  table_name: sleep_stats
 
 kinesis_logger:
   stream_name: dev-logs
