@@ -5,20 +5,21 @@ package com.hello.suripu.core.models.Insights.Message;
  */
 public class BedLightDurationMsgEN {
     public static Text getLittleLight() {
-        return new Text("Hello, Darkness",
-                "You don't have a light on. Good."
+//        not actually used - will need to update text if we do use.
+        return new Text("Doing well",
+                "Your bedroom is dim at night, which is great for your sleep."
         );
     }
 
     public static Text getMediumLight() {
         return new Text("Crepuscular",
-                "You have a light on. Bad."
+                "There seems to be a bright light on in your bedroom late into your night. If you have trouble falling asleep, consider moving any pre-sleep activities outside of the bedroom."
         );
     }
 
     public static Text getHighLight() {
         return new Text("Night owl",
-                "You have a light on. Bad."
+                "There seems to be a bright light on in your bedroom late into your night. If you have trouble falling asleep, consider moving any pre-sleep activities outside of the bedroom."
         );
     }
 
