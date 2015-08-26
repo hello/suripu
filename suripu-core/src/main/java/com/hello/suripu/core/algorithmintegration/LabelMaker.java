@@ -1,12 +1,16 @@
 package com.hello.suripu.core.algorithmintegration;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmData;
+import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.util.FeedbackUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -20,6 +24,7 @@ import java.util.UUID;
 public class LabelMaker {
     private final static int GUARANTEED_SLEEP_PERIOD_FROM_ONE_LABEL = 180; //minutes
     private static final long NUMBER_OF_MILLIS_IN_A_MINUTE = 60000L;
+
 
     private static final int LABEL_PRE_SLEEP = 0;
     private static final int LABEL_DURING_SLEEP = 1;

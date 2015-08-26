@@ -21,6 +21,10 @@ public class OnlineHmmScratchPad {
     public final Map<String,OnlineHmmModelParams> paramsByOutputId;
     public final long lastUpdateTimeUtc;
 
+    public boolean isEmpty() {
+        return paramsByOutputId.isEmpty();
+    }
+
     public static Optional<OnlineHmmScratchPad> createFromProtobuf(final byte [] data) {
 
         try {

@@ -14,12 +14,15 @@ public class OneDaysSensorData {
     public final ImmutableList<TrackerMotion> partnerMotions;
     public final ImmutableList<TimelineFeedback> feedbackList;
     public final int timezoneOffsetMillis;
+    public final long timeOfQueryUTC;
 
-    public OneDaysSensorData(AllSensorSampleList allSensorSampleList,final ImmutableList<TrackerMotion> trackerMotions,final ImmutableList<TrackerMotion> partnerMotions,final ImmutableList<TimelineFeedback> feedbackList, final int timezoneOffsetMillis) {
+    public OneDaysSensorData(AllSensorSampleList allSensorSampleList,final ImmutableList<TrackerMotion> trackerMotions,final ImmutableList<TrackerMotion> partnerMotions,
+                             final ImmutableList<TimelineFeedback> feedbackList, final int timezoneOffsetMillis, final long timeOfQueryUTC) {
         this.allSensorSampleList = allSensorSampleList;
         this.trackerMotions = trackerMotions;
         this.partnerMotions = partnerMotions;
         this.feedbackList = feedbackList;
         this.timezoneOffsetMillis = timezoneOffsetMillis;
+        this.timeOfQueryUTC = timeOfQueryUTC;
     }
 }

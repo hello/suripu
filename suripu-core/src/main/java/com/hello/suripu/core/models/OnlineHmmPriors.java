@@ -11,6 +11,7 @@ import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.Transition;
 import com.hello.suripu.core.algorithmintegration.MotionTransitionRestriction;
+import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.TransitionRestriction;
 import org.apache.commons.codec.binary.Base64;
 
@@ -28,21 +29,24 @@ public class  OnlineHmmPriors {
         this.modelsByOutputId = modelsByOutputId;
     }
 
+    public boolean isEmpty() {
+        return modelsByOutputId.isEmpty();
+    }
+
     @Override
     public OnlineHmmPriors clone() {
         final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
-        for (final String key : modelsByOutputId.keySet()) {
+        for (final Map.Entry<String,Map<String,OnlineHmmModelParams>> entry : this.modelsByOutputId.entrySet()) {
             final Map<String,OnlineHmmModelParams> myMap = Maps.newHashMap();
 
-            for (final Map.Entry<String,OnlineHmmModelParams> params : modelsByOutputId.get(key).entrySet()) {
+            for (final Map.Entry<String,OnlineHmmModelParams> params : entry.getValue().entrySet()) {
                 myMap.put(params.getValue().id, params.getValue().clone());
             }
 
-            modelsByOutputId.put(key, myMap);
+            modelsByOutputId.put(entry.getKey(),myMap);
         }
 
-        final  Multimap<String,com.hello.suripu.algorithm.hmm.Transition> myMap = ArrayListMultimap.create();
 
 
         return new OnlineHmmPriors(modelsByOutputId);
@@ -96,6 +100,12 @@ public class  OnlineHmmPriors {
         }
 
         return RealMatrix.newBuilder().addAllData(vec).setNumRows(numRows).setNumCols(numCols).build();
+    }
+
+    public static OnlineHmmPriors createEmpty() {
+        final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
+
+        return new OnlineHmmPriors(modelsByOutputId);
     }
 
     public static Optional<OnlineHmmModelParams> protobufToParams(final AlphabetHmmPrior protobuf) {

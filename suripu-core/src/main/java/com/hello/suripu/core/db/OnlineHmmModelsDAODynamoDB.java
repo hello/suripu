@@ -88,7 +88,7 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
         final Map<String,byte []> payloads = Maps.newHashMap();
 
         payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
-        payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,OnlineHmmProtos.AlphabetHmmScratchPad.newBuilder().build().toByteArray());
+        payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,OnlineHmmProtos.AlphabetHmmScratchPad.newBuilder().setLastDateUpdatedUtc(0).build().toByteArray());
 
         return dbDAO.update(accountId.toString(),"",payloads);
     }

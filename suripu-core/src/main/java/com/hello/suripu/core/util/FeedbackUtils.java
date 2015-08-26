@@ -55,7 +55,7 @@ public class FeedbackUtils {
 
     }
 
-
+    //returns UTC time
     private static Optional<DateTime> convertFeedbackStringToDateTime(final Event.Type eventType,final DateTime dateOfNight, final String feedbacktime, final Integer offsetMillis) {
         // in bed can not be after after noon AND before 8PM
         // same for fall asleep

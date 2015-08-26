@@ -1,10 +1,7 @@
 package com.hello.suripu.core.algorithmintegration;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.hello.suripu.algorithm.hmm.MultiObsSequenceAlphabetHiddenMarkovModel;
-import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning.*;
 import com.google.common.base.Optional;
@@ -28,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +35,9 @@ import java.util.UUID;
  */
 public class OnlineHmm {
     private final static long NUM_MILLIS_IN_A_MINUTE = 60000L;
+    private static final long NUMBER_OF_MILLIS_IN_AN_HOUR = 3600000L;
+    private static final long MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD = 20 * NUMBER_OF_MILLIS_IN_AN_HOUR;
+
     public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 5;
     public final static String DEFAULT_MODEL_KEY = "default";
 
@@ -57,22 +56,22 @@ public class OnlineHmm {
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
-    private OnlineHmmPriors updateModelPriors(final OnlineHmmPriors models, final OnlineHmmScratchPad newModel, final long startTimeUtc) {
+    private OnlineHmmPriors updateModelPriors(final OnlineHmmPriors models, final OnlineHmmScratchPad newModel, final long startTimeUtc,boolean forceUpdate) {
         final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
 
-        final OnlineHmmPriors updatedModels = models.clone();
+        final OnlineHmmPriors updatedModels = OnlineHmmPriors.createEmpty();
 
         //check to see if this scratchpad is old enough
         //old enough == it was created yesterday or earlier
-        if (newModel.lastUpdateTimeUtc < startTimeUtc) {
+        if (newModel.lastUpdateTimeUtc < startTimeUtc || forceUpdate) {
 
             //go through each and every model, first matching by outputid
             for (final String outputId : newModel.paramsByOutputId.keySet()) {
                 final OnlineHmmModelParams param = newModel.paramsByOutputId.get(outputId);
 
                 //find the existing model params with this id
-                if (!updatedModels.modelsByOutputId.containsKey(outputId)) {
+                if (!models.modelsByOutputId.containsKey(outputId)) {
                     LOGGER.error("did not find models with output id = {}",outputId);
                     continue;
                 }
@@ -80,9 +79,12 @@ public class OnlineHmm {
                 final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList();
 
                 //populate a new list (we will need to sort it later) for this output id
-                for (final Map.Entry<String,OnlineHmmModelParams> params : updatedModels.modelsByOutputId.get(outputId).entrySet()) {
+                for (final Map.Entry<String,OnlineHmmModelParams> params : models.modelsByOutputId.get(outputId).entrySet()) {
                     modelsForThisOutput.add(params.getValue());
                 }
+
+                //add the scratchpad model
+                modelsForThisOutput.add(param);
 
                 //sort by date last used and then updated
                 Collections.sort(modelsForThisOutput, new Comparator<OnlineHmmModelParams>() {
@@ -247,8 +249,23 @@ public class OnlineHmm {
         return SleepEvents.create(inbed,sleep,wake,outofbed);
     }
 
+
+    static private boolean isDayTooOldToConsiderComputingModelUpdate(final long startOfChosenDayUTC, final long currentServerTimeUTC) {
+        final List<TimelineFeedback> filteredFeedbacks = Lists.newArrayList();
+
+        final long ageOfDay = currentServerTimeUTC - startOfChosenDayUTC;
+
+        //am I editing yesterday's timeline?
+        if (ageOfDay > MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD) {
+            return true;
+        }
+
+        return false;
+
+    }
+
     public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc,
-                           OneDaysSensorData oneDaysSensorData, boolean feedbackHasChanged) {
+                           OneDaysSensorData oneDaysSensorData, boolean feedbackHasChanged,boolean forceLearning) {
 
         /*  GET THE FEATURE EXTRACTION LAYER -- this will be as bunch of HMMs that will classify binned sensor data into discrete classes
         *                                    -- it's the time-series equivalent of finding which cluster a data point belongs to
@@ -278,7 +295,7 @@ public class OnlineHmm {
             return predictions;
         }
 
-        final OnlineHmmPriors modelPriors = userModelData.modelPriors.get();
+        OnlineHmmPriors modelPriors = userModelData.modelPriors.get();
 
         if (modelPriors == null) {
             LOGGER.error("somehow never got model priors for account {}",accountId);
@@ -289,12 +306,20 @@ public class OnlineHmm {
         if (userModelData.scratchPad.isPresent()) {
             final OnlineHmmScratchPad scratchPad = userModelData.scratchPad.get();
 
-            //MANAGE THE TANGLE OF MODELS
-            final OnlineHmmPriors updatedModelPriors = updateModelPriors(modelPriors,scratchPad,startTimeUtc);
+            if (!scratchPad.isEmpty()) {
 
-            //UPDATE THE MODEL IN DYNAMO
-            userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,updatedModelPriors);
+                //MANAGE THE TANGLE OF MODELS
+                final OnlineHmmPriors updatedModelPriors = updateModelPriors(modelPriors, scratchPad, startTimeUtc, false);
 
+                if (!updatedModelPriors.isEmpty()) {
+                    //UPDATE THE MODEL IN DYNAMO
+                    userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId, updatedModelPriors);
+
+                    //USE THE NEW PRIORS
+                    modelPriors = updatedModelPriors;
+                }
+
+            }
         }
 
 
@@ -330,7 +355,7 @@ public class OnlineHmm {
         predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset);
 
         /* PROCESS FEEDBACK  */
-        if (feedbackHasChanged && !feedbackList.isEmpty()) {
+        if ( (feedbackHasChanged && !feedbackList.isEmpty() && !isDayTooOldToConsiderComputingModelUpdate(startTimeUtc,oneDaysSensorData.timeOfQueryUTC))  || forceLearning) {
             //1) turn feedback into labels
             final LabelMaker labelMaker = new LabelMaker(uuid);
             final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvent(timezoneOffset,binnedData.t0,endTimeUtc,binnedData.numMinutesInWindow,feedbackList);
@@ -345,7 +370,16 @@ public class OnlineHmm {
             final OnlineHmmScratchPad scratchPad = evaluator.reestimate(usedModelsByOutputId, modelPriors, pathsByModelId, labelsByOutputId, startTimeUtc);
 
             //3) update scratchpad in dynamo
-            userModelDAO.updateScratchpad(accountId,scratchPad);
+            if (forceLearning) {
+                //update right now
+                final OnlineHmmPriors updatedModelPriors = updateModelPriors(modelPriors,scratchPad,startTimeUtc,true);
+
+                userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,updatedModelPriors);
+
+            }
+            else {
+                userModelDAO.updateScratchpad(accountId,scratchPad);
+            }
         }
 
 

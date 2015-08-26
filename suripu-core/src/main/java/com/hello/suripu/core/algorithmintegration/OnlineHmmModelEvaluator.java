@@ -64,6 +64,23 @@ public class OnlineHmmModelEvaluator {
 
     }
 
+    static private String createNewModelId(final String oldModelId) {
+        final String [] tokens = oldModelId.split("-");
+
+
+        if (tokens.length == 1) {
+            return String.format("%s-%d",tokens[0],1);
+        }
+
+        if (tokens.length == 2) {
+            int number = Integer.valueOf(tokens[1]);
+            number++;
+            return String.format("%s-%d",tokens[0],number);
+        }
+
+        return "error";
+
+    }
     /* input:
      * -which models were used for which output
      * -the models
@@ -120,7 +137,10 @@ public class OnlineHmmModelEvaluator {
 
             hmm.reestimate(meas,PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES);
 
-            final OnlineHmmModelParams newParams = new OnlineHmmModelParams(hmm.getLogAlphabetNumerator(),hmm.getLogANumerator(),hmm.getLogDenominator(),hmm.getPi(),params.endStates,params.minStateDurations,params.timeCreatedUtc,currentTime,modelId,outputId,params.transitionRestrictions);
+            //create new model ID
+            final String newModelId = createNewModelId(modelId);
+
+            final OnlineHmmModelParams newParams = new OnlineHmmModelParams(hmm.getLogAlphabetNumerator(),hmm.getLogANumerator(),hmm.getLogDenominator(),hmm.getPi(),params.endStates,params.minStateDurations,params.timeCreatedUtc,currentTime,newModelId,outputId,params.transitionRestrictions);
 
             paramsByOutputId.put(outputId,newParams);
         }

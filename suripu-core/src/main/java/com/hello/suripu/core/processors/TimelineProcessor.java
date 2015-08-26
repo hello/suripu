@@ -180,7 +180,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         /*  GET SENSOR DATA  */
-        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate);
+        final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate,currentTime.getMillis());
 
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
@@ -246,7 +246,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                         targetDate,
                         endDate,
                         sensorData,
-                        feedbackChanged);
+                        feedbackChanged,
+                        false);
 
                 sleepEventsFromAlgorithmOptional = Optional.of(events);
 
@@ -344,7 +345,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
 
-    protected Optional<OneDaysSensorData> getSensorData(final long accountId, final DateTime targetDate, final DateTime endDate) {
+    protected Optional<OneDaysSensorData> getSensorData(final long accountId, final DateTime targetDate, final DateTime endDate, final long currentTimeUTC) {
         final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
         if (originalTrackerMotions.isEmpty()) {
             LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, targetDate);
@@ -445,7 +446,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
          /*  GET FEEDBACK  */
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, tzOffsetMillis);
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),feedbackList,tzOffsetMillis));
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),feedbackList,tzOffsetMillis,currentTimeUTC));
 
     }
 
@@ -1046,10 +1047,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
 
+
         if(!hasFeedbackInTimeline(accountId)) {
             LOGGER.debug("Timeline feedback not enabled for account {}", accountId);
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
+        
         // this is needed to match the datetime created when receiving user feedback
         // I believe we should change how we create datetime in feedback once we have time
         // TODO: tim
