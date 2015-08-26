@@ -130,33 +130,12 @@ public class MultiObsHmmIntegrationTest {
 
             //evaluate
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
+            final String outputId = "SLEEP";
 
             int count = 0;
             for (final Map<String,ImmutableList<Integer>> features : featureData) {
-                final ImmutableList<Integer> motionList = features.get("motion");
 
-                TestCase.assertFalse(motionList == null);
-
-                double [] motion = new double[motionList.size()];
-                for (int i = 1; i < motionList.size(); i++) {
-                    final int state = motionList.get(i);
-
-                    if (state == 6 || state == 0) {
-                        motion[i - 1] = 0;
-                    }
-                    else {
-                        motion[i - 1] = 1;
-                    }
-                }
-
-                final Map<String,Multimap<Integer, Transition>> forbiddenTransitionByOutputId = Maps.newHashMap();
-
-                final String outputId = "SLEEP";
-
-                //map forbidden transitions for motion into a map by time
-                forbiddenTransitionByOutputId.put(outputId, OnlineHmmSensorDataBinning.getMotionForbiddenTransitions(model.get().forbiddenMotionTransitionsByOutputId.get(outputId),motion));
-
-                final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features,forbiddenTransitionByOutputId);
+                final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features);
 
                 final List<Transition> transitions = results.get(outputId).transitions;
 

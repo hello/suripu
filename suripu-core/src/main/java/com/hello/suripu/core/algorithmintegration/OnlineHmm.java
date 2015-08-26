@@ -59,7 +59,6 @@ public class OnlineHmm {
 
     private OnlineHmmPriors updateModelPriors(final OnlineHmmPriors models, final OnlineHmmScratchPad newModel, final long startTimeUtc) {
         final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
-        final Multimap<String,Transition> forbiddenMotionTransitions = models.forbiddenMotionTransitionsByOutputId;
 
 
         final OnlineHmmPriors updatedModels = models.clone();
@@ -223,7 +222,6 @@ public class OnlineHmm {
                     sleep = Optional.of(Event.createFromType(Event.Type.SLEEP, sleepTime, sleepTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
                     wake = Optional.of(Event.createFromType(Event.Type.WAKE_UP,wakeTime,wakeTime + NUM_MILLIS_IN_A_MINUTE,tzOffset, Optional.of(English.WAKE_UP_MESSAGE),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
 
-                    //TODO turn this into events
                     break;
                 }
 
@@ -308,8 +306,7 @@ public class OnlineHmm {
                 featureExtractionModels.params,
                 startTimeUtc,
                 endTimeUtc,
-                timezoneOffset,
-                modelPriors.forbiddenMotionTransitionsByOutputId);
+                timezoneOffset);
 
 
         if (!binnedDataOptional.isPresent()) {
@@ -326,7 +323,7 @@ public class OnlineHmm {
         /*  EVALUATE AND FIND THE BEST MODELS */
         final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(uuid);
 
-        final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId = evaluator.evaluate(modelPriors,pathsByModelId,binnedData.forbiddenTransitionsByOutputId);
+        final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId = evaluator.evaluate(modelPriors,pathsByModelId);
 
 
         /* GET PREDICTIONS  */
@@ -345,7 +342,7 @@ public class OnlineHmm {
                 usedModelsByOutputId.put(entry.getKey(),entry.getValue().originatingModel);
             }
 
-            final OnlineHmmScratchPad scratchPad = evaluator.reestimate(usedModelsByOutputId, modelPriors, pathsByModelId, binnedData.forbiddenTransitionsByOutputId, labelsByOutputId, startTimeUtc);
+            final OnlineHmmScratchPad scratchPad = evaluator.reestimate(usedModelsByOutputId, modelPriors, pathsByModelId, labelsByOutputId, startTimeUtc);
 
             //3) update scratchpad in dynamo
             userModelDAO.updateScratchpad(accountId,scratchPad);

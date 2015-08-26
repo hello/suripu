@@ -921,16 +921,6 @@ public final class OnlineHmmProtos {
      * <code>required int32 to = 2;</code>
      */
     int getTo();
-
-    // optional .hello.OutputId output_id = 3;
-    /**
-     * <code>optional .hello.OutputId output_id = 3;</code>
-     */
-    boolean hasOutputId();
-    /**
-     * <code>optional .hello.OutputId output_id = 3;</code>
-     */
-    com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId getOutputId();
   }
   /**
    * Protobuf type {@code hello.Transition}
@@ -991,17 +981,6 @@ public final class OnlineHmmProtos {
             case 16: {
               bitField0_ |= 0x00000002;
               to_ = input.readInt32();
-              break;
-            }
-            case 24: {
-              int rawValue = input.readEnum();
-              com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId value = com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId.valueOf(rawValue);
-              if (value == null) {
-                unknownFields.mergeVarintField(3, rawValue);
-              } else {
-                bitField0_ |= 0x00000004;
-                outputId_ = value;
-              }
               break;
             }
           }
@@ -1076,26 +1055,9 @@ public final class OnlineHmmProtos {
       return to_;
     }
 
-    // optional .hello.OutputId output_id = 3;
-    public static final int OUTPUT_ID_FIELD_NUMBER = 3;
-    private com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId outputId_;
-    /**
-     * <code>optional .hello.OutputId output_id = 3;</code>
-     */
-    public boolean hasOutputId() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>optional .hello.OutputId output_id = 3;</code>
-     */
-    public com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId getOutputId() {
-      return outputId_;
-    }
-
     private void initFields() {
       from_ = 0;
       to_ = 0;
-      outputId_ = com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId.SLEEP;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1123,9 +1085,6 @@ public final class OnlineHmmProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeInt32(2, to_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeEnum(3, outputId_.getNumber());
-      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1142,10 +1101,6 @@ public final class OnlineHmmProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, to_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(3, outputId_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1267,8 +1222,6 @@ public final class OnlineHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000001);
         to_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
-        outputId_ = com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId.SLEEP;
-        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -1305,10 +1258,6 @@ public final class OnlineHmmProtos {
           to_bitField0_ |= 0x00000002;
         }
         result.to_ = to_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
-        }
-        result.outputId_ = outputId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1330,9 +1279,6 @@ public final class OnlineHmmProtos {
         }
         if (other.hasTo()) {
           setTo(other.getTo());
-        }
-        if (other.hasOutputId()) {
-          setOutputId(other.getOutputId());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1435,42 +1381,6 @@ public final class OnlineHmmProtos {
         return this;
       }
 
-      // optional .hello.OutputId output_id = 3;
-      private com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId outputId_ = com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId.SLEEP;
-      /**
-       * <code>optional .hello.OutputId output_id = 3;</code>
-       */
-      public boolean hasOutputId() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>optional .hello.OutputId output_id = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId getOutputId() {
-        return outputId_;
-      }
-      /**
-       * <code>optional .hello.OutputId output_id = 3;</code>
-       */
-      public Builder setOutputId(com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        bitField0_ |= 0x00000004;
-        outputId_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional .hello.OutputId output_id = 3;</code>
-       */
-      public Builder clearOutputId() {
-        bitField0_ = (bitField0_ & ~0x00000004);
-        outputId_ = com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId.SLEEP;
-        onChanged();
-        return this;
-      }
-
       // @@protoc_insertion_point(builder_scope:hello.Transition)
     }
 
@@ -1480,6 +1390,1008 @@ public final class OnlineHmmProtos {
     }
 
     // @@protoc_insertion_point(class_scope:hello.Transition)
+  }
+
+  public interface MotionModelRestrictionOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string motion_model_id = 1;
+    /**
+     * <code>optional string motion_model_id = 1;</code>
+     */
+    boolean hasMotionModelId();
+    /**
+     * <code>optional string motion_model_id = 1;</code>
+     */
+    java.lang.String getMotionModelId();
+    /**
+     * <code>optional string motion_model_id = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getMotionModelIdBytes();
+
+    // repeated .hello.Transition forbiddeden_motion_transitions = 2;
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> 
+        getForbiddedenMotionTransitionsList();
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index);
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    int getForbiddedenMotionTransitionsCount();
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+        getForbiddedenMotionTransitionsOrBuilderList();
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
+        int index);
+
+    // repeated int32 non_motion_states = 3;
+    /**
+     * <code>repeated int32 non_motion_states = 3;</code>
+     */
+    java.util.List<java.lang.Integer> getNonMotionStatesList();
+    /**
+     * <code>repeated int32 non_motion_states = 3;</code>
+     */
+    int getNonMotionStatesCount();
+    /**
+     * <code>repeated int32 non_motion_states = 3;</code>
+     */
+    int getNonMotionStates(int index);
+  }
+  /**
+   * Protobuf type {@code hello.MotionModelRestriction}
+   */
+  public static final class MotionModelRestriction extends
+      com.google.protobuf.GeneratedMessage
+      implements MotionModelRestrictionOrBuilder {
+    // Use MotionModelRestriction.newBuilder() to construct.
+    private MotionModelRestriction(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private MotionModelRestriction(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final MotionModelRestriction defaultInstance;
+    public static MotionModelRestriction getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public MotionModelRestriction getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private MotionModelRestriction(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              motionModelId_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                forbiddedenMotionTransitions_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              forbiddedenMotionTransitions_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.PARSER, extensionRegistry));
+              break;
+            }
+            case 24: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                nonMotionStates_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              nonMotionStates_.add(input.readInt32());
+              break;
+            }
+            case 26: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004) && input.getBytesUntilLimit() > 0) {
+                nonMotionStates_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                nonMotionStates_.add(input.readInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          forbiddedenMotionTransitions_ = java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
+        }
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          nonMotionStates_ = java.util.Collections.unmodifiableList(nonMotionStates_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_MotionModelRestriction_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_MotionModelRestriction_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.class, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<MotionModelRestriction> PARSER =
+        new com.google.protobuf.AbstractParser<MotionModelRestriction>() {
+      public MotionModelRestriction parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new MotionModelRestriction(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<MotionModelRestriction> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string motion_model_id = 1;
+    public static final int MOTION_MODEL_ID_FIELD_NUMBER = 1;
+    private java.lang.Object motionModelId_;
+    /**
+     * <code>optional string motion_model_id = 1;</code>
+     */
+    public boolean hasMotionModelId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string motion_model_id = 1;</code>
+     */
+    public java.lang.String getMotionModelId() {
+      java.lang.Object ref = motionModelId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          motionModelId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string motion_model_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMotionModelIdBytes() {
+      java.lang.Object ref = motionModelId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        motionModelId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // repeated .hello.Transition forbiddeden_motion_transitions = 2;
+    public static final int FORBIDDEDEN_MOTION_TRANSITIONS_FIELD_NUMBER = 2;
+    private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> forbiddedenMotionTransitions_;
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> getForbiddedenMotionTransitionsList() {
+      return forbiddedenMotionTransitions_;
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+        getForbiddedenMotionTransitionsOrBuilderList() {
+      return forbiddedenMotionTransitions_;
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public int getForbiddedenMotionTransitionsCount() {
+      return forbiddedenMotionTransitions_.size();
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index) {
+      return forbiddedenMotionTransitions_.get(index);
+    }
+    /**
+     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
+        int index) {
+      return forbiddedenMotionTransitions_.get(index);
+    }
+
+    // repeated int32 non_motion_states = 3;
+    public static final int NON_MOTION_STATES_FIELD_NUMBER = 3;
+    private java.util.List<java.lang.Integer> nonMotionStates_;
+    /**
+     * <code>repeated int32 non_motion_states = 3;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getNonMotionStatesList() {
+      return nonMotionStates_;
+    }
+    /**
+     * <code>repeated int32 non_motion_states = 3;</code>
+     */
+    public int getNonMotionStatesCount() {
+      return nonMotionStates_.size();
+    }
+    /**
+     * <code>repeated int32 non_motion_states = 3;</code>
+     */
+    public int getNonMotionStates(int index) {
+      return nonMotionStates_.get(index);
+    }
+
+    private void initFields() {
+      motionModelId_ = "";
+      forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
+      nonMotionStates_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      for (int i = 0; i < getForbiddedenMotionTransitionsCount(); i++) {
+        if (!getForbiddedenMotionTransitions(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getMotionModelIdBytes());
+      }
+      for (int i = 0; i < forbiddedenMotionTransitions_.size(); i++) {
+        output.writeMessage(2, forbiddedenMotionTransitions_.get(i));
+      }
+      for (int i = 0; i < nonMotionStates_.size(); i++) {
+        output.writeInt32(3, nonMotionStates_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getMotionModelIdBytes());
+      }
+      for (int i = 0; i < forbiddedenMotionTransitions_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, forbiddedenMotionTransitions_.get(i));
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < nonMotionStates_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeInt32SizeNoTag(nonMotionStates_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getNonMotionStatesList().size();
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code hello.MotionModelRestriction}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestrictionOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_MotionModelRestriction_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_MotionModelRestriction_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.class, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder.class);
+      }
+
+      // Construct using com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getForbiddedenMotionTransitionsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        motionModelId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          forbiddedenMotionTransitionsBuilder_.clear();
+        }
+        nonMotionStates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.internal_static_hello_MotionModelRestriction_descriptor;
+      }
+
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction getDefaultInstanceForType() {
+        return com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.getDefaultInstance();
+      }
+
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction build() {
+        com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction buildPartial() {
+        com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction result = new com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.motionModelId_ = motionModelId_;
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            forbiddedenMotionTransitions_ = java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.forbiddedenMotionTransitions_ = forbiddedenMotionTransitions_;
+        } else {
+          result.forbiddedenMotionTransitions_ = forbiddedenMotionTransitionsBuilder_.build();
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          nonMotionStates_ = java.util.Collections.unmodifiableList(nonMotionStates_);
+          bitField0_ = (bitField0_ & ~0x00000004);
+        }
+        result.nonMotionStates_ = nonMotionStates_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction) {
+          return mergeFrom((com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction other) {
+        if (other == com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.getDefaultInstance()) return this;
+        if (other.hasMotionModelId()) {
+          bitField0_ |= 0x00000001;
+          motionModelId_ = other.motionModelId_;
+          onChanged();
+        }
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (!other.forbiddedenMotionTransitions_.isEmpty()) {
+            if (forbiddedenMotionTransitions_.isEmpty()) {
+              forbiddedenMotionTransitions_ = other.forbiddedenMotionTransitions_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureForbiddedenMotionTransitionsIsMutable();
+              forbiddedenMotionTransitions_.addAll(other.forbiddedenMotionTransitions_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.forbiddedenMotionTransitions_.isEmpty()) {
+            if (forbiddedenMotionTransitionsBuilder_.isEmpty()) {
+              forbiddedenMotionTransitionsBuilder_.dispose();
+              forbiddedenMotionTransitionsBuilder_ = null;
+              forbiddedenMotionTransitions_ = other.forbiddedenMotionTransitions_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              forbiddedenMotionTransitionsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getForbiddedenMotionTransitionsFieldBuilder() : null;
+            } else {
+              forbiddedenMotionTransitionsBuilder_.addAllMessages(other.forbiddedenMotionTransitions_);
+            }
+          }
+        }
+        if (!other.nonMotionStates_.isEmpty()) {
+          if (nonMotionStates_.isEmpty()) {
+            nonMotionStates_ = other.nonMotionStates_;
+            bitField0_ = (bitField0_ & ~0x00000004);
+          } else {
+            ensureNonMotionStatesIsMutable();
+            nonMotionStates_.addAll(other.nonMotionStates_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (int i = 0; i < getForbiddedenMotionTransitionsCount(); i++) {
+          if (!getForbiddedenMotionTransitions(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string motion_model_id = 1;
+      private java.lang.Object motionModelId_ = "";
+      /**
+       * <code>optional string motion_model_id = 1;</code>
+       */
+      public boolean hasMotionModelId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string motion_model_id = 1;</code>
+       */
+      public java.lang.String getMotionModelId() {
+        java.lang.Object ref = motionModelId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          motionModelId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string motion_model_id = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMotionModelIdBytes() {
+        java.lang.Object ref = motionModelId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          motionModelId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string motion_model_id = 1;</code>
+       */
+      public Builder setMotionModelId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        motionModelId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string motion_model_id = 1;</code>
+       */
+      public Builder clearMotionModelId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        motionModelId_ = getDefaultInstance().getMotionModelId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string motion_model_id = 1;</code>
+       */
+      public Builder setMotionModelIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        motionModelId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // repeated .hello.Transition forbiddeden_motion_transitions = 2;
+      private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> forbiddedenMotionTransitions_ =
+        java.util.Collections.emptyList();
+      private void ensureForbiddedenMotionTransitionsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          forbiddedenMotionTransitions_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition>(forbiddedenMotionTransitions_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> forbiddedenMotionTransitionsBuilder_;
+
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> getForbiddedenMotionTransitionsList() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
+        } else {
+          return forbiddedenMotionTransitionsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public int getForbiddedenMotionTransitionsCount() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return forbiddedenMotionTransitions_.size();
+        } else {
+          return forbiddedenMotionTransitionsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return forbiddedenMotionTransitions_.get(index);
+        } else {
+          return forbiddedenMotionTransitionsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder setForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.set(index, value);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder setForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(value);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(index, value);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(
+          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(builderForValue.build());
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addForbiddedenMotionTransitions(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder addAllForbiddedenMotionTransitions(
+          java.lang.Iterable<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> values) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          super.addAll(values, forbiddedenMotionTransitions_);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder clearForbiddedenMotionTransitions() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public Builder removeForbiddedenMotionTransitions(int index) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          ensureForbiddedenMotionTransitionsIsMutable();
+          forbiddedenMotionTransitions_.remove(index);
+          onChanged();
+        } else {
+          forbiddedenMotionTransitionsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder getForbiddedenMotionTransitionsBuilder(
+          int index) {
+        return getForbiddedenMotionTransitionsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
+          int index) {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          return forbiddedenMotionTransitions_.get(index);  } else {
+          return forbiddedenMotionTransitionsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+           getForbiddedenMotionTransitionsOrBuilderList() {
+        if (forbiddedenMotionTransitionsBuilder_ != null) {
+          return forbiddedenMotionTransitionsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
+        }
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder addForbiddedenMotionTransitionsBuilder() {
+        return getForbiddedenMotionTransitionsFieldBuilder().addBuilder(
+            com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder addForbiddedenMotionTransitionsBuilder(
+          int index) {
+        return getForbiddedenMotionTransitionsFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder> 
+           getForbiddedenMotionTransitionsBuilderList() {
+        return getForbiddedenMotionTransitionsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
+          getForbiddedenMotionTransitionsFieldBuilder() {
+        if (forbiddedenMotionTransitionsBuilder_ == null) {
+          forbiddedenMotionTransitionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder>(
+                  forbiddedenMotionTransitions_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          forbiddedenMotionTransitions_ = null;
+        }
+        return forbiddedenMotionTransitionsBuilder_;
+      }
+
+      // repeated int32 non_motion_states = 3;
+      private java.util.List<java.lang.Integer> nonMotionStates_ = java.util.Collections.emptyList();
+      private void ensureNonMotionStatesIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          nonMotionStates_ = new java.util.ArrayList<java.lang.Integer>(nonMotionStates_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+      /**
+       * <code>repeated int32 non_motion_states = 3;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getNonMotionStatesList() {
+        return java.util.Collections.unmodifiableList(nonMotionStates_);
+      }
+      /**
+       * <code>repeated int32 non_motion_states = 3;</code>
+       */
+      public int getNonMotionStatesCount() {
+        return nonMotionStates_.size();
+      }
+      /**
+       * <code>repeated int32 non_motion_states = 3;</code>
+       */
+      public int getNonMotionStates(int index) {
+        return nonMotionStates_.get(index);
+      }
+      /**
+       * <code>repeated int32 non_motion_states = 3;</code>
+       */
+      public Builder setNonMotionStates(
+          int index, int value) {
+        ensureNonMotionStatesIsMutable();
+        nonMotionStates_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 non_motion_states = 3;</code>
+       */
+      public Builder addNonMotionStates(int value) {
+        ensureNonMotionStatesIsMutable();
+        nonMotionStates_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 non_motion_states = 3;</code>
+       */
+      public Builder addAllNonMotionStates(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureNonMotionStatesIsMutable();
+        super.addAll(values, nonMotionStates_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 non_motion_states = 3;</code>
+       */
+      public Builder clearNonMotionStates() {
+        nonMotionStates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:hello.MotionModelRestriction)
+    }
+
+    static {
+      defaultInstance = new MotionModelRestriction(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:hello.MotionModelRestriction)
   }
 
   public interface AlphabetHmmPriorOrBuilder
@@ -1644,6 +2556,32 @@ public final class OnlineHmmProtos {
      * <code>repeated int32 minimum_state_durations = 11;</code>
      */
     int getMinimumStateDurations(int index);
+
+    // optional .hello.MotionModelRestriction motion_model_restriction = 12;
+    /**
+     * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+     *
+     * <pre>
+     *restricts transitions to only certain states and times
+     * </pre>
+     */
+    boolean hasMotionModelRestriction();
+    /**
+     * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+     *
+     * <pre>
+     *restricts transitions to only certain states and times
+     * </pre>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction getMotionModelRestriction();
+    /**
+     * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+     *
+     * <pre>
+     *restricts transitions to only certain states and times
+     * </pre>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestrictionOrBuilder getMotionModelRestrictionOrBuilder();
   }
   /**
    * Protobuf type {@code hello.AlphabetHmmPrior}
@@ -1833,6 +2771,19 @@ public final class OnlineHmmProtos {
                 minimumStateDurations_.add(input.readInt32());
               }
               input.popLimit(limit);
+              break;
+            }
+            case 98: {
+              com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000020) == 0x00000020)) {
+                subBuilder = motionModelRestriction_.toBuilder();
+              }
+              motionModelRestriction_ = input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(motionModelRestriction_);
+                motionModelRestriction_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000020;
               break;
             }
           }
@@ -2164,6 +3115,40 @@ public final class OnlineHmmProtos {
       return minimumStateDurations_.get(index);
     }
 
+    // optional .hello.MotionModelRestriction motion_model_restriction = 12;
+    public static final int MOTION_MODEL_RESTRICTION_FIELD_NUMBER = 12;
+    private com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction motionModelRestriction_;
+    /**
+     * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+     *
+     * <pre>
+     *restricts transitions to only certain states and times
+     * </pre>
+     */
+    public boolean hasMotionModelRestriction() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+     *
+     * <pre>
+     *restricts transitions to only certain states and times
+     * </pre>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction getMotionModelRestriction() {
+      return motionModelRestriction_;
+    }
+    /**
+     * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+     *
+     * <pre>
+     *restricts transitions to only certain states and times
+     * </pre>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestrictionOrBuilder getMotionModelRestrictionOrBuilder() {
+      return motionModelRestriction_;
+    }
+
     private void initFields() {
       id_ = "";
       outputId_ = com.hello.suripu.api.datascience.OnlineHmmProtos.OutputId.SLEEP;
@@ -2176,6 +3161,7 @@ public final class OnlineHmmProtos {
       pi_ = java.util.Collections.emptyList();
       endStates_ = java.util.Collections.emptyList();
       minimumStateDurations_ = java.util.Collections.emptyList();
+      motionModelRestriction_ = com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2190,6 +3176,12 @@ public final class OnlineHmmProtos {
       }
       for (int i = 0; i < getLogObservationModelNumeratorCount(); i++) {
         if (!getLogObservationModelNumerator(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasMotionModelRestriction()) {
+        if (!getMotionModelRestriction().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -2233,6 +3225,9 @@ public final class OnlineHmmProtos {
       }
       for (int i = 0; i < minimumStateDurations_.size(); i++) {
         output.writeInt32(11, minimumStateDurations_.get(i));
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeMessage(12, motionModelRestriction_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2305,6 +3300,10 @@ public final class OnlineHmmProtos {
         }
         size += dataSize;
         size += 1 * getMinimumStateDurationsList().size();
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(12, motionModelRestriction_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2416,6 +3415,7 @@ public final class OnlineHmmProtos {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getLogStateTransitionNumeratorFieldBuilder();
           getLogObservationModelNumeratorFieldBuilder();
+          getMotionModelRestrictionFieldBuilder();
         }
       }
       private static Builder create() {
@@ -2454,6 +3454,12 @@ public final class OnlineHmmProtos {
         bitField0_ = (bitField0_ & ~0x00000200);
         minimumStateDurations_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000400);
+        if (motionModelRestrictionBuilder_ == null) {
+          motionModelRestriction_ = com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.getDefaultInstance();
+        } else {
+          motionModelRestrictionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -2541,6 +3547,14 @@ public final class OnlineHmmProtos {
           bitField0_ = (bitField0_ & ~0x00000400);
         }
         result.minimumStateDurations_ = minimumStateDurations_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        if (motionModelRestrictionBuilder_ == null) {
+          result.motionModelRestriction_ = motionModelRestriction_;
+        } else {
+          result.motionModelRestriction_ = motionModelRestrictionBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2650,6 +3664,9 @@ public final class OnlineHmmProtos {
           }
           onChanged();
         }
+        if (other.hasMotionModelRestriction()) {
+          mergeMotionModelRestriction(other.getMotionModelRestriction());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -2663,6 +3680,12 @@ public final class OnlineHmmProtos {
         }
         for (int i = 0; i < getLogObservationModelNumeratorCount(); i++) {
           if (!getLogObservationModelNumerator(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasMotionModelRestriction()) {
+          if (!getMotionModelRestriction().isInitialized()) {
             
             return false;
           }
@@ -3579,6 +4602,159 @@ public final class OnlineHmmProtos {
         return this;
       }
 
+      // optional .hello.MotionModelRestriction motion_model_restriction = 12;
+      private com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction motionModelRestriction_ = com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestrictionOrBuilder> motionModelRestrictionBuilder_;
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public boolean hasMotionModelRestriction() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction getMotionModelRestriction() {
+        if (motionModelRestrictionBuilder_ == null) {
+          return motionModelRestriction_;
+        } else {
+          return motionModelRestrictionBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public Builder setMotionModelRestriction(com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction value) {
+        if (motionModelRestrictionBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          motionModelRestriction_ = value;
+          onChanged();
+        } else {
+          motionModelRestrictionBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000800;
+        return this;
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public Builder setMotionModelRestriction(
+          com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder builderForValue) {
+        if (motionModelRestrictionBuilder_ == null) {
+          motionModelRestriction_ = builderForValue.build();
+          onChanged();
+        } else {
+          motionModelRestrictionBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000800;
+        return this;
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public Builder mergeMotionModelRestriction(com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction value) {
+        if (motionModelRestrictionBuilder_ == null) {
+          if (((bitField0_ & 0x00000800) == 0x00000800) &&
+              motionModelRestriction_ != com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.getDefaultInstance()) {
+            motionModelRestriction_ =
+              com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.newBuilder(motionModelRestriction_).mergeFrom(value).buildPartial();
+          } else {
+            motionModelRestriction_ = value;
+          }
+          onChanged();
+        } else {
+          motionModelRestrictionBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000800;
+        return this;
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public Builder clearMotionModelRestriction() {
+        if (motionModelRestrictionBuilder_ == null) {
+          motionModelRestriction_ = com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.getDefaultInstance();
+          onChanged();
+        } else {
+          motionModelRestrictionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000800);
+        return this;
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder getMotionModelRestrictionBuilder() {
+        bitField0_ |= 0x00000800;
+        onChanged();
+        return getMotionModelRestrictionFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestrictionOrBuilder getMotionModelRestrictionOrBuilder() {
+        if (motionModelRestrictionBuilder_ != null) {
+          return motionModelRestrictionBuilder_.getMessageOrBuilder();
+        } else {
+          return motionModelRestriction_;
+        }
+      }
+      /**
+       * <code>optional .hello.MotionModelRestriction motion_model_restriction = 12;</code>
+       *
+       * <pre>
+       *restricts transitions to only certain states and times
+       * </pre>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestrictionOrBuilder> 
+          getMotionModelRestrictionFieldBuilder() {
+        if (motionModelRestrictionBuilder_ == null) {
+          motionModelRestrictionBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestriction.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.MotionModelRestrictionOrBuilder>(
+                  motionModelRestriction_,
+                  getParentForChildren(),
+                  isClean());
+          motionModelRestriction_ = null;
+        }
+        return motionModelRestrictionBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.AlphabetHmmPrior)
     }
 
@@ -4387,31 +5563,6 @@ public final class OnlineHmmProtos {
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelsOrBuilder(
         int index);
-
-    // repeated .hello.Transition forbiddeden_motion_transitions = 2;
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> 
-        getForbiddedenMotionTransitionsList();
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index);
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    int getForbiddedenMotionTransitionsCount();
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
-        getForbiddedenMotionTransitionsOrBuilderList();
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
-        int index);
   }
   /**
    * Protobuf type {@code hello.AlphabetHmmUserModel}
@@ -4472,14 +5623,6 @@ public final class OnlineHmmProtos {
               models_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.PARSER, extensionRegistry));
               break;
             }
-            case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                forbiddedenMotionTransitions_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition>();
-                mutable_bitField0_ |= 0x00000002;
-              }
-              forbiddedenMotionTransitions_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.PARSER, extensionRegistry));
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4490,9 +5633,6 @@ public final class OnlineHmmProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           models_ = java.util.Collections.unmodifiableList(models_);
-        }
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-          forbiddedenMotionTransitions_ = java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -4561,45 +5701,8 @@ public final class OnlineHmmProtos {
       return models_.get(index);
     }
 
-    // repeated .hello.Transition forbiddeden_motion_transitions = 2;
-    public static final int FORBIDDEDEN_MOTION_TRANSITIONS_FIELD_NUMBER = 2;
-    private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> forbiddedenMotionTransitions_;
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> getForbiddedenMotionTransitionsList() {
-      return forbiddedenMotionTransitions_;
-    }
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
-        getForbiddedenMotionTransitionsOrBuilderList() {
-      return forbiddedenMotionTransitions_;
-    }
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    public int getForbiddedenMotionTransitionsCount() {
-      return forbiddedenMotionTransitions_.size();
-    }
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index) {
-      return forbiddedenMotionTransitions_.get(index);
-    }
-    /**
-     * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-     */
-    public com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
-        int index) {
-      return forbiddedenMotionTransitions_.get(index);
-    }
-
     private void initFields() {
       models_ = java.util.Collections.emptyList();
-      forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4608,12 +5711,6 @@ public final class OnlineHmmProtos {
 
       for (int i = 0; i < getModelsCount(); i++) {
         if (!getModels(i).isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-      }
-      for (int i = 0; i < getForbiddedenMotionTransitionsCount(); i++) {
-        if (!getForbiddedenMotionTransitions(i).isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -4628,9 +5725,6 @@ public final class OnlineHmmProtos {
       for (int i = 0; i < models_.size(); i++) {
         output.writeMessage(1, models_.get(i));
       }
-      for (int i = 0; i < forbiddedenMotionTransitions_.size(); i++) {
-        output.writeMessage(2, forbiddedenMotionTransitions_.get(i));
-      }
       getUnknownFields().writeTo(output);
     }
 
@@ -4643,10 +5737,6 @@ public final class OnlineHmmProtos {
       for (int i = 0; i < models_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, models_.get(i));
-      }
-      for (int i = 0; i < forbiddedenMotionTransitions_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, forbiddedenMotionTransitions_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4757,7 +5847,6 @@ public final class OnlineHmmProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getModelsFieldBuilder();
-          getForbiddedenMotionTransitionsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -4771,12 +5860,6 @@ public final class OnlineHmmProtos {
           bitField0_ = (bitField0_ & ~0x00000001);
         } else {
           modelsBuilder_.clear();
-        }
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-        } else {
-          forbiddedenMotionTransitionsBuilder_.clear();
         }
         return this;
       }
@@ -4813,15 +5896,6 @@ public final class OnlineHmmProtos {
           result.models_ = models_;
         } else {
           result.models_ = modelsBuilder_.build();
-        }
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
-            forbiddedenMotionTransitions_ = java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
-            bitField0_ = (bitField0_ & ~0x00000002);
-          }
-          result.forbiddedenMotionTransitions_ = forbiddedenMotionTransitions_;
-        } else {
-          result.forbiddedenMotionTransitions_ = forbiddedenMotionTransitionsBuilder_.build();
         }
         onBuilt();
         return result;
@@ -4864,32 +5938,6 @@ public final class OnlineHmmProtos {
             }
           }
         }
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          if (!other.forbiddedenMotionTransitions_.isEmpty()) {
-            if (forbiddedenMotionTransitions_.isEmpty()) {
-              forbiddedenMotionTransitions_ = other.forbiddedenMotionTransitions_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-            } else {
-              ensureForbiddedenMotionTransitionsIsMutable();
-              forbiddedenMotionTransitions_.addAll(other.forbiddedenMotionTransitions_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.forbiddedenMotionTransitions_.isEmpty()) {
-            if (forbiddedenMotionTransitionsBuilder_.isEmpty()) {
-              forbiddedenMotionTransitionsBuilder_.dispose();
-              forbiddedenMotionTransitionsBuilder_ = null;
-              forbiddedenMotionTransitions_ = other.forbiddedenMotionTransitions_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-              forbiddedenMotionTransitionsBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getForbiddedenMotionTransitionsFieldBuilder() : null;
-            } else {
-              forbiddedenMotionTransitionsBuilder_.addAllMessages(other.forbiddedenMotionTransitions_);
-            }
-          }
-        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -4897,12 +5945,6 @@ public final class OnlineHmmProtos {
       public final boolean isInitialized() {
         for (int i = 0; i < getModelsCount(); i++) {
           if (!getModels(i).isInitialized()) {
-            
-            return false;
-          }
-        }
-        for (int i = 0; i < getForbiddedenMotionTransitionsCount(); i++) {
-          if (!getForbiddedenMotionTransitions(i).isInitialized()) {
             
             return false;
           }
@@ -5169,246 +6211,6 @@ public final class OnlineHmmProtos {
         return modelsBuilder_;
       }
 
-      // repeated .hello.Transition forbiddeden_motion_transitions = 2;
-      private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> forbiddedenMotionTransitions_ =
-        java.util.Collections.emptyList();
-      private void ensureForbiddedenMotionTransitionsIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
-          forbiddedenMotionTransitions_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition>(forbiddedenMotionTransitions_);
-          bitField0_ |= 0x00000002;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> forbiddedenMotionTransitionsBuilder_;
-
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> getForbiddedenMotionTransitionsList() {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
-        } else {
-          return forbiddedenMotionTransitionsBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public int getForbiddedenMotionTransitionsCount() {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          return forbiddedenMotionTransitions_.size();
-        } else {
-          return forbiddedenMotionTransitionsBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition getForbiddedenMotionTransitions(int index) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          return forbiddedenMotionTransitions_.get(index);
-        } else {
-          return forbiddedenMotionTransitionsBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder setForbiddedenMotionTransitions(
-          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureForbiddedenMotionTransitionsIsMutable();
-          forbiddedenMotionTransitions_.set(index, value);
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder setForbiddedenMotionTransitions(
-          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          ensureForbiddedenMotionTransitionsIsMutable();
-          forbiddedenMotionTransitions_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder addForbiddedenMotionTransitions(com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureForbiddedenMotionTransitionsIsMutable();
-          forbiddedenMotionTransitions_.add(value);
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder addForbiddedenMotionTransitions(
-          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition value) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureForbiddedenMotionTransitionsIsMutable();
-          forbiddedenMotionTransitions_.add(index, value);
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder addForbiddedenMotionTransitions(
-          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          ensureForbiddedenMotionTransitionsIsMutable();
-          forbiddedenMotionTransitions_.add(builderForValue.build());
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder addForbiddedenMotionTransitions(
-          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder builderForValue) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          ensureForbiddedenMotionTransitionsIsMutable();
-          forbiddedenMotionTransitions_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder addAllForbiddedenMotionTransitions(
-          java.lang.Iterable<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.Transition> values) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          ensureForbiddedenMotionTransitionsIsMutable();
-          super.addAll(values, forbiddedenMotionTransitions_);
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder clearForbiddedenMotionTransitions() {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          forbiddedenMotionTransitions_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public Builder removeForbiddedenMotionTransitions(int index) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          ensureForbiddedenMotionTransitionsIsMutable();
-          forbiddedenMotionTransitions_.remove(index);
-          onChanged();
-        } else {
-          forbiddedenMotionTransitionsBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder getForbiddedenMotionTransitionsBuilder(
-          int index) {
-        return getForbiddedenMotionTransitionsFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder getForbiddedenMotionTransitionsOrBuilder(
-          int index) {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          return forbiddedenMotionTransitions_.get(index);  } else {
-          return forbiddedenMotionTransitionsBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
-           getForbiddedenMotionTransitionsOrBuilderList() {
-        if (forbiddedenMotionTransitionsBuilder_ != null) {
-          return forbiddedenMotionTransitionsBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(forbiddedenMotionTransitions_);
-        }
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder addForbiddedenMotionTransitionsBuilder() {
-        return getForbiddedenMotionTransitionsFieldBuilder().addBuilder(
-            com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder addForbiddedenMotionTransitionsBuilder(
-          int index) {
-        return getForbiddedenMotionTransitionsFieldBuilder().addBuilder(
-            index, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .hello.Transition forbiddeden_motion_transitions = 2;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder> 
-           getForbiddedenMotionTransitionsBuilderList() {
-        return getForbiddedenMotionTransitionsFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder> 
-          getForbiddedenMotionTransitionsFieldBuilder() {
-        if (forbiddedenMotionTransitionsBuilder_ == null) {
-          forbiddedenMotionTransitionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              com.hello.suripu.api.datascience.OnlineHmmProtos.Transition, com.hello.suripu.api.datascience.OnlineHmmProtos.Transition.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.TransitionOrBuilder>(
-                  forbiddedenMotionTransitions_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
-                  getParentForChildren(),
-                  isClean());
-          forbiddedenMotionTransitions_ = null;
-        }
-        return forbiddedenMotionTransitionsBuilder_;
-      }
-
       // @@protoc_insertion_point(builder_scope:hello.AlphabetHmmUserModel)
     }
 
@@ -5430,6 +6232,11 @@ public final class OnlineHmmProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_Transition_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_hello_MotionModelRestriction_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_hello_MotionModelRestriction_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_AlphabetHmmPrior_descriptor;
   private static
@@ -5456,26 +6263,29 @@ public final class OnlineHmmProtos {
     java.lang.String[] descriptorData = {
       "\n\020online_hmm.proto\022\005hello\"J\n\nRealMatrix\022" +
       "\020\n\010num_rows\030\001 \002(\005\022\020\n\010num_cols\030\002 \002(\005\022\014\n\004d" +
-      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"J\n\nTransition\022\014\n\004f" +
-      "rom\030\001 \002(\005\022\n\n\002to\030\002 \002(\005\022\"\n\toutput_id\030\003 \001(\016" +
-      "2\017.hello.OutputId\"\352\002\n\020AlphabetHmmPrior\022\n" +
-      "\n\002id\030\001 \001(\t\022\"\n\toutput_id\030\002 \001(\0162\017.hello.Ou" +
-      "tputId\022\030\n\020date_created_utc\030\003 \001(\003\022\030\n\020date" +
-      "_updated_utc\030\004 \001(\003\0229\n\036log_state_transiti" +
-      "on_numerator\030\005 \001(\0132\021.hello.RealMatrix\022:\n" +
-      "\037log_observation_model_numerator\030\006 \003(\0132\021",
-      ".hello.RealMatrix\022!\n\031log_observation_mod" +
-      "el_ids\030\007 \003(\t\022\027\n\017log_denominator\030\010 \003(\001\022\n\n" +
-      "\002pi\030\t \003(\001\022\022\n\nend_states\030\n \003(\005\022\037\n\027minimum" +
-      "_state_durations\030\013 \003(\005\"e\n\025AlphabetHmmScr" +
-      "atchPad\022\035\n\025last_date_updated_utc\030\001 \001(\003\022-" +
-      "\n\014model_deltas\030\002 \003(\0132\027.hello.AlphabetHmm" +
-      "Prior\"z\n\024AlphabetHmmUserModel\022\'\n\006models\030" +
-      "\001 \003(\0132\027.hello.AlphabetHmmPrior\0229\n\036forbid" +
-      "deden_motion_transitions\030\002 \003(\0132\021.hello.T" +
-      "ransition*\036\n\010OutputId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020",
-      "\001B3\n com.hello.suripu.api.datascienceB\017O" +
-      "nlineHmmProtos"
+      "ata\030\003 \003(\001\022\n\n\002id\030\004 \001(\t\"&\n\nTransition\022\014\n\004f" +
+      "rom\030\001 \002(\005\022\n\n\002to\030\002 \002(\005\"\207\001\n\026MotionModelRes" +
+      "triction\022\027\n\017motion_model_id\030\001 \001(\t\0229\n\036for" +
+      "biddeden_motion_transitions\030\002 \003(\0132\021.hell" +
+      "o.Transition\022\031\n\021non_motion_states\030\003 \003(\005\"" +
+      "\253\003\n\020AlphabetHmmPrior\022\n\n\002id\030\001 \001(\t\022\"\n\toutp" +
+      "ut_id\030\002 \001(\0162\017.hello.OutputId\022\030\n\020date_cre" +
+      "ated_utc\030\003 \001(\003\022\030\n\020date_updated_utc\030\004 \001(\003",
+      "\0229\n\036log_state_transition_numerator\030\005 \001(\013" +
+      "2\021.hello.RealMatrix\022:\n\037log_observation_m" +
+      "odel_numerator\030\006 \003(\0132\021.hello.RealMatrix\022" +
+      "!\n\031log_observation_model_ids\030\007 \003(\t\022\027\n\017lo" +
+      "g_denominator\030\010 \003(\001\022\n\n\002pi\030\t \003(\001\022\022\n\nend_s" +
+      "tates\030\n \003(\005\022\037\n\027minimum_state_durations\030\013" +
+      " \003(\005\022?\n\030motion_model_restriction\030\014 \001(\0132\035" +
+      ".hello.MotionModelRestriction\"e\n\025Alphabe" +
+      "tHmmScratchPad\022\035\n\025last_date_updated_utc\030" +
+      "\001 \001(\003\022-\n\014model_deltas\030\002 \003(\0132\027.hello.Alph",
+      "abetHmmPrior\"?\n\024AlphabetHmmUserModel\022\'\n\006" +
+      "models\030\001 \003(\0132\027.hello.AlphabetHmmPrior*\036\n" +
+      "\010OutputId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hel" +
+      "lo.suripu.api.datascienceB\017OnlineHmmProt" +
+      "os"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5493,25 +6303,31 @@ public final class OnlineHmmProtos {
           internal_static_hello_Transition_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_Transition_descriptor,
-              new java.lang.String[] { "From", "To", "OutputId", });
-          internal_static_hello_AlphabetHmmPrior_descriptor =
+              new java.lang.String[] { "From", "To", });
+          internal_static_hello_MotionModelRestriction_descriptor =
             getDescriptor().getMessageTypes().get(2);
+          internal_static_hello_MotionModelRestriction_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_MotionModelRestriction_descriptor,
+              new java.lang.String[] { "MotionModelId", "ForbiddedenMotionTransitions", "NonMotionStates", });
+          internal_static_hello_AlphabetHmmPrior_descriptor =
+            getDescriptor().getMessageTypes().get(3);
           internal_static_hello_AlphabetHmmPrior_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmPrior_descriptor,
-              new java.lang.String[] { "Id", "OutputId", "DateCreatedUtc", "DateUpdatedUtc", "LogStateTransitionNumerator", "LogObservationModelNumerator", "LogObservationModelIds", "LogDenominator", "Pi", "EndStates", "MinimumStateDurations", });
+              new java.lang.String[] { "Id", "OutputId", "DateCreatedUtc", "DateUpdatedUtc", "LogStateTransitionNumerator", "LogObservationModelNumerator", "LogObservationModelIds", "LogDenominator", "Pi", "EndStates", "MinimumStateDurations", "MotionModelRestriction", });
           internal_static_hello_AlphabetHmmScratchPad_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_hello_AlphabetHmmScratchPad_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmScratchPad_descriptor,
               new java.lang.String[] { "LastDateUpdatedUtc", "ModelDeltas", });
           internal_static_hello_AlphabetHmmUserModel_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(5);
           internal_static_hello_AlphabetHmmUserModel_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmUserModel_descriptor,
-              new java.lang.String[] { "Models", "ForbiddedenMotionTransitions", });
+              new java.lang.String[] { "Models", });
           return null;
         }
       };

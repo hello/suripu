@@ -39,13 +39,11 @@ public class OnlineHmmSensorDataBinning {
 
     static public class BinnedData {
         public final double[][] data;
-        public final Map<String,Multimap<Integer, Transition>> forbiddenTransitionsByOutputId;
         public final int numMinutesInWindow;
         public final long t0;
 
-        public BinnedData(double[][] data, final Map<String,Multimap<Integer, Transition>> forbiddenTransitionsByOutputId, int numMinutesInWindow,final long t0) {
+        public BinnedData(double[][] data, int numMinutesInWindow,final long t0) {
             this.data = data;
-            this.forbiddenTransitionsByOutputId = forbiddenTransitionsByOutputId;
             this.numMinutesInWindow = numMinutesInWindow;
             this.t0 = t0;
         }
@@ -81,7 +79,7 @@ public class OnlineHmmSensorDataBinning {
     *
     * */
     static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final List<TrackerMotion> pillData,final List<TrackerMotion> partnerPillData,final OnlineHmmMeasurementParameters params,
-                                                           final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset,final Multimap<String,Transition> forbiddenMotionTransitions) {
+                                                           final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset) {
 
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
@@ -301,19 +299,8 @@ public class OnlineHmmSensorDataBinning {
 
         //fill out the indices of the FORBIDDEN TRANSITIONS.  FORBIDDEN!
 
-        final double [] motion = data[SleepHmmBayesNetProtos.MeasType.MOTION_DURATION_VALUE];
-        final Map<String,Multimap<Integer, Transition>> forbiddenTransitionsByOutputId = Maps.newHashMap();
 
-
-        //fuck this is complicated.
-        //at one timestep, for any output, you can have multiple transitions that are forbidden
-        //this blob of code is for applies the rules (outputId == sleep, you can't go from state 1 to state 2 unless there's two conseutive
-        //periods of motion) for each time step
-        for (final String outputId : forbiddenMotionTransitions.keySet()) {
-            forbiddenTransitionsByOutputId.put(outputId,getMotionForbiddenTransitions(forbiddenMotionTransitions.get(outputId),motion));
-        }
-
-        return Optional.of(new BinnedData(data,forbiddenTransitionsByOutputId,numMinutesInWindow,startTimeMillisInUTC));
+        return Optional.of(new BinnedData(data,numMinutesInWindow,startTimeMillisInUTC));
     }
 
     static public Multimap<Integer,Transition> getMotionForbiddenTransitions(final Collection<Transition> forbiddenTransitionList,final double [] motion) {
@@ -329,7 +316,7 @@ public class OnlineHmmSensorDataBinning {
             if (!(motion[t] > 0.0 && motion[t + 1] > 0.0)) {
 
                 for (final Transition transition : forbiddenTransitionList) {
-                    forbiddenTransitions.put(t+1, transition);
+                    forbiddenTransitions.put(t, transition);
                 }
             }
         }

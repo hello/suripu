@@ -13,6 +13,7 @@ import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -73,7 +74,7 @@ public class OnlineHmmModelEvaluator {
      * output:
      * a model delta for each output id
      * */
-    public OnlineHmmScratchPad reestimate(final Map<String,String> usedModelsByOutputId, final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features,final Map<String,Multimap<Integer, Transition>> forbiddenTransitionByOutputId, final Map<String,Map<Integer,Integer>> labelsByOutputId,long currentTime) {
+    public OnlineHmmScratchPad reestimate(final Map<String,String> usedModelsByOutputId, final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features, final Map<String,Map<Integer,Integer>> labelsByOutputId,long currentTime) {
 
         final Map<String,OnlineHmmModelParams> paramsByOutputId = Maps.newHashMap();
 
@@ -94,12 +95,6 @@ public class OnlineHmmModelEvaluator {
                 throw new AlgorithmException(String.format("model id %s in output id %s does not exist",modelId,outputId));
             }
 
-            //get the transitions restrictions by timestep for this outputId
-            Multimap<Integer, Transition> forbiddenTransitions = forbiddenTransitionByOutputId.get(outputId);
-
-            if (forbiddenTransitions == null) {
-                forbiddenTransitions = ArrayListMultimap.create(); //make an empty one
-            }
 
             //get the labels
             Optional<Map<Integer,Integer>> labelsOptional = Optional.absent();
@@ -110,6 +105,13 @@ public class OnlineHmmModelEvaluator {
                 labelsOptional = Optional.of(labels);
             }
 
+            //get the transition restrictions
+            final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
+
+            for (TransitionRestriction restriction : params.transitionRestrictions) {
+                forbiddenTransitions.putAll(restriction.getRestrictions(features));
+            }
+
             //get the measurement sequence
             final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions,labelsOptional);
 
@@ -118,7 +120,7 @@ public class OnlineHmmModelEvaluator {
 
             hmm.reestimate(meas,PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES);
 
-            final OnlineHmmModelParams newParams = new OnlineHmmModelParams(hmm.getLogAlphabetNumerator(),hmm.getLogANumerator(),hmm.getLogDenominator(),hmm.getPi(),params.endStates,params.minStateDurations,params.timeCreatedUtc,currentTime,modelId,outputId);
+            final OnlineHmmModelParams newParams = new OnlineHmmModelParams(hmm.getLogAlphabetNumerator(),hmm.getLogANumerator(),hmm.getLogDenominator(),hmm.getPi(),params.endStates,params.minStateDurations,params.timeCreatedUtc,currentTime,modelId,outputId,params.transitionRestrictions);
 
             paramsByOutputId.put(outputId,newParams);
         }
@@ -128,22 +130,13 @@ public class OnlineHmmModelEvaluator {
     }
 
     /* EVALUATES ALL THE MODELS AND PICKS THE BEST  */
-    public Map<String,MultiEvalHmmDecodedResult> evaluate(final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features,final Map<String,Multimap<Integer, Transition>> forbiddenTransitionByOutputId) {
+    public Map<String,MultiEvalHmmDecodedResult> evaluate(final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features) {
 
         final Map<String,MultiEvalHmmDecodedResult> bestModels = Maps.newHashMap();
 
         //create result for each output Id
         for (final String outputId : priors.modelsByOutputId.keySet()) {
 
-            //get the transitions restrictions by timestep for this outputId
-            Multimap<Integer, Transition> forbiddenTransitions = forbiddenTransitionByOutputId.get(outputId);
-
-            if (forbiddenTransitions == null) {
-                forbiddenTransitions = ArrayListMultimap.create(); //make an empty one
-            }
-
-            //get the measurement sequence with restrictions and labels (the labels will be empty here)
-            final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions,Optional.<Map<Integer,Integer>>absent());
 
             //NOW GO THROUGH EACH MODEL IN THE LIST AND EVALUATE THEM
             double bestScore = Double.NEGATIVE_INFINITY;
@@ -159,6 +152,16 @@ public class OnlineHmmModelEvaluator {
 
 
                 try {
+                    //get the transition restrictions, which is on a per-model basis
+                    final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
+
+                    for (TransitionRestriction restriction : params.transitionRestrictions) {
+                        forbiddenTransitions.putAll(restriction.getRestrictions(features));
+                    }
+
+                    //get the measurement sequence with restrictions and labels (the labels will be empty here)
+                    final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions,Optional.<Map<Integer,Integer>>absent());
+
                     final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
 
                     final MultiObsSequenceAlphabetHiddenMarkovModel.Result result = hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);

@@ -10,6 +10,8 @@ import com.hello.suripu.algorithm.hmm.*;
 import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.Transition;
+import com.hello.suripu.core.algorithmintegration.MotionTransitionRestriction;
+import com.hello.suripu.core.algorithmintegration.TransitionRestriction;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.List;
@@ -21,11 +23,9 @@ import java.util.Map;
 public class  OnlineHmmPriors {
 
     public final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId;
-    public final Multimap<String,com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitionsByOutputId;
 
-    private OnlineHmmPriors(Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId, final Multimap<String,com.hello.suripu.algorithm.hmm.Transition> forbiddenMotionTransitions) {
+    private OnlineHmmPriors(Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId) {
         this.modelsByOutputId = modelsByOutputId;
-        this.forbiddenMotionTransitionsByOutputId = forbiddenMotionTransitions;
     }
 
     @Override
@@ -44,9 +44,8 @@ public class  OnlineHmmPriors {
 
         final  Multimap<String,com.hello.suripu.algorithm.hmm.Transition> myMap = ArrayListMultimap.create();
 
-        myMap.putAll(forbiddenMotionTransitionsByOutputId);
 
-        return new OnlineHmmPriors(modelsByOutputId, myMap);
+        return new OnlineHmmPriors(modelsByOutputId);
     }
 
 
@@ -150,6 +149,17 @@ public class  OnlineHmmPriors {
             minStateDurations[i] = protobuf.getMinimumStateDurations(i);
         }
 
+        //deal with transition restrictions on a per-model basis
+        final List<TransitionRestriction> transitionRestrictions = Lists.newArrayList();
+
+        if (protobuf.hasMotionModelRestriction()) {
+            final Optional<MotionTransitionRestriction> restriction = MotionTransitionRestriction.createFromProtobuf(protobuf.getMotionModelRestriction());
+
+            if (restriction.isPresent()) {
+                transitionRestrictions.add(restriction.get());
+            }
+        }
+
         final Map<String, double[][]> logAlphabetNumerators = Maps.newHashMap();
 
         for (int i = 0; i < protobuf.getLogObservationModelNumeratorCount(); i++) {
@@ -160,7 +170,7 @@ public class  OnlineHmmPriors {
         }
 
 
-        return Optional.of(new OnlineHmmModelParams(logAlphabetNumerators, logStateTransition, logDenominator, pi, endStates, minStateDurations, timeCreated, timeUpdated, protobuf.getId(), protobufEnumToString(protobuf.getOutputId())));
+        return Optional.of(new OnlineHmmModelParams(logAlphabetNumerators, logStateTransition, logDenominator, pi, endStates, minStateDurations, timeCreated, timeUpdated, protobuf.getId(), protobufEnumToString(protobuf.getOutputId()),transitionRestrictions));
 
     }
 
@@ -188,12 +198,7 @@ public class  OnlineHmmPriors {
             }
 
 
-            Multimap<String,com.hello.suripu.algorithm.hmm.Transition> transitions = ArrayListMultimap.create();
-            for (final Transition transition : protobuf.getForbiddedenMotionTransitionsList()) {
-                transitions.put(protobufEnumToString(transition.getOutputId()),new com.hello.suripu.algorithm.hmm.Transition(transition.getFrom(), transition.getTo()));
-            }
-
-            return Optional.of(new OnlineHmmPriors(modelsByOutputId, transitions));
+            return Optional.of(new OnlineHmmPriors(modelsByOutputId));
 
 
         } catch (InvalidProtocolBufferException e) {

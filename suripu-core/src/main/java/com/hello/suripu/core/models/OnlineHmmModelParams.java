@@ -3,7 +3,9 @@ package com.hello.suripu.core.models;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.algorithm.hmm.LogMath;
+import com.hello.suripu.core.algorithmintegration.TransitionRestriction;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -22,8 +24,10 @@ public class OnlineHmmModelParams {
     public final long timeUpdatedUtc;
     public final String id;
     public final String outputId;
+    public final List<TransitionRestriction> transitionRestrictions;
 
-    public OnlineHmmModelParams(final Map<String, double[][]> logAlphabetNumerators, final double[][] logTransitionMatrixNumerator, final double[] logDenominator,final double [] pi, final int [] endStates,final int [] minStateDurations, final long timeCreatedUtc, final long timeUpdatedUtc, final String id, final String outputId) {
+    public OnlineHmmModelParams(final Map<String, double[][]> logAlphabetNumerators, final double[][] logTransitionMatrixNumerator, final double[] logDenominator,final double [] pi, final int [] endStates,final int [] minStateDurations,
+                                final long timeCreatedUtc, final long timeUpdatedUtc, final String id, final String outputId, final List<TransitionRestriction> transitionRestrictions ) {
         this.logAlphabetNumerators = logAlphabetNumerators;
         this.logTransitionMatrixNumerator = logTransitionMatrixNumerator;
         this.logDenominator = logDenominator;
@@ -34,6 +38,7 @@ public class OnlineHmmModelParams {
         this.timeUpdatedUtc = timeUpdatedUtc;
         this.id = id;
         this.outputId = outputId;
+        this.transitionRestrictions = transitionRestrictions;
     }
 
     public double [][] clone2d (final double [][] x) {
@@ -53,7 +58,7 @@ public class OnlineHmmModelParams {
         }
 
 
-        return new OnlineHmmModelParams(logNumerator,clone2d(logTransitionMatrixNumerator),logDenominator.clone(),pi.clone(),endStates.clone(),minStateDurations.clone(),timeCreatedUtc,timeUpdatedUtc,id,outputId);
+        return new OnlineHmmModelParams(logNumerator,clone2d(logTransitionMatrixNumerator),logDenominator.clone(),pi.clone(),endStates.clone(),minStateDurations.clone(),timeCreatedUtc,timeUpdatedUtc,id,outputId,transitionRestrictions);
     }
 
 
