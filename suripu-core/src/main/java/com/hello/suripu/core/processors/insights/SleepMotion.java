@@ -74,18 +74,20 @@ public class SleepMotion {
             return Optional.absent();
         }
 
-        final float averageMotionPercentage = (float) totMotion / (float) totDuration;
-        final float overallDiff = (averageMotionPercentage - AVERAGE_SLEEP_PERC) / AVERAGE_SLEEP_PERC * 100.0f;
+        final float averageMotionPercentageFloat = (float) (totMotion / (float) totDuration) * 100.0f;
+        final int averageMotionPercentage = (int) averageMotionPercentageFloat;
+        final float overallDiffFloat = (averageMotionPercentage - AVERAGE_SLEEP_PERC) / AVERAGE_SLEEP_PERC * 100.0f;
+        final int overallDiff = (int) overallDiffFloat;
 
         Text text;
         if (Math.abs(overallDiff) >= SIGNIFICANT_DIFF) {
             if (overallDiff > 0) {
-                text = SleepMotionMsgEN.moreMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
+                text = SleepMotionMsgEN.moreMovement(numDays, overallDiff, averageMotionPercentage);
             } else {
-                text = SleepMotionMsgEN.lessMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
+                text = SleepMotionMsgEN.lessMovement(numDays, overallDiff, averageMotionPercentage);
             }
         } else {
-            text = SleepMotionMsgEN.equalMovement(numDays, overallDiff, averageMotionPercentage * 100.0f);
+            text = SleepMotionMsgEN.equalMovement(numDays, overallDiff, averageMotionPercentage);
         }
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
