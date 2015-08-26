@@ -29,6 +29,19 @@ public class MotionTransitionRestriction implements TransitionRestriction {
         this.forbiddenTransitions = forbiddenTransitions;
     }
 
+    public OnlineHmmProtos.MotionModelRestriction toProtobuf() {
+        final OnlineHmmProtos.MotionModelRestriction.Builder builder = OnlineHmmProtos.MotionModelRestriction.newBuilder() ;
+
+        builder.setMotionModelId(motionModelId);
+
+        for (final Transition transition : forbiddenTransitions) {
+            builder.addForbiddedenMotionTransitions(OnlineHmmProtos.Transition.newBuilder().setFrom(transition.fromState).setTo(transition.toState).build());
+        }
+
+        builder.addAllNonMotionStates(nonMotionStates);
+
+        return builder.build();
+    }
 
     static public Optional<MotionTransitionRestriction> createFromProtobuf(OnlineHmmProtos.MotionModelRestriction protobuf) {
 

@@ -261,6 +261,14 @@ public class  OnlineHmmPriors {
             builder.addMinimumStateDurations(params.minStateDurations[i]);
         }
 
+        for (final TransitionRestriction restriction : params.transitionRestrictions) {
+            final MotionTransitionRestriction castRestriction = (MotionTransitionRestriction)restriction;
+
+            if (castRestriction != null) {
+                builder.setMotionModelRestriction(castRestriction.toProtobuf());
+            }
+        }
+
         return builder.build();
     }
 
