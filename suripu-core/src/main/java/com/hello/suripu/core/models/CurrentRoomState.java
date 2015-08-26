@@ -294,10 +294,10 @@ public class CurrentRoomState {
         State.Condition condition = State.Condition.ALERT;;
         String message = (preSleep) ? English.VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE: English.VERY_HIGH_PARTICULATES_MESSAGE;;
 
-        if (particulates <= Particulates.PARTICULATE_AQI_LEVEL_MAX_IDEAL) {
+        if (particulates <= Particulates.PARTICULATE_DENSITY_MAX_IDEAL) {
             condition = State.Condition.IDEAL;
             message = (preSleep) ? English.IDEAL_PARTICULATES_PRE_SLEEP_MESSAGE : English.IDEAL_PARTICULATES_MESSAGE;
-        } else if (particulates <= Particulates.PARTICULATE_AQI_LEVEL_MAX_WARNING) {
+        } else if (particulates <= Particulates.PARTICULATE_DENSITY_MAX_WARNING) {
             condition = State.Condition.WARNING;
             message = (preSleep) ? English.HIGH_PARTICULATES_PRE_SLEEP_MESSAGE : English.HIGH_PARTICULATES_MESSAGE;
         }

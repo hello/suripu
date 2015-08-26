@@ -207,9 +207,9 @@ public class SleepScoreUtils {
 
     public static int calculateParticulateScore(final List<Sample> samples, final long fallAsleepTimestamp, final long wakeUpTimestamp) {
         final float average = calculateSensorAverageInTimeRange(samples, fallAsleepTimestamp, wakeUpTimestamp);
-        if (average > Particulates.PARTICULATE_AQI_LEVEL_MAX_WARNING) {
+        if (average > Particulates.PARTICULATE_DENSITY_MAX_WARNING) {
             return SENSOR_ALERT_SCORE;
-        } else if (average > Particulates.PARTICULATE_AQI_LEVEL_MAX_IDEAL) {
+        } else if (average > Particulates.PARTICULATE_DENSITY_MAX_IDEAL) {
             return SENSOR_WARNING_SCORE;
         } else {
             return SENSOR_IDEAL_SCORE;
