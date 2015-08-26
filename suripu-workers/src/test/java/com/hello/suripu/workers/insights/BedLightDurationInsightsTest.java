@@ -297,6 +297,9 @@ public class BedLightDurationInsightsTest {
             }
         }
 
+        assertThat(lightData.size(), is(420));
+        assertThat(timeStamps.size(), is(420));
+
         final int avgLightOn = BedLightDuration.getInsightsHelper(deviceData);
         assertThat(avgLightOn, is(0));
 //        return BedLightDuration.scoreCardBedLightDuration(avgLightOn, accountId);
