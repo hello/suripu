@@ -55,7 +55,7 @@ public class BedLightDuration {
         final List<Integer> lightOnDurationList = Lists.newArrayList();
 
         for (int i = 0; i < deviceDataByDay.size(); i++) {
-            lightOnDurationList.set(i, findLightOnDurationForDay(deviceDataByDay.get(i), OFF_MINUTES_THRESHOLD));
+            lightOnDurationList.add(findLightOnDurationForDay(deviceDataByDay.get(i), OFF_MINUTES_THRESHOLD));
         }
 
         final int avgLightOn;
