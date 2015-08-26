@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -34,7 +35,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -218,7 +218,7 @@ public class RoomConditionsResource extends BaseResource {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData());
+        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
     @Timed
@@ -260,7 +260,7 @@ public class RoomConditionsResource extends BaseResource {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData());
+        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
     /*
@@ -508,16 +508,18 @@ public class RoomConditionsResource extends BaseResource {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData());
+        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
-    private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData){
-        final Map<Sensor, List<Sample>> displayData = new HashMap<>();
+    private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData, Boolean hasDust){
+        final Map<Sensor, List<Sample>> displayData = Maps.newHashMap();
         displayData.put(Sensor.LIGHT, allSensorData.get(Sensor.LIGHT));
         displayData.put(Sensor.HUMIDITY, allSensorData.get(Sensor.HUMIDITY));
         displayData.put(Sensor.SOUND, allSensorData.get(Sensor.SOUND));
         displayData.put(Sensor.TEMPERATURE, allSensorData.get(Sensor.TEMPERATURE));
-//        displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
+        if(hasDust) {
+            displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
+        }
         return displayData;
     }
 }
