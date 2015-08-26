@@ -52,18 +52,6 @@ public class DataUtils{
 
     public static float dbIntToFloatDust(final int valueFromDB) {return ((float)valueFromDB) / DUST_FLOAT_TO_INT_MULTIPLIER;}
 
-    @Deprecated
-    public static int convertRawDustCountsToAQI(final int rawCount, final int firmwareVersion) {
-        final float dustDensity = convertDustDataFromCountsToDensity(rawCount, firmwareVersion);
-        return convertDustDensityToAQI(dustDensity);
-    }
-
-    public static int convertRawDustCountsToAQI(final int rawDustCount, final Calibration calibration, final int firmwareVersion) {
-        final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibration);
-        final float dustDensity = convertDustDataFromCountsToDensity(calibratedRawDustCount, firmwareVersion);
-        return convertDustDensityToAQI(dustDensity);
-    }
-
     public static float convertRawDustCountsToDensity(final int rawDustCount, final Calibration calibration, final int firmwareVersion) {
         // Expected output unit: microgram per cubic meter
         final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibration);
