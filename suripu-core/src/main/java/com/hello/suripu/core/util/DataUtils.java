@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DataUtils{
     private static final Logger LOGGER = LoggerFactory.getLogger(DataUtils.class);
-    private static final float MAX_DUST_ANALOG_VALUE = 4096;
+    private static final float MAX_DUST_ANALOG_VALUE = 4095.0f;
     public static final float DUST_FLOAT_TO_INT_MULTIPLIER = 1000000f;
     public static final float AUDIO_FLOAT_TO_INT_MULTIPLIER = 1000.0f; // 3 decimal places
     public static final float FLOAT_2_INT_MULTIPLIER = 100;
@@ -64,6 +64,12 @@ public class DataUtils{
         return convertDustDensityToAQI(dustDensity);
     }
 
+    public static float convertRawDustCountsToDensity(final int rawDustCount, final Calibration calibration, final int firmwareVersion) {
+        // Expected output unit: microgram per cubic meter
+        final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibration);
+        return convertDustDataFromCountsToDensity(calibratedRawDustCount, firmwareVersion) * 1000.0f;
+    }
+
     public static int calibrateRawDustCount(final int rawDustCount, final Calibration calibration) {
         return rawDustCount + calibration.dustCalibrationDelta;
     }
@@ -88,7 +94,7 @@ public class DataUtils{
     public static float convertDustDataFromCountsToDensity(final int calibratedDustCount, final int firmwareVersion) {
         // TODO: add checks for firmware version when we switch sensor
 
-        final float dustDensity = (calibratedDustCount / 4095.0f) * 4.1076f * (0.5f/2.9f);
+        final float dustDensity = (calibratedDustCount / MAX_DUST_ANALOG_VALUE) * 4.1076f * (0.5f/2.9f);
         return dustDensity; // milligram per cubic meter
     }
 

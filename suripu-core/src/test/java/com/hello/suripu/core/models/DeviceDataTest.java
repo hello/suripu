@@ -29,7 +29,6 @@ public class DeviceDataTest {
                 .withAccountId(accountId)
                 .withDeviceId(251278L)
                 .withAmbientTemperature(temp)
-                .withAmbientAirQuality(dust, 1)
                 .withAmbientAirQualityRaw(dust)
                 .withAmbientDustVariance(0)
                 .withAmbientDustMin(0)

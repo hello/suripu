@@ -9,6 +9,7 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
 import com.hello.suripu.core.db.BayesNetModelDAO;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
@@ -21,6 +22,7 @@ import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -89,6 +91,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final BayesNetHmmModelPriorsDAO priorsDAO;
     private final BayesNetModelDAO bayesNetModelDAO;
     private final Optional<UUID> uuidOptional;
+    private final CalibrationDAO calibrationDAO;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -100,7 +103,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public final static String ALGORITHM_NAME_HMM = "hmm";
     public final static String VERSION_BACKUP = "wupang_backup_for_hmm"; //let us know the HMM had some issues
 
-
+    
     static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                                                             final DeviceDAO deviceDAO,
                                                             final DeviceDataDAO deviceDataDAO,
@@ -111,35 +114,37 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                                             final SenseColorDAO senseColorDAO,
                                                             final BayesNetHmmModelPriorsDAO priorsDAO,
-                                                            final BayesNetModelDAO bayesNetModelDAO) {
+                                                            final BayesNetModelDAO bayesNetModelDAO,
+                                                            final CalibrationDAO calibrationDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(trackerMotionDAO,
                 deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO,bayesNetModelDAO,
-                Optional.<UUID>absent());
+                Optional.<UUID>absent(), calibrationDAO);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,bayesNetModelDAO,Optional.of(uuid));
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,bayesNetModelDAO,Optional.of(uuid),calibrationDAO);
     }
 
     //private SessionLogDebug(final String)
 
     private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                            final DeviceDAO deviceDAO,
-                            final DeviceDataDAO deviceDataDAO,
-                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
-                            final FeedbackDAO feedbackDAO,
-                            final SleepHmmDAO sleepHmmDAO,
-                            final AccountDAO accountDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                              final DeviceDAO deviceDAO,
+                              final DeviceDataDAO deviceDataDAO,
+                              final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+                              final FeedbackDAO feedbackDAO,
+                              final SleepHmmDAO sleepHmmDAO,
+                              final AccountDAO accountDAO,
+                              final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
                               final BayesNetHmmModelPriorsDAO priorsDAO,
                               final BayesNetModelDAO bayesNetModelDAO,
-                              final Optional<UUID> uuid) {
+                              final Optional<UUID> uuid,
+                              final CalibrationDAO calibrationDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -151,6 +156,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.senseColorDAO = senseColorDAO;
         this.priorsDAO = priorsDAO;
         this.bayesNetModelDAO = bayesNetModelDAO;
+        this.calibrationDAO = calibrationDAO;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -452,6 +458,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         // get color of sense, yes this matters for the light sensor
         final Optional<Device.Color> optionalColor = senseColorDAO.getColorForSense(externalDeviceId);
 
+        // get calibration data, which help to adjust dust readings
+        final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(externalDeviceId) ? calibrationDAO.getStrict(externalDeviceId) : Optional.<Calibration>absent();
+        final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(externalDeviceId);
 
         AllSensorSampleList allSensorSampleList;
         if (hasAllSensorQueryUseUTCTs(accountId)) {
@@ -462,7 +471,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                     targetDate.minusMillis(tzOffsetMillis).getMillis(),
                     endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibration);
         } else {
             // query dates are in local_utc_ts
             LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
@@ -470,7 +479,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(),
                     endDate.getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId), optionalColor, calibration);
         }
 
         if (allSensorSampleList.isEmpty()) {
