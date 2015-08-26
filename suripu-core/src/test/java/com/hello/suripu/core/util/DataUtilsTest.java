@@ -17,28 +17,6 @@ public class DataUtilsTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataUtilsTest.class);
 
     @Test
-    public void testDustConversionWithZeroCalibration() {
-        final int raw_dust[] = new int[] {1179, 1570};
-        final int expectedAQI[] = new int[] {254, 322};
-        for (int i = 0; i < raw_dust.length; i++) {
-            final int calculatedAQI = DataUtils.convertRawDustCountsToAQI(raw_dust[i], Calibration.createDefault("dummy-sense"), 1);
-            LOGGER.trace("Under zero calibration, raw_dust {} -> aqi {}", raw_dust[i], calculatedAQI);
-            assertThat(calculatedAQI, is(expectedAQI[i]));
-        }
-    }
-
-    @Test
-    public void testDustConversionWithSignificantCalibration() {
-        final int raw_dust[] = new int[] {1179, 1570};
-        final int expectedAQI[] = new int[] {267, 334};
-        for (int i = 0; i < raw_dust.length; i++) {
-            final int calculatedAQI = DataUtils.convertRawDustCountsToAQI(raw_dust[i], Calibration.create("dummy-sense", 175, DateTime.now(DateTimeZone.UTC).getMillis()), 1);
-            LOGGER.trace("Under calibration of ADC_offset = 175, raw_dust {} -> aqi {}", raw_dust[i], calculatedAQI);
-            assertThat(calculatedAQI, is(expectedAQI[i]));
-        }
-    }
-
-    @Test
     public void testDustCountToDensityWithZeroCalibration() {
         final int raw_dust[] = new int[] {1179, 1570};
         final float expectedDensity[] = new float[] {203.90134f, 271.52255f};
