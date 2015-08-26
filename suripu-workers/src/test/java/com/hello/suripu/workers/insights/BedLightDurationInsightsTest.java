@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.BedLightDurationMsgEN;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -13,6 +14,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -269,7 +271,7 @@ public class BedLightDurationInsightsTest {
 
         final List<DeviceData> deviceData = Lists.newArrayList();
         for (int i = 0; i < lightData.size(); i++) {
-            final int myHour = new DateTime(timeStamps.get(i)).getHourOfDay();
+            final int myHour = new DateTime(timeStamps.get(i), DateTimeZone.forOffsetMillis(-25200000)).getHourOfDay();
             if (myHour > 21 || myHour < 4) {
                 deviceData.add(createNewDeviceData(lightData.get(i), new DateTime(timeStamps.get(i))));
             }
@@ -291,15 +293,12 @@ public class BedLightDurationInsightsTest {
         );
 
         for (int i = 0; i < lightData.size(); i++) {
-            final int myHour = new DateTime(timeStamps.get(i)).getHourOfDay();
+            final int myHour = new DateTime(timeStamps.get(i), DateTimeZone.forOffsetMillis(-25200000)).getHourOfDay();
             if (myHour > 21 || myHour < 4) {
                 deviceData.add(createNewDeviceData(lightData.get(i), new DateTime(timeStamps.get(i))));
             }
         }
-
-        assertThat(lightData.size(), is(420));
-        assertThat(timeStamps.size(), is(420));
-
+        
         final int avgLightOn = BedLightDuration.getInsightsHelper(deviceData);
         assertThat(avgLightOn, is(0));
 //        return BedLightDuration.scoreCardBedLightDuration(avgLightOn, accountId);
@@ -316,7 +315,7 @@ public class BedLightDurationInsightsTest {
         );
 
         for (int i = 0; i < lightData.size(); i++) {
-            final int myHour = new DateTime(timeStamps.get(i)).getHourOfDay();
+            final int myHour = new DateTime(timeStamps.get(i), DateTimeZone.forOffsetMillis(-25200000)).getHourOfDay();
             if (myHour > 21 || myHour < 4) {
                 deviceData.add(createNewDeviceData(lightData.get(i), new DateTime(timeStamps.get(i))));
             }
