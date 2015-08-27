@@ -224,6 +224,30 @@ BEGIN
         INSERT INTO device_sensors_par_2015_08_30 VALUES (NEW.*);
     ELSIF NEW.local_utc_ts >= '2015-08-29 00:00:00' AND NEW.local_utc_ts < '2015-08-30 00:00:00' THEN
         INSERT INTO device_sensors_par_2015_08_29 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-28 00:00:00' AND NEW.local_utc_ts < '2015-08-29 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_28 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-27 00:00:00' AND NEW.local_utc_ts < '2015-08-28 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_27 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-26 00:00:00' AND NEW.local_utc_ts < '2015-08-27 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_26 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-25 00:00:00' AND NEW.local_utc_ts < '2015-08-26 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_25 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-24 00:00:00' AND NEW.local_utc_ts < '2015-08-25 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_24 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-23 00:00:00' AND NEW.local_utc_ts < '2015-08-24 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_23 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-22 00:00:00' AND NEW.local_utc_ts < '2015-08-23 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_22 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-21 00:00:00' AND NEW.local_utc_ts < '2015-08-22 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_21 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-20 00:00:00' AND NEW.local_utc_ts < '2015-08-21 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_20 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-19 00:00:00' AND NEW.local_utc_ts < '2015-08-20 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_19 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-18 00:00:00' AND NEW.local_utc_ts < '2015-08-19 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_18 VALUES (NEW.*);
+    ELSIF NEW.local_utc_ts >= '2015-08-17 00:00:00' AND NEW.local_utc_ts < '2015-08-18 00:00:00' THEN
+        INSERT INTO device_sensors_par_2015_08_17 VALUES (NEW.*);
     ELSE
         INSERT INTO device_sensors_par_default VALUES (NEW.*);
     END IF;
