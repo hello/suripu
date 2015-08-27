@@ -290,8 +290,8 @@ public class CurrentRoomState {
     public static State getParticulatesState(final float particulates, final DateTime dataTimestampUTC, final Boolean preSleep) {
         // see http://www.sparetheair.com/aqi.cfm
 
-        final String idealParticulatesConditions = English.PARTICULATES_ADVICE_MESSAGE;
-        State.Condition condition = State.Condition.ALERT;;
+        String idealParticulatesConditions = English.PARTICULATES_ADVICE_MESSAGE;
+        State.Condition condition = State.Condition.ALERT;
         String message = (preSleep) ? English.VERY_HIGH_PARTICULATES_PRE_SLEEP_MESSAGE: English.VERY_HIGH_PARTICULATES_MESSAGE;;
 
         if (particulates <= Particulates.PARTICULATE_DENSITY_MAX_IDEAL) {
@@ -304,7 +304,7 @@ public class CurrentRoomState {
 
 
         if (condition != State.Condition.IDEAL && !preSleep) {
-            message += English.RECOMMENDATION_PARTICULATES_TOO_HIGH;
+            idealParticulatesConditions += English.RECOMMENDATION_PARTICULATES_TOO_HIGH;
         }
 
         return new State(particulates, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.MICRO_G_M3);
