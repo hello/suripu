@@ -194,7 +194,7 @@ public class CurrentRoomState {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(null, English.LOADING_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.CELCIUS),
                 new State(null, English.LOADING_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.PERCENT),
-                new State(null, English.LOADING_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.MICRO_G_M3),
+                new State(null, English.LOADING_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
                 new State(null, English.LOADING_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.LUX),
                 new State(null, English.LOADING_SOUND_MESSAGE, "", State.Condition.UNKNOWN, DateTime.now(), State.Unit.DB),
                 hasDust
@@ -209,7 +209,7 @@ public class CurrentRoomState {
         final CurrentRoomState roomState = new CurrentRoomState(
                 new State(temperature, English.UNKNOWN_TEMPERATURE_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.CELCIUS),
                 new State(humidity, English.UNKNOWN_HUMIDITY_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.PERCENT),
-                new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.MICRO_G_M3),
+                new State(particulates, English.UNKNOWN_PARTICULATES_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.AQI), // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
                 new State(light, English.UNKNOWN_LIGHT_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.LUX),
                 new State(sound, English.UNKNOWN_SOUND_MESSAGE, "", State.Condition.UNKNOWN, dataTimestampUTC, State.Unit.DB)
         );
@@ -307,7 +307,7 @@ public class CurrentRoomState {
             idealParticulatesConditions += English.RECOMMENDATION_PARTICULATES_TOO_HIGH;
         }
 
-        return new State(particulates, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.MICRO_G_M3);
+        return new State(particulates, message, idealParticulatesConditions, condition, dataTimestampUTC, State.Unit.AQI); // this should be State.Unit.MICRO_G_M3 but clients rely on string AQI
     }
 
     public static State getLightState(final float light, final DateTime dataTimestampUTC, final Boolean preSleep) {

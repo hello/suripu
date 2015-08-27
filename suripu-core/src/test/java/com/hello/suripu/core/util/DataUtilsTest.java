@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -36,5 +37,11 @@ public class DataUtilsTest {
             LOGGER.trace("Under calibration of ADC_offset = 175, raw_dust {} -> aqi {}", raw_dust[i], calculatedDensity);
             assertThat(calculatedDensity, is(expectedDensity[i]));
         }
+    }
+
+    @Test
+    public void badCalibration() {
+        final float calculatedDensity = DataUtils.convertRawDustCountsToDensity(0, Calibration.create("dummy-sense", 600, DateTime.now(DateTimeZone.UTC).getMillis()), 1);
+        assertThat(calculatedDensity, equalTo(1f));
     }
 }

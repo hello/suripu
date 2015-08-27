@@ -21,7 +21,7 @@ public class DataUtils{
     public static float convertRawDustCountsToDensity(final int rawDustCount, final Calibration calibration, final int firmwareVersion) {
         // Expected output unit: microgram per cubic meter
         final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibration);
-        return convertDustDataFromCountsToDensity(calibratedRawDustCount, firmwareVersion) * 1000.0f;
+        return convertDustDataFromCountsToDensity(calibratedRawDustCount, calibration.senseId) * 1000.0f;
     }
 
     public static int calibrateRawDustCount(final int rawDustCount, final Calibration calibration) {
@@ -29,11 +29,15 @@ public class DataUtils{
     }
 
 
-    public static float convertDustDataFromCountsToDensity(final int calibratedDustCount, final int firmwareVersion) {
+    public static float convertDustDataFromCountsToDensity(final int calibratedDustCount, final String senseId) {
         // TODO: add checks for firmware version when we switch sensor
 
         final float dustDensity = (calibratedDustCount / MAX_DUST_ANALOG_VALUE) * 4.1076f * (0.5f/2.9f);
-        return dustDensity; // milligram per cubic meter
+        if(dustDensity < 0.0f) {
+            LOGGER.error("bad calibration for device_id = {}: value was: {}", senseId, dustDensity);
+        }
+
+        return Math.max(0.001f, dustDensity); // milligram per cubic meter
     }
 
     public static float convertLightCountsToLux(final int rawCount) {
