@@ -97,8 +97,15 @@ public class LabelMaker {
         return labels;
     }
 
+    private static List<Long> eventsToTimestamps(final Collection<Event> events) {
+        final List<Long> timestamps = Lists.newArrayList();
 
+        for (final Event e : events) {
+            timestamps.add(e.getStartTimestamp());
+        }
 
+        return timestamps;
+    }
 
     public final Map<String,Map<Integer,Integer>> getLabelsFromEvent(final int tzOffset, final long startTime, final long endTime,
                                                                      final int numMinutesPerPeriod,final List<TimelineFeedback> timelineFeedbacks) {
@@ -109,30 +116,45 @@ public class LabelMaker {
         final Collection<Event> sleeps = eventsByType.get(Event.Type.SLEEP);
         final Collection<Event> inbeds = eventsByType.get(Event.Type.IN_BED);
         final Collection<Event> outofbeds = eventsByType.get(Event.Type.OUT_OF_BED);
+
+        final List<Long> wakeTimes = eventsToTimestamps(wakes);
+        final List<Long> sleepTimes = eventsToTimestamps(sleeps);
+        final List<Long> inbedTimes = eventsToTimestamps(inbeds);
+        final List<Long> outofbedTimes = eventsToTimestamps(outofbeds);
+
+
+        return getLabelsFromEvent(startTime,endTime,numMinutesPerPeriod,wakeTimes,sleepTimes);
+    }
+
+
+    public final Map<String,Map<Integer,Integer>> getLabelsFromEvent(final long startTime, final long endTime, final int numMinutesPerPeriod,
+                                                                     final List<Long> wakes ,final List<Long> sleeps) {
+
+
         final Map<String,Map<Integer,Integer>> labelsByOutputId = Maps.newHashMap();
 
         //for the moment, assume number of events per type is only one or zero
 
         if (wakes.size() > 0 && sleeps.size() > 0) {
-            final Event wake = wakes.iterator().next();
-            final Event sleep = sleeps.iterator().next();
+            final long wake = wakes.get(0);
+            final long sleep = sleeps.get(0);
 
-            final Map<Integer,Integer> labels = labelEventPair(sleep.getStartTimestamp(),wake.getStartTimestamp(),startTime,endTime,numMinutesPerPeriod,LABEL_PRE_SLEEP,LABEL_DURING_SLEEP,LABEL_POST_SLEEP);
+            final Map<Integer,Integer> labels = labelEventPair(sleep,wake,startTime,endTime,numMinutesPerPeriod,LABEL_PRE_SLEEP,LABEL_DURING_SLEEP,LABEL_POST_SLEEP);
 
             labelsByOutputId.put(OnlineHmmData.OUTPUT_MODEL_SLEEP,labels);
         }
         else if (wakes.size() > 0) {
-            final Event wake = wakes.iterator().next();
+            final long wake = wakes.get(0);
 
-            final Map<Integer,Integer> labels = labelSingleEvent(wake.getStartTimestamp(),startTime,endTime,numMinutesPerPeriod,LABEL_DURING_SLEEP,LABEL_POST_SLEEP,false);
+            final Map<Integer,Integer> labels = labelSingleEvent(wake,startTime,endTime,numMinutesPerPeriod,LABEL_DURING_SLEEP,LABEL_POST_SLEEP,false);
 
             labelsByOutputId.put(OnlineHmmData.OUTPUT_MODEL_SLEEP,labels);
 
         }
         else if (sleeps.size() > 0) {
-            final Event sleep = sleeps.iterator().next();
+            final long sleep = sleeps.get(0);
 
-            final Map<Integer,Integer> labels = labelSingleEvent(sleep.getStartTimestamp(),startTime,endTime,numMinutesPerPeriod,LABEL_PRE_SLEEP,LABEL_DURING_SLEEP,true);
+            final Map<Integer,Integer> labels = labelSingleEvent(sleep,startTime,endTime,numMinutesPerPeriod,LABEL_PRE_SLEEP,LABEL_DURING_SLEEP,true);
 
             labelsByOutputId.put(OnlineHmmData.OUTPUT_MODEL_SLEEP,labels);
 

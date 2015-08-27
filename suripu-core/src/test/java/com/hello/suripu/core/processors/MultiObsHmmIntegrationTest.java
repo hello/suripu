@@ -9,10 +9,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.hmm.Transition;
+import com.hello.suripu.core.algorithmintegration.LabelMaker;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
 import com.hello.suripu.core.models.OnlineHmmPriors;
+import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import junit.framework.TestCase;
 import org.junit.Test;
 
@@ -21,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -87,6 +90,65 @@ public class MultiObsHmmIntegrationTest {
         }
     }
 
+    private static Map<String,List<Long>> feedbacksToEventTimesByTime(final List<FeedbackAsIndices> feedbackAsIndices) {
+
+        Map<String,List<Long>> results = Maps.newHashMap();
+
+        for (final FeedbackAsIndices feedback : feedbackAsIndices) {
+            final Long time = feedback.updatedIndex * 5 * 60000L;
+
+            if (results.get(feedback.type) == null) {
+                results.put(feedback.type,Lists.<Long>newArrayList());
+            }
+
+            results.get(feedback.type).add(time);
+
+        }
+
+        return results;
+    }
+
+    private static List<Map<String,Map<Integer,Integer>>> getLabelsFromFile(final String path) {
+        final ObjectMapper mapper = new ObjectMapper();
+        final URL fileUrl = Resources.getResource(path);
+        final File file = new File(fileUrl.getFile());
+
+        final LabelMaker labelMaker = new LabelMaker(Optional.<UUID>absent());
+
+        final List<Map<String,Map<Integer,Integer>>> result = Lists.newArrayList();
+
+        try {
+
+            final AlphabetsAndLabels [] paths = mapper.readValue(file, AlphabetsAndLabels [].class);
+
+            for (int i = 0; i < paths.length; i++) {
+
+                final Map<String,List<Long>> feedbacks = feedbacksToEventTimesByTime(paths[i].feedback);
+
+                List<Long> wakes = feedbacks.get("WAKE_UP");
+                List<Long> sleeps = feedbacks.get("SLEEP");
+
+                if (wakes == null) {
+                    wakes = Lists.newArrayList();
+                }
+
+                if (sleeps == null) {
+                    sleeps = Lists.newArrayList();
+                }
+
+                result.add(labelMaker.getLabelsFromEvent(0, 60000L * 60 * 16, 5, wakes, sleeps));
+
+            }
+
+            return result;
+
+
+        }
+        catch (Exception e) {
+            return result;
+        }
+    }
+
 
     @Test
     public void testMultiDayEvaluation() {
@@ -120,7 +182,7 @@ public class MultiObsHmmIntegrationTest {
 
         try {
             //get model
-            final byte [] protobuf = loadFile("fixtures/algorithm/default_model.proto");
+            final byte [] protobuf = loadFile("fixtures/algorithm/default_model.bin");
             final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
             TestCase.assertTrue(model.isPresent());
 
@@ -154,9 +216,51 @@ public class MultiObsHmmIntegrationTest {
 
 
         } catch (IOException e) {
-            e.printStackTrace();
+            TestCase.assertTrue(false);
         }
 
 
+    }
+
+
+    @Test
+    public void testReestimation() {
+
+        try {
+            //get model
+            final byte[] protobuf = loadFile("fixtures/algorithm/default_model.bin");
+            final Optional<OnlineHmmPriors> modelOptional = OnlineHmmPriors.createFromProtoBuf(protobuf);
+            TestCase.assertTrue(modelOptional.isPresent());
+            final OnlineHmmPriors model = modelOptional.get();
+
+            //get feature data -- it should be a list of days, each day has a bunch of key value pairs that correspond to different sensor data streams for that day
+            final String modelFilename = "fixtures/algorithm/36584.json";
+            final List<Map<String, ImmutableList<Integer>>> featureData = getFeatureDataFromFile(modelFilename);
+            final List<Map<String,Map<Integer,Integer>>> labels = getLabelsFromFile(modelFilename);
+            TestCase.assertFalse(featureData.isEmpty());
+            TestCase.assertTrue(labels.size() == featureData.size());
+
+            final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
+
+            final String outputId = "SLEEP";
+            final String modelId = "default";
+
+            final Map<String,String> modelIds = Maps.newHashMap();
+            modelIds.put(outputId,modelId);
+
+            for (int count = 0;  count < featureData.size(); count++) {
+                final OnlineHmmScratchPad scratchPad = evaluator.reestimate(modelIds, model, featureData.get(count), labels.get(count), 0);
+
+                model.modelsByOutputId.get(outputId).remove(modelId);
+                model.modelsByOutputId.get(outputId).put(modelId, scratchPad.paramsByOutputId.get(outputId));
+            }
+
+            for (int count = 0;  count < featureData.size(); count++) {
+                final Map<String, MultiEvalHmmDecodedResult> results = evaluator.evaluate(model, featureData.get(count));
+            }
+
+        } catch (IOException e) {
+            TestCase.assertTrue(false);
+        }
     }
 }
