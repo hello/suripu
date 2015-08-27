@@ -42,6 +42,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.UUID;
 
 @Path("/v2/timeline")
 public class TimelineResource extends BaseResource {
@@ -82,8 +83,11 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
+
+        final TimelineProcessor timelineProcessorWithUUIDLogging = this.timelineProcessor.copyMeWithNewUUID(UUID.randomUUID());
+
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
-        final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
+        final Optional<TimelineResult> timeline = timelineProcessorWithUUIDLogging.retrieveTimelinesFast(accessToken.accountId, targetDate);
         if(!timeline.isPresent()) {
             return Timeline.createEmpty(targetDate);
         }

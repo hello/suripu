@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -188,7 +189,11 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
                 this.timelineReadyToProcess.mark(1);
                 try {
-                    final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC);
+
+                    final TimelineProcessor timelineProcessorWithUUIDLogging = this.timelineProcessor.copyMeWithNewUUID(UUID.randomUUID());
+
+
+                    final Optional<TimelineResult> result = timelineProcessorWithUUIDLogging.retrieveTimelinesFast(accountId, targetDateLocalUTC);
                     if(!result.isPresent()){
                         this.emptyTimelineAfterProcess.mark(1);
                         continue;
