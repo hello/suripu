@@ -25,9 +25,9 @@ public class SleepMotion {
     // SELECT SUM(agitation_num) / CAST((15 * COUNT(*)) AS FLOAT) AS perc FROM sleep_score;
     // sleep scores are now saved in DynamoDB
     // computed 04/08/2015, 7632 scores, prod_sleep_stats_v_0_2 = 0.121882824828
-    private static int AVERAGE_SLEEP_PERC = 12;
+    private static float AVERAGE_SLEEP_PERC = 12.0f;
 
-    private static int SIGNIFICANT_DIFF = 20; // only differences greater than 30% is worth reporting (TODO)
+    private static float SIGNIFICANT_DIFF = 20.0f; // only differences greater than 30% is worth reporting (TODO)
 
     private static int MIN_DAYS_REQUIRED = 3;
 
@@ -56,8 +56,8 @@ public class SleepMotion {
             return Optional.absent();
         }
 
-        float totDuration = 0;
-        float totMotion = 0;
+        float totDuration = 0.0f;
+        float totMotion = 0.0f;
         int numDays = 0;
 
         for (final AggregateSleepStats stat : sleepStats) {
@@ -65,8 +65,8 @@ public class SleepMotion {
                 continue;
             }
 
-            totMotion += stat.motionScore.numMotions;
-            totDuration += stat.motionScore.motionPeriodMinutes;
+            totMotion += (float) stat.motionScore.numMotions;
+            totDuration += (float) stat.motionScore.motionPeriodMinutes;
             numDays++;
         }
 
