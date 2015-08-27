@@ -41,7 +41,7 @@ public class SleepMotionTest {
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
-        System.out.print(optionalCard.get().message + "\n");
+//        System.out.print(optionalCard.get().message + "\n");
         if (optionalCard.isPresent()) {
             final Text expected = SleepMotionMsgEN.lessMovement(10, 10, 10);
             assertThat(optionalCard.get().title, is(expected.title));
@@ -64,7 +64,7 @@ public class SleepMotionTest {
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
-        System.out.print(optionalCard.get().message + "\n");
+//        System.out.print(optionalCard.get().message + "\n");
         if (optionalCard.isPresent()) {
             final Text expected = SleepMotionMsgEN.moreMovement(10, 10, 10);
             assertThat(optionalCard.get().title, is(expected.title));
@@ -87,7 +87,7 @@ public class SleepMotionTest {
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
-        System.out.print(optionalCard.get().message + "\n");
+//        System.out.print(optionalCard.get().message + "\n");
         if (optionalCard.isPresent()) {
             final Text expected = SleepMotionMsgEN.equalMovement(10, 10, 10);
             assertThat(optionalCard.get().title, is(expected.title));
@@ -111,7 +111,7 @@ public class SleepMotionTest {
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
-        System.out.print(optionalCard.get().message + "\n");
+//        System.out.print(optionalCard.get().message + "\n");
         if (optionalCard.isPresent()) {
             final Text expected = SleepMotionMsgEN.reallyEqualMovement(10, 10, 10);
             assertThat(optionalCard.get().title, is(expected.title));
