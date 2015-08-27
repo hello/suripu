@@ -135,7 +135,9 @@ public class BedLightDuration {
         if (avgLightOn <= 60) {
             return Optional.absent();
 //            text = BedLightDurationMsgEN.getLittleLight();
-        } else if (avgLightOn <= 120) {
+        }
+
+        if (avgLightOn <= 120) {
             text = BedLightDurationMsgEN.getMediumLight();
         } else {
             text = BedLightDurationMsgEN.getHighLight();
