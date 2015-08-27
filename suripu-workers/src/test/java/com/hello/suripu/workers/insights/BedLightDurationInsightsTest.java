@@ -264,7 +264,7 @@ public class BedLightDurationInsightsTest {
 //        Data pulled from 8-01-2015 from accountId 20894 - python script returns 25.2 minutes
 
         List<Integer> lightData = Lists.newArrayList();
-        final URL userCSVFile = Resources.getResource("insights/test/bedlightduration/lightDataUser1.csv");
+        final URL userCSVFile = Resources.getResource("insights/bedlightduration/lightDataUser1.csv");
         try {
             final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
             final String[] lightDataStringList = csvString.replaceAll("\\s+","").split(",");
@@ -276,7 +276,7 @@ public class BedLightDurationInsightsTest {
         }
 
         List<Long> timeStamps = Lists.newArrayList();
-        final URL timeStampCSVFile = Resources.getResource("insights/test/bedlightduration/timeStampUser1.csv");
+        final URL timeStampCSVFile = Resources.getResource("insights/bedlightduration/timeStampUser1.csv");
         try {
             final String csvString = Resources.toString(timeStampCSVFile, Charsets.UTF_8);
             final String[] timeStampStringList = csvString.replaceAll("\\s+","").replaceAll("L","").split(",");
@@ -305,7 +305,7 @@ public class BedLightDurationInsightsTest {
 //        Data pulled from 8-01-2015 from accountId 22262 - python script returns 0 minutes
 
         List<Integer> lightData = Lists.newArrayList();
-        final URL userCSVFile = Resources.getResource("insights/test/bedlightduration/lightDataUser2.csv");
+        final URL userCSVFile = Resources.getResource("insights/bedlightduration/lightDataUser2.csv");
         try {
             final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
             final String[] lightDataStringList = csvString.replaceAll("\\s+","").split(",");
@@ -317,7 +317,7 @@ public class BedLightDurationInsightsTest {
         }
 
         List<Long> timeStamps = Lists.newArrayList();
-        final URL timeStampCSVFile = Resources.getResource("insights/test/bedlightduration/timeStampUser2.csv");
+        final URL timeStampCSVFile = Resources.getResource("insights/bedlightduration/timeStampUser2.csv");
         try {
             final String csvString = Resources.toString(timeStampCSVFile, Charsets.UTF_8);
             final String[] timeStampStringList = csvString.replaceAll("\\s+","").replaceAll("L","").split(",");
@@ -347,7 +347,7 @@ public class BedLightDurationInsightsTest {
 //        Data pulled from 8-01-2015 from accountId 27053 - python script returns 175.6 minutes
 
         List<Integer> lightData = Lists.newArrayList();
-        final URL userCSVFile = Resources.getResource("insights/test/bedlightduration/lightDataUser3.csv");
+        final URL userCSVFile = Resources.getResource("insights/bedlightduration/lightDataUser3.csv");
         try {
             final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
             final String[] lightDataStringList = csvString.replaceAll("\\s+","").split(",");
@@ -359,7 +359,7 @@ public class BedLightDurationInsightsTest {
         }
 
         List<Long> timeStamps = Lists.newArrayList();
-        final URL timeStampCSVFile = Resources.getResource("insights/test/bedlightduration/timeStampUser3.csv");
+        final URL timeStampCSVFile = Resources.getResource("insights/bedlightduration/timeStampUser3.csv");
         try {
             final String csvString = Resources.toString(timeStampCSVFile, Charsets.UTF_8);
             final String[] timeStampStringList = csvString.replaceAll("\\s+","").replaceAll("L","").split(",");
