@@ -36,4 +36,11 @@ public class SleepMotionMsgEN {
                 String.format("we noticed that you only moved %d%% %s than the average person using Sense. ", Math.abs(diff), description) +
                 String.format("About **%d%% of your sleep** consists of agitated sleep.", percentage));
     }
+
+    public static Text reallyEqualMovement(final int numNights, final int diff, final int percentage) {
+        return new Text("Marxist utopia",
+                String.format("In each of the last %d nights, we noticed that you moved the same amount as the average person using Sense. ", numNights) +
+                        String.format("About **%d%% of your sleep** consists of agitated sleep.", percentage)
+        );
+    }
 }

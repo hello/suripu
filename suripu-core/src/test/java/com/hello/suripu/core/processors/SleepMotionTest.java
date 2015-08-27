@@ -41,6 +41,7 @@ public class SleepMotionTest {
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
+        System.out.print(optionalCard.get().message + "\n");
         if (optionalCard.isPresent()) {
             final Text expected = SleepMotionMsgEN.lessMovement(10, 10, 10);
             assertThat(optionalCard.get().title, is(expected.title));
@@ -63,6 +64,7 @@ public class SleepMotionTest {
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
+        System.out.print(optionalCard.get().message + "\n");
         if (optionalCard.isPresent()) {
             final Text expected = SleepMotionMsgEN.moreMovement(10, 10, 10);
             assertThat(optionalCard.get().title, is(expected.title));
@@ -85,11 +87,37 @@ public class SleepMotionTest {
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
+        System.out.print(optionalCard.get().message + "\n");
         if (optionalCard.isPresent()) {
             final Text expected = SleepMotionMsgEN.equalMovement(10, 10, 10);
             assertThat(optionalCard.get().title, is(expected.title));
         }
 
     }
+
+    @Test
+    public void testReallyEqualMovement() {
+        // account,1001,nights,37,avg_motion,0.1353
+        final Long accountId = 1001L;
+        final DateTime now = DateTime.now();
+        final List<Integer> numMotions = Lists.newArrayList(112, 104, 72, 51, 51, 68, 56, 61, 54, 66, 71, 58, 10, 82, 41, 60, 77, 86, 91, 80, 58, 83, 69, 27, 83, 64, 59, 79, 76, 65, 20, 46, 95, 41, 37, 21, 47);
+        final List<Integer> durations = Lists.newArrayList(2800 ,351 ,604 ,482 ,363 ,495 ,459 ,535 ,422 ,451 ,439 ,433 ,59 ,442 ,386 ,438 ,547 ,604 ,585 ,543 ,532 ,501 ,542 ,304 ,575 ,512 ,483 ,511 ,524 ,491 ,166 ,505 ,560 ,357 ,508 ,394 ,447);
+        final SleepStats sleepStats = new SleepStats(1, 2, 3, false, 4, 10L, 20L, 0);
+        final List<AggregateSleepStats> aggSleepStats = new ArrayList();
+        final int numData = numMotions.size();
+        for (int i = 0; i < numData; i ++) {
+            final MotionScore motionScore = new MotionScore(numMotions.get(i), durations.get(i), 1.0f, 1000, 10);
+            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, sleepStats));
+        }
+
+        final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
+        System.out.print(optionalCard.get().message + "\n");
+        if (optionalCard.isPresent()) {
+            final Text expected = SleepMotionMsgEN.reallyEqualMovement(10, 10, 10);
+            assertThat(optionalCard.get().title, is(expected.title));
+        }
+
+    }
+
 
 }
