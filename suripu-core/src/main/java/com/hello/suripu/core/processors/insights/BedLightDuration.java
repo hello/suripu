@@ -84,7 +84,7 @@ public class BedLightDuration {
                 res.add(data.subList(beg, i));
                 beg = i;
             }
-            else if (i == data.size() - 1) {
+            else if (i == data.size() - 1) { //edge case for last day
                 res.add(data.subList(beg, data.size()));
             }
         }
