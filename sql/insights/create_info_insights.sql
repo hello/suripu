@@ -215,5 +215,5 @@ VALUES
  ---
 ('bed_light_duration',
 'Associating your bedroom with sleep',
-'Habitually watching television, using your phone, or engaging in other mentally stimulating activities just before bed can create a subconscious link between your bedroom and staying alert. This often makes it harder to fall asleep when you want to. Alternatively, reserving your bedroom for sleep and intimacy can create a link between your bedroom and sleep, which will help your body fall asleep more easily when it’s time for bed.'
+'Regularly watching television, using your phone, or engaging in other mentally stimulating activities just before bed can create a subconscious link between your bedroom and staying alert. This often makes it harder to fall asleep when you want to. On the other hand, reserving your bedroom for sleep and intimacy can create a link between your bedroom and sleep, which will help your body fall asleep more easily when it’s time for bed.'
 );
