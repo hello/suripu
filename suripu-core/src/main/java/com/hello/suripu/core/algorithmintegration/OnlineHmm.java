@@ -354,8 +354,17 @@ public class OnlineHmm {
         /* GET PREDICTIONS  */
         predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset);
 
-        /* PROCESS FEEDBACK  */
-        if ( (feedbackHasChanged && !feedbackList.isEmpty() && !isDayTooOldToConsiderComputingModelUpdate(startTimeUtc,oneDaysSensorData.timeOfQueryUTC))  || forceLearning) {
+
+        boolean isFeedbackReady = feedbackHasChanged && !isDayTooOldToConsiderComputingModelUpdate(startTimeUtc,oneDaysSensorData.timeOfQueryUTC);
+
+        //override
+        if (forceLearning && !feedbackList.isEmpty()) {
+            isFeedbackReady = true;
+        }
+
+
+        /* PROCESS FEEDBACK, but only if it's ready  */
+        if (isFeedbackReady) {
             //1) turn feedback into labels
             final LabelMaker labelMaker = new LabelMaker(uuid);
             final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvent(timezoneOffset,binnedData.t0,endTimeUtc,binnedData.numMinutesInWindow,feedbackList);
@@ -375,9 +384,9 @@ public class OnlineHmm {
                 final OnlineHmmPriors updatedModelPriors = updateModelPriors(modelPriors,scratchPad,startTimeUtc,true);
 
                 userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,updatedModelPriors);
-
             }
             else {
+                //otherwise just update the scratchpad
                 userModelDAO.updateScratchpad(accountId,scratchPad);
             }
         }

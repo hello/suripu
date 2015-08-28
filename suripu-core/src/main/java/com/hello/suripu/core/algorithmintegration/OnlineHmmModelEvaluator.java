@@ -89,7 +89,14 @@ public class OnlineHmmModelEvaluator {
      * -labels by output id and time
      *
      * output:
-     * a model delta for each output id
+     * a model delta for each output ID if labels are present
+     *
+     *
+     * usedModelsByOutputId - maps output ID to the selected model ID for that output
+     * priors - all the models
+     * features - the measurements
+     * labelsByOutputId - the labels stored by output ID
+     * currentTime - current server time in UTC
      * */
     public OnlineHmmScratchPad reestimate(final Map<String,String> usedModelsByOutputId, final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features, final Map<String,Map<Integer,Integer>> labelsByOutputId,long currentTime) {
 
@@ -113,13 +120,15 @@ public class OnlineHmmModelEvaluator {
             }
 
 
-            //get the labels
-            Optional<Map<Integer,Integer>> labelsOptional = Optional.absent();
-
+            //get the labels, but skip this loop if the labels are not present
             final Map<Integer,Integer> labels = labelsByOutputId.get(outputId)  ;
 
-            if (labels != null) {
-                labelsOptional = Optional.of(labels);
+            if (labels == null) {
+                continue;
+            }
+
+            if (labels.isEmpty()) {
+                continue;
             }
 
             //get the transition restrictions
@@ -130,7 +139,7 @@ public class OnlineHmmModelEvaluator {
             }
 
             //get the measurement sequence
-            final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions,labelsOptional);
+            final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions,Optional.of(labels));
 
             //finally  go fucking reestimate
             final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);

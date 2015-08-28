@@ -385,7 +385,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         }
     }
 
-    public void reestimate(final MultiObsSequence meas, final double priorWeightAsNumberOfSamples) {
+    public boolean reestimate(final MultiObsSequence meas, final double priorWeightAsNumberOfSamples) {
         int iterationNumber;
         int iSequence;
 
@@ -394,41 +394,47 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         final Multimap<Integer,Transition> forbiddenTransitions = meas.forbiddenTransitions;
 
         if (rawdata.isEmpty()) {
-            return;
+            return false;
         }
 
         /*  MUST HAVE LABELS OF SOME KIND FOR ESTIMATION -- this is supposed to be for semi supervised, not unsupervised. */
         if (labels.isEmpty()) {
-            return;
+            return false;
         }
-
-
 
         final int numObs = rawdata.get(rawdata.keySet().iterator().next())[0].length;
 
+        //get observation models
         final Map<String,double [][]> alphabetProbsMap = getAlphabetMatrices();
 
+        //get state transition matrix
         final double [][] A = getAMatrix();
 
+        //get log of evaluated observations
         final double [][] logbmap = getLogBMap(rawdata,alphabetProbsMap);
 
+        //compute log of forwards and backwards probs
         final AlphaBetaResult alphaBeta = getAlphaAndBeta(numObs, pi, logbmap, A, numStates,labels);
 
+        //recompute numerator and denominators
         final double [][] logANumerator = getLogANumerator(A,alphaBeta, logbmap, forbiddenTransitions, numObs, numStates);
 
         final double [] logDenominator = getLogDenominator(alphaBeta, numStates, numObs);
 
+        //go through each measurement available in the raw data
+        //find the matching model, and evaluate it
         for (final String key : rawdata.keySet()) {
 
             if (this.logAlphabetNumerator.get(key) == null) {
+                //don't log this -- we might have a model that ignores a particular measurement
                 continue;
             }
 
+            //measurements are only 1d for now
             final double [] rawmeas = rawdata.get(key)[0];
 
             final int alphabetSize = logAlphabetNumerator.get(key)[0].length;
             final double [][] logAlphabetNumerator = getLogAlphabetNumerator(alphaBeta, rawmeas, numStates, numObs, alphabetSize);
-
 
             this.logAlphabetNumerator.put(key, LogMath.elnAddMatrix(this.logAlphabetNumerator.get(key), logAlphabetNumerator));
         }
@@ -436,8 +442,6 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         this.logANumerator = LogMath.elnAddMatrix(this.logANumerator, logANumerator);
         this.logDenominator = LogMath.elnAddVector(this.logDenominator, logDenominator);
 
-        int foo = 3;
-        foo++;
 
         /*
         if (priorWeightAsNumberOfSamples > 0) {
@@ -446,6 +450,8 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
             scalePriors(scaleFactor);
         }
         */
+
+        return true;
 
     }
 
