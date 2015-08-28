@@ -295,6 +295,10 @@ public class MultiObsHmmIntegrationTest {
             for (int count = 0;  count < featureData.size(); count++) {
                 final OnlineHmmScratchPad scratchPad = evaluator.reestimate(modelIds, model, featureData.get(count), labels.get(count), 0);
 
+                if (!scratchPad.paramsByOutputId.containsKey(outputId)) {
+                    continue;
+                }
+
                 modelId = scratchPad.paramsByOutputId.get(outputId).id;
 
                 model.modelsByOutputId.get(outputId).remove(modelId);
