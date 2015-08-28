@@ -154,13 +154,13 @@ public class MultiObsHmmIntegrationTest {
     public void testMultiDayEvaluation() {
         //reference from C++ code
         final Transition [] wakes = {
-                new Transition(1,2,148),
-                new Transition(1,2,141),
+                new Transition( 1,2,158),
+                new Transition(1,2,147),
                 new Transition(1,2,151),
                 new Transition(1,2,132),
-                new Transition(1,2,104),
+                new Transition(1,2,143),
                 new Transition(1,2,151),
-                new Transition(1,2,167),
+                new Transition(1,2,174),
                 new Transition(1,2,142),
                 new Transition(1,2,145),
                 new Transition(1,2,159)};
@@ -170,7 +170,7 @@ public class MultiObsHmmIntegrationTest {
                 new Transition(0,1,85),
                 new Transition(0,1,54),
                 new Transition(0,1,51),
-                new Transition(0,1,45),
+                new Transition(0,1,44),
                 new Transition(0,1,42),
                 new Transition(0,1,70),
                 new Transition(0,1,73),
@@ -227,6 +227,50 @@ public class MultiObsHmmIntegrationTest {
     public void testReestimation() {
 
         try {
+            final Transition [] sleeps = {
+                    new Transition(0,1,51),
+                    new Transition(0,1,39),
+                    new Transition(0,1,39),
+                    new Transition(0,1,39),
+                    new Transition(0,1,36),
+                    new Transition(0,1,45),
+                    new Transition(0,1,46),
+                    new Transition(0,1,44),
+                    new Transition(0,1,39),
+                    new Transition(0,1,41),
+                    new Transition(0,1,41),
+                    new Transition(0,1,28),
+                    new Transition(0,1,42),
+                    new Transition(0,1,32),
+                    new Transition(0,1,44),
+                    new Transition(0,1,33),
+                    new Transition(0,1,36),
+                    new Transition(0,1,34),
+                    new Transition(0,1,39),
+                    new Transition(0,1,39)};
+
+            final Transition [] wakes = {
+                    new Transition(1,2,124),
+                    new Transition(1,2,137),
+                    new Transition(1,2,124),
+                    new Transition(1,2,180),
+                    new Transition(1,2,127),
+                    new Transition(1,2,124),
+                    new Transition(1,2,132),
+                    new Transition(1,2,131),
+                    new Transition(1,2,113),
+                    new Transition(1,2,114),
+                    new Transition(1,2,113),
+                    new Transition(1,2,113),
+                    new Transition(1,2,125),
+                    new Transition(1,2,127),
+                    new Transition(1,2,136),
+                    new Transition(1,2,117),
+                    new Transition(1,2,101),
+                    new Transition(1,2,113),
+                    new Transition(1,2,113),
+                    new Transition(1,2,116)};
+
             //get model
             final byte[] protobuf = loadFile("fixtures/algorithm/default_model.bin");
             final Optional<OnlineHmmPriors> modelOptional = OnlineHmmPriors.createFromProtoBuf(protobuf);
@@ -243,21 +287,63 @@ public class MultiObsHmmIntegrationTest {
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
 
             final String outputId = "SLEEP";
-            final String modelId = "default";
+            String modelId = "default";
 
             final Map<String,String> modelIds = Maps.newHashMap();
-            modelIds.put(outputId,modelId);
+            modelIds.put(outputId, modelId);
 
             for (int count = 0;  count < featureData.size(); count++) {
                 final OnlineHmmScratchPad scratchPad = evaluator.reestimate(modelIds, model, featureData.get(count), labels.get(count), 0);
 
+                modelId = scratchPad.paramsByOutputId.get(outputId).id;
+
                 model.modelsByOutputId.get(outputId).remove(modelId);
                 model.modelsByOutputId.get(outputId).put(modelId, scratchPad.paramsByOutputId.get(outputId));
+                modelIds.put(outputId,modelId);
+
             }
 
             for (int count = 0;  count < featureData.size(); count++) {
                 final Map<String, MultiEvalHmmDecodedResult> results = evaluator.evaluate(model, featureData.get(count));
+
+                //System.out.print(String.format("COST: %f\n",results.get(outputId).pathcost));
+                List<Transition> transitions = results.get(outputId).transitions;
+
+
+                for (final Transition transition : transitions) {
+
+                    if (transition.fromState == 0) {
+                        TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
+                    }
+                    else if (transition.fromState == 1) {
+                        TestCase.assertEquals(wakes[count].idx,transition.idx,1);
+                    }
+                }
+
+                /*
+                for (Transition t : transitions) {
+                    int hour = t.idx / 12;
+                    int frac = t.idx % 12;
+
+                    int minute = frac * 5;
+
+                    hour -= 4;
+
+                    if (hour < 0) {
+                        hour += 24;
+                    }
+
+                    String foo = String.format("%d --> %d at %2d:%02d\n",t.fromState,t.toState,hour,minute);
+                    System.out.print(foo);
+                }
+
+                System.out.print("----------------\n\n");
+
+
+                */
+
             }
+
 
         } catch (IOException e) {
             TestCase.assertTrue(false);

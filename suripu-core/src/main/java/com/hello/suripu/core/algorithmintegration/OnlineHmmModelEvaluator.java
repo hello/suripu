@@ -26,7 +26,7 @@ public class OnlineHmmModelEvaluator {
     //  new update is 1.0 / (PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES + 1.0) in terms of weight.
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
-    final static double PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES = 5.0;
+    final static double PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES = 1.0;
     public final static String DEFAULT_MODEL_KEY = "default";
 
 

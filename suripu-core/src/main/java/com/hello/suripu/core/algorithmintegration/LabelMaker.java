@@ -48,7 +48,7 @@ public class LabelMaker {
 
         final int i1 = eventTimeToIndex(t1, startTime, numMinutesPerPeriod);
         final int i2 = eventTimeToIndex(t2, startTime, numMinutesPerPeriod);
-        final int i3 = eventTimeToIndex(endTime, endTime, numMinutesPerPeriod);
+        final int i3 = eventTimeToIndex(endTime, startTime, numMinutesPerPeriod);
 
         for (int i = 0; i < i1; i++) {
             labels.put(i, preState);
@@ -81,7 +81,7 @@ public class LabelMaker {
                 labels.put(i, postState);
             }
         } else {
-            final int i3 = eventTimeToIndex(endTime, endTime, numMinutesPerPeriod);
+            final int i3 = eventTimeToIndex(endTime, startTime, numMinutesPerPeriod);
 
 
             for (int i = i1 - labelAssumedKnoweldgePeriod; i < i1; i++) {

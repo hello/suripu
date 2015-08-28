@@ -24,7 +24,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
     final static double MIN_A = 1e-6;
     final static double MIN_PROB = 1e-6;
-    final static double FORBIDDEN_TRANSITION_PENALTY = -100;
+    final static double FORBIDDEN_TRANSITION_PENALTY = Double.NEGATIVE_INFINITY;
 
     public Map<String, double[][]> getLogAlphabetNumerator() {
         return logAlphabetNumerator;
@@ -230,15 +230,6 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         }
     }
 
-    protected static double getPathCost(final int [] path, final double [][] phi) {
-        double cost = 0.0;
-        for (int t = 0; t < path.length; t++) {
-            cost += phi[path[t]][t];
-        }
-
-        return cost;
-    }
-
 
 
     public Result decodeWithConstraints(final MultiObsSequence meas, final int [] possibleEndStates, final int [] minStateDurations) {
@@ -285,6 +276,9 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
             final double [][] logAThisIndex = getLogAWithForbiddenStates(logA, forbiddenTransitions, t);
 
+            int foo = 3;
+
+            foo++;
 
             for (j = 0; j < numStates; j++) {
 
@@ -351,7 +345,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
                 path[t] = vindices[path[t + 1]][t];
             }
 
-            pathCosts[i] = getPathCost(path,phi);
+            pathCosts[i] = phi[possibleEndStates[i]][phi[0].length - 1];
         }
 
         double maxScore = pathCosts[0];
@@ -371,6 +365,24 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         }
 
         return new Result(path,maxScore);
+    }
+
+    static private void printMat(double [][] mat) {
+        for (int j = 0; j < mat.length; j++) {
+
+            if (j != 0) {
+                System.out.print("\n");
+            }
+
+            for (int i = 0; i < mat[j].length; i++) {
+                if (i != 0) {
+                    System.out.print(",");
+                }
+
+                System.out.print(String.format("%.2f",mat[j][i]));
+            }
+
+        }
     }
 
     public void reestimate(final MultiObsSequence meas, final double priorWeightAsNumberOfSamples) {
@@ -400,7 +412,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         final double [][] logbmap = getLogBMap(rawdata,alphabetProbsMap);
 
-        final AlphaBetaResult alphaBeta = getAlphaAndBeta(numObs, pi, logbmap, A, numStates,labels,forbiddenTransitions);
+        final AlphaBetaResult alphaBeta = getAlphaAndBeta(numObs, pi, logbmap, A, numStates,labels);
 
         final double [][] logANumerator = getLogANumerator(A,alphaBeta, logbmap, forbiddenTransitions, numObs, numStates);
 
@@ -424,11 +436,16 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         this.logANumerator = LogMath.elnAddMatrix(this.logANumerator, logANumerator);
         this.logDenominator = LogMath.elnAddVector(this.logDenominator, logDenominator);
 
+        int foo = 3;
+        foo++;
+
+        /*
         if (priorWeightAsNumberOfSamples > 0) {
             final double scaleFactor = priorWeightAsNumberOfSamples / (priorWeightAsNumberOfSamples + 1);
 
             scalePriors(scaleFactor);
         }
+        */
 
     }
 
@@ -450,10 +467,13 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
     private static double [][] getLogAWithForbiddenStates(final double [][] logA,final Multimap<Integer,Transition>  forbiddenTransitions, final int t) {
 
-        double [][] logA2 = clone2d(logA);
+        final double [][] logA2 = clone2d(logA);
 
+        final Collection<Transition> transitionsAtThisTime =  forbiddenTransitions.get(t);
 
-        Collection<Transition> transitionsAtThisTime =  forbiddenTransitions.get(t);
+        if (transitionsAtThisTime == null || transitionsAtThisTime.isEmpty()) {
+            return logA2;
+        }
 
         for (Iterator<Transition> it = transitionsAtThisTime.iterator(); it.hasNext();) {
             final Transition transition = it.next();
@@ -475,7 +495,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return (int)label;
     }
 
-    static private AlphaBetaResult getAlphaAndBeta(final int numObs,final double []  pi, final double [][]  logbmap, final double [][]  A,final int numStates,final Map<Integer,Integer> labels, final Multimap<Integer,Transition>  forbiddenTransitions) {
+    static private AlphaBetaResult getAlphaAndBeta(final int numObs,final double []  pi, final double [][]  logbmap, final double [][]  A,final int numStates,final Map<Integer,Integer> labels) {
 
     /*
      Calculates 'alpha' the forward variable.
@@ -487,6 +507,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
      forbidden transitions means at that time index a transition is unavailable
      labels mean that you have to be in that time
      */
+
         int t,j,i;
         double [][] logalpha = getLogZeroedMatrix(numStates,numObs);
         double [][] logbeta = getLogZeroedMatrix(numStates,numObs);
@@ -500,7 +521,6 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
             }
         }
 
-
         //init stage - alpha_1(x) = pi(x)b_x(O1)
 
         for (j = 0; j < numStates; j++) {
@@ -510,14 +530,12 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         for (t = 1; t < numObs; t++) {
 
-            double [][] logAThisTimeStep = getLogAWithForbiddenStates(logA,forbiddenTransitions,t);
-
             for (j = 0; j < numStates; j++) {
                 temp = LogMath.LOGZERO;
 
                 for (i = 0; i < numStates; i++) {
                     //alpha[j][t] += alpha[i][t-1]*A[i][j];
-                    final double tempval = LogMath.elnproduct(logalpha[i][t - 1], logAThisTimeStep[i][j]);
+                    final double tempval = LogMath.elnproduct(logalpha[i][t - 1], logA[i][j]);
                     temp = LogMath.elnsum(temp, tempval);
                 }
 
@@ -556,13 +574,11 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         for (t = numObs - 2; t >= 0; t--) {
 
-            double [][] logAThisTimeStep = getLogAWithForbiddenStates(logA,forbiddenTransitions,t);
-
             for (i = 0; i < numStates; i++) {
                 temp = LogMath.LOGZERO;
                 for (j = 0;  j < numStates; j++) {
                     final double tempval  = LogMath.elnproduct(logbmap[j][t + 1], logbeta[j][t + 1]);
-                    final double tempval2 = LogMath.elnproduct(tempval, logAThisTimeStep[i][j]);
+                    final double tempval2 = LogMath.elnproduct(tempval, logA[i][j]);
                     temp = LogMath.elnsum(temp, tempval2);
                     //beta[i][t] += A[i][j]*bmap[j][t+1] * beta[j][t+1];
                 }
