@@ -3,15 +3,19 @@ package com.hello.suripu.core.algorithmintegration;
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.MultiObsSequence;
 import com.hello.suripu.algorithm.hmm.MultiObsSequenceAlphabetHiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.Transition;
+import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,42 +31,17 @@ public class OnlineHmmModelEvaluator {
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
     final static double PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES = 1.0;
-    public final static String DEFAULT_MODEL_KEY = "default";
 
-
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmmModelEvaluator.class);
+    private final Logger LOGGER;
     final Optional<UUID> uuid;
 
     public OnlineHmmModelEvaluator(final Optional<UUID> uuid) {
         this.uuid = uuid;
-    }
-
-    private static MultiObsSequence modelPathsToMultiObsSequence(final Map<String,ImmutableList<Integer>> features,
-                                                                 final Multimap<Integer, Transition> forbiddenTransitions,
-                                                                 final Optional< Map<Integer, Integer>> labelsOptional) {
-
-        Map<String, double[][]> rawmeasurements = Maps.newHashMap();
-
-        for (final String modelId : features.keySet()) {
-            final ImmutableList<Integer> featureAlphabet = features.get(modelId);
-
-            final double [][] x = new double [1][featureAlphabet.size()];
-
-            for (int i = 0; i < featureAlphabet.size(); i++) {
-                x[0][i] = featureAlphabet.get(i);
-            }
-
-            rawmeasurements.put(modelId,x);
-        }
-
-        Map<Integer, Integer> labels = Maps.newHashMap(); //no labels
-
-        if (labelsOptional.isPresent()) {
-            labels = labelsOptional.get();
-        }
-
-        return new MultiObsSequence(rawmeasurements,labels,forbiddenTransitions);
+        this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
 
     }
+
 
     static private String createNewModelId(final String oldModelId) {
         final String [] tokens = oldModelId.split("-");
@@ -139,7 +118,7 @@ public class OnlineHmmModelEvaluator {
             }
 
             //get the measurement sequence
-            final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions,Optional.of(labels));
+            final MultiObsSequence meas = MultiObsSequence.createModelPathsToMultiObsSequence(features, forbiddenTransitions, Optional.of(labels));
 
             //finally  go fucking reestimate
             final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
@@ -175,6 +154,8 @@ public class OnlineHmmModelEvaluator {
             //get the list of models to evaluate
             final Map<String,OnlineHmmModelParams> paramsMap = priors.modelsByOutputId.get(outputId);
 
+            final List<Double> scores = Lists.newArrayList();
+            final List<String> ids = Lists.newArrayList();
             //evaluate
             for (final Map.Entry<String,OnlineHmmModelParams> paramsEntry : paramsMap.entrySet()) {
                 final OnlineHmmModelParams params = paramsEntry.getValue();
@@ -189,13 +170,31 @@ public class OnlineHmmModelEvaluator {
                     }
 
                     //get the measurement sequence with restrictions and labels (the labels will be empty here)
-                    final MultiObsSequence meas = modelPathsToMultiObsSequence(features,forbiddenTransitions,Optional.<Map<Integer,Integer>>absent());
+                    final MultiObsSequence meas = MultiObsSequence.createModelPathsToMultiObsSequence(features, forbiddenTransitions, Optional.<Map<Integer, Integer>>absent());
 
                     final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
 
-                    final MultiObsSequenceAlphabetHiddenMarkovModel.Result result = hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);
+                    MultiObsSequenceAlphabetHiddenMarkovModel.Result result = hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);
+                    MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(result.path,result.pathScore,bestModel);
 
-                    //track the best
+                    if (theResult.transitions.size() < hmm.getNumStates() - 1) {
+                        LOGGER.info("lifting transition restrictions for model {} because it produced only {} of {} transitions",params.id,theResult.transitions.size(),hmm.getNumStates() - 1);
+                        final MultiObsSequence measNoRestrictions = MultiObsSequence.createModelPathsToMultiObsSequence(features, Optional.<Map<Integer, Integer>>absent());
+
+                        result = hmm.decodeWithConstraints(measNoRestrictions, params.endStates, params.minStateDurations);
+                        theResult = new MultiEvalHmmDecodedResult(result.path,result.pathScore,bestModel);
+
+                        if (theResult.transitions.size() < hmm.getNumStates() - 1) {
+                            LOGGER.warn("still not enough transitions for model {} -- skipping this model",params.id);
+                            continue;
+                        }
+                    }
+
+                    scores.add(result.pathScore);
+                    ids.add(params.id);
+
+
+                    //is it better?
                     if (result.pathScore > bestScore) {
                         bestScore = result.pathScore;
                         bestResult = result;
@@ -203,19 +202,25 @@ public class OnlineHmmModelEvaluator {
                     }
                 }
                 catch (Exception e) {
-                    int foo  = 3;
-                    foo++;
+                    LOGGER.error("failed to evaluate model {}",params.id);
+                    LOGGER.error(e.getMessage());
                 }
 
-
             }
+
+            LOGGER.info("models = {}",ids);
+            LOGGER.info("scores = {}",scores);
 
             if (bestResult == null) {
                 throw new AlgorithmException("somehow never evaluated any models");
             }
 
+            final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(bestResult.path,bestResult.pathScore,bestModel);
+
+            LOGGER.info("transitions for {} are {}",outputId, theResult.transitions);
+
             //store by outputId
-            bestModels.put(outputId,new MultiEvalHmmDecodedResult(bestResult.path,bestResult.pathScore,bestModel));
+            bestModels.put(outputId,theResult);
         }
 
 

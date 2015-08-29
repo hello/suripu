@@ -11,6 +11,7 @@ import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.core.algorithmintegration.LabelMaker;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
+import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
 import com.hello.suripu.core.models.OnlineHmmPriors;
@@ -353,4 +354,11 @@ public class MultiObsHmmIntegrationTest {
             TestCase.assertTrue(false);
         }
     }
+
+    void testUpdateModelsWithScratchpad() {
+
+      //  OnlineHmmPriors onlineHmmPriors = OnlineHmmPriors.createFromProtoBuf()
+       // OnlineHmm.updateModelPriorsWithScratchpad()
+    }
+
 }

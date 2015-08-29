@@ -40,6 +40,8 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     public OnlineHmmData getModelDataByAccountId(Long accountId) {
         final Map<String, Map<String,byte[]>> results = dbDAO.getBySingleKeyNoRangeKey(accountId.toString());
 
+        LOGGER.info("getModelDataByAccountId for user {}",accountId);
+
         final Map<String,byte[]> allColumns = results.get(accountId.toString());
 
         Optional<OnlineHmmPriors> priors = Optional.absent();
@@ -68,6 +70,8 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     public boolean updateModelPriors(final Long accountId,final  OnlineHmmPriors priors) {
         final Map<String,byte []> payloads = Maps.newHashMap();
 
+        LOGGER.info("updateModelPriors for user {}",accountId);
+
         payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
 
         return dbDAO.update(accountId.toString(), "", payloads);
@@ -76,6 +80,8 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     @Override
     public boolean updateScratchpad(final Long accountId, final OnlineHmmScratchPad scratchPad) {
         final Map<String,byte []> payloads = Maps.newHashMap();
+
+        LOGGER.info("updateScratchpad for user {}",accountId);
 
         payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,scratchPad.serializeToProtobuf());
 
@@ -86,6 +92,8 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     @Override
     public boolean updateModelPriorsAndZeroOutScratchpad(final Long accountId, final OnlineHmmPriors priors) {
         final Map<String,byte []> payloads = Maps.newHashMap();
+
+        LOGGER.info("updateModelPriorsAndZeroOutScratchpad for user {}",accountId);
 
         payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
         payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,OnlineHmmProtos.AlphabetHmmScratchPad.newBuilder().setLastDateUpdatedUtc(0).build().toByteArray());

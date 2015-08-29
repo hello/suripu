@@ -30,6 +30,11 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return logAlphabetNumerator;
     }
 
+
+    public int getNumStates() {
+        return numStates;
+    }
+
     public double[][] getLogANumerator() {
         return logANumerator;
     }

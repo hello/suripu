@@ -1,5 +1,7 @@
 package com.hello.suripu.algorithm.hmm;
 
+import com.google.common.base.Objects;
+
 /**
  * Created by benjo on 8/20/15.
  */
@@ -23,5 +25,21 @@ public class Transition {
     @Override
     public Transition clone()  {
         return new Transition(fromState,toState,idx);
+    }
+
+    @Override
+    public String toString() {
+
+        if (idx >= 0) {
+            return Objects.toStringHelper(this)
+                    .add("from",fromState)
+                    .add("to",toState)
+                    .add("idx",idx).toString();
+        }
+        else {
+            return Objects.toStringHelper(this)
+                    .add("from",fromState)
+                    .add("to",toState).toString();
+        }
     }
 }

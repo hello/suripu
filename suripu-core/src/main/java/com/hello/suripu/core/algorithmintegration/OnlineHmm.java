@@ -56,7 +56,8 @@ public class OnlineHmm {
         this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
-    private OnlineHmmPriors updateModelPriors(final OnlineHmmPriors models, final OnlineHmmScratchPad newModel, final long startTimeUtc,boolean forceUpdate) {
+    //static for testing purposes
+    public static OnlineHmmPriors updateModelPriorsWithScratchpad(final OnlineHmmPriors existingModels, final OnlineHmmScratchPad newModel, final long startTimeUtc, boolean forceUpdate,final Logger logger) {
         final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
 
@@ -71,15 +72,15 @@ public class OnlineHmm {
                 final OnlineHmmModelParams param = newModel.paramsByOutputId.get(outputId);
 
                 //find the existing model params with this id
-                if (!models.modelsByOutputId.containsKey(outputId)) {
-                    LOGGER.error("did not find models with output id = {}",outputId);
+                if (!existingModels.modelsByOutputId.containsKey(outputId)) {
+                    logger.error("did not find models with output id = {}",outputId);
                     continue;
                 }
 
                 final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList();
 
                 //populate a new list (we will need to sort it later) for this output id
-                for (final Map.Entry<String,OnlineHmmModelParams> params : models.modelsByOutputId.get(outputId).entrySet()) {
+                for (final Map.Entry<String,OnlineHmmModelParams> params : existingModels.modelsByOutputId.get(outputId).entrySet()) {
                     modelsForThisOutput.add(params.getValue());
                 }
 
@@ -115,6 +116,7 @@ public class OnlineHmm {
                         continue;
                     }
 
+                    logger.info("removing model {}:{} because it exceeded the model limit and was the oldest",outputId,modelsForThisOutput.get(i).id);
                     modelsForThisOutput.remove(i);
                 }
 
@@ -309,7 +311,7 @@ public class OnlineHmm {
             if (!scratchPad.isEmpty()) {
 
                 //MANAGE THE TANGLE OF MODELS
-                final OnlineHmmPriors updatedModelPriors = updateModelPriors(modelPriors, scratchPad, startTimeUtc, false);
+                final OnlineHmmPriors updatedModelPriors = updateModelPriorsWithScratchpad(modelPriors, scratchPad, startTimeUtc, false,LOGGER);
 
                 if (!updatedModelPriors.isEmpty()) {
                     //UPDATE THE MODEL IN DYNAMO
@@ -381,7 +383,7 @@ public class OnlineHmm {
             //3) update scratchpad in dynamo
             if (forceLearning) {
                 //update right now
-                final OnlineHmmPriors updatedModelPriors = updateModelPriors(modelPriors,scratchPad,startTimeUtc,true);
+                final OnlineHmmPriors updatedModelPriors = updateModelPriorsWithScratchpad(modelPriors, scratchPad, startTimeUtc, true,LOGGER);
 
                 userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,updatedModelPriors);
             }
