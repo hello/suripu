@@ -14,10 +14,13 @@ import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
+import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import junit.framework.TestCase;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +37,7 @@ import java.util.UUID;
  * Created by benjo on 8/25/15.
  */
 public class MultiObsHmmIntegrationTest {
+    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(MultiObsHmmIntegrationTest.class);
 
     private static byte[] loadFile(String path) throws IOException {
         final URL fileUrl = Resources.getResource(path);
@@ -355,7 +360,40 @@ public class MultiObsHmmIntegrationTest {
         }
     }
 
-    void testUpdateModelsWithScratchpad() {
+    @Test
+    public void testUpdateModelsWithScratchpad() {
+        //get model
+        try {
+            final byte[] protobuf = loadFile("fixtures/algorithm/34124.bin");
+            final Optional<OnlineHmmPriors> modelOptional = OnlineHmmPriors.createFromProtoBuf(protobuf);
+            TestCase.assertTrue(modelOptional.isPresent());
+            final OnlineHmmPriors model = modelOptional.get();
+
+            final Map<String,OnlineHmmModelParams> modelUpdates = Maps.newHashMap();
+            Iterator<Map.Entry<String,OnlineHmmModelParams>> paramsIterator = model.modelsByOutputId.get("SLEEP").entrySet().iterator();
+
+            paramsIterator.next(); //skip default
+            final OnlineHmmModelParams params = paramsIterator.next().getValue().clone();
+            final OnlineHmmModelParams params2 = paramsIterator.next().getValue().clone();
+
+            modelUpdates.put("SLEEP",params);
+
+            for (int i = 0; i < OnlineHmm.MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT; i++) {
+                final String newId = String.format("foobars%03d", i);
+                model.modelsByOutputId.get("SLEEP").put(newId,params2.clone(newId));
+            }
+
+            final OnlineHmmScratchPad scratchPad = new OnlineHmmScratchPad(modelUpdates,0);
+
+            OnlineHmmPriors updateModel = OnlineHmm.updateModelPriorsWithScratchpad(model, scratchPad, 1, false, STATIC_LOGGER);
+
+
+            TestCase.assertTrue(updateModel.modelsByOutputId.get("SLEEP").size() == OnlineHmm.MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT + 1);
+            
+        }
+        catch (IOException e) {
+            TestCase.assertTrue(false);
+        }
 
       //  OnlineHmmPriors onlineHmmPriors = OnlineHmmPriors.createFromProtoBuf()
        // OnlineHmm.updateModelPriorsWithScratchpad()

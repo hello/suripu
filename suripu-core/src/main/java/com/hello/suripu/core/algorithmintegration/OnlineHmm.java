@@ -92,11 +92,11 @@ public class OnlineHmm {
                     @Override
                     public int compare(final OnlineHmmModelParams o1, final OnlineHmmModelParams o2) {
                         if (o1.timeUpdatedUtc < o2.timeUpdatedUtc) {
-                            return -1;
+                            return 1;
                         }
 
                         if (o1.timeUpdatedUtc > o2.timeUpdatedUtc) {
-                            return 1;
+                            return -1;
                         }
 
                         return 0;

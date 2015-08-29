@@ -50,7 +50,7 @@ public class OnlineHmmModelParams {
         return y;
     }
 
-    public OnlineHmmModelParams clone() {
+    public OnlineHmmModelParams clone(String newId) {
         final Map<String,double [][]> logNumerator = Maps.newHashMap();
 
         for (final String key : logAlphabetNumerators.keySet()) {
@@ -58,7 +58,11 @@ public class OnlineHmmModelParams {
         }
 
 
-        return new OnlineHmmModelParams(logNumerator,clone2d(logTransitionMatrixNumerator),logDenominator.clone(),pi.clone(),endStates.clone(),minStateDurations.clone(),timeCreatedUtc,timeUpdatedUtc,id,outputId,transitionRestrictions);
+        return new OnlineHmmModelParams(logNumerator,clone2d(logTransitionMatrixNumerator),logDenominator.clone(),pi.clone(),endStates.clone(),minStateDurations.clone(),timeCreatedUtc,timeUpdatedUtc,newId,outputId,transitionRestrictions);
+    }
+
+    public OnlineHmmModelParams clone() {
+       return clone(id);
     }
 
 
