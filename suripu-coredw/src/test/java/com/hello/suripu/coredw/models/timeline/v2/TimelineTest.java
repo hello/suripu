@@ -68,7 +68,8 @@ public class TimelineTest {
         assertThat(converted.dateNight, is(timelineV1.date));
         assertThat(converted.message, is(timelineV1.message));
 
-        assertThat(converted.score.isPresent(), is(false));
+        assertThat(converted.score.isPresent(), is(true));
+        assertThat(converted.score.get(), is(timelineV1.score));
         assertThat(converted.scoreCondition, CoreMatchers.is(ScoreCondition.INCOMPLETE));
 
         assertThat(converted.events, is(empty()));
