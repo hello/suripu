@@ -281,10 +281,6 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
             final double [][] logAThisIndex = getLogAWithForbiddenStates(logA, forbiddenTransitions, t);
 
-            int foo = 3;
-
-            foo++;
-
             for (j = 0; j < numStates; j++) {
 
                 final double obscost = logbmap[j][t];
@@ -304,11 +300,11 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
                 }
 
                 Iterator<CostWithIndex> costIterator = costsWithIndex.iterator();
-                int maxidx = costIterator.next().idx;
-                double maxval = scores[maxidx];
+                int maxIdx = costIterator.next().idx;
+                double maxVal = scores[maxIdx];
 
                 //best path is to stay?  increment zeta.
-                if (maxidx == j) {
+                if (maxIdx == j) {
                     zeta[j] += 1;
                 }
                 else {
@@ -317,20 +313,22 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
                 //if zeta of the state I'm coming FROM is above min durations,
                 //I'll let the transition happen.  Otherwise, pick the next best state.
+                boolean worked = true;
+                while (zeta[maxIdx] < minStateDurations[maxIdx] && costIterator.hasNext()) {
+                    maxIdx = costIterator.next().idx;
+                    maxVal = scores[maxIdx];
 
-                if (zeta[maxidx] >= minStateDurations[maxidx]) {
-                    phi[j][t] = maxval;
-                    vindices[j][t] = maxidx;
+                    worked = zeta[maxIdx] >= minStateDurations[maxIdx];
                 }
-                else {
-                    //next best.... so in theory we should check if this violates the second best state's constraints
-                    //TODO check everything
-                    maxidx = costIterator.next().idx;
-                    maxval = scores[maxidx];
 
-                    phi[j][t] = maxval;
-                    vindices[j][t] = maxidx;
+                if (!worked) {
+                    //failboat
+                    return new Result(new int[0],Double.NEGATIVE_INFINITY);
                 }
+
+                phi[j][t] = maxVal;
+                vindices[j][t] = maxIdx;
+
             }
         }
 

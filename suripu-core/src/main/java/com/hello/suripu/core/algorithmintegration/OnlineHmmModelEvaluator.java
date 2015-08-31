@@ -212,7 +212,8 @@ public class OnlineHmmModelEvaluator {
             LOGGER.info("scores = {}",scores);
 
             if (bestResult == null) {
-                throw new AlgorithmException("somehow never evaluated any models");
+                LOGGER.info("no success in finding a viable model for output {}",outputId);
+                continue; //no output
             }
 
             final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(bestResult.path,bestResult.pathScore,bestModel);
@@ -222,10 +223,6 @@ public class OnlineHmmModelEvaluator {
             //store by outputId
             bestModels.put(outputId,theResult);
         }
-
-
-
-
 
         return bestModels;
     }
