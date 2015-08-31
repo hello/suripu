@@ -3,12 +3,13 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.BedLightDurationMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import com.hello.suripu.core.models.TimeZoneHistory;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -29,20 +30,16 @@ public class BedLightDuration {
     private static final int NIGHT_END_HOUR_LOCAL = 4; // 4am
 
     private static final int OFFLINE_HOURS = 17; // number of hours after night end and before next night start
-
     public static final float LIGHT_LEVEL_WARNING = 5.0f;  // in lux
-    public static final float LIGHT_LEVEL_ALERT = 35.0f;  // in lux
-
     public static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
 
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
-        final Optional<TimeZoneHistory> timeZoneHistory = timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        if (!timeZoneHistory.isPresent()) {
+        final Integer timeZoneOffset = getTimeZoneOffset(sleepStatsDAODynamoDB, accountId, DateTime.now());
+        if (timeZoneOffset == 999999) {
             return Optional.absent();
         }
-        final Integer timeZoneOffset = timeZoneHistory.get().offsetMillis;
 
         final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset);
         if (deviceDatas.isEmpty()) {
@@ -67,34 +64,13 @@ public class BedLightDuration {
         return avgLightOn;
     }
 
-    public static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final Integer timeZoneOffset) {
-
-        final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(NIGHT_START_HOUR_LOCAL);
-        final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
-
-        //Grab all night-time data for past week
-        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
-    }
-
-    public static final List<List<DeviceData>> splitDeviceDataByDay(List<DeviceData> data) {
-        final List<List<DeviceData>> res = Lists.newArrayList();
-        int beg = 0;
-        for (int i = 1; i < data.size(); i++) {
-            if (!sameDay(data.get(i), data.get(i-1))) {
-                res.add(data.subList(beg, i));
-                beg = i;
-            }
-            else if (i == data.size() - 1) { //edge case for last day
-                res.add(data.subList(beg, data.size()));
-            }
+    public static final int computeAverage(final List<Integer> data) {
+        // compute average value
+        final DescriptiveStatistics stats = new DescriptiveStatistics();
+        for (final Integer lightOn : data) {
+            stats.addValue(lightOn);
         }
-        return res;
-    }
-
-    public static Boolean sameDay(final DeviceData currentDeviceData, final DeviceData previousDeviceData) {
-        final Integer elapsedMinutes = new Period(previousDeviceData.dateTimeUTC, currentDeviceData.dateTimeUTC, PeriodType.minutes()).getMinutes();
-        final Integer comparisonPeriodMinutes = OFFLINE_HOURS * 60;
-        return elapsedMinutes < comparisonPeriodMinutes;
+        return (int) stats.getMean();
     }
 
     public static Integer findLightOnDurationForDay(final List<DeviceData> data, final int offMinutesThreshold) {
@@ -121,13 +97,46 @@ public class BedLightDuration {
         return onTime.getMinutes();
     }
 
-    public static final int computeAverage(final List<Integer> data) {
-        // compute average value
-        final DescriptiveStatistics stats = new DescriptiveStatistics();
-        for (final Integer lightOn : data) {
-            stats.addValue(lightOn);
+    public static final List<List<DeviceData>> splitDeviceDataByDay(List<DeviceData> data) {
+        final List<List<DeviceData>> res = Lists.newArrayList();
+        int beg = 0;
+        for (int i = 1; i < data.size(); i++) {
+            if (!sameDay(data.get(i), data.get(i-1))) {
+                res.add(data.subList(beg, i));
+                beg = i;
+            }
+            else if (i == data.size() - 1) { //edge case for last day
+                res.add(data.subList(beg, data.size()));
+            }
         }
-        return (int) stats.getMean();
+        return res;
+    }
+
+    public static Boolean sameDay(final DeviceData currentDeviceData, final DeviceData previousDeviceData) {
+        final Integer elapsedMinutes = new Period(previousDeviceData.dateTimeUTC, currentDeviceData.dateTimeUTC, PeriodType.minutes()).getMinutes();
+        final Integer comparisonPeriodMinutes = OFFLINE_HOURS * 60;
+        return elapsedMinutes < comparisonPeriodMinutes;
+    }
+
+    public static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final Integer timeZoneOffset) {
+
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(NIGHT_START_HOUR_LOCAL);
+        final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
+
+        //Grab all night-time data for past week
+        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+    }
+
+    public static final Integer getTimeZoneOffset(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
+        final String sleepStatsQueryEndDate = DateTimeUtil.dateToYmdString(queryEndDate);
+        final String sleepStatsQueryStartDate = DateTimeUtil.dateToYmdString(queryEndDate.minusDays(1));
+
+
+        final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
+        if (!sleepStats.isEmpty()) {
+            return sleepStats.get(0).offsetMillis;
+        }
+        return 999999;
     }
 
     public static Optional<InsightCard> scoreCardBedLightDuration(final int avgLightOn, final Long accountId) {

@@ -383,7 +383,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
                 .withTrackerMotionDAO(trackerMotionDAO)
                 .withInsightsDAO(trendsInsightsDAO)
-                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB, timeZoneHistoryDAODynamoDB)
+                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB)
                 .withPreferencesDAO(accountPreferencesDAO)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withWakeStdDevData(new WakeStdDevData())

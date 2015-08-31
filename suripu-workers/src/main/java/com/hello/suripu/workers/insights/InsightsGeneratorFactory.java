@@ -32,7 +32,6 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final QuestionResponseDAO questionResponseDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
-    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountPreferencesDAO accountPreferencesDAO;
@@ -46,7 +45,6 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final TrendsInsightsDAO trendsInsightsDAO,
                                     final QuestionResponseDAO questionResponseDAO,
                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
-                                    final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                                     final LightData lightData,
                                     final WakeStdDevData wakeStdDevData,
                                     final AccountPreferencesDAO accountPreferencesDAO) {
@@ -59,7 +57,6 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.questionResponseDAO = questionResponseDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
-        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountPreferencesDAO = accountPreferencesDAO;
@@ -76,7 +73,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
                 .withTrackerMotionDAO(trackerMotionDAO)
                 .withInsightsDAO(trendsInsightsDAO)
-                .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB, timeZoneHistoryDAODynamoDB)
+                .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(lightData)
                 .withWakeStdDevData(wakeStdDevData)
