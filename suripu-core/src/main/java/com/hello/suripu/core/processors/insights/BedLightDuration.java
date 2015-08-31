@@ -110,6 +110,7 @@ public class BedLightDuration {
                 res.add(data.subList(beg, data.size()));
             }
         }
+        LOGGER.debug("Split deviceData and got {} days", res.size());
         return res;
     }
 
@@ -131,7 +132,6 @@ public class BedLightDuration {
     public static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
         final String sleepStatsQueryEndDate = DateTimeUtil.dateToYmdString(queryEndDate);
         final String sleepStatsQueryStartDate = DateTimeUtil.dateToYmdString(queryEndDate.minusDays(1));
-
 
         final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
         if (!sleepStats.isEmpty()) {
