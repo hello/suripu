@@ -198,10 +198,10 @@ WHERE category='wake_variance'
 -- end DELETE ME
 
 
--- Modify all titles to be title case
+-- Modify all titles to be title case 08/31/2015
 
-  UPDATE info_insight_cards SET title = 'Effects of Ambient Light on Your Sleep' WHERE id = 1;
-  UPDATE info_insight_cards SET title = 'Sound: Ambient Sound or Sudden Loud Noises' WHERE id = 3;
-  UPDATE info_insight_cards SET title = 'Sleep Duration: What''s the Ideal Amount?' WHERE id = 6;
-  UPDATE info_insight_cards SET title = 'Effects of Exercise on Your Sleep' WHERE id = 10;
-  UPDATE info_insight_cards SET title = 'Waking Up to Sleep Better' WHERE id = 18;
+UPDATE info_insight_cards SET title = 'Effects of Ambient Light on Your Sleep' WHERE id = 1;
+UPDATE info_insight_cards SET title = 'Sound: Ambient Sound or Sudden Loud Noises' WHERE id = 3;
+UPDATE info_insight_cards SET title = 'Sleep Duration: What''s the Ideal Amount?' WHERE id = 6;
+UPDATE info_insight_cards SET title = 'Effects of Exercise on Your Sleep' WHERE id = 10;
+UPDATE info_insight_cards SET title = 'Waking Up to Sleep Better' WHERE id = 18;
