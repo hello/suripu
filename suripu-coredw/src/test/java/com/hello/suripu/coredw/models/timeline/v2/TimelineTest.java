@@ -46,7 +46,7 @@ public class TimelineTest {
     @Test
     public void fromV1() throws Exception {
         final com.hello.suripu.core.models.Timeline timelineV1 = timelineV1();
-        final Timeline converted = Timeline.fromV1(timelineV1);
+        final Timeline converted = Timeline.fromV1(timelineV1, false);
 
         assertThat(converted.dateNight, is(timelineV1.date));
         assertThat(converted.message, is(timelineV1.message));

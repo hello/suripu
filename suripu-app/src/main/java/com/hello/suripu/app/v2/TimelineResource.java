@@ -88,7 +88,8 @@ public class TimelineResource extends BaseResource {
             return Timeline.createEmpty(targetDate);
         }
         // That's super ugly. Need to find a more elegant way to write this
-        return Timeline.fromV1(timeline.get().timelines.get(0));
+        final TimelineResult timelineResult = timeline.get();
+        return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
     }
 
 

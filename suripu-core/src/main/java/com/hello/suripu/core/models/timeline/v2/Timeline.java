@@ -61,17 +61,16 @@ public class Timeline {
     }
 
 
-    public static Timeline fromV1(final com.hello.suripu.core.models.Timeline timelineV1) {
-
-        final Timeline t = new Timeline(
+    public static Timeline fromV1(final com.hello.suripu.core.models.Timeline timelineV1,
+                                  final boolean notEnoughData) {
+        return new Timeline(
                 Optional.of(timelineV1.score),
-                ScoreCondition.fromScore(timelineV1.score),
+                ScoreCondition.fromScore(timelineV1.score, notEnoughData),
                 timelineV1.message,
                 timelineV1.date,
                 TimelineEvent.fromV1(timelineV1.events),
                 SleepMetrics.fromV1(timelineV1)
         );
-        return t;
     }
 
 }
