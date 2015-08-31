@@ -88,7 +88,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 '),
 ----
 ('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
-'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need). Most current guidelines say school-age children should get at least 10 hours of sleep a night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but unique to the individual.'
+'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but it is unique to the individual.''
 ),
 ----
 ('time_to_sleep', '', 'Sleep Onset',
@@ -193,7 +193,7 @@ VALUES
 
 UPDATE info_insight_cards SET text=
 'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
-WHERE category='wake_variance'
+WHERE category='wake_variance';
 
 -- end DELETE ME
 
