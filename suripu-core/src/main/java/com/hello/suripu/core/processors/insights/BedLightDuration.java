@@ -36,10 +36,11 @@ public class BedLightDuration {
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
-        final Integer timeZoneOffset = getTimeZoneOffset(sleepStatsDAODynamoDB, accountId, DateTime.now());
-        if (timeZoneOffset == 999999) {
+        final Optional<Integer> timeZoneOffsetOptional = getTimeZoneOffsetOptional(sleepStatsDAODynamoDB, accountId, DateTime.now());
+        if (!timeZoneOffsetOptional.isPresent()) {
             return Optional.absent();
         }
+        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, timeZoneOffset);
         if (deviceDatas.isEmpty()) {
@@ -127,16 +128,16 @@ public class BedLightDuration {
         return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
     }
 
-    public static final Integer getTimeZoneOffset(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
+    public static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
         final String sleepStatsQueryEndDate = DateTimeUtil.dateToYmdString(queryEndDate);
         final String sleepStatsQueryStartDate = DateTimeUtil.dateToYmdString(queryEndDate.minusDays(1));
 
 
         final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
         if (!sleepStats.isEmpty()) {
-            return sleepStats.get(0).offsetMillis;
+            return Optional.of(sleepStats.get(0).offsetMillis);
         }
-        return 999999;
+        return Optional.absent();
     }
 
     public static Optional<InsightCard> scoreCardBedLightDuration(final int avgLightOn, final Long accountId) {
