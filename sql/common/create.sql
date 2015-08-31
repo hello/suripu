@@ -262,3 +262,10 @@ CREATE UNIQUE index tracking_uniq_device_id_category on tracking(internal_sense_
 
 GRANT ALL PRIVILEGES ON tracking TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE tracking_id_seq TO ingress_user;
+
+
+
+CREATE TABLE store_feedback (id SERIAL PRIMARY KEY, account_id BIGINT NOT NULL, likes VARCHAR(255), review BOOLEAN, created_at TIMESTAMP);
+
+GRANT ALL PRIVILEGES ON store_feedback TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE store_feedback_id_seq TO ingress_user;

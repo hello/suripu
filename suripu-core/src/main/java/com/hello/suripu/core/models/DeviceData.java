@@ -6,13 +6,15 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DeviceData {
 
-
-
+    private final static Logger LOGGER = LoggerFactory.getLogger(DeviceData.class);
+    private final static int DEFAULT_AMBIENT_AIR_QUALITY = 0; // Because we are now saving only raw data to the database
 
     @JsonProperty("account_id")
     public final Long accountId;
@@ -168,7 +170,7 @@ public class DeviceData {
         private Long deviceId;
         private int ambientTemperature;
         private int ambientHumidity;
-        private int ambientAirQuality;
+        private int ambientAirQuality = DEFAULT_AMBIENT_AIR_QUALITY;
         private int ambientAirQualityRaw;
         private int ambientDustVariance;
         private int ambientDustMin;
@@ -206,14 +208,15 @@ public class DeviceData {
             return this;
         }
 
+        @Deprecated
         public Builder withAmbientAirQuality(final int ambientAirQuality, final int firmwareVersion){
-            final float dustDensity = DataUtils.convertDustDataFromCountsToDensity(ambientAirQuality, firmwareVersion); // milligrams
-            this.ambientAirQuality = DataUtils.floatToDbIntDust(dustDensity); // multiplier to save as Int
+            LOGGER.warn("DeviceData builder's withAmbientHumidty has been deprecated, it will always set ambient air quality to zero");
+            this.ambientHumidity = DEFAULT_AMBIENT_AIR_QUALITY;
             return this;
         }
 
-        public Builder withAmbientAirQualityRaw(final int ambientAirQuality) {
-            this.ambientAirQualityRaw = ambientAirQuality;
+        public Builder withAmbientAirQualityRaw(final int ambientAirQualityRaw){
+            this.ambientAirQualityRaw  = ambientAirQualityRaw;
             return this;
         }
 

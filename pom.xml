@@ -5,7 +5,7 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.9-SNAPSHOT</version>
+    <version>0.5.20-SNAPSHOT</version>
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
@@ -27,6 +27,7 @@
         <module>suripu-workers</module>
         <module>suripu-research</module>
         <module>suripu-coredw</module>
+        <module>suripu-coredw8</module>
     </modules>
 
     <scm>

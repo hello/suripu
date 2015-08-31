@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.UserInfo;
@@ -118,7 +119,8 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                         roundedDateTime.getMillis(),
                         data.getFirmwareVersion(),
                         now,
-                        10); // TODO: adjust threshold
+                        10,
+                        Calibration.createDefault(data.getDeviceId())); // TODO: adjust threshold
                 final Optional<HelloPushMessage> messageOptional = getMostImportantSensorState(currentRoomState);
                 if(messageOptional.isPresent()) {
                     LOGGER.info("Sending push notifications to user: {}. Message: {}", userInfo.accountId, messageOptional.get());

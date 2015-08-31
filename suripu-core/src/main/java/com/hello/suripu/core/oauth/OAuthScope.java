@@ -39,7 +39,8 @@ public enum OAuthScope {
     PCH_READ(28),
     IMPLICIT_TOKEN(29),
     ZENDESK_EXTENSION(30),
-    SUPPORT(31);
+    SUPPORT(31),
+    STORE_FEEDBACK(32);
 
     private int value;
 

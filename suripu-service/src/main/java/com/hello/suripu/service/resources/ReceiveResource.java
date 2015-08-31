@@ -10,6 +10,7 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -22,6 +23,7 @@ import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
@@ -90,6 +92,7 @@ public class ReceiveResource extends BaseResource {
 
     private final Meter senseClockOutOfSync;
     private final Meter pillClockOutOfSync;
+    private final CalibrationDAO calibrationDAO;
 
     @Context
     HttpServletRequest request;
@@ -104,7 +107,8 @@ public class ReceiveResource extends BaseResource {
                            final SenseUploadConfiguration senseUploadConfiguration,
                            final OTAConfiguration otaConfiguration,
                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
-                           final int ringDurationSec) {
+                           final int ringDurationSec,
+                           final CalibrationDAO calibrationDAO) {
 
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
@@ -122,6 +126,7 @@ public class ReceiveResource extends BaseResource {
         this.senseClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "sense-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
         this.pillClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "pill-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
         this.ringDurationSec = ringDurationSec;
+        this.calibrationDAO = calibrationDAO;
     }
 
 
@@ -289,13 +294,17 @@ public class ReceiveResource extends BaseResource {
             }
 
             // only compute the state for the most recent conditions
+
             if(i == batch.getDataCount() -1) {
+                final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.getStrict(deviceName) : Optional.<Calibration>absent();
+                final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(deviceName);
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
                         roundedDateTime.getMillis(),
                         data.getFirmwareVersion(),
                         DateTime.now(),
-                        2);
+                        2,
+                        calibration);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
                     final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState);
@@ -352,6 +361,7 @@ public class ReceiveResource extends BaseResource {
                     .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
                     .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
             responseBuilder.setAlarm(alarmBuilder.build());
+            responseBuilder.setRingTimeAck(String.valueOf(nextRingTime.actualRingTimeUTC));
             // End generate protobuf for alarm
 
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
@@ -407,6 +417,11 @@ public class ReceiveResource extends BaseResource {
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
+        }
+
+        final int responseLength = signedResponse.get().length;
+        if(responseLength > 2048) {
+            LOGGER.warn("response_size too large ({}) for device_id= {}", responseLength, deviceName);
         }
 
         return signedResponse.get();
