@@ -137,6 +137,7 @@ public class BedLightDuration {
         if (!sleepStats.isEmpty()) {
             return Optional.of(sleepStats.get(0).offsetMillis);
         }
+        LOGGER.debug("SleepStats empty, fail to retrieve timeZoneOffset for accountId {} from {} to {}", accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
         return Optional.absent();
     }
 
