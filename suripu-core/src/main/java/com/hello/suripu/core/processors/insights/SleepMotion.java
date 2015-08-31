@@ -80,16 +80,16 @@ public class SleepMotion {
         Text text;
         if (Math.abs(overallDiff) >= SIGNIFICANT_DIFF) {
             if (overallDiff > 0) {
-                text = SleepMotionMsgEN.moreMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
+                text = SleepMotionMsgEN.moreMovement(numDays, (int) Math.abs(overallDiff), (int) averageMotionPercentage);
             } else {
-                text = SleepMotionMsgEN.lessMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
+                text = SleepMotionMsgEN.lessMovement(numDays, (int) Math.abs(overallDiff), (int) averageMotionPercentage);
             }
         } else {
             if ((int) overallDiff != 0) {
-                text = SleepMotionMsgEN.equalMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
+                text = SleepMotionMsgEN.equalMovement(numDays, (int) Math.abs(overallDiff), (int) averageMotionPercentage);
             }
             else {
-                text = SleepMotionMsgEN.reallyEqualMovement(numDays, (int) overallDiff, (int) averageMotionPercentage);
+                text = SleepMotionMsgEN.reallyEqualMovement(numDays, (int) Math.abs(overallDiff), (int) averageMotionPercentage);
             }
         }
 
