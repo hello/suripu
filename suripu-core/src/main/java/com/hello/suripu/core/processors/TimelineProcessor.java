@@ -251,7 +251,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                 sleepEventsFromAlgorithmOptional = Optional.of(events);
 
-                algorithmWorked = true;
+                if (sleepEventsFromAlgorithmOptional.get().fallAsleep.isPresent()) {
+                    algorithmWorked = true;
+                }
+
 
             }
             else {
