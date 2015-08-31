@@ -9,6 +9,7 @@ import com.google.common.base.Optional;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.models.timeline.v2.ScoreCondition;
 import com.hello.suripu.core.models.timeline.v2.Timeline;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.hamcrest.CoreMatchers;
@@ -57,6 +58,21 @@ public class TimelineTest {
 
         assertThat(converted.events, is(not(empty())));
         assertThat(converted.metrics, is(not(empty())));
+    }
+
+    @Test
+    public void fromV1WithNotEnoughData() throws Exception {
+        final com.hello.suripu.core.models.Timeline timelineV1 = com.hello.suripu.core.models.Timeline.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA);
+        final Timeline converted = Timeline.fromV1(timelineV1, true);
+
+        assertThat(converted.dateNight, is(timelineV1.date));
+        assertThat(converted.message, is(timelineV1.message));
+
+        assertThat(converted.score.isPresent(), is(false));
+        assertThat(converted.scoreCondition, CoreMatchers.is(ScoreCondition.INCOMPLETE));
+
+        assertThat(converted.events, is(empty()));
+        assertThat(converted.metrics, is(empty()));
     }
 
     @Test
