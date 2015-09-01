@@ -26,8 +26,8 @@ public class RoomConditionUtilTest {
         final periodic_data.Builder dataBuilder = periodic_data.newBuilder()
                 .setTemperature(2389) //(val - 389) / 100; >26=ALERT (2989); >23=WARNING (2689)
                 .setHumidity(3092)// 20=ALERT; 30=WARNING
-                .setDustMax(1000) // 301=ALERT; 51=WARNING
-                .setLight(3) //8=ALERT; 3=WARNING
+                .setDustMax(4000) // 301=ALERT; 51=WARNING
+                .setLight(2) //8=ALERT; 3=WARNING
                 .setAudioPeakBackgroundEnergyDb(0) //rawBackground; Not Taken Into Account
                 .setAudioPeakDisturbanceEnergyDb(200) //rawPeak---> Math.max(peakDB/1024 - 40, 0) + 25; 90=ALERT; 40=WARNING
                 .setUnixTime(unixTime)
@@ -54,12 +54,16 @@ public class RoomConditionUtilTest {
                 RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, false).ordinal());
         final RoomConditions oldConditions = RoomConditions.valueOf(
                 RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal());
+        final RoomConditions newConditionsCalibrated = RoomConditions.valueOf(
+                RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, true).ordinal());
 
         LOGGER.debug("Light: {}, Audio: {}", currentRoomState.light.value, currentRoomState.sound.value);
         LOGGER.debug("New Conditions: {}", newConditions);
         LOGGER.debug("Old Conditions: {}", oldConditions);
-        assertThat((newConditions == RoomConditions.WARNING), is(true));
-        assertThat((oldConditions == RoomConditions.IDEAL), is(true));
+        LOGGER.debug("New Conditions Calibrated: {}", newConditionsCalibrated);
+        assertThat((newConditions == RoomConditions.IDEAL), is(true));
+        assertThat((oldConditions == RoomConditions.WARNING), is(true));
+        assertThat((newConditionsCalibrated == RoomConditions.ALERT), is(true));
     }
 
 }
