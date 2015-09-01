@@ -1,9 +1,11 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -53,7 +55,7 @@ public class FeedbackUtils {
 
     }
 
-
+    //returns UTC time
     private static Optional<DateTime> convertFeedbackStringToDateTime(final Event.Type eventType,final DateTime dateOfNight, final String feedbacktime, final Integer offsetMillis) {
         // in bed can not be after after noon AND before 8PM
         // same for fall asleep
@@ -140,8 +142,8 @@ public class FeedbackUtils {
     }
 
     /* returns map of events by event type */
-    public static Map<Event.Type, Event> getFeedbackAsEventMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
-        final Map<Event.Type, Event> events = Maps.newHashMap();
+    public static Multimap<Event.Type, Event>  getFeedbackAsEventMap(final List<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
+        final Multimap<Event.Type, Event> events = ArrayListMultimap.create();
 
         /* iterate through list*/
         for(final TimelineFeedback timelineFeedback : timelineFeedbackList) {
@@ -153,7 +155,10 @@ public class FeedbackUtils {
 
                 /* turn into event */
                 final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, optionalDateTime.get(), offsetMillis);
-                events.put(event.get().getType(), event.get());
+
+                if (event.isPresent()) {
+                    events.put(event.get().getType(), event.get());
+                }
             }
         }
         return events;

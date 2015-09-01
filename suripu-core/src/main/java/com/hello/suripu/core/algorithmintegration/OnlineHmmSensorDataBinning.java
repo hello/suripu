@@ -1,32 +1,42 @@
-package com.hello.suripu.core.util;
+package com.hello.suripu.core.algorithmintegration;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.OnlineHmmMeasurementParameters;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 3/20/15.
  */
-public class SleepHmmBayesNetSensorDataBinning {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SleepHmmBayesNetSensorDataBinning.class);
+public class OnlineHmmSensorDataBinning {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OnlineHmmSensorDataBinning.class);
 
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
+    final static protected double LIGHT_INCREASE_THRESHOLD = 1.0;
+    final static protected double LIGHT_DECREASE_THRESHOLD = -1.0;
+
+
     static public class BinnedData {
         public final double[][] data;
         public final int numMinutesInWindow;
@@ -68,7 +78,7 @@ public class SleepHmmBayesNetSensorDataBinning {
     *
     *
     * */
-    static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final List<TrackerMotion> pillData,final List<TrackerMotion> partnerPillData,final HmmBayesNetMeasurementParameters params,
+    static public Optional<BinnedData> getBinnedSensorData(final AllSensorSampleList sensors, final List<TrackerMotion> pillData,final List<TrackerMotion> partnerPillData,final OnlineHmmMeasurementParameters params,
                                                            final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset) {
 
         final List<Sample> light = sensors.get(Sensor.LIGHT);
@@ -118,14 +128,39 @@ public class SleepHmmBayesNetSensorDataBinning {
         /////////////////////////////////////////////
         //LOG OF LIGHT, CONTINUOUS
         final Iterator<Sample> it1 = light.iterator();
+        Sample prev = null;
         while (it1.hasNext()) {
             final Sample sample = it1.next();
             double value = sample.value - params.lightFloorLux;
-            if (value < 0) {
+            if (value < 0.0) {
                 value = 0.0;
             }
+
+            if (prev == null) {
+                prev = sample;
+            }
+
+            double prevvalue = prev.value - params.lightFloorLux;
+
+            if (prevvalue < 0.0) {
+                prevvalue = 0.0;
+            }
+
             //add so we can average later
             addToBin(data, sample.dateTime, value, SleepHmmBayesNetProtos.MeasType.LOG_LIGHT_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+
+            final double v2 = Math.log(value * params.lightPreMultiplier + 1.0) / Math.log(2.0);
+            final double v1 = Math.log(prevvalue * params.lightPreMultiplier + 1.0) / Math.log(2.0);
+
+            if (v2 - v1 > LIGHT_INCREASE_THRESHOLD) {
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.LIGHT_INCREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            if (v2 - v1 < LIGHT_DECREASE_THRESHOLD) {
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.LIGHT_DECREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            prev = sample;
         }
 
         //computing average light in bin, so divide by bin size
@@ -167,20 +202,33 @@ public class SleepHmmBayesNetSensorDataBinning {
 
             //either wave happened or it didn't.. value can be 1.0 or 0.0
             if (value > 0.0 && params.useWavesForDisturbances) {
-                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.WAVE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
 
 
         //SOUND COUNTS
         final Iterator<Sample> it5 = soundCounts.iterator();
+        prev = null;
         while (it5.hasNext()) {
             final Sample sample = it5.next();
+
+            if (prev == null) {
+                prev = sample;
+            }
 
             //accumulate
             if (sample.value > 0.0) {
                 addToBin(data, sample.dateTime, sample.value, SleepHmmBayesNetProtos.MeasType.LOG_SOUND_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
+
+            double logratio = Math.log(sample.value / (prev.value + 1.0)) / Math.log(2.0);
+
+            if (logratio > 2.0 && sample.value > 10) {
+                maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.SOUND_INCREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
+            }
+
+            prev = sample;
 
         }
 
@@ -204,6 +252,21 @@ public class SleepHmmBayesNetSensorDataBinning {
             }
         }
 
+        //output only artificial light
+        for (int t = 0; t < data[0].length; t++) {
+            if (data[SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE][t] == 0.0) {
+                //no light in the morning
+                data[SleepHmmBayesNetProtos.MeasType.LOG_LIGHT_VALUE][t] = 0.0;
+            }
+            else {
+                //at night before bed do not have any "lights on" events
+                data[SleepHmmBayesNetProtos.MeasType.LIGHT_INCREASE_DISTURBANCE_VALUE][t] = 0.0;
+            }
+
+            data[SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE][t] = 0.0;
+
+        }
+
 
         ///////////////////////////
         //PARTNER PILL MOTION
@@ -225,17 +288,42 @@ public class SleepHmmBayesNetSensorDataBinning {
         final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
         final DateTime dateTimeEnd = new DateTime(startTimeMillisInUTC + numMinutesInWindow * NUMBER_OF_MILLIS_IN_A_MINUTE * dataLength).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
 
+        /*
         LOGGER.debug("t0UTC={},tf={}",dateTimeBegin.toLocalTime().toString(),dateTimeEnd.toLocalTime().toString());
         LOGGER.debug("light={}",getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.LOG_LIGHT_VALUE]));
         LOGGER.debug("motion={}",getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.MOTION_DURATION_VALUE]));
         LOGGER.debug("waves={}", getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE]));
         LOGGER.debug("logsc={}", getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.LOG_SOUND_VALUE]));
         LOGGER.debug("natlight={}", getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE]));
+        */
+
+        //fill out the indices of the FORBIDDEN TRANSITIONS.  FORBIDDEN!
 
 
         return Optional.of(new BinnedData(data,numMinutesInWindow,startTimeMillisInUTC));
     }
 
+    static public Multimap<Integer,Transition> getMotionForbiddenTransitions(final Collection<Transition> forbiddenTransitionList,final double [] motion) {
+        final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
+
+        if (forbiddenTransitionList == null) {
+            return forbiddenTransitions;
+        }
+
+        for (int t = 0; t < motion.length - 1; t++) {
+            //so the rule is, unless I have two consecutive bins of motion,
+            //I can't transition from sleep to wake, or whatever the fuck is specified here
+            if (!(motion[t] > 0.0 && motion[t + 1] > 0.0)) {
+
+                for (final Transition transition : forbiddenTransitionList) {
+                    forbiddenTransitions.put(t, transition);
+                }
+            }
+        }
+
+        return forbiddenTransitions;
+
+    }
 
     static protected long getTimeFromBin(int bin, int binWidthMinutes, long t0) {
         long t = bin * binWidthMinutes;
