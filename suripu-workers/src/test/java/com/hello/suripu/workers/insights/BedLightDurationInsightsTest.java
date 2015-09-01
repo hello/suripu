@@ -331,7 +331,7 @@ public class BedLightDurationInsightsTest {
     }
 
     public static List<Integer> readLightData(final String fileName) throws IOException{
-        List<Integer> lightData = Lists.newArrayList();
+        final List<Integer> lightData = Lists.newArrayList();
         final URL userCSVFile = Resources.getResource(fileName);
         if (userCSVFile==null) {
             throw new IOException();
@@ -345,7 +345,7 @@ public class BedLightDurationInsightsTest {
     }
 
     public static List<Long> readTimeStamps(final String fileName) throws IOException{
-        List<Long> timeStamps = Lists.newArrayList();
+        final List<Long> timeStamps = Lists.newArrayList();
         final URL timeStampCSVFile = Resources.getResource(fileName);
         if (timeStampCSVFile==null) {
             throw new IOException();
