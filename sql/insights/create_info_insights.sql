@@ -197,7 +197,6 @@ WHERE category='wake_variance';
 
 -- end DELETE ME
 
-
 -- Modify all titles to be title case 08/31/2015
 
 UPDATE info_insight_cards SET title = 'Effects of Ambient Light on Your Sleep' WHERE id = 1;
