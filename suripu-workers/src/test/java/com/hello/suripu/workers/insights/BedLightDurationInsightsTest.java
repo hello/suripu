@@ -273,7 +273,7 @@ public class BedLightDurationInsightsTest {
 //        Data pulled from 8-01-2015 from accountId 20894 - python script returns 25.2 minutes
 
         List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser1.csv");
-        List<Long> timeStamps = readTimeStamps("insights/bedLightduration/timeStampUser1.csv");
+        List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser1.csv");
 
         final List<DeviceData> deviceData = Lists.newArrayList();
         for (int i = 0; i < lightData.size(); i++) {
@@ -293,7 +293,7 @@ public class BedLightDurationInsightsTest {
 //        Data pulled from 8-01-2015 from accountId 22262 - python script returns 0 minutes
 
         List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser2.csv");
-        List<Long> timeStamps = readTimeStamps("insights/bedLightduration/timeStampUser2.csv");
+        List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser2.csv");
 
 
         final List<DeviceData> deviceData = Lists.newArrayList();
@@ -315,7 +315,7 @@ public class BedLightDurationInsightsTest {
 //        Data pulled from 8-01-2015 from accountId 27053 - python script returns 175.6 minutes
 
         List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser3.csv");
-        List<Long> timeStamps = readTimeStamps("insights/bedLightduration/timeStampUser3.csv");
+        List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser3.csv");
 
         final List<DeviceData> deviceData = Lists.newArrayList();
 
@@ -330,36 +330,33 @@ public class BedLightDurationInsightsTest {
         assertThat(avgLightOn, is(176));
     }
 
-    public static List<Integer> readLightData(final String fileName) {
+    public static List<Integer> readLightData(final String fileName) throws IOException{
         List<Integer> lightData = Lists.newArrayList();
         final URL userCSVFile = Resources.getResource(fileName);
-        try {
-            final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
-            final String[] lightDataStringList = csvString.replaceAll("\\s+","").split(",");
-            for (String lightDataString : lightDataStringList) {
-                lightData.add(Integer.parseInt(lightDataString));
-            }
-        } catch (IOException ioexception) {
-            ioexception.printStackTrace();
+        if (userCSVFile==null) {
+            throw new IOException();
+        }
+        final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
+        final String[] lightDataStringList = csvString.replaceAll("\\s+","").split(",");
+        for (String lightDataString : lightDataStringList) {
+            lightData.add(Integer.parseInt(lightDataString));
         }
         return lightData;
     }
 
-    public static List<Long> readTimeStamps(final String fileName) {
+    public static List<Long> readTimeStamps(final String fileName) throws IOException{
         List<Long> timeStamps = Lists.newArrayList();
         final URL timeStampCSVFile = Resources.getResource(fileName);
-        try {
-            final String csvString = Resources.toString(timeStampCSVFile, Charsets.UTF_8);
-            final String[] timeStampStringList = csvString.replaceAll("\\s+","").replaceAll("L","").split(",");
-            for (String timeStampString : timeStampStringList) {
-                timeStamps.add(Long.parseLong(timeStampString));
-            }
-        } catch (IOException ioexception) {
-            ioexception.printStackTrace();
+        if (timeStampCSVFile==null) {
+            throw new IOException();
+        }
+        final String csvString = Resources.toString(timeStampCSVFile, Charsets.UTF_8);
+        final String[] timeStampStringList = csvString.replaceAll("\\s+","").replaceAll("L","").split(",");
+        for (String timeStampString : timeStampStringList) {
+            timeStamps.add(Long.parseLong(timeStampString));
         }
         return timeStamps;
     }
-
 
     private static DeviceData createNewDeviceData(final Integer lightValue, final DateTime timestamp) {
         final Long accountId = 999L;
