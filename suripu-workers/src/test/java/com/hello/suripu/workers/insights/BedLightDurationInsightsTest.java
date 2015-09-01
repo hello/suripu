@@ -272,8 +272,8 @@ public class BedLightDurationInsightsTest {
     public void testSomeUser() throws IOException{
 //        Data pulled from 8-01-2015 from accountId 20894 - python script returns 25.2 minutes
 
-        List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser1.csv");
-        List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser1.csv");
+        final List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser1.csv");
+        final List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser1.csv");
 
         final List<DeviceData> deviceData = Lists.newArrayList();
         for (int i = 0; i < lightData.size(); i++) {
@@ -292,8 +292,8 @@ public class BedLightDurationInsightsTest {
     public void testSomeUser2() throws IOException{
 //        Data pulled from 8-01-2015 from accountId 22262 - python script returns 0 minutes
 
-        List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser2.csv");
-        List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser2.csv");
+        final List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser2.csv");
+        final List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser2.csv");
 
 
         final List<DeviceData> deviceData = Lists.newArrayList();
@@ -314,8 +314,8 @@ public class BedLightDurationInsightsTest {
     public void testSomeUser3() throws IOException{
 //        Data pulled from 8-01-2015 from accountId 27053 - python script returns 175.6 minutes
 
-        List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser3.csv");
-        List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser3.csv");
+        final List<Integer> lightData = readLightData("insights/bedlightduration/lightDataUser3.csv");
+        final List<Long> timeStamps = readTimeStamps("insights/bedlightduration/timeStampUser3.csv");
 
         final List<DeviceData> deviceData = Lists.newArrayList();
 
