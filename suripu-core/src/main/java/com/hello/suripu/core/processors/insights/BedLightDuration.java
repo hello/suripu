@@ -31,7 +31,7 @@ public class BedLightDuration {
 
     private static final float LIGHT_ON_LEVEL = 5.0f;  // in lux
 
-    private static final int OFFLINE_HOURS = 17; // number of hours after night end and before next night start
+    private static final int OFFLINE_HOURS = 17; // num hours after night end and before next night start. If set OFFLINE_HOURS<length of night hours, sameDay function will need to change
     private static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
@@ -75,6 +75,9 @@ public class BedLightDuration {
     }
 
     public static Integer findLightOnDurationForDay(final List<DeviceData> data, final int offMinutesThreshold) {
+        /**
+         * Splits timeseries into buckets, where each bucket contains no light-off times exceeding offMinutesThreshold. Gets length of time of last bucket which is light on before bed.
+         */
         if (data.size() <= 1) {
             return 0;
         }
@@ -99,6 +102,9 @@ public class BedLightDuration {
     }
 
     public static final List<List<DeviceData>> splitDeviceDataByDay(List<DeviceData> data) {
+        /**
+         * Input is list of DeviceData for 1 week. Split each day into individual list of DeviceData to get output list of lists
+         */
         final List<List<DeviceData>> res = Lists.newArrayList();
         int beg = 0;
         for (int i = 1; i < data.size(); i++) {
@@ -115,6 +121,9 @@ public class BedLightDuration {
     }
 
     public static Boolean sameDay(final DeviceData currentDeviceData, final DeviceData previousDeviceData) {
+        /**
+         * Input is two consecutive timestamps. Because getDeviceData only pulls from 9pm-4am, if two timestamps are from different days, must have difference of at least 17 hrs (time elapsed from 4am-9pm)
+         */
         final Integer elapsedMinutes = new Period(previousDeviceData.dateTimeUTC, currentDeviceData.dateTimeUTC, PeriodType.minutes()).getMinutes();
         final Integer comparisonPeriodMinutes = OFFLINE_HOURS * 60;
         return elapsedMinutes < comparisonPeriodMinutes;

@@ -236,6 +236,7 @@ public class BedLightDurationInsightsTest {
     @Test
     public void testSplitDeviceDataByDayWithThreshold() {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(21).withMinuteOfHour(0);
+        final int off_minutes_threshold = 45; //See BedLightDuration.OFF_MINUTES_THRESHOLD
 
         final List<DeviceData> data = Lists.newArrayList(
                 createNewDeviceData(0, timestamp.withHourOfDay(21)),
@@ -257,10 +258,10 @@ public class BedLightDurationInsightsTest {
         final List<List<DeviceData>> deviceDataByDay = BedLightDuration.splitDeviceDataByDay(data);
         assertThat(deviceDataByDay.size(), is(4));
 
-        final Integer day1Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(0), BedLightDuration.OFF_MINUTES_THRESHOLD);
-        final Integer day2Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(1), BedLightDuration.OFF_MINUTES_THRESHOLD);
-        final Integer day3Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(2), BedLightDuration.OFF_MINUTES_THRESHOLD);
-        final Integer day4Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(3), BedLightDuration.OFF_MINUTES_THRESHOLD);
+        final Integer day1Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(0), off_minutes_threshold);
+        final Integer day2Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(1), off_minutes_threshold);
+        final Integer day3Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(2), off_minutes_threshold);
+        final Integer day4Duration = BedLightDuration.findLightOnDurationForDay(deviceDataByDay.get(3), off_minutes_threshold);
 
         assertThat(day1Duration, is(30));
         assertThat(day2Duration, is(0*60));
