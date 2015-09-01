@@ -42,7 +42,7 @@ public class RoomConditionUtil {
 
     }
 
-    public static CurrentRoomState.State.Condition getRoomConditionV2LightOff(final CurrentRoomState currentRoomState){
+    public static CurrentRoomState.State.Condition getRoomConditionV2LightOff(final CurrentRoomState currentRoomState, final Boolean hasCalibration){
         final CurrentRoomState currentRoomStateWithoutLight = new CurrentRoomState(currentRoomState.temperature,
                 currentRoomState.humidity,
                 currentRoomState.particulates,
@@ -53,10 +53,10 @@ public class RoomConditionUtil {
                         currentRoomState.light.lastUpdated,
                         currentRoomState.light.unit),
                 currentRoomState.sound);
-        return getGeneralRoomConditionV2(currentRoomStateWithoutLight);
+        return getGeneralRoomConditionV2(currentRoomStateWithoutLight, hasCalibration);
     }
 
-    public static CurrentRoomState.State.Condition getGeneralRoomConditionV2(final CurrentRoomState currentRoomState) {
+    public static CurrentRoomState.State.Condition getGeneralRoomConditionV2(final CurrentRoomState currentRoomState, final Boolean hasCalibration) {
         float warningCount = 0;
         float alertCount = 0;
 
@@ -65,11 +65,17 @@ public class RoomConditionUtil {
         warningCount += getWarningCountFromSate(currentRoomState.temperature);
         warningCount += getWarningCountFromSate(currentRoomState.light);
         warningCount += getWarningCountFromSate(currentRoomState.sound);
+        if (hasCalibration) {
+            warningCount += getWarningCountFromSate(currentRoomState.particulates);
+        }
 
         alertCount += getAlertCountFromSate(currentRoomState.humidity);
         alertCount += getAlertCountFromSate(currentRoomState.temperature);
         alertCount += getAlertCountFromSate(currentRoomState.light);
         alertCount += getAlertCountFromSate(currentRoomState.sound);
+        if (hasCalibration) {
+            alertCount += getAlertCountFromSate(currentRoomState.particulates);
+        }
 
 
         if(alertCount > 0) {
