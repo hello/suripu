@@ -205,3 +205,15 @@ UPDATE info_insight_cards SET title = 'Sound: Ambient Sound or Sudden Loud Noise
 UPDATE info_insight_cards SET title = 'Sleep Duration: What''s the Ideal Amount?' WHERE id = 6;
 UPDATE info_insight_cards SET title = 'Effects of Exercise on Your Sleep' WHERE id = 10;
 UPDATE info_insight_cards SET title = 'Waking Up to Sleep Better' WHERE id = 18;
+
+--jyfan 8/25/2015 Adding bed_light_duration insight category
+
+ALTER TYPE insight_category ADD VALUE 'bed_light_duration';
+
+INSERT INTO info_insight_cards (category, title, text)
+VALUES
+ ---
+('bed_light_duration',
+'Associating your bedroom with sleep',
+'Habitually watching television, using your phone, or engaging in other mentally stimulating activities just before bed can create a subconscious link between your bedroom and staying alert. This often makes it harder to fall asleep when you want to. Alternatively, reserving your bedroom for sleep and intimacy can create a link between your bedroom and sleep, which will help your body fall asleep more easily when it’s time for bed.'
+);
