@@ -39,8 +39,9 @@ public class BedLightDurationInsightsTest {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offMinuteThreshold = 45;
 
-        final List<DeviceData> data = Lists.newArrayList();
-        data.add(createNewDeviceData(zeroLight, timestamp.withHourOfDay(18)));
+        final List<DeviceData> data = Lists.newArrayList(
+                createNewDeviceData(zeroLight, timestamp.withHourOfDay(18))
+        );
 
         final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
         assertThat(calculatedLightDurationList, is(0));
@@ -53,12 +54,13 @@ public class BedLightDurationInsightsTest {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offMinuteThreshold = 45;
 
-        final List<DeviceData> data = Lists.newArrayList();
-        data.add(createNewDeviceData(zeroLight, timestamp.withHourOfDay(18)));
-        data.add(createNewDeviceData(light, timestamp));
-        data.add(createNewDeviceData(light, timestamp.withMinuteOfHour(10)));
-        data.add(createNewDeviceData(light, timestamp.withMinuteOfHour(30)));
-        data.add(createNewDeviceData(light, timestamp.withMinuteOfHour(45)));
+        final List<DeviceData> data = Lists.newArrayList(
+                createNewDeviceData(zeroLight, timestamp.withHourOfDay(18)),
+                createNewDeviceData(light, timestamp),
+                createNewDeviceData(light, timestamp.withMinuteOfHour(10)),
+                createNewDeviceData(light, timestamp.withMinuteOfHour(30)),
+                createNewDeviceData(light, timestamp.withMinuteOfHour(45))
+        );
 
         final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
         final Integer expectedLightDurationList = 45;
@@ -72,12 +74,13 @@ public class BedLightDurationInsightsTest {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offMinuteThreshold = 45;
 
-        final List<DeviceData> data = Lists.newArrayList();
-        data.add(createNewDeviceData(light, timestamp));
-        data.add(createNewDeviceData(light, timestamp.withMinuteOfHour(50)));
-        data.add(createNewDeviceData(light, timestamp.withMinuteOfHour(51)));
-        data.add(createNewDeviceData(light, timestamp.withMinuteOfHour(52)));
-        data.add(createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(55)));
+        final List<DeviceData> data = Lists.newArrayList(
+                createNewDeviceData(light, timestamp),
+                createNewDeviceData(light, timestamp.withMinuteOfHour(50)),
+                createNewDeviceData(light, timestamp.withMinuteOfHour(51)),
+                createNewDeviceData(light, timestamp.withMinuteOfHour(52)),
+                createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(55))
+        );
 
         final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
         final Integer expectedLightDurationList = 5;
@@ -90,9 +93,10 @@ public class BedLightDurationInsightsTest {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offMinuteThreshold = 45;
 
-        final List<DeviceData> data = Lists.newArrayList();
-        data.add(createNewDeviceData(light, timestamp));
-        data.add(createNewDeviceData(light, timestamp.withMinuteOfHour(50)));
+        final List<DeviceData> data = Lists.newArrayList(
+                createNewDeviceData(light, timestamp),
+                createNewDeviceData(light, timestamp.withMinuteOfHour(50))
+        );
 
         final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
         final Integer expectedLightDurationList = 0;
@@ -106,12 +110,13 @@ public class BedLightDurationInsightsTest {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offMinuteThreshold = 45;
 
-        final List<DeviceData> data = Lists.newArrayList();
-        data.add(createNewDeviceData(light, timestamp));
-        data.add(createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(10)));
-        data.add(createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(30)));
-        data.add(createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(45)));
-        data.add(createNewDeviceData(zeroLight, timestamp.withHourOfDay(21)));
+        final List<DeviceData> data = Lists.newArrayList(
+                createNewDeviceData(light, timestamp),
+                createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(10)),
+                createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(30)),
+                createNewDeviceData(zeroLight, timestamp.withMinuteOfHour(45)),
+                createNewDeviceData(zeroLight, timestamp.withHourOfDay(21))
+        );
 
         final Integer calculatedLightDurationList = BedLightDuration.findLightOnDurationForDay(data, offMinuteThreshold);
         final Integer expectedLightDurationList = light/4;
@@ -122,10 +127,10 @@ public class BedLightDurationInsightsTest {
     public void testDurationLow() {
         final Long accountId = 999L;
 
-        final List<Integer> lightDurationList = Lists.newArrayList();
-        lightDurationList.add(0);
-        lightDurationList.add(60);
-        lightDurationList.add(10);
+        final List<Integer> lightDurationList = Lists.newArrayList(
+                0,
+                60,
+                10);
 
         final int durationAverage = BedLightDuration.computeAverage(lightDurationList);
         final Optional<InsightCard> lowResult = BedLightDuration.scoreCardBedLightDuration(durationAverage, accountId);
@@ -145,10 +150,11 @@ public class BedLightDurationInsightsTest {
     public void testDurationMedium() {
         final Long accountId = 999L;
 
-        final List<Integer> lightDurationList = Lists.newArrayList();
-        lightDurationList.add(60);
-        lightDurationList.add(120);
-        lightDurationList.add(120);
+        final List<Integer> lightDurationList = Lists.newArrayList(
+                60,
+                120,
+                120);
+
         final int durationAverage = BedLightDuration.computeAverage(lightDurationList);
 
         final Optional<InsightCard> mediumResult = BedLightDuration.scoreCardBedLightDuration(durationAverage, accountId);
@@ -165,10 +171,11 @@ public class BedLightDurationInsightsTest {
     public void testDurationHigh() {
         final Long accountId = 999L;
 
-        final List<Integer> lightDurationList = Lists.newArrayList();
-        lightDurationList.add(120);
-        lightDurationList.add(200);
-        lightDurationList.add(300);
+        final List<Integer> lightDurationList = Lists.newArrayList(
+                120,
+                200,
+                300);
+
         final int durationAverage = BedLightDuration.computeAverage(lightDurationList);
 
         final Optional<InsightCard> highResult = BedLightDuration.scoreCardBedLightDuration(durationAverage, accountId);
@@ -185,9 +192,10 @@ public class BedLightDurationInsightsTest {
     public void testSameDay() {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(21).withMinuteOfHour(0);
 
-        final List<DeviceData> data = Lists.newArrayList();
-        data.add(createNewDeviceData(0, timestamp.withHourOfDay(21)));
-        data.add(createNewDeviceData(0, timestamp.withHourOfDay(23)));
+        final List<DeviceData> data = Lists.newArrayList(
+                createNewDeviceData(0, timestamp.withHourOfDay(21)),
+                createNewDeviceData(0, timestamp.withHourOfDay(23))
+        );
 
         assertThat(BedLightDuration.sameDay(data.get(1), data.get(0)), is(Boolean.TRUE));
     }
@@ -196,19 +204,20 @@ public class BedLightDurationInsightsTest {
     public void testSplitDeviceDataByDay() {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(21).withMinuteOfHour(0);
 
-        final List<DeviceData> data = Lists.newArrayList();
-        data.add(createNewDeviceData(0, timestamp.withHourOfDay(21)));
-        data.add(createNewDeviceData(0, timestamp.withHourOfDay(23)));
-        data.add(createNewDeviceData(0, timestamp.plusDays(1).withHourOfDay(4)));
+        final List<DeviceData> data = Lists.newArrayList(
+                createNewDeviceData(0, timestamp.withHourOfDay(21)),
+                createNewDeviceData(0, timestamp.withHourOfDay(23)),
+                createNewDeviceData(0, timestamp.plusDays(1).withHourOfDay(4)),
 
-        data.add(createNewDeviceData(1, timestamp.plusDays(1).withHourOfDay(21)));
-        data.add(createNewDeviceData(1, timestamp.plusDays(2).withHourOfDay(3)));
-        data.add(createNewDeviceData(1, timestamp.plusDays(2).withHourOfDay(4)));
+                createNewDeviceData(1, timestamp.plusDays(1).withHourOfDay(21)),
+                createNewDeviceData(1, timestamp.plusDays(2).withHourOfDay(3)),
+                createNewDeviceData(1, timestamp.plusDays(2).withHourOfDay(4)),
 
-        data.add(createNewDeviceData(2, timestamp.plusDays(2).withHourOfDay(21)));
+                createNewDeviceData(2, timestamp.plusDays(2).withHourOfDay(21)),
 
-        data.add(createNewDeviceData(3, timestamp.plusDays(4).withHourOfDay(1)));
-        data.add(createNewDeviceData(3, timestamp.plusDays(4).withHourOfDay(2)));
+                createNewDeviceData(3, timestamp.plusDays(4).withHourOfDay(1)),
+                createNewDeviceData(3, timestamp.plusDays(4).withHourOfDay(2))
+        );
 
         final List<List<DeviceData>> deviceDataByDay = BedLightDuration.splitDeviceDataByDay(data);
         assertThat(deviceDataByDay.size(), is(4));
@@ -228,7 +237,6 @@ public class BedLightDurationInsightsTest {
     public void testSplitDeviceDataByDayWithThreshold() {
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(21).withMinuteOfHour(0);
 
-//        final List<DeviceData> data = Lists.newArrayList();
         final List<DeviceData> data = Lists.newArrayList(
                 createNewDeviceData(0, timestamp.withHourOfDay(21)),
                 createNewDeviceData(0, timestamp.withHourOfDay(21)),
@@ -245,6 +253,7 @@ public class BedLightDurationInsightsTest {
                 createNewDeviceData(3, timestamp.plusDays(4).withHourOfDay(1)),
                 createNewDeviceData(3, timestamp.plusDays(4).withHourOfDay(2))
         );
+
         final List<List<DeviceData>> deviceDataByDay = BedLightDuration.splitDeviceDataByDay(data);
         assertThat(deviceDataByDay.size(), is(4));
 
