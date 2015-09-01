@@ -307,8 +307,9 @@ public class ReceiveResource extends BaseResource {
                         calibration);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
-                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState);
-                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState);
+                    final Boolean hasCalibration = featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, deviceName, groups);
+                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, hasCalibration);
+                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState, hasCalibration);
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
                                     roomConditions.ordinal()));

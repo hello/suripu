@@ -80,10 +80,6 @@ public class TimelineResource extends BaseResource {
                                         @PathParam("date") final String night,
                                         @DefaultValue("false") @QueryParam("has_feedback") final Boolean hasFeedback) {
 
-        if(!isTimelineV2Enabled(accessToken.accountId)) {
-            LOGGER.warn("Timeline V2 isn't enabled for {}", accessToken.accountId);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
 
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
         final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate,hasFeedback);
@@ -91,7 +87,8 @@ public class TimelineResource extends BaseResource {
             return Timeline.createEmpty(targetDate);
         }
         // That's super ugly. Need to find a more elegant way to write this
-        return Timeline.fromV1(timeline.get().timelines.get(0));
+        final TimelineResult timelineResult = timeline.get();
+        return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
     }
 
 
@@ -152,7 +149,7 @@ public class TimelineResource extends BaseResource {
         // Correct event means feedback = prediction
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
-
+        
         //recalculate with feedback
         getTimelineForNight(accessToken, date,true);
 
