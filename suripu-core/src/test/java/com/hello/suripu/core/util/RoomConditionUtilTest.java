@@ -51,7 +51,7 @@ public class RoomConditionUtilTest {
                 Calibration.createDefault("dummy-sense"));
 
         final RoomConditions newConditions = RoomConditions.valueOf(
-                RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState).ordinal());
+                RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, false).ordinal());
         final RoomConditions oldConditions = RoomConditions.valueOf(
                 RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal());
 
