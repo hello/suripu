@@ -330,7 +330,22 @@ public class BedLightDurationInsightsTest {
         assertThat(avgLightOn, is(176));
     }
 
-    public static List<Long> readTimeStamp(final String fileName) {
+    public static List<Integer> readLightData(final String fileName) {
+        List<Integer> lightData = Lists.newArrayList();
+        final URL userCSVFile = Resources.getResource(fileName);
+        try {
+            final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
+            final String[] lightDataStringList = csvString.replaceAll("\\s+","").split(",");
+            for (String lightDataString : lightDataStringList) {
+                lightData.add(Integer.parseInt(lightDataString));
+            }
+        } catch (IOException ioexception) {
+            ioexception.printStackTrace();
+        }
+        return lightData;
+    }
+
+    public static List<Long> readTimeStamps(final String fileName) {
         List<Long> timeStamps = Lists.newArrayList();
         final URL timeStampCSVFile = Resources.getResource(fileName);
         try {
@@ -345,36 +360,6 @@ public class BedLightDurationInsightsTest {
         return timeStamps;
     }
 
-    private static List<Integer> readLightData(final String fileName) throws IOException{
-        List<Integer> lightData = Lists.newArrayList();
-        final URL userCSVFile = Resources.getResource(fileName);
-        if (userCSVFile==null) {
-            throw new IOException();
-        }
-
-        final String csvString = Resources.toString(userCSVFile, Charsets.UTF_8);
-        final String[] lightDataStringList = csvString.replaceAll("\\s+","").split(",");
-        for (String lightDataString : lightDataStringList) {
-            lightData.add(Integer.parseInt(lightDataString));
-        }
-        return lightData;
-    }
-
-    private static List<Long> readTimeStamps(final String fileName) throws IOException {
-        List<Long> timeStamps = Lists.newArrayList();
-        final URL timeStampCSVFile = Resources.getResource(fileName);
-
-        if (timeStampCSVFile==null) {
-            throw new IOException();
-        }
-
-        final String csvString = Resources.toString(timeStampCSVFile, Charsets.UTF_8);
-        final String[] timeStampStringList = csvString.replaceAll("\\s+","").replaceAll("L","").split(",");
-        for (String timeStampString : timeStampStringList) {
-            timeStamps.add(Long.parseLong(timeStampString));
-        }
-        return timeStamps;
-    }
 
     private static DeviceData createNewDeviceData(final Integer lightValue, final DateTime timestamp) {
         final Long accountId = 999L;
