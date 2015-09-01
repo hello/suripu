@@ -29,10 +29,10 @@ public class BedLightDuration {
     private static final int NIGHT_START_HOUR_LOCAL = 21; // 9pm
     private static final int NIGHT_END_HOUR_LOCAL = 4; // 4am
 
-    private static final int OFFLINE_HOURS = 17; // number of hours after night end and before next night start
-    public static final float LIGHT_LEVEL_WARNING = 5.0f;  // in lux
-    public static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
+    private static final float LIGHT_ON_LEVEL = 5.0f;  // in lux
 
+    private static final int OFFLINE_HOURS = 17; // number of hours after night end and before next night start
+    private static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
@@ -126,7 +126,7 @@ public class BedLightDuration {
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
         //Grab all night-time data for past week
-        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, (int) LIGHT_LEVEL_WARNING, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, (int) LIGHT_ON_LEVEL, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
     }
 
     public static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
