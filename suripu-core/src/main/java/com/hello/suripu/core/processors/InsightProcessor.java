@@ -17,6 +17,7 @@ import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
+import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.SleepMotion;
@@ -194,6 +195,12 @@ public class InsightProcessor {
             }
         }
 
+        // testing feature always generated
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
+            LOGGER.debug("generating insight bed light duration for accountid {}", accountId);
+            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
+        }
+
 
         //Generate some Insights weekly
         final Integer dayOfWeek = DateTime.now().getDayOfWeek();
@@ -225,21 +232,33 @@ public class InsightProcessor {
         Optional<InsightCard> insightCardOptional = Optional.absent();
 
         if (category == InsightCard.Category.LIGHT) {
+            LOGGER.debug("for light calling getInsights with accountId {}", accountId);
             insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+        }
 
-        } else if (category == InsightCard.Category.TEMPERATURE) {
+        else if (category == InsightCard.Category.TEMPERATURE) {
             final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
             final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
+            LOGGER.debug("for temperature calling getInsights with accountId {}", accountId);
             insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
+        }
 
-        } else if (category == InsightCard.Category.SLEEP_QUALITY) {
+        else if (category == InsightCard.Category.SLEEP_QUALITY) {
+            LOGGER.debug("for sleep quality (movement) calling getInsights with accountId {}", accountId);
             insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
-        } else if (category == InsightCard.Category.WAKE_VARIANCE) {
-            final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
+        }
 
+        else if (category == InsightCard.Category.WAKE_VARIANCE) {
+            final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
             LOGGER.debug("for wake variance calling getInsights with accountId {} and date {} with numDays {}", accountId, queryEndDate, DAYS_ONE_WEEK);
             insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
         }
+
+        else if (category == InsightCard.Category.BED_LIGHT_DURATION) {
+            LOGGER.debug("for bed light duration calling getInsights with accountId {}", accountId);
+            insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataDAO);
+        }
+
 
         if (insightCardOptional.isPresent()) {
             // save to dynamo
@@ -292,7 +311,6 @@ public class InsightProcessor {
         private @Nullable AccountPreferencesDAO preferencesDAO;
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
-        private @Nullable TimelineProcessor timelineProcessor;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
         private @Nullable
         Map<String, String> insightInfoPreview;
