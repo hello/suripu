@@ -99,7 +99,7 @@ public class TimelineResource extends BaseResource {
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
         final Optional<TimelineResult> timelineResultOptional = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
 
-        final Timeline timeline =  !timelineResultOptional.isPresent() ? Timeline.createEmpty(targetDate) : Timeline.fromV1(timelineResultOptional.get().timelines.get(0));
+        final Timeline timeline =  !timelineResultOptional.isPresent() ? Timeline.createEmpty(targetDate) : Timeline.fromV1(timelineResultOptional.get().timelines.get(0), timelineResultOptional.get().notEnoughData);
         final TimelineLog timelineLog = !timelineResultOptional.isPresent() ? TimelineLog.createEmpty() : timelineResultOptional.get().log;
         return new TimelineAdmin(timeline, timelineLog);
     }
