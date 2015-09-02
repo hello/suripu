@@ -5,6 +5,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
@@ -14,15 +16,20 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.WifiInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +41,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
     public final static String SSID_ATTRIBUTE_NAME = "ssid";
     public final static String RSSI_ATTRIBUTE_NAME = "rssi";
     public final static String LAST_UPDATED_ATTRIBUTE_NAME = "last_updated";
+    public final static Integer MAXIMUM_BATCH_WRITE_SIZE = 25;
 
 
     private final AmazonDynamoDB dynamoDBClient;
@@ -65,8 +73,6 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
 
     @Override
     public Boolean put(final WifiInfo wifiInfo) {
-
-
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(wifiTableName)
                 .withItem(createDynamoDBItemFromWifiInfo(wifiInfo));
@@ -79,6 +85,32 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
             LOGGER.error(ase.getMessage());
         }
 
+        return Boolean.FALSE;
+    }
+
+    @Override
+    public Boolean putBatch(final List<WifiInfo> wifiInfoList) {
+        final ImmutableList<WifiInfo> selectedWifiInfoList =  wifiInfoList.size() <= MAXIMUM_BATCH_WRITE_SIZE
+            ? ImmutableList.copyOf(wifiInfoList)
+            : ImmutableList.copyOf(wifiInfoList.subList(0, MAXIMUM_BATCH_WRITE_SIZE));
+
+        final List<WriteRequest> wifiInfoWriteRequestList = new ArrayList<>();
+        for (final WifiInfo wifiInfo : selectedWifiInfoList) {
+            wifiInfoWriteRequestList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(createDynamoDBItemFromWifiInfo(wifiInfo))));
+        }
+
+        Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+        requestItems.put(wifiTableName, wifiInfoWriteRequestList);
+
+        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
+
+        try {
+            final BatchWriteItemResult batchWriteItemResult = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+            return batchWriteItemResult != null;
+        }
+        catch (AmazonServiceException ase) {
+            LOGGER.error(ase.getMessage());
+        }
         return Boolean.FALSE;
     }
 

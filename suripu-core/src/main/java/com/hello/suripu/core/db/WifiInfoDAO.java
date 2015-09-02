@@ -3,6 +3,8 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.WifiInfo;
 
+import java.util.List;
+
 
 public interface WifiInfoDAO {
     /**
@@ -15,7 +17,9 @@ public interface WifiInfoDAO {
     /**
      *
      * @param wifiInfo WifiInfo
-     * @return int
+     * @return Boolean
      */
     Boolean put(WifiInfo wifiInfo);
+    Boolean putBatch(List<WifiInfo> wifiInfoList);
+
 }
