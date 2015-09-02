@@ -17,12 +17,14 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.WifiInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class WifiInfoDynamoDB implements WifiInfoDAO {
 
@@ -53,11 +55,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
         try {
             final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
             final Map<String, AttributeValue> item = getItemResult.getItem();
-            if (item == null) {
-                LOGGER.warn("Sense {} does not have wifi info", senseId);
-                return Optional.absent();
-            }
-            return createWifiInfofromDynamoDBItem(item);
+            return createWifiInfofromDynamoDBItem(item, senseId);
         } catch (AmazonServiceException ase) {
             LOGGER.error("Failed to get wifi info for {}", senseId);
             return Optional.absent();
@@ -104,12 +102,27 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
         return result;
     }
 
-    public static Optional<WifiInfo> createWifiInfofromDynamoDBItem(final Map<String, AttributeValue> item) {
+    public static Optional<WifiInfo> createWifiInfofromDynamoDBItem(final Map<String, AttributeValue> item, final String senseId) {
+        if (item == null) {
+            LOGGER.warn("Sense {} does not have wifi info", senseId);
+            return Optional.absent();
+        }
+
+        final Set<String> requiredAttributes = Sets.newHashSet(SSID_ATTRIBUTE_NAME, RSSI_ATTRIBUTE_NAME);
+        final Set<String> itemAttributes = item.keySet();
+
+        if (!itemAttributes.containsAll(requiredAttributes)) {
+            return Optional.absent();
+        }
+
+        final Long lastUpdated = item.containsKey(LAST_UPDATED_ATTRIBUTE_NAME)
+            ? Long.valueOf(item.get(LAST_UPDATED_ATTRIBUTE_NAME).getN())
+            : 0L;
         return Optional.of(WifiInfo.create(
-                        item.get(WifiInfoDynamoDB.SENSE_ATTRIBUTE_NAME).getS(),
-                        item.get(WifiInfoDynamoDB.SSID_ATTRIBUTE_NAME).getS(),
-                        Integer.valueOf(item.get(WifiInfoDynamoDB.RSSI_ATTRIBUTE_NAME).getN()),
-                        Long.valueOf(item.get(WifiInfoDynamoDB.LAST_UPDATED_ATTRIBUTE_NAME).getN()))
+            item.get(SENSE_ATTRIBUTE_NAME).getS(),
+            item.get(SSID_ATTRIBUTE_NAME).getS(),
+            Integer.valueOf(item.get(RSSI_ATTRIBUTE_NAME).getN()),
+            lastUpdated)
         );
     }
 
