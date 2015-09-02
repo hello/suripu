@@ -33,7 +33,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +54,7 @@ public class InsightProcessor {
     private static final int RECENT_DAYS = 7; // last 7 days
     private static final int NEW_ACCOUNT_THRESHOLD = 2;
     private static final int DAYS_ONE_WEEK = 7;
+    private static final int NUM_INSIGHTS_ALLOWED_PER_WEEK = 2;
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
@@ -110,9 +110,16 @@ public class InsightProcessor {
 
         final Long deviceId = deviceIdOptional.get();
 
+        //generate insight for test users - completely controlled by FF on/off
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
+            generateTestInsights(accountId, deviceId);
+        }
+
+        //generate insight for all users
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
             generateNewUserInsights(accountId, deviceId, accountAge);
         } else {
+            generateGeneralWeeklyInsights(accountId, deviceId);
             generateGeneralInsights(accountId, deviceId);
         }
     }
@@ -151,28 +158,69 @@ public class InsightProcessor {
 
     }
 
+    private void generateGeneralWeeklyInsights(final Long accountId, final Long deviceId) {
+        //Generate some Insights weekly
+        final Integer dayOfWeek = DateTime.now().getDayOfWeek();
+        LOGGER.debug("The day of week is {}", dayOfWeek);
+
+        switch (dayOfWeek) {
+            case 6:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
+                    return;
+                }
+                else if (!generateWeeklyFeatureAllowed(accountId, InsightCard.Category.WAKE_VARIANCE)) {
+                    return;
+                }
+                LOGGER.debug("generating insight wake variance for accountid {}", accountId);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.WAKE_VARIANCE);
+                break;
+            default:
+                return;
+        }
+    }
+
     /**
      * logic to determine what kind of insights to generate
      * @param accountId
      */
     private void generateGeneralInsights(final Long accountId, final Long deviceId) {
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+        if (recentCategories.size() >= NUM_INSIGHTS_ALLOWED_PER_WEEK) {
+            return;
+        }
+
+        //logic for generating current Insight
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
+            if (!recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
+                LOGGER.debug("generating insight bed light duration for accountid {}", accountId);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
+                final Integer numCategoriesGeneratedLastWeek = recentCategories.size() + 1;
+                generateRandomOldInsights(accountId, deviceId, numCategoriesGeneratedLastWeek);
+                return;
+            }
+        }
+
+        generateRandomOldInsights(accountId, deviceId, recentCategories.size());
+    }
+
+    private void generateRandomOldInsights(final Long accountId, final Long deviceId, final Integer numCategoriesGeneratedLastWeek) {
+        if (numCategoriesGeneratedLastWeek >= NUM_INSIGHTS_ALLOWED_PER_WEEK) {
+            return;
+        }
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        // randomly select a card that hasn't been generated recently -- TODO when we have all categories
-        final List<InsightCard.Category> eligibleCategories = new ArrayList<>();
+        /* randomly select a card that hasn't been generated recently - TODO when we have all categories
+        final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
         for (final InsightCard.Category category : InsightCard.Category.values()) {
             if (!recentCategories.contains(category)) {
                 eligibleCategories.add(category);
             }
         }
+        */
 
-        if (eligibleCategories.isEmpty()) {
-            LOGGER.debug("No new insights generated: {}", accountId);
-            return;
-        }
+        //Generate some Insights based on day of month - once every 9 days TODO: randomly generate old Insight on day of week if has not been generated in a while
 
-        //Generate some Insights based on day of month - once every 9 days
         final Integer dayOfMonth = DateTime.now().getDayOfMonth();
         LOGGER.debug("The day of the month is {}", dayOfMonth);
 
@@ -194,37 +242,12 @@ public class InsightProcessor {
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
             }
         }
+    }
 
-        // testing feature always generated
-        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
-            LOGGER.debug("generating insight bed light duration for accountid {}", accountId);
-            this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
-        }
-
-
-        //Generate some Insights weekly
-        final Integer dayOfWeek = DateTime.now().getDayOfWeek();
-        LOGGER.debug("The day of week is {}", dayOfWeek);
-        InsightCard.Category categoryToGenerateWeek;
-
-        switch (dayOfWeek) {
-            case 6:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
-                    return;
-                }
-                else if (recentCategories.contains(InsightCard.Category.WAKE_VARIANCE)) {
-                    return;
-                }
-                LOGGER.debug("setting category to generate as wake variance");
-                categoryToGenerateWeek = InsightCard.Category.WAKE_VARIANCE;
-                break;
-            default:
-                return;
-        }
-
-        if (!recentCategories.contains(categoryToGenerateWeek)) {
-            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerateWeek);
-        }
+    private void generateTestInsights(final Long accountId, final Long deviceId) {
+        //Allows for generation of Insight even if it has been recently generated
+        LOGGER.debug("generating insight bed light duration for accountid {}", accountId);
+        this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
     }
 
     public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
@@ -265,6 +288,17 @@ public class InsightProcessor {
             LOGGER.debug("Category {} insight card present for account {}, Inserting insight into DynamoDB", category, accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
         }
+    }
+
+    public Boolean generateWeeklyFeatureAllowed(final Long accountId, final InsightCard.Category insightCategory) {
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+
+        if (recentCategories.contains(insightCategory)) {
+            LOGGER.debug("Accountid {} already generated insight {} in past week. Now not generating new Insight", accountId, insightCategory);
+            return Boolean.FALSE;
+        }
+
+        return Boolean.TRUE;
     }
 
     public Optional<String> getInsightPreviewForCategory(final InsightCard.Category category) {
