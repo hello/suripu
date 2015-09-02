@@ -132,7 +132,6 @@ public class FeedbackUtilsTest {
 
     }
 
-    @Test
     public void TestGettingTheClosestFeedback() {
         FeedbackUtils utils = new FeedbackUtils();
 //

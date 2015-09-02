@@ -26,7 +26,7 @@ public abstract class FeedbackDAO {
     abstract int updateExistingFeedbackByAccountAndDateAndTime(@Bind("account_id") final Long accountId,@BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
     /* if event type, date, and account id match, update it   */
-    @SqlUpdate("UPDATE timeline_feedback SET new_time=:new_time,created=now() WHERE account_id=:account_id AND date_of_night=:date_of_night AND event_type=:event_type")
+    @SqlUpdate("UPDATE timeline_feedback SET new_time=:new_time, old_time=:old_time, created=now() WHERE account_id=:account_id AND date_of_night=:date_of_night AND event_type=:event_type")
     public abstract int updateDuplicate(@Bind("account_id") final Long accountId,@BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
     @SqlUpdate("INSERT INTO timeline_feedback (account_id, date_of_night, old_time, new_time, event_type, created) VALUES(:account_id, :date_of_night, :old_time, :new_time, :event_type, now())")

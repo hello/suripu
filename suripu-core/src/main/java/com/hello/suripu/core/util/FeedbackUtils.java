@@ -17,12 +17,15 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Time;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 
 
@@ -274,11 +277,89 @@ public class FeedbackUtils {
 
     }
 
+    static final Event copyEventWithNewTime(final Event event, final long newTime) {
+        //create new event
+        final Event newEvent = Event.createFromType(
+                event.getType(),
+                newTime,
+                newTime + MINUTE,
+                event.getTimezoneOffset(),
+                event.getDescription(),
+                event.getSoundInfo(),
+                event.getSleepDepth());
 
+        return newEvent;
+    }
 
     public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
+        //so there will only ever by one feedback of a given type on a day
+        final Map<Event.Type,Long> algTimesByEvent = getFeedbackAsNewTimesByType(timelineFeedbackList, offsetMillis);
 
-        /* get events by time  */
+        for (final Event event : algEvents) {
+            if (algTimesByEvent.containsKey(event.getType())) {
+                continue;
+            }
+
+
+            //lovely n^2 algorithm here
+            if (!checkEventOrdering(algTimesByEvent,event.getStartTimestamp(),event.getType(),offsetMillis)) {
+                //ruh-roh, consistency violation
+
+                //suggest a new time... this should work unless we are processing an event type that should not be there
+                final Optional<Long> newEventTimeOptional = suggestNewEventTypeBasedOnIntendedOrdering(algTimesByEvent,event.getStartTimestamp(),event.getType());
+
+                if (!newEventTimeOptional.isPresent()) {
+                    continue; //ignore this one
+                }
+
+                //create new event
+                final Event newEvent = copyEventWithNewTime(event,newEventTimeOptional.get());
+
+                if (!checkEventOrdering(algTimesByEvent,newEvent.getStartTimestamp(),newEvent.getType(),offsetMillis)) {
+                    //this should not happen evar.
+                    LOGGER.error("suggested event time is not consistent.  bad programmer!");
+
+                    //just insert with original timestamp is and continue
+                    algTimesByEvent.put(event.getType(), event.getStartTimestamp());
+                    continue;
+                }
+
+                //we got this far? that means everything is good, so insert
+                algTimesByEvent.put(newEvent.getType(), newEvent.getStartTimestamp());
+            }
+        }
+
+
+        //now take the alg events, and insert by the mapped times
+        //the mapped times will be the feedback times, or other adjustments that were made
+        //to enforce consistency
+        final Map<Event.Type,Event> eventsByType = Maps.newHashMap();
+
+        for (final Event event : algEvents) {
+            final Long newTime = algTimesByEvent.get(event.getType());
+
+            if (newTime == null) {
+                LOGGER.error("somehow got a mapped time that was null");
+                continue; //this should never happen
+            }
+
+            eventsByType.put(event.getType(),copyEventWithNewTime(event,newTime));
+        }
+
+        //turn events map in to events list
+        final List<Event> mainEvents = Lists.newArrayList();
+
+        for (final Map.Entry<Event.Type,Event> entry : eventsByType.entrySet()) {
+            mainEvents.add(entry.getValue());
+        }
+
+        return new ReprocessedEvents(ImmutableList.copyOf(mainEvents),ImmutableList.copyOf(Collections.EMPTY_LIST));
+    }
+
+    /*
+    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
+
+        // get events by time
         final  List<EventWithTime> feedbackEventByOriginalTime = getFeedbackEventsWithOriginalTime(timelineFeedbackList, offsetMillis);
 
         Map<Event.Type,Set<EventWithTime>> algEventsByType = Maps.newHashMap();
@@ -401,78 +482,111 @@ public class FeedbackUtils {
         return new ReprocessedEvents(ImmutableList.copyOf(newAlgEvents),ImmutableList.copyOf(newExtraEvents));
 
     }
+*/
 
-    private static class EventTimeWithIntendedOrder implements Comparable<EventTimeWithIntendedOrder> {
-        public final int order;
-        public final long eventTime;
-
-        public EventTimeWithIntendedOrder(int order, long eventTime) {
-            this.order = order;
-            this.eventTime = eventTime;
+    static private Integer eventTypeToOrder(final Event.Type type) {
+        int order = -1;
+        switch (type) {
+            case IN_BED:
+                order = 0;
+                break;
+            case SLEEP:
+                order = 1;
+                break;
+            case WAKE_UP:
+                order = 2;
+                break;
+            case OUT_OF_BED:
+                order = 3;
+                break;
         }
-
-        @Override
-        public int compareTo(EventTimeWithIntendedOrder o) {
-            if (this.order < o.order) {
-                return -1;
-            }
-
-            if (this.order > o.order) {
-                return 1;
-            }
-
-            return 0;
-        }
+        return order;
     }
 
-    public boolean checkEventOrdering(final ImmutableList<TimelineFeedback> existingFeedbacks,final long proposedEventTimeUTC, Event.Type proposedEventType, final int tzOffset) {
+    static private TreeMap<Integer,Long> orderEventsByIntendedOrder(final Map<Event.Type,Long> algEventsByType) {
+        final TreeMap<Integer,Long> eventTimeWithIntendedOrders = Maps.newTreeMap();
 
+        //insert sort, sorted by the order events SHOULD be in
+        for (final Map.Entry<Event.Type,Long> entry: algEventsByType.entrySet()) {
+            final Long eventTime = entry.getValue();
+
+            int order = eventTypeToOrder(entry.getKey());
+
+            if (order != -1) {
+                eventTimeWithIntendedOrders.put(order,eventTime);
+            }
+        }
+
+        return eventTimeWithIntendedOrders;
+    }
+
+    public boolean checkEventOrdering(final ImmutableList<TimelineFeedback> existingFeedbacks,final long proposedEventTimeUTC, final Event.Type proposedEventType, final int tzOffset) {
         if (existingFeedbacks.isEmpty()) {
             return true;
         }
 
         //guarantee that there are only the four events (there should not be duplicates, and this will just pick one of the dupes if there happens to be one)
-        final Map<Event.Type,Long> algEventsByType = getFeedbackAsNewTimesByType(existingFeedbacks, tzOffset);
+        final Map<Event.Type,Long> algTypesByTime = getFeedbackAsNewTimesByType(existingFeedbacks, tzOffset);
 
-        algEventsByType.put(proposedEventType,proposedEventTimeUTC);
+        return checkEventOrdering(algTypesByTime,proposedEventTimeUTC,proposedEventType,tzOffset);
 
-        final Set<EventTimeWithIntendedOrder> eventTimeWithIntendedOrders = Sets.newTreeSet();
+    }
 
-        //insert sort, sorted by the order events SHOULD be in
-        for (final Map.Entry<Event.Type,Long> entry: algEventsByType.entrySet()) {
-            final Long eventTime = entry.getValue();
-            int order = -1;
-            switch (entry.getKey()) {
-                case IN_BED:
-                    order = 0;
-                    break;
-                case SLEEP:
-                    order = 1;
-                    break;
-                case WAKE_UP:
-                    order = 2;
-                    break;
-                case OUT_OF_BED:
-                    order = 3;
-                    break;
-            }
+    private boolean checkEventOrdering(final Map<Event.Type,Long> algTypesByTimeInput,final long proposedEventTimeUTC, final Event.Type proposedEventType, final int tzOffset) {
 
-            if (order != -1) {
-                eventTimeWithIntendedOrders.add(new EventTimeWithIntendedOrder(order,eventTime));
-            }
-        }
+        final Map<Event.Type,Long> algTypesByTime = Maps.newHashMap(algTypesByTimeInput);
+
+        algTypesByTime.put(proposedEventType, proposedEventTimeUTC);
+
+        final TreeMap<Integer,Long> eventsByIntendedOrder = orderEventsByIntendedOrder(algTypesByTime);
 
         //assert monotonically increasing
         long prevTime = 0;
-        for (final EventTimeWithIntendedOrder eventTimeWithIntendedOrder : eventTimeWithIntendedOrders) {
-            if (eventTimeWithIntendedOrder.eventTime <= prevTime) {
+        for (final Map.Entry<Integer,Long> eventTimeWithIntendedOrder : eventsByIntendedOrder.entrySet()) {
+            if (eventTimeWithIntendedOrder.getValue() <= prevTime) {
                 return false;
             }
 
-            prevTime = eventTimeWithIntendedOrder.eventTime;
+            prevTime = eventTimeWithIntendedOrder.getValue();
         }
 
         return true;
+    }
+
+    public Optional<Long> suggestNewEventTypeBasedOnIntendedOrdering(final Map<Event.Type,Long> algTypesByTime,final long proposedEventTimeUTC,final Event.Type proposedEventType) {
+
+        final int myOrder = eventTypeToOrder(proposedEventType);
+
+        if (myOrder == -1) {
+            return Optional.absent();
+        }
+
+        final Map<Event.Type,Long> copy = Maps.newHashMap(algTypesByTime);
+        copy.put(proposedEventType,proposedEventTimeUTC);
+
+        final TreeMap<Integer,Long> eventsByIntendedOrder = orderEventsByIntendedOrder(copy);
+        final Map.Entry<Integer,Long> highEntry = eventsByIntendedOrder.higherEntry(myOrder);
+        final Map.Entry<Integer,Long> lowerEntry = eventsByIntendedOrder.lowerEntry(myOrder);
+
+        final boolean failHigh = proposedEventTimeUTC > highEntry.getValue();
+        final boolean failLow = proposedEventTimeUTC < lowerEntry.getValue();
+
+        if (failHigh && failLow) {
+            LOGGER.error("somehow event order is really really really screwed up");
+            return Optional.of(proposedEventTimeUTC); //do nothing, just accept it.
+        }
+
+        if (failHigh) {
+            return  Optional.of(highEntry.getValue() - MINUTE);
+        }
+
+        if (failLow) {
+            return Optional.of(lowerEntry.getValue() + MINUTE);
+        }
+
+        //should also never get here either, but whatever
+        LOGGER.warn("tried suggesting a new time for something that was not originally incosistent");
+        return Optional.of(proposedEventTimeUTC);
     }
 
 }
