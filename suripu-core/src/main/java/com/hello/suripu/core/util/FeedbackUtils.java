@@ -568,8 +568,16 @@ public class FeedbackUtils {
         final Map.Entry<Integer,Long> highEntry = eventsByIntendedOrder.higherEntry(myOrder);
         final Map.Entry<Integer,Long> lowerEntry = eventsByIntendedOrder.lowerEntry(myOrder);
 
-        final boolean failHigh = proposedEventTimeUTC > highEntry.getValue();
-        final boolean failLow = proposedEventTimeUTC < lowerEntry.getValue();
+
+        boolean failHigh = false;
+        if (highEntry != null) {
+            failHigh = proposedEventTimeUTC > highEntry.getValue();
+        }
+
+        boolean failLow = false;
+        if (lowerEntry != null) {
+            failLow = proposedEventTimeUTC < lowerEntry.getValue();
+        }
 
         if (failHigh && failLow) {
             LOGGER.error("somehow event order is really really really screwed up");

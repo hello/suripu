@@ -53,8 +53,51 @@ public class FeedbackUtilsTest {
 
         TestCase.assertTrue(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks),wakeTime3a.get().getMillis(), Event.Type.WAKE_UP,offset));
         TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), wakeTime3b.get().getMillis(), Event.Type.WAKE_UP, offset));
-        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks),wakeTime3c.get().getMillis(), Event.Type.WAKE_UP,offset));
+        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), wakeTime3c.get().getMillis(), Event.Type.WAKE_UP, offset));
 
+        final Map<Event.Type,Long> eventTimesByType = FeedbackUtils.getFeedbackAsNewTimesByType(ImmutableList.copyOf(timelineFeedbacks),offset);
+
+        final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTypeBasedOnIntendedOrdering(eventTimesByType,wakeTime3c.get().getMillis(),feedback3c.eventType);
+
+        TestCase.assertTrue(suggestedTime.isPresent());
+        TestCase.assertTrue(suggestedTime.get().equals(wakeTime3a.get().getMillis()));
+    }
+
+    @Test
+    public void TestConsistencyEdgeCases() {
+        final FeedbackUtils feedbackUtils = new FeedbackUtils();
+
+        final int offset = 3600000; // + 1 hour
+
+        final TimelineFeedback feedback1 = TimelineFeedback.create("2015-04-15","22:42","22:46",Event.Type.SLEEP.name());
+        final TimelineFeedback feedback2 = TimelineFeedback.create("2015-04-15","04:41","04:48",Event.Type.WAKE_UP.name());
+        final TimelineFeedback feedback3 = TimelineFeedback.create("2015-04-15","04:40","04:47",Event.Type.OUT_OF_BED.name());
+        final TimelineFeedback feedback4 = TimelineFeedback.create("2015-04-15","22:40","22:50",Event.Type.IN_BED.name());
+
+        final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
+        timelineFeedbacks.add(feedback1);
+        timelineFeedbacks.add(feedback2);
+
+        final Optional<DateTime> feedback1Time = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback1,offset);
+        final Optional<DateTime> feedback2Time = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback2,offset);
+        final Optional<DateTime> feedback3Time = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback3,offset);
+        final Optional<DateTime> feedback4Time = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback4,offset);
+
+        final Map<Event.Type,Long> eventTimesByType = FeedbackUtils.getFeedbackAsNewTimesByType(ImmutableList.copyOf(timelineFeedbacks),offset);
+
+        {
+            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTypeBasedOnIntendedOrdering(eventTimesByType, feedback3Time.get().getMillis(), feedback3.eventType);
+
+            TestCase.assertTrue(suggestedTime.isPresent());
+            TestCase.assertTrue(suggestedTime.get().equals(feedback2Time.get().plusMinutes(1).getMillis()));
+
+        }
+
+        {
+            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTypeBasedOnIntendedOrdering(eventTimesByType, feedback4Time.get().getMillis(), feedback4.eventType);
+            TestCase.assertTrue(suggestedTime.isPresent());
+            TestCase.assertTrue(suggestedTime.get().equals(feedback1Time.get().minusMinutes(1).getMillis()));
+        }
     }
 
     @Test
