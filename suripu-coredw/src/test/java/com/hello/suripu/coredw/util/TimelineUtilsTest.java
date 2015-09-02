@@ -1235,7 +1235,7 @@ public class TimelineUtilsTest extends FixtureTest {
 
     @Test
     public void testRemoveLightsOutBeforeSignificant(){
-        final List<Event> events = new ArrayList<>();
+        final List<Event> events = Lists.newArrayList();
         events.add(Event.createFromType(Event.Type.MOTION, 0, DateTimeConstants.MILLIS_PER_MINUTE, 0,
                 Optional.<String>absent(),
                 Optional.<SleepSegment.SoundInfo>absent(),

@@ -281,7 +281,7 @@ public class TimelineUtils {
         for(final Event event:events){
             // only consider in-bed or sleep as significant
             final Event.Type eType = event.getType();
-            if (eType == Event.Type.IN_BED || eType == Event.Type.SLEEP) {
+            if (Event.Type.IN_BED.equals(eType) || Event.Type.SLEEP.equals(eType)) {
                 return Optional.of(event);
             }
         }
@@ -296,11 +296,11 @@ public class TimelineUtils {
             return events;
         }
 
-        final List<Event> filteredEvents = new ArrayList<>();
+        final List<Event> filteredEvents = Lists.newArrayList();
         for(final Event event:events){
 
             if(event.getStartTimestamp() < significantEvent.get().getStartTimestamp()){
-                if (event.getType() == Event.Type.LIGHTS_OUT) {
+                if (Event.Type.LIGHTS_OUT.equals(event.getType())) {
                     // only keep lights-out if it is within 60 minutes of in-bed/sleep
                     final Long timeDiff = significantEvent.get().getStartTimestamp() - event.getStartTimestamp();
                     if (timeDiff < FILTER_NON_SIGNIFICANT_EVENT_IN_MILLIS)
