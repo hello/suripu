@@ -161,10 +161,10 @@ public class RingProcessor {
 
     protected static boolean isRingTimeFromNextSmartAlarm(final DateTime currentTimeAlignedToStartOfMinute,
                                                           final RingTime nextRingTimeFromWorker){
-        final boolean isCurrentTimeAfterNextRingTime = currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
+        final boolean isNextSmartAlarm = currentTimeAlignedToStartOfMinute.isAfter(nextRingTimeFromWorker.actualRingTimeUTC) == false;
         final boolean isProcessedSmartAlarm = nextRingTimeFromWorker.processed();
 
-        return isCurrentTimeAfterNextRingTime && isProcessedSmartAlarm;
+        return isNextSmartAlarm && isProcessedSmartAlarm;
     }
 
     protected static boolean isCurrentTimeBetweenActualRingTimeAndExpectedRingTime(final DateTime currentTimeAlignedToStartOfMinute,
@@ -182,6 +182,10 @@ public class RingProcessor {
                                                                            final RingTime nextRingTimeFromWorker,
                                                                            final int smartAlarmProcessRangeInMinutes){
         if(!nextRingTimeFromWorker.fromSmartAlarm || !nextRingTimeFromWorker.processed()){
+            LOGGER.debug("from smart alarm {}, processed {}",
+                    !nextRingTimeFromWorker.fromSmartAlarm,
+                    !nextRingTimeFromWorker.processed());
+
             return false;
         }
 
@@ -195,6 +199,10 @@ public class RingProcessor {
         // so we can do progressive processing.
         final boolean currentTimeNotTooCloseToRingTime = currentTimeAlignedToStartOfMinute.plusMinutes(PROGRESSIVE_SAFE_GAP_MIN)
                 .isBefore(nextRingTimeFromWorker.actualRingTimeUTC);
+
+        LOGGER.debug("isCurrentTimeWithinProcessRangeOfNextSmartAlarm {}, currentTimeNotTooCloseToRingTime {}",
+                isCurrentTimeWithinProcessRangeOfNextSmartAlarm,
+                currentTimeNotTooCloseToRingTime);
         return isCurrentTimeWithinProcessRangeOfNextSmartAlarm && currentTimeNotTooCloseToRingTime;
     }
 
@@ -223,6 +231,8 @@ public class RingProcessor {
                     true);
             return Optional.of(progressiveRingTime);
         }
+
+        LOGGER.info("User {} not awake for progressive smart alarm.", accountId);
         return Optional.absent();
     }
 
@@ -242,8 +252,14 @@ public class RingProcessor {
         LOGGER.info("Updating smart alarm for device {}, account {}", userInfo.deviceId, userInfo.accountId);
         // smart alarm computed, but not yet proceed to the actual ring time.
         if (isRingTimeFromNextSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker)) {
+            LOGGER.debug("Ring time from smart alarm {}",
+                    feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST));
+
             if((feature == null || feature.userFeatureActive(FeatureFlipper.PROGRESSIVE_SMART_ALARM, userInfo.accountId, Collections.EMPTY_LIST)) &&
                     hasSufficientTimeToApplyProgressiveSmartAlarm(currentTimeAlignedToStartOfMinute, nextRingTimeFromWorker, smartAlarmProcessAheadInMinutes)){
+                LOGGER.debug("trying update progressive alarm for device {}, account {}",
+                        userInfo.deviceId,
+                        userInfo.accountId);
 
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
@@ -257,7 +273,8 @@ public class RingProcessor {
                             new DateTime(progressiveRingTimeOptional.get().expectedRingTimeUTC, userInfo.timeZone.get()),
                             Optional.of(new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get())),
                             userInfo.timeZone.get());
-                    LOGGER.info("Reset smart alarm with updated progressive smart alarm, original ring time {}, updated ring time {}",
+                    LOGGER.info("Reset smart alarm with updated progressive smart alarm for account {}, original ring time {}, updated ring time {}",
+                            userInfo.accountId,
                             new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
                             new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get()));
                     return progressiveRingTimeOptional.get();
