@@ -9,8 +9,6 @@ import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.SleepStats;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.swing.text.html.Option;
 import java.util.List;
 
 public class SleepMetrics {
