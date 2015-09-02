@@ -1152,9 +1152,14 @@ public class TimelineUtilsTest extends FixtureTest {
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.of(0)));
 
+        events.add(Event.createFromType(Event.Type.IN_BED, 4 * DateTimeConstants.MILLIS_PER_MINUTE, 5 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.of("in bed"),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(0)));
+
         final Optional<Event> firstSignificantEvent = timelineUtils.getFirstSignificantEvent(events);
         assertThat(firstSignificantEvent.isPresent(), is(true));
-        assertThat(firstSignificantEvent.get().getType(), is(Event.Type.LIGHTS_OUT));
+        assertThat(firstSignificantEvent.get().getType(), is(Event.Type.IN_BED));
     }
 
     @Test
@@ -1216,8 +1221,8 @@ public class TimelineUtilsTest extends FixtureTest {
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.of(0)));
 
-        events.add(Event.createFromType(Event.Type.WAKE_UP, 8 * DateTimeConstants.MILLIS_PER_MINUTE, 9 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
-                Optional.<String>absent(),
+        events.add(Event.createFromType(Event.Type.IN_BED, 6 * DateTimeConstants.MILLIS_PER_MINUTE, 7 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.of("In bed"),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.of(0)));
 
@@ -1225,6 +1230,36 @@ public class TimelineUtilsTest extends FixtureTest {
         final List<Event> filteredEvents = timelineUtils.removeEventBeforeSignificant(events);
         assertThat(filteredEvents.size(), is(2));
         assertThat(filteredEvents.get(0).getType(), is(Event.Type.LIGHTS_OUT));
-        assertThat(filteredEvents.get(1).getType(), is(Event.Type.WAKE_UP));
+        assertThat(filteredEvents.get(1).getType(), is(Event.Type.IN_BED));
     }
+
+    @Test
+    public void testRemoveLightsOutBeforeSignificant(){
+        final List<Event> events = new ArrayList<>();
+        events.add(Event.createFromType(Event.Type.MOTION, 0, DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(1)));
+
+        events.add(Event.createFromType(Event.Type.NONE, DateTimeConstants.MILLIS_PER_MINUTE, 2 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(100)));
+
+        events.add(Event.createFromType(Event.Type.LIGHTS_OUT, 3 * DateTimeConstants.MILLIS_PER_MINUTE, 4 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.<String>absent(),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(0)));
+
+        events.add(Event.createFromType(Event.Type.IN_BED, 65 * DateTimeConstants.MILLIS_PER_MINUTE, 66 * DateTimeConstants.MILLIS_PER_MINUTE, 0,
+                Optional.of("In bed"),
+                Optional.<SleepSegment.SoundInfo>absent(),
+                Optional.of(0)));
+
+
+        final List<Event> filteredEvents = timelineUtils.removeEventBeforeSignificant(events);
+        assertThat(filteredEvents.size(), is(1));
+        assertThat(filteredEvents.get(0).getType(), is(Event.Type.IN_BED));
+    }
+
 }
