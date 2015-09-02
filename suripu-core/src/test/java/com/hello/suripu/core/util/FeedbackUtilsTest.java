@@ -29,6 +29,35 @@ public class FeedbackUtilsTest {
     }
 
     @Test
+    public void TestConsistency() {
+        final FeedbackUtils feedbackUtils = new FeedbackUtils();
+
+        final int offset = 3600000; // + 1 hour
+
+        final TimelineFeedback feedback1 = TimelineFeedback.create("2015-04-15","22:41","22:45",Event.Type.IN_BED.name());
+        final TimelineFeedback feedback2 = TimelineFeedback.create("2015-04-15","22:42","22:46",Event.Type.SLEEP.name());
+        final TimelineFeedback feedback4 = TimelineFeedback.create("2015-04-15","04:41","04:48",Event.Type.OUT_OF_BED.name());
+
+        final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
+        timelineFeedbacks.add(feedback1);
+        timelineFeedbacks.add(feedback2);
+        timelineFeedbacks.add(feedback4);
+
+        final TimelineFeedback feedback3a = TimelineFeedback.create("2015-04-15","04:40","04:47",Event.Type.WAKE_UP.name());
+        final TimelineFeedback feedback3b = TimelineFeedback.create("2015-04-15","04:41","04:48",Event.Type.WAKE_UP.name());
+        final TimelineFeedback feedback3c = TimelineFeedback.create("2015-04-15","04:42","04:49",Event.Type.WAKE_UP.name());
+
+        final Optional<DateTime> wakeTime3a = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback3a,offset);
+        final Optional<DateTime> wakeTime3b = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback3b,offset);
+        final Optional<DateTime> wakeTime3c = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback3c,offset);
+
+        TestCase.assertTrue(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks),wakeTime3a.get().getMillis(), Event.Type.WAKE_UP,offset));
+        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), wakeTime3b.get().getMillis(), Event.Type.WAKE_UP, offset));
+        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks),wakeTime3c.get().getMillis(), Event.Type.WAKE_UP,offset));
+
+    }
+
+    @Test
     public void TestFeedbackReprocessing() {
 
         final List<Event> events = new ArrayList<>();

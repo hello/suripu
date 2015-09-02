@@ -1,6 +1,7 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -17,7 +18,9 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PATCH;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
@@ -102,8 +105,18 @@ public class TimelineResource extends BaseResource {
         final Integer offsetMillis = getOffsetMillis(accessToken.accountId, date, timestamp);
         final DateTime oldEventDateTime = new DateTime(timestamp, DateTimeZone.UTC).plusMillis(offsetMillis);
         final String hourMinute = oldEventDateTime.toString(DateTimeFormat.forPattern("HH:mm"));
-
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
+
+
+        final FeedbackUtils feedbackUtils = new FeedbackUtils();
+        final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accessToken.accountId, DateTimeUtil.ymdStringToDateTime(date));
+
+        //events out of order
+        if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timestamp,eventType,offsetMillis)) {
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
+        }
+
+
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
@@ -140,6 +153,15 @@ public class TimelineResource extends BaseResource {
         final DateTime correctEvent = new DateTime(timestamp, DateTimeZone.UTC).plusMillis(offsetMillis);
         final String hourMinute = correctEvent.toString(DateTimeFormat.forPattern("HH:mm"));
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
+
+        final FeedbackUtils feedbackUtils = new FeedbackUtils();
+        final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accessToken.accountId, DateTimeUtil.ymdStringToDateTime(date));
+
+        //events out of order
+        if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timestamp,eventType,offsetMillis)) {
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
+        }
+
 
         // Correct event means feedback = prediction
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
