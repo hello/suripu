@@ -201,11 +201,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         switch (discardReason){
             case TIMESPAN_TOO_SHORT:
                 LOGGER.info("Tracker motion span too short for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
+                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             case NOT_ENOUGH_DATA:
                 LOGGER.info("Not enough tracker motion seen for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA));
+                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             case NO_DATA:
                 LOGGER.info("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);

@@ -80,12 +80,6 @@ public class TimelineResource extends BaseResource {
     @Path("/{date}")
     public Timeline getTimelineForNight(@Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken,
                                         @PathParam("date") final String night) {
-
-        if (!isTimelineV2Enabled(accessToken.accountId)) {
-            LOGGER.warn("Timeline V2 isn't enabled for {}", accessToken.accountId);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
         final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
         if(!timeline.isPresent()) {
@@ -94,7 +88,8 @@ public class TimelineResource extends BaseResource {
 
         timelineLogDAO.putTimelineLog(accessToken.accountId, timeline.get().log);
         // That's super ugly. Need to find a more elegant way to write this
-        return Timeline.fromV1(timeline.get().timelines.get(0));
+        final TimelineResult timelineResult = timeline.get();
+        return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
     }
 
 
