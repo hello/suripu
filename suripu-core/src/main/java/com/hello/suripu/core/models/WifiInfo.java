@@ -1,13 +1,8 @@
 package com.hello.suripu.core.models;
 
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
-import com.hello.suripu.core.db.WifiInfoDynamoDB;
-
-import java.util.Map;
 
 public class WifiInfo {
 
@@ -28,19 +23,19 @@ public class WifiInfo {
         Condition(final String value) {
             this.value = value;
         }
-    }
 
-    private static Condition getCondition(final Integer rssi) {
-        if (rssi == RSSI_NONE) {
-            return Condition.NONE;
+        private static Condition fromRssi(final Integer rssi) {
+            if (rssi == RSSI_NONE) {
+                return Condition.NONE;
+            }
+            else if (rssi <= RSSI_LOW_CEILING) {
+                return Condition.BAD;
+            }
+            else if (rssi <= RSSI_MEDIUM_CEILING) {
+                return Condition.FAIR;
+            }
+            return Condition.GOOD;
         }
-        else if (rssi <= RSSI_LOW_CEILING) {
-            return Condition.BAD;
-        }
-        else if (rssi <= RSSI_MEDIUM_CEILING) {
-            return Condition.FAIR;
-        }
-        return Condition.GOOD;
     }
 
     @JsonProperty("sense_id")
@@ -71,19 +66,10 @@ public class WifiInfo {
                                   @JsonProperty("ssid") final String ssid,
                                   @JsonProperty("rssi") final Integer rssi,
                                   @JsonProperty("last_updated") final Long lastUpdated) {
-        return new WifiInfo(senseId, ssid, rssi, getCondition(rssi), lastUpdated);
+        return new WifiInfo(senseId, ssid, rssi, Condition.fromRssi(rssi), lastUpdated);
     }
 
     public static WifiInfo createEmpty(final String senseId) {
         return WifiInfo.create(senseId, DEFAULT_SSID, DEFAULT_RSSI, 0L);
-    }
-
-    public static Optional<WifiInfo> createFromDynamoDBItem(final Map<String, AttributeValue> item) {
-        return Optional.of(WifiInfo.create(
-            item.get(WifiInfoDynamoDB.SENSE_ATTRIBUTE_NAME).getS(),
-            item.get(WifiInfoDynamoDB.SSID_ATTRIBUTE_NAME).getS(),
-            Integer.valueOf(item.get(WifiInfoDynamoDB.RSSI_ATTRIBUTE_NAME).getN()),
-            Long.valueOf(item.get(WifiInfoDynamoDB.LAST_UPDATED_ATTRIBUTE_NAME).getN()))
-        );
     }
 }

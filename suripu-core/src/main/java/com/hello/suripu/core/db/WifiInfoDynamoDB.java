@@ -57,7 +57,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
                 LOGGER.warn("Sense {} does not have wifi info", senseId);
                 return Optional.absent();
             }
-            return WifiInfo.createFromDynamoDBItem(item);
+            return createWifiInfofromDynamoDBItem(item);
         } catch (AmazonServiceException ase) {
             LOGGER.error("Failed to get wifi info for {}", senseId);
             return Optional.absent();
@@ -67,15 +67,11 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
 
     @Override
     public Boolean put(final WifiInfo wifiInfo) {
-        final Map<String, AttributeValue> attributes = new HashMap<>();
-        attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.senseId));
-        attributes.put(SSID_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.ssid));
-        attributes.put(RSSI_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(wifiInfo.rssi)));
-        attributes.put(LAST_UPDATED_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(wifiInfo.lastUpdated)));
+
 
         final PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(wifiTableName)
-                .withItem(attributes);
+                .withItem(createDynamoDBItemFromWifiInfo(wifiInfo));
 
         try {
             final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
@@ -92,7 +88,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-            new KeySchemaElement().withAttributeName(SENSE_ATTRIBUTE_NAME).withKeyType(KeyType.HASH)
+                new KeySchemaElement().withAttributeName(SENSE_ATTRIBUTE_NAME).withKeyType(KeyType.HASH)
         );
 
         request.withAttributeDefinitions(
@@ -106,5 +102,23 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
+    }
+
+    public static Optional<WifiInfo> createWifiInfofromDynamoDBItem(final Map<String, AttributeValue> item) {
+        return Optional.of(WifiInfo.create(
+                        item.get(WifiInfoDynamoDB.SENSE_ATTRIBUTE_NAME).getS(),
+                        item.get(WifiInfoDynamoDB.SSID_ATTRIBUTE_NAME).getS(),
+                        Integer.valueOf(item.get(WifiInfoDynamoDB.RSSI_ATTRIBUTE_NAME).getN()),
+                        Long.valueOf(item.get(WifiInfoDynamoDB.LAST_UPDATED_ATTRIBUTE_NAME).getN()))
+        );
+    }
+
+    public Map<String, AttributeValue> createDynamoDBItemFromWifiInfo(final WifiInfo wifiInfo) {
+        final Map<String, AttributeValue> attributes = new HashMap<>();
+        attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.senseId));
+        attributes.put(SSID_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.ssid));
+        attributes.put(RSSI_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(wifiInfo.rssi)));
+        attributes.put(LAST_UPDATED_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(wifiInfo.lastUpdated)));
+        return attributes;
     }
 }
