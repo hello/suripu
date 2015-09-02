@@ -1,8 +1,13 @@
 package com.hello.suripu.core.models;
 
 
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
+import com.hello.suripu.core.db.WifiInfoDynamoDB;
+
+import java.util.Map;
 
 public class WifiInfo {
 
@@ -25,6 +30,19 @@ public class WifiInfo {
         }
     }
 
+    private static Condition getCondition(final Integer rssi) {
+        if (rssi == RSSI_NONE) {
+            return Condition.NONE;
+        }
+        else if (rssi <= RSSI_LOW_CEILING) {
+            return Condition.BAD;
+        }
+        else if (rssi <= RSSI_MEDIUM_CEILING) {
+            return Condition.FAIR;
+        }
+        return Condition.GOOD;
+    }
+
     @JsonProperty("sense_id")
     public final String senseId;
 
@@ -40,7 +58,6 @@ public class WifiInfo {
     @JsonProperty("last_updated")
     public final Long lastUpdated;
 
-    @JsonCreator
     private WifiInfo(final String senseId, final String ssid, final Integer rssi, final Condition condition, final Long lastUpdated) {
         this.senseId = senseId;
         this.ssid = ssid;
@@ -49,7 +66,11 @@ public class WifiInfo {
         this.lastUpdated = lastUpdated;
     }
 
-    public static WifiInfo create(final String senseId, final String ssid, final Integer rssi, final Long lastUpdated) {
+    @JsonCreator
+    public static WifiInfo create(@JsonProperty("sense_id") final String senseId,
+                                  @JsonProperty("ssid") final String ssid,
+                                  @JsonProperty("rssi") final Integer rssi,
+                                  @JsonProperty("last_updated") final Long lastUpdated) {
         return new WifiInfo(senseId, ssid, rssi, getCondition(rssi), lastUpdated);
     }
 
@@ -57,18 +78,12 @@ public class WifiInfo {
         return WifiInfo.create(senseId, DEFAULT_SSID, DEFAULT_RSSI, 0L);
     }
 
-    private static Condition getCondition(final Integer rssi) {
-        if (rssi == RSSI_NONE) {
-            return Condition.NONE;
-        }
-        else if (rssi <= RSSI_LOW_CEILING) {
-            return Condition.BAD;
-        }
-        else if (rssi <= RSSI_MEDIUM_CEILING) {
-            return Condition.FAIR;
-        }
-        else {
-            return Condition.GOOD;
-        }
+    public static Optional<WifiInfo> createFromDynamoDBItem(final Map<String, AttributeValue> item) {
+        return Optional.of(WifiInfo.create(
+            item.get(WifiInfoDynamoDB.SENSE_ATTRIBUTE_NAME).getS(),
+            item.get(WifiInfoDynamoDB.SSID_ATTRIBUTE_NAME).getS(),
+            Integer.valueOf(item.get(WifiInfoDynamoDB.RSSI_ATTRIBUTE_NAME).getN()),
+            Long.valueOf(item.get(WifiInfoDynamoDB.LAST_UPDATED_ATTRIBUTE_NAME).getN()))
+        );
     }
 }

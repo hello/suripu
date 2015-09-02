@@ -10,8 +10,7 @@ public interface WifiInfoDAO {
      * @param senseId String
      * @return WifiInfo
      */
-    WifiInfo get(String senseId);
-    Optional<WifiInfo> getStrict(String senseId);
+    Optional<WifiInfo> get(String senseId);
 
     /**
      *

@@ -28,10 +28,10 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(WifiInfoDynamoDB.class);
 
-    private final static String SENSE_ATTRIBUTE_NAME = "sense_id";
-    private final static String SSID_ATTRIBUTE_NAME = "ssid";
-    private final static String RSSI_ATTRIBUTE_NAME = "rssi";
-    private final static String LAST_UPDATED_ATTRIBUTE_NAME = "last_updated";
+    public final static String SENSE_ATTRIBUTE_NAME = "sense_id";
+    public final static String SSID_ATTRIBUTE_NAME = "ssid";
+    public final static String RSSI_ATTRIBUTE_NAME = "rssi";
+    public final static String LAST_UPDATED_ATTRIBUTE_NAME = "last_updated";
 
 
     private final AmazonDynamoDB dynamoDBClient;
@@ -43,32 +43,26 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
     }
 
     @Override
-    public WifiInfo get(final String senseId) {
-        return getRemotely(senseId, Boolean.FALSE).get();
-    }
-
-    @Override
-    public Optional<WifiInfo> getStrict(final String senseId) {
-        return getRemotely(senseId, Boolean.TRUE);
-    }
-
-    private Optional<WifiInfo> getRemotely(final String senseId, final Boolean strict) {
+    public Optional<WifiInfo> get(final String senseId) {
         final HashMap<String, AttributeValue> key = Maps.newHashMap();
         key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
         final GetItemRequest getItemRequest = new GetItemRequest()
                 .withTableName(wifiTableName)
                 .withKey(key);
 
-        final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
-        final Map<String, AttributeValue> item = getItemResult.getItem();
-        if (item == null) {
-            if (strict) {
+        try {
+            final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
+            final Map<String, AttributeValue> item = getItemResult.getItem();
+            if (item == null) {
                 LOGGER.warn("Sense {} does not have wifi info", senseId);
                 return Optional.absent();
             }
-            return Optional.of(WifiInfo.createEmpty(senseId));
+            return WifiInfo.createFromDynamoDBItem(item);
+        } catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to get wifi info for {}", senseId);
+            return Optional.absent();
         }
-        return Optional.of(WifiInfo.create(senseId, item.get(SSID_ATTRIBUTE_NAME).getS(), Integer.valueOf(item.get(RSSI_ATTRIBUTE_NAME).getN()), Long.valueOf(item.get(LAST_UPDATED_ATTRIBUTE_NAME).getN())));
+
     }
 
     @Override
