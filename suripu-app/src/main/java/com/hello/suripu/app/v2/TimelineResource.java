@@ -3,6 +3,7 @@ package com.hello.suripu.app.v2;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
@@ -53,6 +54,7 @@ public class TimelineResource extends BaseResource {
 
     private final TimelineProcessor timelineProcessor;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
+    private final TimelineLogDAO timelineLogDAO;
     private final FeedbackDAO feedbackDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -60,11 +62,13 @@ public class TimelineResource extends BaseResource {
 
     public TimelineResource(final TimelineDAODynamoDB timelineDAODynamoDB,
                             final TimelineProcessor timelineProcessor,
+                            final TimelineLogDAO timelineLogDAO,
                             final FeedbackDAO feedbackDAO,
                             final TrackerMotionDAO trackerMotionDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
+        this.timelineLogDAO = timelineLogDAO;
         this.feedbackDAO = feedbackDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
@@ -81,6 +85,8 @@ public class TimelineResource extends BaseResource {
         if(!timeline.isPresent()) {
             return Timeline.createEmpty(targetDate);
         }
+
+        timelineLogDAO.putTimelineLog(accessToken.accountId, timeline.get().log);
         // That's super ugly. Need to find a more elegant way to write this
         final TimelineResult timelineResult = timeline.get();
         return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
