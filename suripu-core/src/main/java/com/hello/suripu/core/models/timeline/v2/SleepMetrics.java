@@ -1,14 +1,12 @@
 package com.hello.suripu.core.models.timeline.v2;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Insight;
 import com.hello.suripu.core.models.SleepStats;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 public class SleepMetrics {
@@ -33,21 +31,15 @@ public class SleepMetrics {
     }
 
     public static SleepMetrics create(final String name, final Optional<Long> value, final Unit unit, final CurrentRoomState.State.Condition condition) {
-        final Optional<Long> metricValue = value
-                .transform(new Function<Long, Optional<Long>>() {
-                    @Nonnull
-                    @Override
-                    public Optional<Long> apply(@Nonnull Long v1Value) {
-                        // v1Values default to 0, but what we really want is to know if it was calculated or not and thus using
-                        // Optionals inside SleepStats would be ideal. Since that model is highly depended on, changing those
-                        // default values might have a higher impact than we might like for now so we will convert inside v2
-                        if (v1Value == 0L && (unit == Unit.TIMESTAMP || unit == Unit.MINUTES)) {
-                            return Optional.absent();
-                        }
-                        return Optional.of(v1Value);
-                    }
-                })
-                .or(Optional.<Long>absent()); // required to handle outcome of .transform
+        final Optional<Long> metricValue;
+        // v1Values default to 0, but what we really want is to know if it was calculated or not and thus using
+        // Optionals inside SleepStats would be ideal. Since that model is highly depended on, changing those
+        // default values might have a higher impact than we might like for now so we will convert inside v2
+        if (value.or(0L) == 0L && (unit == Unit.TIMESTAMP || unit == Unit.MINUTES)) {
+            metricValue = Optional.absent();
+        } else {
+            metricValue = value;
+        }
         return new SleepMetrics(name, metricValue, unit, condition);
     }
 
