@@ -112,15 +112,15 @@ public class InsightProcessor {
 
         //generate insight for test users - completely controlled by FF on/off
         if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
-            generateTestInsights(accountId, deviceId);
+            this.generateTestInsights(accountId, deviceId);
         }
 
         //generate insight for all users
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
-            generateNewUserInsights(accountId, deviceId, accountAge);
+            this.generateNewUserInsights(accountId, deviceId, accountAge);
         } else {
-            generateGeneralWeeklyInsights(accountId, deviceId);
-            generateGeneralInsights(accountId, deviceId);
+            this.generateGeneralWeeklyInsights(accountId, deviceId);
+            this.generateGeneralInsights(accountId, deviceId);
         }
     }
 
@@ -133,7 +133,7 @@ public class InsightProcessor {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        InsightCard.Category categoryToGenerate;
+        final InsightCard.Category categoryToGenerate;
         switch (accountAge) {
             case 1:
                 categoryToGenerate = InsightCard.Category.LIGHT;
@@ -153,7 +153,7 @@ public class InsightProcessor {
 
         if (!recentCategories.contains(categoryToGenerate)) {
             LOGGER.debug("Generating NEW user category {} insight for account id {}", categoryToGenerate, accountId);
-            generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
+            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
 
     }
@@ -194,8 +194,9 @@ public class InsightProcessor {
             if (!recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
                 LOGGER.debug("generating insight bed light duration for accountid {}", accountId);
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
+
                 final Integer numCategoriesGeneratedLastWeek = recentCategories.size() + 1;
-                generateRandomOldInsights(accountId, deviceId, numCategoriesGeneratedLastWeek);
+                this.generateRandomOldInsights(accountId, deviceId, numCategoriesGeneratedLastWeek);
                 return;
             }
         }
