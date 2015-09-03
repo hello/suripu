@@ -213,7 +213,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             case LOW_AMP_DATA:
                 LOGGER.debug("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.absent();
+                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             default:
                 break;
@@ -244,7 +244,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             else if (this.hasBayesNetEnabled(accountId)) {
 
                 //get model from DB
-                final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId,date,uuidOptional);
+                final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId, date, uuidOptional);
 
                 if (bayesNetData.isValid()) {
 
