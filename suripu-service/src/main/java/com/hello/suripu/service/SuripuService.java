@@ -54,6 +54,9 @@ import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.hello.suripu.service.cli.CreateDynamoDBTables;
 import com.hello.suripu.service.configuration.SuripuConfiguration;
 import com.hello.suripu.service.modules.RolloutModule;
+import com.hello.suripu.service.registration.CommonDevice;
+import com.hello.suripu.service.registration.PillRegistration;
+import com.hello.suripu.service.registration.SenseRegistration;
 import com.hello.suripu.service.resources.AudioResource;
 import com.hello.suripu.service.resources.CheckResource;
 import com.hello.suripu.service.resources.LogsResource;
@@ -238,13 +241,11 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
 
         environment.addResource(receiveResource);
-        environment.addResource(new RegisterResource(deviceDAO,
-                tokenStore,
-                kinesisLoggerFactory,
-                senseKeyStore,
-                mergedUserInfoDynamoDB,
-                groupFlipper,
-                configuration.getDebug()));
+
+        final CommonDevice commonDevice = new CommonDevice(tokenStore, senseKeyStore);
+        final SenseRegistration senseRegistration = SenseRegistration.create(deviceDAO, commonDevice);
+        final PillRegistration pillRegistration = PillRegistration.create(deviceDAO, mergedUserInfoDynamoDB, commonDevice);
+        environment.addResource(new RegisterResource(senseRegistration, pillRegistration, configuration.getDebug()));
 
 
         final DataLogger senseLogs = kinesisLoggerFactory.get(QueueName.LOGS);

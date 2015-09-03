@@ -15,7 +15,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * Created by pangwu on 5/4/15.
  */
-public class RegistrationLoggerTest {
+public class RegistrationLoggerKinesisTest {
     private static final String testSenseId = "test sense";
 
 
@@ -27,7 +27,7 @@ public class RegistrationLoggerTest {
 
     private void testException(final Exception exception){
         final DataLogger dataLogger = DataLoggerTestHelper.mockDataLogger();
-        final RegistrationLogger logger = RegistrationLogger.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
+        final RegistrationLogger logger = RegistrationLoggerKinesis.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
 
         writeALog(logger);
         DataLoggerTestHelper.stubPutAnyException(dataLogger, testSenseId,
@@ -54,7 +54,7 @@ public class RegistrationLoggerTest {
     @Test
     public void testCommit(){
         final DataLogger dataLogger = DataLoggerTestHelper.mockDataLogger();
-        final RegistrationLogger logger = RegistrationLogger.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
+        final RegistrationLoggerKinesis logger = RegistrationLoggerKinesis.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
         writeALog(logger);
         DataLoggerTestHelper.stubPut(dataLogger, testSenseId, logger.toByteArray(), "");
         assertThat(logger.commit(), is(true));
@@ -70,7 +70,7 @@ public class RegistrationLoggerTest {
     @Test
     public void testCommitLogMessageTooLarge(){
         final DataLogger dataLogger = DataLoggerTestHelper.mockDataLogger();
-        final RegistrationLogger logger = RegistrationLogger.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
+        final RegistrationLoggerKinesis logger = RegistrationLoggerKinesis.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
         writeMoreThan20KToLogger(logger);
         DataLoggerTestHelper.stubPut(dataLogger, testSenseId, logger.toByteArray(), "");
         assertThat(logger.commit(), is(false));
@@ -79,7 +79,7 @@ public class RegistrationLoggerTest {
     @Test
     public void testStartItemIs1MillisEarlier(){
         final DataLogger dataLogger = DataLoggerTestHelper.mockDataLogger();
-        final RegistrationLogger logger = RegistrationLogger.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
+        final RegistrationLoggerKinesis logger = RegistrationLoggerKinesis.create(testSenseId, PairAction.PAIR_MORPHEUS, "127.0.0.1", dataLogger);
         writeALog(logger);  // trigger the start write
         final byte[] bytes = logger.toByteArray();
         try {
