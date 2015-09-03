@@ -61,6 +61,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -334,6 +335,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
 
             final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
+
+            for (final Timeline timeline : timelines) {
+                if (timeline.score.equals(0)) {
+                    return Optional.of(TimelineResult.createEmpty(English.TIMELINE_INVALID_SCORE, true));
+                }
+            }
 
             final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
 
