@@ -162,7 +162,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
         );
     }
 
-    public Map<String, AttributeValue> createDynamoDBItemFromWifiInfo(final WifiInfo wifiInfo) {
+    public static Map<String, AttributeValue> createDynamoDBItemFromWifiInfo(final WifiInfo wifiInfo) {
         final Map<String, AttributeValue> attributes = new HashMap<>();
         attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.senseId));
         attributes.put(SSID_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.ssid));
