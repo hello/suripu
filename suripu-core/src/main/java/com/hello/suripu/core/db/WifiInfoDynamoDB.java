@@ -24,6 +24,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.WifiInfo;
+import com.hello.suripu.core.util.DateTimeUtil;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,9 +151,9 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
             return Optional.absent();
         }
 
-        final Long lastUpdated = item.containsKey(LAST_UPDATED_ATTRIBUTE_NAME)
-            ? Long.valueOf(item.get(LAST_UPDATED_ATTRIBUTE_NAME).getN())
-            : 0L;
+        final DateTime lastUpdated = item.containsKey(LAST_UPDATED_ATTRIBUTE_NAME)
+            ? DateTime.parse(item.get(LAST_UPDATED_ATTRIBUTE_NAME).getS(), DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))
+            : DateTime.now(DateTimeZone.UTC);
         return Optional.of(WifiInfo.create(
             item.get(SENSE_ATTRIBUTE_NAME).getS(),
             item.get(SSID_ATTRIBUTE_NAME).getS(),
@@ -163,7 +167,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
         attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.senseId));
         attributes.put(SSID_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.ssid));
         attributes.put(RSSI_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(wifiInfo.rssi)));
-        attributes.put(LAST_UPDATED_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(wifiInfo.lastUpdated)));
+        attributes.put(LAST_UPDATED_ATTRIBUTE_NAME, new AttributeValue().withS(wifiInfo.lastUpdated.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))));
         return attributes;
     }
 }
