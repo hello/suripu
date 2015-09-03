@@ -16,10 +16,10 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.translations.English;
+import com.hello.suripu.core.util.AlarmUtils;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,9 +118,8 @@ public class AlarmResource {
                           @PathParam("client_time_utc") long clientTime,
                           final List<Alarm> alarms){
 
-        final Long now = DateTime.now().getMillis();
-        final Long timeDiff =  now - clientTime;
-        if(Math.abs(timeDiff) > DateTimeConstants.MILLIS_PER_MINUTE){
+        final DateTime now = DateTime.now();
+        if(!AlarmUtils.isWithinReasonableBounds(now, clientTime)) {
             LOGGER.error("account_id {} set alarm failed, client time too off.( was {}, now is {}", token.accountId, clientTime, now);
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
                     new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), English.ERROR_CLOCK_OUT_OF_SYNC)).build()
