@@ -338,7 +338,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             for (final Timeline timeline : timelines) {
                 if (timeline.score.equals(0)) {
-                    return Optional.of(TimelineResult.createEmpty(English.TIMELINE_INVALID_SCORE, true));
+                    return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
                 }
             }
 
