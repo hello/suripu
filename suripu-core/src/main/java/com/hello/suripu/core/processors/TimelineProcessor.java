@@ -549,8 +549,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, offsetMillis);
 
         //MOVE EVENTS BASED ON FEEDBACK
-        final FeedbackUtils.ReprocessedEvents reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents),extraEvents, offsetMillis);
+        FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
 
+        if (this.hasTimelineOrderEnforcement(accountId)) {
+            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, ImmutableList.copyOf(sleepEvents), extraEvents, offsetMillis);
+
+        }
+        else {
+            reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedbackTheOldWay(feedbackList, ImmutableList.copyOf(sleepEvents), extraEvents, offsetMillis);
+        }
 
         // PARTNER MOTION
         final List<PartnerMotionEvent> partnerMotionEvents = getPartnerMotionEvents(sleepEventsFromAlgorithm.fallAsleep, sleepEventsFromAlgorithm.wakeUp, ImmutableList.copyOf(motionEvents), partnerMotions);

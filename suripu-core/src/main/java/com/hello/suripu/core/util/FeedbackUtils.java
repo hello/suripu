@@ -356,8 +356,8 @@ public class FeedbackUtils {
         return new ReprocessedEvents(ImmutableList.copyOf(mainEvents),ImmutableList.copyOf(Collections.EMPTY_LIST));
     }
 
-    /*
-    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
+
+    public ReprocessedEvents reprocessEventsBasedOnFeedbackTheOldWay(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
 
         // get events by time
         final  List<EventWithTime> feedbackEventByOriginalTime = getFeedbackEventsWithOriginalTime(timelineFeedbackList, offsetMillis);
@@ -482,7 +482,7 @@ public class FeedbackUtils {
         return new ReprocessedEvents(ImmutableList.copyOf(newAlgEvents),ImmutableList.copyOf(newExtraEvents));
 
     }
-*/
+
 
     static private Integer eventTypeToOrder(final Event.Type type) {
         int order = -1;
