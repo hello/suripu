@@ -127,8 +127,8 @@ public class AlarmResource {
         }
 
         final List<DeviceAccountPair> deviceAccountMap = this.deviceDAO.getSensesForAccountId(token.accountId);
-        if(deviceAccountMap.size() == 0){
-            LOGGER.error("Account {} tries to set alarm without connected to a Morpheus.", token.accountId);
+        if(deviceAccountMap.isEmpty()){
+            LOGGER.error("Account {} tries to set alarm without connected to a Sense.", token.accountId);
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
