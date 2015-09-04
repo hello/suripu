@@ -61,6 +61,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -343,11 +344,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = Collections.EMPTY_LIST;
             }
 
-            final List<Timeline> timelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
+            final PopulatedTimelines populateTimelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
+
+            //something was wrong with the combination of sleep/wake events + data in interpretation
+            if (!populateTimelines.isValidSleepScore) {
+                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
+            }
 
             final TimelineLog log = new TimelineLog(algorithm,version,currentTime.getMillis(),targetDate.getMillis());
 
-            return Optional.of(TimelineResult.create(timelines, log));
+            return Optional.of(TimelineResult.create(populateTimelines.timelines, log));
         }
         catch (Exception e) {
             LOGGER.error(e.toString());
@@ -501,8 +507,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     }
 
+    private static class PopulatedTimelines {
+        public final List<Timeline> timelines;
+        public final boolean isValidSleepScore;
 
-    public List<Timeline> populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, final ImmutableList<Event> extraEvents,
+        public PopulatedTimelines(List<Timeline> timelines, boolean isValidSleepScore) {
+            this.timelines = timelines;
+            this.isValidSleepScore = isValidSleepScore;
+        }
+    }
+
+
+    public PopulatedTimelines populateTimeline(final long accountId,final DateTime date,final DateTime targetDate, final DateTime endDate, final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm, final ImmutableList<Event> extraEvents,
                                            final OneDaysSensorData sensorData) {
 
         // compute lights-out and sound-disturbance events
@@ -686,6 +702,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
+        boolean isValidSleepScore = sleepScore > 0;
+
+        //if there's feedback, sleep score can never be invalid
+        if (!feedbackList.isEmpty()) {
+            isValidSleepScore = true;
+        }
+
         final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
 
         LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
@@ -695,8 +718,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
-        final List<Timeline> timelines = Lists.newArrayList(timeline);
-        return timelines;
+        return new PopulatedTimelines(Lists.newArrayList(timeline),isValidSleepScore);
     }
 
     /*
