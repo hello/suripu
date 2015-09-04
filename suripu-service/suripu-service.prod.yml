@@ -168,7 +168,7 @@ dynamodb:
     sense_key_store : key_store
     sync_response_commands : prod_response_commands
     teams : teams
-    calibration: calibration
+    calibration: prod_calibration
 
   endpoints:
       alarm_info : http://dynamodb.us-east-1.amazonaws.com
