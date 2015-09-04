@@ -685,7 +685,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             sleepScore = 0;
         }
 
-        boolean isValidSleepScore = sleepScore <= 0;
+        boolean isValidSleepScore = sleepScore > 0;
 
         //if there's feedback, sleep score can never be invalid
         if (!feedbackList.isEmpty()) {
