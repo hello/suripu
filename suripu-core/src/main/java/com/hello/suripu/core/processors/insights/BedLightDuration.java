@@ -27,13 +27,13 @@ import java.util.List;
 public class BedLightDuration {
     private static final Logger LOGGER = LoggerFactory.getLogger(BedLightDuration.class);
 
-    private static final int NIGHT_START_HOUR_LOCAL = 21; // 9pm
-    private static final int NIGHT_END_HOUR_LOCAL = 4; // 4am
+    private static final Integer NIGHT_START_HOUR_LOCAL = 21; // 9pm
+    private static final Integer NIGHT_END_HOUR_LOCAL = 4; // 4am
 
-    private static final float LIGHT_ON_LEVEL = 5.0f;  // in lux
+    private static final Float LIGHT_ON_LEVEL = 5.0f;  // in lux
 
-    private static final int OFFLINE_HOURS = 17; // num hours after night end and before next night start. If set OFFLINE_HOURS<length of night hours, sameDay function will need to change
-    private static final int OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
+    private static final Integer OFFLINE_HOURS = 17; // num hours after night end and before next night start. If set OFFLINE_HOURS<length of night hours, sameDay function will need to change
+    private static final Integer OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
 
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
@@ -48,7 +48,7 @@ public class BedLightDuration {
             return Optional.absent();
         }
 
-        final int avgLightOn = getInsightsHelper(deviceDatas, accountId);
+        final Integer avgLightOn = getInsightsHelper(deviceDatas, accountId);
         return scoreCardBedLightDuration(avgLightOn, accountId);
     }
 
@@ -68,20 +68,21 @@ public class BedLightDuration {
     }
 
     @VisibleForTesting
-    public static final int computeAverage(final List<Integer> data) {
+    public static final Integer computeAverage(final List<Integer> data) {
         // compute average value
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final Integer lightOn : data) {
             stats.addValue(lightOn);
         }
-        return (int) stats.getMean();
+
+        return new Integer((int) stats.getMean());
     }
 
     /**
      * Splits timeseries into buckets, where each bucket contains no light-off times exceeding offMinutesThreshold. Gets length of time of last bucket which is light on before bed.
      */
     @VisibleForTesting
-    public static Integer findLightOnDurationForDay(final List<DeviceData> data, final int offMinutesThreshold, final Long accountId) {
+    public static Integer findLightOnDurationForDay(final List<DeviceData> data, final Integer offMinutesThreshold, final Long accountId) {
 
         if (data.size() <= 1) {
             return 0;
@@ -146,7 +147,7 @@ public class BedLightDuration {
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
         //Grab all night-time data for past week
-        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, (int) LIGHT_ON_LEVEL, queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, LIGHT_ON_LEVEL.intValue() , queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
     }
 
     private static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
@@ -164,7 +165,7 @@ public class BedLightDuration {
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard> scoreCardBedLightDuration(final int avgLightOn, final Long accountId) {
+    public static Optional<InsightCard> scoreCardBedLightDuration(final Integer avgLightOn, final Long accountId) {
         final Text text;
         if (avgLightOn <= 60) {
             return Optional.absent();
