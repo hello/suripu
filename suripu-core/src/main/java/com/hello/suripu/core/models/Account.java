@@ -234,13 +234,13 @@ public class Account {
             return this;
         }
 
-        @JsonIgnore
+        @JsonProperty("created")
         public Builder withCreated(final Long created) {
             this.created = new DateTime(created);
             return this;
         }
 
-        @JsonProperty("created")
+        @JsonIgnore
         public Builder withCreated(final DateTime created) {
             this.created = created;
             return this;

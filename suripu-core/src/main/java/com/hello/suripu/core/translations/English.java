@@ -14,7 +14,7 @@ public class English {
     public final static String SUNRISE_MESSAGE = "Rise and shine.";
     public final static String IN_BED_MESSAGE = "You went to bed.";
     public final static String OUT_OF_BED_MESSAGE = "You got out of bed.";
-    public final static String LIGHT_MESSAGE = "Your room lit up.";
+    public final static String LIGHT_MESSAGE = "There was a light disturbance.";
     public final static String LIGHTS_OUT_MESSAGE = "The lights went out in your room.";
     public final static String MOTION_MESSAGE = "You were moving around quite a bit.";
     public final static String PARTNER_MOTION_MESSAGE = "You and your partner were both moving around.";
@@ -185,6 +185,7 @@ public class English {
 
 
     public final static String TIMELINE_UNAVAILABLE = "Your timeline is currently unavailable. Please try again later.";
+    public final static String FEEDBACK_INCONSISTENT = "Please update your timeline events to be in the correct order.";
 
     public final static String ERROR_CLOCK_OUT_OF_SYNC = "Your device's time is significantly different from our reference time. From your device's Settings app, please enable automatic Date & Time, or enter the correct time manually.";
 }
