@@ -85,4 +85,8 @@ public class FeatureFlippedProcessor {
     protected Boolean hasCalibrationEnabled(final String senseId) {
         return featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasTimelineOrderEnforcement(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
 }
