@@ -73,6 +73,7 @@ public class TimelineUtils {
     private static final long PRESLEEP_WINDOW_IN_MILLIS = 900000; // 15 mins
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
+    private static final long FILTER_NON_SIGNIFICANT_EVENT_IN_MILLIS = 3600000; // 60 mins
 
     // for sound
     private static final int DEFAULT_QUIET_START_HOUR = 23; // 11pm
@@ -278,7 +279,9 @@ public class TimelineUtils {
     }
     public Optional<Event> getFirstSignificantEvent(final List<Event> events){
         for(final Event event:events){
-            if(event.getType() != Event.Type.NONE && event.getType() != Event.Type.MOTION){
+            // only consider in-bed or sleep as significant
+            final Event.Type eType = event.getType();
+            if (Event.Type.IN_BED.equals(eType) || Event.Type.SLEEP.equals(eType)) {
                 return Optional.of(event);
             }
         }
@@ -286,33 +289,23 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
-    public boolean shouldRemoveEventsBeforeSignificantEvent(final Optional<Event> significantEvent,
-                                                                   final List<Event> events){
-        if(!significantEvent.isPresent()){
-            return false;
-        }
-
-        final Event firstEvent = events.get(0);
-        final Event lastEvent = events.get(events.size() - 1);
-        final Long eventSpanMillis = lastEvent.getEndTimestamp() - firstEvent.getStartTimestamp();
-
-        if(significantEvent.get().getStartTimestamp() - firstEvent.getStartTimestamp() > eventSpanMillis / 3){
-            return false;
-        }
-
-        return true;
-    }
-
     public List<Event> removeEventBeforeSignificant(final List<Event> events){
         final Optional<Event> significantEvent = getFirstSignificantEvent(events);
-        final boolean shouldRemoveEvents = shouldRemoveEventsBeforeSignificantEvent(significantEvent, events);
-        if(!shouldRemoveEvents){
+        if (!significantEvent.isPresent()) {
+            // nothing to remove
             return events;
         }
 
-        final List<Event> filteredEvents = new ArrayList<>();
+        final List<Event> filteredEvents = Lists.newArrayList();
         for(final Event event:events){
+
             if(event.getStartTimestamp() < significantEvent.get().getStartTimestamp()){
+                if (Event.Type.LIGHTS_OUT.equals(event.getType())) {
+                    // only keep lights-out if it is within 60 minutes of in-bed/sleep
+                    final Long timeDiff = significantEvent.get().getStartTimestamp() - event.getStartTimestamp();
+                    if (timeDiff < FILTER_NON_SIGNIFICANT_EVENT_IN_MILLIS)
+                        filteredEvents.add(event);
+                }
                 continue;
             }
 

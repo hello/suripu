@@ -63,11 +63,11 @@ public class SleepMetricsTest {
 
         assertThat(sleepMetrics.get("total_sleep").value, is(Optional.of(330L)));
         assertThat(sleepMetrics.get("sound_sleep").value, is(Optional.of(106L)));
-        assertThat(sleepMetrics.get("time_to_sleep").value, is(Optional.of(0L)));
+        assertThat(sleepMetrics.get("time_to_sleep").value, is(Optional.<Long>absent()));
         assertThat(sleepMetrics.get("times_awake").value, is(Optional.of(3L)));
 
-        assertThat(sleepMetrics.get("fell_asleep").value, is(Optional.of(0L)));
-        assertThat(sleepMetrics.get("woke_up").value, is(Optional.of(0L)));
+        assertThat(sleepMetrics.get("fell_asleep").value, is(Optional.<Long>absent()));
+        assertThat(sleepMetrics.get("woke_up").value, is(Optional.<Long>absent()));
 
         assertThat(sleepMetrics.get("temperature").value, is(Optional.<Long>absent()));
         assertThat(sleepMetrics.get("sound").value, is(Optional.<Long>absent()));

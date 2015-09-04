@@ -14,7 +14,7 @@ public class English {
     public final static String SUNRISE_MESSAGE = "Rise and shine.";
     public final static String IN_BED_MESSAGE = "You went to bed.";
     public final static String OUT_OF_BED_MESSAGE = "You got out of bed.";
-    public final static String LIGHT_MESSAGE = "Your room lit up.";
+    public final static String LIGHT_MESSAGE = "There was a light disturbance.";
     public final static String LIGHTS_OUT_MESSAGE = "The lights went out in your room.";
     public final static String MOTION_MESSAGE = "You were moving around quite a bit.";
     public final static String PARTNER_MOTION_MESSAGE = "You and your partner were both moving around.";

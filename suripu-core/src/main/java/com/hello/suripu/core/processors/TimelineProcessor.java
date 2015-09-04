@@ -213,7 +213,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             case LOW_AMP_DATA:
                 LOGGER.debug("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.absent();
+                return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             default:
                 break;
@@ -244,7 +244,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             else if (this.hasBayesNetEnabled(accountId)) {
 
                 //get model from DB
-                final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId,date,uuidOptional);
+                final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId, date, uuidOptional);
 
                 if (bayesNetData.isValid()) {
 
@@ -320,6 +320,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                         sensorData.allSensorSampleList.get(Sensor.LIGHT),
                         sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
 
+                //make sure all four events are present, otherwise we fail with a message indicating that there's not enough data
+                if (sleepEventsFromAlgorithmOptional.isPresent()) {
+                    final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = sleepEventsFromAlgorithmOptional.get();
+                    for (final Optional<Event> eventOptional : sleepEventsFromAlgorithm.toList()) {
+                        if (!eventOptional.isPresent()) {
+                            LOGGER.info("backup algorithm did not produce all four events, account_id = {} and day = {}", accountId, targetDate);
+                            return Optional.of(TimelineResult.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
+                        }
+                    }
+                }
             }
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
@@ -413,7 +423,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 }
             }
             else if (this.hasHmmPartnerFilterEnabled(accountId)) {
-                LOGGER.info("using bayesian partner filter");
+                LOGGER.info("using hmm partner filter");
                 try {
                     trackerMotions.addAll(
                             partnerDataUtils.partnerFilterWithDurationsDiffHmm(
