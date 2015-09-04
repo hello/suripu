@@ -50,9 +50,9 @@ public class FeedbackUtilsTest {
         final Optional<DateTime> wakeTime3b = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback3b,offset);
         final Optional<DateTime> wakeTime3c = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback3c,offset);
 
-        TestCase.assertTrue(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks),wakeTime3a.get().getMillis(), Event.Type.WAKE_UP,offset));
-        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), wakeTime3b.get().getMillis(), Event.Type.WAKE_UP, offset));
-        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), wakeTime3c.get().getMillis(), Event.Type.WAKE_UP, offset));
+        TestCase.assertTrue(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks),feedback3a,offset));
+        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), feedback3b, offset));
+        TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), feedback3c, offset));
 
         final Map<Event.Type,Long> eventTimesByType = FeedbackUtils.getFeedbackAsNewTimesByType(ImmutableList.copyOf(timelineFeedbacks),offset);
 

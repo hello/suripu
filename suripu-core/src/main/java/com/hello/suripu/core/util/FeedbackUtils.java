@@ -521,15 +521,23 @@ public class FeedbackUtils {
     }
 
     //given a bunch of feedback events, and a proposed new event, make sure that they appear in the right order, or return false
-    public boolean checkEventOrdering(final ImmutableList<TimelineFeedback> existingFeedbacks,final long proposedEventTimeUTC, final Event.Type proposedEventType, final int tzOffset) {
+    public boolean checkEventOrdering(final ImmutableList<TimelineFeedback> existingFeedbacks,final TimelineFeedback proposedFeedback, final int tzOffset) {
         if (existingFeedbacks.isEmpty()) {
             return true;
         }
 
+        final Optional<DateTime> proposedFeedbackTimeOptional = convertFeedbackToDateTimeByNewTime(proposedFeedback,tzOffset);
+
+        if (!proposedFeedbackTimeOptional.isPresent()) {
+            return false; //invalid time somehow
+        }
+
+        final long proposedEventTimeUTC = proposedFeedbackTimeOptional.get().withZone(DateTimeZone.UTC).getMillis();
+
         //guarantee that there are only the four events (there should not be duplicates, and this will just pick one of the dupes if there happens to be one)
         final Map<Event.Type,Long> algTypesByTime = getFeedbackAsNewTimesByType(existingFeedbacks, tzOffset);
 
-        return checkEventOrdering(algTypesByTime,proposedEventTimeUTC,proposedEventType,tzOffset);
+        return checkEventOrdering(algTypesByTime,proposedEventTimeUTC,proposedFeedback.eventType,tzOffset);
 
     }
 
