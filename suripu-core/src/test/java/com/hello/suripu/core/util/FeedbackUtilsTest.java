@@ -8,7 +8,6 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,7 +56,7 @@ public class FeedbackUtilsTest {
 
         final Map<Event.Type,Long> eventTimesByType = FeedbackUtils.getFeedbackAsNewTimesByType(ImmutableList.copyOf(timelineFeedbacks),offset);
 
-        final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTypeBasedOnIntendedOrdering(eventTimesByType,wakeTime3c.get().getMillis(),feedback3c.eventType);
+        final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(eventTimesByType, wakeTime3c.get().getMillis(), feedback3c.eventType);
 
         TestCase.assertTrue(suggestedTime.isPresent());
         TestCase.assertTrue(suggestedTime.get().equals(wakeTime3a.get().getMillis()));
@@ -86,7 +85,7 @@ public class FeedbackUtilsTest {
         final Map<Event.Type,Long> eventTimesByType = FeedbackUtils.getFeedbackAsNewTimesByType(ImmutableList.copyOf(timelineFeedbacks),offset);
 
         {
-            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTypeBasedOnIntendedOrdering(eventTimesByType, feedback3Time.get().getMillis(), feedback3.eventType);
+            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(eventTimesByType, feedback3Time.get().getMillis(), feedback3.eventType);
 
             TestCase.assertTrue(suggestedTime.isPresent());
             TestCase.assertTrue(suggestedTime.get().equals(feedback2Time.get().plusMinutes(1).getMillis()));
@@ -94,7 +93,7 @@ public class FeedbackUtilsTest {
         }
 
         {
-            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTypeBasedOnIntendedOrdering(eventTimesByType, feedback4Time.get().getMillis(), feedback4.eventType);
+            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(eventTimesByType, feedback4Time.get().getMillis(), feedback4.eventType);
             TestCase.assertTrue(suggestedTime.isPresent());
             TestCase.assertTrue(suggestedTime.get().equals(feedback1Time.get().minusMinutes(1).getMillis()));
         }
