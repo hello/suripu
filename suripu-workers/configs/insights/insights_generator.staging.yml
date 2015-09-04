@@ -163,6 +163,11 @@ preferences_db:
   region: us-east-1
   table_name: preferences
 
+sleep_stats_db:
+    endpoint : http://dynamodb.us-east-1.amazonaws.com
+    region : us-east-1
+    table_name : sleep_stats
+
 kinesis_logger:
   stream_name: dev-logs
   enabled : false
