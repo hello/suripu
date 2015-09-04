@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
@@ -72,8 +73,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                 .withSenseDAOs(deviceDataDAO, deviceDAO)
                 .withTrackerMotionDAO(trackerMotionDAO)
                 .withInsightsDAO(trendsInsightsDAO)
-                .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB)
-                .withSleepStatsDAODynamoDB(sleepStatsDAODynamoDB)
+                .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(lightData)
                 .withWakeStdDevData(wakeStdDevData)

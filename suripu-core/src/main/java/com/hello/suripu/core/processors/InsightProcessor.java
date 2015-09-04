@@ -17,6 +17,7 @@ import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
+import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.SleepMotion;
@@ -32,7 +33,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +54,7 @@ public class InsightProcessor {
     private static final int RECENT_DAYS = 7; // last 7 days
     private static final int NEW_ACCOUNT_THRESHOLD = 2;
     private static final int DAYS_ONE_WEEK = 7;
+    private static final int NUM_INSIGHTS_ALLOWED_PER_WEEK = 2;
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
@@ -109,10 +110,17 @@ public class InsightProcessor {
 
         final Long deviceId = deviceIdOptional.get();
 
+        //generate insight for test users - completely controlled by FF on/off
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_TESTING, accountId, Collections.EMPTY_LIST)) {
+            this.generateTestInsights(accountId, deviceId);
+        }
+
+        //generate insight for all users
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
-            generateNewUserInsights(accountId, deviceId, accountAge);
+            this.generateNewUserInsights(accountId, deviceId, accountAge);
         } else {
-            generateGeneralInsights(accountId, deviceId);
+            this.generateGeneralWeeklyInsights(accountId, deviceId);
+            this.generateGeneralInsights(accountId, deviceId);
         }
     }
 
@@ -125,7 +133,7 @@ public class InsightProcessor {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        InsightCard.Category categoryToGenerate;
+        final InsightCard.Category categoryToGenerate;
         switch (accountAge) {
             case 1:
                 categoryToGenerate = InsightCard.Category.LIGHT;
@@ -145,9 +153,30 @@ public class InsightProcessor {
 
         if (!recentCategories.contains(categoryToGenerate)) {
             LOGGER.debug("Generating NEW user category {} insight for account id {}", categoryToGenerate, accountId);
-            generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
+            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerate);
         }
 
+    }
+
+    private void generateGeneralWeeklyInsights(final Long accountId, final Long deviceId) {
+        //Generate some Insights weekly
+        final Integer dayOfWeek = DateTime.now().getDayOfWeek();
+        LOGGER.debug("The day of week is {}", dayOfWeek);
+
+        switch (dayOfWeek) {
+            case 6:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
+                    return;
+                }
+                else if (!generateWeeklyFeatureAllowed(accountId, InsightCard.Category.WAKE_VARIANCE)) {
+                    return;
+                }
+                LOGGER.debug("generating insight wake variance for accountid {}", accountId);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.WAKE_VARIANCE);
+                break;
+            default:
+                return;
+        }
     }
 
     /**
@@ -155,23 +184,44 @@ public class InsightProcessor {
      * @param accountId
      */
     private void generateGeneralInsights(final Long accountId, final Long deviceId) {
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+        if (recentCategories.size() >= NUM_INSIGHTS_ALLOWED_PER_WEEK) {
+            return;
+        }
+
+        //logic for generating current Insight
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
+            if (!recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
+                LOGGER.debug("generating insight bed light duration for accountid {}", accountId);
+                this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
+
+                final Integer numCategoriesGeneratedLastWeek = recentCategories.size() + 1;
+                this.generateRandomOldInsights(accountId, deviceId, numCategoriesGeneratedLastWeek);
+                return;
+            }
+        }
+
+        generateRandomOldInsights(accountId, deviceId, recentCategories.size());
+    }
+
+    private void generateRandomOldInsights(final Long accountId, final Long deviceId, final Integer numCategoriesGeneratedLastWeek) {
+        if (numCategoriesGeneratedLastWeek >= NUM_INSIGHTS_ALLOWED_PER_WEEK) {
+            return;
+        }
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
-        // randomly select a card that hasn't been generated recently -- TODO when we have all categories
-        final List<InsightCard.Category> eligibleCategories = new ArrayList<>();
+        /* randomly select a card that hasn't been generated recently - TODO when we have all categories
+        final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
         for (final InsightCard.Category category : InsightCard.Category.values()) {
             if (!recentCategories.contains(category)) {
                 eligibleCategories.add(category);
             }
         }
+        */
 
-        if (eligibleCategories.isEmpty()) {
-            LOGGER.debug("No new insights generated: {}", accountId);
-            return;
-        }
+        //Generate some Insights based on day of month - once every 9 days TODO: randomly generate old Insight on day of week if has not been generated in a while
 
-        //Generate some Insights based on day of month - once every 9 days
         final Integer dayOfMonth = DateTime.now().getDayOfMonth();
         LOGGER.debug("The day of the month is {}", dayOfMonth);
 
@@ -193,31 +243,12 @@ public class InsightProcessor {
                 this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.SLEEP_QUALITY);
             }
         }
+    }
 
-
-        //Generate some Insights weekly
-        final Integer dayOfWeek = DateTime.now().getDayOfWeek();
-        LOGGER.debug("The day of week is {}", dayOfWeek);
-        InsightCard.Category categoryToGenerateWeek;
-
-        switch (dayOfWeek) {
-            case 6:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_WAKE_VARIANCE, accountId, Collections.EMPTY_LIST)) {
-                    return;
-                }
-                else if (recentCategories.contains(InsightCard.Category.WAKE_VARIANCE)) {
-                    return;
-                }
-                LOGGER.debug("setting category to generate as wake variance");
-                categoryToGenerateWeek = InsightCard.Category.WAKE_VARIANCE;
-                break;
-            default:
-                return;
-        }
-
-        if (!recentCategories.contains(categoryToGenerateWeek)) {
-            this.generateInsightsByCategory(accountId, deviceId, categoryToGenerateWeek);
-        }
+    private void generateTestInsights(final Long accountId, final Long deviceId) {
+        //Allows for generation of Insight even if it has been recently generated
+        LOGGER.debug("generating insight bed light duration for accountid {}", accountId);
+        this.generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
     }
 
     public void generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
@@ -225,27 +256,50 @@ public class InsightProcessor {
         Optional<InsightCard> insightCardOptional = Optional.absent();
 
         if (category == InsightCard.Category.LIGHT) {
+            LOGGER.debug("for light calling getInsights with accountId {}", accountId);
             insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+        }
 
-        } else if (category == InsightCard.Category.TEMPERATURE) {
+        else if (category == InsightCard.Category.TEMPERATURE) {
             final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
             final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
+            LOGGER.debug("for temperature calling getInsights with accountId {}", accountId);
             insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
+        }
 
-        } else if (category == InsightCard.Category.SLEEP_QUALITY) {
+        else if (category == InsightCard.Category.SLEEP_QUALITY) {
+            LOGGER.debug("for sleep quality (movement) calling getInsights with accountId {}", accountId);
             insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
-        } else if (category == InsightCard.Category.WAKE_VARIANCE) {
-            final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
+        }
 
+        else if (category == InsightCard.Category.WAKE_VARIANCE) {
+            final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
             LOGGER.debug("for wake variance calling getInsights with accountId {} and date {} with numDays {}", accountId, queryEndDate, DAYS_ONE_WEEK);
             insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
         }
+
+        else if (category == InsightCard.Category.BED_LIGHT_DURATION) {
+            LOGGER.debug("for bed light duration calling getInsights with accountId {}", accountId);
+            insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
+        }
+
 
         if (insightCardOptional.isPresent()) {
             // save to dynamo
             LOGGER.debug("Category {} insight card present for account {}, Inserting insight into DynamoDB", category, accountId);
             this.insightsDAODynamoDB.insertInsight(insightCardOptional.get());
         }
+    }
+
+    public Boolean generateWeeklyFeatureAllowed(final Long accountId, final InsightCard.Category insightCategory) {
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+
+        if (recentCategories.contains(insightCategory)) {
+            LOGGER.debug("Accountid {} already generated insight {} in past week. Now not generating new Insight", accountId, insightCategory);
+            return Boolean.FALSE;
+        }
+
+        return Boolean.TRUE;
     }
 
     public Optional<String> getInsightPreviewForCategory(final InsightCard.Category category) {
@@ -292,10 +346,8 @@ public class InsightProcessor {
         private @Nullable AccountPreferencesDAO preferencesDAO;
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
-        private @Nullable TimelineProcessor timelineProcessor;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
-        private @Nullable
-        Map<String, String> insightInfoPreview;
+        private @Nullable Map<String, String> insightInfoPreview;
 
         public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -324,14 +376,12 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withSleepStatsDAODynamoDB(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
-            this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
-            return this;
-        }
-
-        public Builder withDynamoDBDAOs(final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final InsightsDAODynamoDB insightsDAODynamoDB) {
+        public Builder withDynamoDBDAOs(final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
+                                        final InsightsDAODynamoDB insightsDAODynamoDB,
+                                        final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
             this.scoreDAODynamoDB = scoreDAODynamoDB;
             this.insightsDAODynamoDB = insightsDAODynamoDB;
+            this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
             return this;
         }
 
@@ -369,10 +419,12 @@ public class InsightProcessor {
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(insightInfoPreview, "insight info preview can not be null");
 
-            return new InsightProcessor(deviceDataDAO, deviceDAO,
+            return new InsightProcessor(deviceDataDAO,
+                    deviceDAO,
                     trendsInsightsDAO,
                     trackerMotionDAO,
-                    scoreDAODynamoDB, insightsDAODynamoDB,
+                    scoreDAODynamoDB,
+                    insightsDAODynamoDB,
                     sleepStatsDAODynamoDB,
                     preferencesDAO,
                     accountInfoProcessor,

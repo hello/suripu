@@ -164,7 +164,6 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 configuration.getSleepStatsDynamoConfiguration().getTableName(),
                 configuration.getSleepStatsVersion());
 
-
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
