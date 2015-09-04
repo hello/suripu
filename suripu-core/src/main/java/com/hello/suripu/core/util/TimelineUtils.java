@@ -154,10 +154,6 @@ public class TimelineUtils {
 
         final Long trackerId = positiveMotions.get(0).trackerId;
         for(final TrackerMotion trackerMotion : positiveMotions) {
-            if (!trackerMotion.trackerId.equals(trackerId)) {
-                LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
-                break; // if user has multiple pill, only use data from the latest tracker_id
-            }
 
             final MotionEvent motionEvent = new MotionEvent(
                     trackerMotion.timestamp,
