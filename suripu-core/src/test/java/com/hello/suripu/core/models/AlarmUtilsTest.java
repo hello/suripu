@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import com.hello.suripu.core.util.AlarmUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -16,7 +17,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * Created by pangwu on 9/24/14.
  */
-public class AlarmUtilTest {
+public class AlarmUtilsTest {
 
     @Test
     public void testValidAlarms(){
@@ -296,5 +297,40 @@ public class AlarmUtilTest {
         assertThat(actualRingTime.isEmpty(), is(true));
         assertThat(actualRingTime.processed(), is(false));
 
+    }
+
+    @Test
+    public void testClockIsGood() {
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final Long clientTimestamp = now.getMillis();
+        final boolean ok = AlarmUtils.isWithinReasonableBounds(now, clientTimestamp);
+        assertThat(ok, is(true));
+    }
+
+    @Test
+    public void testClockIsGoodOnlyWithAddedOffset() {
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final Long clientTimestamp = now.plusSeconds(65).getMillis();
+        assertThat(AlarmUtils.isWithinReasonableBoundsApproximately(now, clientTimestamp), is(true));
+        assertThat(AlarmUtils.isWithinReasonableBounds(now, clientTimestamp), is(false));
+        assertThat(AlarmUtils.isWithinReasonableBounds(now, clientTimestamp, 5000), is(true));
+    }
+
+
+    @Test
+    public void testClockIsGoodOnlyWithAddedOffsetRedux() {
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final Long clientTimestamp = now.minusSeconds(65).getMillis();
+        assertThat(AlarmUtils.isWithinReasonableBoundsApproximately(now, clientTimestamp), is(true));
+        assertThat(AlarmUtils.isWithinReasonableBounds(now, clientTimestamp), is(false));
+        assertThat(AlarmUtils.isWithinReasonableBounds(now, clientTimestamp, 5000), is(true));
+    }
+
+    @Test
+    public void testClockIsOutOfSync() {
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final Long clientTimestamp = now.plusSeconds(75).getMillis();
+        assertThat(AlarmUtils.isWithinReasonableBoundsApproximately(now, clientTimestamp), is(false));
+        assertThat(AlarmUtils.isWithinReasonableBounds(now, clientTimestamp), is(false));
     }
 }

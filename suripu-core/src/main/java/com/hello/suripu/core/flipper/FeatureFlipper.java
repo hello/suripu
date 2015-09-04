@@ -55,6 +55,7 @@ public class FeatureFlipper {
     public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
     public final static String PRINT_RAW_PB = "print_raw_pb";
     public final static String CALIBRATION = "calibration";
+    public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
 
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";
