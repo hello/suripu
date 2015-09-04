@@ -1,5 +1,6 @@
 package com.hello.suripu.service.registration;
 
+import com.hello.suripu.service.SignedMessage;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Random;
 
 public class SenseSigner {
@@ -18,6 +20,52 @@ public class SenseSigner {
 
     private static final Integer IV_LENGTH = 16;
     private static final Integer SIG_LENGTH = 32;
+
+
+    public static SignedMessage reverseParse(byte[] body) {
+
+
+        /**
+         * Format [PB bytes][IV (16 bytes)][Sig (32 bytes)]
+         *
+         *  On Morpheus
+         *
+         *  1. The protobuf bytes are sha-1'd by Sense
+         *  2. This hash (20 bytes) is padded to be a multiple of 16 bytes (in our case 32 bytes)
+         *  3. Morpheus encrypts the hash with our unique per user shared key – also stored in our DB
+         *
+         *
+         *  On server
+         *
+         *  1. Extract pb body, IV and signature
+         *  2. Sha-1 pb body
+         *  3. Decrypt signature with key
+         *  4. Compare sha
+         *
+         */
+
+        if(body.length < (SIG_LENGTH + IV_LENGTH)) {
+            LOGGER.error("Body length is less than sum of signature and IV");
+            throw new RuntimeException("Invalid content");
+        }
+
+        /*
+                    byteArrayOutputStream.write(IV);
+            byteArrayOutputStream.write(sig);
+            byteArrayOutputStream.write(body);
+         */
+
+        final int bodyStartIndex = IV_LENGTH + SIG_LENGTH;
+        final int sigStartIndex = IV_LENGTH;
+        final int ivStartIndex = 0;
+
+        final byte[] pb = Arrays.copyOfRange(body, bodyStartIndex, body.length) ;
+        final byte[] IV = Arrays.copyOfRange(body, ivStartIndex, sigStartIndex);
+        final byte[] sig = Arrays.copyOfRange(body, sigStartIndex, bodyStartIndex);
+
+        return new SignedMessage(pb, IV, sig, "");
+    }
+
 
     /**
      * Sign message for Sense

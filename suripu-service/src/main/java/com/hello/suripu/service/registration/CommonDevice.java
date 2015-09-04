@@ -81,7 +81,11 @@ public class CommonDevice {
         }
         LOGGER.trace("Key used to sign device {} : {}", senseId, Hex.encodeHexString(keyBytesOptional.get()));
 
-        final Optional<byte[]> signedResponse = SignedMessage.sign(command.toByteArray(), keyBytesOptional.get());
+        final SenseCommandProtos.MorpheusCommand cleanCommand = SenseCommandProtos.MorpheusCommand.newBuilder(command)
+                .clearAccountId()
+                .build();
+
+        final Optional<byte[]> signedResponse = SignedMessage.sign(cleanCommand.toByteArray(), keyBytesOptional.get());
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message for deviceId = {}", senseId);
             BaseResource.throwPlainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");

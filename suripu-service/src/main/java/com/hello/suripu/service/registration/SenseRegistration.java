@@ -89,7 +89,8 @@ public class SenseRegistration implements ResponseSigner {
             final SenseCommandProtos.MorpheusCommand.Builder builder = SenseCommandProtos.MorpheusCommand
                     .newBuilder(command)
                     .setType(SenseCommandProtos.MorpheusCommand.CommandType.MORPHEUS_COMMAND_ERROR)
-                    .setError(errorType);
+                    .setError(errorType)
+                    .clearAccountId();
 
             final String errorMessage = String.format("SQL error %s", sqlExp.getMessage());
             LOGGER.error(errorMessage);
