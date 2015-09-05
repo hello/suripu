@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -152,6 +153,11 @@ public class FeedbackUtils {
 
                 /* turn into event */
                 final Optional<Event> event = fromFeedbackWithAdjustedDateTime(timelineFeedback, optionalDateTime.get(), offsetMillis);
+
+                if (!event.isPresent()) {
+                    continue;
+                }
+
                 final Long timestampUTC = optionalDateTime.get().withZone(DateTimeZone.UTC).getMillis();
 
                 eventTimesByType.put(event.get().getType(), timestampUTC);
@@ -521,15 +527,54 @@ public class FeedbackUtils {
     }
 
     //given a bunch of feedback events, and a proposed new event, make sure that they appear in the right order, or return false
-    public boolean checkEventOrdering(final ImmutableList<TimelineFeedback> existingFeedbacks,final long proposedEventTimeUTC, final Event.Type proposedEventType, final int tzOffset) {
+
+    public boolean checkEventsValidity(final ImmutableList<TimelineFeedback> existingFeedbacks, final int offsetMillis) {
+        for (final TimelineFeedback feedback : existingFeedbacks) {
+
+            if (!checkEventValidity(feedback,offsetMillis)) {
+                return false;
+            }
+
+        }
+
+        return true;
+    }
+
+    public boolean checkEventValidity(final TimelineFeedback feedback, final int offsetMillis) {
+
+        final Optional<DateTime> optionalDateTime = convertFeedbackToDateTimeByNewTime(feedback, offsetMillis);
+
+        if (!optionalDateTime.isPresent()) {
+            return false;
+        }
+
+        final Optional<Event> event = fromFeedbackWithAdjustedDateTime(feedback, optionalDateTime.get(), offsetMillis);
+
+        if (!event.isPresent()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean checkEventOrdering(final ImmutableList<TimelineFeedback> existingFeedbacks,final TimelineFeedback proposedFeedback, final int tzOffset) {
         if (existingFeedbacks.isEmpty()) {
             return true;
         }
 
+        final Optional<DateTime> proposedFeedbackTimeOptional = convertFeedbackToDateTimeByNewTime(proposedFeedback,tzOffset);
+
+        if (!proposedFeedbackTimeOptional.isPresent()) {
+            return false; //invalid time somehow
+        }
+
+        final long proposedEventTimeUTC = proposedFeedbackTimeOptional.get().withZone(DateTimeZone.UTC).getMillis();
+
         //guarantee that there are only the four events (there should not be duplicates, and this will just pick one of the dupes if there happens to be one)
         final Map<Event.Type,Long> algTypesByTime = getFeedbackAsNewTimesByType(existingFeedbacks, tzOffset);
 
-        return checkEventOrdering(algTypesByTime,proposedEventTimeUTC,proposedEventType,tzOffset);
+
+        return checkEventOrdering(algTypesByTime,proposedEventTimeUTC,proposedFeedback.eventType,tzOffset);
 
     }
 

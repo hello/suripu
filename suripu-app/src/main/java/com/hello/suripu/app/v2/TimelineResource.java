@@ -113,11 +113,10 @@ public class TimelineResource extends BaseResource {
         final String hourMinute = oldEventDateTime.toString(DateTimeFormat.forPattern("HH:mm"));
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
 
-
-        checkValidFeedbackOrThrow(accessToken.accountId,date,timestamp,eventType,offsetMillis);
-
-
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
+
+        checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
+
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
         return getTimelineForNight(accessToken, date);
@@ -134,7 +133,7 @@ public class TimelineResource extends BaseResource {
 
         return Response.status(Response.Status.ACCEPTED)
                        .entity(getTimelineForNight(accessToken, date))
-                       .build();
+                .build();
     }
 
     @PUT
@@ -154,11 +153,11 @@ public class TimelineResource extends BaseResource {
         final String hourMinute = correctEvent.toString(DateTimeFormat.forPattern("HH:mm"));
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
 
-
-        checkValidFeedbackOrThrow(accessToken.accountId,date,timestamp,eventType,offsetMillis);
-
         // Correct event means feedback = prediction
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
+
+        checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback,offsetMillis);
+
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
 
         return Response.status(Response.Status.ACCEPTED).build();
@@ -195,17 +194,24 @@ public class TimelineResource extends BaseResource {
         return offsetMillis;
     }
 
-    private void checkValidFeedbackOrThrow(final long accountId, final String date,final long timestampUTC,final Event.Type eventType,final int offsetMillis) {
+    private void checkValidFeedbackOrThrow(final long accountId, final TimelineFeedback timelineFeedback, final int offsetMillis) {
 
+        
         if (!this.hasTimelineOrderEnforcement(accountId)) {
             return;
         }
 
+
         final FeedbackUtils feedbackUtils = new FeedbackUtils();
-        final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accountId, DateTimeUtil.ymdStringToDateTime(date));
+        final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accountId,timelineFeedback.dateOfNight);
+
+        //proposed event is valid
+        if (!feedbackUtils.checkEventValidity(timelineFeedback,offsetMillis)) {
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_AT_INVALID_TIME)).build());
+        }
 
         //events out of order
-        if (!feedbackUtils.checkEventOrdering(existingFeedbacks, timestampUTC,eventType,offsetMillis)) {
+        if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timelineFeedback,offsetMillis)) {
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
         }
 
