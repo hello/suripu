@@ -26,7 +26,7 @@ public class WifiInfo {
             this.value = value;
         }
 
-        private static Condition fromRssi(final Integer rssi) {
+        public static Condition fromRssi(final Integer rssi) {
             if (rssi == RSSI_NONE) {
                 return Condition.NONE;
             }
