@@ -61,7 +61,7 @@ INSERT INTO info_insight_cards (category, image_url, title, text)
 VALUES
  ---
 ('light', 'https://s3.amazonaws.com/hello-data/insights_images/light_1.jpeg',
-'Effects of Environmental Light on Your Sleep',
+'Effects of light in the environment on your sleep',
 'Light influences our internal clock through specialized "light sensitive" cells in the retina of our eyes, which sends messages to the brain that keep us in a 24-hour cycle or the **circadian rhythm**. These are physical, mental and behavioral changes that follow a roughly a 24-hour cycle, responding primarily to light and darkness in our environment.
 
 The increase and decrease of light cues, trigger different chemical reactions our body, causing changes to our physiology and behavior. As evening approaches and the light in our environment recedes, the hormone melatonin begins to rise, the body temperature falls, thus making us less alert and more likely to fall sleep. In the morning light, melatonin levels are low, the body temperature begins to rise, and other chemical shifts, such as a rise in the activating hormone cortisol, then will help us to feel alert and ready for the day.'
@@ -71,7 +71,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 'The temperature of your sleeping environment and how comfortable you feel in it effects the quality of sleep because our brain has an ideal **set point** for body temperature that it is trying to achieve, almost like an internal thermostat. If it’s too cold, or too hot, the body struggles to achieve this set point, hence interrupting sleep. The usual recommendation is to keep the bedroom cool, quiet, & dark, between 65°F (18°C) and 72°F (22°C). However, the perfect room temperature level is different for everyone and should be whatever is most comfortable for the sleeper.'
 ),
 ----
-('sound', '', 'Sound: Ambient Sound or Sudden Loud Noises',
+('sound', '', 'Sound: ambient sound or sudden loud noise',
 'Even while you''re asleep, your brain continues to register and process sounds. A loud noise can interrupt sleep causing you to wake up, shift between stages of sleep, or experience a rise or fall in heart rate and blood pressure. Whether sounds disturb your sleep or not depends on factors such as the stage of sleep you''re in, the time of night, and even your own personal feelings about the sounds themselves. Researchers have seen that we are more likely to wake up when a sound is relevant or emotionally charged and has personal significance. If you have difficulty falling asleep or staying asleep, creating a constant ambient sound could help mask activity from inside and outside your environment allowing a more peaceful slumber.'
 ),
 ----
@@ -113,7 +113,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 '
 ),
 ----
-('workout', '', 'Effects of Exercise on Your Sleep',
+('workout', '', 'Effects of Working Out on Your Sleep',
 'Studies indicate people sleep significantly better and feel more alert during the day if they get **at least 150 minutes** (the national guideline) of **moderate to vigorous** of exercise a week.
 
  Upwards of a 65% improvement in sleep quality is realized through regular exercise. In addition regular exercise relaxes you, lengthens and deepens sleep and you will feel less sleepy during the day, compared to those with less physical activity. Exercise triggers an increase in body temperature, and the post-exercise drop in temperature may also promote falling asleep.
@@ -151,7 +151,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
  However, it is not only those exposed to extreme amounts of stress (like our military personnel for example), who experience difficulties sleeping. Also anxiety produced from a common act of emotional labor (i.e., faking a smile while at work) is sufficient enough to lead to insomnia.'
 ),
 ----
-('sleep_quality', '', 'Amount of Movement During Sleep',
+('sleep_quality', '', 'Amount of Movement during Sleep',
 'Tossing and turning generally occurs during brief interruptions of sleep during the night. Chemical systems in your brain work to paralyze skeletal muscles during rapid eye movement (REM) sleep, keeping you still at night. But simple factors such as high temperature or light levels can lead to restless sleep. Excessive alcohol, heavy meals, and caffeine before bed can also cause tossing and turning in bed. Lastly, serious conditions such as acid reflux, periodic limb movement, and sleep apnea can contribute to high levels of movement during the night.'
 )
 ;
@@ -185,7 +185,7 @@ INSERT INTO info_insight_cards (category, title, text)
 VALUES
  ---
 ('wake_variance',
-'Waking Up to Sleep Better',
+'Waking up to sleep better',
 'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
 );
 
