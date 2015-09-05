@@ -217,3 +217,7 @@ UPDATE info_insight_cards SET title = 'Sleep Duration: What''s the Ideal Amount?
 UPDATE info_insight_cards SET title = 'Effects of Exercise on Your Sleep' WHERE id = 10;
 UPDATE info_insight_cards SET title = 'Waking Up to Sleep Better' WHERE id = 18;
 
+-- 09/04/2015 Text change for sleep_duration
+UPDATE info_insight_cards
+SET text='Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" for the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but the amount you need is also unique to you as an individual.'
+WHERE category='sleep_duration';
