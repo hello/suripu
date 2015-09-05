@@ -196,11 +196,11 @@ public class TimelineResource extends BaseResource {
 
     private void checkValidFeedbackOrThrow(final long accountId, final TimelineFeedback timelineFeedback, final int offsetMillis) {
 
-        /*
+        
         if (!this.hasTimelineOrderEnforcement(accountId)) {
             return;
         }
-        */
+
 
         final FeedbackUtils feedbackUtils = new FeedbackUtils();
         final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accountId,timelineFeedback.dateOfNight);
