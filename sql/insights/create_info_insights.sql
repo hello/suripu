@@ -71,7 +71,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 'The temperature of your sleeping environment and how comfortable you feel in it effects the quality of sleep because our brain has an ideal **set point** for body temperature that it is trying to achieve, almost like an internal thermostat. If it’s too cold, or too hot, the body struggles to achieve this set point, hence interrupting sleep. The usual recommendation is to keep the bedroom cool, quiet, & dark, between 65°F (18°C) and 72°F (22°C). However, the perfect room temperature level is different for everyone and should be whatever is most comfortable for the sleeper.'
 ),
 ----
-('sound', '', 'Sound: ambient sound or sudden loud noise',
+('sound', '', 'Sound: ambient sound or sudden loud noises',
 'Even while you''re asleep, your brain continues to register and process sounds. A loud noise can interrupt sleep causing you to wake up, shift between stages of sleep, or experience a rise or fall in heart rate and blood pressure. Whether sounds disturb your sleep or not depends on factors such as the stage of sleep you''re in, the time of night, and even your own personal feelings about the sounds themselves. Researchers have seen that we are more likely to wake up when a sound is relevant or emotionally charged and has personal significance. If you have difficulty falling asleep or staying asleep, creating a constant ambient sound could help mask activity from inside and outside your environment allowing a more peaceful slumber.'
 ),
 ----
@@ -87,7 +87,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
  Breathing poor quality air while sleeping can result in clogged sinuses, a stuffy nose, headache, or scratchy throat due to the contaminants breathed in during the night.
 '),
 ----
-('sleep_duration', '', 'Sleep Duration: What''s the Ideal Amount?',
+('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
 'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need). Most current guidelines say school-age children should get at least 10 hours of sleep a night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but unique to the individual.'
 ),
 ----
