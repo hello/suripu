@@ -196,12 +196,19 @@ public class TimelineResource extends BaseResource {
 
     private void checkValidFeedbackOrThrow(final long accountId, final TimelineFeedback timelineFeedback, final int offsetMillis) {
 
+        /*
         if (!this.hasTimelineOrderEnforcement(accountId)) {
             return;
         }
+        */
 
         final FeedbackUtils feedbackUtils = new FeedbackUtils();
         final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accountId,timelineFeedback.dateOfNight);
+
+        //proposed event is valid
+        if (!feedbackUtils.checkEventValidity(timelineFeedback,offsetMillis)) {
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_AT_INVALID_TIME)).build());
+        }
 
         //events out of order
         if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timelineFeedback,offsetMillis)) {
