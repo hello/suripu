@@ -12,7 +12,7 @@ public class Calibration {
     private final static Integer DEFAULT_DUST_OFFSET = 0;
     private final static Integer DEFAULT_DUST_CALIBRATION_DELTA = 0;
     private final static Float DUST_CALIBRATION_BASE = 300f;
-    private final static Float DUST_CALIBRATION_K_FACTOR = 1.5f;
+    private final static Float DUST_CALIBRATION_K_FACTOR = 1.3f;
 
     @NotNull
     @JsonProperty("sense_id")

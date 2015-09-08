@@ -2,12 +2,15 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -34,7 +37,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,19 +44,23 @@ import java.util.Map;
 public class RoomConditionsResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
+    private final static ImmutableSet<String> hiddenSensors = ImmutableSet.copyOf(Sets.newHashSet("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
+
     private final AccountDAO accountDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
     private final SenseColorDAO senseColorDAO;
-    private final static ImmutableSet<String> hiddenSensors = ImmutableSet.copyOf(Sets.newHashSet("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
+    private final CalibrationDAO calibrationDAO;
 
-    public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO) {
+
+    public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO, final CalibrationDAO calibrationDAO) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
         this.allowedRangeInSeconds = allowedRangeInSeconds;
         this.senseColorDAO = senseColorDAO;
+        this.calibrationDAO = calibrationDAO;
     }
 
 
@@ -65,15 +71,19 @@ public class RoomConditionsResource extends BaseResource {
     public CurrentRoomState current(@Scope({OAuthScope.SENSORS_BASIC}) final AccessToken token,
                                     @DefaultValue("c") @QueryParam("temp_unit") final String unit) {
 
-        if(isSensorsViewUnavailable(token.accountId)) {
-            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", token.accountId);
-            return CurrentRoomState.empty();
-        }
 
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(token.accountId);
+
         if(!deviceIdPair.isPresent()) {
             LOGGER.warn("Did not find any device_id for account_id = {}", token.accountId);
-            return CurrentRoomState.empty();
+            return CurrentRoomState.empty(false); // at this stage we don't have a Sense id, so we can't use FF.
+        }
+
+        final Boolean hasDust = hasCalibrationEnabled(deviceIdPair.get().externalDeviceId);
+
+        if(isSensorsViewUnavailable(token.accountId)) {
+            LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", token.accountId);
+            return CurrentRoomState.empty(hasDust);
         }
 
         Integer thresholdInMinutes = 15;
@@ -89,7 +99,7 @@ public class RoomConditionsResource extends BaseResource {
 
 
         if(!data.isPresent()) {
-            return CurrentRoomState.empty();
+            return CurrentRoomState.empty(hasDust);
         }
 
         //default -- return the usual
@@ -104,8 +114,10 @@ public class RoomConditionsResource extends BaseResource {
 
         LOGGER.debug("Last device data in db = {}", deviceData);
 
-        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit);
-        return roomState;
+        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit, calibration);
+
+        return roomState.withDust(hasDust);
     }
 
 
@@ -169,8 +181,9 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
+        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId),color);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibration);
     }
 
     @Timed
@@ -207,14 +220,16 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
+        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId),color);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibration);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData());
+        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
     @Timed
@@ -250,13 +265,15 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
+        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibration);
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData());
+        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
     /*
@@ -328,9 +345,11 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceName);
         }
 
+        final Calibration calibration = getCalibration(deviceName);
+
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accessToken.accountId),color);
+                sensor, missingDataDefaultValue(accessToken.accountId),color, calibration);
     }
 
     /*
@@ -369,9 +388,11 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceName);
         }
 
+        final Calibration calibration = getCalibration(deviceName);
+
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accessToken.accountId),color);
+                sensor, missingDataDefaultValue(accessToken.accountId),color, calibration);
     }
 
 
@@ -425,8 +446,10 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
+        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color, calibration);
 
     }
 
@@ -462,9 +485,11 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
+        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accountId),color);
+                sensor, missingDataDefaultValue(accountId),color, calibration);
     }
 
     private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
@@ -497,23 +522,32 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
+        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId),color);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId),color, calibration);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData());
+        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
-    private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData){
-        final Map<Sensor, List<Sample>> displayData = new HashMap<>();
+    private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData, Boolean hasDust){
+        final Map<Sensor, List<Sample>> displayData = Maps.newHashMap();
         displayData.put(Sensor.LIGHT, allSensorData.get(Sensor.LIGHT));
         displayData.put(Sensor.HUMIDITY, allSensorData.get(Sensor.HUMIDITY));
         displayData.put(Sensor.SOUND, allSensorData.get(Sensor.SOUND));
         displayData.put(Sensor.TEMPERATURE, allSensorData.get(Sensor.TEMPERATURE));
-//        displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
+        if(hasDust) {
+            displayData.put(Sensor.PARTICULATES, allSensorData.get(Sensor.PARTICULATES));
+        }
         return displayData;
+    }
+
+    private Calibration getCalibration(final String senseId) {
+        final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(senseId) ? calibrationDAO.getStrict(senseId) : Optional.<Calibration>absent();
+        return optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(senseId);
     }
 }

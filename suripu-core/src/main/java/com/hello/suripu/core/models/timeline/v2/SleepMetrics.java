@@ -31,7 +31,16 @@ public class SleepMetrics {
     }
 
     public static SleepMetrics create(final String name, final Optional<Long> value, final Unit unit, final CurrentRoomState.State.Condition condition) {
-        return new SleepMetrics(name, value, unit, condition);
+        final Optional<Long> metricValue;
+        // v1Values default to 0, but what we really want is to know if it was calculated or not and thus using
+        // Optionals inside SleepStats would be ideal. Since that model is highly depended on, changing those
+        // default values might have a higher impact than we might like for now so we will convert inside v2
+        if (value.or(0L) == 0L && (unit == Unit.TIMESTAMP || unit == Unit.MINUTES)) {
+            metricValue = Optional.absent();
+        } else {
+            metricValue = value;
+        }
+        return new SleepMetrics(name, metricValue, unit, condition);
     }
 
     public static List<SleepMetrics> fromV1(final com.hello.suripu.core.models.Timeline timelineV1) {

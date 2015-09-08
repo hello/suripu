@@ -88,7 +88,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 '),
 ----
 ('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
-'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need). Most current guidelines say school-age children should get at least 10 hours of sleep a night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but unique to the individual.'
+'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but it is unique to the individual.''
 ),
 ----
 ('time_to_sleep', '', 'Sleep Onset',
@@ -189,10 +189,31 @@ VALUES
 'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
 );
 
---jyfan 8/10/2015 Fixed typo with wake_variance card. DELETE ME when done
+--jyfan 8/10/2015 Fix typo with wake_variance card.
 
 UPDATE info_insight_cards SET text=
 'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
-WHERE category='wake_variance'
+WHERE category='wake_variance';
 
--- end DELETE ME
+--jyfan 8/25/2015 Adding bed_light_duration insight category
+
+ALTER TYPE insight_category ADD VALUE 'bed_light_duration';
+
+INSERT INTO info_insight_cards (category, title, text)
+VALUES
+ ---
+('bed_light_duration',
+'Associating Your Bedroom with Sleep',
+'Regularly watching television, using your phone, or engaging in other mentally stimulating activities just before bed can create a subconscious link between your bedroom and staying alert. This often makes it harder to fall asleep when you want to.
+
+On the other hand, reserving your bedroom for sleep and intimacy can create a link between your bedroom and sleep, which will help your body fall asleep more easily when it’s time for bed.'
+);
+
+-- Modify all titles to be title case 08/31/2015
+
+UPDATE info_insight_cards SET title = 'Effects of Ambient Light on Your Sleep' WHERE id = 1;
+UPDATE info_insight_cards SET title = 'Sound: Ambient Sound or Sudden Loud Noises' WHERE id = 3;
+UPDATE info_insight_cards SET title = 'Sleep Duration: What''s the Ideal Amount?' WHERE id = 6;
+UPDATE info_insight_cards SET title = 'Effects of Exercise on Your Sleep' WHERE id = 10;
+UPDATE info_insight_cards SET title = 'Waking Up to Sleep Better' WHERE id = 18;
+

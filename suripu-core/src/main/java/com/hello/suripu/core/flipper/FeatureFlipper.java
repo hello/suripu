@@ -48,7 +48,6 @@ public class FeatureFlipper {
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";
     public final static String NEW_ROOM_CONDITION = "new_room_condition";
-    public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String BAYES_NET_ALGORITHM = "bayes_net_algorithm";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
@@ -56,6 +55,7 @@ public class FeatureFlipper {
     public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
     public final static String PRINT_RAW_PB = "print_raw_pb";
     public final static String CALIBRATION = "calibration";
+    public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
 
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";

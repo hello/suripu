@@ -1,8 +1,10 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
@@ -17,7 +19,9 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.PATCH;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
@@ -53,6 +57,7 @@ public class TimelineResource extends BaseResource {
 
     private final TimelineProcessor timelineProcessor;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
+    private final TimelineLogDAO timelineLogDAO;
     private final FeedbackDAO feedbackDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -60,11 +65,13 @@ public class TimelineResource extends BaseResource {
 
     public TimelineResource(final TimelineDAODynamoDB timelineDAODynamoDB,
                             final TimelineProcessor timelineProcessor,
+                            final TimelineLogDAO timelineLogDAO,
                             final FeedbackDAO feedbackDAO,
                             final TrackerMotionDAO trackerMotionDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
+        this.timelineLogDAO = timelineLogDAO;
         this.feedbackDAO = feedbackDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
@@ -76,19 +83,16 @@ public class TimelineResource extends BaseResource {
     @Path("/{date}")
     public Timeline getTimelineForNight(@Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken,
                                         @PathParam("date") final String night) {
-
-        if(!isTimelineV2Enabled(accessToken.accountId)) {
-            LOGGER.warn("Timeline V2 isn't enabled for {}", accessToken.accountId);
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
-
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
         final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
         if(!timeline.isPresent()) {
             return Timeline.createEmpty(targetDate);
         }
+
+        timelineLogDAO.putTimelineLog(accessToken.accountId, timeline.get().log);
         // That's super ugly. Need to find a more elegant way to write this
-        return Timeline.fromV1(timeline.get().timelines.get(0));
+        final TimelineResult timelineResult = timeline.get();
+        return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
     }
 
 
@@ -107,9 +111,12 @@ public class TimelineResource extends BaseResource {
         final Integer offsetMillis = getOffsetMillis(accessToken.accountId, date, timestamp);
         final DateTime oldEventDateTime = new DateTime(timestamp, DateTimeZone.UTC).plusMillis(offsetMillis);
         final String hourMinute = oldEventDateTime.toString(DateTimeFormat.forPattern("HH:mm"));
-
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
+
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
+
+        checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
+
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
         return getTimelineForNight(accessToken, date);
@@ -126,7 +133,7 @@ public class TimelineResource extends BaseResource {
 
         return Response.status(Response.Status.ACCEPTED)
                        .entity(getTimelineForNight(accessToken, date))
-                       .build();
+                .build();
     }
 
     @PUT
@@ -148,6 +155,9 @@ public class TimelineResource extends BaseResource {
 
         // Correct event means feedback = prediction
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
+
+        checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback,offsetMillis);
+
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
 
         return Response.status(Response.Status.ACCEPTED).build();
@@ -182,5 +192,28 @@ public class TimelineResource extends BaseResource {
         }
 
         return offsetMillis;
+    }
+
+    private void checkValidFeedbackOrThrow(final long accountId, final TimelineFeedback timelineFeedback, final int offsetMillis) {
+
+        
+        if (!this.hasTimelineOrderEnforcement(accountId)) {
+            return;
+        }
+
+
+        final FeedbackUtils feedbackUtils = new FeedbackUtils();
+        final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accountId,timelineFeedback.dateOfNight);
+
+        //proposed event is valid
+        if (!feedbackUtils.checkEventValidity(timelineFeedback,offsetMillis)) {
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_AT_INVALID_TIME)).build());
+        }
+
+        //events out of order
+        if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timelineFeedback,offsetMillis)) {
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
+        }
+
     }
 }
