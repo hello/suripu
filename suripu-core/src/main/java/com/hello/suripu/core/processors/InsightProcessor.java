@@ -324,14 +324,10 @@ public class InsightProcessor {
             return this;
         }
 
-        public Builder withSleepStatsDAODynamoDB(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
-            this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
-            return this;
-        }
-
-        public Builder withDynamoDBDAOs(final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final InsightsDAODynamoDB insightsDAODynamoDB) {
+        public Builder withDynamoDBDAOs(final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB, final InsightsDAODynamoDB insightsDAODynamoDB, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
             this.scoreDAODynamoDB = scoreDAODynamoDB;
             this.insightsDAODynamoDB = insightsDAODynamoDB;
+            this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
             return this;
         }
 
