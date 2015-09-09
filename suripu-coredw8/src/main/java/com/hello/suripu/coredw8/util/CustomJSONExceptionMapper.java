@@ -93,6 +93,15 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
                     .type(MediaType.APPLICATION_JSON)
                     .build();
         }
+
+        if (webAppException.getResponse().getStatus() == 403) {
+            return Response
+                    .status(Response.Status.FORBIDDEN)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new JsonError(403, "Forbidden"))
+                    .build();
+        }
+
         if (webAppException.getResponse().getStatus() == 404) {
             return Response
                     .status(Response.Status.NOT_FOUND)
