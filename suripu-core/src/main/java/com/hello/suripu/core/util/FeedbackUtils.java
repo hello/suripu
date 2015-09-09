@@ -10,7 +10,6 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
-import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -140,8 +139,8 @@ public class FeedbackUtils {
     }
 
     /* returns map of events by event type */
-    public static Map<Event.Type, Long> getFeedbackAsNewTimesByType(final ImmutableList<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
-        final Map<Event.Type, Long> eventTimesByType = Maps.newHashMap();
+    public static Map<Event.Type, Event> getFeedbackAsEventsByType(final ImmutableList<TimelineFeedback> timelineFeedbackList, final Integer offsetMillis) {
+        final Map<Event.Type, Event> eventsByType = Maps.newHashMap();
 
         /* iterate through list*/
         for(final TimelineFeedback timelineFeedback : timelineFeedbackList) {
@@ -158,10 +157,18 @@ public class FeedbackUtils {
                     continue;
                 }
 
-                final Long timestampUTC = optionalDateTime.get().withZone(DateTimeZone.UTC).getMillis();
-
-                eventTimesByType.put(event.get().getType(), timestampUTC);
+                eventsByType.put(event.get().getType(), event.get());
             }
+        }
+
+        return eventsByType;
+    }
+
+    public static Map<Event.Type,Long> getTimesFromEventsMap(final Map<Event.Type, Event> eventsByType) {
+        final Map<Event.Type,Long> eventTimesByType = Maps.newHashMap();
+
+        for (final Map.Entry<Event.Type,Event> event : eventsByType.entrySet()) {
+            eventTimesByType.put(event.getKey(),event.getValue().getStartTimestamp());
         }
 
         return eventTimesByType;
@@ -296,21 +303,29 @@ public class FeedbackUtils {
     }
 
     public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
-        //so there will only ever by one feedback of a given type on a day
-        final Map<Event.Type,Long> algTimesByEvent = getFeedbackAsNewTimesByType(timelineFeedbackList, offsetMillis);
+
+        //there will only ever by one feedback of a given type on a day
+        //and they have priority over alg events
+        final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(timelineFeedbackList, offsetMillis);
+
 
         for (final Event event : algEvents) {
-            if (algTimesByEvent.containsKey(event.getType())) {
+
+            //if alg event is already present in feedback, skip
+            if (eventsByType.containsKey(event.getType())) {
                 continue;
             }
 
 
-            //lovely n^2 algorithm here
-            if (!checkEventOrdering(algTimesByEvent,event.getStartTimestamp(),event.getType(),offsetMillis)) {
-                //ruh-roh, consistency violation
-
+            if (checkEventOrdering(eventsByType,event.getStartTimestamp(),event.getType(),offsetMillis)) {
+                //alles ist gut jawohl, so insert event
+                eventsByType.put(event.getType(), event);
+            }
+            else {
+                //if consistency violation with existing events, then suggest new event time
                 //suggest a new time... this should work unless we are processing an event type that should not be there
-                final Optional<Long> newEventTimeOptional = suggestNewEventTimeBasedOnIntendedOrdering(algTimesByEvent, event.getStartTimestamp(), event.getType());
+
+                final Optional<Long> newEventTimeOptional = suggestNewEventTimeBasedOnIntendedOrdering(getTimesFromEventsMap(eventsByType), event.getStartTimestamp(), event.getType());
 
                 if (!newEventTimeOptional.isPresent()) {
                     continue; //ignore this one
@@ -319,36 +334,20 @@ public class FeedbackUtils {
                 //create new event
                 final Event newEvent = copyEventWithNewTime(event,newEventTimeOptional.get());
 
-                if (!checkEventOrdering(algTimesByEvent,newEvent.getStartTimestamp(),newEvent.getType(),offsetMillis)) {
+                if (!checkEventOrdering(eventsByType,newEvent.getStartTimestamp(),newEvent.getType(),offsetMillis)) {
                     //this should not happen evar.
                     LOGGER.error("suggested event time is not consistent.  bad programmer!");
 
                     //just insert with original timestamp is and continue
-                    algTimesByEvent.put(event.getType(), event.getStartTimestamp());
+                    eventsByType.put(event.getType(), event);
                     continue;
                 }
 
-                //we got this far? that means everything is good, so insert
-                algTimesByEvent.put(newEvent.getType(), newEvent.getStartTimestamp());
+                //we got this far? that means everything is now good, so insert
+                eventsByType.put(newEvent.getType(), newEvent);
             }
         }
 
-
-        //now take the alg events, and insert by the mapped times
-        //the mapped times will be the feedback times, or other adjustments that were made
-        //to enforce consistency
-        final Map<Event.Type,Event> eventsByType = Maps.newHashMap();
-
-        for (final Event event : algEvents) {
-            final Long newTime = algTimesByEvent.get(event.getType());
-
-            if (newTime == null) {
-                LOGGER.error("somehow got a mapped time that was null");
-                continue; //this should never happen
-            }
-
-            eventsByType.put(event.getType(),copyEventWithNewTime(event,newTime));
-        }
 
         //turn events map in to events list
         final List<Event> mainEvents = Lists.newArrayList();
@@ -571,17 +570,18 @@ public class FeedbackUtils {
         final long proposedEventTimeUTC = proposedFeedbackTimeOptional.get().withZone(DateTimeZone.UTC).getMillis();
 
         //guarantee that there are only the four events (there should not be duplicates, and this will just pick one of the dupes if there happens to be one)
-        final Map<Event.Type,Long> algTypesByTime = getFeedbackAsNewTimesByType(existingFeedbacks, tzOffset);
+        final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(existingFeedbacks, tzOffset);
 
 
-        return checkEventOrdering(algTypesByTime,proposedEventTimeUTC,proposedFeedback.eventType,tzOffset);
+        return checkEventOrdering(eventsByType,proposedEventTimeUTC,proposedFeedback.eventType,tzOffset);
 
     }
 
-    //given a bunch of events (from feedback, or from alg), and a proposed new event, make sure that they appear in the right order, or return false
-    private boolean checkEventOrdering(final Map<Event.Type,Long> algTypesByTimeInput,final long proposedEventTimeUTC, final Event.Type proposedEventType, final int tzOffset) {
 
-        final Map<Event.Type,Long> algTypesByTime = Maps.newHashMap(algTypesByTimeInput);
+    //given a bunch of events (from feedback, or from alg), and a proposed new event, make sure that they appear in the right order, or return false
+    private boolean checkEventOrdering(final Map<Event.Type,Event> eventsByType,final long proposedEventTimeUTC, final Event.Type proposedEventType, final int tzOffset) {
+
+        final Map<Event.Type,Long> algTypesByTime = Maps.newHashMap(getTimesFromEventsMap(eventsByType));
 
         algTypesByTime.put(proposedEventType, proposedEventTimeUTC);
 
