@@ -185,7 +185,7 @@ public class English {
 
 
     public final static String TIMELINE_UNAVAILABLE = "Your timeline is currently unavailable. Please try again later.";
-    public final static String FEEDBACK_INCONSISTENT = "This adjustment could not be made because it conflicts previous adjustments.";
+    public final static String FEEDBACK_INCONSISTENT = "This adjustment could not be made because it conflicts with previous adjustments.";
     public final static String FEEDBACK_AT_INVALID_TIME = "This adjustment could not be made because it is too early or too late.";
 
     public final static String ERROR_CLOCK_OUT_OF_SYNC = "Your device's time is significantly different from our reference time. From your device's Settings app, please enable automatic Date & Time, or enter the correct time manually.";
