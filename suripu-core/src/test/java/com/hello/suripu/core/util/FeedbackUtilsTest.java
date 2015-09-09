@@ -54,9 +54,9 @@ public class FeedbackUtilsTest {
         TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), feedback3b, offset));
         TestCase.assertFalse(feedbackUtils.checkEventOrdering(ImmutableList.copyOf(timelineFeedbacks), feedback3c, offset));
 
-        final Map<Event.Type,Long> eventTimesByType = FeedbackUtils.getFeedbackAsNewTimesByType(ImmutableList.copyOf(timelineFeedbacks),offset);
+        final Map<Event.Type,Event> eventsByType = FeedbackUtils.getFeedbackAsEventsByType(ImmutableList.copyOf(timelineFeedbacks), offset);
 
-        final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(eventTimesByType, wakeTime3c.get().getMillis(), feedback3c.eventType);
+        final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(FeedbackUtils.getTimesFromEventsMap(eventsByType), wakeTime3c.get().getMillis(), feedback3c.eventType);
 
         TestCase.assertTrue(suggestedTime.isPresent());
         TestCase.assertTrue(suggestedTime.get().equals(wakeTime3a.get().getMillis()));
@@ -82,10 +82,10 @@ public class FeedbackUtilsTest {
         final Optional<DateTime> feedback3Time = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback3,offset);
         final Optional<DateTime> feedback4Time = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback4,offset);
 
-        final Map<Event.Type,Long> eventTimesByType = FeedbackUtils.getFeedbackAsNewTimesByType(ImmutableList.copyOf(timelineFeedbacks),offset);
+        final Map<Event.Type,Event> eventsByType = FeedbackUtils.getFeedbackAsEventsByType(ImmutableList.copyOf(timelineFeedbacks), offset);
 
         {
-            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(eventTimesByType, feedback3Time.get().getMillis(), feedback3.eventType);
+            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(FeedbackUtils.getTimesFromEventsMap(eventsByType), feedback3Time.get().getMillis(), feedback3.eventType);
 
             TestCase.assertTrue(suggestedTime.isPresent());
             TestCase.assertTrue(suggestedTime.get().equals(feedback2Time.get().plusMinutes(1).getMillis()));
@@ -93,11 +93,12 @@ public class FeedbackUtilsTest {
         }
 
         {
-            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(eventTimesByType, feedback4Time.get().getMillis(), feedback4.eventType);
+            final Optional<Long> suggestedTime = feedbackUtils.suggestNewEventTimeBasedOnIntendedOrdering(FeedbackUtils.getTimesFromEventsMap(eventsByType), feedback4Time.get().getMillis(), feedback4.eventType);
             TestCase.assertTrue(suggestedTime.isPresent());
             TestCase.assertTrue(suggestedTime.get().equals(feedback1Time.get().minusMinutes(1).getMillis()));
         }
     }
+
 
     @Test
     public void TestFeedbackReprocessing() {
@@ -111,6 +112,7 @@ public class FeedbackUtilsTest {
 
 
         events.add(Event.createFromType(Event.Type.SLEEP,t1,t2,offset,Optional.of("FOOBARS"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+        events.add(Event.createFromType(Event.Type.WAKE_UP,t1 + 42,t2 + 42,offset,Optional.of("FOOBARS2"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
 
         /*
 
@@ -130,9 +132,15 @@ public class FeedbackUtilsTest {
         final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
-        final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
+        TestCase.assertTrue(newEvents.mainEvents.size() == 2);
 
-        TestCase.assertEquals(expectedTime, mysleeptime);
+        for (final Event event : newEvents.mainEvents) {
+            if (event.getType().equals(Event.Type.SLEEP)) {
+                final long mysleeptime = event.getStartTimestamp();
+                TestCase.assertEquals(expectedTime, mysleeptime);
+            }
+        }
+
 
     }
 
