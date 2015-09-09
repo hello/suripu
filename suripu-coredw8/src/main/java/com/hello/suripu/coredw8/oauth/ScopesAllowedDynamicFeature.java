@@ -15,11 +15,15 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by jnorgan on 8/21/15.
  */
 public class ScopesAllowedDynamicFeature implements DynamicFeature {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScopesAllowedDynamicFeature.class);
 
     @Override
     public void configure(final ResourceInfo resourceInfo, final FeatureContext configuration) {
@@ -84,6 +88,12 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
                 }
             }
 
+            final AccessToken token = (AccessToken) requestContext.getSecurityContext().getUserPrincipal();
+            LOGGER.warn("Token ({}) not authorized for any of the allowed scopes {}. Account ID: {}, App ID: {}",
+                    token.token,
+                    scopesAllowed,
+                    token.accountId,
+                    token.appId);
             throw new ForbiddenException();
         }
     }
