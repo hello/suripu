@@ -1,5 +1,6 @@
 package com.hello.suripu.core.logging;
 
+import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.models.TimelineLog;
@@ -24,19 +25,27 @@ public class TimelineLogV2 {
     private final LoggingProtos.TimelineLog.Builder builder;
     private final Long accountId; //use for partition
 
-    public static TimelineLogV2 createFromProtobuf (final  String protobufBase64) throws InvalidProtocolBufferException {
+    public static Optional<TimelineLogV2> createFromProtobuf (final  String protobufBase64)  {
         return createFromProtobuf(Base64.decodeBase64(protobufBase64));
     }
 
-    public static TimelineLogV2 createFromProtobuf (final  byte [] protobuf) throws InvalidProtocolBufferException {
-        final LoggingProtos.TimelineLog log = LoggingProtos.TimelineLog.parseFrom(protobuf);
+    public static Optional<TimelineLogV2> createFromProtobuf (final  byte [] protobuf)  {
+        final LoggingProtos.TimelineLog log;
+        try {
+            log = LoggingProtos.TimelineLog.parseFrom(protobuf);
 
-        Long accountId = 0L;
-        if (log.hasAccountId()) {
-            accountId = log.getAccountId();
+            if (!log.hasAccountId()) {
+                return Optional.absent();
+            }
+
+            return Optional.of(new TimelineLogV2(log,log.getAccountId()));
+
+        }
+        catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
         }
 
-        return new TimelineLogV2(log,accountId);
+        return Optional.absent();
     }
 
     public TimelineLogV2(final LoggingProtos.TimelineLog log, final Long accountId) {
@@ -82,6 +91,12 @@ public class TimelineLogV2 {
                 break;
             case NO_DATA:
                 builder.addErrors(LoggingProtos.TimelineLog.ErrorType.NO_DATA);
+                break;
+            case INVALID_SLEEP_SCORE:
+                builder.addErrors(LoggingProtos.TimelineLog.ErrorType.INVALID_SLEEP_SCORE);
+                break;
+            case MISSING_KEY_EVENTS:
+                builder.addErrors(LoggingProtos.TimelineLog.ErrorType.MISSING_KEY_EVENTS);
                 break;
         }
 

@@ -2,7 +2,7 @@ package com.hello.suripu.core.models;
 
 import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import com.hello.suripu.core.preferences.AccountPreference;
+import com.hello.suripu.core.preferences.TemperatureUnit;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ public class TemperatureMsgTest {
     @Test
     public void testMessages() {
         final String message;
-        final String unit = AccountPreference.TemperatureUnit.FAHRENHEIT.toString();
+        final String unit = TemperatureUnit.FAHRENHEIT.toString();
 
         Boolean contains;
 

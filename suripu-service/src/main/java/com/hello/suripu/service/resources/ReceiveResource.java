@@ -1,6 +1,8 @@
 package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.protobuf.TextFormat;
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
@@ -8,6 +10,7 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
@@ -20,6 +23,7 @@ import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.Alarm;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.core.models.UserInfo;
@@ -36,7 +40,7 @@ import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
-import javax.ws.rs.HEAD;
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -88,6 +92,7 @@ public class ReceiveResource extends BaseResource {
 
     private final Meter senseClockOutOfSync;
     private final Meter pillClockOutOfSync;
+    private final CalibrationDAO calibrationDAO;
 
     @Context
     HttpServletRequest request;
@@ -102,7 +107,8 @@ public class ReceiveResource extends BaseResource {
                            final SenseUploadConfiguration senseUploadConfiguration,
                            final OTAConfiguration otaConfiguration,
                            final ResponseCommandsDAODynamoDB responseCommandsDAODynamoDB,
-                           final int ringDurationSec) {
+                           final int ringDurationSec,
+                           final CalibrationDAO calibrationDAO) {
 
         this.keyStore = keyStore;
         this.kinesisLoggerFactory = kinesisLoggerFactory;
@@ -120,6 +126,7 @@ public class ReceiveResource extends BaseResource {
         this.senseClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "sense-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
         this.pillClockOutOfSync = Metrics.newMeter(ReceiveResource.class, "pill-clock-out-sync", "clock-out-of-sync", TimeUnit.SECONDS);
         this.ringDurationSec = ringDurationSec;
+        this.calibrationDAO = calibrationDAO;
     }
 
 
@@ -140,7 +147,7 @@ public class ReceiveResource extends BaseResource {
             debugSenseId = "";
         }
 
-        LOGGER.info("DebugSenseId device_id = {}", debugSenseId);
+        LOGGER.debug("DebugSenseId device_id = {}", debugSenseId);
 
         try {
             data = DataInputProtos.batched_periodic_data.parseFrom(signedMessage.body);
@@ -166,6 +173,11 @@ public class ReceiveResource extends BaseResource {
         final String ipAddress = getIpAddress(request);
         final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
 
+
+        if(featureFlipper.deviceFeatureActive(FeatureFlipper.PRINT_RAW_PB, deviceId, groups)) {
+            LOGGER.debug("RAW_PB for device_id={} {}", deviceId, Hex.encodeHexString(body));
+        }
+
         if(OTAProcessor.isPCH(ipAddress, ipGroups) && !(featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceId, groups))){
             // return 202 to not confuse provisioning script with correct test key
             LOGGER.info("IP {} is from PCH. Return HTTP 202", ipAddress);
@@ -187,23 +199,41 @@ public class ReceiveResource extends BaseResource {
         }
 
 
-        final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorkerMessage = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
+        final List<UserInfo> userInfoList = new ArrayList<>();
+
+        try {
+            userInfoList.addAll(this.mergedInfoDynamoDB.getInfo(data.getDeviceId()));  // get alarm related info from DynamoDB "cache".
+        }catch (Exception ex){
+            LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", data.getDeviceId(), ex.getMessage());
+        }
+        LOGGER.debug("Found {} pairs for device_id = {}", userInfoList.size(), data.getDeviceId());
+
+        final Map<Long, DateTimeZone> accountTimezones = getUserTimeZones(userInfoList);
+        final DataInputProtos.BatchPeriodicDataWorker.Builder batchPeriodicDataWorkerMessageBuilder = DataInputProtos.BatchPeriodicDataWorker.newBuilder()
                 .setData(data)
                 .setReceivedAt(DateTime.now().getMillis())
                 .setIpAddress(ipAddress)
-                .setUptimeInSecond(data.getUptimeInSecond())
-                .build();
+                .setUptimeInSecond(data.getUptimeInSecond());
+
+
+        for(final Long accountId : accountTimezones.keySet()) {
+            final DataInputProtos.AccountMetadata metadata = DataInputProtos.AccountMetadata.newBuilder()
+                    .setAccountId(accountId)
+                    .setTimezone(accountTimezones.get(accountId).getID())
+                    .build();
+            batchPeriodicDataWorkerMessageBuilder.addTimezones(metadata);
+        }
 
         try {
             final DataLogger batchSenseDataLogger = kinesisLoggerFactory.get(QueueName.SENSE_SENSORS_DATA);
-            batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessage.toByteArray());
+            batchSenseDataLogger.put(data.getDeviceId(), batchPeriodicDataWorkerMessageBuilder.build().toByteArray());
         } catch (Exception e) {
             LOGGER.error("IMPORTANT Failed to insert into batch sensors kinesis stream: {}", e.getMessage());
             return plainTextError(Response.Status.SERVICE_UNAVAILABLE, "");
         }
 
         final String tempSenseId = data.hasDeviceId() ? data.getDeviceId() : debugSenseId;
-        return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data);
+        return generateSyncResponse(tempSenseId, data.getFirmwareVersion(), optionalKeyBytes.get(), data, userInfoList);
     }
 
 
@@ -234,19 +264,11 @@ public class ReceiveResource extends BaseResource {
     private byte[] generateSyncResponse(final String deviceName,
                                         final int firmwareVersion,
                                         final byte[] encryptionKey,
-                                        final DataInputProtos.batched_periodic_data batch) {
+                                        final DataInputProtos.batched_periodic_data batch,
+                                        final List<UserInfo> userInfoList) {
         // TODO: Warning, since we query dynamoDB based on user input, the user can generate a lot of
         // requests to break our bank(Assume that Dynamo DB never goes down).
         // May be we should somehow cache these data to reduce load & cost.
-
-        final List<UserInfo> userInfoList = new ArrayList<>();
-
-        try {
-            userInfoList.addAll(this.mergedInfoDynamoDB.getInfo(deviceName));  // get alarm related info from DynamoDB "cache".
-        }catch (Exception ex){
-            LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", deviceName, ex.getMessage());
-        }
-        LOGGER.debug("Found {} pairs", userInfoList.size());
 
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
@@ -272,17 +294,22 @@ public class ReceiveResource extends BaseResource {
             }
 
             // only compute the state for the most recent conditions
+
             if(i == batch.getDataCount() -1) {
+                final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.getStrict(deviceName) : Optional.<Calibration>absent();
+                final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(deviceName);
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
                         roundedDateTime.getMillis(),
                         data.getFirmwareVersion(),
                         DateTime.now(),
-                        2);
+                        2,
+                        calibration);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
-                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState);
-                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState);
+                    final Boolean hasCalibration = featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, deviceName, groups);
+                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, hasCalibration);
+                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState, hasCalibration);
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
                                     roomConditions.ordinal()));
@@ -335,12 +362,15 @@ public class ReceiveResource extends BaseResource {
                     .setRingtonePath(Alarm.Utils.getSoundPathFromSoundId(soundId))
                     .setRingOffsetFromNowInSecond(ringOffsetFromNowInSecond);
             responseBuilder.setAlarm(alarmBuilder.build());
+            responseBuilder.setRingTimeAck(String.valueOf(nextRingTime.actualRingTimeUTC));
             // End generate protobuf for alarm
-            
-            //Perform all OTA checks and compute the update file list (if necessary)
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
-            if(!fileDownloadList.isEmpty()) {
-                responseBuilder.addAllFiles(fileDownloadList);
+
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
+                //Perform all OTA checks and compute the update file list (if necessary)
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
+                if (!fileDownloadList.isEmpty()) {
+                    responseBuilder.addAllFiles(fileDownloadList);
+                }
             }
 
             final AudioControlProtos.AudioControl.Builder audioControl = AudioControlProtos.AudioControl
@@ -363,14 +393,16 @@ public class ReceiveResource extends BaseResource {
                 this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, userInfoList, nextRingTime);
             }
 
-            LOGGER.info("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
+            LOGGER.debug("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
             responseBuilder.setAudioControl(audioControl);
             setPillColors(userInfoList, responseBuilder);
         }else{
             LOGGER.error("NO TIMEZONE IS A BIG DEAL.");
-            final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
-            if(!fileDownloadList.isEmpty()) {
-                responseBuilder.addAllFiles(fileDownloadList);
+            if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
+                if (!fileDownloadList.isEmpty()) {
+                    responseBuilder.addAllFiles(fileDownloadList);
+                }
             }
         }
 
@@ -386,6 +418,11 @@ public class ReceiveResource extends BaseResource {
         if(!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
+        }
+
+        final int responseLength = signedResponse.get().length;
+        if(responseLength > 2048) {
+            LOGGER.warn("response_size too large ({}) for device_id= {}", responseLength, deviceName);
         }
 
         return signedResponse.get();
@@ -515,6 +552,21 @@ public class ReceiveResource extends BaseResource {
         return Optional.absent();
     }
 
+
+    /**
+     * Maps account to timezones
+     * @param userInfoList
+     * @return
+     */
+    private Map<Long, DateTimeZone> getUserTimeZones(final List<UserInfo> userInfoList) {
+        final Map<Long, DateTimeZone> map = Maps.newHashMap();
+        for(final UserInfo info: userInfoList){
+            if(info.timeZone.isPresent()){
+                map.put(info.accountId, info.timeZone.get());
+            }
+        }
+        return ImmutableMap.copyOf(map);
+    }
 
     /**
      * Performs all OTA availability checks and produces an update file list

@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DataScience.JoinedSensorsMinuteData;
 import com.hello.suripu.core.models.DataScience.UserLabel;
 import com.hello.suripu.core.models.Device;
@@ -124,7 +125,8 @@ public class DataScienceResource extends BaseResource {
                     accountId.get(), internalSenseIdOptional.get(),
                     slotDurationMins,
                     missingDataDefaultValue(accountId.get()),
-                    Optional.<Device.Color>absent());
+                    Optional.<Device.Color>absent(),
+                    Calibration.createDefault("dummy-sense"));
             final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
             final TimelineUtils timelineUtils = new TimelineUtils();
             final List<Event> lightEvents = timelineUtils.getLightEventsWithMultipleLightOut(lightData);
@@ -162,7 +164,8 @@ public class DataScienceResource extends BaseResource {
                     accountId.get(), deviceId.get(),
                     slotDurationMins,
                     missingDataDefaultValue(accountId.get()),
-                    Optional.<Device.Color>absent());
+                    Optional.<Device.Color>absent(),
+                    Calibration.createDefault("dummy-sense"));
             final List<Sample> data = sensorData.get(Sensor.valueOf(dataType));
             return data;
         }
@@ -265,7 +268,8 @@ public class DataScienceResource extends BaseResource {
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
                 missingDataDefaultValue,
-                Optional.<Device.Color>absent()
+                Optional.<Device.Color>absent(),
+                Calibration.createDefault("dummy-sense")
         );
 
         final List<Sample> lightSamples = sensorSamples.get(Sensor.LIGHT);

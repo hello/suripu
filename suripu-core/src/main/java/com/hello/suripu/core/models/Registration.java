@@ -139,7 +139,7 @@ public class Registration {
     public static Registration secureAndNormalize(final Registration registration) {
         return new Registration(
                 registration.name,
-                registration.email.toLowerCase(),
+                registration.email.toLowerCase().trim(),
                 PasswordUtil.encrypt(registration.password),
                 registration.age,
                 registration.gender,

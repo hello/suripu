@@ -10018,6 +10018,10 @@ public final class LoggingProtos {
        * <code>MISSING_KEY_EVENTS = 6;</code>
        */
       MISSING_KEY_EVENTS(6, 6),
+      /**
+       * <code>INVALID_SLEEP_SCORE = 7;</code>
+       */
+      INVALID_SLEEP_SCORE(7, 7),
       ;
 
       /**
@@ -10048,6 +10052,10 @@ public final class LoggingProtos {
        * <code>MISSING_KEY_EVENTS = 6;</code>
        */
       public static final int MISSING_KEY_EVENTS_VALUE = 6;
+      /**
+       * <code>INVALID_SLEEP_SCORE = 7;</code>
+       */
+      public static final int INVALID_SLEEP_SCORE_VALUE = 7;
 
 
       public final int getNumber() { return value; }
@@ -10061,6 +10069,7 @@ public final class LoggingProtos {
           case 4: return LOW_AMPLITUDE_DATA;
           case 5: return PARTNER_FILTER_REJECTED_MY_DATA;
           case 6: return MISSING_KEY_EVENTS;
+          case 7: return INVALID_SLEEP_SCORE;
           default: return null;
         }
       }
@@ -11060,7 +11069,7 @@ public final class LoggingProtos {
       "\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020P",
       "rovisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_" +
       "number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004" +
-      " \001(\t\"\236\004\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
+      " \001(\t\"\267\004\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
       "\022$\n\034timestamp_when_log_generated\030\002 \001(\003\022\031" +
       "\n\021night_of_timeline\030\003 \001(\003\0220\n\022intended_al" +
       "gorithm\030\004 \001(\0162\024.TimelineLog.AlgType\022,\n\016u" +
@@ -11069,12 +11078,13 @@ public final class LoggingProtos {
       "e\022\026\n\016log_uuid_upper\030\007 \001(\003\022\026\n\016log_uuid_lo" +
       "wer\030\010 \001(\003\"E\n\007AlgType\022\010\n\004NONE\020\000\022\n\n\006WUPANG",
       "\020\001\022\007\n\003HMM\020\002\022\n\n\006VOTING\020\003\022\017\n\013LAYERED_HMM\020\004" +
-      "\"\272\001\n\tErrorType\022\036\n\032INTENDED_ALGORITHM_FAI" +
+      "\"\323\001\n\tErrorType\022\036\n\032INTENDED_ALGORITHM_FAI" +
       "LURE\020\000\022\026\n\022TIMESPAN_TOO_SHORT\020\001\022\023\n\017NOT_EN" +
       "OUGH_DATA\020\002\022\013\n\007NO_DATA\020\003\022\026\n\022LOW_AMPLITUD" +
       "E_DATA\020\004\022#\n\037PARTNER_FILTER_REJECTED_MY_D" +
-      "ATA\020\005\022\026\n\022MISSING_KEY_EVENTS\020\006B-\n\034com.hel" +
-      "lo.suripu.api.loggingB\rLoggingProtos"
+      "ATA\020\005\022\026\n\022MISSING_KEY_EVENTS\020\006\022\027\n\023INVALID" +
+      "_SLEEP_SCORE\020\007B-\n\034com.hello.suripu.api.l" +
+      "oggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

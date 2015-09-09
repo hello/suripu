@@ -29,7 +29,10 @@ public enum DynamoDBTableName {
     ALARM_LOG("alarm_log"),
     SMART_ALARM_LOG("smart_alarm_log"),
     BAYESNET_PRIORS("hmm_bayesnet_priors"),
-    BAYESNET_MODEL("hmm_bayesnet_models");
+    BAYESNET_MODEL("hmm_bayesnet_models"),
+    CALIBRATION("calibration"),
+    INSIGHTS("insights");
+
     private String value;
 
     private DynamoDBTableName(String value) {

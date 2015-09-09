@@ -204,11 +204,11 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
                     // TODO: Push notification here?
                 } catch (AmazonServiceException awsException) {
-                    LOGGER.error("Failed to generate timeline: {}", awsException.getErrorMessage());
+                    LOGGER.error("Failed to generate timeline for account {} : {}",accountId, awsException.getErrorMessage());
                     this.awsErrorCount.mark(1);
                     this.errorCount.mark(1);
                 } catch (Exception ex) {
-                    LOGGER.error("Failed to generate timeline. General error {}", ex.getMessage());
+                    LOGGER.error("Failed to generate timeline for account {}. General error {}",accountId, ex.getMessage());
                     this.generalErrorCount.mark(1);
                     this.errorCount.mark(1);
                 }

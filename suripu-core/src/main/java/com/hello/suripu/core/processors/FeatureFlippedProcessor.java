@@ -81,4 +81,12 @@ public class FeatureFlippedProcessor {
     protected Boolean hasSleepScoreDurationWeighting(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_WEIGHTING, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasCalibrationEnabled(final String senseId) {
+        return featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasTimelineOrderEnforcement(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
 }

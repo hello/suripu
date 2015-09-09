@@ -36,6 +36,8 @@ public class SenseLogIndexer implements LogIndexer<LoggingProtos.BatchLogMessage
     private static final Map<String, SenseLogTag> tagToField = ImmutableMap.<String, SenseLogTag>builder()
             .put("ALARM RINGING", SenseLogTag.ALARM_RINGING)
             .put("fault", SenseLogTag.FIRMWARE_CRASH)
+            .put("i2c recovery", SenseLogTag.FIRMWARE_CRASH)
+            .put("fail at", SenseLogTag.FIRMWARE_CRASH)
             .put("ASSERT", SenseLogTag.FIRMWARE_CRASH)
             .put("SSID RSSI UNIQUE", SenseLogTag.WIFI_INFO)
             .put("dust", SenseLogTag.DUST_STATS)

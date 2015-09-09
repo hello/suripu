@@ -9,6 +9,7 @@ public class FeatureFlipper {
     public final static String SMART_ALARM = "smart_alarm";
     public final static String OTA_RELEASE = "release";
     public final static String BYPASS_OTA_CHECKS = "bypass_ota_checks";
+    public final static String ENABLE_OTA_UPDATES = "enable_ota_updates";
     public final static String FORCE_EVT_OTA_UPDATE = "pang-fire-fighting";
     public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
     public final static String MISSING_DATA_DEFAULT_VALUE = "missing_data_default_value";
@@ -52,4 +53,14 @@ public class FeatureFlipper {
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
     public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
+    public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
+    public final static String INSIGHTS_BED_LIGHT_DURATION = "insights_bed_light_duration";
+    public final static String INSIGHTS_TESTING = "insights_testing";
+    public final static String PRINT_RAW_PB = "print_raw_pb";
+    public final static String CALIBRATION = "calibration";
+    public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
+
+    public final static String WORKER_PG_CACHE = "worker_pg_cache";
+    public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";
+    public final static String WORKER_KINESIS_TIMEZONES = "worker_kinesis_timezones";
 }

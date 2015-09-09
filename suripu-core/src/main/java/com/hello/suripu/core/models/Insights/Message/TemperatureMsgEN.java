@@ -1,13 +1,13 @@
 package com.hello.suripu.core.models.Insights.Message;
 
-import com.hello.suripu.core.preferences.AccountPreference;
+import com.hello.suripu.core.preferences.TemperatureUnit;
 
 /**
  * Created by kingshy on 1/12/15.
  */
 public class TemperatureMsgEN {
 
-    private static final String CELSIUS = AccountPreference.TemperatureUnit.CELSIUS.toString();
+    private static final String CELSIUS = TemperatureUnit.CELSIUS.toString();
     public static final String DEGREE = "\u00b0";
     public static final String DEGREE_C = "\u00b0C";
     public static final String DEGREE_F = "\u00b0F";

@@ -59,7 +59,7 @@ public class Account {
     @JsonIgnore
     public final String password;
 
-    @JsonIgnore
+    @JsonProperty("created")
     public final DateTime created;
 
     @JsonProperty("last_modified")
@@ -234,7 +234,7 @@ public class Account {
             return this;
         }
 
-        @JsonIgnore
+        @JsonProperty("created")
         public Builder withCreated(final Long created) {
             this.created = new DateTime(created);
             return this;
@@ -315,7 +315,7 @@ public class Account {
     public static Account normalizeWithId(final Account account, final Long accountId) {
         return new Account(
                 Optional.fromNullable(accountId),
-                account.email.toLowerCase(),
+                account.email.toLowerCase().trim(),
                 account.password,
                 account.tzOffsetMillis,
                 account.name,
