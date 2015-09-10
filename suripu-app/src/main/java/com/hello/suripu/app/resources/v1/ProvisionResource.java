@@ -119,11 +119,15 @@ public class ProvisionResource {
             }
 
             final PillBlobProvision pillBlobProvision = pillBlobProvisionOptional.get();
-            pillKeyStore.put(pillBlobProvision.pillId, pillBlobProvision.key, serialNumber);
+            final boolean success = pillKeyStore.putOnlyIfAbsent(pillBlobProvision.pillId, pillBlobProvision.key, serialNumber, DateTime.now());
             final StringBuilder sb = new StringBuilder();
             sb.append("OK\n");
             sb.append(pillBlobProvision.pillId + "\n");
             sb.append(pillBlobProvision.serialNumber + "\n");
+            if(!success) {
+                sb.append("EXISTS");
+            }
+
             return Response.ok().entity(sb.toString()).type(MediaType.TEXT_PLAIN).build();
 
         } catch (Exception e) {
