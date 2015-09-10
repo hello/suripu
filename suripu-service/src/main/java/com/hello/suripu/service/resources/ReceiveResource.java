@@ -296,20 +296,19 @@ public class ReceiveResource extends BaseResource {
             // only compute the state for the most recent conditions
 
             if(i == batch.getDataCount() -1) {
-                final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.getStrict(deviceName) : Optional.<Calibration>absent();
-                final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(deviceName);
+                final Optional<Calibration> calibrationOptional = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.getStrict(deviceName) : Optional.<Calibration>absent();
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
                         roundedDateTime.getMillis(),
                         data.getFirmwareVersion(),
                         DateTime.now(),
                         2,
-                        calibration);
+                        calibrationOptional);
 
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.NEW_ROOM_CONDITION, deviceName, groups)) {
                     final Boolean hasCalibration = featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, deviceName, groups);
-                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, hasCalibration);
-                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState, hasCalibration);
+                    final CurrentRoomState.State.Condition roomConditions = RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, hasCalibration && calibrationOptional.isPresent());
+                    final CurrentRoomState.State.Condition roomConditionsLightsOff = RoomConditionUtil.getRoomConditionV2LightOff(currentRoomState, hasCalibration && calibrationOptional.isPresent());
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
                                     roomConditions.ordinal()));

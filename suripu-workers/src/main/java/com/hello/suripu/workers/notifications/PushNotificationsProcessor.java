@@ -120,7 +120,7 @@ public class PushNotificationsProcessor extends HelloBaseRecordProcessor {
                         data.getFirmwareVersion(),
                         now,
                         10,
-                        Calibration.createDefault(data.getDeviceId())); // TODO: adjust threshold
+                        Optional.of(Calibration.createDefault(data.getDeviceId()))); // TODO: adjust threshold
                 final Optional<HelloPushMessage> messageOptional = getMostImportantSensorState(currentRoomState);
                 if(messageOptional.isPresent()) {
                     LOGGER.info("Sending push notifications to user: {}. Message: {}", userInfo.accountId, messageOptional.get());

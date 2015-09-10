@@ -79,7 +79,8 @@ public class RoomConditionsResource extends BaseResource {
             return CurrentRoomState.empty(false); // at this stage we don't have a Sense id, so we can't use FF.
         }
 
-        final Boolean hasDust = hasCalibrationEnabled(deviceIdPair.get().externalDeviceId);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
+        final Boolean hasDust = calibrationOptional.isPresent();
 
         if(isSensorsViewUnavailable(token.accountId)) {
             LOGGER.warn("SENSORS VIEW UNAVAILABLE FOR USER {}", token.accountId);
@@ -111,11 +112,9 @@ public class RoomConditionsResource extends BaseResource {
             deviceData = data.get().withCalibratedLight(color); //and compensate 
         }
 
-
         LOGGER.debug("Last device data in db = {}", deviceData);
 
-        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
-        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit, calibration);
+        final CurrentRoomState roomState = CurrentRoomState.fromDeviceData(deviceData, DateTime.now(), thresholdInMinutes, unit, calibrationOptional);
 
         return roomState.withDust(hasDust);
     }
@@ -181,9 +180,9 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
-        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibration);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
     }
 
     @Timed
@@ -220,10 +219,10 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
-        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibration);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -265,10 +264,10 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
-        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibration);
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional );
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
@@ -345,11 +344,11 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceName);
         }
 
-        final Calibration calibration = getCalibration(deviceName);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accessToken.accountId),color, calibration);
+                sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
     }
 
     /*
@@ -388,11 +387,11 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceName);
         }
 
-        final Calibration calibration = getCalibration(deviceName);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accessToken.accountId),color, calibration);
+                sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
     }
 
 
@@ -446,10 +445,10 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
-        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color, calibration);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color, calibrationOptional);
 
     }
 
@@ -485,11 +484,11 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
-        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accountId),color, calibration);
+                sensor, missingDataDefaultValue(accountId),color, calibrationOptional);
     }
 
     private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
@@ -522,10 +521,10 @@ public class RoomConditionsResource extends BaseResource {
             color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
         }
 
-        final Calibration calibration = getCalibration(deviceIdPair.get().externalDeviceId);
+        final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId),color, calibration);
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -549,5 +548,9 @@ public class RoomConditionsResource extends BaseResource {
     private Calibration getCalibration(final String senseId) {
         final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(senseId) ? calibrationDAO.getStrict(senseId) : Optional.<Calibration>absent();
         return optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(senseId);
+    }
+
+    private Optional<Calibration> getCalibrationStrict(final String senseId) {
+        return calibrationDAO.getStrict(senseId);
     }
 }

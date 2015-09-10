@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Optional;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
@@ -132,11 +133,11 @@ public class CurrentRoomState {
                                                final int firmwareVersion,
                                                final DateTime referenceTime,
                                                final Integer thresholdInMinutes,
-                                               final Calibration calibration) {
+                                               final Optional<Calibration> calibrationOptional) {
 
         final float humidity = DataUtils.calibrateHumidity(rawTemperature, rawHumidity);
         final float temperature = DataUtils.calibrateTemperature(rawTemperature);
-        final float particulates = DataUtils.convertRawDustCountsToDensity(rawDustMax, calibration, firmwareVersion);
+        final float particulates = DataUtils.convertRawDustCountsToDensity(rawDustMax, calibrationOptional, firmwareVersion);
         final float sound = DataUtils.calibrateAudio(DataUtils.convertAudioRawToDB(rawBackgroundNoise), DataUtils.convertAudioRawToDB(rawPeakNoise));
         return fromTempHumidDustLightSound(temperature, humidity, particulates, rawLight, sound, new DateTime(timestamp, DateTimeZone.UTC), referenceTime, thresholdInMinutes, DEFAULT_TEMP_UNIT);
 
@@ -171,18 +172,17 @@ public class CurrentRoomState {
 
     }
 
-    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit, final Calibration calibration) {
+    public static CurrentRoomState fromDeviceData(final DeviceData data, final DateTime referenceTime, final Integer thresholdInMinutes, final String tempUnit, final Optional<Calibration> calibrationOptional) {
 
         final float temp = DataUtils.calibrateTemperature(data.ambientTemperature);
         final float humidity = DataUtils.calibrateHumidity(data.ambientTemperature, data.ambientHumidity);
         final float light = data.ambientLight; // dvt units values are already converted to lux
         final float sound = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(data.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(data.audioPeakDisturbancesDB));
         // max value is in raw counts, conversion needed
-        final float particulates = DataUtils.convertRawDustCountsToDensity(data.ambientAirQualityRaw, calibration, data.firmwareVersion);
+        final float particulates = DataUtils.convertRawDustCountsToDensity(data.ambientAirQualityRaw, calibrationOptional, data.firmwareVersion);
         return fromTempHumidDustLightSound(temp, humidity, particulates, light, sound, data.dateTimeUTC, referenceTime, thresholdInMinutes, tempUnit);
 
     }
-
 
     /**
      * To be used when data isn’t found for the currently logged in user

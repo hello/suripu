@@ -61,7 +61,7 @@ public class Bucketing {
      * @param sensorName
      * @return
      */
-    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,final Optional<Device.Color> optionalColor, final Calibration calibration) {
+    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,final Optional<Device.Color> optionalColor, final Optional<Calibration> calibrationOptional) {
 
         if(deviceDataList == null) {
             LOGGER.error("deviceDataList is null for sensor {}", sensorName);
@@ -91,8 +91,8 @@ public class Bucketing {
                 sensorValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             } else if(sensorName.equals("temperature")) {
                 sensorValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
-            } else if (sensorName.equals("particulates")) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibration, deviceData.firmwareVersion);
+            } else if (sensorName.equals("particulates") && calibrationOptional.isPresent()) {
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional, deviceData.firmwareVersion);
             } else if (sensorName.equals("light")) {
                 sensorValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             } else if (sensorName.equals("sound")) {
@@ -112,9 +112,9 @@ public class Bucketing {
             } else if(sensorName.equals("light_peakiness")) {
                 sensorValue = deviceData.ambientLightPeakiness;
             } else if(sensorName.equals("dust_min")) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMin, calibration, deviceData.firmwareVersion);
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMin, calibrationOptional, deviceData.firmwareVersion);
             } else if(sensorName.equals("dust_max")) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMax, calibration, deviceData.firmwareVersion);
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMax, calibrationOptional, deviceData.firmwareVersion);
             } else if(sensorName.equals("dust_raw")) {
                 sensorValue = deviceData.ambientAirQualityRaw;
             } else if(sensorName.equals("dust_variance")) {
@@ -135,7 +135,7 @@ public class Bucketing {
 
 
 
-    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor, final Calibration calibration) {
+    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor, final Optional<Calibration> calibrationOptional) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
 
@@ -157,7 +157,7 @@ public class Bucketing {
             final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
-            final float particulatesValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibration, deviceData.firmwareVersion);
+            final float particulatesValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional, deviceData.firmwareVersion);
             final int waveCount = deviceData.waveCount;
             final int holdCount = deviceData.holdCount;
             final float soundNumDisturbances = (float) deviceData.audioNumDisturbances;
