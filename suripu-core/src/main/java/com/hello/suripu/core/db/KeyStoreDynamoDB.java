@@ -7,8 +7,10 @@ import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -19,6 +21,7 @@ import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.DeviceKeyStoreRecord;
@@ -60,6 +63,11 @@ public class KeyStoreDynamoDB implements KeyStore {
             final Integer cacheExpireAfterInSeconds) {
         this.dynamoDBClient = dynamoDBClient;
         this.keyStoreTableName = keyStoreTableName;
+    }
+
+
+    private String dateToString(final DateTime createdAt) {
+        return createdAt.toString(DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT));
     }
 
     @Override
@@ -131,6 +139,33 @@ public class KeyStoreDynamoDB implements KeyStore {
                 .withItem(attributes);
 
         final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
+    }
+
+    @Override
+    public boolean putOnlyIfAbsent(String deviceId, String aesKey, String serialNumber, DateTime createdAt) {
+        final ImmutableMap<String, AttributeValue> attributes = new ImmutableMap.Builder<String, AttributeValue>()
+                .put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId))
+                .put(AES_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(aesKey.toUpperCase()))
+                .put(METADATA, new AttributeValue().withS(serialNumber))
+                .put(CREATED_AT_ATTRIBUTE_NAME, new AttributeValue().withS(dateToString(createdAt)))
+                .build();
+
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(keyStoreTableName)
+                .withItem(attributes)
+                .withExpected(new ImmutableMap.Builder<String, ExpectedAttributeValue>()
+                        // When exists is false and the id already exists a ConditionalCheckFailedException will be thrown
+                        .put(DEVICE_ID_ATTRIBUTE_NAME, new ExpectedAttributeValue(false))
+                        .build());
+        try {
+            final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
+            return true;
+        } catch (ConditionalCheckFailedException e) {
+            return false;
+        } catch (Exception e) {
+            LOGGER.error("Failed insert keys in table because of: {}", e.getMessage());
+            return false;
+        }
     }
 
     @Override
