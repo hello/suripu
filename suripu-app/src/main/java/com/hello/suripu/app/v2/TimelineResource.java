@@ -7,7 +7,7 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
-import com.hello.suripu.core.logging.TimelineLogV2;
+import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -94,7 +94,7 @@ public class TimelineResource extends BaseResource {
         }
 
         if (timeline.get().logV2.isPresent()) {
-            final TimelineLogV2 logV2 = timeline.get().logV2.get();
+            final TimelineLog logV2 = timeline.get().logV2.get();
             final String partitionKey = logV2.getParitionKey();
             timelineLogDAOV2.putAsync(partitionKey, logV2.toProtoBuf());
             timelineLogDAO.putTimelineLog(accessToken.accountId, logV2.getAsV1Log());

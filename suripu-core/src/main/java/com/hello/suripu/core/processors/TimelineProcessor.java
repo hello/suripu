@@ -19,7 +19,7 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
-import com.hello.suripu.core.logging.TimelineLogV2;
+import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
@@ -39,7 +39,6 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
-import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.translations.English;
@@ -48,7 +47,7 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.HmmBayesNetData;
 import com.hello.suripu.core.util.HmmBayesNetPredictor;
-import com.hello.suripu.core.util.InvalidNightType;
+import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
@@ -183,14 +182,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
         final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
 
-        final TimelineLogV2 logV2 = new TimelineLogV2(accountId);
+        final TimelineLog log = new TimelineLog(accountId,targetDate.withZone(DateTimeZone.UTC).getMillis());
 
-        logV2.setCreatedTime(currentTime.getMillis());
-        logV2.setNightOfTimeline(date.getMillis());
-
-        if (uuidOptional.isPresent()) {
-            logV2.setLogUUID(uuidOptional.get());
-        }
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
@@ -206,17 +199,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
-        final InvalidNightType discardReason = isValidNight(accountId, sensorData.trackerMotions);
+        final TimelineError discardReason = isValidNight(accountId, sensorData.trackerMotions);
 
-        logV2.addError(discardReason);
+        log.addMessage(discardReason);
+
         switch (discardReason){
             case TIMESPAN_TOO_SHORT:
                 LOGGER.info("Tracker motion span too short for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.of(TimelineResult.createEmpty(logV2,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
+                return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             case NOT_ENOUGH_DATA:
                 LOGGER.info("Not enough tracker motion seen for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.of(TimelineResult.createEmpty(logV2,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
+                return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             case NO_DATA:
                 LOGGER.info("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
@@ -224,7 +218,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             case LOW_AMP_DATA:
                 LOGGER.debug("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
-                return Optional.of(TimelineResult.createEmpty(logV2,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
+                return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             default:
                 break;
@@ -240,22 +234,21 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             if(this.hasVotingEnabled(accountId)){
                 // Voting algorithm feature
-                logV2.setIntendedAlgorithm(AlgorithmType.VOTING);
-                logV2.setUsedAlgorithm(AlgorithmType.VOTING);
+                log.addMessage(AlgorithmType.VOTING);
+
                 final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
                         sensorData.allSensorSampleList.get(Sensor.SOUND),
                         sensorData.allSensorSampleList.get(Sensor.LIGHT),
                         sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
                 sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
                 extraEvents = votingSleepEventsOptional.get().extraEvents;
-                logV2.setUsedAlgorithm(AlgorithmType.VOTING);
                 algorithmWorked = true;
 
             }
             else if (this.hasBayesNetEnabled(accountId)) {
 
-                logV2.setIntendedAlgorithm(AlgorithmType.LAYERED_HMM);
-                logV2.setUsedAlgorithm(AlgorithmType.LAYERED_HMM);
+                log.addMessage(AlgorithmType.BAYES_NET);
+
                 //get model from DB
                 final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId,date,uuidOptional);
 
@@ -293,8 +286,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 }
             }
             else {
-                logV2.setIntendedAlgorithm(AlgorithmType.HMM);
-                logV2.setUsedAlgorithm(AlgorithmType.HMM);
+                log.addMessage(AlgorithmType.HMM);
 
                 // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
                 Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
@@ -307,13 +299,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     extraEvents = results.get().allTheOtherWakesAndSleeps.asList();
 
                     //verify that algorithm produced something useable
-                    if (timelineSafeguards.checkIfValidTimeline(
+                    final TimelineError error = timelineSafeguards.checkIfValidTimeline(
                             sleepEventsFromAlgorithmOptional.get(),
                             ImmutableList.copyOf(extraEvents),
-                            ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)))) {
+                            ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
 
-                        algorithmWorked = true;
-                    }
+                    log.addMessage(error);
+
                 }
             }
 
@@ -322,9 +314,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             /* TRY THE BACKUP PLAN!  */
             if (!algorithmWorked) {
                 LOGGER.warn("ALGORITHM FAILED, trying regular algorithm instead");
+                log.addMessage(AlgorithmType.WUPANG);
 
-                logV2.setUsedAlgorithm(AlgorithmType.WUPANG);
-                logV2.addNotUsingIntendedAlgorithmError();
                 //reset state
                 extraEvents = Collections.EMPTY_LIST;
 
@@ -339,8 +330,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     for (final Optional<Event> eventOptional : sleepEventsFromAlgorithm.toList()) {
                         if (!eventOptional.isPresent()) {
                             LOGGER.info("backup algorithm did not produce all four events, account_id = {} and day = {}", accountId, targetDate);
-                            logV2.addError(InvalidNightType.MISSING_KEY_EVENTS);
-                            return Optional.of(TimelineResult.createEmpty(logV2,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
+                            log.addMessage(TimelineError.MISSING_KEY_EVENTS);
+                            return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
                         }
                     }
                 }
@@ -354,8 +345,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final SleepEvents<Optional<Event>> sleepEvents = sleepEventsFromAlgorithmOptional.get();
 
             if (!sleepEvents.fallAsleep.isPresent() || !sleepEvents.wakeUp.isPresent() || !sleepEvents.goToBed.isPresent() || !sleepEvents.outOfBed.isPresent()) {
-                logV2.addMisingEventsError();
+                log.addMessage(TimelineError.MISSING_KEY_EVENTS);
             }
+
             /* FEATURE FLIP EXTRA EVENTS */
             if (!this.hasExtraEventsEnabled(accountId)) {
                 LOGGER.info("not using {} extra events", extraEvents.size());
@@ -366,11 +358,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             //something was wrong with the combination of sleep/wake events + data in interpretation
             if (!populateTimelines.isValidSleepScore) {
-                logV2.addError(InvalidNightType.INVALID_SLEEP_SCORE);
-                return Optional.of(TimelineResult.createEmpty(logV2,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
+                log.addMessage(TimelineError.INVALID_SLEEP_SCORE);
+                return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
             }
 
-            return Optional.of(TimelineResult.create(populateTimelines.timelines, logV2));
+            return Optional.of(TimelineResult.create(populateTimelines.timelines, log));
         }
         catch (Exception e) {
             LOGGER.error(e.toString());
@@ -740,18 +732,18 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     /*
      * PRELIMINARY SANITY CHECK
      */
-    protected InvalidNightType isValidNight(final Long accountId, final List<TrackerMotion> motionData){
+    protected TimelineError isValidNight(final Long accountId, final List<TrackerMotion> motionData){
         if(!hasNewInvalidNightFilterEnabled(accountId)){
             if(motionData.size() >= MIN_TRACKER_MOTION_COUNT){
-                return InvalidNightType.VALID;
+                return TimelineError.NO_ERROR;
             }
             else {
-                return InvalidNightType.NOT_ENOUGH_DATA;  // This needs to align to the old behavior before the new filter has been discussed.
+                return TimelineError.NOT_ENOUGH_DATA;  // This needs to align to the old behavior before the new filter has been discussed.
             }
         }
 
         if(motionData.size() == 0){
-            return InvalidNightType.NO_DATA;
+            return TimelineError.NO_DATA;
         }
 
         //CHECK TO SEE IF MOTION AMPLITUDE IS EVER ABOVE MINIMUM THRESHOLD
@@ -766,20 +758,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         //NEVER ABOVE THRESHOLD?  REJECT.
         if (!isMotionAmplitudeAboveMinimumThreshold) {
-            return InvalidNightType.LOW_AMP_DATA;
+            return TimelineError.LOW_AMP_DATA;
         }
 
         //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT IS ABOVE 5 HOURS
         if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
-            return InvalidNightType.TIMESPAN_TOO_SHORT;
+            return TimelineError.TIMESPAN_TOO_SHORT;
         }
 
         //LAST, CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
         if(motionData.size() < MIN_TRACKER_MOTION_COUNT){
-            return InvalidNightType.NOT_ENOUGH_DATA;
+            return TimelineError.NOT_ENOUGH_DATA;
         }
 
-        return InvalidNightType.VALID;
+        return TimelineError.NO_ERROR;
     }
 
 

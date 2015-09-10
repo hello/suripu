@@ -8,7 +8,8 @@ public enum AlgorithmType {
     WUPANG("wupang"),
     VOTING("voting"),
     HMM("hmm"),
-    LAYERED_HMM("layered_hmm");
+    ONLINE_HMM("online_hmm"),
+    BAYES_NET("bayes_net");
 
 
     private final String name;
