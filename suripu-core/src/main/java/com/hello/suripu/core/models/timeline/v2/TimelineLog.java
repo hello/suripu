@@ -46,6 +46,7 @@ public class TimelineLog {
         invalidNightErrorMap.put(TimelineError.NOT_ENOUGH_HOURS_OF_SLEEP, ErrorType.NOT_ENOUGH_SLEEP_TIME);
         invalidNightErrorMap.put(TimelineError.DATA_GAP_TOO_LARGE, ErrorType.NOT_ENOUGH_SLEEP_TIME);
         invalidNightErrorMap.put(TimelineError.EVENTS_OUT_OF_ORDER, ErrorType.NOT_ENOUGH_SLEEP_TIME);
+        invalidNightErrorMap.put(TimelineError.UNEXEPECTED, ErrorType.UNEXEPECTED);
 
 
 
@@ -130,6 +131,25 @@ public class TimelineLog {
                 LoggingProtos.TimelineLog.newBuilder()
                         .setAccountId(accountId)
                         .setNightOfTimeline(dateOfNight)
+                        .setAlgorithm(AlgType.NO_ALGORITHM)
+                        .setError(errorType)
+                        .build());
+
+    }
+
+    public void addMessage(final TimelineError timelineError, final String message) {
+        final ErrorType errorType = invalidNightErrorMap.get(timelineError);
+
+        if (errorType == null) {
+            return;
+        }
+
+        builder.addTimelineLog(
+                LoggingProtos.TimelineLog.newBuilder()
+                        .setAccountId(accountId)
+                        .setNightOfTimeline(dateOfNight)
+                        .setAlgorithm(AlgType.NO_ALGORITHM)
+                        .setMessage(message)
                         .setError(errorType)
                         .build());
 
@@ -147,6 +167,52 @@ public class TimelineLog {
                         .setAccountId(accountId)
                         .setNightOfTimeline(dateOfNight)
                         .setAlgorithm(algType)
+                        .setError(ErrorType.NO_ERROR)
+                        .build());
+    }
+
+    public void addMessage(final AlgorithmType algorithmType, final TimelineError timelineError) {
+        final AlgType algType = algorithmTypeMap.get(algorithmType);
+
+        if (algType == null) {
+            return;
+        }
+
+        final ErrorType error = invalidNightErrorMap.get(timelineError);
+
+        if (error == null) {
+            return;
+        }
+
+        builder.addTimelineLog(
+                LoggingProtos.TimelineLog.newBuilder()
+                        .setAccountId(accountId)
+                        .setNightOfTimeline(dateOfNight)
+                        .setAlgorithm(algType)
+                        .setError(error)
+                        .build());
+    }
+
+    public void addMessage(final AlgorithmType algorithmType, final TimelineError timelineError, final String message) {
+        final AlgType algType = algorithmTypeMap.get(algorithmType);
+
+        if (algType == null) {
+            return;
+        }
+
+        final ErrorType error = invalidNightErrorMap.get(timelineError);
+
+        if (error == null) {
+            return;
+        }
+
+        builder.addTimelineLog(
+                LoggingProtos.TimelineLog.newBuilder()
+                        .setAccountId(accountId)
+                        .setNightOfTimeline(dateOfNight)
+                        .setAlgorithm(algType)
+                        .setError(error)
+                        .setMessage(message)
                         .build());
     }
 
@@ -162,6 +228,7 @@ public class TimelineLog {
                         .setAccountId(accountId)
                         .setNightOfTimeline(dateOfNight)
                         .setAlgorithm(algType)
+                        .setError(ErrorType.NO_ERROR)
                         .setModelName(model)
                         .setModelScore(score)
                         .build());
