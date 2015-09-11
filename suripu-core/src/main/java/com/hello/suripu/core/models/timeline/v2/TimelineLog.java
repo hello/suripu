@@ -275,8 +275,8 @@ public class TimelineLog {
 
         String intendedAlgorithm = "none";
         String usedAlgorithm = "none";
+        String version = "none";
 
-        String version = "";
         boolean isFirst = true;
         //get first and last alg
         for (LoggingProtos.TimelineLog timelineLog : log.getTimelineLogList()) {
