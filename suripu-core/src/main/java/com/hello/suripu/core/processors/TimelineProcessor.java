@@ -201,23 +201,26 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final OneDaysSensorData sensorData = sensorDataOptional.get();
         final TimelineError discardReason = isValidNight(accountId, sensorData.trackerMotions);
 
-        log.addMessage(discardReason);
 
         switch (discardReason){
             case TIMESPAN_TOO_SHORT:
+                log.addMessage(discardReason);
                 LOGGER.info("Tracker motion span too short for account_id = {} and day = {}", accountId, targetDate);
                 return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             case NOT_ENOUGH_DATA:
+                log.addMessage(discardReason);
                 LOGGER.info("Not enough tracker motion seen for account_id = {} and day = {}", accountId, targetDate);
                 return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             case NO_DATA:
+                log.addMessage(discardReason);
                 LOGGER.info("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
                 return Optional.absent();
 
             case LOW_AMP_DATA:
-                LOGGER.debug("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
+                log.addMessage(discardReason);
+                LOGGER.info("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
                 return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
 
             default:
@@ -310,9 +313,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                     if (error.equals(TimelineError.NO_ERROR)) {
                         algorithmWorked = true;
+                        log.addMessage(AlgorithmType.HMM, timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithmOptional.get().toList()));
                     }
-
-                    log.addMessage(AlgorithmType.HMM,error);
+                    else {
+                        log.addMessage(AlgorithmType.HMM, error);
+                    }
 
                 }
             }
