@@ -10032,6 +10032,115 @@ public final class LoggingProtos {
     }
 
     /**
+     * Protobuf enum {@code TimelineLog.SleepEventType}
+     */
+    public enum SleepEventType
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>NO_EVENT = 0;</code>
+       */
+      NO_EVENT(0, 0),
+      /**
+       * <code>IN_BED = 1;</code>
+       */
+      IN_BED(1, 1),
+      /**
+       * <code>SLEEP = 2;</code>
+       */
+      SLEEP(2, 2),
+      /**
+       * <code>WAKE = 3;</code>
+       */
+      WAKE(3, 3),
+      /**
+       * <code>OUT_OF_BED = 4;</code>
+       */
+      OUT_OF_BED(4, 4),
+      ;
+
+      /**
+       * <code>NO_EVENT = 0;</code>
+       */
+      public static final int NO_EVENT_VALUE = 0;
+      /**
+       * <code>IN_BED = 1;</code>
+       */
+      public static final int IN_BED_VALUE = 1;
+      /**
+       * <code>SLEEP = 2;</code>
+       */
+      public static final int SLEEP_VALUE = 2;
+      /**
+       * <code>WAKE = 3;</code>
+       */
+      public static final int WAKE_VALUE = 3;
+      /**
+       * <code>OUT_OF_BED = 4;</code>
+       */
+      public static final int OUT_OF_BED_VALUE = 4;
+
+
+      public final int getNumber() { return value; }
+
+      public static SleepEventType valueOf(int value) {
+        switch (value) {
+          case 0: return NO_EVENT;
+          case 1: return IN_BED;
+          case 2: return SLEEP;
+          case 3: return WAKE;
+          case 4: return OUT_OF_BED;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<SleepEventType>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<SleepEventType>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<SleepEventType>() {
+              public SleepEventType findValueByNumber(int number) {
+                return SleepEventType.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDescriptor().getEnumTypes().get(1);
+      }
+
+      private static final SleepEventType[] VALUES = values();
+
+      public static SleepEventType valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private SleepEventType(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:TimelineLog.SleepEventType)
+    }
+
+    /**
      * Protobuf enum {@code TimelineLog.ErrorType}
      *
      * <pre>
@@ -10173,7 +10282,7 @@ public final class LoggingProtos {
       }
       public static final com.google.protobuf.Descriptors.EnumDescriptor
           getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDescriptor().getEnumTypes().get(1);
+        return com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDescriptor().getEnumTypes().get(2);
       }
 
       private static final ErrorType[] VALUES = values();
@@ -10198,127 +10307,18 @@ public final class LoggingProtos {
       // @@protoc_insertion_point(enum_scope:TimelineLog.ErrorType)
     }
 
-    /**
-     * Protobuf enum {@code TimelineLog.EventType}
-     */
-    public enum EventType
-        implements com.google.protobuf.ProtocolMessageEnum {
-      /**
-       * <code>NO_EVENT = 0;</code>
-       */
-      NO_EVENT(0, 0),
-      /**
-       * <code>IN_BED = 1;</code>
-       */
-      IN_BED(1, 1),
-      /**
-       * <code>SLEEP = 2;</code>
-       */
-      SLEEP(2, 2),
-      /**
-       * <code>WAKE = 3;</code>
-       */
-      WAKE(3, 3),
-      /**
-       * <code>OUT_OF_BED = 4;</code>
-       */
-      OUT_OF_BED(4, 4),
-      ;
-
-      /**
-       * <code>NO_EVENT = 0;</code>
-       */
-      public static final int NO_EVENT_VALUE = 0;
-      /**
-       * <code>IN_BED = 1;</code>
-       */
-      public static final int IN_BED_VALUE = 1;
-      /**
-       * <code>SLEEP = 2;</code>
-       */
-      public static final int SLEEP_VALUE = 2;
-      /**
-       * <code>WAKE = 3;</code>
-       */
-      public static final int WAKE_VALUE = 3;
-      /**
-       * <code>OUT_OF_BED = 4;</code>
-       */
-      public static final int OUT_OF_BED_VALUE = 4;
-
-
-      public final int getNumber() { return value; }
-
-      public static EventType valueOf(int value) {
-        switch (value) {
-          case 0: return NO_EVENT;
-          case 1: return IN_BED;
-          case 2: return SLEEP;
-          case 3: return WAKE;
-          case 4: return OUT_OF_BED;
-          default: return null;
-        }
-      }
-
-      public static com.google.protobuf.Internal.EnumLiteMap<EventType>
-          internalGetValueMap() {
-        return internalValueMap;
-      }
-      private static com.google.protobuf.Internal.EnumLiteMap<EventType>
-          internalValueMap =
-            new com.google.protobuf.Internal.EnumLiteMap<EventType>() {
-              public EventType findValueByNumber(int number) {
-                return EventType.valueOf(number);
-              }
-            };
-
-      public final com.google.protobuf.Descriptors.EnumValueDescriptor
-          getValueDescriptor() {
-        return getDescriptor().getValues().get(index);
-      }
-      public final com.google.protobuf.Descriptors.EnumDescriptor
-          getDescriptorForType() {
-        return getDescriptor();
-      }
-      public static final com.google.protobuf.Descriptors.EnumDescriptor
-          getDescriptor() {
-        return com.hello.suripu.api.logging.LoggingProtos.TimelineLog.getDescriptor().getEnumTypes().get(2);
-      }
-
-      private static final EventType[] VALUES = values();
-
-      public static EventType valueOf(
-          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-        if (desc.getType() != getDescriptor()) {
-          throw new java.lang.IllegalArgumentException(
-            "EnumValueDescriptor is not for this type.");
-        }
-        return VALUES[desc.getIndex()];
-      }
-
-      private final int index;
-      private final int value;
-
-      private EventType(int index, int value) {
-        this.index = index;
-        this.value = value;
-      }
-
-      // @@protoc_insertion_point(enum_scope:TimelineLog.EventType)
-    }
-
     public interface PredictionOrBuilder
         extends com.google.protobuf.MessageOrBuilder {
 
-      // optional .TimelineLog.EventType event_type = 1;
+      // optional .TimelineLog.SleepEventType event_type = 1;
       /**
-       * <code>optional .TimelineLog.EventType event_type = 1;</code>
+       * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
        */
       boolean hasEventType();
       /**
-       * <code>optional .TimelineLog.EventType event_type = 1;</code>
+       * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
        */
-      com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType getEventType();
+      com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType getEventType();
 
       // optional int64 event_time_utc_millis = 2;
       /**
@@ -10393,7 +10393,7 @@ public final class LoggingProtos {
               }
               case 8: {
                 int rawValue = input.readEnum();
-                com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType value = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType.valueOf(rawValue);
+                com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType value = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType.valueOf(rawValue);
                 if (value == null) {
                   unknownFields.mergeVarintField(1, rawValue);
                 } else {
@@ -10452,19 +10452,19 @@ public final class LoggingProtos {
       }
 
       private int bitField0_;
-      // optional .TimelineLog.EventType event_type = 1;
+      // optional .TimelineLog.SleepEventType event_type = 1;
       public static final int EVENT_TYPE_FIELD_NUMBER = 1;
-      private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType eventType_;
+      private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType eventType_;
       /**
-       * <code>optional .TimelineLog.EventType event_type = 1;</code>
+       * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
        */
       public boolean hasEventType() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .TimelineLog.EventType event_type = 1;</code>
+       * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
        */
-      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType getEventType() {
+      public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType getEventType() {
         return eventType_;
       }
 
@@ -10501,7 +10501,7 @@ public final class LoggingProtos {
       }
 
       private void initFields() {
-        eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType.NO_EVENT;
+        eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType.NO_EVENT;
         eventTimeUtcMillis_ = 0L;
         timezoneOffsetMillis_ = 0;
       }
@@ -10663,7 +10663,7 @@ public final class LoggingProtos {
 
         public Builder clear() {
           super.clear();
-          eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType.NO_EVENT;
+          eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType.NO_EVENT;
           bitField0_ = (bitField0_ & ~0x00000001);
           eventTimeUtcMillis_ = 0L;
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -10761,24 +10761,24 @@ public final class LoggingProtos {
         }
         private int bitField0_;
 
-        // optional .TimelineLog.EventType event_type = 1;
-        private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType.NO_EVENT;
+        // optional .TimelineLog.SleepEventType event_type = 1;
+        private com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType.NO_EVENT;
         /**
-         * <code>optional .TimelineLog.EventType event_type = 1;</code>
+         * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
          */
         public boolean hasEventType() {
           return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
-         * <code>optional .TimelineLog.EventType event_type = 1;</code>
+         * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
          */
-        public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType getEventType() {
+        public com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType getEventType() {
           return eventType_;
         }
         /**
-         * <code>optional .TimelineLog.EventType event_type = 1;</code>
+         * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
          */
-        public Builder setEventType(com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType value) {
+        public Builder setEventType(com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType value) {
           if (value == null) {
             throw new NullPointerException();
           }
@@ -10788,11 +10788,11 @@ public final class LoggingProtos {
           return this;
         }
         /**
-         * <code>optional .TimelineLog.EventType event_type = 1;</code>
+         * <code>optional .TimelineLog.SleepEventType event_type = 1;</code>
          */
         public Builder clearEventType() {
           bitField0_ = (bitField0_ & ~0x00000001);
-          eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.EventType.NO_EVENT;
+          eventType_ = com.hello.suripu.api.logging.LoggingProtos.TimelineLog.SleepEventType.NO_EVENT;
           onChanged();
           return this;
         }
@@ -12372,7 +12372,7 @@ public final class LoggingProtos {
       "\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020P",
       "rovisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_" +
       "number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004" +
-      " \001(\t\"\355\006\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
+      " \001(\t\"\367\006\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
       "\022$\n\034timestamp_when_log_generated\030\002 \001(\003\022\031" +
       "\n\021night_of_timeline\030\003 \001(\003\022\'\n\talgorithm\030\004" +
       " \001(\0162\024.TimelineLog.AlgType\022%\n\005error\030\005 \001(" +
@@ -12380,22 +12380,22 @@ public final class LoggingProtos {
       "per\030\006 \001(\003\022\026\n\016log_uuid_lower\030\007 \001(\003\022\023\n\013mod" +
       "el_score\030\010 \001(\002\022\022\n\nmodel_name\030\t \001(\t\022,\n\013pr" +
       "edictions\030\n \003(\0132\027.TimelineLog.Prediction",
-      "\022\017\n\007message\030\013 \001(\t\032w\n\nPrediction\022*\n\nevent" +
-      "_type\030\001 \001(\0162\026.TimelineLog.EventType\022\035\n\025e" +
-      "vent_time_utc_millis\030\002 \001(\003\022\036\n\026timezone_o" +
-      "ffset_millis\030\003 \001(\005\"L\n\007AlgType\022\020\n\014NO_ALGO" +
-      "RITHM\020\000\022\n\n\006WUPANG\020\001\022\007\n\003HMM\020\002\022\n\n\006VOTING\020\003" +
-      "\022\016\n\nONLINE_HMM\020\004\"\215\002\n\tErrorType\022\014\n\010NO_ERR" +
-      "OR\020\000\022\036\n\032INTENDED_ALGORITHM_FAILURE\020\001\022\026\n\022" +
-      "TIMESPAN_TOO_SHORT\020\002\022\023\n\017NOT_ENOUGH_DATA\020" +
-      "\003\022\013\n\007NO_DATA\020\004\022\026\n\022LOW_AMPLITUDE_DATA\020\005\022#" +
-      "\n\037PARTNER_FILTER_REJECTED_MY_DATA\020\006\022\026\n\022M",
-      "ISSING_KEY_EVENTS\020\007\022\027\n\023INVALID_SLEEP_SCO" +
-      "RE\020\010\022\031\n\025NOT_ENOUGH_SLEEP_TIME\020\t\022\017\n\013UNEXE" +
-      "PECTED\020\n\"J\n\tEventType\022\014\n\010NO_EVENT\020\000\022\n\n\006I" +
-      "N_BED\020\001\022\t\n\005SLEEP\020\002\022\010\n\004WAKE\020\003\022\016\n\nOUT_OF_B" +
-      "ED\020\004B-\n\034com.hello.suripu.api.loggingB\rLo" +
-      "ggingProtos"
+      "\022\017\n\007message\030\013 \001(\t\032|\n\nPrediction\022/\n\nevent" +
+      "_type\030\001 \001(\0162\033.TimelineLog.SleepEventType" +
+      "\022\035\n\025event_time_utc_millis\030\002 \001(\003\022\036\n\026timez" +
+      "one_offset_millis\030\003 \001(\005\"L\n\007AlgType\022\020\n\014NO" +
+      "_ALGORITHM\020\000\022\n\n\006WUPANG\020\001\022\007\n\003HMM\020\002\022\n\n\006VOT" +
+      "ING\020\003\022\016\n\nONLINE_HMM\020\004\"O\n\016SleepEventType\022" +
+      "\014\n\010NO_EVENT\020\000\022\n\n\006IN_BED\020\001\022\t\n\005SLEEP\020\002\022\010\n\004" +
+      "WAKE\020\003\022\016\n\nOUT_OF_BED\020\004\"\215\002\n\tErrorType\022\014\n\010" +
+      "NO_ERROR\020\000\022\036\n\032INTENDED_ALGORITHM_FAILURE" +
+      "\020\001\022\026\n\022TIMESPAN_TOO_SHORT\020\002\022\023\n\017NOT_ENOUGH",
+      "_DATA\020\003\022\013\n\007NO_DATA\020\004\022\026\n\022LOW_AMPLITUDE_DA" +
+      "TA\020\005\022#\n\037PARTNER_FILTER_REJECTED_MY_DATA\020" +
+      "\006\022\026\n\022MISSING_KEY_EVENTS\020\007\022\027\n\023INVALID_SLE" +
+      "EP_SCORE\020\010\022\031\n\025NOT_ENOUGH_SLEEP_TIME\020\t\022\017\n" +
+      "\013UNEXEPECTED\020\nB-\n\034com.hello.suripu.api.l" +
+      "oggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

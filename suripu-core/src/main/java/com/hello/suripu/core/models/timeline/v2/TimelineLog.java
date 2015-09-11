@@ -5,6 +5,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.TimelineError;
 import org.apache.commons.codec.binary.Base64;
@@ -13,6 +14,8 @@ import org.joda.time.DateTimeZone;
 import com.hello.suripu.api.logging.LoggingProtos.TimelineLog.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Created by benjo on 7/31/15.
@@ -32,6 +35,7 @@ public class TimelineLog {
 
     private static final BiMap<TimelineError, ErrorType> invalidNightErrorMap;
     private static final BiMap<AlgorithmType,AlgType> algorithmTypeMap;
+    private static final BiMap<Event.Type,SleepEventType> eventTypeMap;
 
     static {
         //initialize static maps
@@ -56,6 +60,13 @@ public class TimelineLog {
         algorithmTypeMap.put(AlgorithmType.HMM,AlgType.HMM);
         algorithmTypeMap.put(AlgorithmType.ONLINE_HMM,AlgType.ONLINE_HMM);
         algorithmTypeMap.put(AlgorithmType.VOTING,AlgType.VOTING);
+
+
+        eventTypeMap = HashBiMap.create();
+        eventTypeMap.put(Event.Type.IN_BED,SleepEventType.IN_BED);
+        eventTypeMap.put(Event.Type.SLEEP,SleepEventType.SLEEP);
+        eventTypeMap.put(Event.Type.WAKE_UP,SleepEventType.WAKE);
+        eventTypeMap.put(Event.Type.OUT_OF_BED,SleepEventType.OUT_OF_BED);
 
 
 
@@ -120,6 +131,20 @@ public class TimelineLog {
         return Long.valueOf(accountId).toString();
     }
 
+    private static Optional<Prediction> predictionFromEvent(final Event event) {
+        final SleepEventType eventType = eventTypeMap.get(event.getType());
+
+        if (eventType == null) {
+            return Optional.absent();
+        }
+
+        return Optional.of(Prediction.newBuilder()
+                .setEventType(eventType)
+                .setTimezoneOffsetMillis(event.getTimezoneOffset())
+                .setEventTimeUtcMillis(event.getStartTimestamp()).build());
+
+    }
+
     public void addMessage(final TimelineError timelineError) {
         final ErrorType errorType = invalidNightErrorMap.get(timelineError);
 
@@ -155,20 +180,30 @@ public class TimelineLog {
 
     }
 
-    public void addMessage(final AlgorithmType algorithmType) {
+    public void addMessage(final AlgorithmType algorithmType,final List<Event> predictions) {
         final AlgType algType = algorithmTypeMap.get(algorithmType);
 
         if (algType == null) {
             return;
         }
 
-        builder.addTimelineLog(
-                LoggingProtos.TimelineLog.newBuilder()
-                        .setAccountId(accountId)
-                        .setNightOfTimeline(dateOfNight)
-                        .setAlgorithm(algType)
-                        .setError(ErrorType.NO_ERROR)
-                        .build());
+        final LoggingProtos.TimelineLog.Builder timelineLogBuilder = LoggingProtos.TimelineLog.newBuilder()
+                .setAccountId(accountId)
+                .setNightOfTimeline(dateOfNight)
+                .setAlgorithm(algType)
+                .setError(ErrorType.NO_ERROR);
+        
+        for (final Event event : predictions) {
+            final Optional<Prediction> predictionOptional = predictionFromEvent(event);
+
+            if (!predictionOptional.isPresent()) {
+                continue;
+            }
+
+            timelineLogBuilder.addPredictions(predictionOptional.get());
+        }
+
+        builder.addTimelineLog(timelineLogBuilder.build());
     }
 
     public void addMessage(final AlgorithmType algorithmType, final TimelineError timelineError) {

@@ -1334,4 +1334,18 @@ public class TimelineUtils {
         LOGGER.debug("Adding {} alarms to the timeline", events.size());
         return events;
     }
+
+    public List<Event> eventsFromOptionalEvents(final List<Optional<Event>> optionalEvents) {
+        final List<Event> events = Lists.newArrayList();
+
+        for (final Optional<Event> event : optionalEvents) {
+            if (!event.isPresent()) {
+                continue;
+            }
+
+            events.add(event.get());
+        }
+
+        return events;
+    }
 }

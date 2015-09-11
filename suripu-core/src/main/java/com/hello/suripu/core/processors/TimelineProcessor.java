@@ -243,7 +243,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = votingSleepEventsOptional.get().extraEvents;
                 algorithmWorked = true;
 
-                log.addMessage(AlgorithmType.VOTING);
+                log.addMessage(AlgorithmType.VOTING,timelineUtils.eventsFromOptionalEvents(votingSleepEventsOptional.get().sleepEvents.toList()));
 
 
             }
@@ -282,7 +282,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
                         algorithmWorked = true;
 
-                        log.addMessage(AlgorithmType.BAYES_NET);
+                        log.addMessage(AlgorithmType.BAYES_NET,timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithm.toList()));
 
                     }
                     else {
@@ -350,7 +350,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     }
                 }
 
-                log.addMessage(AlgorithmType.WUPANG);
+                log.addMessage(AlgorithmType.WUPANG,timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithm.toList()));
             }
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
