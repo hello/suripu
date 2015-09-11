@@ -377,4 +377,10 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration calibrationConfiguration;
     public DynamoDBConfiguration getCalibrationConfiguration() {return this.calibrationConfiguration;}
 
+    @Valid
+    @NotNull
+    @JsonProperty("wifi_info")
+    private DynamoDBConfiguration wifiInfoConfiguration;
+    public DynamoDBConfiguration getWifiInfoConfiguration() {return this.wifiInfoConfiguration;}
+
 }
