@@ -21,13 +21,14 @@ public class PartnerHmm {
     private static final Logger LOGGER = LoggerFactory.getLogger(PartnerHmm.class);
 
 
-    static final Double MINUTES_ON_BED = 60.0 * 0.5; //rough order of magnitude, this will limit the number of transitions seen
+    static final Double MINUTES_ON_BED = 60.0 * 0.1; //rough order of magnitude, this will limit the number of transitions seen
     static final Double DECISION_FRACTION = 0.5;
     static final int NUM_STATES = 7;
     static final int NUM_OBS = 4;
-    static final Double PROB_NOT_ON_BED = 0.999;
-
+    static final Double PROB_NOT_ON_BED = 0.9998;
+    static final Double NOT_ME_PENALTY = 1e-3;
     static final double MIN_LIKELIHOOD = 1e-100;
+    static final double NOT_ON_BED_PENALTY = 0.25;
 
 
     private static Double getSelfTermFromDuration(final Double durationInMinutes, final int durationOfPeriodInMinutes) {
@@ -147,23 +148,23 @@ public class PartnerHmm {
 
         //these numbers are made up
         final List<Double> probsOfMeOnBed = Lists.newArrayList();
-        probsOfMeOnBed.add(0.3);
-        probsOfMeOnBed.add(0.3999);
-        probsOfMeOnBed.add(0.0001);
-        probsOfMeOnBed.add(0.3);
+        probsOfMeOnBed.add(1.0 - NOT_ON_BED_PENALTY);
+        probsOfMeOnBed.add(NOT_ON_BED_PENALTY * (4.0/7.0) - NOT_ME_PENALTY);
+        probsOfMeOnBed.add(NOT_ME_PENALTY);
+        probsOfMeOnBed.add(NOT_ON_BED_PENALTY * (3.0/7.0));
 
 
         final List<Double> probsOfYouOnBed = Lists.newArrayList();
-        probsOfYouOnBed.add(0.3);
-        probsOfYouOnBed.add(0.0001);
-        probsOfYouOnBed.add(0.3999);
-        probsOfYouOnBed.add(0.3);
+        probsOfYouOnBed.add(1.0 - NOT_ON_BED_PENALTY);
+        probsOfYouOnBed.add(NOT_ME_PENALTY);
+        probsOfYouOnBed.add(NOT_ON_BED_PENALTY * (4.0/7.0) - NOT_ME_PENALTY);
+        probsOfYouOnBed.add(NOT_ON_BED_PENALTY * (3.0/7.0));
 
         final List<Double> probsItsAParty = Lists.newArrayList();
-        probsItsAParty.add(0.3);
-        probsItsAParty.add(0.2);
-        probsItsAParty.add(0.2);
-        probsItsAParty.add(0.3);
+        probsItsAParty.add(1.0 - NOT_ON_BED_PENALTY);
+        probsItsAParty.add(NOT_ON_BED_PENALTY * (2.0/7.0));
+        probsItsAParty.add(NOT_ON_BED_PENALTY * (2.0/7.0));
+        probsItsAParty.add(NOT_ON_BED_PENALTY * (3.0/7.0));
 
 
         final HmmPdfInterface [] obsModels = new HmmPdfInterface[NUM_STATES];

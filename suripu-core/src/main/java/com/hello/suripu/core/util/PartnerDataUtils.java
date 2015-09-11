@@ -27,7 +27,7 @@ public class PartnerDataUtils {
 
 
     private static final int NUM_SIGNALS = 3;
-    final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
+    final static protected Integer NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
 
     private final Logger LOGGER;
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(PartnerDataUtils.class);
@@ -252,40 +252,50 @@ public class PartnerDataUtils {
 
     }
 
-    private static void fillBinsWithTrackerDurations(final Double [] bins, final Long t0,final Long period,final List<TrackerMotion> data, int sign,boolean smear) {
+    private static class FractionalTrackerMotion {
+
+        public FractionalTrackerMotion(final TrackerMotion m) {
+            final Long mod = m.timestampNoTruncation % NUMBER_OF_MILLIS_IN_A_MINUTE.longValue();
+            final Double frac2 = ((mod.doubleValue()) / (NUMBER_OF_MILLIS_IN_A_MINUTE.doubleValue()));
+            final Double frac1 = 1.0 - frac2;
+
+
+            timestamp1 = m.timestamp - NUMBER_OF_MILLIS_IN_A_MINUTE;
+            duration1 = frac1 * m.onDurationInSeconds;
+
+            timestamp2 = m.timestamp;
+            duration2 = frac2 * m.onDurationInSeconds;
+        }
+
+        public final Double duration1;
+        public final Long timestamp1;
+
+        public final Double duration2;
+        public final Long timestamp2;
+    }
+
+    private static void fillBinsWithTrackerDurations(final Double [] bins, final Long t0,final Long period,final List<TrackerMotion> data, int sign) {
 
         Iterator<TrackerMotion> it = data.iterator();
 
         while(it.hasNext()) {
-            final TrackerMotion m1 = it.next();
+            final FractionalTrackerMotion fractionalMotion = new FractionalTrackerMotion(it.next());
 
-            final int idx = getIndex(m1.timestamp,t0,period,bins.length);
-            double normalizer = 1.0;
+            final int idx1 = getIndex(fractionalMotion.timestamp1,t0,period,bins.length);
 
-            if (smear) {
-                normalizer = 3.0;
+            if (idx1 >= 0) {
+                bins[idx1] += (sign * fractionalMotion.duration1);
             }
 
-            if (idx >= 0) {
-                bins[idx] += (sign * m1.onDurationInSeconds) / normalizer;
-            }
+            final int idx2 = getIndex(fractionalMotion.timestamp2,t0,period,bins.length);
 
-            if (smear) {
-
-                final int idx1 = getIndex(m1.timestamp - 1 * NUMBER_OF_MILLIS_IN_A_MINUTE,t0,period,bins.length);
-                final int idx2 = getIndex(m1.timestamp + 1 * NUMBER_OF_MILLIS_IN_A_MINUTE,t0,period,bins.length);
-
-                if (idx1 >= 0) {
-                    bins[idx1] += (sign * m1.onDurationInSeconds) / normalizer;
-
-                }
-
-                if (idx2 >= 0) {
-                    bins[idx2] += (sign * m1.onDurationInSeconds) / normalizer;
-                }
+            if (idx2 >= 0) {
+                bins[idx2] += (sign * fractionalMotion.duration2);
             }
         }
     }
+
+
 
     private static String getTimestampOfTrackerMotionInLocalTimezone(final TrackerMotion m) {
         final DateTime time = new DateTime(m.timestamp).withZone(DateTimeZone.forOffsetMillis(m.offsetMillis));
@@ -299,8 +309,8 @@ public class PartnerDataUtils {
         }
 
         //de-dup tracker motion
-        final List<TrackerMotion> myMotionsDeDuped = TrackerMotionUtils.removeDuplicatesAndInvalidValues(myMotions.asList());
-        final List<TrackerMotion> yourMotionsDeDuped = TrackerMotionUtils.removeDuplicatesAndInvalidValues(yourMotions.asList());
+        final List<TrackerMotion> myMotionsDeDuped = TrackerMotionUtils.removeDuplicatesAndInvalidValuesBySpacing(myMotions.asList());
+        final List<TrackerMotion> yourMotionsDeDuped = TrackerMotionUtils.removeDuplicatesAndInvalidValuesBySpacing(yourMotions.asList());
 
 
 
@@ -309,7 +319,7 @@ public class PartnerDataUtils {
         final Long tf = endTimeUTC.getMillis();
 
 
-        final long period = NUMBER_OF_MILLIS_IN_A_MINUTE * 5;
+        final long period = NUMBER_OF_MILLIS_IN_A_MINUTE * 1;
         final int durationInIntervals = (int) ((tf - t0) / period);
 
 
@@ -319,11 +329,11 @@ public class PartnerDataUtils {
         final Double partnerMotionsBinned [] = new Double[durationInIntervals];
         Arrays.fill(partnerMotionsBinned,0.0);
 
-        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1,true);
-        fillBinsWithTrackerDurations(partnerMotionsBinned,t0,period,yourMotionsDeDuped,1,true);
+        fillBinsWithTrackerDurations(myMotionsBinned,t0,period,myMotionsDeDuped,1);
+        fillBinsWithTrackerDurations(partnerMotionsBinned,t0,period,yourMotionsDeDuped,1);
 
         final PartnerHmm partnerHmmFilter = new PartnerHmm();
-        final ImmutableList<Integer> hmmPath = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, 5);
+        final ImmutableList<Integer> hmmPath = partnerHmmFilter.decodeSensorData(myMotionsBinned, partnerMotionsBinned, 1);
 
         final ImmutableList<Integer> myClassifiedMotions = partnerHmmFilter.interpretPath(hmmPath);
 

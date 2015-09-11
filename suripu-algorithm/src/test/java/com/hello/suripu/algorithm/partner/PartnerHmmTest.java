@@ -34,7 +34,7 @@ public class PartnerHmmTest {
         final Double [] myMotionData2 =      {0.0,0.0,1.0,1.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0};
         final Double [] somePartnerMotion2 = {0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0};
 
-        final int [] refPath1 = {0,0,0,1,1,1,6,6};
+        final int [] refPath1 = {0,0,0,1,3,4,6,6};
         final int [] refPath2 = {0,0,0,1,1,1,3,3,3,5,5,6,6,6};
         final int [] refPath3 = {0,0,0,2,2,2,3,3,3,4,4,6,6,6};
 
