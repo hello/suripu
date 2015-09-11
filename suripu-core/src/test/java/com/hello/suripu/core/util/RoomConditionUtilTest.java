@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.api.input.DataInputProtos.periodic_data;
 import com.hello.suripu.api.output.OutputProtos.SyncResponse.RoomConditions;
 import com.hello.suripu.core.models.Calibration;
@@ -48,7 +49,7 @@ public class RoomConditionUtilTest {
                 data.getFirmwareVersion(),
                 DateTime.now(),
                 2,
-                Calibration.createDefault("dummy-sense"));
+                Optional.of(Calibration.createDefault("dummy-sense")));
 
         final RoomConditions newConditions = RoomConditions.valueOf(
                 RoomConditionUtil.getGeneralRoomConditionV2(currentRoomState, false).ordinal());

@@ -252,7 +252,7 @@ public abstract class DeviceDataDAO {
             final String sensor,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Calibration calibration) {
+            final Optional<Calibration> calibrationOptional) {
 
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
@@ -287,7 +287,7 @@ public abstract class DeviceDataDAO {
 
         LOGGER.trace("Map size = {}", map.size());
 
-        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor, color, calibration);
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor, color, calibrationOptional);
 
         if(!optionalPopulatedMap.isPresent()) {
             return Collections.EMPTY_LIST;
@@ -313,7 +313,7 @@ public abstract class DeviceDataDAO {
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Calibration calibration) {
+            final Optional<Calibration> calibrationOptional) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
@@ -331,7 +331,7 @@ public abstract class DeviceDataDAO {
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibration);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibrationOptional);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;
@@ -408,7 +408,7 @@ public abstract class DeviceDataDAO {
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Calibration calibration) {
+            final Optional<Calibration> calibrationOptional) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
@@ -427,7 +427,7 @@ public abstract class DeviceDataDAO {
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibration);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibrationOptional);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;

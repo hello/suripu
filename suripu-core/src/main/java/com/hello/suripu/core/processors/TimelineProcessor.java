@@ -475,8 +475,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Optional<Device.Color> optionalColor = senseColorDAO.getColorForSense(externalDeviceId);
 
         // get calibration data, which help to adjust dust readings
-        final Optional<Calibration> optionalCalibration = this.hasCalibrationEnabled(externalDeviceId) ? calibrationDAO.getStrict(externalDeviceId) : Optional.<Calibration>absent();
-        final Calibration calibration = optionalCalibration.isPresent() ? optionalCalibration.get() : Calibration.createDefault(externalDeviceId);
+        final Optional<Calibration> calibrationOptional = this.hasCalibrationEnabled(externalDeviceId) ? calibrationDAO.getStrict(externalDeviceId) : Optional.<Calibration>absent();
 
         AllSensorSampleList allSensorSampleList;
         if (hasAllSensorQueryUseUTCTs(accountId)) {
@@ -487,7 +486,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                     targetDate.minusMillis(tzOffsetMillis).getMillis(),
                     endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibration);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional);
         } else {
             // query dates are in local_utc_ts
             LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
@@ -495,7 +494,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(),
                     endDate.getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId), optionalColor, calibration);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId), optionalColor, calibrationOptional);
         }
 
         if (allSensorSampleList.isEmpty()) {

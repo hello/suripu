@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import org.slf4j.Logger;
@@ -18,10 +19,14 @@ public class DataUtils{
     private static final int TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS = 389; // 389 => 7ºF, previous 278 => 5ºF;
     public static final float PEAK_DISTURBANCE_NOISE_FLOOR = 40.0f;
 
-    public static float convertRawDustCountsToDensity(final int rawDustCount, final Calibration calibration, final int firmwareVersion) {
+    public static float convertRawDustCountsToDensity(final int rawDustCount, final Optional<Calibration> calibrationOptional, final int firmwareVersion) {
         // Expected output unit: microgram per cubic meter
-        final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibration);
-        return convertDustDataFromCountsToDensity(calibratedRawDustCount, calibration.senseId) * 1000.0f;
+
+        if (calibrationOptional.isPresent()) {
+            final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibrationOptional.get());
+            return convertDustDataFromCountsToDensity(calibratedRawDustCount, calibrationOptional.get().senseId) * 1000.0f;
+        }
+        return convertDustDataFromCountsToDensity(rawDustCount, "");
     }
 
     public static int calibrateRawDustCount(final int rawDustCount, final Calibration calibration) {
