@@ -31,7 +31,8 @@ public enum DynamoDBTableName {
     BAYESNET_PRIORS("hmm_bayesnet_priors"),
     BAYESNET_MODEL("hmm_bayesnet_models"),
     CALIBRATION("calibration"),
-    INSIGHTS("insights");
+    INSIGHTS("insights"),
+    WIFI_INFO("wifi_info");
 
     private String value;
 
