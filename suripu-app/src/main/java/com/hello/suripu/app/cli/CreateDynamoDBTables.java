@@ -26,6 +26,7 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
@@ -68,9 +69,10 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createOTAHistoryTable(configuration, awsCredentialsProvider);
         createResponseCommandsTable(configuration, awsCredentialsProvider);
         createFWUpgradePathTable(configuration, awsCredentialsProvider);
-        createHmmBayesNetModelPriorTable(configuration,awsCredentialsProvider);
-        createHmmBayesNetModelTable(configuration,awsCredentialsProvider);
+        createHmmBayesNetModelPriorTable(configuration, awsCredentialsProvider);
+        createHmmBayesNetModelTable(configuration, awsCredentialsProvider);
         createCalibrationTable(configuration, awsCredentialsProvider);
+        createWifiInfoTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -463,6 +465,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = CalibrationDynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createWifiInfoTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getWifiInfoConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = WifiInfoDynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }
