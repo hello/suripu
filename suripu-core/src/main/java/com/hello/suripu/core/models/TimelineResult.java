@@ -28,10 +28,9 @@ public class TimelineResult {
         if (logV2.isPresent()) {
             return logV2.get().toProtobufBase64();
         }
-        else {
-            return "";
-        }
 
+        return "";
+        
     }
 
     @JsonIgnore
