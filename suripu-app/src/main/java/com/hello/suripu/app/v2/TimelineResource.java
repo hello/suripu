@@ -114,7 +114,7 @@ public class TimelineResource extends BaseResource {
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
 
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
-
+        
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
 
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
@@ -201,6 +201,15 @@ public class TimelineResource extends BaseResource {
             return;
         }
 
+        //do not check validity of events that are not sleep events
+        final boolean isSleepEvent = timelineFeedback.eventType.equals(Event.Type.IN_BED)
+                || timelineFeedback.eventType.equals(Event.Type.SLEEP)
+                || timelineFeedback.eventType.equals(Event.Type.WAKE_UP)
+                || timelineFeedback.eventType.equals(Event.Type.OUT_OF_BED);
+
+        if (!isSleepEvent) {
+            return;
+        }
 
         final FeedbackUtils feedbackUtils = new FeedbackUtils();
         final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accountId,timelineFeedback.dateOfNight);
