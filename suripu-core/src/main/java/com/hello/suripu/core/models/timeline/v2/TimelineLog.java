@@ -48,8 +48,8 @@ public class TimelineLog {
         invalidNightErrorMap.put(TimelineError.INVALID_SLEEP_SCORE, ErrorType.INVALID_SLEEP_SCORE);
         invalidNightErrorMap.put(TimelineError.MISSING_KEY_EVENTS, ErrorType.MISSING_KEY_EVENTS);
         invalidNightErrorMap.put(TimelineError.NOT_ENOUGH_HOURS_OF_SLEEP, ErrorType.NOT_ENOUGH_SLEEP_TIME);
-        invalidNightErrorMap.put(TimelineError.DATA_GAP_TOO_LARGE, ErrorType.NOT_ENOUGH_SLEEP_TIME);
-        invalidNightErrorMap.put(TimelineError.EVENTS_OUT_OF_ORDER, ErrorType.NOT_ENOUGH_SLEEP_TIME);
+        invalidNightErrorMap.put(TimelineError.DATA_GAP_TOO_LARGE, ErrorType.DATA_GAP_TOO_LARGE);
+        invalidNightErrorMap.put(TimelineError.EVENTS_OUT_OF_ORDER, ErrorType.EVENTS_OUT_OF_ORDER);
         invalidNightErrorMap.put(TimelineError.UNEXEPECTED, ErrorType.UNEXEPECTED);
 
 
