@@ -1,6 +1,7 @@
 package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
@@ -377,4 +378,13 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration calibrationConfiguration;
     public DynamoDBConfiguration getCalibrationConfiguration() {return this.calibrationConfiguration;}
 
+
+    @Valid
+    @NotNull
+    @JsonProperty("dynamodb")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+
+    public NewDynamoDBConfiguration dynamoDBConfiguration(){
+        return dynamoDBConfiguration;
+    }
 }
