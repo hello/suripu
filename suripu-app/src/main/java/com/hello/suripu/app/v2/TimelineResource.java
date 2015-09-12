@@ -6,6 +6,8 @@ import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -61,20 +63,22 @@ public class TimelineResource extends BaseResource {
     private final FeedbackDAO feedbackDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
-
+    private final DataLogger timelineLogDAOV2;
 
     public TimelineResource(final TimelineDAODynamoDB timelineDAODynamoDB,
                             final TimelineProcessor timelineProcessor,
                             final TimelineLogDAO timelineLogDAO,
                             final FeedbackDAO feedbackDAO,
                             final TrackerMotionDAO trackerMotionDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                            final DataLogger timelineLogDAOV2) {
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.timelineLogDAO = timelineLogDAO;
         this.feedbackDAO = feedbackDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        this.timelineLogDAOV2 = timelineLogDAOV2;
     }
 
     @GET
@@ -89,7 +93,13 @@ public class TimelineResource extends BaseResource {
             return Timeline.createEmpty(targetDate);
         }
 
-        timelineLogDAO.putTimelineLog(accessToken.accountId, timeline.get().log);
+        if (timeline.get().logV2.isPresent()) {
+            final TimelineLog logV2 = timeline.get().logV2.get();
+            final String partitionKey = logV2.getParitionKey();
+            timelineLogDAOV2.putAsync(partitionKey, logV2.toProtoBuf());
+            timelineLogDAO.putTimelineLog(accessToken.accountId, logV2.getAsV1Log());
+        }
+
         // That's super ugly. Need to find a more elegant way to write this
         final TimelineResult timelineResult = timeline.get();
         return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
