@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
 
@@ -83,6 +82,7 @@ public class WifiInfoDAODynamoDBTest {
         assertThat(wifiInfo.senseId, is(senseId));
         assertThat(wifiInfo.ssid, is(ssid));
         assertThat(wifiInfo.rssi, is(rssi));
-        assertThat(wifiInfo.lastUpdated, is(DateTime.now(DateTimeZone.UTC)));
+        assertThat(wifiInfo.lastUpdated != null, is(true));
+        assertThat(wifiInfo.lastUpdated.isAfterNow(), is(false));
     }
 }
