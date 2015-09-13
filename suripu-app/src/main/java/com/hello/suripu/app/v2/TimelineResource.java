@@ -6,6 +6,8 @@ import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -61,20 +63,22 @@ public class TimelineResource extends BaseResource {
     private final FeedbackDAO feedbackDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
-
+    private final DataLogger timelineLogDAOV2;
 
     public TimelineResource(final TimelineDAODynamoDB timelineDAODynamoDB,
                             final TimelineProcessor timelineProcessor,
                             final TimelineLogDAO timelineLogDAO,
                             final FeedbackDAO feedbackDAO,
                             final TrackerMotionDAO trackerMotionDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                            final DataLogger timelineLogDAOV2) {
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.timelineLogDAO = timelineLogDAO;
         this.feedbackDAO = feedbackDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
+        this.timelineLogDAOV2 = timelineLogDAOV2;
     }
 
     @GET
@@ -83,13 +87,21 @@ public class TimelineResource extends BaseResource {
     @Path("/{date}")
     public Timeline getTimelineForNight(@Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken,
                                         @PathParam("date") final String night) {
+
+
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
         final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
         if(!timeline.isPresent()) {
             return Timeline.createEmpty(targetDate);
         }
+        // That's super ugly. Need to find a more elegant way to write this
+        if (timeline.get().logV2.isPresent()) {
+            final TimelineLog logV2 = timeline.get().logV2.get();
+            final String partitionKey = logV2.getPartitionKey();
+            timelineLogDAOV2.putAsync(partitionKey, logV2.toProtoBuf());
+            timelineLogDAO.putTimelineLog(accessToken.accountId, logV2.getAsV1Log());
+        }
 
-        timelineLogDAO.putTimelineLog(accessToken.accountId, timeline.get().log);
         // That's super ugly. Need to find a more elegant way to write this
         final TimelineResult timelineResult = timeline.get();
         return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
@@ -114,9 +126,7 @@ public class TimelineResource extends BaseResource {
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
 
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
-        
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
-
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
         return getTimelineForNight(accessToken, date);
@@ -133,7 +143,7 @@ public class TimelineResource extends BaseResource {
 
         return Response.status(Response.Status.ACCEPTED)
                        .entity(getTimelineForNight(accessToken, date))
-                .build();
+                       .build();
     }
 
     @PUT
@@ -155,9 +165,7 @@ public class TimelineResource extends BaseResource {
 
         // Correct event means feedback = prediction
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
-
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback,offsetMillis);
-
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
 
         return Response.status(Response.Status.ACCEPTED).build();
@@ -173,7 +181,6 @@ public class TimelineResource extends BaseResource {
 
         LOGGER.warn("Missing aggregateSleepStats for account_id = {} and date = {}", accountId, date);
         LOGGER.warn("Querying trackerMotion table for offset for account_id = {} and date = {}", accountId, date);
-
         final DateTime startDateTime = DateTimeUtil.ymdStringToDateTime(date);
         final DateTime endDateTime = startDateTime.plusHours(48);
 
@@ -223,6 +230,5 @@ public class TimelineResource extends BaseResource {
         if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timelineFeedback,offsetMillis)) {
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
         }
-
     }
 }

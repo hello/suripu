@@ -201,10 +201,10 @@ public class TimelineSafeguards {
     }
 
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
-    public boolean checkIfValidTimeline (SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
+    public TimelineError checkIfValidTimeline (SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
 
         if (!checkEventOrdering(sleepEvents,extraEvents)) {
-            return false;
+            return TimelineError.NO_ERROR;
         }
 
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {
@@ -212,7 +212,7 @@ public class TimelineSafeguards {
 
             if (sleepDurationInMinutes <= MINIMUM_SLEEP_DURATION_MINUTES) {
                 LOGGER.warn("sleep duration of {} minutes is less than limit {} minutes -- invalidating timeline",sleepDurationInMinutes,MINIMUM_SLEEP_DURATION_MINUTES);
-                return false;
+                return TimelineError.NOT_ENOUGH_HOURS_OF_SLEEP;
             }
         }
 
@@ -220,10 +220,10 @@ public class TimelineSafeguards {
 
         if (maxDataGapInMinutes > MAXIMUM_ALLOWABLE_DATAGAP) {
             LOGGER.warn("max data gap {} minutes is greaten than limit {} minutes -- invalidating timeline",maxDataGapInMinutes,MAXIMUM_ALLOWABLE_DATAGAP);
-            return false;
+            return TimelineError.DATA_GAP_TOO_LARGE;
         }
 
-        return  true;
+        return TimelineError.NO_ERROR;
     }
 
 }

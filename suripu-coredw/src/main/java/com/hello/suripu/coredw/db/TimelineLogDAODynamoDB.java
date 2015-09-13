@@ -48,7 +48,7 @@ public class TimelineLogDAODynamoDB implements TimelineLogDAO {
     /* hash key = accountId
      * range_key = target_date + alg name
       * */
-    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineLogDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
