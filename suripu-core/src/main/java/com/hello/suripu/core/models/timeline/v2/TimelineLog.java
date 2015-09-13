@@ -127,7 +127,7 @@ public class TimelineLog {
         return Base64.encodeBase64URLSafeString(toProtoBuf());
     }
 
-    public String getParitionKey() {
+    public String getPartitionKey() {
         return Long.valueOf(accountId).toString();
     }
 

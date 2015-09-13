@@ -97,7 +97,7 @@ public class TimelineResource extends BaseResource {
         // That's super ugly. Need to find a more elegant way to write this
         if (timeline.get().logV2.isPresent()) {
             final TimelineLog logV2 = timeline.get().logV2.get();
-            final String partitionKey = logV2.getParitionKey();
+            final String partitionKey = logV2.getPartitionKey();
             timelineLogDAOV2.putAsync(partitionKey, logV2.toProtoBuf());
             timelineLogDAO.putTimelineLog(accessToken.accountId, logV2.getAsV1Log());
         }

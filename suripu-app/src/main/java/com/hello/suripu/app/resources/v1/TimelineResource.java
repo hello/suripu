@@ -111,7 +111,7 @@ public class TimelineResource extends BaseResource {
             if (logV2.isPresent()) {
                 timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
 
-                final String partitionKey = logV2.get().getParitionKey();
+                final String partitionKey = logV2.get().getPartitionKey();
                 timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
             }
             return cachedResult.get();
@@ -141,7 +141,7 @@ public class TimelineResource extends BaseResource {
                 if (logV2.isPresent()) {
                     timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
 
-                    final String partitionKey = logV2.get().getParitionKey();
+                    final String partitionKey = logV2.get().getPartitionKey();
                     timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
                 }
 
