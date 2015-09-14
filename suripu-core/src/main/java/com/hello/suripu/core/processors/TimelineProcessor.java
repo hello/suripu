@@ -264,9 +264,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                         //update priors
                 if (sleepEventsFromAlgorithmOptional.get().fallAsleep.isPresent()) {
                     algorithmWorked = true;
-                    }
-
-                    //save first priors for day
+                    log.addMessage(AlgorithmType.ONLINE_HMM,timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithmOptional.get().toList()));
+                }
+                else {
+                    log.addMessage(AlgorithmType.ONLINE_HMM,TimelineError.MISSING_KEY_EVENTS);
+                }
             }
             else {
 
