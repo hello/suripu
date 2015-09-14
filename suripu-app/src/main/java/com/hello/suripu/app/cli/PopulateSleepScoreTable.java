@@ -10,16 +10,16 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
-import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
-import com.hello.suripu.core.db.BayesNetModelDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -103,14 +103,14 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
         );
 
        /* Priors for bayesnet  */
-        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
-        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        final String onlineHmmModelsTableName = configuration.getOnlineHmmModelsConfiguration().getTableName();
+        final AmazonDynamoDB onlineHmmModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getOnlineHmmModelsConfiguration().getEndpoint());
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = new OnlineHmmModelsDAODynamoDB(onlineHmmModelsDb,onlineHmmModelsTableName);
 
         /* Models for bayesnet */
-        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
-        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
+        final String featureExtractionModelsTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
+        final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
 
         /* data for ye olde HMM */
@@ -126,11 +126,8 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
         ObjectGraphRoot.getInstance().init(module);
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
-
-
         final AmazonDynamoDB calibrationDynamoDB = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
         final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDB, configuration.getCalibrationConfiguration().getTableName());
-
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
@@ -138,9 +135,10 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
                 accountDAO,
-                sleepStatsDAODynamoDB,
-                senseColorDAO, priorsDAO,modelDAO,
-                calibrationDAO);
+                sleepStatsDAODynamoDB,          
+                senseColorDAO,
+                onlineHmmModelsDAO,
+                featureExtractionDAO,calibrationDAO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);
@@ -159,7 +157,7 @@ public class PopulateSleepScoreTable extends ConfiguredCommand<SuripuAppConfigur
             int hasScore = 0;
             for (int i = 0; i < numDays; i++) {
                 final DateTime targetDate = startTargetDate.plusDays(i);
-                final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+                final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,false);
 
                 if (!result.isPresent()) {
                     continue;

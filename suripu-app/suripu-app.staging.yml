@@ -123,7 +123,6 @@ http:
   # The port on which the HTTP server listens for administrative
   # requests. Subject to the same limitations as "port".
   adminPort: 9998
-  # HTTP request log settings.
   requestLog:
     file:
       enabled: true
@@ -144,7 +143,7 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu: DEBUG
-  # Settings for logging to a file.
+
   file:
     enabled: true
     threshold: DEBUG
@@ -157,7 +156,6 @@ logging:
     archivedFileCount: 7
     # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
     timeZone: UTC
-
 
 event_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -322,22 +320,17 @@ sense_last_seen:
   region: us-east-1
   table_name: sense_last_seen
 
-hmm_bayesnet_priors:
+ture_extraction_models:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: hmm_bayesnet_priors
+  table_name: feature_extraction_models
 
-hmm_bayesnet_models:
+online_hmm_models:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: hmm_bayesnet_models
+  table_name: online_hmm_models
 
 calibration:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: calibration
-
-wifi_info:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: wifi_info

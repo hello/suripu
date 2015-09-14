@@ -1,9 +1,11 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
@@ -27,6 +29,7 @@ import java.util.UUID;
 
 
 public class FeedbackUtils {
+
     private static long MINUTE = 60000L;
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(FeedbackUtils.class);
     private static int INVALID_EVENT_ORDER = -1;
@@ -164,6 +167,7 @@ public class FeedbackUtils {
         return eventsByType;
     }
 
+    /* returns list of events by original event type */
     public static Map<Event.Type,Long> getTimesFromEventsMap(final Map<Event.Type, Event> eventsByType) {
         final Map<Event.Type,Long> eventTimesByType = Maps.newHashMap();
 
@@ -304,8 +308,8 @@ public class FeedbackUtils {
 
     public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
 
-        //there will only ever by one feedback of a given type on a day
-        //and they have priority over alg events
+
+        /* get events by time  */
         final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(timelineFeedbackList, offsetMillis);
 
 
@@ -370,8 +374,6 @@ public class FeedbackUtils {
 
 
         //populate maps
-
-        //populate feedback multimap with feedback events, organized by type of event
         for (final EventWithTime event : feedbackEventByOriginalTime) {
             if (!feedbackEventsByType.containsKey(event.event.getType())) {
                 feedbackEventsByType.put(event.event.getType(),new HashSet<EventWithTime>());
@@ -381,7 +383,6 @@ public class FeedbackUtils {
 
         }
 
-        //populate alg multimap with "main" alg events, organized by type
         for (final Event event : algEvents) {
             if (!algEventsByType.containsKey(event.getType())) {
                 algEventsByType.put(event.getType(),new HashSet<EventWithTime>());
@@ -390,7 +391,6 @@ public class FeedbackUtils {
             algEventsByType.get(event.getType()).add(new EventWithTime(event.getStartTimestamp(),event,EventWithTime.Type.MAIN));
         }
 
-        //populate alg multimap with "extra" alg events, organized by type
         for (final Event event : extraEvents) {
             if (!algEventsByType.containsKey(event.getType())) {
                 algEventsByType.put(event.getType(),new HashSet<EventWithTime>());
@@ -482,7 +482,7 @@ public class FeedbackUtils {
             }
         }
 
-        return new ReprocessedEvents(ImmutableList.copyOf(newAlgEvents),ImmutableList.copyOf(newExtraEvents));
+        return  new ReprocessedEvents(ImmutableList.copyOf(newAlgEvents),ImmutableList.copyOf(newExtraEvents));
 
     }
 
