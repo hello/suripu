@@ -10,6 +10,8 @@ import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
+import com.hello.suripu.core.util.DateTimeUtil;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,7 @@ import java.util.Map;
  */
 public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     private final static String HASH_KEY = "account_id";
+    private final static String RANGE_KEY = "date";
     private final static String PAYLOAD_KEY_FOR_PARAMS = "model_params";
     private final static String PAYLOAD_KEY_FOR_SCRATCHPAD = "scratchpad";
     private final static Logger LOGGER = LoggerFactory.getLogger(OnlineHmmModelsDAODynamoDB.class);
@@ -32,13 +35,15 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
         final List<String> payloadColumnNames = Lists.newArrayList();
         payloadColumnNames.add(PAYLOAD_KEY_FOR_PARAMS);
         payloadColumnNames.add(PAYLOAD_KEY_FOR_SCRATCHPAD);
-        dbDAO = new GeneralProtobufDAODynamoDB(LOGGER, dynamoDBClient, tableName, HASH_KEY, Optional.<String>absent(), payloadColumnNames);
+        dbDAO = new GeneralProtobufDAODynamoDB(LOGGER, dynamoDBClient, tableName, HASH_KEY, Optional.of(RANGE_KEY), payloadColumnNames);
     }
 
 
     @Override
-    public OnlineHmmData getModelDataByAccountId(Long accountId) {
-        final Map<String, Map<String,byte[]>> results = dbDAO.getBySingleKeyNoRangeKey(accountId.toString());
+    public OnlineHmmData getModelDataByAccountId(Long accountId,final DateTime date) {
+        final String dateString = DateTimeUtil.dateToYmdString(date);
+
+        final Map<String, Map<String,byte[]>> results = dbDAO.getBySingleKeyLessThanRangeKey(accountId.toString(),dateString,1);
 
         LOGGER.info("getModelDataByAccountId for user {}",accountId);
 
@@ -67,43 +72,46 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     }
 
     @Override
-    public boolean updateModelPriors(final Long accountId,final  OnlineHmmPriors priors) {
+    public boolean updateModelPriors(final Long accountId,final DateTime date, final  OnlineHmmPriors priors) {
         final Map<String,byte []> payloads = Maps.newHashMap();
+        final String dateString = DateTimeUtil.dateToYmdString(date);
 
         LOGGER.info("updateModelPriors for user {}",accountId);
 
         payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
 
-        return dbDAO.update(accountId.toString(), "", payloads);
+        return dbDAO.update(accountId.toString(), dateString, payloads);
     }
 
     @Override
-    public boolean updateScratchpad(final Long accountId, final OnlineHmmScratchPad scratchPad) {
+    public boolean updateScratchpad(final Long accountId,final DateTime date, final OnlineHmmScratchPad scratchPad) {
         final Map<String,byte []> payloads = Maps.newHashMap();
+        final String dateString = DateTimeUtil.dateToYmdString(date);
 
         LOGGER.info("updateScratchpad for user {}",accountId);
 
         payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,scratchPad.serializeToProtobuf());
 
-        return dbDAO.update(accountId.toString(), "", payloads);
+        return dbDAO.update(accountId.toString(), dateString, payloads);
 
     }
 
     @Override
-    public boolean updateModelPriorsAndZeroOutScratchpad(final Long accountId, final OnlineHmmPriors priors) {
+    public boolean updateModelPriorsAndZeroOutScratchpad(final Long accountId,final DateTime date, final OnlineHmmPriors priors) {
         final Map<String,byte []> payloads = Maps.newHashMap();
+        final String dateString = DateTimeUtil.dateToYmdString(date);
 
         LOGGER.info("updateModelPriorsAndZeroOutScratchpad for user {}",accountId);
 
         payloads.put(PAYLOAD_KEY_FOR_PARAMS,priors.serializeToProtobuf());
         payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,OnlineHmmProtos.AlphabetHmmScratchPad.newBuilder().setLastDateUpdatedUtc(0).build().toByteArray());
 
-        return dbDAO.update(accountId.toString(),"",payloads);
+        return dbDAO.update(accountId.toString(),dateString,payloads);
     }
 
 
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient) {
-        return GeneralProtobufDAODynamoDB.createTable(tableName, HASH_KEY, Optional.<String>absent(), dynamoDBClient, 1, 1);
+        return GeneralProtobufDAODynamoDB.createTable(tableName, HASH_KEY, Optional.of(RANGE_KEY), dynamoDBClient, 1, 1);
     }
 }

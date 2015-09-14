@@ -143,11 +143,11 @@ public class OnlineHmm {
 
     }
 
-    public OnlineHmmData getReconciledModelsForUser(final long accountId) {
+    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening) {
         final OnlineHmmData emptyResult = new OnlineHmmData(Optional.<OnlineHmmPriors>absent(),Optional.<OnlineHmmScratchPad>absent());
 
         /* GET THE USER-SPECIFIC MODEL PARAMETERS FOR THE ONE HMM TO RULE THEM ALL */
-        final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId);
+        final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId,evening);
 
         //sort out the differences between the default model and the user models
         OnlineHmmPriors modelPriors = null;
@@ -168,7 +168,7 @@ public class OnlineHmm {
             modelPriors = defaultPrior;
 
             //update dynamo
-            userModelDAO.updateModelPriors(accountId,modelPriors);
+            userModelDAO.updateModelPriors(accountId,evening,modelPriors);
 
         }
         else {
@@ -271,7 +271,7 @@ public class OnlineHmm {
 
     }
 
-    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc,
+    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime evening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc,
                            OneDaysSensorData oneDaysSensorData, boolean feedbackHasChanged,boolean forceLearning) {
 
         /*  GET THE FEATURE EXTRACTION LAYER -- this will be as bunch of HMMs that will classify binned sensor data into discrete classes
@@ -295,7 +295,7 @@ public class OnlineHmm {
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
 
 
-        OnlineHmmData userModelData = getReconciledModelsForUser(accountId);
+        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening);
 
         if (!userModelData.modelPriors.isPresent()) {
             LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
@@ -320,7 +320,7 @@ public class OnlineHmm {
 
                 if (!updatedModelPriors.isEmpty()) {
                     //UPDATE THE MODEL IN DYNAMO
-                    userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId, updatedModelPriors);
+                    userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId, evening,updatedModelPriors);
 
                     //USE THE NEW PRIORS
                     modelPriors = updatedModelPriors;
@@ -390,11 +390,11 @@ public class OnlineHmm {
                 //update right now
                 final OnlineHmmPriors updatedModelPriors = updateModelPriorsWithScratchpad(modelPriors, scratchPad, startTimeUtc, true,LOGGER);
 
-                userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,updatedModelPriors);
+                userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,evening,updatedModelPriors);
             }
             else {
                 //otherwise just update the scratchpad
-                userModelDAO.updateScratchpad(accountId,scratchPad);
+                userModelDAO.updateScratchpad(accountId,evening,scratchPad);
             }
         }
 

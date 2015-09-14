@@ -254,6 +254,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     //get priors from DB
                 final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(
                         accountId,
+                        date,
                         targetDate,
                         endDate,
                         sensorData,
