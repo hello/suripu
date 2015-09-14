@@ -5,7 +5,7 @@ import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 /**
  * Created by benjo on 6/24/15.
  */
-public class HmmBayesNetMeasurementParameters {
+public class OnlineHmmMeasurementParameters {
     public static Boolean DEFAULT_ENABLE_INTERVAL_SEARCH = false;
     public static Double DEFAULT_LIGHT_FLOOR_LUX = 0.0;
     public static Double DEFAULT_LIGHT_PRE_MULTIPLER = 1.0;
@@ -28,7 +28,7 @@ public class HmmBayesNetMeasurementParameters {
     public final Boolean useWavesForDisturbances;
     public final Integer numMinutesInMeasPeriod;
 
-    public HmmBayesNetMeasurementParameters(Boolean enableIntervalSearch, Double lightFloorLux, Double lightPreMultiplier, Double pillMagnitudeForDisturbance, Double natLightStartHour, Double natLightStopHour, Boolean useWavesForDisturbances, Integer numMinutesInMeasPeriod) {
+    public OnlineHmmMeasurementParameters(Boolean enableIntervalSearch, Double lightFloorLux, Double lightPreMultiplier, Double pillMagnitudeForDisturbance, Double natLightStartHour, Double natLightStopHour, Boolean useWavesForDisturbances, Integer numMinutesInMeasPeriod) {
         this.enableIntervalSearch = enableIntervalSearch;
         this.lightFloorLux = lightFloorLux;
         this.lightPreMultiplier = lightPreMultiplier;
@@ -39,7 +39,7 @@ public class HmmBayesNetMeasurementParameters {
         this.numMinutesInMeasPeriod = numMinutesInMeasPeriod;
     }
 
-    static public HmmBayesNetMeasurementParameters createFromProto(SleepHmmBayesNetProtos.MeasurementParams params) {
+    static public OnlineHmmMeasurementParameters createFromProto(SleepHmmBayesNetProtos.MeasurementParams params) {
         Boolean enableIntervalSearch = DEFAULT_ENABLE_INTERVAL_SEARCH;
         if (params.hasEnableIntervalSearch()) {
             enableIntervalSearch = params.getEnableIntervalSearch();
@@ -81,7 +81,7 @@ public class HmmBayesNetMeasurementParameters {
         }
 
 
-        return new HmmBayesNetMeasurementParameters(enableIntervalSearch,lightFloorLux,lightPreMultiplier,pillMagnitudeForDisturbance,natLightStartHour,natLightStopHour,useWavesForDisturbances,numMinutesInMeasPeriod);
+        return new OnlineHmmMeasurementParameters(enableIntervalSearch,lightFloorLux,lightPreMultiplier,pillMagnitudeForDisturbance,natLightStartHour,natLightStopHour,useWavesForDisturbances,numMinutesInMeasPeriod);
     }
 
 }

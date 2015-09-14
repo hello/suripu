@@ -18,8 +18,8 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
-import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
-import com.hello.suripu.core.db.BayesNetModelDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -27,8 +27,8 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
+import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -112,16 +112,12 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ALARM_INFO));
 
        /* Priors for bayesnet  */
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_PRIORS));
-        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(
-                priorsDb,
-                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.BAYESNET_PRIORS));
+        final AmazonDynamoDB onlineModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.ONLINE_HMM_MODELS));
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = OnlineHmmModelsDAODynamoDB.create(onlineModelsDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ONLINE_HMM_MODELS));
 
         /* Models for bayesnet */
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.BAYESNET_MODEL));
-        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(
-                modelsDb,
-                configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.BAYESNET_MODEL));
+        final AmazonDynamoDB featureExtractionDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
+        final FeatureExtractionModelsDAO featureExtractionModelsDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
 
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
@@ -180,7 +176,6 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.CALIBRATION));
         final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
-
         final TimelineProcessor timelineProcessor =
                 TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
@@ -190,8 +185,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 accountDAO,
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
-                priorsDAO,
-                modelDAO,
+                onlineHmmModelsDAO,
+                featureExtractionModelsDAO,
                 calibrationDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
