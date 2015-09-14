@@ -39,7 +39,12 @@ public class OnlineHmm {
     private static final long MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD = 20 * NUMBER_OF_MILLIS_IN_AN_HOUR;
 
     public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 5;
-    public final static String DEFAULT_MODEL_KEY = "default";
+    public final static Set<String> DEFAULT_MODEL_KEYS;
+
+    static {
+        DEFAULT_MODEL_KEYS = Sets.newHashSet();
+        DEFAULT_MODEL_KEYS.add("default");
+    }
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmm.class);
     private final Logger LOGGER;
@@ -67,7 +72,7 @@ public class OnlineHmm {
         //old enough == it was created yesterday or earlier
         if (newModel.lastUpdateTimeUtc < startTimeUtc || forceUpdate) {
 
-            //go through each and every model, first matching by outputid
+            //go through each and every model, first matching by output id
             for (final String outputId : newModel.paramsByOutputId.keySet()) {
                 final OnlineHmmModelParams param = newModel.paramsByOutputId.get(outputId);
 
@@ -112,7 +117,7 @@ public class OnlineHmm {
                     }
 
                     //skip default model
-                    if (modelsForThisOutput.get(i).id.equals(DEFAULT_MODEL_KEY)) {
+                    if (DEFAULT_MODEL_KEYS.contains(modelsForThisOutput.get(i).id)) {
                         continue;
                     }
 

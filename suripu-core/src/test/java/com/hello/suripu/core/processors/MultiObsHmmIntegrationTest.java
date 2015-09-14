@@ -370,16 +370,21 @@ public class MultiObsHmmIntegrationTest {
             final OnlineHmmPriors model = modelOptional.get();
 
             final Map<String,OnlineHmmModelParams> modelUpdates = Maps.newHashMap();
-            Iterator<Map.Entry<String,OnlineHmmModelParams>> paramsIterator = model.modelsByOutputId.get("SLEEP").entrySet().iterator();
-
-            paramsIterator.next(); //skip default
-            final OnlineHmmModelParams params = paramsIterator.next().getValue().clone();
-            final OnlineHmmModelParams params2 = paramsIterator.next().getValue().clone();
+            final OnlineHmmModelParams params = model.modelsByOutputId.get("SLEEP").get("default-2");
+            final OnlineHmmModelParams params2 = model.modelsByOutputId.get("SLEEP").get("default-3");
 
             modelUpdates.put("SLEEP",params);
 
+            final Map<String,OnlineHmmModelParams> existingModel = model.modelsByOutputId.get("SLEEP");
+
+            for (final String key : existingModel.keySet()) {
+                STATIC_LOGGER.info("existing model: {}", key);
+            }
+
             for (int i = 0; i < OnlineHmm.MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT; i++) {
                 final String newId = String.format("foobars%03d", i);
+                STATIC_LOGGER.debug("adding model {}", newId);
+
                 model.modelsByOutputId.get("SLEEP").put(newId,params2.clone(newId));
             }
 
@@ -387,8 +392,21 @@ public class MultiObsHmmIntegrationTest {
 
             OnlineHmmPriors updateModel = OnlineHmm.updateModelPriorsWithScratchpad(model, scratchPad, 1, false, STATIC_LOGGER);
 
+            for (final String key : updateModel.modelsByOutputId.keySet()) {
+                STATIC_LOGGER.info("{}", key);
+            }
 
-            TestCase.assertTrue(updateModel.modelsByOutputId.get("SLEEP").size() == OnlineHmm.MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT + 1);
+
+            final Map<String,OnlineHmmModelParams> sleepModels = updateModel.modelsByOutputId.get("SLEEP");
+
+            TestCase.assertFalse(sleepModels == null);
+
+
+            final int numberOfModelsExpected = OnlineHmm.MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT + 1;
+            STATIC_LOGGER.info("number of sleep models: {}, expected: {}", sleepModels.size(),numberOfModelsExpected);
+            final int size = sleepModels.size();
+
+            TestCase.assertTrue(size == numberOfModelsExpected);
             
         }
         catch (IOException e) {
