@@ -2,6 +2,7 @@ package com.hello.suripu.core.models;
 
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -40,7 +41,7 @@ public class WifiInfo {
         }
     }
 
-    @JsonProperty("sense_id")
+    @JsonIgnore
     public final String senseId;
 
     @JsonProperty("ssid")
