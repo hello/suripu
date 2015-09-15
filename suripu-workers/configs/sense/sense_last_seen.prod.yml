@@ -13,7 +13,7 @@ kinesis:
   streams :
     sense_sensors_data : dev_sense_sensors_data
 
-app_name: SenseLastSeenDev
+app_name: SenseLastSeenProd
 
 max_records: 100
 
@@ -26,16 +26,9 @@ dynamodb:
   region: us-east-1
   tables:
     features: features
-    wifi_info: wifi_info
+    wifi_info: prod_wifi_info
 
   endpoints:
-    features: http://localhost:7777
-    wifi_info: http://localhost:7777
+    features: http://dynamodb.us-east-1.amazonaws.com
+    wifi_info: http://dynamodb.us-east-1.amazonaws.com
 
-
-kinesis_logger:
-  stream_name: logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO

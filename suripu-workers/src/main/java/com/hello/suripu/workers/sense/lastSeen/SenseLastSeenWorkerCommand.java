@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.sense_last_seen;
+package com.hello.suripu.workers.sense.lastSeen;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;

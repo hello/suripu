@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.sense_last_seen;
+package com.hello.suripu.workers.sense.lastSeen;
 
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
@@ -84,7 +84,9 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             }
 
             //LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
-            collectWifiInfo(batchPeriodicDataWorker.getData());
+            final DataInputProtos.batched_periodic_data batchPeriodicData = batchPeriodicDataWorker.getData();
+            collectWifiInfo(batchPeriodicData);
+            activeSenses.put(batchPeriodicData.getDeviceId(), batchPeriodicDataWorker.getReceivedAt());
 
         }
 
@@ -104,7 +106,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         }
 
 
-        final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f) ;
+        final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f);
         LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);
@@ -128,33 +130,33 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
     }
 
-
-
     private void collectWifiInfo (final DataInputProtos.batched_periodic_data batchedPeriodicData) {
         final String connectedSSID = batchedPeriodicData.hasConnectedSsid() ? batchedPeriodicData.getConnectedSsid() : "unknown_ssid";
         final String senseId = batchedPeriodicData.getDeviceId();
         for (final DataInputProtos.batched_periodic_data.wifi_access_point wifiAccessPoint : batchedPeriodicData.getScanList()) {
             final String scannedSSID = wifiAccessPoint.getSsid();
-            if (connectedSSID.equals(scannedSSID)) {
-                if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).equals(connectedSSID)) {
-                    LOGGER.trace("Skip writing because wifi ssid remains unchanged for {} : {}", senseId, connectedSSID);
-                    continue;
-                }
-                wifiInfoPerBatch.put(
-                        senseId,
-                        WifiInfo.create(senseId, connectedSSID, wifiAccessPoint.getRssi(), new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC))
-                );
-                wifiInfoHistory.put(senseId, connectedSSID);
+            if (!connectedSSID.equals(scannedSSID)) {
+                continue;
             }
+            if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).equals(connectedSSID)) {
+                LOGGER.trace("Skip writing because wifi ssid remains unchanged for {} : {}", senseId, connectedSSID);
+                continue;
+            }
+            wifiInfoPerBatch.put(
+                    senseId,
+                    WifiInfo.create(senseId, connectedSSID, wifiAccessPoint.getRssi(), new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC))
+            );
+            wifiInfoHistory.put(senseId, connectedSSID);
         }
     }
 
     public void trackWifiInfo(final Map<String, WifiInfo> wifiInfoPerBatch) {
-        List<WifiInfo> wifiInfoList = Lists.newArrayList(wifiInfoPerBatch.values());
+        final List<WifiInfo> wifiInfoList = Lists.newArrayList(wifiInfoPerBatch.values());
         Collections.shuffle(wifiInfoList);
-        if (!wifiInfoList.isEmpty()) {
-            wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
-            LOGGER.debug("Tracked wifi info for {} senses {}", wifiInfoPerBatch.size(), wifiInfoPerBatch);
+        if (wifiInfoList.isEmpty()) {
+            return;
         }
+        wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
+        LOGGER.debug("Tracked wifi info for {} senses {}", wifiInfoPerBatch.size(), wifiInfoPerBatch);
     }
 }

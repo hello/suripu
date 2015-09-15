@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.sense_last_seen;
+package com.hello.suripu.workers.sense.lastSeen;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
