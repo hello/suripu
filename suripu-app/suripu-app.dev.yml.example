@@ -152,7 +152,7 @@ max_cache_refresh_days: 20
 dynamodb:
   region: us-east-1
   tables:
-    alarm_info : prod_alarm_info
+    alarm_info : alarm_info
     alarms: alarms
     calibration: prod_calibration
     features : features
