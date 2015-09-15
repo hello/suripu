@@ -137,7 +137,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             final String scannedSSID = wifiAccessPoint.getSsid();
             if (connectedSSID.equals(scannedSSID)) {
                 if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).equals(connectedSSID)) {
-                    LOGGER.warn("Skip writing because wifi ssid remains unchanged");
+                    LOGGER.trace("Skip writing because wifi ssid remains unchanged for {} : {}", senseId, connectedSSID);
                     continue;
                 }
                 wifiInfoPerBatch.put(
