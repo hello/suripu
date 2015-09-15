@@ -37,6 +37,7 @@ import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.app.v2.StoreFeedbackResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
@@ -45,36 +46,29 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
+import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
-import com.hello.suripu.core.store.StoreFeedbackDAO;
-import com.hello.suripu.core.processors.insights.WakeStdDevData;
-import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.core.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TeamStore;
-import com.hello.suripu.core.db.TeamStoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
-import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
-import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
-import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -86,22 +80,25 @@ import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
 import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
-import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
-import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
-import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.provision.PillProvisionDAO;
+import com.hello.suripu.core.store.StoreFeedbackDAO;
 import com.hello.suripu.core.support.SupportDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.KeyStoreUtils;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
+import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
+import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -162,86 +159,106 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         insightsDB.registerContainerFactory(new OptionalContainerFactory());
         insightsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
+
+        // COMMON DB
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final PillProvisionDAO pillProvisionDAO = commonDB.onDemand(PillProvisionDAO.class);
-
-        final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
-        final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final SupportDAO supportDAO = commonDB.onDemand(SupportDAO.class);
+        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
+        final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
 
+        // SENSORS DB
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
+
+        // TODO: replace this with commonDB pool to decrease # of connections to common db host
+        // INSIGHTS DB
         final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
-        final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
+        final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
+
         final NotificationSubscriptionsDAO notificationSubscriptionsDAO = commonDB.onDemand(NotificationSubscriptionsDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
 
+        // AWS SDK
         final ClientConfiguration clientConfiguration = new ClientConfiguration();
         clientConfiguration.withConnectionTimeout(200); // in ms
         clientConfiguration.withMaxErrorRetry(1);
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
-        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-
-
-
         final AmazonSNSClient snsClient = new AmazonSNSClient(awsCredentialsProvider, clientConfiguration);
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
-
         final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
 
-        final AmazonDynamoDB timelineDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineDBConfiguration().getEndpoint());
-        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(timelineDynamoDBClient,
-                configuration.getTimelineDBConfiguration().getTableName(),
-                configuration.getMaxCacheRefreshDay());
+        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
 
-        final AmazonDynamoDB sleepHmmDynamoDbClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepHmmDBConfiguration().getEndpoint());
-        final String sleepHmmTableName = configuration.getSleepHmmDBConfiguration().getTableName();
-        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = new SleepHmmDAODynamoDB(sleepHmmDynamoDbClient,sleepHmmTableName);
-        final AmazonDynamoDB alarmDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
-        final AlarmDAODynamoDB alarmDAODynamoDB = new AlarmDAODynamoDB(
-                alarmDynamoDBClient, configuration.getAlarmDBConfiguration().getTableName()
+
+        final AlarmDAODynamoDB alarmDAODynamoDB = (AlarmDAODynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.ALARMS);
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = (MergedUserInfoDynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.ALARM_INFO);
+        final BayesNetModelDAO modelDAO = (BayesNetHmmModelDAODynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.BAYESNET_MODEL);
+        final BayesNetHmmModelPriorsDAO priorsDAO = (BayesNetHmmModelPriorsDAODynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.BAYESNET_PRIORS);
+        final CalibrationDAO calibrationDAO = (CalibrationDynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.CALIBRATION);
+        final InsightsDAODynamoDB insightsDAODynamoDB = (InsightsDAODynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.INSIGHTS);
+        final PasswordResetDB passwordResetDB = (PasswordResetDB) dynamoDBClientFactory.get(DynamoDBTableName.PASSWORD_RESET);
+        final AccountPreferencesDAO accountPreferencesDAO = (AccountPreferencesDAO) dynamoDBClientFactory.get(DynamoDBTableName.PREFERENCES);
+        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = (RingTimeHistoryDAODynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.RING_TIME_HISTORY);
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = (SensorsViewsDynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.SENSE_LAST_SEEN);
+        final SleepHmmDAODynamoDB sleepHmmDAODynamoDB = (SleepHmmDAODynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.SLEEP_HMM);
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = (TimeZoneHistoryDAODynamoDB) dynamoDBClientFactory.get(DynamoDBTableName.TIMEZONE_HISTORY);
+
+
+        // WARNING: Due to module conflicts the following two should be handled manually
+        final AmazonDynamoDB timelineDAOClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.TIMELINE_LOG);
+        final TimelineDAODynamoDB timelineDAODynamoDB = new TimelineDAODynamoDB(
+                timelineDAOClient, configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.TIMELINE),
+                configuration.getMaxCacheRefreshDay()
         );
 
-        final AmazonDynamoDB timezoneHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimeZoneHistoryDBConfiguration().getEndpoint());
-        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(
-                timezoneHistoryDynamoDBClient, configuration.getTimeZoneHistoryDBConfiguration().getTableName()
+        final AmazonDynamoDB timelineLogClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.TIMELINE_LOG);
+        final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(
+                timelineLogClient,
+                configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.TIMELINE_LOG)
         );
 
-        final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
-        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(
-                mergedUserInfoDynamoDBClient, configuration.getUserInfoDynamoDBConfiguration().getTableName()
-        );
-
-        final AmazonDynamoDB insightsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDBConfiguration().getEndpoint());
-        final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(
-                insightsDynamoDBClient, configuration.getInsightsDynamoDBConfiguration().getTableName());
-
-        final AmazonDynamoDB dynamoDBScoreClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepScoreDBConfiguration().getEndpoint());
-
+        // Exceptions because constructor has an extra parameter
+        final AmazonDynamoDB dynamoDBScoreClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SLEEP_SCORE);
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
                 dynamoDBScoreClient,
-                configuration.getSleepScoreDBConfiguration().getTableName(),
+                configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.SLEEP_SCORE),
                 configuration.getSleepScoreVersion()
         );
 
-        final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
+        final AmazonDynamoDB dynamoDBStatsClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SLEEP_STATS);
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBStatsClient,
-                configuration.getSleepStatsDynamoConfiguration().getTableName(),
+                configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.SLEEP_STATS),
                 configuration.getSleepStatsVersion());
 
+
+
+        // KEYSTORES
+        final AmazonDynamoDB senseKeyStoreDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_KEY_STORE);
+        final KeyStore senseKeyStore = new KeyStoreDynamoDB(
+                senseKeyStoreDynamoDBClient,
+                configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.SENSE_KEY_STORE),
+                "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                120 // 2 minutes for cache
+        );
+
+        final AmazonDynamoDB pillKeyStoreDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_KEY_STORE);
+        final KeyStore pillKeyStore = new KeyStoreDynamoDB(
+                pillKeyStoreDynamoDBClient,
+                configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.PILL_KEY_STORE),
+                "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
+                120 // 2 minutes for cache
+        );
+
+
         final ImmutableMap<String, String> arns = ImmutableMap.copyOf(configuration.getPushNotificationsConfiguration().getArns());
-
-        final AmazonDynamoDB ringTimeHistoryDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getRingTimeHistoryDBConfiguration().getEndpoint());
-        final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient,
-                configuration.getRingTimeHistoryDBConfiguration().getTableName());
-
         final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper = NotificationSubscriptionDAOWrapper.create(
                 notificationSubscriptionsDAO,
                 snsClient,
@@ -249,24 +266,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         );
 
         final MobilePushNotificationProcessor mobilePushNotificationProcessor = new MobilePushNotificationProcessor(snsClient, notificationSubscriptionsDAO);
-
-        /*  Timeline Log dynamo dB stuff */
-        final String timelineLogTableName = configuration.getTimelineLogDBConfiguration().getTableName();
-        final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
-        final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
-
-        /* Priors for bayesnet  */
-        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
-        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
-
-        /* Models for bayesnet */
-        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
-        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
-
-        final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
-        final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
@@ -305,42 +304,13 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .getResourceFilterFactories().add(CacheFilterFactory.class);
 
         final String namespace = (configuration.getDebug()) ? "dev" : "prod";
-        final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
-        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace);
-
+        final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
+        final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace); // TODO: remove hardcoded table name
 
 
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
-        final AmazonDynamoDB senseKeyStoreDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseKeyStoreDynamoDBConfiguration().getEndpoint());
-        final KeyStore senseKeyStore = new KeyStoreDynamoDB(
-                senseKeyStoreDynamoDBClient,
-                configuration.getSenseKeyStoreDynamoDBConfiguration().getTableName(),
-                "1234567891234567".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
-                120 // 2 minutes for cache
-        );
-
-        final AmazonDynamoDB pillKeyStoreDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPillKeyStoreDynamoDBConfiguration().getEndpoint());
-        final KeyStore pillKeyStore = new KeyStoreDynamoDB(
-                pillKeyStoreDynamoDBClient,
-                configuration.getPillKeyStoreDynamoDBConfiguration().getTableName(),
-                "9876543219876543".getBytes(), // TODO: REMOVE THIS WHEN WE ARE NOT SUPPOSED TO HAVE A DEFAULT KEY
-                120 // 2 minutes for cache
-        );
-
-
-        final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
-        
-        final AmazonDynamoDB senseLastSeenDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseLastSeenConfiguration().getEndpoint());
-        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
-                senseLastSeenDynamoDBClient,
-                "", // We are not using dynamodb for minute by minute data yet
-                configuration.getSenseLastSeenConfiguration().getTableName()
-        );
-
-        final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
@@ -381,8 +351,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withMapping(questionResponseDAO);
         final AccountInfoProcessor accountInfoProcessor = builder.build();
 
-        final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
-        final AccountPreferencesDAO accountPreferencesDAO = AccountPreferencesDynamoDB.create(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
+
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
@@ -405,8 +374,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
             environment.addResource(new PingResource());
         }
 
-        final AmazonDynamoDB passwordResetDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPasswordResetDBConfiguration().getEndpoint());
-        final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
 
         environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));
 

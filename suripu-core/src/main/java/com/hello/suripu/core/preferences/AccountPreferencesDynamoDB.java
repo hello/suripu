@@ -16,11 +16,12 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hello.suripu.core.db.BaseDynamoDB;
 
 import java.util.Map;
 import java.util.Set;
 
-public class AccountPreferencesDynamoDB implements AccountPreferencesDAO {
+public class AccountPreferencesDynamoDB implements AccountPreferencesDAO, BaseDynamoDB {
 
     private final static String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
 

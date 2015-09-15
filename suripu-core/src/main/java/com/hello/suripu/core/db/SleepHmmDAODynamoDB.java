@@ -1,7 +1,6 @@
-package com.hello.suripu.coredw.db;
+package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
@@ -14,17 +13,12 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
-import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
-import com.yammer.dropwizard.json.GuavaExtrasModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +50,9 @@ import java.util.Map;
 
  */
 
-public class SleepHmmDAODynamoDB implements SleepHmmDAO {
+public class SleepHmmDAODynamoDB implements SleepHmmDAO, BaseDynamoDB {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(SleepHmmDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
@@ -70,17 +64,9 @@ public class SleepHmmDAODynamoDB implements SleepHmmDAO {
 
     private static final long DEFAULT_ACCOUNT_HASH_RANGE = 5;
 
-    private final String JSON_CHARSET = "UTF-8";
-
-    private static ObjectMapper mapper = new ObjectMapper();
-
     public SleepHmmDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
-
-        mapper.registerModule(new GuavaModule());
-        mapper.registerModule(new GuavaExtrasModule());
-        mapper.registerModule(new JodaModule());
     }
 
     //return range between -1 and -DEFAULT_ACCOUNT_HASH_RANGE
@@ -210,7 +196,7 @@ public class SleepHmmDAODynamoDB implements SleepHmmDAO {
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

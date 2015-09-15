@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
@@ -37,7 +36,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 6/13/14.
  */
-public class TimeZoneHistoryDAODynamoDB {
+public class TimeZoneHistoryDAODynamoDB implements BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneHistoryDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -226,7 +225,7 @@ public class TimeZoneHistoryDAODynamoDB {
         return timeZoneHistoryMap;
     }
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
@@ -34,7 +33,7 @@ import java.util.UUID;
 
 
 
-public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
+public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO, BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(BayesNetHmmModelDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -170,7 +169,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

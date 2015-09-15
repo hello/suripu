@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class SensorsViewsDynamoDB {
+public class SensorsViewsDynamoDB implements BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SensorsViewsDynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -82,6 +82,10 @@ public class SensorsViewsDynamoDB {
         this.lastSeenTableName = lastSeenTableName;
     }
 
+
+    public static SensorsViewsDynamoDB create(final AmazonDynamoDB dynamoDBClient, final String lastSeenTableName){
+        return new SensorsViewsDynamoDB(dynamoDBClient, "", lastSeenTableName);
+    }
 
     public WriteRequest transform(final String deviceName, final DeviceData deviceData) {
         final Map<String, AttributeValue> items = Maps.newHashMap();

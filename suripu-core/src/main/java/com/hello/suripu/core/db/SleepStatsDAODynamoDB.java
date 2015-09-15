@@ -233,7 +233,7 @@ public class SleepStatsDAODynamoDB {
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
 
         // attributes
         ArrayList<AttributeDefinition> attributes = new ArrayList<>();

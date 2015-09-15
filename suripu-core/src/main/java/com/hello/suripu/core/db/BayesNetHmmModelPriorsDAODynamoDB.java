@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriorsDAO {
+public class BayesNetHmmModelPriorsDAODynamoDB implements BayesNetHmmModelPriorsDAO, BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(BayesNetHmmModelPriorsDAODynamoDB.class);
 

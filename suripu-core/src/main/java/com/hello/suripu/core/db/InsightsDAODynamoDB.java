@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
@@ -37,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class InsightsDAODynamoDB {
+public class InsightsDAODynamoDB implements BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(InsightsDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -191,7 +190,7 @@ public class InsightsDAODynamoDB {
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
 
         // attributes
         ArrayList<AttributeDefinition> attributes = new ArrayList<>();

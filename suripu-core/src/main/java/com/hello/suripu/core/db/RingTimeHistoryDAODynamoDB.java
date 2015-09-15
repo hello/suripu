@@ -44,7 +44,7 @@ import java.util.Set;
 /**
  * Created by pangwu on 2/26/15.
  */
-public class RingTimeHistoryDAODynamoDB {
+public class RingTimeHistoryDAODynamoDB implements BaseDynamoDB {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;

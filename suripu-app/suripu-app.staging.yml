@@ -335,3 +335,8 @@ calibration:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: calibration
+
+wifi_info:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: wifi_info

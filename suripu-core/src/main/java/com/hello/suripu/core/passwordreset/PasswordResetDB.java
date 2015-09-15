@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.BaseDynamoDB;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -25,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.UUID;
 
-public class PasswordResetDB {
+public class PasswordResetDB implements BaseDynamoDB {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetDB.class);
 

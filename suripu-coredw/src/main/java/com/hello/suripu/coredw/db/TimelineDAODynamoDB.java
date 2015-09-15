@@ -2,7 +2,6 @@ package com.hello.suripu.coredw.db;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -35,6 +34,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.hello.suripu.core.db.BaseDynamoDB;
 import com.hello.suripu.core.db.util.Compression;
 import com.hello.suripu.core.models.CachedTimelines;
 import com.hello.suripu.core.models.Timeline;
@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by pangwu on 6/5/14.
  */
-public class TimelineDAODynamoDB {
+public class TimelineDAODynamoDB implements BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -466,7 +466,7 @@ public class TimelineDAODynamoDB {
 
     }
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

@@ -3,7 +3,6 @@ package com.hello.suripu.core.db;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -35,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class TeamStore implements TeamStoreDAO {
+public class TeamStore implements TeamStoreDAO, BaseDynamoDB {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TeamStore.class);
 
@@ -213,7 +212,7 @@ public class TeamStore implements TeamStoreDAO {
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

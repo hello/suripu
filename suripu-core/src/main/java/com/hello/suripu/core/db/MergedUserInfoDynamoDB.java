@@ -2,7 +2,6 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -42,7 +41,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -55,7 +54,7 @@ import java.util.Map;
 /**
  * Created by pangwu on 9/25/14.
  */
-public class MergedUserInfoDynamoDB {
+public class MergedUserInfoDynamoDB implements BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MergedUserInfoDynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -558,7 +557,7 @@ public class MergedUserInfoDynamoDB {
         return MergedUserInfoDynamoDB.getTimeZoneFromAttributes(senseId, accountId, result.getItem());
     }
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

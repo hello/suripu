@@ -7,6 +7,7 @@ public enum DynamoDBTableName {
 
     FEATURES("features"),
     ALARM_INFO("alarm_info"),
+    ALARMS("alarms"),
     SENSE_KEY_STORE("sense_key_store"),
     PILL_KEY_STORE("pill_key_store"),
     PASSWORD_RESET("password_reset"),
@@ -31,7 +32,10 @@ public enum DynamoDBTableName {
     BAYESNET_PRIORS("hmm_bayesnet_priors"),
     BAYESNET_MODEL("hmm_bayesnet_models"),
     CALIBRATION("calibration"),
-    INSIGHTS("insights");
+    INSIGHTS("insights"),
+    WIFI_INFO("wifi_info"),
+    PREFERENCES("preferences");
+
 
     private String value;
 
