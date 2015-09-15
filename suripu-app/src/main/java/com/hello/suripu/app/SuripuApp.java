@@ -418,7 +418,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new SupportResource(supportDAO));
         environment.addResource(new com.hello.suripu.app.v2.TimelineResource(timelineDAODynamoDB, timelineProcessor, timelineLogDAO, feedbackDAO, trackerMotionDAO, sleepStatsDAODynamoDB,timelineLogger));
-        environment.addResource(new com.hello.suripu.app.v2.WifiInfoResource(wifiInfoDAO));
+        environment.addResource(new com.hello.suripu.app.v2.WifiInfoResource(wifiInfoDAO, deviceDAO));
         environment.addResource(new com.hello.suripu.app.v2.AccountPreferencesResource(accountPreferencesDAO));
         StoreFeedbackDAO storeFeedbackDAO = commonDB.onDemand(StoreFeedbackDAO.class);
         environment.addResource(new StoreFeedbackResource(storeFeedbackDAO));
