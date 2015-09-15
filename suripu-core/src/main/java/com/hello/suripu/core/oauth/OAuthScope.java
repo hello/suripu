@@ -40,7 +40,9 @@ public enum OAuthScope {
     IMPLICIT_TOKEN(29),
     ZENDESK_EXTENSION(30),
     SUPPORT(31),
-    STORE_FEEDBACK(32);
+    STORE_FEEDBACK(32),
+    WIFI_INFO_READ(33),
+    WIFI_INFO_WRITE(34);
 
     private int value;
 
