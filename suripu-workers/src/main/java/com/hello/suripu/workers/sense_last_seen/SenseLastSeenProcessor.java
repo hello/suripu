@@ -5,22 +5,17 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.google.common.cache.CacheStats;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.WifiInfoDAO;
-import com.hello.suripu.core.flipper.FeatureFlipper;
-import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.Timer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -32,7 +27,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
@@ -48,30 +42,20 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     private final WifiInfoDAO wifiInfoDAO;
 
     private final Meter messagesProcessed;
-    private final Meter batchSaved;
-    private final Meter clockOutOfSync;
-    private final Timer fetchTimezones;
     private final Meter capacity;
 
     private Map<String, WifiInfo> wifiInfoPerBatch = Maps.newHashMap();
-    private Map<String, WifiInfo> wifiInfoHistory = Maps.newHashMap();
+    private Map<String, String> wifiInfoHistory = Maps.newHashMap();
 
 
     private String shardId = "";
-    private Random random;
-    private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
     public SenseLastSeenProcessor(final Integer maxRecords, final WifiInfoDAO wifiInfoDAO) {
         this.maxRecords = maxRecords;
         this.wifiInfoDAO = wifiInfoDAO;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseLastSeenProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
-        this.batchSaved = Metrics.defaultRegistry().newMeter(SenseLastSeenProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
-        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseLastSeenProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
-        this.fetchTimezones = Metrics.defaultRegistry().newTimer(SenseLastSeenProcessor.class, "fetch-timezones");
         this.capacity = Metrics.defaultRegistry().newMeter(SenseLastSeenProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
-
-        random = new Random(System.currentTimeMillis());
 
     }
 
@@ -110,17 +94,6 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
         messagesProcessed.mark(records.size());
 
-        if(random.nextInt(11) % 10 == 0) {
-            final CacheStats stats = dbCache.stats();
-            LOGGER.info("{} - Cache hitrate: {}", this.shardId, stats.hitRate());
-        }
-
-        // This lets us clear the cache remotely by turning on the feature in FeatureFlipper.
-        // DeviceId is not required and thus empty
-        if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_CLEAR_ALL_CACHE, "", Collections.EMPTY_LIST)) {
-            LOGGER.warn("Clearing all caches");
-            dbCache.invalidateAll();
-        }
 
         try {
             iRecordProcessorCheckpointer.checkpoint();
@@ -163,18 +136,15 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         for (final DataInputProtos.batched_periodic_data.wifi_access_point wifiAccessPoint : batchedPeriodicData.getScanList()) {
             final String scannedSSID = wifiAccessPoint.getSsid();
             if (connectedSSID.equals(scannedSSID)) {
-                if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(batchedPeriodicData.getDeviceId()).equals(connectedSSID)) {
+                if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).equals(connectedSSID)) {
                     LOGGER.warn("Skip writing because wifi ssid remains unchanged");
                     continue;
                 }
                 wifiInfoPerBatch.put(
-                        batchedPeriodicData.getDeviceId(),
+                        senseId,
                         WifiInfo.create(senseId, connectedSSID, wifiAccessPoint.getRssi(), new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC))
                 );
-                wifiInfoHistory.put(
-                        batchedPeriodicData.getDeviceId(),
-                        WifiInfo.create(senseId, connectedSSID, wifiAccessPoint.getRssi(), new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC))
-                );
+                wifiInfoHistory.put(senseId, connectedSSID);
             }
         }
     }
@@ -182,8 +152,9 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     public void trackWifiInfo(final Map<String, WifiInfo> wifiInfoPerBatch) {
         List<WifiInfo> wifiInfoList = Lists.newArrayList(wifiInfoPerBatch.values());
         Collections.shuffle(wifiInfoList);
-
-        wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
-        LOGGER.debug("Tracked wifi info for {} senses {}", wifiInfoPerBatch.size(), wifiInfoPerBatch);
+        if (!wifiInfoList.isEmpty()) {
+            wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
+            LOGGER.debug("Tracked wifi info for {} senses {}", wifiInfoPerBatch.size(), wifiInfoPerBatch);
+        }
     }
 }
