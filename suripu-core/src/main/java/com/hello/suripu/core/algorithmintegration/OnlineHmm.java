@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Time;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -36,7 +37,7 @@ import java.util.UUID;
 public class OnlineHmm {
     private final static long NUM_MILLIS_IN_A_MINUTE = 60000L;
     private static final long NUMBER_OF_MILLIS_IN_AN_HOUR = 3600000L;
-    private static final long MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD = 20 * NUMBER_OF_MILLIS_IN_AN_HOUR;
+    private static final long MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD = 12 * NUMBER_OF_MILLIS_IN_AN_HOUR;
 
     public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 5;
     public final static Set<String> DEFAULT_MODEL_KEYS;
@@ -256,20 +257,28 @@ public class OnlineHmm {
         return SleepEvents.create(inbed,sleep,wake,outofbed);
     }
 
+    static ImmutableList<TimelineFeedback> filterFeedbackInValidTimeRange(final DateTime date, final ImmutableList<TimelineFeedback> feedbacks, final long startTimeUtc,final long endTimeUtc) {
+        final List<TimelineFeedback> feedbackListFiltered = Lists.newArrayList();
 
-    static private boolean isDayTooOldToConsiderComputingModelUpdate(final long startOfChosenDayUTC, final long currentServerTimeUTC) {
-        final List<TimelineFeedback> filteredFeedbacks = Lists.newArrayList();
+        for (final TimelineFeedback feedback : feedbacks) {
+            if (!feedback.dateOfNight.equals(date)) {
+                continue;
+            }
 
-        final long ageOfDay = currentServerTimeUTC - startOfChosenDayUTC;
+            if (!feedback.created.isPresent()) {
+                continue;
+            }
 
-        //am I editing yesterday's timeline?
-        if (ageOfDay > MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD) {
-            return true;
+            final long createdTime = feedback.created.get();
+            if (createdTime >= startTimeUtc && createdTime <= endTimeUtc) {
+                feedbackListFiltered.add(feedback);
+            }
+
         }
 
-        return false;
-
+        return ImmutableList.copyOf(feedbackListFiltered);
     }
+
 
     public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime evening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc,
                            OneDaysSensorData oneDaysSensorData, boolean feedbackHasChanged,boolean forceLearning) {
@@ -283,6 +292,7 @@ public class OnlineHmm {
         final int timezoneOffset = oneDaysSensorData.timezoneOffsetMillis;
         final long startTimeUtc = startTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
         final long endTimeUtc = endTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
+        final long endTimeToUpdateFeedback = endTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;
         final ImmutableList<TimelineFeedback> feedbackList = oneDaysSensorData.feedbackList;
 
         final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, startTimeLocalUtc, uuid);
@@ -362,10 +372,13 @@ public class OnlineHmm {
         predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset);
 
 
-        boolean isFeedbackReady = feedbackHasChanged && !isDayTooOldToConsiderComputingModelUpdate(startTimeUtc,oneDaysSensorData.timeOfQueryUTC);
+        //get filtered feedback
+        final ImmutableList<TimelineFeedback> filteredTimelineFeedback =  filterFeedbackInValidTimeRange(evening,oneDaysSensorData.feedbackList,startTimeUtc,endTimeToUpdateFeedback);
+
+        boolean isFeedbackReady = feedbackHasChanged && !filteredTimelineFeedback.isEmpty();
 
         //override
-        if (forceLearning && !feedbackList.isEmpty()) {
+        if (forceLearning && !filteredTimelineFeedback.isEmpty()) {
             isFeedbackReady = true;
         }
 

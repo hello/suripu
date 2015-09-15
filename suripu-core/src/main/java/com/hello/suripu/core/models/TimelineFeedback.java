@@ -15,7 +15,8 @@ public class TimelineFeedback {
     public final Optional<Long> accountId;
     public final Optional<Long> created;
 
-    private TimelineFeedback(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Optional<Long> accountId, final Optional<Long> created) {
+    //public for testing purposes
+    public TimelineFeedback(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Optional<Long> accountId, final Optional<Long> created) {
         this.dateOfNight= dateOfNight;
         this.oldTimeOfEvent = oldTimeOfEvent;
         this.newTimeOfEvent = newTimeOfEvent;
