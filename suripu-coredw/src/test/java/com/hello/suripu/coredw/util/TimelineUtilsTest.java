@@ -1075,6 +1075,15 @@ public class TimelineUtilsTest extends FixtureTest {
     }
 
     @Test
+    public void calculateAverageSensorStateNoSamplesInRange() {
+        final List<Sample> samples = Lists.newArrayList();
+        samples.add(new Sample(0L, 80f, 0));
+        samples.add(new Sample(500L, 80f, 0));
+        final Optional<Float> average = timelineUtils.calculateAverageSensorState(samples, 10L, 100L);
+        assertThat(average.isPresent(), is(false));
+    }
+
+    @Test
     public void calculateAverageSensorStateWithData() {
         final List<Sample> samples = Lists.newArrayList();
         samples.add(new Sample(0L, 80f, 0));

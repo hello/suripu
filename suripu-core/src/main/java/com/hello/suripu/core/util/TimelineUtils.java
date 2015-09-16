@@ -857,8 +857,13 @@ public class TimelineUtils {
             count++;
 
         }
-        final float average = sum / count;
-        return Optional.of(average);
+
+        if (count > 0) {
+            final float average = sum / count;
+            return Optional.of(average);
+        } else {
+            return Optional.absent();
+        }
     }
 
     public List<Insight> generateInSleepInsights(final AllSensorSampleList allSensorSampleList,
