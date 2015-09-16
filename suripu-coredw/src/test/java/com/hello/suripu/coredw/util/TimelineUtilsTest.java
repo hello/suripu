@@ -5,11 +5,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
-import com.hello.suripu.core.util.MultiLightOutUtils;
-import com.hello.suripu.core.util.TimelineUtils;
-import com.hello.suripu.core.util.VotingSleepEvents;
-import com.hello.suripu.coredw.FixtureTest;
 import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.CurrentRoomState;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
@@ -23,6 +20,10 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.MultiLightOutUtils;
+import com.hello.suripu.core.util.TimelineUtils;
+import com.hello.suripu.core.util.VotingSleepEvents;
+import com.hello.suripu.coredw.FixtureTest;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -37,6 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -1057,6 +1059,72 @@ public class TimelineUtilsTest extends FixtureTest {
         assertThat(allSensorSampleList.isEmpty(), is(false));
         assertThat(allSensorSampleList.get(Sensor.TEMPERATURE).isEmpty(), is(true));
 
+    }
+
+    @Test
+    public void calculateAverageSensorStateEmptySamples() {
+        final Optional<Float> average = timelineUtils.calculateAverageSensorState(Collections.<Sample>emptyList(), 0L, 10L);
+        assertThat(average.isPresent(), is(false));
+    }
+
+    @Test
+    public void calculateAverageSensorStateBadTimeRange() {
+        final List<Sample> samples = Lists.newArrayList(new Sample(0L, 0f, 0));
+        final Optional<Float> average = timelineUtils.calculateAverageSensorState(samples, 0L, 0L);
+        assertThat(average.isPresent(), is(false));
+    }
+
+    @Test
+    public void calculateAverageSensorStateNoSamplesInRange() {
+        final List<Sample> samples = Lists.newArrayList();
+        samples.add(new Sample(0L, 80f, 0));
+        samples.add(new Sample(500L, 80f, 0));
+        final Optional<Float> average = timelineUtils.calculateAverageSensorState(samples, 10L, 100L);
+        assertThat(average.isPresent(), is(false));
+    }
+
+    @Test
+    public void calculateAverageSensorStateWithData() {
+        final List<Sample> samples = Lists.newArrayList();
+        samples.add(new Sample(0L, 80f, 0));
+        samples.add(new Sample(20L, 3f, 0));
+        samples.add(new Sample(50L, 6f, 0));
+        samples.add(new Sample(80L, 0f, 0));
+        samples.add(new Sample(500L, 80f, 0));
+        final Optional<Float> average = timelineUtils.calculateAverageSensorState(samples, 10L, 100L);
+        assertThat(average.isPresent(), is(true));
+        assertThat(average.get(), is(equalTo(3f)));
+    }
+
+    @Test
+    public void testGenerateInSleepInsightsMissingSensorData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGenerateInSleepInsightsEmptyData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        allSensorSampleList.add(Sensor.LIGHT, Collections.<Sample>emptyList());
+        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 0L, 999L);
+        assertThat(insights.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGenerateInSleepInsightsWithData() {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+        final List<Sample> samples = Lists.newArrayList();
+        samples.add(new Sample(0L, 80f, 0));
+        samples.add(new Sample(20L, 0f, 0));
+        samples.add(new Sample(50L, 4f, 0));
+        samples.add(new Sample(80L, 0f, 0));
+        samples.add(new Sample(500L, 80f, 0));
+        allSensorSampleList.add(Sensor.LIGHT, samples);
+
+        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 10L, 100L);
+        assertThat(insights.isEmpty(), is(false));
+        assertThat(insights.get(0).condition, is(equalTo(CurrentRoomState.State.Condition.IDEAL)));
     }
 
 
