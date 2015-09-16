@@ -40,16 +40,18 @@ public class TimelineLogProcessor extends HelloBaseRecordProcessor {
         for(final Record record : records) {
             try {
                 final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(record.getData().array());
-                if(batchLogMessage.hasLogType() && batchLogMessage.getLogType().equals(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG) && batchLogMessage.getTimelineLogCount() > 0) {
-                    for(final LoggingProtos.TimelineLog timelineLog : batchLogMessage.getTimelineLogList()) {
-                        if(!uniqueLogs.contains(timelineLog)) {
-                            logs.add(timelineLog);
-                            uniqueLogs.add(timelineLog);
-                        }
-                    }
-
+                if(!batchLogMessage.hasLogType() && batchLogMessage.getLogType().equals(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG) && batchLogMessage.getTimelineLogCount() > 0) {
+                    continue;
                 }
 
+                for(final LoggingProtos.TimelineLog timelineLog : batchLogMessage.getTimelineLogList()) {
+                    if(uniqueLogs.contains(timelineLog)) {
+                        continue;
+                    }
+
+                    logs.add(timelineLog);
+                    uniqueLogs.add(timelineLog);
+                }
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed converting protobuf: {}", e.getMessage());
             }
