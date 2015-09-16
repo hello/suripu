@@ -10,8 +10,8 @@ import java.util.List;
 
 public class SmoothSample {
 
-    private static int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE = 3;
-    private static int DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE = 2;
+    public static int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE = 3;
+    public static int DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE = 2;
 
     public static List<Sample> convert(final List<Sample> samples) {
         if (samples.size() < Math.max(DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE)) {
@@ -53,7 +53,12 @@ public class SmoothSample {
 
         // replace edge noises with average of past values
         for (int k = values.length - forwardAttemptsToRemoveNoise; k < values.length; k++) {
-            noiseFreeValues[k] = (noiseFreeValues[k-2] + noiseFreeValues[k-1])/2;
+            if (isNoise(values[k], mean, stdDev)) {
+                noiseFreeValues[k] = (noiseFreeValues[k - 2] + noiseFreeValues[k - 1]) / 2;
+            }
+            else {
+                noiseFreeValues[k] = values[k];
+            }
         }
         return noiseFreeValues;
     }

@@ -185,10 +185,7 @@ public class RoomConditionsResource extends BaseResource {
         final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
-        if (this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId)){
-
-        };
-        return timeSeries;
+        return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }
 
     @Timed
@@ -578,7 +575,7 @@ public class RoomConditionsResource extends BaseResource {
     }
 
     private List<Sample> adjustTimeSeries (final List<Sample> samples, final String sensor, final String senseId) {
-        if (sensor.toUpperCase().equals(Sensor.PARTICULATES.name()) && this.hasDustSmoothEnabled(senseId)) {
+        if ((Sensor.PARTICULATES.name().equals(sensor) || Sensor.PARTICULATES.name().toLowerCase().equals(sensor)) && this.hasDustSmoothEnabled(senseId)) {
             return SmoothSample.convert(samples);
         }
         return samples;
@@ -588,18 +585,8 @@ public class RoomConditionsResource extends BaseResource {
         if (!this.hasDustSmoothEnabled(senseId)) {
             return allSensorSampleList;
         }
-        final AllSensorSampleList adjustedAllSensorSampleList = new AllSensorSampleList();
-        adjustedAllSensorSampleList.add(Sensor.LIGHT, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.HUMIDITY, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.SOUND, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.TEMPERATURE, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.LIGHT, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.WAVE_COUNT, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.HOLD_COUNT, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.SOUND_NUM_DISTURBANCES, allSensorSampleList.get(Sensor.LIGHT));
-        adjustedAllSensorSampleList.add(Sensor.SOUND_PEAK_DISTURBANCE, allSensorSampleList.get(Sensor.LIGHT));
 
-        adjustedAllSensorSampleList.add(Sensor.PARTICULATES, SmoothSample.convert(allSensorSampleList.get(Sensor.PARTICULATES)));
-        return adjustedAllSensorSampleList;
+        allSensorSampleList.update(Sensor.PARTICULATES, SmoothSample.convert(allSensorSampleList.get(Sensor.PARTICULATES)));
+        return allSensorSampleList;
     }
 }
