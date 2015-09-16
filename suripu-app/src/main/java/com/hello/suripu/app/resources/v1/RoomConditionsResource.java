@@ -575,7 +575,7 @@ public class RoomConditionsResource extends BaseResource {
     }
 
     private List<Sample> adjustTimeSeries (final List<Sample> samples, final String sensor, final String senseId) {
-        if ((Sensor.PARTICULATES.name().equals(sensor) || Sensor.PARTICULATES.name().toLowerCase().equals(sensor)) && this.hasDustSmoothEnabled(senseId)) {
+        if (Sensor.PARTICULATES.name().equalsIgnoreCase(sensor) && this.hasDustSmoothEnabled(senseId)) {
             return SmoothSample.convert(samples);
         }
         return samples;
