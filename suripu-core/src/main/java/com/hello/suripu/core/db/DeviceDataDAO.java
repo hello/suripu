@@ -2,6 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.binders.BindDeviceData;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
@@ -16,6 +17,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.util.SmoothSample;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -41,6 +43,8 @@ import java.util.regex.Matcher;
 public abstract class DeviceDataDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
+    private static final List<String> dustSensorNames = Lists.newArrayList();
+
 
     private static final String AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET = "SELECT " +  // for queries using DeviceDataBucketMapper
             "MAX(account_id) AS account_id," +
@@ -252,7 +256,8 @@ public abstract class DeviceDataDAO {
             final String sensor,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean hasDustSmoothEnabled) {
 
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
@@ -299,7 +304,12 @@ public abstract class DeviceDataDAO {
         LOGGER.trace("New map size = {}", merged.size());
 
         final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
+
+        if (dustSensorNames.contains(sensor) && hasDustSmoothEnabled) {
+            return SmoothSample.manipulateSamples(sortedList);
+        }
         return sortedList;
+
     }
 
     // used by timeline, query by local_utc_ts
@@ -313,7 +323,8 @@ public abstract class DeviceDataDAO {
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean hasDustSmoothEnabled) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
@@ -390,7 +401,12 @@ public abstract class DeviceDataDAO {
                 LOGGER.trace("New map size = {}", merged.size());
 
                 final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
-                sensorDataResults.add(sensor, sortedList);
+                if (dustSensorNames.contains(sensor) && hasDustSmoothEnabled) {
+                    sensorDataResults.add(sensor, SmoothSample.manipulateSamples(sortedList));
+                }
+                else {
+                    sensorDataResults.add(sensor, sortedList);
+                }
 
             }
         }
@@ -408,7 +424,8 @@ public abstract class DeviceDataDAO {
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean hasDustSmoothEnabled) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
@@ -469,7 +486,14 @@ public abstract class DeviceDataDAO {
             if (!mergedMaps.get(sensor).isEmpty()) {
                 LOGGER.trace("New map size = {}", mergedMaps.get(sensor).size());
                 final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.get(sensor), currentOffsetMillis);
-                sensorDataResults.add(sensor, sortedList);
+
+                if (dustSensorNames.contains(sensor) && hasDustSmoothEnabled) {
+                    sensorDataResults.add(sensor, SmoothSample.manipulateSamples(sortedList));
+                }
+                else {
+                    sensorDataResults.add(sensor, sortedList);
+                }
+
             }
         }
 
