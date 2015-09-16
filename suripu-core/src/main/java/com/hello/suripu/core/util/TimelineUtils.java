@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -80,6 +81,14 @@ public class TimelineUtils {
     private static final int DEFAULT_QUIET_END_HOUR = 7; // 7am
     private static final int SOUND_WINDOW_SIZE_MINS = 30; // smoothing windows, binning
     private static final int MAX_SOUND_EVENT_SIZE = 5; // max sound event allowed in timeline
+
+    private static final Sensor[] SLEEP_TIME_AVERAGE_SENSORS = {
+            Sensor.TEMPERATURE,
+            Sensor.HUMIDITY,
+            Sensor.PARTICULATES,
+            Sensor.SOUND,
+            Sensor.LIGHT,
+    };
 
     private final Logger LOGGER;
 
@@ -825,7 +834,71 @@ public class TimelineUtils {
 
     }
 
-    public List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
+    public Optional<Float> calculateAverageSensorState(final List<Sample> samples,
+                                                       final long startTimestampUTC,
+                                                       final long endTimestampUTC) {
+        if (samples.isEmpty() || (startTimestampUTC == endTimestampUTC)) {
+            return Optional.absent();
+        }
+
+        float sum = 0;
+        int count = 0;
+        for (final Sample sample : samples) {
+            final long sampleTimestampUTC = sample.dateTime;
+            if (sampleTimestampUTC < startTimestampUTC) {
+                continue;
+            }
+
+            if (sampleTimestampUTC > endTimestampUTC) {
+                break;
+            }
+
+            sum += sample.value;
+            count++;
+
+        }
+        final float average = sum / count;
+        return Optional.of(average);
+    }
+
+    public List<Insight> generateInSleepInsights(final AllSensorSampleList allSensorSampleList,
+                                                 final Long sleepTimestampUTC,
+                                                 final Long wakeTimestampUTC) {
+        if (allSensorSampleList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final List<Insight> insights = Lists.newArrayList();
+        final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
+
+        for (final Sensor sensor : SLEEP_TIME_AVERAGE_SENSORS) {
+            final List<Sample> samples = allSensorSampleList.get(sensor);
+            final Optional<Float> sampleAverage = calculateAverageSensorState(samples,
+                    sleepTimestampUTC, wakeTimestampUTC);
+            if (!sampleAverage.isPresent()) {
+                continue;
+            }
+
+            final Optional<CurrentRoomState.State> sensorState = CurrentRoomState.getSensorState(sensor,
+                    sampleAverage.get(), sleepDateTime, false);
+            final Optional<Insight> insight = sensorState.transform(new Function<CurrentRoomState.State, Insight>() {
+                @Override
+                public Insight apply(CurrentRoomState.State state) {
+                    return Insight.create(sensor, state.condition, state.message);
+                }
+            });
+
+            if (insight.isPresent()) {
+                insights.add(insight.get());
+            }
+        }
+
+        return insights;
+    }
+
+    public List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList,
+                                                  final Long sleepTimestampUTC,
+                                                  final Long accountId) {
         final List<Insight> generatedInsights = Lists.newArrayList();
 
         if (allSensorSampleList.isEmpty()) {
