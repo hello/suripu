@@ -5,11 +5,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Timeline;
-import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -46,17 +47,19 @@ public class TimelineResource extends BaseResource {
     private final TimelineProcessor timelineProcessor;
     private final AccountDAO accountDAO;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final TimelineLogDAO timelineLogDAO;
-
+    private final TimelineLogDAO timelineLogDAOV1;
+    private final DataLogger timelineLogDAOV2;
 
     public TimelineResource(final AccountDAO accountDAO,
                             final TimelineDAODynamoDB timelineDAODynamoDB,
-                            final TimelineLogDAO timelineLogDAO,
+                            final TimelineLogDAO timelineLogDAOV1,
+                            final DataLogger timelineLogDAOV2,
                             final TimelineProcessor timelineProcessor) {
         this.accountDAO = accountDAO;
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
-        this.timelineLogDAO = timelineLogDAO;
+        this.timelineLogDAOV1 = timelineLogDAOV1;
+        this.timelineLogDAOV2 = timelineLogDAOV2;
     }
 
     private boolean cacheTimeline(final long accountId, final DateTime targetDateLocalUTC, final TimelineResult result){
@@ -103,8 +106,14 @@ public class TimelineResource extends BaseResource {
             LOGGER.info("{} Found cached timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
-            timelineLogDAO.putTimelineLog(accountId,cachedResult.get().log);
+            final Optional<TimelineLog> logV2 = cachedResult.get().logV2;
 
+            if (logV2.isPresent()) {
+                timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
+
+                final String partitionKey = logV2.get().getPartitionKey();
+                timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
+            }
             return cachedResult.get();
         }
         else {
@@ -126,7 +135,16 @@ public class TimelineResource extends BaseResource {
                 cacheTimeline(accountId, targetDate, result.get());
 
                 //log it, too
-                timelineLogDAO.putTimelineLog(accountId,result.get().log);
+                //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
+                final Optional<TimelineLog> logV2 = result.get().logV2;
+
+                if (logV2.isPresent()) {
+                    timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
+
+                    final String partitionKey = logV2.get().getPartitionKey();
+                    timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
+                }
+
 
                 return result.get();
 
@@ -203,7 +221,7 @@ public class TimelineResource extends BaseResource {
     @Path("/admin/algo/{email}/{date}")
     @Produces(MediaType.APPLICATION_JSON)
     @GET
-    public TimelineLog getTimelineAlgorithm(
+    public com.hello.suripu.core.models.TimelineLog getTimelineAlgorithm(
             @Scope(OAuthScope.ADMINISTRATION_READ)final AccessToken accessToken,
             @PathParam("email") String email,
             @PathParam("date") String date) {
@@ -231,13 +249,13 @@ public class TimelineResource extends BaseResource {
         return account.id;
     }
 
-    private TimelineLog getAlgorithmFromTimelineLog(final Long accountId, final String date) {
+    private com.hello.suripu.core.models.TimelineLog getAlgorithmFromTimelineLog(final Long accountId, final String date) {
 
         final DateTime dateTime = DateTimeUtil.ymdStringToDateTime(date);
-        final ImmutableList<TimelineLog> timelineLogs = this.timelineLogDAO.getLogsForUserAndDay(accountId, dateTime, Optional.<Integer>absent());
+        final ImmutableList<com.hello.suripu.core.models.TimelineLog> timelineLogs = this.timelineLogDAOV1.getLogsForUserAndDay(accountId, dateTime, Optional.<Integer>absent());
 
         if (timelineLogs.isEmpty()) {
-            return TimelineLog.createEmpty();
+            return com.hello.suripu.core.models.TimelineLog.createEmpty();
         } else if (timelineLogs.size() == 1) {
             return timelineLogs.get(0);
         }
