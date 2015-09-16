@@ -2,7 +2,6 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -40,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CalibrationDynamoDB implements CalibrationDAO {
+public class CalibrationDynamoDB implements CalibrationDAO, BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CalibrationDynamoDB.class);
 
@@ -268,7 +267,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         return Boolean.FALSE;
     }
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

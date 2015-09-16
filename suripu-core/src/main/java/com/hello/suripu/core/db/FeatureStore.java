@@ -96,7 +96,7 @@ public class FeatureStore {
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(

@@ -2,8 +2,9 @@ package com.hello.suripu.app.cli;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
+import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -54,11 +55,8 @@ public class RecreatePillColorCommand extends ConfiguredCommand<SuripuAppConfigu
         final DeviceDAO deviceDAO = jdbi.onDemand(DeviceDAO.class);
 
         final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
-        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
-
-        client.setEndpoint(configuration.getUserInfoDynamoDBConfiguration().getEndpoint());
-        final String eventTableName = configuration.getUserInfoDynamoDBConfiguration().getTableName();
-        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(client, eventTableName);
+        final AmazonDynamoDBClientFactory factory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = (MergedUserInfoDynamoDB) factory.get(DynamoDBTableName.ALARM_INFO);
 
         LOGGER.info("Getting all pills..");
         final List<DeviceAccountPair> activePills = deviceDAO.getAllPills(true);

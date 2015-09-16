@@ -110,22 +110,6 @@ logging:
 #    # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
 #    timeZone: UTC
 
-
-event_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: event
-
-timezone_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: timezone_history
-
-alarm_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: alarm
-
 score_threshold : 15 # minutes bucket for sleep-scores
 
 push_notifications:
@@ -135,63 +119,7 @@ push_notifications:
 
   table_name: notifications
 
-
-notifications_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: notifications
-
-preferences_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: preferences
-
-ring_time_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: ring_time
-
-alarm_info_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: alarm_info
-
-# remember to update version when changing score methods
-sleep_score_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: sleep_score
 sleep_score_version: v_0_1
-
-features_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: features
-
-teams_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: teams
-
-insights_dynamo_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: insights
-
-sense_key_store_dynamo_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: key_store
-
-pill_key_store_dynamo_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: pill_key_store
-
-password_reset_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: password_reset
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
@@ -207,87 +135,73 @@ kinesis:
 question_configs:
   num_skips : 5
 
-timeline_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: timeline
+http:
+  port : 9999
+  adminPort: 9998
 
 email:
    api_key: XnAIQfmDpMYIapDWGigfwA
    link_host: http://localhost:5000/password_update
 
-ring_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: ring_history_by_account
-
-sleephmm_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: sleephmm
-
-algorithm_test_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: algorithm_test
-
-timeline_log_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: timeline_log
-
 # store sleep scores and other stats
 # v0.2: score uses movement and duration
-sleep_stats_db:
-    endpoint : http://localhost:7777
-    region: us-east-1
-    table_name: sleep_stats
 sleep_stats_version: v_0_2
 
 
 max_cache_refresh_days: 20
 
-smart_alarm_log_db:
-  endpoint : http://localhost:7777
+dynamodb:
   region: us-east-1
-  table_name: smart_alarm_log
+  tables:
+    alarm_info : alarm_info
+    alarms: alarms
+    calibration: prod_calibration
+    features : features
+    firmware_upgrade_path : fw_upgrade_path
+    firmware_versions : firmware_versions_mapping
+    hmm_bayesnet_models: hmm_bayesnet_models
+    hmm_bayesnet_priors: hmm_bayesnet_priors
+    insights: insights
+    ota_history : ota_history
+    password_reset: password_reset
+    pill_key_store : pill_key_store
+    preferences: preferences
+    ring_time_history: ring_history_by_account
+    sense_key_store : key_store
+    sense_last_seen: sense_last_seen
+    sleep_hmm: sleephmm
+    sleep_score: sleep_score
+    sleep_stats: sleep_stats
+    smart_alarm_log: smart_alarm_log
+    sync_response_commands : response_commands
+    teams : teams
+    timeline: timeline
+    timeline_log : timeline_log
+    timezone_history : timezone_history
 
-ota_history_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: ota_history
-
-resp_commands_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: response_commands
-
-fw_path_db:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: fw_upgrade_path
-
-sense_last_seen:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: sense_last_seen
-
-hmm_bayesnet_priors:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: hmm_bayesnet_priors
-
-hmm_bayesnet_models:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: hmm_bayesnet_models
-
-calibration:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: calibration
-
-wifi_info:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: wifi_info
+  endpoints:
+      alarm_info : http://localhost:7777
+      alarms: http://localhost:7777
+      calibration : http://localhost:7777
+      features : http://localhost:7777
+      firmware_upgrade_path : http://localhost:7777
+      firmware_versions : http://localhost:7777
+      hmm_bayesnet_models: http://localhost:7777
+      hmm_bayesnet_priors: http://localhost:7777
+      insights: http://localhost:7777
+      ota_history : http://localhost:7777
+      password_reset: http://localhost:7777
+      pill_key_store : http://localhost:7777
+      preferences: http://localhost:7777
+      ring_time_history: http://localhost:7777
+      sense_key_store : http://localhost:7777
+      sense_last_seen : http://localhost:7777
+      sleep_hmm: http://localhost:7777
+      sleep_score: http://localhost:7777
+      sleep_stats : http://localhost:7777
+      smart_alarm_log: http://localhost:7777
+      sync_response_commands : http://localhost:7777
+      teams : http://localhost:7777
+      timeline: http://localhost:7777
+      timeline_log : http://localhost:7777
+      timezone_history : http://localhost:7777

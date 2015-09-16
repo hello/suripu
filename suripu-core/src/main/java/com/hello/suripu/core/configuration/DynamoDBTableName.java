@@ -7,6 +7,7 @@ public enum DynamoDBTableName {
 
     FEATURES("features"),
     ALARM_INFO("alarm_info"),
+    ALARMS("alarms"),
     SENSE_KEY_STORE("sense_key_store"),
     PILL_KEY_STORE("pill_key_store"),
     PASSWORD_RESET("password_reset"),

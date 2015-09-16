@@ -158,22 +158,6 @@ logging:
     # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
     timeZone: UTC
 
-
-event_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: event
-
-timezone_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: timezone_history
-
-alarm_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: alarm
-
 score_threshold : 15 # minutes bucket for sleep-scores
 
 push_notifications:
@@ -183,63 +167,9 @@ push_notifications:
 
   table_name: notifications #deprecate later
 
-notifications_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: notifications
-
-preferences_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: preferences
-
-ring_time_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: ring_time
-
-alarm_info_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: alarm_info
-
 # remember to update version when changing score methods
 # v0.1: pure movement
-sleep_score_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: sleep_score
 sleep_score_version: v_0_1
-
-features_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: features
-
-teams_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: teams
-
-insights_dynamo_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: insights
-
-sense_key_store_dynamo_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: key_store
-
-pill_key_store_dynamo_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: pill_key_store
-
-password_reset_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: password_reset
 
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
@@ -255,89 +185,69 @@ kinesis:
 question_configs:
   num_skips : 5
 
-timeline_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: timeline
-
 email:
    api_key: XnAIQfmDpMYIapDWGigfwA
    link_host: http://account-staging-zpbsmunavw.elasticbeanstalk.com/password_update
 
-ring_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: ring_history_by_account
-
-sleephmm_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: sleephmm
-
 # store sleep scores and other stats
 # v0.2: score uses movement and duration
-sleep_stats_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: sleep_stats
 sleep_stats_version: v_0_2
 
 
 max_cache_refresh_days: 20
 
-algorithm_test_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+dynamodb:
   region: us-east-1
-  table_name: algorithm_test
+  tables:
+    alarm_info : alarm_info
+    alarms: alarms
+    calibration: prod_calibration
+    features : features
+    firmware_upgrade_path : fw_upgrade_path
+    firmware_versions : firmware_versions_mapping
+    hmm_bayesnet_models: hmm_bayesnet_models
+    hmm_bayesnet_priors: hmm_bayesnet_priors
+    insights: insights
+    ota_history : ota_history
+    password_reset: password_reset
+    pill_key_store : pill_key_store
+    preferences: preferences
+    ring_time_history: ring_history_by_account
+    sense_key_store : key_store
+    sense_last_seen: sense_last_seen
+    sleep_hmm: sleephmm
+    sleep_score: sleep_score
+    sleep_stats: sleep_stats
+    smart_alarm_log: smart_alarm_log
+    sync_response_commands : response_commands
+    teams : teams
+    timeline: timeline
+    timeline_log : timeline_log
+    timezone_history : timezone_history
 
-
-smart_alarm_log_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: smart_alarm_log
-
-timeline_log_db:
-  endpoint: http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: timeline_log
-
-ota_history_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: ota_history
-
-resp_commands_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: response_commands
-
-fw_path_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: fw_upgrade_path
-
-
-sense_last_seen:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: sense_last_seen
-
-hmm_bayesnet_priors:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: hmm_bayesnet_priors
-
-hmm_bayesnet_models:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: hmm_bayesnet_models
-
-calibration:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: calibration
-
-wifi_info:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
-  region: us-east-1
-  table_name: wifi_info
+  endpoints:
+      alarm_info : http://dynamodb.us-east-1.amazonaws.com
+      alarms: http://dynamodb.us-east-1.amazonaws.com
+      calibration : http://dynamodb.us-east-1.amazonaws.com
+      features : http://dynamodb.us-east-1.amazonaws.com
+      firmware_upgrade_path : http://dynamodb.us-east-1.amazonaws.com
+      firmware_versions : http://dynamodb.us-east-1.amazonaws.com
+      hmm_bayesnet_models: http://dynamodb.us-east-1.amazonaws.com
+      hmm_bayesnet_priors: http://dynamodb.us-east-1.amazonaws.com
+      insights: http://dynamodb.us-east-1.amazonaws.com
+      ota_history : http://dynamodb.us-east-1.amazonaws.com
+      password_reset: http://dynamodb.us-east-1.amazonaws.com
+      pill_key_store : http://dynamodb.us-east-1.amazonaws.com
+      preferences: http://dynamodb.us-east-1.amazonaws.com
+      ring_time_history: http://dynamodb.us-east-1.amazonaws.com
+      sense_key_store : http://dynamodb.us-east-1.amazonaws.com
+      sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
+      sleep_hmm: http://dynamodb.us-east-1.amazonaws.com
+      sleep_score: http://dynamodb.us-east-1.amazonaws.com
+      sleep_stats : http://dynamodb.us-east-1.amazonaws.com
+      smart_alarm_log: http://dynamodb.us-east-1.amazonaws.com
+      sync_response_commands : http://dynamodb.us-east-1.amazonaws.com
+      teams : http://dynamodb.us-east-1.amazonaws.com
+      timeline: http://dynamodb.us-east-1.amazonaws.com
+      timeline_log : http://dynamodb.us-east-1.amazonaws.com
+      timezone_history : http://dynamodb.us-east-1.amazonaws.com

@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
@@ -39,7 +38,7 @@ import java.util.Set;
 /**
  * Created by pangwu on 9/16/14.
  */
-public class AlarmDAODynamoDB {
+public class AlarmDAODynamoDB implements BaseDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -146,7 +145,7 @@ public class AlarmDAODynamoDB {
     }
 
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient){
+    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
