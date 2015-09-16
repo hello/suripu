@@ -262,13 +262,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                         false);
 
                 sleepEventsFromAlgorithmOptional = Optional.of(events);
-                        //update priors
-                if (sleepEventsFromAlgorithmOptional.get().fallAsleep.isPresent()) {
+
+
+                //verify that algorithm produced something useable
+                final TimelineError error = timelineSafeguards.checkIfValidTimeline(
+                        sleepEventsFromAlgorithmOptional.get(),
+                        ImmutableList.copyOf(Collections.EMPTY_LIST),
+                        ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+
+                if (error.equals(TimelineError.NO_ERROR)) {
                     algorithmWorked = true;
-                    log.addMessage(AlgorithmType.ONLINE_HMM,timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithmOptional.get().toList()));
+                    log.addMessage(AlgorithmType.ONLINE_HMM, timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithmOptional.get().toList()));
                 }
                 else {
-                    log.addMessage(AlgorithmType.ONLINE_HMM,TimelineError.MISSING_KEY_EVENTS);
+                    log.addMessage(AlgorithmType.ONLINE_HMM, error);
                 }
             }
             else {
@@ -1118,7 +1125,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
     private ImmutableList<TimelineFeedback> getFeedbackList(final Long accountId, final DateTime nightOf, final Integer offsetMillis) {
-
         if(!hasFeedbackInTimeline(accountId)) {
             LOGGER.debug("Timeline feedback not enabled for account {}", accountId);
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
