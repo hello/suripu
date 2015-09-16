@@ -49,6 +49,20 @@ public class GeneralProtobufDAODynamoDB {
     private final List<String> payloadColumnNames;
     private final Logger logger;
 
+    public static class GeneralQueryResult {
+        public final Map<String,Map<String,byte []>> payloadsByKey;
+        public final Map<String,String> rangeKeysByKey;
+
+        public GeneralQueryResult(Map<String, Map<String, byte[]>> payloadsByKey, Map<String, String> rangeKeysByKey) {
+            this.payloadsByKey = payloadsByKey;
+            this.rangeKeysByKey = rangeKeysByKey;
+        }
+
+        static public GeneralQueryResult createEmtpy() {
+            return new GeneralQueryResult(Maps.<String, Map<String, byte[]>> newHashMap(),Maps.<String, String>newHashMap());
+        }
+    }
+
     public GeneralProtobufDAODynamoDB(Logger logger, final AmazonDynamoDB dynamoDBClient, final String tableName, final String hashKeyColumnName, final Optional<String> rangeKeyColumnName, final List<String> payloadColumnNames) {
         this.logger = logger;
         this.dynamoDBClient = dynamoDBClient;
@@ -59,6 +73,33 @@ public class GeneralProtobufDAODynamoDB {
     }
 
 
+    public boolean updateLatest(final String key, final String rangeKey,final Map<String,byte[]> payloadByColumn) {
+
+
+        //query latest
+        final GeneralQueryResult queryResult = getBySingleKeyLTERangeKey(key, rangeKey, 1);
+
+        if (!queryResult.payloadsByKey.containsKey(key)) {
+            return false;
+        }
+
+        final Map<String, byte[]> data = queryResult.payloadsByKey.get(key);
+
+        String foundRangeKey = queryResult.rangeKeysByKey.get(key);
+
+        if (foundRangeKey == null) {
+            foundRangeKey = "";
+        }
+
+        for (final Map.Entry<String, byte[]> entry : payloadByColumn.entrySet()) {
+            data.put(entry.getKey(), entry.getValue());
+        }
+
+
+        //put back into found item
+        return update(key,foundRangeKey,data);
+
+    }
 
     public boolean update(final String key, final String rangeKey,final Map<String,byte[]> payloadByColumn) {
 
@@ -112,14 +153,14 @@ public class GeneralProtobufDAODynamoDB {
 
     }
 
-    public Map<String, Map<String,byte[]>> getBySingleKeyNoRangeKey(final String key) {
+    public GeneralQueryResult getBySingleKeyNoRangeKey(final String key) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
         return getBySingleKey(key, queryConditions, 1);
 
     }
 
-    public Map<String, Map<String,byte[]>> getBySingleKeyLessThanRangeKey(final String key, final String rangeKey, final int limit) {
+    public GeneralQueryResult getBySingleKeyLTERangeKey(final String key, final String rangeKey, final int limit) {
 
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
@@ -135,7 +176,7 @@ public class GeneralProtobufDAODynamoDB {
         return getBySingleKey(key, queryConditions, limit);
     }
 
-    public Map<String, Map<String,byte[]>> getByMultipleKeysLessThanRangeKey(final List<String> keys, final String rangeKey, final int limit) {
+    public GeneralQueryResult getByMultipleKeysLTERangeKey(final List<String> keys, final String rangeKey, final int limit) {
 
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
@@ -151,7 +192,7 @@ public class GeneralProtobufDAODynamoDB {
         return getByMultipleKeys(keys, queryConditions, limit);
     }
 
-    public Map<String, Map<String,byte[]>> getBySingleKeyBetweenRangeKeys(final String key, final String rangeKey1, final String rangeKey2, final int limit) {
+    public GeneralQueryResult getBySingleKeyBetweenRangeKeys(final String key, final String rangeKey1, final String rangeKey2, final int limit) {
 
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 
@@ -175,7 +216,7 @@ public class GeneralProtobufDAODynamoDB {
 
 
 
-    public Map<String, Map<String,byte[]>> getByMultipleKeys(final List<String> keys, final Map<String, Condition> queryConditions, final int limit) {
+    public GeneralQueryResult getByMultipleKeys(final List<String> keys, final Map<String, Condition> queryConditions, final int limit) {
         final List<AttributeValue> values = Lists.newArrayList();
 
         for (final String key : keys) {
@@ -192,7 +233,7 @@ public class GeneralProtobufDAODynamoDB {
     }
 
 
-    public Map<String, Map<String,byte[]>> getBySingleKey(final String key, final Map<String, Condition> queryConditions, final int limit) {
+    public GeneralQueryResult getBySingleKey(final String key, final Map<String, Condition> queryConditions, final int limit) {
 
 
         final Condition selectHashKeyCondition = new Condition()
@@ -204,10 +245,10 @@ public class GeneralProtobufDAODynamoDB {
     }
 
 
-    public Map<String, Map<String,byte[]>> get(final Map<String, Condition> queryConditions, final int limit) {
+    public GeneralQueryResult get(final Map<String, Condition> queryConditions, final int limit) {
 
-        final Map<String, Map<String,byte[]>> finalResult = new HashMap<>();
-
+        final Map<String, Map<String,byte[]>> finalResult = Maps.newHashMap();
+        final Map<String,String> rangeKeys = Maps.newHashMap();
         final Collection<String> targetAttributeSet = Sets.newHashSet();
 
         Collections.addAll(targetAttributeSet,
@@ -234,7 +275,7 @@ public class GeneralProtobufDAODynamoDB {
 
         if (items == null) {
             logger.error("DynamoDB query did not return anything for query {} on table {}", queryRequest, this.tableName);
-            return finalResult;
+            return GeneralQueryResult.createEmtpy();
         }
 
 
@@ -275,9 +316,13 @@ public class GeneralProtobufDAODynamoDB {
 
             finalResult.put(thisItemsKey, results);
 
+            if (rangeKeyColumnName.isPresent()) {
+                rangeKeys.put(thisItemsKey, item.get(rangeKeyColumnName.get()).getS());
+            }
+
         }
 
-        return finalResult;
+        return new GeneralQueryResult(finalResult,rangeKeys);
 
     }
 

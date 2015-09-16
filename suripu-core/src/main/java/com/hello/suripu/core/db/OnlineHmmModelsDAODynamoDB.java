@@ -43,11 +43,11 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     public OnlineHmmData getModelDataByAccountId(Long accountId,final DateTime date) {
         final String dateString = DateTimeUtil.dateToYmdString(date);
 
-        final Map<String, Map<String,byte[]>> results = dbDAO.getBySingleKeyLessThanRangeKey(accountId.toString(),dateString,1);
+        final GeneralProtobufDAODynamoDB.GeneralQueryResult results = dbDAO.getBySingleKeyLTERangeKey(accountId.toString(), dateString, 1);
 
         LOGGER.info("getModelDataByAccountId for user {}",accountId);
 
-        final Map<String,byte[]> allColumns = results.get(accountId.toString());
+        final Map<String,byte[]> allColumns = results.payloadsByKey.get(accountId.toString());
 
         Optional<OnlineHmmPriors> priors = Optional.absent();
         Optional<OnlineHmmScratchPad> scratchPad = Optional.absent();
@@ -92,7 +92,7 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
 
         payloads.put(PAYLOAD_KEY_FOR_SCRATCHPAD,scratchPad.serializeToProtobuf());
 
-        return dbDAO.update(accountId.toString(), dateString, payloads);
+        return dbDAO.updateLatest(accountId.toString(), dateString, payloads);
 
     }
 
