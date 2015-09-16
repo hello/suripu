@@ -21,6 +21,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.util.SmoothSample;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -181,8 +182,13 @@ public class RoomConditionsResource extends BaseResource {
         }
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId));
+        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+
+        if (this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId)){
+
+        };
+        return timeSeries;
     }
 
     @Timed
@@ -222,13 +228,16 @@ public class RoomConditionsResource extends BaseResource {
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId));
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
+        final AllSensorSampleList adjustedSensorData = adjustTimeSeriesAllSensors(sensorData, deviceIdPair.get().externalDeviceId);
+
+        return getDisplayData(adjustedSensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
     @Timed
@@ -267,12 +276,16 @@ public class RoomConditionsResource extends BaseResource {
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId));
+                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
+        final AllSensorSampleList adjustedSensorData = adjustTimeSeriesAllSensors(sensorData, deviceIdPair.get().externalDeviceId);
+
+        return getDisplayData(adjustedSensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
     /*
@@ -346,10 +359,10 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional,
-                this.hasDustSmoothEnabled(deviceName));
+                sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        return adjustTimeSeries(timeSeries, sensor, deviceName);
     }
 
     /*
@@ -390,9 +403,11 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
+        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                 accessToken.accountId, deviceId.get(), slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, this.hasDustSmoothEnabled(deviceName));
+                sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+
+        return adjustTimeSeries(timeSeries, sensor, deviceName);
     }
 
 
@@ -448,8 +463,11 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accountId),color, calibrationOptional, this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId));
+        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor,
+                missingDataDefaultValue(accountId), color, calibrationOptional);
+
+        return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
 
     }
 
@@ -487,9 +505,11 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        return deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                sensor, missingDataDefaultValue(accountId), color, calibrationOptional, this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId));
+        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                    accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                    sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
+
+        return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }
 
     private Map<Sensor, List<Sample>> retrieveAllSensorsWeekData(final Long accountId, final Long queryEndTimestampInUTC) {
@@ -525,13 +545,15 @@ public class RoomConditionsResource extends BaseResource {
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
         final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional, this.hasDustSmoothEnabled(deviceIdPair.get().externalDeviceId));
+                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
         }
 
-        return getDisplayData(sensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
+        final AllSensorSampleList adjustedSensorData = adjustTimeSeriesAllSensors(sensorData, deviceIdPair.get().externalDeviceId);
+
+        return getDisplayData(adjustedSensorData.getAllData(), hasCalibrationEnabled(deviceIdPair.get().externalDeviceId));
     }
 
     private static Map<Sensor, List<Sample>> getDisplayData(final Map<Sensor, List<Sample>> allSensorData, Boolean hasDust){
@@ -555,4 +577,29 @@ public class RoomConditionsResource extends BaseResource {
         return calibrationDAO.getStrict(senseId);
     }
 
+    private List<Sample> adjustTimeSeries (final List<Sample> samples, final String sensor, final String senseId) {
+        if (sensor.toUpperCase().equals(Sensor.PARTICULATES.name()) && this.hasDustSmoothEnabled(senseId)) {
+            return SmoothSample.convert(samples);
+        }
+        return samples;
+    }
+
+    private AllSensorSampleList adjustTimeSeriesAllSensors (final AllSensorSampleList allSensorSampleList, final String senseId) {
+        if (!this.hasDustSmoothEnabled(senseId)) {
+            return allSensorSampleList;
+        }
+        final AllSensorSampleList adjustedAllSensorSampleList = new AllSensorSampleList();
+        adjustedAllSensorSampleList.add(Sensor.LIGHT, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.HUMIDITY, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.SOUND, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.TEMPERATURE, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.LIGHT, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.WAVE_COUNT, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.HOLD_COUNT, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.SOUND_NUM_DISTURBANCES, allSensorSampleList.get(Sensor.LIGHT));
+        adjustedAllSensorSampleList.add(Sensor.SOUND_PEAK_DISTURBANCE, allSensorSampleList.get(Sensor.LIGHT));
+
+        adjustedAllSensorSampleList.add(Sensor.PARTICULATES, SmoothSample.convert(allSensorSampleList.get(Sensor.PARTICULATES)));
+        return adjustedAllSensorSampleList;
+    }
 }

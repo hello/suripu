@@ -126,8 +126,8 @@ public class DataScienceResource extends BaseResource {
                     slotDurationMins,
                     missingDataDefaultValue(accountId.get()),
                     Optional.<Device.Color>absent(),
-                    Optional.of(Calibration.createDefault("dummy-sense")),
-                    false);
+                    Optional.of(Calibration.createDefault("dummy-sense"))
+                );
             final List<Sample> lightData = sensorData.get(Sensor.LIGHT);
             final TimelineUtils timelineUtils = new TimelineUtils();
             final List<Event> lightEvents = timelineUtils.getLightEventsWithMultipleLightOut(lightData);
@@ -166,8 +166,7 @@ public class DataScienceResource extends BaseResource {
                     slotDurationMins,
                     missingDataDefaultValue(accountId.get()),
                     Optional.<Device.Color>absent(),
-                    Optional.of(Calibration.createDefault("dummy-sense")),
-                    false
+                    Optional.of(Calibration.createDefault("dummy-sense"))
             );
             final List<Sample> data = sensorData.get(Sensor.valueOf(dataType));
             return data;
@@ -272,8 +271,7 @@ public class DataScienceResource extends BaseResource {
                 slotDurationInMinutes,
                 missingDataDefaultValue,
                 Optional.<Device.Color>absent(),
-                Optional.of(Calibration.createDefault("dummy-sense")),
-                false
+                Optional.of(Calibration.createDefault("dummy-sense"))
         );
 
         final List<Sample> lightSamples = sensorSamples.get(Sensor.LIGHT);
