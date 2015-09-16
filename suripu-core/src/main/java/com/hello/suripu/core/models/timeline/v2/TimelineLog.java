@@ -165,7 +165,7 @@ public class TimelineLog {
                         .setNightOfTimeline(dateOfNight)
                         .setAlgorithm(AlgType.NO_ALGORITHM)
                         .setError(errorType)
-                        .setNightOfTimelineString(dateOfNightString)
+                        .setNightOf(dateOfNightString)
                         .build());
 
     }
@@ -184,7 +184,7 @@ public class TimelineLog {
                         .setAlgorithm(AlgType.NO_ALGORITHM)
                         .setMessage(message)
                         .setError(errorType)
-                        .setNightOfTimelineString(dateOfNightString)
+                        .setNightOf(dateOfNightString)
                         .build());
 
     }
@@ -201,8 +201,8 @@ public class TimelineLog {
                 .setNightOfTimeline(dateOfNight)
                 .setAlgorithm(algType)
                 .setError(ErrorType.NO_ERROR)
-                .setNightOfTimelineString(dateOfNightString);
-        
+                .setNightOf(dateOfNightString);
+
         for (final Event event : predictions) {
             final Optional<Prediction> predictionOptional = predictionFromEvent(event);
 
@@ -235,7 +235,7 @@ public class TimelineLog {
                         .setNightOfTimeline(dateOfNight)
                         .setAlgorithm(algType)
                         .setError(error)
-                        .setNightOfTimelineString(dateOfNightString)
+                        .setNightOf(dateOfNightString)
                         .build());
     }
 
@@ -259,7 +259,7 @@ public class TimelineLog {
                         .setAlgorithm(algType)
                         .setError(error)
                         .setMessage(message)
-                        .setNightOfTimelineString(dateOfNightString)
+                        .setNightOf(dateOfNightString)
                         .build());
     }
 
@@ -278,7 +278,7 @@ public class TimelineLog {
                         .setError(ErrorType.NO_ERROR)
                         .setModelName(model)
                         .setModelScore(score)
-                        .setNightOfTimelineString(dateOfNightString)
+                        .setNightOf(dateOfNightString)
                         .build());
     }
 

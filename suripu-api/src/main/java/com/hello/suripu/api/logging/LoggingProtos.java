@@ -9754,20 +9754,20 @@ public final class LoggingProtos {
     com.google.protobuf.ByteString
         getMessageBytes();
 
-    // optional string night_of_timeline_string = 12;
+    // optional string night_of = 12;
     /**
-     * <code>optional string night_of_timeline_string = 12;</code>
+     * <code>optional string night_of = 12;</code>
      */
-    boolean hasNightOfTimelineString();
+    boolean hasNightOf();
     /**
-     * <code>optional string night_of_timeline_string = 12;</code>
+     * <code>optional string night_of = 12;</code>
      */
-    java.lang.String getNightOfTimelineString();
+    java.lang.String getNightOf();
     /**
-     * <code>optional string night_of_timeline_string = 12;</code>
+     * <code>optional string night_of = 12;</code>
      */
     com.google.protobuf.ByteString
-        getNightOfTimelineStringBytes();
+        getNightOfBytes();
   }
   /**
    * Protobuf type {@code TimelineLog}
@@ -9897,7 +9897,7 @@ public final class LoggingProtos {
             }
             case 98: {
               bitField0_ |= 0x00000400;
-              nightOfTimelineString_ = input.readBytes();
+              nightOf_ = input.readBytes();
               break;
             }
           }
@@ -11179,20 +11179,20 @@ public final class LoggingProtos {
       }
     }
 
-    // optional string night_of_timeline_string = 12;
-    public static final int NIGHT_OF_TIMELINE_STRING_FIELD_NUMBER = 12;
-    private java.lang.Object nightOfTimelineString_;
+    // optional string night_of = 12;
+    public static final int NIGHT_OF_FIELD_NUMBER = 12;
+    private java.lang.Object nightOf_;
     /**
-     * <code>optional string night_of_timeline_string = 12;</code>
+     * <code>optional string night_of = 12;</code>
      */
-    public boolean hasNightOfTimelineString() {
+    public boolean hasNightOf() {
       return ((bitField0_ & 0x00000400) == 0x00000400);
     }
     /**
-     * <code>optional string night_of_timeline_string = 12;</code>
+     * <code>optional string night_of = 12;</code>
      */
-    public java.lang.String getNightOfTimelineString() {
-      java.lang.Object ref = nightOfTimelineString_;
+    public java.lang.String getNightOf() {
+      java.lang.Object ref = nightOf_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
@@ -11200,22 +11200,22 @@ public final class LoggingProtos {
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          nightOfTimelineString_ = s;
+          nightOf_ = s;
         }
         return s;
       }
     }
     /**
-     * <code>optional string night_of_timeline_string = 12;</code>
+     * <code>optional string night_of = 12;</code>
      */
     public com.google.protobuf.ByteString
-        getNightOfTimelineStringBytes() {
-      java.lang.Object ref = nightOfTimelineString_;
+        getNightOfBytes() {
+      java.lang.Object ref = nightOf_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        nightOfTimelineString_ = b;
+        nightOf_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -11234,7 +11234,7 @@ public final class LoggingProtos {
       modelName_ = "";
       predictions_ = java.util.Collections.emptyList();
       message_ = "";
-      nightOfTimelineString_ = "";
+      nightOf_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -11282,7 +11282,7 @@ public final class LoggingProtos {
         output.writeBytes(11, getMessageBytes());
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
-        output.writeBytes(12, getNightOfTimelineStringBytes());
+        output.writeBytes(12, getNightOfBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -11339,7 +11339,7 @@ public final class LoggingProtos {
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(12, getNightOfTimelineStringBytes());
+          .computeBytesSize(12, getNightOfBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -11489,7 +11489,7 @@ public final class LoggingProtos {
         }
         message_ = "";
         bitField0_ = (bitField0_ & ~0x00000400);
-        nightOfTimelineString_ = "";
+        nightOf_ = "";
         bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
@@ -11571,7 +11571,7 @@ public final class LoggingProtos {
         if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
           to_bitField0_ |= 0x00000400;
         }
-        result.nightOfTimelineString_ = nightOfTimelineString_;
+        result.nightOf_ = nightOf_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -11648,9 +11648,9 @@ public final class LoggingProtos {
           message_ = other.message_;
           onChanged();
         }
-        if (other.hasNightOfTimelineString()) {
+        if (other.hasNightOf()) {
           bitField0_ |= 0x00000800;
-          nightOfTimelineString_ = other.nightOfTimelineString_;
+          nightOf_ = other.nightOf_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -12370,76 +12370,76 @@ public final class LoggingProtos {
         return this;
       }
 
-      // optional string night_of_timeline_string = 12;
-      private java.lang.Object nightOfTimelineString_ = "";
+      // optional string night_of = 12;
+      private java.lang.Object nightOf_ = "";
       /**
-       * <code>optional string night_of_timeline_string = 12;</code>
+       * <code>optional string night_of = 12;</code>
        */
-      public boolean hasNightOfTimelineString() {
+      public boolean hasNightOf() {
         return ((bitField0_ & 0x00000800) == 0x00000800);
       }
       /**
-       * <code>optional string night_of_timeline_string = 12;</code>
+       * <code>optional string night_of = 12;</code>
        */
-      public java.lang.String getNightOfTimelineString() {
-        java.lang.Object ref = nightOfTimelineString_;
+      public java.lang.String getNightOf() {
+        java.lang.Object ref = nightOf_;
         if (!(ref instanceof java.lang.String)) {
           java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
-          nightOfTimelineString_ = s;
+          nightOf_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
         }
       }
       /**
-       * <code>optional string night_of_timeline_string = 12;</code>
+       * <code>optional string night_of = 12;</code>
        */
       public com.google.protobuf.ByteString
-          getNightOfTimelineStringBytes() {
-        java.lang.Object ref = nightOfTimelineString_;
+          getNightOfBytes() {
+        java.lang.Object ref = nightOf_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          nightOfTimelineString_ = b;
+          nightOf_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
       /**
-       * <code>optional string night_of_timeline_string = 12;</code>
+       * <code>optional string night_of = 12;</code>
        */
-      public Builder setNightOfTimelineString(
+      public Builder setNightOf(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000800;
-        nightOfTimelineString_ = value;
+        nightOf_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string night_of_timeline_string = 12;</code>
+       * <code>optional string night_of = 12;</code>
        */
-      public Builder clearNightOfTimelineString() {
+      public Builder clearNightOf() {
         bitField0_ = (bitField0_ & ~0x00000800);
-        nightOfTimelineString_ = getDefaultInstance().getNightOfTimelineString();
+        nightOf_ = getDefaultInstance().getNightOf();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string night_of_timeline_string = 12;</code>
+       * <code>optional string night_of = 12;</code>
        */
-      public Builder setNightOfTimelineStringBytes(
+      public Builder setNightOfBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000800;
-        nightOfTimelineString_ = value;
+        nightOf_ = value;
         onChanged();
         return this;
       }
@@ -12546,7 +12546,7 @@ public final class LoggingProtos {
       "\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020P",
       "rovisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_" +
       "number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004" +
-      " \001(\t\"\312\007\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
+      " \001(\t\"\272\007\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
       "\022$\n\034timestamp_when_log_generated\030\002 \001(\003\022\031" +
       "\n\021night_of_timeline\030\003 \001(\003\022\'\n\talgorithm\030\004" +
       " \001(\0162\024.TimelineLog.AlgType\022%\n\005error\030\005 \001(" +
@@ -12554,24 +12554,24 @@ public final class LoggingProtos {
       "per\030\006 \001(\003\022\026\n\016log_uuid_lower\030\007 \001(\003\022\023\n\013mod" +
       "el_score\030\010 \001(\002\022\022\n\nmodel_name\030\t \001(\t\022,\n\013pr" +
       "edictions\030\n \003(\0132\027.TimelineLog.Prediction",
-      "\022\017\n\007message\030\013 \001(\t\022 \n\030night_of_timeline_s" +
-      "tring\030\014 \001(\t\032|\n\nPrediction\022/\n\nevent_type\030" +
-      "\001 \001(\0162\033.TimelineLog.SleepEventType\022\035\n\025ev" +
-      "ent_time_utc_millis\030\002 \001(\003\022\036\n\026timezone_of" +
-      "fset_millis\030\003 \001(\005\"L\n\007AlgType\022\020\n\014NO_ALGOR" +
-      "ITHM\020\000\022\n\n\006WUPANG\020\001\022\007\n\003HMM\020\002\022\n\n\006VOTING\020\003\022" +
-      "\016\n\nONLINE_HMM\020\004\"O\n\016SleepEventType\022\014\n\010NO_" +
-      "EVENT\020\000\022\n\n\006IN_BED\020\001\022\t\n\005SLEEP\020\002\022\010\n\004WAKE\020\003" +
-      "\022\016\n\nOUT_OF_BED\020\004\"\276\002\n\tErrorType\022\014\n\010NO_ERR" +
-      "OR\020\000\022\036\n\032INTENDED_ALGORITHM_FAILURE\020\001\022\026\n\022",
-      "TIMESPAN_TOO_SHORT\020\002\022\023\n\017NOT_ENOUGH_DATA\020" +
-      "\003\022\013\n\007NO_DATA\020\004\022\026\n\022LOW_AMPLITUDE_DATA\020\005\022#" +
-      "\n\037PARTNER_FILTER_REJECTED_MY_DATA\020\006\022\026\n\022M" +
-      "ISSING_KEY_EVENTS\020\007\022\027\n\023INVALID_SLEEP_SCO" +
-      "RE\020\010\022\031\n\025NOT_ENOUGH_SLEEP_TIME\020\t\022\017\n\013UNEXE" +
-      "PECTED\020\n\022\026\n\022DATA_GAP_TOO_LARGE\020\013\022\027\n\023EVEN" +
-      "TS_OUT_OF_ORDER\020\014B-\n\034com.hello.suripu.ap" +
-      "i.loggingB\rLoggingProtos"
+      "\022\017\n\007message\030\013 \001(\t\022\020\n\010night_of\030\014 \001(\t\032|\n\nP" +
+      "rediction\022/\n\nevent_type\030\001 \001(\0162\033.Timeline" +
+      "Log.SleepEventType\022\035\n\025event_time_utc_mil" +
+      "lis\030\002 \001(\003\022\036\n\026timezone_offset_millis\030\003 \001(" +
+      "\005\"L\n\007AlgType\022\020\n\014NO_ALGORITHM\020\000\022\n\n\006WUPANG" +
+      "\020\001\022\007\n\003HMM\020\002\022\n\n\006VOTING\020\003\022\016\n\nONLINE_HMM\020\004\"" +
+      "O\n\016SleepEventType\022\014\n\010NO_EVENT\020\000\022\n\n\006IN_BE" +
+      "D\020\001\022\t\n\005SLEEP\020\002\022\010\n\004WAKE\020\003\022\016\n\nOUT_OF_BED\020\004" +
+      "\"\276\002\n\tErrorType\022\014\n\010NO_ERROR\020\000\022\036\n\032INTENDED" +
+      "_ALGORITHM_FAILURE\020\001\022\026\n\022TIMESPAN_TOO_SHO",
+      "RT\020\002\022\023\n\017NOT_ENOUGH_DATA\020\003\022\013\n\007NO_DATA\020\004\022\026" +
+      "\n\022LOW_AMPLITUDE_DATA\020\005\022#\n\037PARTNER_FILTER" +
+      "_REJECTED_MY_DATA\020\006\022\026\n\022MISSING_KEY_EVENT" +
+      "S\020\007\022\027\n\023INVALID_SLEEP_SCORE\020\010\022\031\n\025NOT_ENOU" +
+      "GH_SLEEP_TIME\020\t\022\017\n\013UNEXEPECTED\020\n\022\026\n\022DATA" +
+      "_GAP_TOO_LARGE\020\013\022\027\n\023EVENTS_OUT_OF_ORDER\020" +
+      "\014B-\n\034com.hello.suripu.api.loggingB\rLoggi" +
+      "ngProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -12631,7 +12631,7 @@ public final class LoggingProtos {
           internal_static_TimelineLog_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_TimelineLog_descriptor,
-              new java.lang.String[] { "AccountId", "TimestampWhenLogGenerated", "NightOfTimeline", "Algorithm", "Error", "LogUuidUpper", "LogUuidLower", "ModelScore", "ModelName", "Predictions", "Message", "NightOfTimelineString", });
+              new java.lang.String[] { "AccountId", "TimestampWhenLogGenerated", "NightOfTimeline", "Algorithm", "Error", "LogUuidUpper", "LogUuidLower", "ModelScore", "ModelName", "Predictions", "Message", "NightOf", });
           internal_static_TimelineLog_Prediction_descriptor =
             internal_static_TimelineLog_descriptor.getNestedTypes().get(0);
           internal_static_TimelineLog_Prediction_fieldAccessorTable = new
