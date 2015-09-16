@@ -127,7 +127,7 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.workers: DEBUG
-  # Settings for logging to a file.
+
   file:
     enabled: true
     threshold: DEBUG
@@ -140,7 +140,6 @@ logging:
     archivedFileCount: 7
     # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
     timeZone: UTC
-
 dynamodb:
   region: us-east-1
   tables:
@@ -154,8 +153,8 @@ dynamodb:
     ring_time_history: prod_ring_history_by_account
     timezone_history: prod_timezone_history
     alarm_log: prod_alarm
-    hmm_bayesnet_priors: prod_hmm_bayesnet_priors
-    hmm_bayesnet_models: prod_hmm_bayesnet_models
+    feature_extraction_models: prod_feature_extraction_models
+    online_hmm_models: prod_online_hmm_models
     calibration: prod_calibration
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
@@ -168,8 +167,8 @@ dynamodb:
     ring_time_history: http://dynamodb.us-east-1.amazonaws.com
     timezone_history: http://dynamodb.us-east-1.amazonaws.com
     alarm_log: http://dynamodb.us-east-1.amazonaws.com
-    hmm_bayesnet_priors: http://dynamodb.us-east-1.amazonaws.com
-    hmm_bayesnet_models: http://dynamodb.us-east-1.amazonaws.com
+    feature_extraction_models: http://dynamodb.us-east-1.amazonaws.com
+    online_hmm_models: http://dynamodb.us-east-1.amazonaws.com
     calibration: http://dynamodb.us-east-1.amazonaws.com
 
 aggregate_window_size_min: 10

@@ -39,11 +39,13 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -86,11 +88,12 @@ public class TimelineResource extends BaseResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{date}")
     public Timeline getTimelineForNight(@Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken,
-                                        @PathParam("date") final String night) {
+                                        @PathParam("date") final String night,
+                                        @DefaultValue("false") @QueryParam("has_feedback") final Boolean hasFeedback) {
 
 
         final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
-        final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
+        final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate,hasFeedback);
         if(!timeline.isPresent()) {
             return Timeline.createEmpty(targetDate);
         }
@@ -129,7 +132,7 @@ public class TimelineResource extends BaseResource {
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
-        return getTimelineForNight(accessToken, date);
+        return getTimelineForNight(accessToken, date,true);
     }
 
     @DELETE
@@ -142,7 +145,7 @@ public class TimelineResource extends BaseResource {
                                 @PathParam("timestamp") long timestamp) {
 
         return Response.status(Response.Status.ACCEPTED)
-                       .entity(getTimelineForNight(accessToken, date))
+                       .entity(getTimelineForNight(accessToken, date,true))
                        .build();
     }
 
@@ -167,6 +170,9 @@ public class TimelineResource extends BaseResource {
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback,offsetMillis);
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
+
+        //recalculate with feedback
+        getTimelineForNight(accessToken, date,true);
 
         return Response.status(Response.Status.ACCEPTED).build();
     }
