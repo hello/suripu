@@ -76,35 +76,35 @@ public class AllSensorSampleList {
                 this.light.addAll(values);
                 break;
             case SOUND:
-                this.light.clear();
+                this.sound.clear();
                 this.sound.addAll(values);
                 break;
             case HUMIDITY:
-                this.light.clear();
+                this.humidity.clear();
                 this.humidity.addAll(values);
                 break;
             case TEMPERATURE:
-                this.light.clear();
+                this.temperature.clear();
                 this.temperature.addAll(values);
                 break;
             case PARTICULATES:
-                this.light.clear();
+                this.particulates.clear();
                 this.particulates.addAll(values);
                 break;
             case WAVE_COUNT:
-                this.light.clear();
+                this.waveCounts.clear();
                 this.waveCounts.addAll(values);
                 break;
             case HOLD_COUNT:
-                this.light.clear();
+                this.holdCounts.clear();
                 this.holdCounts.addAll(values);
                 break;
             case SOUND_NUM_DISTURBANCES:
-                this.light.clear();
+                this.soundNumDisturbances.clear();
                 this.soundNumDisturbances.addAll(values);
                 break;
             case SOUND_PEAK_DISTURBANCE:
-                this.light.clear();
+                this.soundPeakDisturbance.clear();
                 this.soundPeakDisturbance.addAll(values);
                 break;
             default:
