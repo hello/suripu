@@ -33,13 +33,21 @@ import java.util.UUID;
 
 /**
  * Created by benjo on 8/20/15.
+ *
+ * This class integrates all the separate components of the online hmm predictor
+ * -getting pre-classificaiton models (the feature extractors)
+ * -pre-classifying
+ * -loading the personalized model for the user
+ * -evaluating the personalized models
+ * -updating the model with labels
+ * -saving the new models
  */
 public class OnlineHmm {
     private final static long NUM_MILLIS_IN_A_MINUTE = 60000L;
     private static final long NUMBER_OF_MILLIS_IN_AN_HOUR = 3600000L;
     private static final long MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD = 12 * NUMBER_OF_MILLIS_IN_AN_HOUR;
 
-    public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 5;
+    public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 15;
     public final static Set<String> DEFAULT_MODEL_KEYS;
 
     static {

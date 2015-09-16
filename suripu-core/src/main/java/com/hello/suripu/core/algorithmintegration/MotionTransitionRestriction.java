@@ -15,6 +15,10 @@ import java.util.Set;
 
 /**
  * Created by benjo on 8/25/15.
+ *
+ *   generate motion transition restrictions
+ *   The general rule is this -- only allow transitions from sleep to post-sleep if there are two-consecutive 5-minute periods of motion
+ *   
  */
 public class MotionTransitionRestriction implements TransitionRestriction {
 

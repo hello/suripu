@@ -12,6 +12,10 @@ import java.util.SortedSet;
 
 /**
  *  DANGER this class is mutable!
+ *
+ *  This is a regular `ol alphabet / categorical data HMM as described in the Rabiner tutorial
+ *  The main differences is that his supports labeled  and semi-labled sequences and can generate new models
+ *  based on the data and the labels.
  */
 
 

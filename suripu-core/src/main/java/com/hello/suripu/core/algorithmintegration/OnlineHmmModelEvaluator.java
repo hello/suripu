@@ -24,6 +24,9 @@ import java.util.UUID;
 
 /**
  * Created by benjo on 8/20/15.
+ *
+ * As yoou would guess, this class will evaluate models and output predictions.
+ * It will also handle using labels to create new models
  */
 public class OnlineHmmModelEvaluator {
     //how much to you weight the prior relative to the new update?

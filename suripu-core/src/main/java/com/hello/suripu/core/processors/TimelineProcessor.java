@@ -502,7 +502,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final ImmutableList<TimelineFeedback> feedbackList = getFeedbackList(accountId, targetDate, tzOffsetMillis);
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),feedbackList,tzOffsetMillis,currentTimeUTC));
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),feedbackList,tzOffsetMillis));
 
     }
 

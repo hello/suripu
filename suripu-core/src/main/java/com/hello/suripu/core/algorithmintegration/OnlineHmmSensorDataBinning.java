@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by benjo on 3/20/15.
+ *  takes raw sensor data and bins it into 5 minute chunks
+ *  it also does some processing on the sensor data to come up with some new signals, like light/sound increases
  */
 public class OnlineHmmSensorDataBinning {
     private static final Logger LOGGER = LoggerFactory.getLogger(OnlineHmmSensorDataBinning.class);

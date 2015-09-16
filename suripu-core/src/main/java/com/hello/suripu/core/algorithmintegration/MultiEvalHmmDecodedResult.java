@@ -7,6 +7,8 @@ import java.util.List;
 
 /**
  * Created by benjo on 8/20/15.
+ *
+ * the result you get from evaluating one of the MultiObsHmms
  */
 public class MultiEvalHmmDecodedResult {
 
