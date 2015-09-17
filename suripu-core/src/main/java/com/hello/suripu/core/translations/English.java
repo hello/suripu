@@ -56,7 +56,7 @@ public class English {
             "People tend to sleep best when humidity is between **30%** and **60%**.";
 
     public final static String PARTICULATES_ADVICE_MESSAGE =
-            "For ideal sleep, the air in your bedroom should be as clean as possible, which is usually below **80**.";
+            "For ideal sleep, the air in your bedroom should be as clean as possible, which is usually below **80 µg/m³**.";
 
     public final static String LIGHT_ADVICE_MESSAGE =
             "For ideal sleep, your bedroom should be as dark as possible, which is below **2 lux**.";
@@ -85,8 +85,8 @@ public class English {
 
     // Particulates (Air Quality)
     public final static String VERY_HIGH_PARTICULATES_MESSAGE = "The air quality is **poor**.";
-    public final static String HIGH_PARTICULATES_MESSAGE = "The air quality is **marginal**.";
-    public final static String IDEAL_PARTICULATES_MESSAGE = "The air quality is **good**.";
+    public final static String HIGH_PARTICULATES_MESSAGE = "The air quality is **not ideal**.";
+    public final static String IDEAL_PARTICULATES_MESSAGE = "The air quality is **just right**.";
 
     // Light
     public final static String IDEAL_LIGHT_MESSAGE = "The light level is **just right**.";
@@ -153,7 +153,7 @@ public class English {
     public final static String RECOMMENDATION_LIGHT_TOO_HIGH = "\n\nMake sure all your lights are off. You may want to consider blackout curtains.";
     public final static String RECOMMENDATION_SOUND_TOO_HIGH = "\n\nTry shutting windows if it's noisy outside, or consider ear plugs.";
 
-    public final static String RECOMMENDATION_PARTICULATES_TOO_HIGH = "\n\nTry opening a window to clear the air. You may also want to consider an air filter.";
+    public final static String RECOMMENDATION_PARTICULATES_TOO_HIGH = "\n\nTry opening a window to bring in some fresh air. If these conditions persist, you may want to consider a HEPA filter.";
     // TIMELINE
     public final static String TIMELINE_NO_SLEEP_DATA = "There was no sleep data recorded for this night.";
     public final static String TIMELINE_NOT_ENOUGH_SLEEP_DATA = "Some sleep data was recorded, but not enough to generate a Sleep Timeline for this night.";
