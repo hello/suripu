@@ -291,3 +291,8 @@ wifi_info:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: wifi_info
+
+app_stats:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: app_stats
