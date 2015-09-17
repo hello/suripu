@@ -14,7 +14,7 @@ public class SmoothSample {
     public static int DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE = 2;
 
     public static List<Sample> convert(final List<Sample> samples) {
-        if (samples.size() < Math.max(DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE)) {
+        if (samples.size() <= Math.max(DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE)) {
             return samples;
         }
 
@@ -23,7 +23,7 @@ public class SmoothSample {
         final double stdDev = new StandardDeviation().evaluate(values, mean);
         
         
-        final double[] noiseFreeValues = replaceNoiseWithAvergeOfSurroundings(values, mean, stdDev, DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE);
+        final double[] noiseFreeValues = replaceNoiseWithAverageOfSurroundings(values, mean, stdDev, DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE);
         
         final double[] smoothedValues = smooth(noiseFreeValues, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE);
 
@@ -35,10 +35,18 @@ public class SmoothSample {
     }
 
 
-    public static double[] replaceNoiseWithAvergeOfSurroundings(final double[] values, final double mean, final double stdDev, final int forwardAttemptsToRemoveNoise) {
+    public static double[] replaceNoiseWithAverageOfSurroundings(final double[] values, final double mean, final double stdDev, final int forwardAttemptsToRemoveNoise) {
         double[] noiseFreeValues = new double[values.length];
-        for (int i = 0; i < values.length - forwardAttemptsToRemoveNoise; i++) {
-            if (!isNoise(values[i], mean, stdDev) || i == 0) {
+
+        if (isNoise(values[0], mean, stdDev)) {
+            noiseFreeValues[0] = mean;
+        }
+        else {
+            noiseFreeValues[0] = values[0];
+        }
+
+        for (int i = 1; i < values.length - forwardAttemptsToRemoveNoise; i++) {
+            if (!isNoise(values[i], mean, stdDev)) {
                 noiseFreeValues[i] = values[i];
                 continue;
             }
@@ -47,6 +55,9 @@ public class SmoothSample {
                 if (!isNoise(values[i + j], mean, stdDev)) {
                     noiseFreeValues[i] = 0.5 * (noiseFreeValues[i-1] + noiseFreeValues[i + j]);
                     break;
+                }
+                else {
+                    noiseFreeValues[i] = values[i];
                 }
             }
         }
