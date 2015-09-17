@@ -56,7 +56,7 @@ public class English {
             "People tend to sleep best when humidity is between **30%** and **60%**.";
 
     public final static String PARTICULATES_ADVICE_MESSAGE =
-            "For ideal sleep, the air in your bedroom should be as clean as possible, which is usually below **80 µg/m³**.";
+            "For ideal sleep, the air in your bedroom should be as clean as possible, which is usually below **80µg/m³**.";
 
     public final static String LIGHT_ADVICE_MESSAGE =
             "For ideal sleep, your bedroom should be as dark as possible, which is below **2 lux**.";
