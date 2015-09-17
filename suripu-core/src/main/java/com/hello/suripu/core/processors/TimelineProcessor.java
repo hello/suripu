@@ -233,22 +233,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             List<Event> extraEvents = Collections.EMPTY_LIST;
 
 
-            if(this.hasVotingEnabled(accountId)){
-                // Voting algorithm feature
-                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
-                        sensorData.allSensorSampleList.get(Sensor.SOUND),
-                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
-                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
-                extraEvents = votingSleepEventsOptional.get().extraEvents;
-                algorithmWorked = true;
-                log.addMessage(AlgorithmType.VOTING,timelineUtils.eventsFromOptionalEvents(votingSleepEventsOptional.get().sleepEvents.toList()));
-
-            }
-            else if (this.hasBayesNetEnabled(accountId)) {
+            if (this.hasBayesNetEnabled(accountId)) {
 
                 //get model from DB
-                final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId,date,uuidOptional);
+                final HmmBayesNetData bayesNetData = bayesNetModelDAO.getLatestModelForDate(accountId, date, uuidOptional);
 
                 if (bayesNetData.isValid()) {
 
@@ -320,35 +308,37 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             /* TRY THE BACKUP PLAN!  */
             if (!algorithmWorked) {
-                LOGGER.warn("ALGORITHM FAILED, trying regular algorithm instead");
+                LOGGER.warn("ALGORITHM FAILED, trying voting algorithm instead");
 
-                //reset state
-                extraEvents = Collections.EMPTY_LIST;
-
-                sleepEventsFromAlgorithmOptional = Optional.of(fromAlgorithm(targetDate,
-                        sensorData.trackerMotions,
+                // Voting algorithm feature
+                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
+                        sensorData.allSensorSampleList.get(Sensor.SOUND),
                         sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT)));
+                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
 
-                if (!sleepEventsFromAlgorithmOptional.isPresent()) {
-                    LOGGER.error("backup algorithm did not any events whatsoever, account_id = {} and day = {}", accountId, targetDate);
-                    log.addMessage(AlgorithmType.WUPANG,TimelineError.UNEXEPECTED,"optional.absent from fromAlgorithm");
+                if (!votingSleepEventsOptional.isPresent()) {
+                    LOGGER.warn("backup algorithm did not produce ANY events, account_id = {} and day = {}", accountId, targetDate);
+                    log.addMessage(AlgorithmType.VOTING,TimelineError.UNEXEPECTED,"optional.absent from fromVotingAlgorithm");
                     return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
                 }
 
+                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
+                extraEvents = votingSleepEventsOptional.get().extraEvents;
 
                 final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = sleepEventsFromAlgorithmOptional.get();
 
+                //check to see that all events are present
                 for (final Optional<Event> eventOptional : sleepEventsFromAlgorithm.toList()) {
 
                     if (!eventOptional.isPresent()) {
                         LOGGER.info("backup algorithm did not produce all four events, account_id = {} and day = {}", accountId, targetDate);
-                        log.addMessage(AlgorithmType.WUPANG,TimelineError.MISSING_KEY_EVENTS);
+                        log.addMessage(AlgorithmType.VOTING,TimelineError.MISSING_KEY_EVENTS);
                         return Optional.of(TimelineResult.createEmpty(log,English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true));
                     }
                 }
 
-                log.addMessage(AlgorithmType.WUPANG,timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithm.toList()));
+                log.addMessage(AlgorithmType.VOTING,timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithm.toList()));
+
             }
 
             if (!sleepEventsFromAlgorithmOptional.isPresent()) {
@@ -358,6 +348,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
 
             final SleepEvents<Optional<Event>> sleepEvents = sleepEventsFromAlgorithmOptional.get();
+
             /* FEATURE FLIP EXTRA EVENTS */
             if (!this.hasExtraEventsEnabled(accountId)) {
                 LOGGER.info("not using {} extra events", extraEvents.size());
