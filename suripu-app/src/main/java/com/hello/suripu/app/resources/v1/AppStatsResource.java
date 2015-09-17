@@ -55,7 +55,7 @@ public class AppStatsResource {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public AppStats getLastViewed(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public AppStats getLastViewed(@Scope(OAuthScope.APP_STATS) final AccessToken accessToken) {
         final Optional<DateTime> insightsLastViewed = appStatsDAO.getInsightsLastViewed(accessToken.accountId);
         return new AppStats(insightsLastViewed);
     }
@@ -63,22 +63,22 @@ public class AppStatsResource {
     @Timed
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateLastViewed(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
+    public Response updateLastViewed(@Scope(OAuthScope.APP_STATS) final AccessToken accessToken,
                                      @Valid final AppStats appStats) {
-        if (appStats.insightsLastViewed.isPresent()) {
-            final DateTime insightsLastViewed = appStats.insightsLastViewed.get();
-            appStatsDAO.putInsightsLastViewed(accessToken.accountId, insightsLastViewed);
-            return Response.status(Response.Status.ACCEPTED).build();
-        } else {
+        if (!appStats.insightsLastViewed.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE).entity(new JsonError(406, "Not acceptable")).build());
         }
+
+        final DateTime insightsLastViewed = appStats.insightsLastViewed.get();
+        appStatsDAO.putInsightsLastViewed(accessToken.accountId, insightsLastViewed);
+        return Response.status(Response.Status.ACCEPTED).build();
     }
 
     @Timed
     @GET
     @Path("/unread")
     @Produces(MediaType.APPLICATION_JSON)
-    public AppUnreadStats unread(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+    public AppUnreadStats unread(@Scope(OAuthScope.APP_STATS) final AccessToken accessToken) {
         final Long accountId = accessToken.accountId;
 
         final Optional<DateTime> insightsLastViewed = appStatsDAO.getInsightsLastViewed(accountId);
