@@ -21,9 +21,6 @@ import org.joda.time.DateTimeZone;
 
 import java.util.Map;
 
-/**
- * Created by km on 9/16/15.
- */
 public class AppStatsDAODynamoDB implements AppStatsDAO {
     private final static String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     private final static String INSIGHTS_LAST_VIEWED_ATTRIBUTE_NAME = "insights_last_viewed";

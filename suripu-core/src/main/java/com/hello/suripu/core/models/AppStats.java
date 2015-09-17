@@ -5,9 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 
-/**
- * Created by km on 9/16/15.
- */
 public class AppStats {
     @JsonProperty("insights_last_viewed")
     public final Optional<DateTime> insightsLastViewed;

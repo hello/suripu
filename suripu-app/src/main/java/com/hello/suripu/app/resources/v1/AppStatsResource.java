@@ -3,6 +3,7 @@ package com.hello.suripu.app.resources.v1;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AppStatsDAO;
 import com.hello.suripu.core.models.AppStats;
+import com.hello.suripu.core.models.AppUnreadStats;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
@@ -20,9 +21,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-/**
- * Created by km on 9/16/15.
- */
 @Path("/v1/app/stats")
 public class AppStatsResource {
     private final AppStatsDAO appStatsDAO;
@@ -58,7 +56,7 @@ public class AppStatsResource {
     @GET
     @Path("/unread")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response unread(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
-        return Response.ok().build();
+    public AppUnreadStats unread(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+        return new AppUnreadStats(false);
     }
 }
