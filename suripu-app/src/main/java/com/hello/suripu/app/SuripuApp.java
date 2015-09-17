@@ -422,6 +422,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new com.hello.suripu.app.v2.AccountPreferencesResource(accountPreferencesDAO));
         StoreFeedbackDAO storeFeedbackDAO = commonDB.onDemand(StoreFeedbackDAO.class);
         environment.addResource(new StoreFeedbackResource(storeFeedbackDAO));
-        environment.addResource(new AppStatsResource(appStatsDAO));
+        environment.addResource(new AppStatsResource(appStatsDAO, insightsDAODynamoDB));
     }
 }

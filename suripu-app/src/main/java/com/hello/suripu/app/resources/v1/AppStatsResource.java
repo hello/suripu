@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AppStatsDAO;
+import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.models.AppStats;
 import com.hello.suripu.core.models.AppUnreadStats;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -24,9 +25,11 @@ import javax.ws.rs.core.Response;
 @Path("/v1/app/stats")
 public class AppStatsResource {
     private final AppStatsDAO appStatsDAO;
+    private final InsightsDAODynamoDB insightsDAO;
 
-    public AppStatsResource(final AppStatsDAO appStatsDAO) {
+    public AppStatsResource(final AppStatsDAO appStatsDAO, final InsightsDAODynamoDB insightsDAO) {
         this.appStatsDAO = appStatsDAO;
+        this.insightsDAO = insightsDAO;
     }
 
 
@@ -57,6 +60,13 @@ public class AppStatsResource {
     @Path("/unread")
     @Produces(MediaType.APPLICATION_JSON)
     public AppUnreadStats unread(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
+        final Long accountId = accessToken.accountId;
+        final Optional<DateTime> insightsLastViewed = appStatsDAO.getInsightsLastViewed(accountId);
+        if (insightsLastViewed.isPresent()) {
+            final int count = insightsDAO.getInsightCountByDate(accountId, insightsLastViewed.get(), 1);
+            return new AppUnreadStats(count > 0);
+        }
+
         return new AppUnreadStats(false);
     }
 }
