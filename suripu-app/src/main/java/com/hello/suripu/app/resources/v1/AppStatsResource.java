@@ -112,7 +112,7 @@ public class AppStatsResource {
             return tzHistory.get().offsetMillis;
         }
 
-        return -26200000; // PDT
+        return TimeZoneHistory.FALLBACK_OFFSET_MILLIS;
     }
 
     private Optional<Integer> getAccountAgeInDays(final Long accountId) {
