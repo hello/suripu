@@ -2,7 +2,6 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Choice;
@@ -44,15 +43,12 @@ public class QuestionsResource {
     private final TimeZoneHistoryDAODynamoDB tzHistoryDAO;
     private final QuestionProcessor questionProcessor;
 
-    public QuestionsResource(final AccountDAO accountDAO, final QuestionResponseDAO questionResponseDAO, final TimeZoneHistoryDAODynamoDB tzHistoryDAO, final int checkSkipsNum) {
+    public QuestionsResource(final AccountDAO accountDAO,
+                             final TimeZoneHistoryDAODynamoDB tzHistoryDAO,
+                             final QuestionProcessor questionProcessor) {
         this.accountDAO = accountDAO;
         this.tzHistoryDAO = tzHistoryDAO;
-
-        final QuestionProcessor.Builder builder = new QuestionProcessor.Builder()
-                .withQuestionResponseDAO(questionResponseDAO)
-                .withCheckSkipsNum(checkSkipsNum)
-                .withQuestions(questionResponseDAO);
-        this.questionProcessor = builder.build();
+        this.questionProcessor = questionProcessor;
     }
 
     @Timed

@@ -1,5 +1,6 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AppStatsDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -8,6 +9,7 @@ import com.hello.suripu.core.models.AppUnreadStats;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.processors.QuestionProcessor;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -26,10 +28,14 @@ import javax.ws.rs.core.Response;
 public class AppStatsResource {
     private final AppStatsDAO appStatsDAO;
     private final InsightsDAODynamoDB insightsDAO;
+    private final QuestionProcessor questionProcessor;
 
-    public AppStatsResource(final AppStatsDAO appStatsDAO, final InsightsDAODynamoDB insightsDAO) {
+    public AppStatsResource(final AppStatsDAO appStatsDAO,
+                            final InsightsDAODynamoDB insightsDAO,
+                            final QuestionProcessor questionProcessor) {
         this.appStatsDAO = appStatsDAO;
         this.insightsDAO = insightsDAO;
+        this.questionProcessor = questionProcessor;
     }
 
 
@@ -61,12 +67,17 @@ public class AppStatsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public AppUnreadStats unread(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
         final Long accountId = accessToken.accountId;
-        final Optional<DateTime> insightsLastViewed = appStatsDAO.getInsightsLastViewed(accountId);
-        if (insightsLastViewed.isPresent()) {
-            final int count = insightsDAO.getInsightCountByDate(accountId, insightsLastViewed.get(), 1);
-            return new AppUnreadStats(count > 0);
-        }
 
-        return new AppUnreadStats(false);
+        final Optional<DateTime> insightsLastViewed = appStatsDAO.getInsightsLastViewed(accountId);
+        final Optional<Boolean> hasUnreadInsights = insightsLastViewed.transform(new Function<DateTime, Boolean>() {
+            @Override
+            public Boolean apply(DateTime insightsLastViewed) {
+                final int count = insightsDAO.getInsightCountByDate(accountId, insightsLastViewed, 1);
+                return (count > 0);
+            }
+        });
+
+        final boolean hasUnansweredQuestions = false;
+        return new AppUnreadStats(hasUnreadInsights.or(false), hasUnansweredQuestions);
     }
 }

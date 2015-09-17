@@ -91,6 +91,7 @@ import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.processors.InsightProcessor;
+import com.hello.suripu.core.processors.QuestionProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
@@ -378,7 +379,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new MobilePushRegistrationResource(notificationSubscriptionDAOWrapper, mobilePushNotificationProcessor, accountDAO));
 
-        environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
+        final QuestionProcessor questionProcessor = new QuestionProcessor.Builder()
+                .withQuestionResponseDAO(questionResponseDAO)
+                .withCheckSkipsNum(configuration.getQuestionConfigs().getNumSkips())
+                .withQuestions(questionResponseDAO)
+                .build();
+        environment.addResource(new QuestionsResource(accountDAO, timeZoneHistoryDAODynamoDB, questionProcessor));
         environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
         environment.addResource(new AppCheckinResource(2015000000));
 
@@ -422,6 +428,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new com.hello.suripu.app.v2.AccountPreferencesResource(accountPreferencesDAO));
         StoreFeedbackDAO storeFeedbackDAO = commonDB.onDemand(StoreFeedbackDAO.class);
         environment.addResource(new StoreFeedbackResource(storeFeedbackDAO));
-        environment.addResource(new AppStatsResource(appStatsDAO, insightsDAODynamoDB));
+        environment.addResource(new AppStatsResource(appStatsDAO, insightsDAODynamoDB, questionProcessor));
     }
 }
