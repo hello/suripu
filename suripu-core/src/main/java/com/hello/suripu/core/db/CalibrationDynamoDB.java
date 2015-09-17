@@ -90,26 +90,30 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
     @Override
     public Boolean putForce(final Calibration calibration) {
-        return putRemotely(calibration, Boolean.TRUE);
+        final Optional<Boolean> hasUpserted = putRemotely(calibration, Boolean.TRUE);
+        if (hasUpserted.isPresent()){
+            return hasUpserted.get();
+        }
+        return Boolean.FALSE;
     }
 
     @Override
-    public Boolean put(final Calibration calibration) {
+    public Optional<Boolean> put(final Calibration calibration) {
         return putRemotely(calibration, Boolean.FALSE);
     }
 
-    private Boolean putRemotely(final Calibration calibration, final Boolean force) {
+    private Optional<Boolean> putRemotely(final Calibration calibration, final Boolean force) {
         if (force) {
             final Boolean hasPutItem = putWithoutComparation(calibration, false);
-            return hasPutItem;
+            return Optional.of(hasPutItem);
         }
 
         final Boolean hasAddedItem = putWithoutComparation(calibration, true);
         if (!hasAddedItem) {
-            final Boolean hasUpdatedItem = putWithComparationIfExist(calibration);
+            final Optional<Boolean> hasUpdatedItem = putWithComparationIfExist(calibration);
             return hasUpdatedItem;
         }
-        return hasAddedItem;
+        return Optional.of(hasAddedItem);
     }
 
     private Boolean putWithoutComparation(final Calibration calibration, final Boolean checkExist) {
@@ -146,7 +150,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         return Boolean.FALSE;
     }
 
-    private Boolean putWithComparationIfExist(final Calibration calibration) {
+    private Optional<Boolean> putWithComparationIfExist(final Calibration calibration) {
         final HashMap<String, AttributeValue> key = Maps.newHashMap();
         key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
 
@@ -171,15 +175,16 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
         try {
             final UpdateItemResult updateItemResult = dynamoDBClient.updateItem(updateItemRequest);
-            return updateItemResult != null;
+            return Optional.of(updateItemResult != null);
         }
         catch (ConditionalCheckFailedException cce) {
             LOGGER.info("Update condition failed for sense_id {} - tested_at {}", calibration.senseId, calibration.testedAt);
+            return Optional.absent();
         }
         catch (AmazonServiceException ase) {
             LOGGER.error(ase.getMessage());
         }
-        return Boolean.FALSE;
+        return Optional.of(Boolean.FALSE);
     }
 
 

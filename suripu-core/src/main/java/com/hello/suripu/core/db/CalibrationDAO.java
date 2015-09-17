@@ -22,7 +22,7 @@ public interface CalibrationDAO {
      * @return int
      */
     Boolean putForce(Calibration calibration);
-    Boolean put(Calibration calibration);
+    Optional<Boolean> put(Calibration calibration);
 
 
     /**
