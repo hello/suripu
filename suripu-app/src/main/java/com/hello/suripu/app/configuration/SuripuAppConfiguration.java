@@ -1,11 +1,11 @@
 package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.KinesisConfiguration;
+import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
-import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -383,4 +383,9 @@ public class SuripuAppConfiguration extends Configuration {
     private DynamoDBConfiguration wifiInfoConfiguration;
     public DynamoDBConfiguration getWifiInfoConfiguration() {return this.wifiInfoConfiguration;}
 
+    @Valid
+    @NotNull
+    @JsonProperty("app_stats")
+    private DynamoDBConfiguration appStatsConfiguration;
+    public DynamoDBConfiguration getAppStatsConfiguration() {return this.appStatsConfiguration;}
 }
