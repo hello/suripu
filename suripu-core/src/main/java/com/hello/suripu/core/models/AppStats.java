@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 import org.joda.time.DateTime;
 
 public class AppStats {
-    @JsonProperty("insights_last_viewed")
+    @JsonProperty(value = "insights_last_viewed", required = false)
     public final Optional<DateTime> insightsLastViewed;
 
     @JsonCreator

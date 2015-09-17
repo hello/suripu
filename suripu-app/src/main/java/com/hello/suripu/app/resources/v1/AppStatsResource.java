@@ -15,7 +15,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.QuestionProcessor;
-import com.hello.suripu.core.util.JsonError;
+import com.hello.suripu.core.util.PATCH;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -23,10 +23,8 @@ import org.joda.time.DateTimeZone;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -61,17 +59,17 @@ public class AppStatsResource {
     }
 
     @Timed
-    @PUT
+    @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateLastViewed(@Scope(OAuthScope.APP_STATS) final AccessToken accessToken,
                                      @Valid final AppStats appStats) {
-        if (!appStats.insightsLastViewed.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE).entity(new JsonError(406, "Not acceptable")).build());
+        if (appStats.insightsLastViewed.isPresent()) {
+            final DateTime insightsLastViewed = appStats.insightsLastViewed.get();
+            appStatsDAO.putInsightsLastViewed(accessToken.accountId, insightsLastViewed);
+            return Response.status(Response.Status.ACCEPTED).build();
         }
 
-        final DateTime insightsLastViewed = appStats.insightsLastViewed.get();
-        appStatsDAO.putInsightsLastViewed(accessToken.accountId, insightsLastViewed);
-        return Response.status(Response.Status.ACCEPTED).build();
+        return Response.status(Response.Status.NOT_MODIFIED).build();
     }
 
     @Timed
