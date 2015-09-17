@@ -90,6 +90,10 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasDustSmoothEnabled(final String senseId) {
+        return featureFlipper.deviceFeatureActive(FeatureFlipper.DUST_SMOOTH, senseId, Collections.EMPTY_LIST);
+    }
+
     protected boolean hasTimelineInSleepInsights(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_IN_SLEEP_INSIGHTS, accountId, Collections.EMPTY_LIST);
     }

@@ -504,7 +504,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                     targetDate.minusMillis(tzOffsetMillis).getMillis(),
                     endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
+            );
         } else {
             // query dates are in local_utc_ts
             LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
@@ -512,7 +513,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(),
                     endDate.getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId), optionalColor, calibrationOptional);
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId), optionalColor, calibrationOptional
+            );
         }
 
         if (allSensorSampleList.isEmpty()) {

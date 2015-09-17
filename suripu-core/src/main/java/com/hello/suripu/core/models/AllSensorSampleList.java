@@ -67,7 +67,49 @@ public class AllSensorSampleList {
             default:
                 break;
         }
+    }
 
+    public void update(final Sensor sensor, final List<Sample> values) {
+        switch (sensor) {
+            case LIGHT:
+                this.light.clear();
+                this.light.addAll(values);
+                break;
+            case SOUND:
+                this.sound.clear();
+                this.sound.addAll(values);
+                break;
+            case HUMIDITY:
+                this.humidity.clear();
+                this.humidity.addAll(values);
+                break;
+            case TEMPERATURE:
+                this.temperature.clear();
+                this.temperature.addAll(values);
+                break;
+            case PARTICULATES:
+                this.particulates.clear();
+                this.particulates.addAll(values);
+                break;
+            case WAVE_COUNT:
+                this.waveCounts.clear();
+                this.waveCounts.addAll(values);
+                break;
+            case HOLD_COUNT:
+                this.holdCounts.clear();
+                this.holdCounts.addAll(values);
+                break;
+            case SOUND_NUM_DISTURBANCES:
+                this.soundNumDisturbances.clear();
+                this.soundNumDisturbances.addAll(values);
+                break;
+            case SOUND_PEAK_DISTURBANCE:
+                this.soundPeakDisturbance.clear();
+                this.soundPeakDisturbance.addAll(values);
+                break;
+            default:
+                break;
+        }
     }
 
     public List<Sensor> getAvailableSensors() {

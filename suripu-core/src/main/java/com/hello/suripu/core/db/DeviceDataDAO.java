@@ -300,6 +300,7 @@ public abstract class DeviceDataDAO {
 
         final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
         return sortedList;
+
     }
 
     // used by timeline, query by local_utc_ts
@@ -391,7 +392,6 @@ public abstract class DeviceDataDAO {
 
                 final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
                 sensorDataResults.add(sensor, sortedList);
-
             }
         }
 
@@ -469,7 +469,9 @@ public abstract class DeviceDataDAO {
             if (!mergedMaps.get(sensor).isEmpty()) {
                 LOGGER.trace("New map size = {}", mergedMaps.get(sensor).size());
                 final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.get(sensor), currentOffsetMillis);
+
                 sensorDataResults.add(sensor, sortedList);
+
             }
         }
 
