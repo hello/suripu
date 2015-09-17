@@ -1,5 +1,6 @@
 package com.hello.suripu.app.resources.v1;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
@@ -13,7 +14,6 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.QuestionProcessor;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +36,6 @@ import java.util.List;
 public class QuestionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionsResource.class);
-    private static final int DEFAULT_NUM_QUESTIONS = 2;
-    private static final int DEFAULT_NUM_MORE_QUESTIONS = 5;
 
     private final AccountDAO accountDAO;
     private final TimeZoneHistoryDAODynamoDB tzHistoryDAO;
@@ -59,8 +57,8 @@ public class QuestionsResource {
             @QueryParam("date") final String date) {
 
         LOGGER.debug("Returning list of questions for account id = {}", accessToken.accountId);
-        final int accountAgeInDays =  this.getAccountAgeInDays(accessToken.accountId);
-        if (accountAgeInDays == -1) {
+        final Optional<Integer> accountAgeInDays = this.getAccountAgeInDays(accessToken.accountId);
+        if (!accountAgeInDays.isPresent()) {
             LOGGER.warn("Fail to get account age for {}", accessToken.accountId);
             throw new WebApplicationException(404);
         }
@@ -74,7 +72,7 @@ public class QuestionsResource {
         }
 
         // get question
-        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_QUESTIONS, true);
+        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays.get(), today, QuestionProcessor.DEFAULT_NUM_QUESTIONS, true);
     }
 
     @Timed
@@ -86,8 +84,8 @@ public class QuestionsResource {
 
         // user asked for more questions
         LOGGER.debug("Returning list of questions for account id = {}", accessToken.accountId);
-        final int accountAgeInDays =  this.getAccountAgeInDays(accessToken.accountId);
-        if (accountAgeInDays == -1) {
+        final Optional<Integer> accountAgeInDays = this.getAccountAgeInDays(accessToken.accountId);
+        if (!accountAgeInDays.isPresent()) {
             LOGGER.warn("Fail to get account age for {}", accessToken.accountId);
             throw new WebApplicationException(404);
         }
@@ -98,7 +96,7 @@ public class QuestionsResource {
         LOGGER.debug("More questions for today = {}", today);
 
         // get question
-        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays, today, DEFAULT_NUM_MORE_QUESTIONS, false);
+        return this.questionProcessor.getQuestions(accessToken.accountId, accountAgeInDays.get(), today, QuestionProcessor.DEFAULT_NUM_MORE_QUESTIONS, false);
     }
 
     @Timed
@@ -161,12 +159,13 @@ public class QuestionsResource {
         return -26200000; // PDT
     }
 
-    private int getAccountAgeInDays(final Long accountId) {
+    private Optional<Integer> getAccountAgeInDays(final Long accountId) {
         final Optional<Account> accountOptional = this.accountDAO.getById(accountId);
-        if(!accountOptional.isPresent()) {
-            return -1;
-        }
-
-        return (int) ((DateTime.now(DateTimeZone.UTC).getMillis() - accountOptional.get().created.getMillis()) / DateTimeConstants.MILLIS_PER_DAY);
+        return accountOptional.transform(new Function<Account, Integer>() {
+            @Override
+            public Integer apply(Account account) {
+                return account.getAgeInDays();
+            }
+        });
     }
 }
