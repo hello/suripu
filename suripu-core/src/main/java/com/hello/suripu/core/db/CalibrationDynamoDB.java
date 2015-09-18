@@ -9,6 +9,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
@@ -24,9 +26,11 @@ import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
+import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -35,6 +39,8 @@ import com.hello.suripu.core.models.Calibration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +54,10 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static String DUST_OFFSET_ATTRIBUTE_NAME = "dust_offset";
     private final static String TESTED_AT_ATTRIBUTE_NAME = "tested_at";
 
-    private final static Integer MAX_BATCH_QUERY_SIZE = 100;
+    private final static Integer MAX_GET_SIZE = 100;
+    private final static Integer MAX_PUT_SIZE = 50;
+    private final static Integer MAX_PUT_FORCE_SIZE_PER_BATCH = 25;
+    private final static Integer MAX_PUT_FORCE_SIZE = 1000;
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String calibrationTableName;
@@ -116,11 +125,62 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         return Optional.of(hasAddedItem);
     }
 
+
+    @Override
+    public Map<String, Boolean> putBatchForce(final List<Calibration> calibrations) {
+        if (calibrations.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        final Map<String, Boolean> putResults = Maps.newHashMap();
+
+        final List<Calibration> selectedCalibrations = calibrations.subList(0, Math.min(calibrations.size(), MAX_PUT_FORCE_SIZE));
+        for (final Calibration selectedCalibration : selectedCalibrations) {
+            putResults.put(selectedCalibration.senseId, Boolean.TRUE);
+        }
+
+        final List<List<Calibration>> partitionedCalibrationsList = Lists.partition(selectedCalibrations, MAX_PUT_FORCE_SIZE_PER_BATCH);
+        for (final List<Calibration> partitionedCalibrations : partitionedCalibrationsList) {
+            final List<WriteRequest> calibrationPutRequests = new ArrayList<>();
+            for (final Calibration calibration : partitionedCalibrations) {
+                calibrationPutRequests.add(new WriteRequest().withPutRequest(new PutRequest().withItem(getAttributeMapFromCalibration(calibration))));
+            }
+            Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+            requestItems.put(calibrationTableName, calibrationPutRequests);
+            final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
+            try {
+                final BatchWriteItemResult batchWriteItemResult = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+                final Map<String, List<WriteRequest>> unprocessedItems = batchWriteItemResult.getUnprocessedItems();
+
+                for (final WriteRequest writeRequest: unprocessedItems.get(calibrationTableName)) {
+                    putResults.put(writeRequest.getPutRequest().getItem().get(SENSE_ATTRIBUTE_NAME).getS(), Boolean.FALSE);
+                }
+            }
+            catch (AmazonServiceException ase) {
+                LOGGER.error(ase.getMessage());
+            }
+        }
+        return putResults;
+    }
+
+
+    @Override
+    public Map<String, Optional<Boolean>> putBatch(final List<Calibration> calibrations) {
+        if (calibrations.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        final Map<String, Optional<Boolean>> putResults = Maps.newHashMap();
+
+        final List<Calibration> selectedCalibrations = calibrations.subList(0, Math.min(calibrations.size(), MAX_PUT_SIZE));
+
+        for (final Calibration selectedCalibration : selectedCalibrations) {
+            final Optional<Boolean> hasPutSuccessfully = putRemotely(selectedCalibration, Boolean.FALSE);
+            putResults.put(selectedCalibration.senseId, hasPutSuccessfully);
+        }
+        return putResults;
+    }
+
     private Boolean putWithoutComparation(final Calibration calibration, final Boolean checkExist) {
-        final Map<String, AttributeValue> attributes = new HashMap<>();
-        attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
-        attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.dustOffset)));
-        attributes.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.testedAt)));
+        final Map<String, AttributeValue> attributes = getAttributeMapFromCalibration(calibration);
 
         PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(calibrationTableName)
@@ -209,7 +269,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         }
 
         final List<String> senseIdsList = Lists.newArrayList(senseIds);
-        final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, MAX_BATCH_QUERY_SIZE);
+        final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, MAX_GET_SIZE);
 
 
         for (final List<String> partitionedSenseIds : partitionedSenseIdsList ) {
@@ -227,6 +287,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
             final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
             requestItems.put(calibrationTableName, key);
             batchGetItemRequest.withRequestItems(requestItems);
+
 
             try {
                 final BatchGetItemResult batchGetItemResult = dynamoDBClient.batchGetItem(batchGetItemRequest);
@@ -291,5 +352,13 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
+    }
+
+    private Map<String, AttributeValue> getAttributeMapFromCalibration(final Calibration calibration) {
+        final Map<String, AttributeValue> attributes = new HashMap<>();
+        attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
+        attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.dustOffset)));
+        attributes.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.testedAt)));
+        return attributes;
     }
 }

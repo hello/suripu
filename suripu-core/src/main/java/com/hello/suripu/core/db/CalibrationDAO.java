@@ -3,6 +3,7 @@ package com.hello.suripu.core.db;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Calibration;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,4 +39,12 @@ public interface CalibrationDAO {
      * @param senseId String
      */
      Boolean delete(String senseId);
+
+    /**
+     * Put calibration by Batch
+     * @param List<Calibration>
+     */
+
+    Map<String, Boolean> putBatchForce(List<Calibration> calibrations);
+    Map<String, Optional<Boolean>> putBatch(List<Calibration> calibration);
 }
