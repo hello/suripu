@@ -320,9 +320,9 @@ public class InsightProcessor {
 
     public Optional<String> getInsightPreviewForCategory(final InsightCard.Category category) {
         final Map<String, String> insightInfoPreview = Maps.newHashMap();
-
         final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
-        for (InfoInsightCards card : infoInsightCards) {
+
+        for (final InfoInsightCards card : infoInsightCards) {
             // only grab the first title for a category, if multiple exists
             final String categoryString = card.category.toCategoryString();
             if (!insightInfoPreview.containsKey(categoryString)) {
