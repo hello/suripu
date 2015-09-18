@@ -25,6 +25,10 @@ public class OnlineHmmScratchPad {
         return paramsByOutputId.isEmpty();
     }
 
+    public static OnlineHmmScratchPad createEmpty() {
+        return new OnlineHmmScratchPad(Maps.<String, OnlineHmmModelParams>newHashMap(),0);
+    }
+
     public static Optional<OnlineHmmScratchPad> createFromProtobuf(final byte [] data) {
 
         try {

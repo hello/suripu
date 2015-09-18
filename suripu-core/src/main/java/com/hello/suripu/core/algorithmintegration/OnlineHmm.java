@@ -153,7 +153,7 @@ public class OnlineHmm {
     }
 
     public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening) {
-        final OnlineHmmData emptyResult = new OnlineHmmData(Optional.<OnlineHmmPriors>absent(),Optional.<OnlineHmmScratchPad>absent());
+        final OnlineHmmData emptyResult = OnlineHmmData.createEmpty();
 
         /* GET THE USER-SPECIFIC MODEL PARAMETERS FOR THE ONE HMM TO RULE THEM ALL */
         final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId,evening);
@@ -170,7 +170,7 @@ public class OnlineHmm {
         final OnlineHmmPriors defaultPrior = defaultPriorOptional.get();
 
         /*  CREATE DEFAULT MODELS IF NECESSARY */
-        if (!userModelData.modelPriors.isPresent()) {
+        if (userModelData.modelPriors.isEmpty()) {
             LOGGER.info("creating default model data for account {}",accountId);
 
             //straight out assign
@@ -183,7 +183,7 @@ public class OnlineHmm {
         else {
             //verify that the default prior doesn't contain any more output ids
             //otherwise that means there are new outputs available in the default models
-            modelPriors = userModelData.modelPriors.get();
+            modelPriors = userModelData.modelPriors;
 
             final Set<String> defaultKeys = Sets.newHashSet(defaultPrior.modelsByOutputId.keySet());
             defaultKeys.removeAll(modelPriors.modelsByOutputId.keySet());
@@ -203,7 +203,7 @@ public class OnlineHmm {
         }
 
 
-        return new OnlineHmmData(Optional.of(modelPriors),userModelData.scratchPad);
+        return new OnlineHmmData(modelPriors,userModelData.scratchPad);
     }
 
     static private long indexToTimestamp(final long t0, final int periodInMinutes, final int idx) {
@@ -315,12 +315,12 @@ public class OnlineHmm {
 
         final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening);
 
-        if (!userModelData.modelPriors.isPresent()) {
+        if (userModelData.modelPriors.isEmpty()) {
             LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
             return predictions;
         }
 
-        OnlineHmmPriors modelPriors = userModelData.modelPriors.get();
+        OnlineHmmPriors modelPriors = userModelData.modelPriors;
 
         if (modelPriors == null) {
             LOGGER.error("somehow never got model priors for account {}",accountId);
@@ -328,8 +328,8 @@ public class OnlineHmm {
         }
 
         /*  CHECK TO SEE IF THE SCRATCH PAD SHOULD BE ADDED TO THE CURRENT MODEL */
-        if (userModelData.scratchPad.isPresent()) {
-            final OnlineHmmScratchPad scratchPad = userModelData.scratchPad.get();
+        if (!userModelData.scratchPad.isEmpty()) {
+            final OnlineHmmScratchPad scratchPad = userModelData.scratchPad;
 
             if (!scratchPad.isEmpty()) {
 

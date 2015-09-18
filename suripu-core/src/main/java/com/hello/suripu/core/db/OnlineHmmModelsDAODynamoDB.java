@@ -59,23 +59,31 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
 
         final Map<String,byte[]> allColumns = results.payloadsByKey.get(accountId.toString());
 
-        Optional<OnlineHmmPriors> priors = Optional.absent();
-        Optional<OnlineHmmScratchPad> scratchPad = Optional.absent();
+        OnlineHmmPriors priors = OnlineHmmPriors.createEmpty();
+        OnlineHmmScratchPad scratchPad = OnlineHmmScratchPad.createEmpty();
 
         if (allColumns == null) {
-            return new OnlineHmmData(priors,scratchPad);
+            return OnlineHmmData.createEmpty();
         }
 
         final byte [] priorProtobufData = allColumns.get(PAYLOAD_KEY_FOR_PARAMS);
 
         if (priorProtobufData != null) {
-            priors = OnlineHmmPriors.createFromProtoBuf(priorProtobufData);
+            final Optional<OnlineHmmPriors> priorsOptional = OnlineHmmPriors.createFromProtoBuf(priorProtobufData);
+
+            if (priorsOptional.isPresent()) {
+                priors = priorsOptional.get();
+            }
         }
 
         final byte [] scratchPadProtobufData = allColumns.get(PAYLOAD_KEY_FOR_SCRATCHPAD);
 
         if (scratchPadProtobufData != null) {
-            scratchPad = OnlineHmmScratchPad.createFromProtobuf(scratchPadProtobufData);
+            final Optional<OnlineHmmScratchPad> scratchPadOptional = OnlineHmmScratchPad.createFromProtobuf(scratchPadProtobufData);
+
+            if (scratchPadOptional.isPresent()) {
+                scratchPad = scratchPadOptional.get();
+            }
         }
 
         return new OnlineHmmData(priors,scratchPad);
