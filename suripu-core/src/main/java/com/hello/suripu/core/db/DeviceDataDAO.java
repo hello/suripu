@@ -182,8 +182,7 @@ public abstract class DeviceDataDAO {
             "WHERE account_id = :account_id AND device_id = :device_id" +
             "AND ts >= :start_ts AND ts <= :end_ts" +
             "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour" +
-            "OR CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)" +
-            "ORDER BY ts")
+            "OR CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)")
     public abstract ImmutableList<DeviceData> getBetweenHourDateByTS(@Bind("account_id") Long accountId,
                                                                      @Bind("device_id") Long deviceId,
                                                                      @Bind("start_ts") DateTime startTimestamp,
