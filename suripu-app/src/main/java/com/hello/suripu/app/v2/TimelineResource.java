@@ -88,26 +88,9 @@ public class TimelineResource extends BaseResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{date}")
     public Timeline getTimelineForNight(@Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken,
-                                        @PathParam("date") final String night,
-                                        @DefaultValue("false") @QueryParam("has_feedback") final Boolean hasFeedback) {
+                                        @PathParam("date") final String night) {
 
-
-        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
-        final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate,hasFeedback);
-        if(!timeline.isPresent()) {
-            return Timeline.createEmpty(targetDate);
-        }
-        // That's super ugly. Need to find a more elegant way to write this
-        if (timeline.get().logV2.isPresent()) {
-            final TimelineLog logV2 = timeline.get().logV2.get();
-            final String partitionKey = logV2.getPartitionKey();
-            timelineLogDAOV2.putAsync(partitionKey, logV2.toProtoBuf());
-            timelineLogDAO.putTimelineLog(accessToken.accountId, logV2.getAsV1Log());
-        }
-
-        // That's super ugly. Need to find a more elegant way to write this
-        final TimelineResult timelineResult = timeline.get();
-        return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
+        return getTimelineForNightInternal(accessToken.accountId, night, false);
     }
 
 
@@ -132,7 +115,7 @@ public class TimelineResource extends BaseResource {
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
-        return getTimelineForNight(accessToken, date,true);
+        return getTimelineForNightInternal(accessToken.accountId, date,true);
     }
 
     @DELETE
@@ -145,7 +128,7 @@ public class TimelineResource extends BaseResource {
                                 @PathParam("timestamp") long timestamp) {
 
         return Response.status(Response.Status.ACCEPTED)
-                       .entity(getTimelineForNight(accessToken, date,true))
+                       .entity(getTimelineForNightInternal(accessToken.accountId, date,true))
                        .build();
     }
 
@@ -172,7 +155,7 @@ public class TimelineResource extends BaseResource {
         feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
 
         //recalculate with feedback
-        getTimelineForNight(accessToken, date,true);
+        getTimelineForNightInternal(accessToken.accountId, date,true);
 
         return Response.status(Response.Status.ACCEPTED).build();
     }
@@ -237,4 +220,24 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
         }
     }
+
+    private Timeline getTimelineForNightInternal(final long accountId,final String night, final boolean hasFeedback) {
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
+        final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,hasFeedback);
+        if(!timeline.isPresent()) {
+            return Timeline.createEmpty(targetDate);
+        }
+        // That's super ugly. Need to find a more elegant way to write this
+        if (timeline.get().logV2.isPresent()) {
+            final TimelineLog logV2 = timeline.get().logV2.get();
+            final String partitionKey = logV2.getPartitionKey();
+            timelineLogDAOV2.putAsync(partitionKey, logV2.toProtoBuf());
+            timelineLogDAO.putTimelineLog(accountId, logV2.getAsV1Log());
+        }
+
+        // That's super ugly. Need to find a more elegant way to write this
+        final TimelineResult timelineResult = timeline.get();
+        return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
+    }
+
 }
