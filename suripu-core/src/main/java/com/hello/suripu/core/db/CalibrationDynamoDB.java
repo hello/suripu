@@ -55,9 +55,9 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static String TESTED_AT_ATTRIBUTE_NAME = "tested_at";
 
     private final static Integer MAX_GET_SIZE = 100;
-    private final static Integer MAX_PUT_SIZE = 50;
+    public final static Integer MAX_PUT_SIZE = 50;
     private final static Integer MAX_PUT_FORCE_SIZE_PER_BATCH = 25;
-    private final static Integer MAX_PUT_FORCE_SIZE = 1000;
+    public final static Integer MAX_PUT_FORCE_SIZE = 1000;
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String calibrationTableName;
@@ -67,10 +67,12 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         this.calibrationTableName = calibrationTableName;
     }
 
+
     @Override
     public Calibration get(final String senseId) {
         return getRemotely(senseId, Boolean.FALSE).get();
     }
+
 
     @Override
     public Optional<Calibration> getStrict(final String senseId) {
@@ -97,29 +99,19 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()), Long.valueOf(item.get(TESTED_AT_ATTRIBUTE_NAME).getN())));
     }
 
+
     @Override
     public Boolean putForce(final Calibration calibration) {
-        final Optional<Boolean> hasUpserted = putRemotely(calibration, Boolean.TRUE);
-        if (hasUpserted.isPresent()){
-            return hasUpserted.get();
-        }
-        return Boolean.FALSE;
+        final Boolean hasPutItem = putWithoutCondition(calibration, false);
+        return hasPutItem;
     }
+
 
     @Override
     public Optional<Boolean> put(final Calibration calibration) {
-        return putRemotely(calibration, Boolean.FALSE);
-    }
-
-    private Optional<Boolean> putRemotely(final Calibration calibration, final Boolean force) {
-        if (force) {
-            final Boolean hasPutItem = putWithoutComparation(calibration, false);
-            return Optional.of(hasPutItem);
-        }
-
-        final Boolean hasAddedItem = putWithoutComparation(calibration, true);
+        final Boolean hasAddedItem = putWithoutCondition(calibration, true);
         if (!hasAddedItem) {
-            final Optional<Boolean> hasUpdatedItem = putWithComparationIfExist(calibration);
+            final Optional<Boolean> hasUpdatedItem = putWithConditionIfExist(calibration);
             return hasUpdatedItem;
         }
         return Optional.of(hasAddedItem);
@@ -133,26 +125,27 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         }
         final Map<String, Boolean> putResults = Maps.newHashMap();
 
-        final List<Calibration> selectedCalibrations = calibrations.subList(0, Math.min(calibrations.size(), MAX_PUT_FORCE_SIZE));
-        for (final Calibration selectedCalibration : selectedCalibrations) {
-            putResults.put(selectedCalibration.senseId, Boolean.TRUE);
+        for (final Calibration calibration : calibrations) {
+            putResults.put(calibration.senseId, Boolean.TRUE);
         }
 
-        final List<List<Calibration>> partitionedCalibrationsList = Lists.partition(selectedCalibrations, MAX_PUT_FORCE_SIZE_PER_BATCH);
+        final List<List<Calibration>> partitionedCalibrationsList = Lists.partition(calibrations, MAX_PUT_FORCE_SIZE_PER_BATCH);
+
         for (final List<Calibration> partitionedCalibrations : partitionedCalibrationsList) {
             final List<WriteRequest> calibrationPutRequests = new ArrayList<>();
             for (final Calibration calibration : partitionedCalibrations) {
                 calibrationPutRequests.add(new WriteRequest().withPutRequest(new PutRequest().withItem(getAttributeMapFromCalibration(calibration))));
             }
-            Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+            Map<String, List<WriteRequest>> requestItems = Maps.newHashMap();
             requestItems.put(calibrationTableName, calibrationPutRequests);
             final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
             try {
                 final BatchWriteItemResult batchWriteItemResult = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
                 final Map<String, List<WriteRequest>> unprocessedItems = batchWriteItemResult.getUnprocessedItems();
-
-                for (final WriteRequest writeRequest: unprocessedItems.get(calibrationTableName)) {
-                    putResults.put(writeRequest.getPutRequest().getItem().get(SENSE_ATTRIBUTE_NAME).getS(), Boolean.FALSE);
+                if (unprocessedItems.containsKey(calibrationTableName)) {
+                    for (final WriteRequest writeRequest : unprocessedItems.get(calibrationTableName)) {
+                        putResults.put(writeRequest.getPutRequest().getItem().get(SENSE_ATTRIBUTE_NAME).getS(), Boolean.FALSE);
+                    }
                 }
             }
             catch (AmazonServiceException ase) {
@@ -170,16 +163,15 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         }
         final Map<String, Optional<Boolean>> putResults = Maps.newHashMap();
 
-        final List<Calibration> selectedCalibrations = calibrations.subList(0, Math.min(calibrations.size(), MAX_PUT_SIZE));
-
-        for (final Calibration selectedCalibration : selectedCalibrations) {
-            final Optional<Boolean> hasPutSuccessfully = putRemotely(selectedCalibration, Boolean.FALSE);
-            putResults.put(selectedCalibration.senseId, hasPutSuccessfully);
+        for (final Calibration calibration : calibrations) {
+            final Optional<Boolean> hasPutSuccessfully = put(calibration);
+            putResults.put(calibration.senseId, hasPutSuccessfully);
         }
         return putResults;
     }
 
-    private Boolean putWithoutComparation(final Calibration calibration, final Boolean checkExist) {
+
+    private Boolean putWithoutCondition(final Calibration calibration, final Boolean checkExist) {
         final Map<String, AttributeValue> attributes = getAttributeMapFromCalibration(calibration);
 
         PutItemRequest putItemRequest = new PutItemRequest()
@@ -187,7 +179,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                 .withItem(attributes);
 
         if (checkExist) {
-            final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
+            final Map<String, ExpectedAttributeValue> putConditions = Maps.newHashMap();
             putConditions.put(SENSE_ATTRIBUTE_NAME, new ExpectedAttributeValue(false));
 
             putItemRequest = new PutItemRequest()
@@ -210,11 +202,11 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         return Boolean.FALSE;
     }
 
-    private Optional<Boolean> putWithComparationIfExist(final Calibration calibration) {
+    private Optional<Boolean> putWithConditionIfExist(final Calibration calibration) {
         final HashMap<String, AttributeValue> key = Maps.newHashMap();
         key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
 
-        final Map<String, AttributeValueUpdate> attributeUpdates = new HashMap<>();
+        final Map<String, AttributeValueUpdate> attributeUpdates = Maps.newHashMap();
         attributeUpdates.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValueUpdate()
                 .withAction(AttributeAction.PUT)
                 .withValue(new AttributeValue().withN(String.valueOf(calibration.dustOffset))));
@@ -222,7 +214,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                 .withAction(AttributeAction.PUT)
                 .withValue(new AttributeValue().withN(String.valueOf(calibration.testedAt))));
 
-        final Map<String, ExpectedAttributeValue> putConditions = new HashMap<>();
+        final Map<String, ExpectedAttributeValue> putConditions = Maps.newHashMap();
         putConditions.put(TESTED_AT_ATTRIBUTE_NAME, new ExpectedAttributeValue()
                 .withComparisonOperator(ComparisonOperator.LT)
                 .withValue(new AttributeValue().withN(String.valueOf(calibration.testedAt))));
@@ -355,7 +347,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     }
 
     private Map<String, AttributeValue> getAttributeMapFromCalibration(final Calibration calibration) {
-        final Map<String, AttributeValue> attributes = new HashMap<>();
+        final Map<String, AttributeValue> attributes = Maps.newHashMap();
         attributes.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(calibration.senseId));
         attributes.put(DUST_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.dustOffset)));
         attributes.put(TESTED_AT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(calibration.testedAt)));
