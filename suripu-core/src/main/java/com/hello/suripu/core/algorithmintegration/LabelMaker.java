@@ -24,8 +24,11 @@ import java.util.UUID;
 /**
  * Created by benjo on 8/23/15.
  *
- *   Turns feedback events into label sequences pairs ( t = 42, label=1 )
- *
+ *   Turns feedback events into label sequences pairs 
+ *    {t=42,label=1 },
+ *    {t=43,label=1},
+ *    {t=44,label=1},
+ *    {t=45,label=2}, ... etc
  */
 public class LabelMaker {
     private final static int GUARANTEED_SLEEP_PERIOD_FROM_ONE_LABEL = 180; //minutes
