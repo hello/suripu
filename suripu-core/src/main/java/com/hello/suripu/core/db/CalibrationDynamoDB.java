@@ -57,7 +57,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static Integer MAX_GET_SIZE = 100;
     public final static Integer MAX_PUT_SIZE = 50;
     private final static Integer MAX_PUT_FORCE_SIZE_PER_BATCH = 25;
-    public final static Integer MAX_PUT_FORCE_SIZE = 1000;
+    public final static Integer MAX_PUT_FORCE_SIZE = 500;
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String calibrationTableName;
