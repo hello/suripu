@@ -74,7 +74,7 @@ public class OnlineHmmTest {
 
                     final DateTime dateTime = new DateTime(0);
 
-                    priorByDate.put(dateTime, new OnlineHmmData(Optional.of(model.get()), Optional.<OnlineHmmScratchPad>absent()));
+                    priorByDate.put(dateTime, new OnlineHmmData(model.get(), OnlineHmmScratchPad.createEmpty()));
 
                 } catch (IOException exception) {
                     TestCase.assertTrue(false);
@@ -91,7 +91,7 @@ public class OnlineHmmTest {
             final Map.Entry<DateTime,OnlineHmmData> entry = priorByDate.floorEntry(date);
 
             if (entry == null) {
-                return  new OnlineHmmData(Optional.<OnlineHmmPriors>absent(),Optional.<OnlineHmmScratchPad>absent());
+                return OnlineHmmData.createEmpty();
             }
 
             return entry.getValue();
@@ -100,10 +100,10 @@ public class OnlineHmmTest {
         @Override
         public boolean updateModelPriors(Long accountId, DateTime date, OnlineHmmPriors priors) {
 
-            OnlineHmmData newOnlineHmmData = new OnlineHmmData(Optional.of(priors),Optional.<OnlineHmmScratchPad>absent());
+            OnlineHmmData newOnlineHmmData = new OnlineHmmData(priors,OnlineHmmScratchPad.createEmpty());
 
             if (priorByDate.containsKey(date)) {
-                newOnlineHmmData = new OnlineHmmData(Optional.of(priors),priorByDate.get(date).scratchPad);
+                newOnlineHmmData = new OnlineHmmData(priors,priorByDate.get(date).scratchPad);
             }
 
             priorByDate.put(date, newOnlineHmmData);
@@ -112,7 +112,7 @@ public class OnlineHmmTest {
 
         @Override
         public boolean updateModelPriorsAndZeroOutScratchpad(Long accountId, DateTime date, OnlineHmmPriors priors) {
-            final OnlineHmmData newOnlineHmmData = new OnlineHmmData(Optional.of(priors),Optional.<OnlineHmmScratchPad>absent());
+            final OnlineHmmData newOnlineHmmData = new OnlineHmmData( priors,OnlineHmmScratchPad.createEmpty());
             priorByDate.put(date,newOnlineHmmData);
             return true;
         }
@@ -123,7 +123,7 @@ public class OnlineHmmTest {
             final DateTime key  =  priorByDate.floorKey(date);
 
             if (key != null) {
-                priorByDate.put(key,new OnlineHmmData(priorByDate.get(key).modelPriors,Optional.of(scratchPad)));
+                priorByDate.put(key,new OnlineHmmData(priorByDate.get(key).modelPriors,scratchPad));
                 return true;
             }
 
@@ -220,12 +220,12 @@ public class OnlineHmmTest {
         //step 1) make sure we save off default model on first day
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isPresent());
+        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
         //make sure evaluating again doesn't screw things up
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isPresent());
+        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
 
 
@@ -245,13 +245,13 @@ public class OnlineHmmTest {
 
         //make sure that no new entries were created, and that there is a scratchpad
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isPresent());
+        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
 
         //run again, this time with no update, and make sure that no new entries are created
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData2,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isPresent());
+        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
 
 
@@ -293,7 +293,7 @@ public class OnlineHmmTest {
         //step 1) make sure we save off default model on first day
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isPresent());
+        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
 
 
@@ -313,7 +313,7 @@ public class OnlineHmmTest {
 
         //make sure that no new entries were created, and that there is a scratchpad
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isPresent());
+        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
 
 
