@@ -177,6 +177,20 @@ public abstract class DeviceDataDAO {
                                                                             @Bind("start_hour") int startHour,
                                                                             @Bind("end_hour") int endHour);
 
+    @RegisterMapper(DeviceDataMapper.class)
+    @SqlQuery("SELECT * FROM device_sensors_master" +
+            "WHERE account_id = :account_id AND device_id = :device_id" +
+            "AND ts >= :start_ts AND ts <= :end_ts" +
+            "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour" +
+            "OR CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)" +
+            "ORDER BY ts")
+    public abstract ImmutableList<DeviceData> getBetweenHourDateByTS(@Bind("account_id") Long accountId,
+                                                                     @Bind("device_id") Long deviceId,
+                                                                     @Bind("start_ts") DateTime startTimestamp,
+                                                                     @Bind("end_ts") DateTime endTimestamp,
+                                                                     @Bind("start_hour") int startHour,
+                                                                     @Bind("end_hour") int endHour);
+
     @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
