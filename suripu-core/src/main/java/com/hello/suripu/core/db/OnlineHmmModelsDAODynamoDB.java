@@ -27,15 +27,25 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
     private final static String PAYLOAD_KEY_FOR_PARAMS = "model_params";
     private final static String PAYLOAD_KEY_FOR_SCRATCHPAD = "scratchpad";
     private final static Logger LOGGER = LoggerFactory.getLogger(OnlineHmmModelsDAODynamoDB.class);
+    private static final List<String> payloadColumnNames;
+
+    static  {
+        payloadColumnNames = Lists.newArrayList();
+        payloadColumnNames.add(PAYLOAD_KEY_FOR_PARAMS);
+        payloadColumnNames.add(PAYLOAD_KEY_FOR_SCRATCHPAD);
+    }
 
     private final GeneralProtobufDAODynamoDB dbDAO;
 
 
-    public OnlineHmmModelsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
-        final List<String> payloadColumnNames = Lists.newArrayList();
-        payloadColumnNames.add(PAYLOAD_KEY_FOR_PARAMS);
-        payloadColumnNames.add(PAYLOAD_KEY_FOR_SCRATCHPAD);
-        dbDAO = new GeneralProtobufDAODynamoDB(LOGGER, dynamoDBClient, tableName, HASH_KEY, Optional.of(RANGE_KEY), payloadColumnNames);
+    public  static OnlineHmmModelsDAODynamoDB create(final AmazonDynamoDB dynamoDBClient, final String tableName) {
+        final GeneralProtobufDAODynamoDB dbDAO = new GeneralProtobufDAODynamoDB(LOGGER, dynamoDBClient, tableName, HASH_KEY, Optional.of(RANGE_KEY), payloadColumnNames);
+
+        return new OnlineHmmModelsDAODynamoDB(dbDAO);
+    }
+
+    private OnlineHmmModelsDAODynamoDB(final GeneralProtobufDAODynamoDB dbDAO) {
+        this.dbDAO = dbDAO;
     }
 
 

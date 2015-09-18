@@ -113,7 +113,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
 
        /* Priors for bayesnet  */
         final AmazonDynamoDB onlineModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.ONLINE_HMM_MODELS));
-        final OnlineHmmModelsDAO onlineHmmModelsDAO = new OnlineHmmModelsDAODynamoDB(onlineModelsDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ONLINE_HMM_MODELS));
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = OnlineHmmModelsDAODynamoDB.create(onlineModelsDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.ONLINE_HMM_MODELS));
 
         /* Models for bayesnet */
         final AmazonDynamoDB featureExtractionDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));

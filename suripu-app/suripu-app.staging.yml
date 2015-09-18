@@ -320,7 +320,7 @@ sense_last_seen:
   region: us-east-1
   table_name: sense_last_seen
 
-ture_extraction_models:
+feature_extraction_models:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: feature_extraction_models

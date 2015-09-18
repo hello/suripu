@@ -13,7 +13,6 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
-import com.hello.suripu.app.cli.PopulateSleepScoreTable;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
@@ -136,7 +135,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new RecreatePillColorCommand());
-        bootstrap.addCommand(new PopulateSleepScoreTable());
         bootstrap.addCommand(new ScanInvalidNightsCommand());
     }
 
@@ -258,7 +256,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         /* Individual models for users  */
         final String onlineHmmModelsTableName = configuration.getOnlineHmmModelsConfiguration().getTableName();
         final AmazonDynamoDB onlineHmmModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getOnlineHmmModelsConfiguration().getEndpoint());
-        final OnlineHmmModelsDAO onlineHmmModelsDAO = new OnlineHmmModelsDAODynamoDB(onlineHmmModelsDb,onlineHmmModelsTableName);
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = OnlineHmmModelsDAODynamoDB.create(onlineHmmModelsDb,onlineHmmModelsTableName);
 
         /* Models for feature extraction layer */
         final String featureExtractionModelsTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
