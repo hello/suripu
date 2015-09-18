@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -33,7 +34,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +66,6 @@ public class InsightProcessor {
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountInfoProcessor accountInfoProcessor;
-    private final Map<String, String> insightInfoPreview;
 
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
                             @NotNull final DeviceDAO deviceDAO,
@@ -78,8 +77,7 @@ public class InsightProcessor {
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
                             @NotNull final LightData lightData,
-                            @NotNull final WakeStdDevData wakeStdDevData,
-                            @NotNull final Map<String, String> insightInfoPreview
+                            @NotNull final WakeStdDevData wakeStdDevData
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -92,7 +90,6 @@ public class InsightProcessor {
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountInfoProcessor = accountInfoProcessor;
-        this.insightInfoPreview = insightInfoPreview;
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
@@ -322,7 +319,17 @@ public class InsightProcessor {
     }
 
     public Optional<String> getInsightPreviewForCategory(final InsightCard.Category category) {
-        return Optional.fromNullable(this.insightInfoPreview.get(category.toCategoryString()));
+        final Map<String, String> insightInfoPreview = Maps.newHashMap();
+
+        final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
+        for (InfoInsightCards card : infoInsightCards) {
+            // only grab the first title for a category, if multiple exists
+            final String categoryString = card.category.toCategoryString();
+            if (!insightInfoPreview.containsKey(categoryString)) {
+                insightInfoPreview.put(categoryString, card.title);
+            }
+        }
+        return Optional.fromNullable(insightInfoPreview.get(category.toCategoryString()));
     }
 
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
@@ -366,8 +373,6 @@ public class InsightProcessor {
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
-        private @Nullable
-        Map<String, String> insightInfoPreview;
 
         public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -382,17 +387,6 @@ public class InsightProcessor {
 
         public Builder withInsightsDAO(final TrendsInsightsDAO trendsInsightsDAO) {
             this.trendsInsightsDAO = trendsInsightsDAO;
-            this.insightInfoPreview = new HashMap<>();
-
-            final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
-            for (InfoInsightCards card : infoInsightCards) {
-                // only grab the first title for a category, if multiple exists
-                final String categoryString = card.category.toCategoryString();
-                if (!this.insightInfoPreview.containsKey(categoryString)) {
-                    this.insightInfoPreview.put(categoryString, card.title);
-                }
-            }
-
             return this;
         }
 
@@ -435,7 +429,6 @@ public class InsightProcessor {
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
-            checkNotNull(insightInfoPreview, "insight info preview can not be null");
 
             return new InsightProcessor(deviceDataDAO, deviceDAO,
                     trendsInsightsDAO,
@@ -445,8 +438,7 @@ public class InsightProcessor {
                     preferencesDAO,
                     accountInfoProcessor,
                     lightData,
-                    wakeStdDevData,
-                    insightInfoPreview);
+                    wakeStdDevData);
         }
     }
 }
