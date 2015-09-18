@@ -199,6 +199,9 @@ public abstract class TrackerMotionDAO {
             offsets.clear();
             local_utc_ts.clear();
             trackerMotions.clear();
+            motionRanges.clear();
+            kickoffCounts.clear();
+            onDurationSeconds.clear();
         }
 
         LOGGER.debug("expected iteration: {}, actual: {}", Math.round(dataSize / (float) batchSize), numIterations);
