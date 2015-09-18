@@ -57,34 +57,43 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
 
         LOGGER.info("getModelDataByAccountId for user {}",accountId);
 
+        if (!results.payloadsByKey.containsKey(accountId.toString())) {
+            LOGGER.info("getModelDataByAccountId for user {} returned ",accountId);
+            return OnlineHmmData.createEmpty();
+
+        }
+
         final Map<String,byte[]> allColumns = results.payloadsByKey.get(accountId.toString());
 
         OnlineHmmPriors priors = OnlineHmmPriors.createEmpty();
         OnlineHmmScratchPad scratchPad = OnlineHmmScratchPad.createEmpty();
 
-        if (allColumns == null) {
+        if (!allColumns.containsKey(PAYLOAD_KEY_FOR_PARAMS)) {
+            LOGGER.info("getModelDataByAccountId for user {} did not find column {}",accountId,PAYLOAD_KEY_FOR_PARAMS);
+            return OnlineHmmData.createEmpty();
+        }
+
+        if ( !allColumns.containsKey(PAYLOAD_KEY_FOR_SCRATCHPAD)) {
+            LOGGER.info("getModelDataByAccountId for user {} did not find column {}",accountId,PAYLOAD_KEY_FOR_SCRATCHPAD);
             return OnlineHmmData.createEmpty();
         }
 
         final byte [] priorProtobufData = allColumns.get(PAYLOAD_KEY_FOR_PARAMS);
 
-        if (priorProtobufData != null) {
-            final Optional<OnlineHmmPriors> priorsOptional = OnlineHmmPriors.createFromProtoBuf(priorProtobufData);
+        final Optional<OnlineHmmPriors> priorsOptional = OnlineHmmPriors.createFromProtoBuf(priorProtobufData);
 
-            if (priorsOptional.isPresent()) {
-                priors = priorsOptional.get();
-            }
+        if (priorsOptional.isPresent()) {
+            priors = priorsOptional.get();
         }
 
         final byte [] scratchPadProtobufData = allColumns.get(PAYLOAD_KEY_FOR_SCRATCHPAD);
 
-        if (scratchPadProtobufData != null) {
-            final Optional<OnlineHmmScratchPad> scratchPadOptional = OnlineHmmScratchPad.createFromProtobuf(scratchPadProtobufData);
+        final Optional<OnlineHmmScratchPad> scratchPadOptional = OnlineHmmScratchPad.createFromProtobuf(scratchPadProtobufData);
 
-            if (scratchPadOptional.isPresent()) {
-                scratchPad = scratchPadOptional.get();
-            }
+        if (scratchPadOptional.isPresent()) {
+            scratchPad = scratchPadOptional.get();
         }
+
 
         return new OnlineHmmData(priors,scratchPad);
     }
