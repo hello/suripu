@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.hello.suripu.core.util.HmmBayesNetData;
+import com.hello.suripu.core.util.FeatureExtractionModelData;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +34,9 @@ import java.util.UUID;
 
 
 
-public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
+public class FeatureExtractionModelsDAODynamoDB implements FeatureExtractionModelsDAO {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(BayesNetHmmModelDAODynamoDB.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(FeatureExtractionModelsDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
@@ -49,7 +49,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
     private static final long DEFAULT_ACCOUNT_HASH_RANGE = 5;
 
 
-    public BayesNetHmmModelDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
+    public FeatureExtractionModelsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
     }
@@ -61,7 +61,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
     }
 
     @Override
-    public HmmBayesNetData getLatestModelForDate(final Long accountId, final DateTime dateTimeLocalUTC, final Optional<UUID> uuidForLogger) {
+    public FeatureExtractionModelData getLatestModelForDate(final Long accountId, final DateTime dateTimeLocalUTC, final Optional<UUID> uuidForLogger) {
 
         final String dateString = DateTimeUtil.dateToYmdString(dateTimeLocalUTC);
         byte [] protobufData = null;
@@ -90,7 +90,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
 
         if (protobufData != null) {
             //decode blob if it exists
-            final HmmBayesNetData deserialization = new HmmBayesNetData(uuidForLogger);
+            final FeatureExtractionModelData deserialization = new FeatureExtractionModelData(uuidForLogger);
 
             deserialization.deserialize(protobufData);
 
@@ -99,7 +99,7 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
         }
 
         //default object will be invalid
-        return new HmmBayesNetData(uuidForLogger);
+        return new FeatureExtractionModelData(uuidForLogger);
 
 
     }
@@ -174,13 +174,13 @@ public class BayesNetHmmModelDAODynamoDB implements BayesNetModelDAO {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
         request.withKeySchema(
-                new KeySchemaElement().withAttributeName(BayesNetHmmModelDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName(BayesNetHmmModelDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
+                new KeySchemaElement().withAttributeName(FeatureExtractionModelsDAODynamoDB.HASH_KEY).withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName(FeatureExtractionModelsDAODynamoDB.RANGE_KEY).withKeyType(KeyType.RANGE)
         );
 
         request.withAttributeDefinitions(
-                new AttributeDefinition().withAttributeName(BayesNetHmmModelDAODynamoDB.HASH_KEY).withAttributeType(ScalarAttributeType.N),
-                new AttributeDefinition().withAttributeName(BayesNetHmmModelDAODynamoDB.RANGE_KEY).withAttributeType(ScalarAttributeType.S)
+                new AttributeDefinition().withAttributeName(FeatureExtractionModelsDAODynamoDB.HASH_KEY).withAttributeType(ScalarAttributeType.N),
+                new AttributeDefinition().withAttributeName(FeatureExtractionModelsDAODynamoDB.RANGE_KEY).withAttributeType(ScalarAttributeType.S)
 
         );
 

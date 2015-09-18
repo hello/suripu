@@ -53,6 +53,10 @@ public final class SleepHmmBayesNetProtos {
      * <code>SOUND_INCREASE_DISTURBANCE = 8;</code>
      */
     SOUND_INCREASE_DISTURBANCE(8, 8),
+    /**
+     * <code>LIGHT_DECREASE_DISTURBANCE = 9;</code>
+     */
+    LIGHT_DECREASE_DISTURBANCE(9, 9),
     ;
 
     /**
@@ -91,6 +95,10 @@ public final class SleepHmmBayesNetProtos {
      * <code>SOUND_INCREASE_DISTURBANCE = 8;</code>
      */
     public static final int SOUND_INCREASE_DISTURBANCE_VALUE = 8;
+    /**
+     * <code>LIGHT_DECREASE_DISTURBANCE = 9;</code>
+     */
+    public static final int LIGHT_DECREASE_DISTURBANCE_VALUE = 9;
 
 
     public final int getNumber() { return value; }
@@ -106,6 +114,7 @@ public final class SleepHmmBayesNetProtos {
         case 6: return WAVE_DISTURBANCE;
         case 7: return LIGHT_INCREASE_DISTURBANCE;
         case 8: return SOUND_INCREASE_DISTURBANCE;
+        case 9: return LIGHT_DECREASE_DISTURBANCE;
         default: return null;
       }
     }
@@ -157,10 +166,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(enum_scope:hello.MeasType)
   }
 
-  public interface PoissonModelOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.PoissonModel)
-      com.google.protobuf.MessageOrBuilder {
+  public interface PoissonModelOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required double mean = 1;
     /**
      * <code>required double mean = 1;</code>
      */
@@ -174,9 +183,8 @@ public final class SleepHmmBayesNetProtos {
    * Protobuf type {@code hello.PoissonModel}
    */
   public static final class PoissonModel extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.PoissonModel)
-      PoissonModelOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements PoissonModelOrBuilder {
     // Use PoissonModel.newBuilder() to construct.
     private PoissonModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -267,6 +275,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // required double mean = 1;
     public static final int MEAN_FIELD_NUMBER = 1;
     private double mean_;
     /**
@@ -288,8 +297,7 @@ public final class SleepHmmBayesNetProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasMean()) {
         memoizedIsInitialized = 0;
@@ -400,9 +408,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.PoissonModel}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.PoissonModel)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_PoissonModel_descriptor;
@@ -519,6 +526,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // required double mean = 1;
       private double mean_ ;
       /**
        * <code>required double mean = 1;</code>
@@ -562,10 +570,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.PoissonModel)
   }
 
-  public interface DiscreteAlphabetModelOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.DiscreteAlphabetModel)
-      com.google.protobuf.MessageOrBuilder {
+  public interface DiscreteAlphabetModelOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // repeated double probabilities = 1;
     /**
      * <code>repeated double probabilities = 1;</code>
      */
@@ -583,9 +591,8 @@ public final class SleepHmmBayesNetProtos {
    * Protobuf type {@code hello.DiscreteAlphabetModel}
    */
   public static final class DiscreteAlphabetModel extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.DiscreteAlphabetModel)
-      DiscreteAlphabetModelOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements DiscreteAlphabetModelOrBuilder {
     // Use DiscreteAlphabetModel.newBuilder() to construct.
     private DiscreteAlphabetModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -694,6 +701,7 @@ public final class SleepHmmBayesNetProtos {
       return PARSER;
     }
 
+    // repeated double probabilities = 1;
     public static final int PROBABILITIES_FIELD_NUMBER = 1;
     private java.util.List<java.lang.Double> probabilities_;
     /**
@@ -722,8 +730,7 @@ public final class SleepHmmBayesNetProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -832,9 +839,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.DiscreteAlphabetModel}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.DiscreteAlphabetModel)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_DiscreteAlphabetModel_descriptor;
@@ -953,6 +959,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // repeated double probabilities = 1;
       private java.util.List<java.lang.Double> probabilities_ = java.util.Collections.emptyList();
       private void ensureProbabilitiesIsMutable() {
         if (!((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1004,8 +1011,7 @@ public final class SleepHmmBayesNetProtos {
       public Builder addAllProbabilities(
           java.lang.Iterable<? extends java.lang.Double> values) {
         ensureProbabilitiesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, probabilities_);
+        super.addAll(values, probabilities_);
         onChanged();
         return this;
       }
@@ -1030,10 +1036,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.DiscreteAlphabetModel)
   }
 
-  public interface GammaModelOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.GammaModel)
-      com.google.protobuf.MessageOrBuilder {
+  public interface GammaModelOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required double mean = 1;
     /**
      * <code>required double mean = 1;</code>
      */
@@ -1043,6 +1049,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getMean();
 
+    // required double stddev = 2;
     /**
      * <code>required double stddev = 2;</code>
      */
@@ -1056,9 +1063,8 @@ public final class SleepHmmBayesNetProtos {
    * Protobuf type {@code hello.GammaModel}
    */
   public static final class GammaModel extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.GammaModel)
-      GammaModelOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements GammaModelOrBuilder {
     // Use GammaModel.newBuilder() to construct.
     private GammaModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1154,6 +1160,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // required double mean = 1;
     public static final int MEAN_FIELD_NUMBER = 1;
     private double mean_;
     /**
@@ -1169,6 +1176,7 @@ public final class SleepHmmBayesNetProtos {
       return mean_;
     }
 
+    // required double stddev = 2;
     public static final int STDDEV_FIELD_NUMBER = 2;
     private double stddev_;
     /**
@@ -1191,8 +1199,7 @@ public final class SleepHmmBayesNetProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasMean()) {
         memoizedIsInitialized = 0;
@@ -1314,9 +1321,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.GammaModel}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.GammaModel)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_GammaModel_descriptor;
@@ -1446,6 +1452,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // required double mean = 1;
       private double mean_ ;
       /**
        * <code>required double mean = 1;</code>
@@ -1478,6 +1485,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // required double stddev = 2;
       private double stddev_ ;
       /**
        * <code>required double stddev = 2;</code>
@@ -1521,10 +1529,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.GammaModel)
   }
 
-  public interface ChiSquareModelOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.ChiSquareModel)
-      com.google.protobuf.MessageOrBuilder {
+  public interface ChiSquareModelOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required double mean = 1;
     /**
      * <code>required double mean = 1;</code>
      */
@@ -1538,9 +1546,8 @@ public final class SleepHmmBayesNetProtos {
    * Protobuf type {@code hello.ChiSquareModel}
    */
   public static final class ChiSquareModel extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.ChiSquareModel)
-      ChiSquareModelOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements ChiSquareModelOrBuilder {
     // Use ChiSquareModel.newBuilder() to construct.
     private ChiSquareModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1631,6 +1638,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // required double mean = 1;
     public static final int MEAN_FIELD_NUMBER = 1;
     private double mean_;
     /**
@@ -1652,8 +1660,7 @@ public final class SleepHmmBayesNetProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasMean()) {
         memoizedIsInitialized = 0;
@@ -1764,9 +1771,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.ChiSquareModel}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.ChiSquareModel)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_ChiSquareModel_descriptor;
@@ -1883,6 +1889,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // required double mean = 1;
       private double mean_ ;
       /**
        * <code>required double mean = 1;</code>
@@ -1926,10 +1933,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.ChiSquareModel)
   }
 
-  public interface OneDimensionalGaussianModelOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.OneDimensionalGaussianModel)
-      com.google.protobuf.MessageOrBuilder {
+  public interface OneDimensionalGaussianModelOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required double mean = 1;
     /**
      * <code>required double mean = 1;</code>
      */
@@ -1939,6 +1946,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getMean();
 
+    // required double stddev = 2;
     /**
      * <code>required double stddev = 2;</code>
      */
@@ -1952,9 +1960,8 @@ public final class SleepHmmBayesNetProtos {
    * Protobuf type {@code hello.OneDimensionalGaussianModel}
    */
   public static final class OneDimensionalGaussianModel extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.OneDimensionalGaussianModel)
-      OneDimensionalGaussianModelOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements OneDimensionalGaussianModelOrBuilder {
     // Use OneDimensionalGaussianModel.newBuilder() to construct.
     private OneDimensionalGaussianModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2050,6 +2057,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // required double mean = 1;
     public static final int MEAN_FIELD_NUMBER = 1;
     private double mean_;
     /**
@@ -2065,6 +2073,7 @@ public final class SleepHmmBayesNetProtos {
       return mean_;
     }
 
+    // required double stddev = 2;
     public static final int STDDEV_FIELD_NUMBER = 2;
     private double stddev_;
     /**
@@ -2087,8 +2096,7 @@ public final class SleepHmmBayesNetProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasMean()) {
         memoizedIsInitialized = 0;
@@ -2210,9 +2218,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.OneDimensionalGaussianModel}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.OneDimensionalGaussianModel)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_OneDimensionalGaussianModel_descriptor;
@@ -2342,6 +2349,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // required double mean = 1;
       private double mean_ ;
       /**
        * <code>required double mean = 1;</code>
@@ -2374,6 +2382,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // required double stddev = 2;
       private double stddev_ ;
       /**
        * <code>required double stddev = 2;</code>
@@ -2417,10 +2426,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.OneDimensionalGaussianModel)
   }
 
-  public interface ObsModelOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.ObsModel)
-      com.google.protobuf.MessageOrBuilder {
+  public interface ObsModelOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required int32 state_index = 1;
     /**
      * <code>required int32 state_index = 1;</code>
      *
@@ -2438,15 +2447,21 @@ public final class SleepHmmBayesNetProtos {
      */
     int getStateIndex();
 
+    // repeated .hello.MeasType meas_type = 2;
     /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
      */
-    boolean hasMeasType();
+    java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> getMeasTypeList();
     /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
      */
-    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType();
+    int getMeasTypeCount();
+    /**
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
+     */
+    com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType(int index);
 
+    // optional .hello.ChiSquareModel chisquare = 5;
     /**
      * <code>optional .hello.ChiSquareModel chisquare = 5;</code>
      */
@@ -2460,6 +2475,7 @@ public final class SleepHmmBayesNetProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModelOrBuilder getChisquareOrBuilder();
 
+    // optional .hello.OneDimensionalGaussianModel gaussian = 6;
     /**
      * <code>optional .hello.OneDimensionalGaussianModel gaussian = 6;</code>
      */
@@ -2473,6 +2489,7 @@ public final class SleepHmmBayesNetProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModelOrBuilder getGaussianOrBuilder();
 
+    // optional .hello.GammaModel gamma = 7;
     /**
      * <code>optional .hello.GammaModel gamma = 7;</code>
      */
@@ -2486,6 +2503,7 @@ public final class SleepHmmBayesNetProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModelOrBuilder getGammaOrBuilder();
 
+    // optional .hello.PoissonModel poisson = 8;
     /**
      * <code>optional .hello.PoissonModel poisson = 8;</code>
      */
@@ -2499,6 +2517,7 @@ public final class SleepHmmBayesNetProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModelOrBuilder getPoissonOrBuilder();
 
+    // optional .hello.DiscreteAlphabetModel alphabet = 9;
     /**
      * <code>optional .hello.DiscreteAlphabetModel alphabet = 9;</code>
      */
@@ -2512,6 +2531,7 @@ public final class SleepHmmBayesNetProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModelOrBuilder getAlphabetOrBuilder();
 
+    // optional double weight = 20;
     /**
      * <code>optional double weight = 20;</code>
      */
@@ -2521,6 +2541,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getWeight();
 
+    // optional int32 num_free_params = 21;
     /**
      * <code>optional int32 num_free_params = 21;</code>
      */
@@ -2538,9 +2559,8 @@ public final class SleepHmmBayesNetProtos {
    * </pre>
    */
   public static final class ObsModel extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.ObsModel)
-      ObsModelOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements ObsModelOrBuilder {
     // Use ObsModel.newBuilder() to construct.
     private ObsModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2597,14 +2617,36 @@ public final class SleepHmmBayesNetProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(2, rawValue);
               } else {
-                bitField0_ |= 0x00000002;
-                measType_ = value;
+                if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                  measType_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType>();
+                  mutable_bitField0_ |= 0x00000002;
+                }
+                measType_.add(value);
               }
+              break;
+            }
+            case 18: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(2, rawValue);
+                } else {
+                  if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                    measType_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType>();
+                    mutable_bitField0_ |= 0x00000002;
+                  }
+                  measType_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
               break;
             }
             case 42: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = chisquare_.toBuilder();
               }
               chisquare_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.PARSER, extensionRegistry);
@@ -2612,12 +2654,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(chisquare_);
                 chisquare_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000004;
+              bitField0_ |= 0x00000002;
               break;
             }
             case 50: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = gaussian_.toBuilder();
               }
               gaussian_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.PARSER, extensionRegistry);
@@ -2625,12 +2667,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(gaussian_);
                 gaussian_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000004;
               break;
             }
             case 58: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = gamma_.toBuilder();
               }
               gamma_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.PARSER, extensionRegistry);
@@ -2638,12 +2680,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(gamma_);
                 gamma_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000008;
               break;
             }
             case 66: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000020) == 0x00000020)) {
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = poisson_.toBuilder();
               }
               poisson_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel.PARSER, extensionRegistry);
@@ -2651,12 +2693,12 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(poisson_);
                 poisson_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000010;
               break;
             }
             case 74: {
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+              if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 subBuilder = alphabet_.toBuilder();
               }
               alphabet_ = input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel.PARSER, extensionRegistry);
@@ -2664,16 +2706,16 @@ public final class SleepHmmBayesNetProtos {
                 subBuilder.mergeFrom(alphabet_);
                 alphabet_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000020;
               break;
             }
             case 161: {
-              bitField0_ |= 0x00000080;
+              bitField0_ |= 0x00000040;
               weight_ = input.readDouble();
               break;
             }
             case 168: {
-              bitField0_ |= 0x00000100;
+              bitField0_ |= 0x00000080;
               numFreeParams_ = input.readInt32();
               break;
             }
@@ -2685,6 +2727,9 @@ public final class SleepHmmBayesNetProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          measType_ = java.util.Collections.unmodifiableList(measType_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -2717,6 +2762,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // required int32 state_index = 1;
     public static final int STATE_INDEX_FIELD_NUMBER = 1;
     private int stateIndex_;
     /**
@@ -2740,28 +2786,36 @@ public final class SleepHmmBayesNetProtos {
       return stateIndex_;
     }
 
+    // repeated .hello.MeasType meas_type = 2;
     public static final int MEAS_TYPE_FIELD_NUMBER = 2;
-    private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType measType_;
+    private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> measType_;
     /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
      */
-    public boolean hasMeasType() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required .hello.MeasType meas_type = 2;</code>
-     */
-    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType() {
+    public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> getMeasTypeList() {
       return measType_;
     }
+    /**
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
+     */
+    public int getMeasTypeCount() {
+      return measType_.size();
+    }
+    /**
+     * <code>repeated .hello.MeasType meas_type = 2;</code>
+     */
+    public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType(int index) {
+      return measType_.get(index);
+    }
 
+    // optional .hello.ChiSquareModel chisquare = 5;
     public static final int CHISQUARE_FIELD_NUMBER = 5;
     private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel chisquare_;
     /**
      * <code>optional .hello.ChiSquareModel chisquare = 5;</code>
      */
     public boolean hasChisquare() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <code>optional .hello.ChiSquareModel chisquare = 5;</code>
@@ -2776,13 +2830,14 @@ public final class SleepHmmBayesNetProtos {
       return chisquare_;
     }
 
+    // optional .hello.OneDimensionalGaussianModel gaussian = 6;
     public static final int GAUSSIAN_FIELD_NUMBER = 6;
     private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel gaussian_;
     /**
      * <code>optional .hello.OneDimensionalGaussianModel gaussian = 6;</code>
      */
     public boolean hasGaussian() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <code>optional .hello.OneDimensionalGaussianModel gaussian = 6;</code>
@@ -2797,13 +2852,14 @@ public final class SleepHmmBayesNetProtos {
       return gaussian_;
     }
 
+    // optional .hello.GammaModel gamma = 7;
     public static final int GAMMA_FIELD_NUMBER = 7;
     private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel gamma_;
     /**
      * <code>optional .hello.GammaModel gamma = 7;</code>
      */
     public boolean hasGamma() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
      * <code>optional .hello.GammaModel gamma = 7;</code>
@@ -2818,13 +2874,14 @@ public final class SleepHmmBayesNetProtos {
       return gamma_;
     }
 
+    // optional .hello.PoissonModel poisson = 8;
     public static final int POISSON_FIELD_NUMBER = 8;
     private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel poisson_;
     /**
      * <code>optional .hello.PoissonModel poisson = 8;</code>
      */
     public boolean hasPoisson() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
      * <code>optional .hello.PoissonModel poisson = 8;</code>
@@ -2839,13 +2896,14 @@ public final class SleepHmmBayesNetProtos {
       return poisson_;
     }
 
+    // optional .hello.DiscreteAlphabetModel alphabet = 9;
     public static final int ALPHABET_FIELD_NUMBER = 9;
     private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel alphabet_;
     /**
      * <code>optional .hello.DiscreteAlphabetModel alphabet = 9;</code>
      */
     public boolean hasAlphabet() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional .hello.DiscreteAlphabetModel alphabet = 9;</code>
@@ -2860,13 +2918,14 @@ public final class SleepHmmBayesNetProtos {
       return alphabet_;
     }
 
+    // optional double weight = 20;
     public static final int WEIGHT_FIELD_NUMBER = 20;
     private double weight_;
     /**
      * <code>optional double weight = 20;</code>
      */
     public boolean hasWeight() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <code>optional double weight = 20;</code>
@@ -2875,13 +2934,14 @@ public final class SleepHmmBayesNetProtos {
       return weight_;
     }
 
+    // optional int32 num_free_params = 21;
     public static final int NUM_FREE_PARAMS_FIELD_NUMBER = 21;
     private int numFreeParams_;
     /**
      * <code>optional int32 num_free_params = 21;</code>
      */
     public boolean hasNumFreeParams() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <code>optional int32 num_free_params = 21;</code>
@@ -2892,7 +2952,7 @@ public final class SleepHmmBayesNetProtos {
 
     private void initFields() {
       stateIndex_ = 0;
-      measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
+      measType_ = java.util.Collections.emptyList();
       chisquare_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.getDefaultInstance();
       gaussian_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.getDefaultInstance();
       gamma_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.getDefaultInstance();
@@ -2904,14 +2964,9 @@ public final class SleepHmmBayesNetProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasStateIndex()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasMeasType()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -2949,28 +3004,28 @@ public final class SleepHmmBayesNetProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt32(1, stateIndex_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeEnum(2, measType_.getNumber());
+      for (int i = 0; i < measType_.size(); i++) {
+        output.writeEnum(2, measType_.get(i).getNumber());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(5, chisquare_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(6, gaussian_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeMessage(7, gamma_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeMessage(8, poisson_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeMessage(9, alphabet_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeDouble(20, weight_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeInt32(21, numFreeParams_);
       }
       getUnknownFields().writeTo(output);
@@ -2986,35 +3041,40 @@ public final class SleepHmmBayesNetProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, stateIndex_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(2, measType_.getNumber());
+      {
+        int dataSize = 0;
+        for (int i = 0; i < measType_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(measType_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 1 * measType_.size();
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, chisquare_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, gaussian_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, gamma_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, poisson_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, alphabet_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(20, weight_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(21, numFreeParams_);
       }
@@ -3104,9 +3164,8 @@ public final class SleepHmmBayesNetProtos {
      * </pre>
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.ObsModel)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ObsModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ObsModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_ObsModel_descriptor;
@@ -3146,7 +3205,7 @@ public final class SleepHmmBayesNetProtos {
         super.clear();
         stateIndex_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
-        measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
+        measType_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
         if (chisquareBuilder_ == null) {
           chisquare_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.getDefaultInstance();
@@ -3214,12 +3273,13 @@ public final class SleepHmmBayesNetProtos {
           to_bitField0_ |= 0x00000001;
         }
         result.stateIndex_ = stateIndex_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          measType_ = java.util.Collections.unmodifiableList(measType_);
+          bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.measType_ = measType_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
+          to_bitField0_ |= 0x00000002;
         }
         if (chisquareBuilder_ == null) {
           result.chisquare_ = chisquare_;
@@ -3227,7 +3287,7 @@ public final class SleepHmmBayesNetProtos {
           result.chisquare_ = chisquareBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
+          to_bitField0_ |= 0x00000004;
         }
         if (gaussianBuilder_ == null) {
           result.gaussian_ = gaussian_;
@@ -3235,7 +3295,7 @@ public final class SleepHmmBayesNetProtos {
           result.gaussian_ = gaussianBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
+          to_bitField0_ |= 0x00000008;
         }
         if (gammaBuilder_ == null) {
           result.gamma_ = gamma_;
@@ -3243,7 +3303,7 @@ public final class SleepHmmBayesNetProtos {
           result.gamma_ = gammaBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
+          to_bitField0_ |= 0x00000010;
         }
         if (poissonBuilder_ == null) {
           result.poisson_ = poisson_;
@@ -3251,7 +3311,7 @@ public final class SleepHmmBayesNetProtos {
           result.poisson_ = poissonBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000040;
+          to_bitField0_ |= 0x00000020;
         }
         if (alphabetBuilder_ == null) {
           result.alphabet_ = alphabet_;
@@ -3259,11 +3319,11 @@ public final class SleepHmmBayesNetProtos {
           result.alphabet_ = alphabetBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
-          to_bitField0_ |= 0x00000080;
+          to_bitField0_ |= 0x00000040;
         }
         result.weight_ = weight_;
         if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
-          to_bitField0_ |= 0x00000100;
+          to_bitField0_ |= 0x00000080;
         }
         result.numFreeParams_ = numFreeParams_;
         result.bitField0_ = to_bitField0_;
@@ -3285,8 +3345,15 @@ public final class SleepHmmBayesNetProtos {
         if (other.hasStateIndex()) {
           setStateIndex(other.getStateIndex());
         }
-        if (other.hasMeasType()) {
-          setMeasType(other.getMeasType());
+        if (!other.measType_.isEmpty()) {
+          if (measType_.isEmpty()) {
+            measType_ = other.measType_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureMeasTypeIsMutable();
+            measType_.addAll(other.measType_);
+          }
+          onChanged();
         }
         if (other.hasChisquare()) {
           mergeChisquare(other.getChisquare());
@@ -3315,10 +3382,6 @@ public final class SleepHmmBayesNetProtos {
 
       public final boolean isInitialized() {
         if (!hasStateIndex()) {
-          
-          return false;
-        }
-        if (!hasMeasType()) {
           
           return false;
         }
@@ -3368,6 +3431,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // required int32 state_index = 1;
       private int stateIndex_ ;
       /**
        * <code>required int32 state_index = 1;</code>
@@ -3416,41 +3480,79 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
-      private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
-      /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
-       */
-      public boolean hasMeasType() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+      // repeated .hello.MeasType meas_type = 2;
+      private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> measType_ =
+        java.util.Collections.emptyList();
+      private void ensureMeasTypeIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          measType_ = new java.util.ArrayList<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType>(measType_);
+          bitField0_ |= 0x00000002;
+        }
       }
       /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
        */
-      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType() {
-        return measType_;
+      public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> getMeasTypeList() {
+        return java.util.Collections.unmodifiableList(measType_);
       }
       /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
        */
-      public Builder setMeasType(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value) {
+      public int getMeasTypeCount() {
+        return measType_.size();
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType getMeasType(int index) {
+        return measType_.get(index);
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public Builder setMeasType(
+          int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value) {
         if (value == null) {
           throw new NullPointerException();
         }
-        bitField0_ |= 0x00000002;
-        measType_ = value;
+        ensureMeasTypeIsMutable();
+        measType_.set(index, value);
         onChanged();
         return this;
       }
       /**
-       * <code>required .hello.MeasType meas_type = 2;</code>
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public Builder addMeasType(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureMeasTypeIsMutable();
+        measType_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
+       */
+      public Builder addAllMeasType(
+          java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType> values) {
+        ensureMeasTypeIsMutable();
+        super.addAll(values, measType_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .hello.MeasType meas_type = 2;</code>
        */
       public Builder clearMeasType() {
+        measType_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
-        measType_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasType.LOG_LIGHT;
         onChanged();
         return this;
       }
 
+      // optional .hello.ChiSquareModel chisquare = 5;
       private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel chisquare_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModelOrBuilder> chisquareBuilder_;
@@ -3559,7 +3661,7 @@ public final class SleepHmmBayesNetProtos {
         if (chisquareBuilder_ == null) {
           chisquareBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ChiSquareModelOrBuilder>(
-                  getChisquare(),
+                  chisquare_,
                   getParentForChildren(),
                   isClean());
           chisquare_ = null;
@@ -3567,6 +3669,7 @@ public final class SleepHmmBayesNetProtos {
         return chisquareBuilder_;
       }
 
+      // optional .hello.OneDimensionalGaussianModel gaussian = 6;
       private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel gaussian_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModelOrBuilder> gaussianBuilder_;
@@ -3675,7 +3778,7 @@ public final class SleepHmmBayesNetProtos {
         if (gaussianBuilder_ == null) {
           gaussianBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.OneDimensionalGaussianModelOrBuilder>(
-                  getGaussian(),
+                  gaussian_,
                   getParentForChildren(),
                   isClean());
           gaussian_ = null;
@@ -3683,6 +3786,7 @@ public final class SleepHmmBayesNetProtos {
         return gaussianBuilder_;
       }
 
+      // optional .hello.GammaModel gamma = 7;
       private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel gamma_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModelOrBuilder> gammaBuilder_;
@@ -3791,7 +3895,7 @@ public final class SleepHmmBayesNetProtos {
         if (gammaBuilder_ == null) {
           gammaBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.GammaModelOrBuilder>(
-                  getGamma(),
+                  gamma_,
                   getParentForChildren(),
                   isClean());
           gamma_ = null;
@@ -3799,6 +3903,7 @@ public final class SleepHmmBayesNetProtos {
         return gammaBuilder_;
       }
 
+      // optional .hello.PoissonModel poisson = 8;
       private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel poisson_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModelOrBuilder> poissonBuilder_;
@@ -3907,7 +4012,7 @@ public final class SleepHmmBayesNetProtos {
         if (poissonBuilder_ == null) {
           poissonBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.PoissonModelOrBuilder>(
-                  getPoisson(),
+                  poisson_,
                   getParentForChildren(),
                   isClean());
           poisson_ = null;
@@ -3915,6 +4020,7 @@ public final class SleepHmmBayesNetProtos {
         return poissonBuilder_;
       }
 
+      // optional .hello.DiscreteAlphabetModel alphabet = 9;
       private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel alphabet_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModelOrBuilder> alphabetBuilder_;
@@ -4023,7 +4129,7 @@ public final class SleepHmmBayesNetProtos {
         if (alphabetBuilder_ == null) {
           alphabetBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModel.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.DiscreteAlphabetModelOrBuilder>(
-                  getAlphabet(),
+                  alphabet_,
                   getParentForChildren(),
                   isClean());
           alphabet_ = null;
@@ -4031,6 +4137,7 @@ public final class SleepHmmBayesNetProtos {
         return alphabetBuilder_;
       }
 
+      // optional double weight = 20;
       private double weight_ ;
       /**
        * <code>optional double weight = 20;</code>
@@ -4063,6 +4170,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional int32 num_free_params = 21;
       private int numFreeParams_ ;
       /**
        * <code>optional int32 num_free_params = 21;</code>
@@ -4106,10 +4214,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.ObsModel)
   }
 
-  public interface HiddenMarkovModelOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.HiddenMarkovModel)
-      com.google.protobuf.MessageOrBuilder {
+  public interface HiddenMarkovModelOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required string id = 1;
     /**
      * <code>required string id = 1;</code>
      */
@@ -4124,6 +4232,7 @@ public final class SleepHmmBayesNetProtos {
     com.google.protobuf.ByteString
         getIdBytes();
 
+    // optional string description = 2;
     /**
      * <code>optional string description = 2;</code>
      */
@@ -4138,6 +4247,7 @@ public final class SleepHmmBayesNetProtos {
     com.google.protobuf.ByteString
         getDescriptionBytes();
 
+    // repeated .hello.ObsModel observation_model = 3;
     /**
      * <code>repeated .hello.ObsModel observation_model = 3;</code>
      */
@@ -4162,6 +4272,7 @@ public final class SleepHmmBayesNetProtos {
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ObsModelOrBuilder getObservationModelOrBuilder(
         int index);
 
+    // repeated double state_transition_matrix = 4;
     /**
      * <code>repeated double state_transition_matrix = 4;</code>
      */
@@ -4175,6 +4286,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getStateTransitionMatrix(int index);
 
+    // required int32 num_states = 5;
     /**
      * <code>required int32 num_states = 5;</code>
      */
@@ -4188,9 +4300,8 @@ public final class SleepHmmBayesNetProtos {
    * Protobuf type {@code hello.HiddenMarkovModel}
    */
   public static final class HiddenMarkovModel extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.HiddenMarkovModel)
-      HiddenMarkovModelOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements HiddenMarkovModelOrBuilder {
     // Use HiddenMarkovModel.newBuilder() to construct.
     private HiddenMarkovModel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -4237,15 +4348,13 @@ public final class SleepHmmBayesNetProtos {
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              id_ = bs;
+              id_ = input.readBytes();
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              description_ = bs;
+              description_ = input.readBytes();
               break;
             }
             case 26: {
@@ -4328,6 +4437,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // required string id = 1;
     public static final int ID_FIELD_NUMBER = 1;
     private java.lang.Object id_;
     /**
@@ -4370,6 +4480,7 @@ public final class SleepHmmBayesNetProtos {
       }
     }
 
+    // optional string description = 2;
     public static final int DESCRIPTION_FIELD_NUMBER = 2;
     private java.lang.Object description_;
     /**
@@ -4412,6 +4523,7 @@ public final class SleepHmmBayesNetProtos {
       }
     }
 
+    // repeated .hello.ObsModel observation_model = 3;
     public static final int OBSERVATION_MODEL_FIELD_NUMBER = 3;
     private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ObsModel> observationModel_;
     /**
@@ -4447,6 +4559,7 @@ public final class SleepHmmBayesNetProtos {
       return observationModel_.get(index);
     }
 
+    // repeated double state_transition_matrix = 4;
     public static final int STATE_TRANSITION_MATRIX_FIELD_NUMBER = 4;
     private java.util.List<java.lang.Double> stateTransitionMatrix_;
     /**
@@ -4469,6 +4582,7 @@ public final class SleepHmmBayesNetProtos {
       return stateTransitionMatrix_.get(index);
     }
 
+    // required int32 num_states = 5;
     public static final int NUM_STATES_FIELD_NUMBER = 5;
     private int numStates_;
     /**
@@ -4494,8 +4608,7 @@ public final class SleepHmmBayesNetProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasId()) {
         memoizedIsInitialized = 0;
@@ -4646,9 +4759,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.HiddenMarkovModel}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.HiddenMarkovModel)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_HiddenMarkovModel_descriptor;
@@ -4856,6 +4968,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // required string id = 1;
       private java.lang.Object id_ = "";
       /**
        * <code>required string id = 1;</code>
@@ -4869,12 +4982,9 @@ public final class SleepHmmBayesNetProtos {
       public java.lang.String getId() {
         java.lang.Object ref = id_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            id_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          id_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -4932,6 +5042,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional string description = 2;
       private java.lang.Object description_ = "";
       /**
        * <code>optional string description = 2;</code>
@@ -4945,12 +5056,9 @@ public final class SleepHmmBayesNetProtos {
       public java.lang.String getDescription() {
         java.lang.Object ref = description_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            description_ = s;
-          }
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          description_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5008,6 +5116,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // repeated .hello.ObsModel observation_model = 3;
       private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ObsModel> observationModel_ =
         java.util.Collections.emptyList();
       private void ensureObservationModelIsMutable() {
@@ -5149,8 +5258,7 @@ public final class SleepHmmBayesNetProtos {
           java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.ObsModel> values) {
         if (observationModelBuilder_ == null) {
           ensureObservationModelIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, observationModel_);
+          super.addAll(values, observationModel_);
           onChanged();
         } else {
           observationModelBuilder_.addAllMessages(values);
@@ -5248,6 +5356,7 @@ public final class SleepHmmBayesNetProtos {
         return observationModelBuilder_;
       }
 
+      // repeated double state_transition_matrix = 4;
       private java.util.List<java.lang.Double> stateTransitionMatrix_ = java.util.Collections.emptyList();
       private void ensureStateTransitionMatrixIsMutable() {
         if (!((bitField0_ & 0x00000008) == 0x00000008)) {
@@ -5299,8 +5408,7 @@ public final class SleepHmmBayesNetProtos {
       public Builder addAllStateTransitionMatrix(
           java.lang.Iterable<? extends java.lang.Double> values) {
         ensureStateTransitionMatrixIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, stateTransitionMatrix_);
+        super.addAll(values, stateTransitionMatrix_);
         onChanged();
         return this;
       }
@@ -5314,6 +5422,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // required int32 num_states = 5;
       private int numStates_ ;
       /**
        * <code>required int32 num_states = 5;</code>
@@ -5357,10 +5466,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.HiddenMarkovModel)
   }
 
-  public interface MeasurementParamsOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.MeasurementParams)
-      com.google.protobuf.MessageOrBuilder {
+  public interface MeasurementParamsOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional int32 num_minutes_in_meas_period = 1;
     /**
      * <code>optional int32 num_minutes_in_meas_period = 1;</code>
      */
@@ -5370,6 +5479,7 @@ public final class SleepHmmBayesNetProtos {
      */
     int getNumMinutesInMeasPeriod();
 
+    // optional bool enable_interval_search = 2;
     /**
      * <code>optional bool enable_interval_search = 2;</code>
      */
@@ -5379,6 +5489,7 @@ public final class SleepHmmBayesNetProtos {
      */
     boolean getEnableIntervalSearch();
 
+    // optional double natural_light_filter_start_hour = 3;
     /**
      * <code>optional double natural_light_filter_start_hour = 3;</code>
      *
@@ -5396,6 +5507,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getNaturalLightFilterStartHour();
 
+    // optional double natural_light_filter_stop_hour = 4;
     /**
      * <code>optional double natural_light_filter_stop_hour = 4;</code>
      *
@@ -5413,6 +5525,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getNaturalLightFilterStopHour();
 
+    // optional double light_pre_multiplier = 5;
     /**
      * <code>optional double light_pre_multiplier = 5;</code>
      */
@@ -5422,6 +5535,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getLightPreMultiplier();
 
+    // optional double light_floor_lux = 6;
     /**
      * <code>optional double light_floor_lux = 6;</code>
      */
@@ -5431,6 +5545,7 @@ public final class SleepHmmBayesNetProtos {
      */
     double getLightFloorLux();
 
+    // optional bool use_waves_for_disturbances = 7;
     /**
      * <code>optional bool use_waves_for_disturbances = 7;</code>
      */
@@ -5440,6 +5555,7 @@ public final class SleepHmmBayesNetProtos {
      */
     boolean getUseWavesForDisturbances();
 
+    // optional double motion_count_for_disturbances = 8;
     /**
      * <code>optional double motion_count_for_disturbances = 8;</code>
      */
@@ -5448,14 +5564,33 @@ public final class SleepHmmBayesNetProtos {
      * <code>optional double motion_count_for_disturbances = 8;</code>
      */
     double getMotionCountForDisturbances();
+
+    // optional double log_light_increase_for_disturbance = 9;
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    boolean hasLogLightIncreaseForDisturbance();
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    double getLogLightIncreaseForDisturbance();
+
+    // optional double log_sound_increase_for_disturbance = 10;
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    boolean hasLogSoundIncreaseForDisturbance();
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    double getLogSoundIncreaseForDisturbance();
   }
   /**
    * Protobuf type {@code hello.MeasurementParams}
    */
   public static final class MeasurementParams extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.MeasurementParams)
-      MeasurementParamsOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements MeasurementParamsOrBuilder {
     // Use MeasurementParams.newBuilder() to construct.
     private MeasurementParams(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -5541,6 +5676,16 @@ public final class SleepHmmBayesNetProtos {
               motionCountForDisturbances_ = input.readDouble();
               break;
             }
+            case 73: {
+              bitField0_ |= 0x00000100;
+              logLightIncreaseForDisturbance_ = input.readDouble();
+              break;
+            }
+            case 81: {
+              bitField0_ |= 0x00000200;
+              logSoundIncreaseForDisturbance_ = input.readDouble();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -5581,6 +5726,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // optional int32 num_minutes_in_meas_period = 1;
     public static final int NUM_MINUTES_IN_MEAS_PERIOD_FIELD_NUMBER = 1;
     private int numMinutesInMeasPeriod_;
     /**
@@ -5596,6 +5742,7 @@ public final class SleepHmmBayesNetProtos {
       return numMinutesInMeasPeriod_;
     }
 
+    // optional bool enable_interval_search = 2;
     public static final int ENABLE_INTERVAL_SEARCH_FIELD_NUMBER = 2;
     private boolean enableIntervalSearch_;
     /**
@@ -5611,6 +5758,7 @@ public final class SleepHmmBayesNetProtos {
       return enableIntervalSearch_;
     }
 
+    // optional double natural_light_filter_start_hour = 3;
     public static final int NATURAL_LIGHT_FILTER_START_HOUR_FIELD_NUMBER = 3;
     private double naturalLightFilterStartHour_;
     /**
@@ -5634,6 +5782,7 @@ public final class SleepHmmBayesNetProtos {
       return naturalLightFilterStartHour_;
     }
 
+    // optional double natural_light_filter_stop_hour = 4;
     public static final int NATURAL_LIGHT_FILTER_STOP_HOUR_FIELD_NUMBER = 4;
     private double naturalLightFilterStopHour_;
     /**
@@ -5657,6 +5806,7 @@ public final class SleepHmmBayesNetProtos {
       return naturalLightFilterStopHour_;
     }
 
+    // optional double light_pre_multiplier = 5;
     public static final int LIGHT_PRE_MULTIPLIER_FIELD_NUMBER = 5;
     private double lightPreMultiplier_;
     /**
@@ -5672,6 +5822,7 @@ public final class SleepHmmBayesNetProtos {
       return lightPreMultiplier_;
     }
 
+    // optional double light_floor_lux = 6;
     public static final int LIGHT_FLOOR_LUX_FIELD_NUMBER = 6;
     private double lightFloorLux_;
     /**
@@ -5687,6 +5838,7 @@ public final class SleepHmmBayesNetProtos {
       return lightFloorLux_;
     }
 
+    // optional bool use_waves_for_disturbances = 7;
     public static final int USE_WAVES_FOR_DISTURBANCES_FIELD_NUMBER = 7;
     private boolean useWavesForDisturbances_;
     /**
@@ -5702,6 +5854,7 @@ public final class SleepHmmBayesNetProtos {
       return useWavesForDisturbances_;
     }
 
+    // optional double motion_count_for_disturbances = 8;
     public static final int MOTION_COUNT_FOR_DISTURBANCES_FIELD_NUMBER = 8;
     private double motionCountForDisturbances_;
     /**
@@ -5717,6 +5870,38 @@ public final class SleepHmmBayesNetProtos {
       return motionCountForDisturbances_;
     }
 
+    // optional double log_light_increase_for_disturbance = 9;
+    public static final int LOG_LIGHT_INCREASE_FOR_DISTURBANCE_FIELD_NUMBER = 9;
+    private double logLightIncreaseForDisturbance_;
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    public boolean hasLogLightIncreaseForDisturbance() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional double log_light_increase_for_disturbance = 9;</code>
+     */
+    public double getLogLightIncreaseForDisturbance() {
+      return logLightIncreaseForDisturbance_;
+    }
+
+    // optional double log_sound_increase_for_disturbance = 10;
+    public static final int LOG_SOUND_INCREASE_FOR_DISTURBANCE_FIELD_NUMBER = 10;
+    private double logSoundIncreaseForDisturbance_;
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    public boolean hasLogSoundIncreaseForDisturbance() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+     */
+    public double getLogSoundIncreaseForDisturbance() {
+      return logSoundIncreaseForDisturbance_;
+    }
+
     private void initFields() {
       numMinutesInMeasPeriod_ = 0;
       enableIntervalSearch_ = false;
@@ -5726,12 +5911,13 @@ public final class SleepHmmBayesNetProtos {
       lightFloorLux_ = 0D;
       useWavesForDisturbances_ = false;
       motionCountForDisturbances_ = 0D;
+      logLightIncreaseForDisturbance_ = 0D;
+      logSoundIncreaseForDisturbance_ = 0D;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
@@ -5763,6 +5949,12 @@ public final class SleepHmmBayesNetProtos {
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeDouble(8, motionCountForDisturbances_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeDouble(9, logLightIncreaseForDisturbance_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeDouble(10, logSoundIncreaseForDisturbance_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -5804,6 +5996,14 @@ public final class SleepHmmBayesNetProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(8, motionCountForDisturbances_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(9, logLightIncreaseForDisturbance_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(10, logSoundIncreaseForDisturbance_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5887,9 +6087,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.MeasurementParams}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.MeasurementParams)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParamsOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParamsOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_MeasurementParams_descriptor;
@@ -5938,6 +6137,10 @@ public final class SleepHmmBayesNetProtos {
         bitField0_ = (bitField0_ & ~0x00000040);
         motionCountForDisturbances_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000080);
+        logLightIncreaseForDisturbance_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        logSoundIncreaseForDisturbance_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -5998,6 +6201,14 @@ public final class SleepHmmBayesNetProtos {
           to_bitField0_ |= 0x00000080;
         }
         result.motionCountForDisturbances_ = motionCountForDisturbances_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.logLightIncreaseForDisturbance_ = logLightIncreaseForDisturbance_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.logSoundIncreaseForDisturbance_ = logSoundIncreaseForDisturbance_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6038,6 +6249,12 @@ public final class SleepHmmBayesNetProtos {
         if (other.hasMotionCountForDisturbances()) {
           setMotionCountForDisturbances(other.getMotionCountForDisturbances());
         }
+        if (other.hasLogLightIncreaseForDisturbance()) {
+          setLogLightIncreaseForDisturbance(other.getLogLightIncreaseForDisturbance());
+        }
+        if (other.hasLogSoundIncreaseForDisturbance()) {
+          setLogSoundIncreaseForDisturbance(other.getLogSoundIncreaseForDisturbance());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -6065,6 +6282,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // optional int32 num_minutes_in_meas_period = 1;
       private int numMinutesInMeasPeriod_ ;
       /**
        * <code>optional int32 num_minutes_in_meas_period = 1;</code>
@@ -6097,6 +6315,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional bool enable_interval_search = 2;
       private boolean enableIntervalSearch_ ;
       /**
        * <code>optional bool enable_interval_search = 2;</code>
@@ -6129,6 +6348,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional double natural_light_filter_start_hour = 3;
       private double naturalLightFilterStartHour_ ;
       /**
        * <code>optional double natural_light_filter_start_hour = 3;</code>
@@ -6177,6 +6397,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional double natural_light_filter_stop_hour = 4;
       private double naturalLightFilterStopHour_ ;
       /**
        * <code>optional double natural_light_filter_stop_hour = 4;</code>
@@ -6225,6 +6446,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional double light_pre_multiplier = 5;
       private double lightPreMultiplier_ ;
       /**
        * <code>optional double light_pre_multiplier = 5;</code>
@@ -6257,6 +6479,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional double light_floor_lux = 6;
       private double lightFloorLux_ ;
       /**
        * <code>optional double light_floor_lux = 6;</code>
@@ -6289,6 +6512,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional bool use_waves_for_disturbances = 7;
       private boolean useWavesForDisturbances_ ;
       /**
        * <code>optional bool use_waves_for_disturbances = 7;</code>
@@ -6321,6 +6545,7 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional double motion_count_for_disturbances = 8;
       private double motionCountForDisturbances_ ;
       /**
        * <code>optional double motion_count_for_disturbances = 8;</code>
@@ -6353,6 +6578,72 @@ public final class SleepHmmBayesNetProtos {
         return this;
       }
 
+      // optional double log_light_increase_for_disturbance = 9;
+      private double logLightIncreaseForDisturbance_ ;
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public boolean hasLogLightIncreaseForDisturbance() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public double getLogLightIncreaseForDisturbance() {
+        return logLightIncreaseForDisturbance_;
+      }
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public Builder setLogLightIncreaseForDisturbance(double value) {
+        bitField0_ |= 0x00000100;
+        logLightIncreaseForDisturbance_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double log_light_increase_for_disturbance = 9;</code>
+       */
+      public Builder clearLogLightIncreaseForDisturbance() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        logLightIncreaseForDisturbance_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional double log_sound_increase_for_disturbance = 10;
+      private double logSoundIncreaseForDisturbance_ ;
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public boolean hasLogSoundIncreaseForDisturbance() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public double getLogSoundIncreaseForDisturbance() {
+        return logSoundIncreaseForDisturbance_;
+      }
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public Builder setLogSoundIncreaseForDisturbance(double value) {
+        bitField0_ |= 0x00000200;
+        logSoundIncreaseForDisturbance_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double log_sound_increase_for_disturbance = 10;</code>
+       */
+      public Builder clearLogSoundIncreaseForDisturbance() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        logSoundIncreaseForDisturbance_ = 0D;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:hello.MeasurementParams)
     }
 
@@ -6364,10 +6655,10 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.MeasurementParams)
   }
 
-  public interface HmmBayesNetOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:hello.HmmBayesNet)
-      com.google.protobuf.MessageOrBuilder {
+  public interface HmmBayesNetOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // required .hello.MeasurementParams measurement_parameters = 1;
     /**
      * <code>required .hello.MeasurementParams measurement_parameters = 1;</code>
      */
@@ -6381,61 +6672,57 @@ public final class SleepHmmBayesNetProtos {
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParamsOrBuilder getMeasurementParametersOrBuilder();
 
+    // repeated .hello.HiddenMarkovModel independent_hmms = 2;
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel> 
         getIndependentHmmsList();
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel getIndependentHmms(int index);
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     int getIndependentHmmsCount();
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder> 
         getIndependentHmmsOrBuilderList();
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder getIndependentHmmsOrBuilder(
-        int index);
-
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> 
-        getConditionalProbabilitiesList();
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs getConditionalProbabilities(int index);
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    int getConditionalProbabilitiesCount();
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    java.util.List<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
-        getConditionalProbabilitiesOrBuilderList();
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
         int index);
   }
   /**
    * Protobuf type {@code hello.HmmBayesNet}
    */
   public static final class HmmBayesNet extends
-      com.google.protobuf.GeneratedMessage implements
-      // @@protoc_insertion_point(message_implements:hello.HmmBayesNet)
-      HmmBayesNetOrBuilder {
+      com.google.protobuf.GeneratedMessage
+      implements HmmBayesNetOrBuilder {
     // Use HmmBayesNet.newBuilder() to construct.
     private HmmBayesNet(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -6502,14 +6789,6 @@ public final class SleepHmmBayesNetProtos {
               independentHmms_.add(input.readMessage(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.PARSER, extensionRegistry));
               break;
             }
-            case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                conditionalProbabilities_ = new java.util.ArrayList<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs>();
-                mutable_bitField0_ |= 0x00000004;
-              }
-              conditionalProbabilities_.add(input.readMessage(com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.PARSER, extensionRegistry));
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -6520,9 +6799,6 @@ public final class SleepHmmBayesNetProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           independentHmms_ = java.util.Collections.unmodifiableList(independentHmms_);
-        }
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-          conditionalProbabilities_ = java.util.Collections.unmodifiableList(conditionalProbabilities_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -6556,6 +6832,7 @@ public final class SleepHmmBayesNetProtos {
     }
 
     private int bitField0_;
+    // required .hello.MeasurementParams measurement_parameters = 1;
     public static final int MEASUREMENT_PARAMETERS_FIELD_NUMBER = 1;
     private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams measurementParameters_;
     /**
@@ -6577,16 +6854,25 @@ public final class SleepHmmBayesNetProtos {
       return measurementParameters_;
     }
 
+    // repeated .hello.HiddenMarkovModel independent_hmms = 2;
     public static final int INDEPENDENT_HMMS_FIELD_NUMBER = 2;
     private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel> independentHmms_;
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel> getIndependentHmmsList() {
       return independentHmms_;
     }
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder> 
         getIndependentHmmsOrBuilderList() {
@@ -6594,69 +6880,44 @@ public final class SleepHmmBayesNetProtos {
     }
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     public int getIndependentHmmsCount() {
       return independentHmms_.size();
     }
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel getIndependentHmms(int index) {
       return independentHmms_.get(index);
     }
     /**
      * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+     *
+     * <pre>
+     *repeated CondProbs conditional_probabilities  = 3;
+     * </pre>
      */
     public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder getIndependentHmmsOrBuilder(
         int index) {
       return independentHmms_.get(index);
     }
 
-    public static final int CONDITIONAL_PROBABILITIES_FIELD_NUMBER = 3;
-    private java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> conditionalProbabilities_;
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    public java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> getConditionalProbabilitiesList() {
-      return conditionalProbabilities_;
-    }
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    public java.util.List<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
-        getConditionalProbabilitiesOrBuilderList() {
-      return conditionalProbabilities_;
-    }
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    public int getConditionalProbabilitiesCount() {
-      return conditionalProbabilities_.size();
-    }
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs getConditionalProbabilities(int index) {
-      return conditionalProbabilities_.get(index);
-    }
-    /**
-     * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-     */
-    public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
-        int index) {
-      return conditionalProbabilities_.get(index);
-    }
-
     private void initFields() {
       measurementParameters_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams.getDefaultInstance();
       independentHmms_ = java.util.Collections.emptyList();
-      conditionalProbabilities_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       if (!hasMeasurementParameters()) {
         memoizedIsInitialized = 0;
@@ -6664,12 +6925,6 @@ public final class SleepHmmBayesNetProtos {
       }
       for (int i = 0; i < getIndependentHmmsCount(); i++) {
         if (!getIndependentHmms(i).isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-      }
-      for (int i = 0; i < getConditionalProbabilitiesCount(); i++) {
-        if (!getConditionalProbabilities(i).isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -6687,9 +6942,6 @@ public final class SleepHmmBayesNetProtos {
       for (int i = 0; i < independentHmms_.size(); i++) {
         output.writeMessage(2, independentHmms_.get(i));
       }
-      for (int i = 0; i < conditionalProbabilities_.size(); i++) {
-        output.writeMessage(3, conditionalProbabilities_.get(i));
-      }
       getUnknownFields().writeTo(output);
     }
 
@@ -6706,10 +6958,6 @@ public final class SleepHmmBayesNetProtos {
       for (int i = 0; i < independentHmms_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, independentHmms_.get(i));
-      }
-      for (int i = 0; i < conditionalProbabilities_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, conditionalProbabilities_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -6793,9 +7041,8 @@ public final class SleepHmmBayesNetProtos {
      * Protobuf type {@code hello.HmmBayesNet}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:hello.HmmBayesNet)
-        com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HmmBayesNetOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HmmBayesNetOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.internal_static_hello_HmmBayesNet_descriptor;
@@ -6822,7 +7069,6 @@ public final class SleepHmmBayesNetProtos {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getMeasurementParametersFieldBuilder();
           getIndependentHmmsFieldBuilder();
-          getConditionalProbabilitiesFieldBuilder();
         }
       }
       private static Builder create() {
@@ -6842,12 +7088,6 @@ public final class SleepHmmBayesNetProtos {
           bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           independentHmmsBuilder_.clear();
-        }
-        if (conditionalProbabilitiesBuilder_ == null) {
-          conditionalProbabilities_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
-        } else {
-          conditionalProbabilitiesBuilder_.clear();
         }
         return this;
       }
@@ -6894,15 +7134,6 @@ public final class SleepHmmBayesNetProtos {
         } else {
           result.independentHmms_ = independentHmmsBuilder_.build();
         }
-        if (conditionalProbabilitiesBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
-            conditionalProbabilities_ = java.util.Collections.unmodifiableList(conditionalProbabilities_);
-            bitField0_ = (bitField0_ & ~0x00000004);
-          }
-          result.conditionalProbabilities_ = conditionalProbabilities_;
-        } else {
-          result.conditionalProbabilities_ = conditionalProbabilitiesBuilder_.build();
-        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6948,32 +7179,6 @@ public final class SleepHmmBayesNetProtos {
             }
           }
         }
-        if (conditionalProbabilitiesBuilder_ == null) {
-          if (!other.conditionalProbabilities_.isEmpty()) {
-            if (conditionalProbabilities_.isEmpty()) {
-              conditionalProbabilities_ = other.conditionalProbabilities_;
-              bitField0_ = (bitField0_ & ~0x00000004);
-            } else {
-              ensureConditionalProbabilitiesIsMutable();
-              conditionalProbabilities_.addAll(other.conditionalProbabilities_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.conditionalProbabilities_.isEmpty()) {
-            if (conditionalProbabilitiesBuilder_.isEmpty()) {
-              conditionalProbabilitiesBuilder_.dispose();
-              conditionalProbabilitiesBuilder_ = null;
-              conditionalProbabilities_ = other.conditionalProbabilities_;
-              bitField0_ = (bitField0_ & ~0x00000004);
-              conditionalProbabilitiesBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getConditionalProbabilitiesFieldBuilder() : null;
-            } else {
-              conditionalProbabilitiesBuilder_.addAllMessages(other.conditionalProbabilities_);
-            }
-          }
-        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -6985,12 +7190,6 @@ public final class SleepHmmBayesNetProtos {
         }
         for (int i = 0; i < getIndependentHmmsCount(); i++) {
           if (!getIndependentHmms(i).isInitialized()) {
-            
-            return false;
-          }
-        }
-        for (int i = 0; i < getConditionalProbabilitiesCount(); i++) {
-          if (!getConditionalProbabilities(i).isInitialized()) {
             
             return false;
           }
@@ -7017,6 +7216,7 @@ public final class SleepHmmBayesNetProtos {
       }
       private int bitField0_;
 
+      // required .hello.MeasurementParams measurement_parameters = 1;
       private com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams measurementParameters_ = com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParamsOrBuilder> measurementParametersBuilder_;
@@ -7125,7 +7325,7 @@ public final class SleepHmmBayesNetProtos {
         if (measurementParametersBuilder_ == null) {
           measurementParametersBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParams.Builder, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.MeasurementParamsOrBuilder>(
-                  getMeasurementParameters(),
+                  measurementParameters_,
                   getParentForChildren(),
                   isClean());
           measurementParameters_ = null;
@@ -7133,6 +7333,7 @@ public final class SleepHmmBayesNetProtos {
         return measurementParametersBuilder_;
       }
 
+      // repeated .hello.HiddenMarkovModel independent_hmms = 2;
       private java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel> independentHmms_ =
         java.util.Collections.emptyList();
       private void ensureIndependentHmmsIsMutable() {
@@ -7147,6 +7348,10 @@ public final class SleepHmmBayesNetProtos {
 
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel> getIndependentHmmsList() {
         if (independentHmmsBuilder_ == null) {
@@ -7157,6 +7362,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public int getIndependentHmmsCount() {
         if (independentHmmsBuilder_ == null) {
@@ -7167,6 +7376,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel getIndependentHmms(int index) {
         if (independentHmmsBuilder_ == null) {
@@ -7177,6 +7390,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder setIndependentHmms(
           int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel value) {
@@ -7194,6 +7411,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder setIndependentHmms(
           int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.Builder builderForValue) {
@@ -7208,6 +7429,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder addIndependentHmms(com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel value) {
         if (independentHmmsBuilder_ == null) {
@@ -7224,6 +7449,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder addIndependentHmms(
           int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel value) {
@@ -7241,6 +7470,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder addIndependentHmms(
           com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.Builder builderForValue) {
@@ -7255,6 +7488,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder addIndependentHmms(
           int index, com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.Builder builderForValue) {
@@ -7269,13 +7506,16 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder addAllIndependentHmms(
           java.lang.Iterable<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel> values) {
         if (independentHmmsBuilder_ == null) {
           ensureIndependentHmmsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, independentHmms_);
+          super.addAll(values, independentHmms_);
           onChanged();
         } else {
           independentHmmsBuilder_.addAllMessages(values);
@@ -7284,6 +7524,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder clearIndependentHmms() {
         if (independentHmmsBuilder_ == null) {
@@ -7297,6 +7541,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public Builder removeIndependentHmms(int index) {
         if (independentHmmsBuilder_ == null) {
@@ -7310,6 +7558,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.Builder getIndependentHmmsBuilder(
           int index) {
@@ -7317,6 +7569,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder getIndependentHmmsOrBuilder(
           int index) {
@@ -7327,6 +7583,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public java.util.List<? extends com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModelOrBuilder> 
            getIndependentHmmsOrBuilderList() {
@@ -7338,6 +7598,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.Builder addIndependentHmmsBuilder() {
         return getIndependentHmmsFieldBuilder().addBuilder(
@@ -7345,6 +7609,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.Builder addIndependentHmmsBuilder(
           int index) {
@@ -7353,6 +7621,10 @@ public final class SleepHmmBayesNetProtos {
       }
       /**
        * <code>repeated .hello.HiddenMarkovModel independent_hmms = 2;</code>
+       *
+       * <pre>
+       *repeated CondProbs conditional_probabilities  = 3;
+       * </pre>
        */
       public java.util.List<com.hello.suripu.api.datascience.SleepHmmBayesNetProtos.HiddenMarkovModel.Builder> 
            getIndependentHmmsBuilderList() {
@@ -7373,246 +7645,6 @@ public final class SleepHmmBayesNetProtos {
         return independentHmmsBuilder_;
       }
 
-      private java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> conditionalProbabilities_ =
-        java.util.Collections.emptyList();
-      private void ensureConditionalProbabilitiesIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
-          conditionalProbabilities_ = new java.util.ArrayList<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs>(conditionalProbabilities_);
-          bitField0_ |= 0x00000004;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> conditionalProbabilitiesBuilder_;
-
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> getConditionalProbabilitiesList() {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(conditionalProbabilities_);
-        } else {
-          return conditionalProbabilitiesBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public int getConditionalProbabilitiesCount() {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          return conditionalProbabilities_.size();
-        } else {
-          return conditionalProbabilitiesBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs getConditionalProbabilities(int index) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          return conditionalProbabilities_.get(index);
-        } else {
-          return conditionalProbabilitiesBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder setConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs value) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureConditionalProbabilitiesIsMutable();
-          conditionalProbabilities_.set(index, value);
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder setConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder builderForValue) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          ensureConditionalProbabilitiesIsMutable();
-          conditionalProbabilities_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder addConditionalProbabilities(com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs value) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureConditionalProbabilitiesIsMutable();
-          conditionalProbabilities_.add(value);
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder addConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs value) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureConditionalProbabilitiesIsMutable();
-          conditionalProbabilities_.add(index, value);
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder addConditionalProbabilities(
-          com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder builderForValue) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          ensureConditionalProbabilitiesIsMutable();
-          conditionalProbabilities_.add(builderForValue.build());
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder addConditionalProbabilities(
-          int index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder builderForValue) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          ensureConditionalProbabilitiesIsMutable();
-          conditionalProbabilities_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder addAllConditionalProbabilities(
-          java.lang.Iterable<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs> values) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          ensureConditionalProbabilitiesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, conditionalProbabilities_);
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder clearConditionalProbabilities() {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          conditionalProbabilities_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public Builder removeConditionalProbabilities(int index) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          ensureConditionalProbabilitiesIsMutable();
-          conditionalProbabilities_.remove(index);
-          onChanged();
-        } else {
-          conditionalProbabilitiesBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder getConditionalProbabilitiesBuilder(
-          int index) {
-        return getConditionalProbabilitiesFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder getConditionalProbabilitiesOrBuilder(
-          int index) {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          return conditionalProbabilities_.get(index);  } else {
-          return conditionalProbabilitiesBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public java.util.List<? extends com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
-           getConditionalProbabilitiesOrBuilderList() {
-        if (conditionalProbabilitiesBuilder_ != null) {
-          return conditionalProbabilitiesBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(conditionalProbabilities_);
-        }
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder addConditionalProbabilitiesBuilder() {
-        return getConditionalProbabilitiesFieldBuilder().addBuilder(
-            com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder addConditionalProbabilitiesBuilder(
-          int index) {
-        return getConditionalProbabilitiesFieldBuilder().addBuilder(
-            index, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .hello.CondProbs conditional_probabilities = 3;</code>
-       */
-      public java.util.List<com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder> 
-           getConditionalProbabilitiesBuilderList() {
-        return getConditionalProbabilitiesFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilder<
-          com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder> 
-          getConditionalProbabilitiesFieldBuilder() {
-        if (conditionalProbabilitiesBuilder_ == null) {
-          conditionalProbabilitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbs.Builder, com.hello.suripu.api.datascience.BetaBinomialProtos.CondProbsOrBuilder>(
-                  conditionalProbabilities_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
-                  getParentForChildren(),
-                  isClean());
-          conditionalProbabilities_ = null;
-        }
-        return conditionalProbabilitiesBuilder_;
-      }
-
       // @@protoc_insertion_point(builder_scope:hello.HmmBayesNet)
     }
 
@@ -7624,47 +7656,47 @@ public final class SleepHmmBayesNetProtos {
     // @@protoc_insertion_point(class_scope:hello.HmmBayesNet)
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_PoissonModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_PoissonModel_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_DiscreteAlphabetModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_DiscreteAlphabetModel_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_GammaModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_GammaModel_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_ChiSquareModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_ChiSquareModel_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_OneDimensionalGaussianModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_OneDimensionalGaussianModel_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_ObsModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_ObsModel_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_HiddenMarkovModel_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_HiddenMarkovModel_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_MeasurementParams_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_hello_MeasurementParams_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_hello_HmmBayesNet_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -7678,113 +7710,113 @@ public final class SleepHmmBayesNetProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\030sleep_hmm_bayesnet.proto\022\005hello\032\023beta_" +
-      "binomial.proto\"\034\n\014PoissonModel\022\014\n\004mean\030\001" +
-      " \002(\001\".\n\025DiscreteAlphabetModel\022\025\n\rprobabi" +
-      "lities\030\001 \003(\001\"*\n\nGammaModel\022\014\n\004mean\030\001 \002(\001" +
-      "\022\016\n\006stddev\030\002 \002(\001\"\036\n\016ChiSquareModel\022\014\n\004me" +
-      "an\030\001 \002(\001\";\n\033OneDimensionalGaussianModel\022" +
-      "\014\n\004mean\030\001 \002(\001\022\016\n\006stddev\030\002 \002(\001\"\304\002\n\010ObsMod" +
-      "el\022\023\n\013state_index\030\001 \002(\005\022\"\n\tmeas_type\030\002 \002" +
-      "(\0162\017.hello.MeasType\022(\n\tchisquare\030\005 \001(\0132\025" +
-      ".hello.ChiSquareModel\0224\n\010gaussian\030\006 \001(\0132",
-      "\".hello.OneDimensionalGaussianModel\022 \n\005g" +
-      "amma\030\007 \001(\0132\021.hello.GammaModel\022$\n\007poisson" +
-      "\030\010 \001(\0132\023.hello.PoissonModel\022.\n\010alphabet\030" +
-      "\t \001(\0132\034.hello.DiscreteAlphabetModel\022\016\n\006w" +
-      "eight\030\024 \001(\001\022\027\n\017num_free_params\030\025 \001(\005\"\225\001\n" +
-      "\021HiddenMarkovModel\022\n\n\002id\030\001 \002(\t\022\023\n\013descri" +
-      "ption\030\002 \001(\t\022*\n\021observation_model\030\003 \003(\0132\017" +
-      ".hello.ObsModel\022\037\n\027state_transition_matr" +
-      "ix\030\004 \003(\001\022\022\n\nnum_states\030\005 \002(\005\"\252\002\n\021Measure" +
-      "mentParams\022\"\n\032num_minutes_in_meas_period",
-      "\030\001 \001(\005\022\036\n\026enable_interval_search\030\002 \001(\010\022\'" +
-      "\n\037natural_light_filter_start_hour\030\003 \001(\001\022" +
-      "&\n\036natural_light_filter_stop_hour\030\004 \001(\001\022" +
-      "\034\n\024light_pre_multiplier\030\005 \001(\001\022\027\n\017light_f" +
-      "loor_lux\030\006 \001(\001\022\"\n\032use_waves_for_disturba" +
-      "nces\030\007 \001(\010\022%\n\035motion_count_for_disturban" +
-      "ces\030\010 \001(\001\"\260\001\n\013HmmBayesNet\0228\n\026measurement" +
-      "_parameters\030\001 \002(\0132\030.hello.MeasurementPar" +
-      "ams\0222\n\020independent_hmms\030\002 \003(\0132\030.hello.Hi" +
-      "ddenMarkovModel\0223\n\031conditional_probabili",
-      "ties\030\003 \003(\0132\020.hello.CondProbs*\343\001\n\010MeasTyp" +
-      "e\022\r\n\tLOG_LIGHT\020\000\022\023\n\017MOTION_DURATION\020\001\022\036\n" +
-      "\032PILL_MAGNITUDE_DISTURBANCE\020\002\022\021\n\rNATURAL" +
-      "_LIGHT\020\003\022\r\n\tLOG_SOUND\020\004\022\033\n\027PARTNER_MOTIO" +
-      "N_DURATION\020\005\022\024\n\020WAVE_DISTURBANCE\020\006\022\036\n\032LI" +
-      "GHT_INCREASE_DISTURBANCE\020\007\022\036\n\032SOUND_INCR" +
-      "EASE_DISTURBANCE\020\010B:\n com.hello.suripu.a" +
-      "pi.datascienceB\026SleepHmmBayesNetProtos"
+      "\n\030sleep_hmm_bayesnet.proto\022\005hello\"\034\n\014Poi" +
+      "ssonModel\022\014\n\004mean\030\001 \002(\001\".\n\025DiscreteAlpha" +
+      "betModel\022\025\n\rprobabilities\030\001 \003(\001\"*\n\nGamma" +
+      "Model\022\014\n\004mean\030\001 \002(\001\022\016\n\006stddev\030\002 \002(\001\"\036\n\016C" +
+      "hiSquareModel\022\014\n\004mean\030\001 \002(\001\";\n\033OneDimens" +
+      "ionalGaussianModel\022\014\n\004mean\030\001 \002(\001\022\016\n\006stdd" +
+      "ev\030\002 \002(\001\"\304\002\n\010ObsModel\022\023\n\013state_index\030\001 \002" +
+      "(\005\022\"\n\tmeas_type\030\002 \003(\0162\017.hello.MeasType\022(" +
+      "\n\tchisquare\030\005 \001(\0132\025.hello.ChiSquareModel" +
+      "\0224\n\010gaussian\030\006 \001(\0132\".hello.OneDimensiona",
+      "lGaussianModel\022 \n\005gamma\030\007 \001(\0132\021.hello.Ga" +
+      "mmaModel\022$\n\007poisson\030\010 \001(\0132\023.hello.Poisso" +
+      "nModel\022.\n\010alphabet\030\t \001(\0132\034.hello.Discret" +
+      "eAlphabetModel\022\016\n\006weight\030\024 \001(\001\022\027\n\017num_fr" +
+      "ee_params\030\025 \001(\005\"\225\001\n\021HiddenMarkovModel\022\n\n" +
+      "\002id\030\001 \002(\t\022\023\n\013description\030\002 \001(\t\022*\n\021observ" +
+      "ation_model\030\003 \003(\0132\017.hello.ObsModel\022\037\n\027st" +
+      "ate_transition_matrix\030\004 \003(\001\022\022\n\nnum_state" +
+      "s\030\005 \002(\005\"\202\003\n\021MeasurementParams\022\"\n\032num_min" +
+      "utes_in_meas_period\030\001 \001(\005\022\036\n\026enable_inte",
+      "rval_search\030\002 \001(\010\022\'\n\037natural_light_filte" +
+      "r_start_hour\030\003 \001(\001\022&\n\036natural_light_filt" +
+      "er_stop_hour\030\004 \001(\001\022\034\n\024light_pre_multipli" +
+      "er\030\005 \001(\001\022\027\n\017light_floor_lux\030\006 \001(\001\022\"\n\032use" +
+      "_waves_for_disturbances\030\007 \001(\010\022%\n\035motion_" +
+      "count_for_disturbances\030\010 \001(\001\022*\n\"log_ligh" +
+      "t_increase_for_disturbance\030\t \001(\001\022*\n\"log_" +
+      "sound_increase_for_disturbance\030\n \001(\001\"{\n\013" +
+      "HmmBayesNet\0228\n\026measurement_parameters\030\001 " +
+      "\002(\0132\030.hello.MeasurementParams\0222\n\020indepen",
+      "dent_hmms\030\002 \003(\0132\030.hello.HiddenMarkovMode" +
+      "l*\203\002\n\010MeasType\022\r\n\tLOG_LIGHT\020\000\022\023\n\017MOTION_" +
+      "DURATION\020\001\022\036\n\032PILL_MAGNITUDE_DISTURBANCE" +
+      "\020\002\022\021\n\rNATURAL_LIGHT\020\003\022\r\n\tLOG_SOUND\020\004\022\033\n\027" +
+      "PARTNER_MOTION_DURATION\020\005\022\024\n\020WAVE_DISTUR" +
+      "BANCE\020\006\022\036\n\032LIGHT_INCREASE_DISTURBANCE\020\007\022" +
+      "\036\n\032SOUND_INCREASE_DISTURBANCE\020\010\022\036\n\032LIGHT" +
+      "_DECREASE_DISTURBANCE\020\tB:\n com.hello.sur" +
+      "ipu.api.datascienceB\026SleepHmmBayesNetPro" +
+      "tos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_hello_PoissonModel_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_hello_PoissonModel_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_PoissonModel_descriptor,
+              new java.lang.String[] { "Mean", });
+          internal_static_hello_DiscreteAlphabetModel_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_hello_DiscreteAlphabetModel_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_DiscreteAlphabetModel_descriptor,
+              new java.lang.String[] { "Probabilities", });
+          internal_static_hello_GammaModel_descriptor =
+            getDescriptor().getMessageTypes().get(2);
+          internal_static_hello_GammaModel_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_GammaModel_descriptor,
+              new java.lang.String[] { "Mean", "Stddev", });
+          internal_static_hello_ChiSquareModel_descriptor =
+            getDescriptor().getMessageTypes().get(3);
+          internal_static_hello_ChiSquareModel_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_ChiSquareModel_descriptor,
+              new java.lang.String[] { "Mean", });
+          internal_static_hello_OneDimensionalGaussianModel_descriptor =
+            getDescriptor().getMessageTypes().get(4);
+          internal_static_hello_OneDimensionalGaussianModel_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_OneDimensionalGaussianModel_descriptor,
+              new java.lang.String[] { "Mean", "Stddev", });
+          internal_static_hello_ObsModel_descriptor =
+            getDescriptor().getMessageTypes().get(5);
+          internal_static_hello_ObsModel_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_ObsModel_descriptor,
+              new java.lang.String[] { "StateIndex", "MeasType", "Chisquare", "Gaussian", "Gamma", "Poisson", "Alphabet", "Weight", "NumFreeParams", });
+          internal_static_hello_HiddenMarkovModel_descriptor =
+            getDescriptor().getMessageTypes().get(6);
+          internal_static_hello_HiddenMarkovModel_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_HiddenMarkovModel_descriptor,
+              new java.lang.String[] { "Id", "Description", "ObservationModel", "StateTransitionMatrix", "NumStates", });
+          internal_static_hello_MeasurementParams_descriptor =
+            getDescriptor().getMessageTypes().get(7);
+          internal_static_hello_MeasurementParams_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_MeasurementParams_descriptor,
+              new java.lang.String[] { "NumMinutesInMeasPeriod", "EnableIntervalSearch", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "LightPreMultiplier", "LightFloorLux", "UseWavesForDisturbances", "MotionCountForDisturbances", "LogLightIncreaseForDisturbance", "LogSoundIncreaseForDisturbance", });
+          internal_static_hello_HmmBayesNet_descriptor =
+            getDescriptor().getMessageTypes().get(8);
+          internal_static_hello_HmmBayesNet_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_hello_HmmBayesNet_descriptor,
+              new java.lang.String[] { "MeasurementParameters", "IndependentHmms", });
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          com.hello.suripu.api.datascience.BetaBinomialProtos.getDescriptor(),
         }, assigner);
-    internal_static_hello_PoissonModel_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_hello_PoissonModel_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_PoissonModel_descriptor,
-        new java.lang.String[] { "Mean", });
-    internal_static_hello_DiscreteAlphabetModel_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_hello_DiscreteAlphabetModel_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_DiscreteAlphabetModel_descriptor,
-        new java.lang.String[] { "Probabilities", });
-    internal_static_hello_GammaModel_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_hello_GammaModel_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_GammaModel_descriptor,
-        new java.lang.String[] { "Mean", "Stddev", });
-    internal_static_hello_ChiSquareModel_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_hello_ChiSquareModel_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_ChiSquareModel_descriptor,
-        new java.lang.String[] { "Mean", });
-    internal_static_hello_OneDimensionalGaussianModel_descriptor =
-      getDescriptor().getMessageTypes().get(4);
-    internal_static_hello_OneDimensionalGaussianModel_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_OneDimensionalGaussianModel_descriptor,
-        new java.lang.String[] { "Mean", "Stddev", });
-    internal_static_hello_ObsModel_descriptor =
-      getDescriptor().getMessageTypes().get(5);
-    internal_static_hello_ObsModel_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_ObsModel_descriptor,
-        new java.lang.String[] { "StateIndex", "MeasType", "Chisquare", "Gaussian", "Gamma", "Poisson", "Alphabet", "Weight", "NumFreeParams", });
-    internal_static_hello_HiddenMarkovModel_descriptor =
-      getDescriptor().getMessageTypes().get(6);
-    internal_static_hello_HiddenMarkovModel_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_HiddenMarkovModel_descriptor,
-        new java.lang.String[] { "Id", "Description", "ObservationModel", "StateTransitionMatrix", "NumStates", });
-    internal_static_hello_MeasurementParams_descriptor =
-      getDescriptor().getMessageTypes().get(7);
-    internal_static_hello_MeasurementParams_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_MeasurementParams_descriptor,
-        new java.lang.String[] { "NumMinutesInMeasPeriod", "EnableIntervalSearch", "NaturalLightFilterStartHour", "NaturalLightFilterStopHour", "LightPreMultiplier", "LightFloorLux", "UseWavesForDisturbances", "MotionCountForDisturbances", });
-    internal_static_hello_HmmBayesNet_descriptor =
-      getDescriptor().getMessageTypes().get(8);
-    internal_static_hello_HmmBayesNet_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_hello_HmmBayesNet_descriptor,
-        new java.lang.String[] { "MeasurementParameters", "IndependentHmms", "ConditionalProbabilities", });
-    com.hello.suripu.api.datascience.BetaBinomialProtos.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
