@@ -190,64 +190,6 @@ BEGIN
         INSERT INTO device_sensors_par_2015_09_16 VALUES (NEW.*);
     ELSIF NEW.local_utc_ts >= '2015-09-15 00:00:00' AND NEW.local_utc_ts < '2015-09-16 00:00:00' THEN
         INSERT INTO device_sensors_par_2015_09_15 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-14 00:00:00' AND NEW.local_utc_ts < '2015-09-15 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_14 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-13 00:00:00' AND NEW.local_utc_ts < '2015-09-14 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_13 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-12 00:00:00' AND NEW.local_utc_ts < '2015-09-13 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_12 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-11 00:00:00' AND NEW.local_utc_ts < '2015-09-12 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_11 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-10 00:00:00' AND NEW.local_utc_ts < '2015-09-11 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_10 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-09 00:00:00' AND NEW.local_utc_ts < '2015-09-10 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_09 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-08 00:00:00' AND NEW.local_utc_ts < '2015-09-09 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_08 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-07 00:00:00' AND NEW.local_utc_ts < '2015-09-08 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_07 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-06 00:00:00' AND NEW.local_utc_ts < '2015-09-07 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_06 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-05 00:00:00' AND NEW.local_utc_ts < '2015-09-06 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_05 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-04 00:00:00' AND NEW.local_utc_ts < '2015-09-05 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_04 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-03 00:00:00' AND NEW.local_utc_ts < '2015-09-04 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_03 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-02 00:00:00' AND NEW.local_utc_ts < '2015-09-03 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_02 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-01 00:00:00' AND NEW.local_utc_ts < '2015-09-02 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_09_01 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-31 00:00:00' AND NEW.local_utc_ts < '2015-09-01 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_31 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-30 00:00:00' AND NEW.local_utc_ts < '2015-08-31 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_30 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-29 00:00:00' AND NEW.local_utc_ts < '2015-08-30 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_29 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-28 00:00:00' AND NEW.local_utc_ts < '2015-08-29 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_28 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-27 00:00:00' AND NEW.local_utc_ts < '2015-08-28 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_27 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-26 00:00:00' AND NEW.local_utc_ts < '2015-08-27 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_26 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-25 00:00:00' AND NEW.local_utc_ts < '2015-08-26 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_25 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-24 00:00:00' AND NEW.local_utc_ts < '2015-08-25 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_24 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-23 00:00:00' AND NEW.local_utc_ts < '2015-08-24 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_23 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-22 00:00:00' AND NEW.local_utc_ts < '2015-08-23 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_22 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-21 00:00:00' AND NEW.local_utc_ts < '2015-08-22 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_21 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-20 00:00:00' AND NEW.local_utc_ts < '2015-08-21 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_20 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-19 00:00:00' AND NEW.local_utc_ts < '2015-08-20 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_19 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-18 00:00:00' AND NEW.local_utc_ts < '2015-08-19 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_18 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-17 00:00:00' AND NEW.local_utc_ts < '2015-08-18 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_08_17 VALUES (NEW.*);
     ELSE
         INSERT INTO device_sensors_par_default VALUES (NEW.*);
     END IF;
@@ -479,35 +421,7 @@ BEGIN
         INSERT INTO tracker_motion_par_2015_09_16 VALUES (NEW.*);
     ELSIF NEW.local_utc_ts >= '2015-09-15 00:00:00' AND NEW.local_utc_ts < '2015-09-16 00:00:00' THEN
         INSERT INTO tracker_motion_par_2015_09_15 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-14 00:00:00' AND NEW.local_utc_ts < '2015-09-15 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_14 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-13 00:00:00' AND NEW.local_utc_ts < '2015-09-14 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_13 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-12 00:00:00' AND NEW.local_utc_ts < '2015-09-13 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_12 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-11 00:00:00' AND NEW.local_utc_ts < '2015-09-12 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_11 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-10 00:00:00' AND NEW.local_utc_ts < '2015-09-11 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_10 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-09 00:00:00' AND NEW.local_utc_ts < '2015-09-10 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_09 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-08 00:00:00' AND NEW.local_utc_ts < '2015-09-09 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_08 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-07 00:00:00' AND NEW.local_utc_ts < '2015-09-08 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_07 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-06 00:00:00' AND NEW.local_utc_ts < '2015-09-07 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_06 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-05 00:00:00' AND NEW.local_utc_ts < '2015-09-06 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_05 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-04 00:00:00' AND NEW.local_utc_ts < '2015-09-05 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_04 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-03 00:00:00' AND NEW.local_utc_ts < '2015-09-04 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_03 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-02 00:00:00' AND NEW.local_utc_ts < '2015-09-03 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_02 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-09-01 00:00:00' AND NEW.local_utc_ts < '2015-09-02 00:00:00' THEN
-        INSERT INTO tracker_motion_par_2015_09_01 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-08-01 00:00:00' AND NEW.local_utc_ts < '2015-09-01 00:00:00' THEN
+ ELSIF NEW.local_utc_ts >= '2015-08-01 00:00:00' AND NEW.local_utc_ts < '2015-09-01 00:00:00' THEN
         INSERT INTO tracker_motion_par_2015_08 VALUES (NEW.*);
     ELSIF NEW.local_utc_ts >= '2015-07-01 00:00:00' AND NEW.local_utc_ts < '2015-08-01 00:00:00' THEN
         INSERT INTO tracker_motion_par_2015_07 VALUES (NEW.*);

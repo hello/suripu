@@ -7,6 +7,7 @@ def date_range(start_date, end_date):
         yield end_date - timedelta(n)
 
 def get_year_months(start_date, end_date):
+    """not used anymore"""
     diff_days = (end_date - start_date).days
     approx_months = diff_days/30 + 5
 
@@ -48,6 +49,7 @@ num_days = m_range[1]
 DAILY_SHARDING_START = datetime(year=2015, month=7, day = 1)
 start_sharding_date = datetime(year=int(year), month=int(month), day = 1)
 end_sharding_date = datetime(year=int(year), month=int(month), day = num_days)
+print "start_sharding %s, end_sharding %s" % (start_sharding_date, end_sharding_date)
 
 # sql file
 filename = "sensors/device_sensors/sharding/shard_daily_%s_%s.sql" % (year, month)
@@ -93,7 +95,12 @@ fp.write(start_trigger_str + "\n")
 trigger_condition = "NEW.local_utc_ts >= '%s 00:00:00' AND NEW.local_utc_ts < '%s 00:00:00' THEN"
 
 n = 0
-for current_date in date_range(DAILY_SHARDING_START, end_sharding_date):
+
+start_trigger_date = DAILY_SHARDING_START
+start_trigger_date = datetime.now() - timedelta(days=4)
+print "Trigger START", start_trigger_date
+
+for current_date in date_range(start_trigger_date, end_sharding_date):
     gte_str = datetime.strftime(current_date, "%Y-%m-%d")
     lt_str = datetime.strftime(current_date + timedelta(1), "%Y-%m-%d")
 
@@ -103,19 +110,12 @@ for current_date in date_range(DAILY_SHARDING_START, end_sharding_date):
         fp.write("    ELSIF " + trigger_condition % (gte_str, lt_str) + "\n")
 
     table_name = "device_sensors_par_%s" % datetime.strftime(current_date, "%Y_%m_%d") 
+    
     fp.write("        INSERT INTO %s VALUES (NEW.*);" % table_name + "\n")
     n += 1
     
 
-remaining_str = """    ELSIF NEW.local_utc_ts >= '2015-06-01 00:00:00' AND NEW.local_utc_ts < '2015-07-01 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_06 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-05-01 00:00:00' AND NEW.local_utc_ts < '2015-06-01 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_05 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-03-01 00:00:00' AND NEW.local_utc_ts < '2015-04-01 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_03 VALUES (NEW.*);
-    ELSIF NEW.local_utc_ts >= '2015-02-01 00:00:00' AND NEW.local_utc_ts < '2015-03-01 00:00:00' THEN
-        INSERT INTO device_sensors_par_2015_02 VALUES (NEW.*);
-    ELSE
+remaining_str = """    ELSE
         INSERT INTO device_sensors_par_default VALUES (NEW.*);
     END IF;
 
@@ -179,7 +179,7 @@ fp.write("\n" + start_trigger_str + "\n")
 trigger_condition = "NEW.local_utc_ts >= '%s 00:00:00' AND NEW.local_utc_ts < '%s 00:00:00' THEN"
 
 n = 0
-for current_date in date_range(DAILY_SHARDING_START, end_sharding_date):
+for current_date in date_range(start_trigger_date, end_sharding_date):
     gte_str = datetime.strftime(current_date, "%Y-%m-%d")
     lt_str = datetime.strftime(current_date + timedelta(1), "%Y-%m-%d")
 
@@ -193,8 +193,7 @@ for current_date in date_range(DAILY_SHARDING_START, end_sharding_date):
     n += 1
     
 
-remaining_str = """
-    ELSIF NEW.local_utc_ts >= '2015-08-01 00:00:00' AND NEW.local_utc_ts < '2015-09-01 00:00:00' THEN
+remaining_str = """ ELSIF NEW.local_utc_ts >= '2015-08-01 00:00:00' AND NEW.local_utc_ts < '2015-09-01 00:00:00' THEN
         INSERT INTO tracker_motion_par_2015_08 VALUES (NEW.*);
     ELSIF NEW.local_utc_ts >= '2015-07-01 00:00:00' AND NEW.local_utc_ts < '2015-08-01 00:00:00' THEN
         INSERT INTO tracker_motion_par_2015_07 VALUES (NEW.*);
