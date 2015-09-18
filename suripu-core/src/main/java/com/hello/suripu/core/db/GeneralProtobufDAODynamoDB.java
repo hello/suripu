@@ -131,27 +131,29 @@ public class GeneralProtobufDAODynamoDB {
 
 
         try {
+
             final UpdateItemResult result = this.dynamoDBClient.updateItem(request);
+
+            return true;
 
         } catch (AmazonServiceException awsException) {
             logger.error("Server exception {} result for key {}, rangekey {}",
                     awsException.getMessage(),
                     key,
                     rangeKey);
-            return false;
         } catch (AmazonClientException acExp) {
 
             logger.error("AmazonClientException exception {} result for key {}, rangekey {}",
                     acExp.getMessage(),
                     key,
                     rangeKey);
-            return false;
 
         }
 
-        return true;
 
+        return false;
     }
+
 
     public GeneralQueryResult getBySingleKeyNoRangeKey(final String key) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
@@ -198,11 +200,10 @@ public class GeneralProtobufDAODynamoDB {
 
         if (rangeKeyColumnName.isPresent()) {
 
-            final List<AttributeValue> values = Lists.newArrayList();
-
-            values.add(new AttributeValue().withS(rangeKey1));
-            values.add(new AttributeValue().withS(rangeKey2));
-
+            final List<AttributeValue> values = Lists.newArrayList(
+                    new AttributeValue().withS(rangeKey1),
+                    new AttributeValue().withS(rangeKey2));
+            
             final Condition selectRangeKeyCondition = new Condition()
                     .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
                     .withAttributeValueList(values);
