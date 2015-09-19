@@ -18,6 +18,7 @@ import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
+import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.SleepMotion;
@@ -308,6 +309,9 @@ public class InsightProcessor {
                 break;
             case "BED_LIGHT_DURATION":
                 insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
+                break;
+            case "HUMIDITY":
+                insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
                 break;
         }
 
