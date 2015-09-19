@@ -8,7 +8,7 @@ public class WakeVarianceMsgEN {
     public static Text getWakeVarianceLow(final int wakeStdDev, final int percentile) {
         final float wakeStdDevHr = (float) wakeStdDev/60;
         return new Text("Hello, very regular",
-                String.format("The time you wake up each morning is **very consistent**, which is great. It varied an average of %.1f hours last week, ", wakeStdDevHr) + String.format("Which is less than %d%% of other people using Sense. ", 100 - percentile) +
+                String.format("The time you wake up each morning is **very consistent**, which is great. It varied an average of %.1f hours last week, ", wakeStdDevHr) + String.format("which is less than %d%% of other people using Sense. ", 100 - percentile) +
                         "\n\nWaking up at the same time each morning is great for your internal clock, which helps you sleep better.");
     }
 
