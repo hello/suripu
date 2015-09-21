@@ -33,6 +33,7 @@ import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.SupportResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
+import com.hello.suripu.app.v2.DeviceResource;
 import com.hello.suripu.app.v2.StoreFeedbackResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
@@ -61,6 +62,8 @@ import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
+import com.hello.suripu.core.db.WifiInfoDAO;
+import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.store.StoreFeedbackDAO;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
@@ -342,6 +345,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
         final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
 
+        final AmazonDynamoDB wifiInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getWifiInfoConfiguration().getEndpoint());
+        final WifiInfoDAO wifiInfoDAO = new WifiInfoDynamoDB(wifiInfoDynamoDBClient, configuration.getWifiInfoConfiguration().getTableName());
+
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
@@ -413,6 +419,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new SupportResource(supportDAO));
         environment.addResource(new com.hello.suripu.app.v2.TimelineResource(timelineDAODynamoDB, timelineProcessor, timelineLogDAO, feedbackDAO, trackerMotionDAO, sleepStatsDAODynamoDB,timelineLogger));
+        environment.addResource(new DeviceResource(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB, wifiInfoDAO));
         environment.addResource(new com.hello.suripu.app.v2.AccountPreferencesResource(accountPreferencesDAO));
         StoreFeedbackDAO storeFeedbackDAO = commonDB.onDemand(StoreFeedbackDAO.class);
         environment.addResource(new StoreFeedbackResource(storeFeedbackDAO));
