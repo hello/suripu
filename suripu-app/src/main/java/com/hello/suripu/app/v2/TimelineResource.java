@@ -11,10 +11,12 @@ import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
+import com.hello.suripu.core.models.TimelineLog;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.timeline.v2.EventType;
 import com.hello.suripu.core.models.timeline.v2.Timeline;
+import com.hello.suripu.core.models.timeline.v2.TimelineAdmin;
 import com.hello.suripu.core.models.timeline.v2.TimelineEvent;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -93,6 +95,21 @@ public class TimelineResource extends BaseResource {
         return getTimelineForNightInternal(accessToken.accountId, night, false);
     }
 
+
+    @GET
+    @Timed
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/admin/{date}")
+    public TimelineAdmin getTimelineForNightForAdmin(@Scope({OAuthScope.ADMINISTRATION_READ}) final AccessToken accessToken,
+                                        @PathParam("date") final String night) {
+
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
+        final Optional<TimelineResult> timelineResultOptional = timelineProcessor.retrieveTimelinesFast(accessToken.accountId, targetDate);
+
+        final Timeline timeline =  !timelineResultOptional.isPresent() ? Timeline.createEmpty(targetDate) : Timeline.fromV1(timelineResultOptional.get().timelines.get(0), timelineResultOptional.get().notEnoughData);
+        final TimelineLog timelineLog = !timelineResultOptional.isPresent() ? TimelineLog.createEmpty() : timelineResultOptional.get().log;
+        return new TimelineAdmin(timeline, timelineLog);
+    }
 
     @PATCH
     @Timed
