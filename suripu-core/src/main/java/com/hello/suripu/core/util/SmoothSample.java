@@ -53,7 +53,7 @@ public class SmoothSample {
             // replace noise value by average of surrounding good values
             for (int j = 1; j <= forwardAttemptsToRemoveNoise; j++) {
                 if (!isNoise(values[i + j], mean, stdDev)) {
-                    noiseFreeValues[i] = 0.5 * (noiseFreeValues[i-1] + noiseFreeValues[i + j]);
+                    noiseFreeValues[i] = 0.5 * (noiseFreeValues[i-1] + values[i + j]);
                     break;
                 }
                 else {
