@@ -50,8 +50,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.VOTING_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasBayesNetEnabled(final Long accountId) {
-        return  featureFlipper.userFeatureActive(FeatureFlipper.BAYES_NET_ALGORITHM,accountId,Collections.EMPTY_LIST);
+    protected Boolean hasOnlineHmmEnabled(final Long accountId) {
+        return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_ALGORITHM,accountId,Collections.EMPTY_LIST);
     }
 
     protected Boolean hasPartnerFilterEnabled(final Long accountId) {
@@ -88,6 +88,10 @@ public class FeatureFlippedProcessor {
 
     protected Boolean hasTimelineOrderEnforcement(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasDustSmoothEnabled(final String senseId) {
+        return featureFlipper.deviceFeatureActive(FeatureFlipper.DUST_SMOOTH, senseId, Collections.EMPTY_LIST);
     }
 
     protected boolean hasTimelineInSleepInsights(final long accountId) {

@@ -1,14 +1,26 @@
 package com.hello.suripu.core.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
 public class DeviceStatus {
 
+    @JsonProperty("id")
     public final Long id;
+
+    @JsonProperty("device_id")
     public final Long deviceId;
+
+    @JsonProperty("firmware_version")
     public final String firmwareVersion;
+
+    @JsonProperty("battery_level")
     public final Integer batteryLevel;
+
+    @JsonProperty("last_seen")
     public final DateTime lastSeen;
+
+    @JsonProperty("uptime")
     public final Integer uptime;
 
 

@@ -355,20 +355,21 @@ public class SuripuAppConfiguration extends Configuration {
         return this.senseLastSeenConfiguration;
     }
 
+
     @Valid
     @NotNull
-    @JsonProperty("hmm_bayesnet_priors")
-    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
-        return this.hmmBayesnetPriorsConfiguration;
+    @JsonProperty("feature_extraction_models")
+    private DynamoDBConfiguration hmmFeatureExtractionModelsConfiguration;
+    public DynamoDBConfiguration getFeatureExtractionModelsConfiguration() {
+        return this.hmmFeatureExtractionModelsConfiguration;
     }
 
     @Valid
     @NotNull
-    @JsonProperty("hmm_bayesnet_models")
-    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
-        return this.hmmBayesnetModelsConfiguration;
+    @JsonProperty("online_hmm_models")
+    private DynamoDBConfiguration onlineHmmModelsConfiguration;
+    public DynamoDBConfiguration getOnlineHmmModelsConfiguration() {
+        return this.onlineHmmModelsConfiguration;
     }
 
     @Valid

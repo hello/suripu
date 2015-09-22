@@ -75,15 +75,6 @@ http:
   # The port on which the HTTP server listens for administrative
   # requests. Subject to the same limitations as "port".
   adminPort: 9998
-  # HTTP request log settings.
-#  requestLog:
-#    file:
-#      enabled: true
-#      timeZone: UTC
-#      currentLogFilename: /var/log/suripu-app/suripu-app-access.log
-#      archive: true
-#      archivedLogFilenamePattern: /var/log/suripu-app/suripu-app-access-%d{yyyy-MM-dd}.log.gz
-#      archivedFileCount: 7
 
 # Logging settings.
 logging:
@@ -96,19 +87,6 @@ logging:
 
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu: DEBUG
-  # Settings for logging to a file.
-#  file:
-#    enabled: true
-#    threshold: DEBUG
-#    currentLogFilename: /var/log/suripu-app/suripu-app.log
-#    # When the log file rotates, the archived log will be renamed to this and gzipped. The
-#    # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
-#    # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
-#    archivedLogFilenamePattern: /var/log/suripu-app/suripu-app-%d{yyyy-MM-dd}.log.gz
-#    # The number of archived files to keep.
-#    archivedFileCount: 7
-#    # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
-#    timeZone: UTC
 
 
 event_db:
@@ -272,25 +250,20 @@ sense_last_seen:
   region: us-east-1
   table_name: sense_last_seen
 
-hmm_bayesnet_priors:
+feature_extraction_models:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: hmm_bayesnet_priors
+  table_name: feature_extraction_models
 
-hmm_bayesnet_models:
+online_hmm_models:
   endpoint : http://localhost:7777
   region: us-east-1
-  table_name: hmm_bayesnet_models
+  table_name: online_hmm_models
 
 calibration:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: calibration
-
-wifi_info:
-  endpoint : http://localhost:7777
-  region: us-east-1
-  table_name: wifi_info
 
 app_stats:
   endpoint : http://localhost:7777
