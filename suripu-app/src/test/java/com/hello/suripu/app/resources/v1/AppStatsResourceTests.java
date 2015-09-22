@@ -18,10 +18,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -74,10 +75,11 @@ public class AppStatsResourceTests {
     }
 
 
-    @Test(expected = WebApplicationException.class)
-    public void updateLastViewedInputValidation() throws Exception {
+    @Test
+    public void updateLastViewedEmptyPayload() throws Exception {
         final AppStats badAppStats = new AppStats(Optional.<DateTime>absent());
-        resource.updateLastViewed(accessToken, badAppStats);
+        final Response response = resource.updateLastViewed(accessToken, badAppStats);
+        assertThat(response.getStatus(), is(equalTo(Response.Status.NOT_MODIFIED.getStatusCode())));
     }
 
     @Test
