@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.insights;
+package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by jyfan on 8/27/15.
  */
-public class BedLightIntensityTest {
+public class BedLightIntensityInsightsTest {
 
     private final Long FAKE_ACCOUNT_ID = 9999L;
     private final Long FAKE_DEVICE_ID = 9998L;
