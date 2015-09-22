@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
 import com.hello.suripu.core.preferences.TemperatureUnit;
+import com.hello.suripu.core.util.DataUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -77,7 +78,7 @@ public class TemperatureHumidity {
         // get min, max and average
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final DeviceData deviceData : data) {
-            stats.addValue(deviceData.ambientTemperature);
+            stats.addValue(DataUtils.calibrateTemperature(deviceData.ambientTemperature));
         }
 
         final double tmpMinValue = stats.getMin() / TEMP_MULTIPLIER;
