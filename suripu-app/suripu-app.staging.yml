@@ -339,3 +339,8 @@ wifi_info:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: wifi_info
+
+app_stats:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: app_stats

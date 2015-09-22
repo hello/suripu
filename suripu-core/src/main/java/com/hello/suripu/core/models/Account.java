@@ -8,6 +8,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 
 import javax.validation.constraints.NotNull;
 
@@ -332,5 +333,10 @@ public class Account {
     public static Account forApplication(final Long aaplicationId, final Account account) {
 //        return new Account();
         return null;
+    }
+
+    @JsonIgnore
+    public int getAgeInDays() {
+        return Days.daysBetween(created, DateTime.now(DateTimeZone.UTC)).getDays();
     }
 }
