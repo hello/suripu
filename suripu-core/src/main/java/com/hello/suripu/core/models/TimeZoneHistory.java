@@ -9,6 +9,7 @@ import com.google.common.base.Objects;
  * Created by pangwu on 6/16/14.
  */
 public class TimeZoneHistory {
+    public static final int FALLBACK_OFFSET_MILLIS = -26200000; // PDT
 
     @JsonIgnore
     public final long updatedAt;

@@ -25,11 +25,11 @@ public class SmoothSample {
         final double[] values = getSampleValuesArray(samples);
         final double mean = new Mean().evaluate(values);
         final double stdDev = new StandardDeviation().evaluate(values, mean);
-        
+
         final int movingAvgWindowSize =  samples.get(1).dateTime - samples.get(0).dateTime > 60000 ?
                 DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_LOW_RESOLUTION : DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION;
         final double[] noiseFreeValues = smudgeNoise(values, mean, stdDev, DEFAULT_NOISE_LENGTH_TOLERANCE);
-        
+
         final double[] smoothedValues = smooth(noiseFreeValues, movingAvgWindowSize);
 
         final List<Sample> convertedSamples = Lists.newArrayList();

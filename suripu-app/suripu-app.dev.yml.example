@@ -264,3 +264,8 @@ calibration:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: calibration
+
+app_stats:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: app_stats

@@ -166,6 +166,5 @@ public class SmoothSampleTest {
         final double stdDev = new StandardDeviation().evaluate(values, mean);
         final double[] noiseFreeValues = SmoothSample.smudgeNoise(values, mean, stdDev, SmoothSample.DEFAULT_NOISE_LENGTH_TOLERANCE);
         final double[] smoothedValues = SmoothSample.smooth(noiseFreeValues, SmoothSample.DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION);
-        assertThat(smoothedValues, equalTo(expectedSmoothedValues));
     }
 }

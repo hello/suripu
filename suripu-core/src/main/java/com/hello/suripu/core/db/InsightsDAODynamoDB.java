@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
+import com.amazonaws.services.dynamodbv2.model.Select;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -129,6 +130,31 @@ public class InsightsDAODynamoDB {
         queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByDate);
 
         return this.getData(queryConditions, limit);
+    }
+
+    @Timed
+    public int getInsightCountByDate(final Long accountId, final DateTime date, final int limit) {
+        final Condition selectByAccountId = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+
+        final String rangeKey = this.createDateCategoryKey(date, "000");
+        final Condition selectByDate = new Condition()
+                .withComparisonOperator(ComparisonOperator.GE.toString())
+                .withAttributeValueList(new AttributeValue().withS(rangeKey));
+
+        final Map<String, Condition> queryConditions = new HashMap<>();
+        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
+        queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByDate);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withSelect(Select.COUNT)
+                .withLimit(limit);
+
+        final QueryResult queryResult = dynamoDBClient.query(queryRequest);
+        return queryResult.getCount();
     }
 
     @Timed
