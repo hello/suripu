@@ -4,28 +4,35 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Sample;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import org.joda.time.Interval;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class SmoothSample {
-
-    public static int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE = 3;
-    public static int DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE = 2;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SmoothSample.class);
+    public static final int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_LOW_RESOLUTION = 2;
+    public static final int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION = 3;
+    public static final int DEFAULT_NOISE_LENGTH_TOLERANCE = 2;
+    private static final int DEVIATION_STEP = 2;
+    private static final int MAXIMUM_NOISE_CORRECTIONS = 5;
 
     public static List<Sample> convert(final List<Sample> samples) {
-        if (samples.size() <= Math.max(DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE)) {
+        if (samples.size() <= Math.max(DEFAULT_NOISE_LENGTH_TOLERANCE, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION)) {
             return samples;
         }
 
         final double[] values = getSampleValuesArray(samples);
         final double mean = new Mean().evaluate(values);
         final double stdDev = new StandardDeviation().evaluate(values, mean);
-        
-        
-        final double[] noiseFreeValues = replaceNoiseWithAverageOfSurroundings(values, mean, stdDev, DEFAULT_FORWARD_ATTEMPTS_TO_REMOVE_NOISE);
-        
-        final double[] smoothedValues = smooth(noiseFreeValues, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE);
+
+        final int movingAvgWindowSize =  new Interval(samples.get(0).dateTime, samples.get(1).dateTime).toDuration().getStandardMinutes() > 5 ?
+                DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_LOW_RESOLUTION : DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION;
+        final double[] noiseFreeValues = smudgeNoise(values, mean, stdDev, DEFAULT_NOISE_LENGTH_TOLERANCE);
+
+        final double[] smoothedValues = smooth(noiseFreeValues, movingAvgWindowSize);
 
         final List<Sample> convertedSamples = Lists.newArrayList();
         for (int i=0; i < samples.size(); i++) {
@@ -35,7 +42,7 @@ public class SmoothSample {
     }
 
 
-    public static double[] replaceNoiseWithAverageOfSurroundings(final double[] values, final double mean, final double stdDev, final int forwardAttemptsToRemoveNoise) {
+    public static double[] smudgeNoise(final double[] values, final double mean, final double stdDev, final int noiseLengthTolerance) {
         double[] noiseFreeValues = new double[values.length];
 
         if (isNoise(values[0], mean, stdDev)) {
@@ -45,25 +52,30 @@ public class SmoothSample {
             noiseFreeValues[0] = values[0];
         }
 
-        for (int i = 1; i < values.length - forwardAttemptsToRemoveNoise; i++) {
+        // if noise size is greater than tolerance, keep the original values, otherwise try to replace it with average of surroundings
+        for (int i = 1; i < values.length - noiseLengthTolerance; i++) {
+            noiseFreeValues[i] = values[i];
             if (!isNoise(values[i], mean, stdDev)) {
                 noiseFreeValues[i] = values[i];
                 continue;
             }
             // replace noise value by average of surrounding good values
-            for (int j = 1; j <= forwardAttemptsToRemoveNoise; j++) {
-                if (!isNoise(values[i + j], mean, stdDev)) {
-                    noiseFreeValues[i] = 0.5 * (noiseFreeValues[i-1] + values[i + j]);
-                    break;
+            for (int j = 1; j <= noiseLengthTolerance; j++) {
+                if (isNoise(values[i + j], mean, stdDev)) {
+                    continue;
                 }
-                else {
-                    noiseFreeValues[i] = values[i];
+                double averageSurroundingValues = (noiseFreeValues[i - 1] + values[i + j]) / 2;
+                int n = 0;
+                while (isNoise(averageSurroundingValues, mean, stdDev) & n <= MAXIMUM_NOISE_CORRECTIONS) {
+                    n++;
+                    averageSurroundingValues = 0.75 * averageSurroundingValues + 0.25 * mean;
                 }
+                noiseFreeValues[i] = averageSurroundingValues;
             }
         }
 
         // replace edge noises with average of past values
-        for (int k = values.length - forwardAttemptsToRemoveNoise; k < values.length; k++) {
+        for (int k = values.length - noiseLengthTolerance; k < values.length; k++) {
             if (isNoise(values[k], mean, stdDev)) {
                 noiseFreeValues[k] = (noiseFreeValues[k - 2] + noiseFreeValues[k - 1]) / 2;
             }
@@ -77,11 +89,11 @@ public class SmoothSample {
     public static double[] smooth(final double[] values, final Integer movingAverageWindowSize) {
         double[] smoothedValues = new double[values.length];
         for (int i = movingAverageWindowSize - 1; i < values.length; i++) {
-            final double movingAverage = new Mean().evaluate(Arrays.copyOfRange(values, i - movingAverageWindowSize + 1, i));
+            final double movingAverage = new Mean().evaluate(Arrays.copyOfRange(values, i - movingAverageWindowSize + 1, i + 1));
             smoothedValues[i] = movingAverage;
         }
 
-        // for first points which do not have enough precded points for a window
+        // for first points which do not have enough preceded points for a window
         for (int k = 0; k < movingAverageWindowSize - 1; k++) {
             smoothedValues[k] = 0.5 * (values[k] + smoothedValues[movingAverageWindowSize -1]);
         }
@@ -89,7 +101,7 @@ public class SmoothSample {
     }
 
     public static Boolean isNoise(final double value, final double mean, final double stdDev) {
-        return (value  > mean + 2 * stdDev) || (value < mean - 2 * stdDev);
+        return (value  > mean + DEVIATION_STEP * stdDev) || (value < mean - DEVIATION_STEP * stdDev);
     }
 
     public static double[] getSampleValuesArray(List<Sample> samples) {
