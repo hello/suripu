@@ -208,7 +208,7 @@ public class RingProcessor {
         final List<TrackerMotion> motionWithinProgressiveWindow = trackerMotionDAO.getBetween(accountId,
                 dataCollectionBeginTime, nowAlignedToStartOfMinute.plusMinutes(1));
 
-        if(motionWithinProgressiveWindow.size() == 0){
+        if(motionWithinProgressiveWindow.isEmpty()){
             LOGGER.info("No motion data in last {} minutes for Account ID: {}. Not computing progressive alarm.", PROGRESSIVE_MOTION_WINDOW_MIN, accountId);
             return Optional.absent();
         }
@@ -225,7 +225,7 @@ public class RingProcessor {
                     true);
             return Optional.of(progressiveRingTime);
         }
-        LOGGER.info("User deemed 'not awake' in last 5 minutes for Account ID: {}. Not computing progressive alarm.");
+        LOGGER.info("User deemed 'not awake' in last {} minutes for Account ID: {}. Not computing progressive alarm.", PROGRESSIVE_MOTION_WINDOW_MIN, accountId);
         return Optional.absent();
     }
 
