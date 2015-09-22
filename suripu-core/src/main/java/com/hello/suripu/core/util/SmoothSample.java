@@ -89,7 +89,7 @@ public class SmoothSample {
     public static double[] smooth(final double[] values, final Integer movingAverageWindowSize) {
         double[] smoothedValues = new double[values.length];
         for (int i = movingAverageWindowSize - 1; i < values.length; i++) {
-            final double movingAverage = new Mean().evaluate(Arrays.copyOfRange(values, i - movingAverageWindowSize + 1, i));
+            final double movingAverage = new Mean().evaluate(Arrays.copyOfRange(values, i - movingAverageWindowSize + 1, i + 1));
             smoothedValues[i] = movingAverage;
         }
 
