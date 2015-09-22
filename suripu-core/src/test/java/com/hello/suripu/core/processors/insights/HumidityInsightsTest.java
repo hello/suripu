@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.insights;
+package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
