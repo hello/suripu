@@ -42,6 +42,7 @@ public class RingProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(RingProcessor.class);
     private final static int SMART_ALARM_MIN_DELAY_MILLIS = 10 * DateTimeConstants.MILLIS_PER_MINUTE;  // This must be >= 2 * max possible data upload interval
     public final static int PROGRESSIVE_SAFE_GAP_MIN = 2;
+    public final static int PROGRESSIVE_MOTION_WINDOW_MIN = 5;
 
     public static class PipeDataSource implements DataSource<AmplitudeData> {
 
@@ -202,16 +203,17 @@ public class RingProcessor {
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
                                                                final TrackerMotionDAO trackerMotionDAO){
-        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(5);
+        final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(PROGRESSIVE_MOTION_WINDOW_MIN);
 
-        final List<TrackerMotion> motionFromLast5Minutes = trackerMotionDAO.getBetween(accountId,
+        final List<TrackerMotion> motionWithinProgressiveWindow = trackerMotionDAO.getBetween(accountId,
                 dataCollectionBeginTime, nowAlignedToStartOfMinute.plusMinutes(1));
 
-        if(motionFromLast5Minutes.size() == 0){
+        if(motionWithinProgressiveWindow.size() == 0){
+            LOGGER.info("No motion data in last {} minutes for Account ID: {}. Not computing progressive alarm.", PROGRESSIVE_MOTION_WINDOW_MIN, accountId);
             return Optional.absent();
         }
-        final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionFromLast5Minutes);
-        final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionFromLast5Minutes);
+        final List<AmplitudeData> amplitudeData = TrackerMotionUtils.trackerMotionToAmplitudeData(motionWithinProgressiveWindow);
+        final List<AmplitudeData> kickOffCounts = TrackerMotionUtils.trackerMotionToKickOffCounts(motionWithinProgressiveWindow);
 
         // TODO: CHANGE THRESHOLD WHEN NECESSARY
         if(SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts)){
@@ -223,6 +225,7 @@ public class RingProcessor {
                     true);
             return Optional.of(progressiveRingTime);
         }
+        LOGGER.info("User deemed 'not awake' in last 5 minutes for Account ID: {}. Not computing progressive alarm.");
         return Optional.absent();
     }
 
@@ -257,9 +260,11 @@ public class RingProcessor {
                             new DateTime(progressiveRingTimeOptional.get().expectedRingTimeUTC, userInfo.timeZone.get()),
                             Optional.of(new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get())),
                             userInfo.timeZone.get());
-                    LOGGER.info("Reset smart alarm with updated progressive smart alarm, original ring time {}, updated ring time {}",
+                    LOGGER.info("Reset smart alarm with updated progressive smart alarm, original ring time {}, updated ring time {} for device {}, account {} ",
                             new DateTime(nextRingTimeFromWorker.actualRingTimeUTC, userInfo.timeZone.get()),
-                            new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get()));
+                            new DateTime(progressiveRingTimeOptional.get().actualRingTimeUTC, userInfo.timeZone.get()),
+                            userInfo.deviceId,
+                            userInfo.accountId);
                     return progressiveRingTimeOptional.get();
                 }
 

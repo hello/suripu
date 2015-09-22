@@ -277,7 +277,6 @@ public class SleepCycleAlgorithm {
                 return true;
             }
         }
-
         return false;
 
     }
