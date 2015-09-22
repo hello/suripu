@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Sample;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,10 +13,11 @@ import java.util.List;
 
 public class SmoothSample {
     private static final Logger LOGGER = LoggerFactory.getLogger(SmoothSample.class);
-    public static int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_LOW_RESOLUTION = 2;
-    public static int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION = 3;
-    public static int DEFAULT_NOISE_LENGTH_TOLERANCE = 2;
-    private static int DEVIATION_STEP = 2;
+    public static final int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_LOW_RESOLUTION = 2;
+    public static final int DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION = 3;
+    public static final int DEFAULT_NOISE_LENGTH_TOLERANCE = 2;
+    private static final int DEVIATION_STEP = 2;
+    private static final int MAXIMUM_NOISE_CORRECTIONS = 5;
 
     public static List<Sample> convert(final List<Sample> samples) {
         if (samples.size() <= Math.max(DEFAULT_NOISE_LENGTH_TOLERANCE, DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION)) {
@@ -26,7 +28,7 @@ public class SmoothSample {
         final double mean = new Mean().evaluate(values);
         final double stdDev = new StandardDeviation().evaluate(values, mean);
 
-        final int movingAvgWindowSize =  samples.get(1).dateTime - samples.get(0).dateTime > 60000 ?
+        final int movingAvgWindowSize =  new Interval(samples.get(0).dateTime, samples.get(1).dateTime).toDuration().getStandardMinutes() > 5 ?
                 DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_LOW_RESOLUTION : DEFAULT_MOVING_AVERAGE_WINDOW_SIZE_FOR_HIGH_RESOLUTION;
         final double[] noiseFreeValues = smudgeNoise(values, mean, stdDev, DEFAULT_NOISE_LENGTH_TOLERANCE);
 
@@ -57,7 +59,6 @@ public class SmoothSample {
                 noiseFreeValues[i] = values[i];
                 continue;
             }
-            LOGGER.info("index {}: value {} is noise",i, values[i]);
             // replace noise value by average of surrounding good values
             for (int j = 1; j <= noiseLengthTolerance; j++) {
                 if (isNoise(values[i + j], mean, stdDev)) {
@@ -65,7 +66,7 @@ public class SmoothSample {
                 }
                 double averageSurroundingValues = (noiseFreeValues[i - 1] + values[i + j]) / 2;
                 int n = 0;
-                while (isNoise(averageSurroundingValues, mean, stdDev) & n <= 5) {
+                while (isNoise(averageSurroundingValues, mean, stdDev) & n <= MAXIMUM_NOISE_CORRECTIONS) {
                     n++;
                     averageSurroundingValues = 0.75 * averageSurroundingValues + 0.25 * mean;
                 }
