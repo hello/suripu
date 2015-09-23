@@ -57,7 +57,7 @@ public class BaseResource {
      * @param message
      * @return
      */
-    protected byte[] plainTextError(final Response.Status status, final String message) {
+    protected static byte[] plainTextError(final Response.Status status, final String message) {
         LOGGER.error("{} : {} ", status, (message.isEmpty()) ? "-" : message);
         throw new WebApplicationException(Response.status(status)
                 .entity(message)
@@ -65,7 +65,7 @@ public class BaseResource {
         );
     }
 
-    public void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
+    public static void throwPlainTextError(final Response.Status status, final String message) throws WebApplicationException {
         plainTextError(status, message);
     }
 

@@ -234,6 +234,14 @@ public class MergedUserInfoDynamoDB {
         return true;
     }
 
+
+    /**
+     * Sets next available color for Pill paired with Sense
+     * @param senseId
+     * @param accountId
+     * @param pillId
+     * @return
+     */
     public Optional<Color> setNextPillColor(final String senseId, final long accountId, final String pillId){
         final List<UserInfo> userInfoList = this.getInfo(senseId);
         final List<Color> availableColor = PillColorUtil.getPillColors();
@@ -257,6 +265,7 @@ public class MergedUserInfoDynamoDB {
             // WARNING: potential race condition here.
             final Color pillColor = availableColor.get(0);
             this.setPillColor(senseId, accountId, pillId, pillColor);
+            LOGGER.info("Pill {} set to color {} on sense {}", pillId, pillColor, senseId);
             return Optional.of(pillColor);
         }catch (AmazonServiceException ase){
             LOGGER.error("Set pill {} color for sense {} failed: {}", pillId, senseId, ase.getErrorMessage());

@@ -1,7 +1,9 @@
 package com.hello.suripu.service;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.service.registration.FailedToSignException;
 import org.apache.commons.codec.binary.Hex;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +88,7 @@ public class SignedMessage {
         return new SignedMessage(pb, IV, sig, "");
     }
 
-    public Optional<Error> validateWithKey(byte[] key) {
+    public Optional<Error> validateWithKey(@NotNull byte[] key) {
         final StringBuilder sb = new StringBuilder();
 
         try {
@@ -157,9 +159,7 @@ public class SignedMessage {
         r.nextBytes(IV);
         LOGGER.trace("random IV = {}", Hex.encodeHex(IV));
 
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        try {
+        try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
 
             final MessageDigest md = MessageDigest.getInstance("SHA1");
             md.update(body);
@@ -207,14 +207,17 @@ public class SignedMessage {
             LOGGER.error(e.getMessage());
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
-        } finally {
-            try {
-                byteArrayOutputStream.close();
-            } catch(IOException exception) {
-                LOGGER.warn("Failed closing stream");
-            }
         }
 
         return Optional.absent();
+    }
+
+    public static byte[] signUnchecked(final byte[] body, final byte[] key) {
+        final Optional<byte[]> bytes = sign(body, key);
+        if(bytes.isPresent()) {
+            return bytes.get();
+        }
+        throw new FailedToSignException("Failed to sign");
+
     }
 }
