@@ -7,21 +7,29 @@ public class BedLightIntensityMsgEN {
 
     public static Text getGoodHabits(final int morningRatio) {
         return new Text("Early bird gets the worm",
-                String.format("good job"));
+                "You're exposed to less light at night than you are in the morning, which is ideal. " +
+                        "This keeps your biological clock calibrated, " +
+                        "and makes it easier to fall asleep at night.");
     }
 
     public static Text getMoreThanOne(final int nightRatio) {
         return new Text("Who's on first?",
-                String.format("don't be bad"));
+                "You're exposed to a bit more light at night than you are in the morning. " +
+                        "This can upset your biological clock, and make it harder to fall asleep at night. " +
+                        "Try dimming your lights at night, and opening your drapes to let in some natural light in the morning.");
     }
 
     public static Text getMoreThanTwo(final int nightRatio) {
         return new Text("What happens once will never...",
-                String.format("don't be bad"));
+                "You're exposed to more light at night than you are in the morning. " +
+                        "This can upset your biological clock, and make it harder to fall asleep at night. " +
+                        "Try dimming your lights at night, and opening your drapes to let in some natural light in the morning.");
     }
     public static Text getMoreThanThree(final int nightRatio) {
         return new Text("Three time's the charm",
-                String.format("don't be bad"));
+                "You're exposed to significantly more light at night than you are in the morning. " +
+                        "This can upset your biological clock, and make it much harder to fall asleep at night. " +
+                        "Try dimming your lights at night, and opening your drapes to let in some natural light in the morning.");
     }
 
 
