@@ -53,4 +53,8 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         return flipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasAlarmWorkerDropIfTooOldEnabled(final String senseId) {
+        return flipper.deviceFeatureActive(FeatureFlipper.ALARM_WORKER_DROP_IF_TOO_OLD, senseId, Collections.EMPTY_LIST);
+    }
+
 }

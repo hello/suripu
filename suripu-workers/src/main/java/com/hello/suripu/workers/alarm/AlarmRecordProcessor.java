@@ -13,6 +13,8 @@ import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import com.yammer.metrics.core.Histogram;
+import com.yammer.metrics.Metrics;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,8 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
 
+    private final Histogram recordAge;
+
     public AlarmRecordProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                 final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
@@ -46,11 +50,20 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         this.configuration = configuration;
 
+        // Create a histogram of the ages of records, biased towards newer values.
+        this.recordAge = Metrics.defaultRegistry().newHistogram(AlarmRecordProcessor.class, "records", "record-age", true);
     }
 
     @Override
     public void initialize(String s) {
         LOGGER.info("AlarmRecordProcessor initialized: " + s);
+    }
+
+    private Boolean isRecordTooOld(long recordTimestamp) {
+        long currentRecordAgeMillis = DateTime.now().getMillis() - recordTimestamp;
+        recordAge.update(currentRecordAgeMillis);
+        long maxRecordAgeMillis = configuration.getMaximumRecordAgeMinutes() * 60 * 1000;
+        return currentRecordAgeMillis > maxRecordAgeMillis;
     }
 
     @Override
@@ -68,6 +81,10 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
                 }
 
                 final String senseId = pb.getData().getDeviceId();
+
+                // If the record is too old, don't process it so that we can catch up to newer messages.
+                if (isRecordTooOld(pb.getReceivedAt()) && hasAlarmWorkerDropIfTooOldEnabled(senseId)) continue;
+
                 senseIds.add(senseId);
 
 
@@ -91,6 +108,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
                         flipper
                 );
             }catch (Exception ex){
+                // Currently catching all exceptions, which means that we could checkpoint after a failure.
                 LOGGER.error("Update next ring time for sense {} failed at {}, error {}",
                         senseId,
                         DateTime.now(),
@@ -107,6 +125,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
+        // Optimization in cases where we have very few new messages
         if(records.size() < 5) {
             LOGGER.info("Batch size was small. Sleeping for 10s");
             try {

@@ -48,6 +48,8 @@ app_name: AlarmWorkerProd
 
 max_records: 1000
 
+maximum_record_age_minutes: 15
+
 # Logging settings.
 logging:
 
