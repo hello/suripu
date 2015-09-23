@@ -3,8 +3,9 @@ package com.hello.suripu.core.util;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Device;
+import com.hello.suripu.core.models.device.v2.Pill;
 
-import java.awt.Color;
+import java.awt.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -84,5 +85,9 @@ public class PillColorUtil {
         }
 
         return BLUE;
+    }
+
+    public static Pill.Color displayPillColor(int color) {
+        return Pill.Color.fromDeviceColor(displayDeviceColor(color));
     }
 }

@@ -226,7 +226,7 @@ public class DeviceResources extends BaseResource {
                 Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatusLastHour(sense.internalDeviceId);
                 if (!senseStatusOptional.isPresent()) {
                     LOGGER.warn("No data in the last hour for device id = {} (external id = {}) for account_id = {}", sense.internalDeviceId, sense.externalDeviceId, sense.accountId);
-                    senseStatusOptional = this.deviceDataDAO.senseStatus(sense.internalDeviceId);
+                    senseStatusOptional = this.deviceDataDAO.senseStatusLastWeek(sense.internalDeviceId);
                 }
                 devices.add(senseDeviceStatusToSenseDevice(sense, senseStatusOptional));
             }
