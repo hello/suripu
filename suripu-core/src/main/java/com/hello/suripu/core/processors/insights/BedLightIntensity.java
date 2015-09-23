@@ -109,9 +109,8 @@ public class BedLightIntensity {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(0);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
-//        Change to faster query after other PR merge
 //        TODO: add safeguard for patchy missing data
-        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, 0, queryStartTime, queryEndTime, startHour, endHour);
+        return deviceDataDAO.getBetweenHourDateByTSSameDay(accountId, deviceId, queryStartTime, queryEndTime, startHour, endHour);
     }
 
     private static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
