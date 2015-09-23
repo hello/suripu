@@ -62,15 +62,6 @@ public class HumidityInsightsTest {
     }
 
     @Test
-    public void test_processData_veryLowHumidity() {
-        final Optional<InsightCard> result = Humidity.processData(FAKE_ACCOUNT_ID, 0);
-        final String title = result.get().title;
-        final String expectedTitle = HumidityMsgEN.getVeryLowHumidity().title;
-
-        assertThat(title, is(expectedTitle));
-    }
-
-    @Test
     public void test_processData_lowHumidity() {
         final Optional<InsightCard> result = Humidity.processData(FAKE_ACCOUNT_ID, 25);
         final String title = result.get().title;
@@ -93,15 +84,6 @@ public class HumidityInsightsTest {
         final Optional<InsightCard> result = Humidity.processData(FAKE_ACCOUNT_ID, 65);
         final String title = result.get().title;
         final String expectedTitle = HumidityMsgEN.getHighHumidity().title;
-
-        assertThat(title, is(expectedTitle));
-    }
-
-    @Test
-    public void test_processData_veryHighHumidity() {
-        final Optional<InsightCard> result = Humidity.processData(FAKE_ACCOUNT_ID, 100);
-        final String title = result.get().title;
-        final String expectedTitle = HumidityMsgEN.getVeryHighHumidity().title;
 
         assertThat(title, is(expectedTitle));
     }

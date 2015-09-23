@@ -63,20 +63,14 @@ public class Humidity {
     public static Optional<InsightCard> processData(final Long accountId, final Integer medianHumidity) {
 
         final Text text;
-        if (medianHumidity < ALERT_HUMIDITY_LOW) {
-            text = HumidityMsgEN.getVeryLowHumidity();
-        }
-        else if (medianHumidity < IDEAL_HUMIDITY_MIN) {
+        if (medianHumidity < IDEAL_HUMIDITY_MIN) {
             text = HumidityMsgEN.getLowHumidity();
         }
         else if (medianHumidity < IDEAL_HUMIDITY_MAX) {
             text = HumidityMsgEN.getIdealHumidity();
         }
-        else if (medianHumidity < ALERT_HUMIDITY_HIGH) {
-            text = HumidityMsgEN.getHighHumidity();
-        }
         else {
-            text = HumidityMsgEN.getVeryHighHumidity();
+            text = HumidityMsgEN.getHighHumidity();
         }
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
