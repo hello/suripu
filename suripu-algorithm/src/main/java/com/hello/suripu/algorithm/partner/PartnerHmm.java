@@ -146,17 +146,18 @@ public class PartnerHmm {
 
 
         //these numbers are made up
+        final double partnerWeight = 1e-10;
         final List<Double> probsOfMeOnBed = Lists.newArrayList();
         probsOfMeOnBed.add(0.3);
-        probsOfMeOnBed.add(0.3999);
-        probsOfMeOnBed.add(0.0001);
+        probsOfMeOnBed.add(0.4 - partnerWeight);
+        probsOfMeOnBed.add(partnerWeight);
         probsOfMeOnBed.add(0.3);
 
 
         final List<Double> probsOfYouOnBed = Lists.newArrayList();
         probsOfYouOnBed.add(0.3);
-        probsOfYouOnBed.add(0.0001);
-        probsOfYouOnBed.add(0.3999);
+        probsOfYouOnBed.add(partnerWeight);
+        probsOfYouOnBed.add(0.4 - partnerWeight);
         probsOfYouOnBed.add(0.3);
 
         final List<Double> probsItsAParty = Lists.newArrayList();
