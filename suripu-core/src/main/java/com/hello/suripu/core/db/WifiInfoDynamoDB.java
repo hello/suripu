@@ -79,7 +79,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
     }
 
     @Override
-    public Map<String, Optional<WifiInfo>> getBatchStrict(List<String> senseIds) {
+    public Map<String, Optional<WifiInfo>> getBatchStrict(final List<String> senseIds) {
         final Map<String, Optional<WifiInfo>> wifiInfoMap = Maps.newHashMap();
         for (final String senseId : senseIds) {
             wifiInfoMap.put(senseId, Optional.<WifiInfo>absent());

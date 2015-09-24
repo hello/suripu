@@ -9,12 +9,11 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
-import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -28,8 +27,6 @@ import javax.ws.rs.core.Response;
 
 @Path("/v2/devices")
 public class DeviceResource extends BaseResource {
-    @Inject
-    RolloutClient feature;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceResource.class);
 
@@ -65,7 +62,7 @@ public class DeviceResource extends BaseResource {
     @Timed
     @Path("/pill/{pill_id}")
     public Response unregisterPill(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
-                                   @PathParam("pill_id") String pillId) {
+                                   @PathParam("pill_id") final String pillId) {
 
         deviceProcessor.unregisterPill(accessToken.accountId, pillId);
         return Response.noContent().build();
@@ -76,10 +73,11 @@ public class DeviceResource extends BaseResource {
     @Timed
     @Path("/sense/{sense_id}")
     public Response unregisterSense(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
-                                    @PathParam("sense_id") String senseId) {
+                                    @PathParam("sense_id") final String senseId) {
         deviceProcessor.unregisterSense(accessToken.accountId, senseId);
         return Response.noContent().build();
     }
+
 
     @DELETE
     @Timed
@@ -91,14 +89,13 @@ public class DeviceResource extends BaseResource {
     }
 
 
-
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/wifi_info")
     public Response updateWifiInfo(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
-                                   final WifiInfo wifiInfo){
-        deviceProcessor.updateWifiInfo(accessToken.accountId, wifiInfo);
+                                   @Valid final WifiInfo wifiInfo){
+        deviceProcessor.upsertWifiInfo(accessToken.accountId, wifiInfo);
         return Response.noContent().build();
     }
 }

@@ -21,7 +21,6 @@ import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.util.PillColorUtil;
-import com.librato.rollout.RolloutClient;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -29,7 +28,6 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -37,19 +35,16 @@ import java.util.Map;
 
 public class DeviceProcessor extends FeatureFlippedProcessor {
 
-    @Inject
-    RolloutClient feature;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceProcessor.class);
 
-    public final DeviceDAO deviceDAO;
-    public final DeviceDataDAO deviceDataDAO;
-    public final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    public final SensorsViewsDynamoDB sensorsViewsDynamoDB;
-    public final PillHeartBeatDAO pillHeartBeatDAO;
-    public final TrackerMotionDAO trackerMotionDAO;
-    public final WifiInfoDAO wifiInfoDAO;
-    public final SenseColorDAO senseColorDAO;
+    private final DeviceDAO deviceDAO;
+    private final DeviceDataDAO deviceDataDAO;
+    private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
+    private  final SensorsViewsDynamoDB sensorsViewsDynamoDB;
+    private final PillHeartBeatDAO pillHeartBeatDAO;
+    private final TrackerMotionDAO trackerMotionDAO;
+    private final WifiInfoDAO wifiInfoDAO;
+    private final SenseColorDAO senseColorDAO;
 
 
     private DeviceProcessor(final DeviceDAO deviceDAO, final DeviceDataDAO deviceDataDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final PillHeartBeatDAO pillHeartBeatDAO, final TrackerMotionDAO trackerMotionDAO, final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO) {
@@ -63,6 +58,12 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         this.senseColorDAO = senseColorDAO;
     }
 
+    /**
+     * Retrieve pairing info which contains sense ID and number of senses paired
+     *
+     * @param accountId internal account ID
+     * @return optional pairing info
+     */
     public Optional<PairingInfo> getPairingInfo(final Long accountId) {
         final Optional<DeviceAccountPair> senseAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         if(!senseAccountPairOptional.isPresent()) {
@@ -74,6 +75,13 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         return Optional.of(PairingInfo.create(senseAccountPair.externalDeviceId, pairs.size()));
     }
 
+
+    /**
+     * Unpair a pill from an account
+     *
+     * @param accountId internal account ID
+     * @param pillId external pill ID
+     */
     public void unregisterPill(final Long accountId, final String pillId) {
         final Integer numRows = deviceDAO.deletePillPairing(pillId, accountId);
         if(numRows == 0) {
@@ -98,6 +106,13 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         }
     }
 
+
+    /**
+     * Unpair a sense from an account
+     *
+     * @param accountId internal account ID
+     * @param senseId external sense ID
+     */
     public void unregisterSense(final Long accountId, final String senseId) {
         final Integer numRows = deviceDAO.deleteSensePairing(senseId, accountId);
         final Optional<UserInfo> alarmInfoOptional = this.mergedUserInfoDynamoDB.unlinkAccountToDevice(accountId, senseId);
@@ -111,6 +126,13 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         }
     }
 
+
+    /**
+     * Factory reset which means unpair all pills from input account, and unpair all account associated with input sense
+     *
+     * @param accountId internal account ID
+     * @param senseId external sense ID
+     */
     public void factoryReset(final Long accountId, final String senseId) {
         final List<UserInfo> pairedUsers = mergedUserInfoDynamoDB.getInfo(senseId);
         try {
@@ -118,10 +140,10 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
                 @Override
                 public Void inTransaction(final DeviceDAO transactional, final TransactionStatus status) throws Exception {
                     final Integer pillDeleted = transactional.deletePillPairingByAccount(accountId);
-                    LOGGER.info("Factory reset delete {} Pills linked to account {}", pillDeleted, accountId);
+                    LOGGER.info("Factory reset - delete {} Pills linked to account {}", pillDeleted, accountId);
 
                     final Integer accountUnlinked = transactional.unlinkAllAccountsPairedToSense(senseId);
-                    LOGGER.info("Factory reset delete {} accounts linked to Sense {}", accountUnlinked, accountId);
+                    LOGGER.info("Factory reset - delete {} accounts linked to Sense {}", accountUnlinked, senseId);
 
                     for (final UserInfo userInfo : pairedUsers) {
                         try {
@@ -143,7 +165,14 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         }
     }
 
-    public void updateWifiInfo(final Long accountId, final WifiInfo wifiInfo) {
+
+    /**
+     * Update / insert wifi info for a sense
+     *
+     * @param accountId internal account ID
+     * @param wifiInfo container of wifi specs
+     */
+    public void upsertWifiInfo(final Long accountId, final WifiInfo wifiInfo) {
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
 
         if (deviceAccountPairOptional.isPresent()) {
@@ -157,60 +186,13 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         }
     }
 
-    public static class Builder {
-        private DeviceDAO deviceDAO;
-        private DeviceDataDAO deviceDataDAO;
-        private MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-        private SensorsViewsDynamoDB sensorsViewsDynamoDB;
-        private PillHeartBeatDAO pillHeartBeatDAO;
-        private TrackerMotionDAO trackerMotionDAO;
-        private WifiInfoDAO wifiInfoDAO;
-        private SenseColorDAO senseColorDAO;
 
-        public Builder withDeviceDAO(final DeviceDAO deviceDAO) {
-            this.deviceDAO = deviceDAO;
-            return this;
-        }
-
-        public Builder withDeviceDataDAO(final DeviceDataDAO deviceDataDAO) {
-            this.deviceDataDAO = deviceDataDAO;
-            return this;
-        }
-
-        public Builder withMergedUserInfoDynamoDB(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
-            this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
-            return this;
-        }
-
-        public Builder withSensorsViewDynamoDB(final SensorsViewsDynamoDB sensorsViewDynamoDB) {
-            this.sensorsViewsDynamoDB = sensorsViewDynamoDB;
-            return this;
-        }
-
-        public Builder withPillHeartbeatDAO(final PillHeartBeatDAO pillHeartbeatDAO) {
-            this.pillHeartBeatDAO = pillHeartbeatDAO;
-            return this;
-        }
-
-        public Builder withTrackerMotionDAO(final TrackerMotionDAO trackerMotionDAO) {
-            this.trackerMotionDAO = trackerMotionDAO;
-            return this;
-        }
-
-        public Builder withWifiInfoDAO(final WifiInfoDAO wifiInfoDAO) {
-            this.wifiInfoDAO = wifiInfoDAO;
-            return this;
-        }
-
-        public Builder withSenseColorDAO(final SenseColorDAO senseColorDAO) {
-            this.senseColorDAO = senseColorDAO;
-            return this;
-        }
-
-        public DeviceProcessor build() {
-            return new DeviceProcessor(deviceDAO, deviceDataDAO, mergedUserInfoDynamoDB, sensorsViewsDynamoDB, pillHeartBeatDAO, trackerMotionDAO, wifiInfoDAO, senseColorDAO);
-        }
-    }
+    /**
+     * Get all senses and pills for an account
+     *
+     * @param accountId internal account ID
+     * @return a Devices object which contains list of all associated senses and pills
+     */
     public Devices getAllDevices(final Long accountId) {
         final List<DeviceAccountPair> senseAccountPairs = deviceDAO.getSensesForAccountId(accountId);
         final List<DeviceAccountPair> pillAccountPairs = deviceDAO.getPillsForAccountId(accountId);
@@ -220,7 +202,7 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         return new Devices(getSenses(senseAccountPairs, wifiInfoMap), getPills(pillAccountPairs, pillColorOptional));
     }
 
-    public List<Sense> getSenses(final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
+    private List<Sense> getSenses(final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
         final List<Sense> senses = Lists.newArrayList();
 
         for (final DeviceAccountPair senseAccountPair : senseAccountPairs) {
@@ -232,7 +214,7 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         return senses;
     }
 
-    public List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional) {
+    private List<Pill> getPills(final List<DeviceAccountPair> pillAccountPairs, final Optional<Pill.Color> pillColorOptional) {
         final List<Pill> pills = Lists.newArrayList();
         for (final DeviceAccountPair pillAccountPair : pillAccountPairs) {
             final Optional<DeviceStatus> pillStatusOptional = retrievePillStatus(pillAccountPair);
@@ -295,6 +277,61 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
             senseIds.add(senseAccountPair.externalDeviceId);
         }
         return wifiInfoDAO.getBatchStrict(senseIds);
+    }
+
+    public static class Builder {
+        private DeviceDAO deviceDAO;
+        private DeviceDataDAO deviceDataDAO;
+        private MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
+        private SensorsViewsDynamoDB sensorsViewsDynamoDB;
+        private PillHeartBeatDAO pillHeartBeatDAO;
+        private TrackerMotionDAO trackerMotionDAO;
+        private WifiInfoDAO wifiInfoDAO;
+        private SenseColorDAO senseColorDAO;
+
+        public Builder withDeviceDAO(final DeviceDAO deviceDAO) {
+            this.deviceDAO = deviceDAO;
+            return this;
+        }
+
+        public Builder withDeviceDataDAO(final DeviceDataDAO deviceDataDAO) {
+            this.deviceDataDAO = deviceDataDAO;
+            return this;
+        }
+
+        public Builder withMergedUserInfoDynamoDB(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB) {
+            this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
+            return this;
+        }
+
+        public Builder withSensorsViewDynamoDB(final SensorsViewsDynamoDB sensorsViewDynamoDB) {
+            this.sensorsViewsDynamoDB = sensorsViewDynamoDB;
+            return this;
+        }
+
+        public Builder withPillHeartbeatDAO(final PillHeartBeatDAO pillHeartbeatDAO) {
+            this.pillHeartBeatDAO = pillHeartbeatDAO;
+            return this;
+        }
+
+        public Builder withTrackerMotionDAO(final TrackerMotionDAO trackerMotionDAO) {
+            this.trackerMotionDAO = trackerMotionDAO;
+            return this;
+        }
+
+        public Builder withWifiInfoDAO(final WifiInfoDAO wifiInfoDAO) {
+            this.wifiInfoDAO = wifiInfoDAO;
+            return this;
+        }
+
+        public Builder withSenseColorDAO(final SenseColorDAO senseColorDAO) {
+            this.senseColorDAO = senseColorDAO;
+            return this;
+        }
+
+        public DeviceProcessor build() {
+            return new DeviceProcessor(deviceDAO, deviceDataDAO, mergedUserInfoDynamoDB, sensorsViewsDynamoDB, pillHeartBeatDAO, trackerMotionDAO, wifiInfoDAO, senseColorDAO);
+        }
     }
 
 }

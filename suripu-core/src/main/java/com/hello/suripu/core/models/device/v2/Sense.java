@@ -13,6 +13,7 @@ public class Sense {
     public enum Color {
         BLACK("BLACK"),
         WHITE("WHITE");
+
         private final String value;
         Color(final String value) {
             this.value = value;

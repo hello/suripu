@@ -23,7 +23,7 @@ public abstract class SenseColorDAOSQLImpl implements SenseColorDAO {
     public abstract Optional<Device.Color> getColorForSense(@Bind("sense_id") final String senseId);
 
     @SingleValueResult
-    @RegisterMapper(DeviceColorMapper.class)
+    @RegisterMapper(SenseColorMapper.class)
     @SqlQuery("SELECT * FROM sense_colors WHERE sense_id = :sense_id LIMIT 1")
     public abstract Optional<Sense.Color> get(@Bind("sense_id") final String senseId);
 
