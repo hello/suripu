@@ -8,7 +8,7 @@ import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import org.joda.time.DateTime;
 
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by pangwu on 9/23/14.
@@ -20,7 +20,7 @@ public class AlarmRecordProcessorFactory implements IRecordProcessorFactory {
     private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
-    private final HashMap<String, DateTime> senseIdLastProcessed;
+    private final Map<String, DateTime> senseIdLastProcessed;
 
 
     public AlarmRecordProcessorFactory(
@@ -29,7 +29,7 @@ public class AlarmRecordProcessorFactory implements IRecordProcessorFactory {
             final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
             final TrackerMotionDAO trackerMotionDAO,
             final AlarmWorkerConfiguration configuration,
-            final HashMap<String, DateTime> senseIdLastProcessed) {
+            final Map<String, DateTime> senseIdLastProcessed) {
 
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;

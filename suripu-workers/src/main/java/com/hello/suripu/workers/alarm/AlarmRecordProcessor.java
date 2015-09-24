@@ -13,16 +13,16 @@ import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
-import com.yammer.metrics.core.Histogram;
 import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -40,14 +40,14 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final Histogram recordAgesMinutes;
     private final Histogram alarmUpdateLatencyHistogram;
 
-    private final HashMap<String, DateTime> senseIdLastProcessed;
+    private final Map<String, DateTime> senseIdLastProcessed;
 
     public AlarmRecordProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                 final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                 final TrackerMotionDAO trackerMotionDAO,
                                 final AlarmWorkerConfiguration configuration,
-                                final HashMap<String, DateTime> senseIdLastProcessed){
+                                final Map<String, DateTime> senseIdLastProcessed){
 
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.scheduledRingTimeHistoryDAODynamoDB = scheduledRingTimeHistoryDAODynamoDB;
