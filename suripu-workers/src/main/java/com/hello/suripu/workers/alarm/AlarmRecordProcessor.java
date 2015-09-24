@@ -20,6 +20,7 @@ import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,12 +38,16 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final AlarmWorkerConfiguration configuration;
 
     private final Histogram recordAgesMinutes;
+    private final Histogram alarmUpdateLatencyHistogram;
+
+    private final HashMap<String, DateTime> senseIdLastProcessed;
 
     public AlarmRecordProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                 final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                 final TrackerMotionDAO trackerMotionDAO,
-                                final AlarmWorkerConfiguration configuration){
+                                final AlarmWorkerConfiguration configuration,
+                                final HashMap<String, DateTime> senseIdLastProcessed){
 
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.scheduledRingTimeHistoryDAODynamoDB = scheduledRingTimeHistoryDAODynamoDB;
@@ -51,8 +56,12 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         this.configuration = configuration;
 
+        this.senseIdLastProcessed = senseIdLastProcessed;
+
         // Create a histogram of the ages of records in minutes, biased towards newer values.
         this.recordAgesMinutes = Metrics.defaultRegistry().newHistogram(AlarmRecordProcessor.class, "records", "record-age-minutes", true);
+        // Histogram of the time delta in ms from the last time a given senseId was processed by this worker.
+        this.alarmUpdateLatencyHistogram = Metrics.defaultRegistry().newHistogram(AlarmRecordProcessor.class, "alarms", "alarm-update-latency-millis", true);
     }
 
     @Override
@@ -65,6 +74,15 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         final int currentRecordAgeMinutes = interval.toPeriod().getMinutes();
         recordAgesMinutes.update(currentRecordAgeMinutes);
         return currentRecordAgeMinutes > configuration.getMaximumRecordAgeMinutes();
+    }
+
+    private void updateLatencyHistogram(final String senseId, final DateTime newDateTime) {
+        if (senseIdLastProcessed.containsKey(senseId)) {
+            final DateTime lastProcessedTime = senseIdLastProcessed.get(senseId);
+            final long deltaSinceSenseIdLastProcessed = new Interval(lastProcessedTime, newDateTime).toDurationMillis();
+            alarmUpdateLatencyHistogram.update(deltaSinceSenseIdLastProcessed);
+        }
+        senseIdLastProcessed.put(senseId, newDateTime);
     }
 
     @Override
@@ -99,6 +117,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
         for(final String senseId : senseIds) {
             try {
+                updateLatencyHistogram(senseId, DateTime.now());
                 RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                         this.scheduledRingTimeHistoryDAODynamoDB,
                         this.smartAlarmLoggerDynamoDB,

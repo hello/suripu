@@ -31,11 +31,13 @@ import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -125,11 +127,14 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
 
+        final HashMap<String, DateTime> senseIdLastProcessed = new HashMap<>();
+
         final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(mergedUserInfoDynamoDB,
                 scheduledRingTimeHistoryDAODynamoDB,
                 smartAlarmLoggerDynamoDB,
                 trackerMotionDAO,
-                configuration);
+                configuration,
+                senseIdLastProcessed);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }
