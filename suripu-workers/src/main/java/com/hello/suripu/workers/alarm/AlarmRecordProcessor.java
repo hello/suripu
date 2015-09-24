@@ -61,8 +61,8 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     }
 
     private Boolean isRecordTooOld(DateTime endDateTime, DateTime recordDateTime) {
-        Interval interval = new Interval(recordDateTime, endDateTime);
-        int currentRecordAgeMinutes = interval.toPeriod().getMinutes();
+        final Interval interval = new Interval(recordDateTime, endDateTime);
+        final int currentRecordAgeMinutes = interval.toPeriod().getMinutes();
         recordAgesMinutes.update(currentRecordAgeMinutes);
         return currentRecordAgeMinutes > configuration.getMaximumRecordAgeMinutes();
     }
