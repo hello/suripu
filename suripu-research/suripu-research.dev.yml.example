@@ -137,12 +137,20 @@ timeline_log_db:
   region: us-east-1
   table_name: timeline_log
 
-hmm_bayesnet_priors:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+feature_extraction_models:
+#  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  endpoint : http://localhost:7777
   region: us-east-1
-  table_name: hmm_bayesnet_priors
+  table_name: feature_extraction_models
 
-hmm_bayesnet_models:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+online_hmm_models:
+#  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  endpoint : http://localhost:7777
   region: us-east-1
-  table_name: hmm_bayesnet_models
+  table_name: online_hmm_models
+
+calibration:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: calibration
+

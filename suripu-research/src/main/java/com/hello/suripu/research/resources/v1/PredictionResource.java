@@ -7,21 +7,25 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
+import com.hello.suripu.algorithm.partner.PartnerHmm;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.sleep.Vote;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.OnlineHmm;
+import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
-import com.hello.suripu.core.models.BayesNetHmmMultipleModelsPriors;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -29,6 +33,7 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -40,13 +45,11 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.hello.suripu.core.util.FeatureExtractionModelData;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.HmmBayesNetData;
-import com.hello.suripu.core.util.HmmBayesNetPredictor;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
-import com.hello.suripu.core.util.SleepHmmBayesNetSensorDataBinning;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SoundUtils;
 import com.hello.suripu.core.util.TimelineUtils;
@@ -104,8 +107,8 @@ public class PredictionResource extends BaseResource {
     private final TimelineProcessor timelineProcessor;
     private final TimelineUtils timelineUtils;
     private final SenseColorDAO senseColorDAO;
-    private final BayesNetModelDAO modelDAO;
-    private final BayesNetHmmModelPriorsDAO priorsDAO;
+    private final FeatureExtractionModelsDAO featureExtractionModelsDAO;
+    private final OnlineHmmModelsDAO priorsDAO;
 
     public PredictionResource(final AccountDAO accountDAO,
                               final TrackerMotionDAO trackerMotionDAO,
@@ -116,8 +119,8 @@ public class PredictionResource extends BaseResource {
                               final FeedbackDAO feedbackDAO,
                               final TimelineProcessor timelineProcessor,
                               final SenseColorDAO senseColorDAO,
-                              final BayesNetModelDAO modelDAO,
-                              final BayesNetHmmModelPriorsDAO priorsDAO) {
+                              final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                              final OnlineHmmModelsDAO priorsDAO) {
 
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
@@ -129,7 +132,7 @@ public class PredictionResource extends BaseResource {
         this.timelineUtils = new TimelineUtils();
         this.feedbackDAO = feedbackDAO;
         this.senseColorDAO = senseColorDAO;
-        this.modelDAO = modelDAO;
+        this.featureExtractionModelsDAO = featureExtractionModelsDAO;
         this.priorsDAO = priorsDAO;
     }
 
@@ -144,36 +147,38 @@ public class PredictionResource extends BaseResource {
         return Collections.EMPTY_LIST;
     }
 
-    private ImmutableList<Event> getBayesEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
-                                              final AllSensorSampleList allSensorSampleList, final List<TrackerMotion> myMotion, final List<TrackerMotion> partnerMotion) {
+
+    private ImmutableList<Event> getOnlineHmmEvents(final DateTime dateOfNight, final DateTime startTime, final DateTime endTime, final long accountId,
+                                                    final OneDaysSensorData oneDaysSensorData) {
 
         //get model from DB
-        final HmmBayesNetData bayesNetData = modelDAO.getLatestModelForDate(accountId, targetDate, Optional.<UUID>absent());
+        final FeatureExtractionModelData featureExtractor = featureExtractionModelsDAO.getLatestModelForDate(accountId, dateOfNight, Optional.<UUID>absent());
 
-        if (bayesNetData.isValid()) {
+        if (featureExtractor.isValid()) {
 
             //get priors from DB
-            final Optional<BayesNetHmmMultipleModelsPriors> modelsPriorsOptional = priorsDAO.getModelPriorsByAccountIdAndDate(accountId, targetDate);
 
-            if (modelsPriorsOptional.isPresent()) {
-                //update priors
-                bayesNetData.updateModelPriors(modelsPriorsOptional.get().modelPriorList);
-            }
-
-            //do not write priors evar
-            
-            //get the predictor, which will turn the model output into events via some kind of segmenter
-            final HmmBayesNetPredictor predictor = new HmmBayesNetPredictor(bayesNetData.getDeserializedData(), Optional.<UUID>absent());
+            final OnlineHmm onlineHmm = new OnlineHmm(featureExtractionModelsDAO,priorsDAO,Optional.<UUID>absent());
 
             //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
-            final List<Event> events = predictor.getBayesNetHmmEvents(targetDate, endDate, currentTimeMillis, accountId, allSensorSampleList, myMotion,partnerMotion,myMotion.get(0).offsetMillis);
+            final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(accountId, dateOfNight, startTime, endTime, oneDaysSensorData, false, false);
 
-            return ImmutableList.copyOf(events);
+            final List<Event> predictions = Lists.newArrayList();
+            for (final Optional<Event> event : events.toList()) {
+                if (!event.isPresent()) {
+                    continue;
+                }
+
+                predictions.add(event.get());
+            }
+
+            return ImmutableList.copyOf(predictions);
         }
 
         return ImmutableList.copyOf(Collections.EMPTY_LIST);
 
     }
+
 
     /*  Get sleep/wake events from the hidden markov model  */
     private ImmutableList<Event> getHmmEvents(final DateTime targetDate, final DateTime endDate,final long  currentTimeMillis,final long accountId,
@@ -344,7 +349,7 @@ public class PredictionResource extends BaseResource {
         final DateTime endDate = targetDate.plusHours(16);
 
 
-        Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate);
+        Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,false);
 
         if (!result.isPresent()) {
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
@@ -427,7 +432,7 @@ public class PredictionResource extends BaseResource {
         sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 targetDate.minusMillis(tzOffsetMillis).getMillis(),
                 endDate.minusMillis(tzOffsetMillis).getMillis(),
-                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color);
+                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE, color, Optional.<Calibration>absent());
 
 
         return new SensorData(sensorData,myMotions,partnerMotions,motions);
@@ -474,28 +479,28 @@ public class PredictionResource extends BaseResource {
 
 
         //get model from DB
-        final HmmBayesNetData bayesNetData = modelDAO.getLatestModelForDate(accountId, targetDate, Optional.<UUID>absent());
+        final FeatureExtractionModelData featureExtractionModelData = featureExtractionModelsDAO.getLatestModelForDate(accountId, targetDate, Optional.<UUID>absent());
 
-        if (!bayesNetData.isValid()) {
+        if (!featureExtractionModelData.isValid()) {
             throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                     .entity(new JsonError(204, "model data was not valid")).build());
         }
 
-        final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(allData.senseSensorData,allData.myMotionFiltered,allData.partnerMotion,
-                bayesNetData.getDeserializedData().params,startTimeUtc,endTimeUTc,tzOffset);
+        final Optional<OnlineHmmSensorDataBinning.BinnedData> binnedDataOptional = OnlineHmmSensorDataBinning.getBinnedSensorData(allData.senseSensorData, allData.myMotionFiltered, allData.partnerMotion,
+                featureExtractionModelData.getDeserializedData().params, startTimeUtc, endTimeUTc, tzOffset);
 
         if (!binnedDataOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                     .entity(new JsonError(204, "unable to get binned data")).build());
         }
 
-        SleepHmmBayesNetSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
+        OnlineHmmSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
         final Integer [] possibleEndStates = {0};
 
         final Map<String,List<Integer>> pathsByModelId = Maps.newHashMap();
         final Map<String,Integer> numStates = Maps.newHashMap();
 
-        final Map<String,HiddenMarkovModel> hmmByModelName = bayesNetData.getDeserializedData().sensorDataReductionAndInterpretation.hmmByModelName;
+        final Map<String,HiddenMarkovModel> hmmByModelName = featureExtractionModelData.getDeserializedData().sensorDataReduction.hmmByModelName;
         //DECODE ALL SENSOR DATA INTO DISCRETE "CLASSIFICATIONS"
         for (final String modelName : hmmByModelName.keySet()) {
 
@@ -510,7 +515,7 @@ public class PredictionResource extends BaseResource {
         //get feedback for this day
         final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
 
-        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsInOriginalTimeMap(feedbacks.asList(),tzOffset);
+        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsWithOriginalTime(feedbacks.asList(), tzOffset);
 
         LOGGER.debug("got {} pieces of feedback",feedbacksAsEvents.size());
 
@@ -597,20 +602,21 @@ public class PredictionResource extends BaseResource {
 
         final int tzOffsetMillis = myMotions.get(0).offsetMillis;
 
+        final PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
 
-        List<TrackerMotion> motions = new ArrayList<>();
+        final List<TrackerMotion> motions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty() && usePartnerFilter ) {
             try {
-                PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
+                motions.addAll(
+                        partnerDataUtils.partnerFilterWithDurationsDiffHmm(
+                                targetDate.minusMillis(tzOffsetMillis),
+                                endDate.minusMillis(tzOffsetMillis),
+                                ImmutableList.copyOf(myMotions),
+                                ImmutableList.copyOf(partnerMotions)));
 
-                final ImmutableList<TrackerMotion> myFilteredMotions =
-                        partnerDataUtils.partnerFilterWithDurationsDiffHmm(targetDate.minusMillis(tzOffsetMillis),endDate.minusMillis(tzOffsetMillis),ImmutableList.copyOf(myMotions), ImmutableList.copyOf(partnerMotions));
-
-                motions.addAll(myFilteredMotions);
-            }
-            catch (Exception e) {
-                LOGGER.info(e.getMessage());
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage());
                 motions.addAll(myMotions);
             }
         }
@@ -626,13 +632,16 @@ public class PredictionResource extends BaseResource {
 
         final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
-
+        //get feedback for this day
+        ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
 
 
         allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 targetDate.minusMillis(tzOffsetMillis).getMillis(),
                 endDate.minusMillis(tzOffsetMillis).getMillis(),
-                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color);
+                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color, Optional.<Calibration>absent());
+
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(motions),ImmutableList.copyOf(partnerMotions),feedbacks,tzOffsetMillis);
 
 
          /*  pull out algorithm type */
@@ -650,7 +659,7 @@ public class PredictionResource extends BaseResource {
                 break;
 
             case ALGORITHM_BAYESNETHMM:
-                events = getBayesEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,motions,partnerMotions);
+                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData);
                 break;
 
             default:
@@ -660,10 +669,9 @@ public class PredictionResource extends BaseResource {
         }
 
 
-        //get feedback for this day
-        ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
 
-        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsInOriginalTimeMap(feedbacks.asList(),myMotions.get(0).offsetMillis);
+
+        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsWithOriginalTime(feedbacks.asList(), myMotions.get(0).offsetMillis);
 
         LOGGER.debug("got {} pieces of feedback",feedbacksAsEvents.size());
 

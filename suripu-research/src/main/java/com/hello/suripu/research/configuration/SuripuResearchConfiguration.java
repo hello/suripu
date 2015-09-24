@@ -118,17 +118,23 @@ public class SuripuResearchConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("hmm_bayesnet_priors")
-    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
-        return this.hmmBayesnetPriorsConfiguration;
+    @JsonProperty("online_hmm_models")
+    private DynamoDBConfiguration onlineHmmModelsConfiguration;
+    public DynamoDBConfiguration getOnlineHmmModelsConfiguration() {
+        return this.onlineHmmModelsConfiguration;
     }
 
     @Valid
     @NotNull
-    @JsonProperty("hmm_bayesnet_models")
-    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
-        return this.hmmBayesnetModelsConfiguration;
+    @JsonProperty("feature_extraction_models")
+    private DynamoDBConfiguration featureExtractionConfiguration;
+    public DynamoDBConfiguration getFeatureExtractionConfiguration() {
+        return this.featureExtractionConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("calibration")
+    private DynamoDBConfiguration calibrationConfiguration;
+    public DynamoDBConfiguration getCalibrationConfiguration() {return this.calibrationConfiguration;}
 }

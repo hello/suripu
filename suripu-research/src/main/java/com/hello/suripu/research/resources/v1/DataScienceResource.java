@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
@@ -35,11 +36,10 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.HmmBayesNetMeasurementParameters;
 import com.hello.suripu.core.util.JsonError;
 import com.hello.suripu.core.util.NamedSleepHmmModel;
+import com.hello.suripu.core.util.OnlineHmmMeasurementParameters;
 import com.hello.suripu.core.util.PartnerDataUtils;
-import com.hello.suripu.core.util.SleepHmmBayesNetSensorDataBinning;
 import com.hello.suripu.core.util.SleepHmmSensorDataBinning;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
@@ -699,7 +699,7 @@ public class DataScienceResource extends BaseResource {
         final NamedSleepHmmModel model = new NamedSleepHmmModel(null,"dummy", ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableSet.copyOf(Collections.EMPTY_SET),ImmutableList.copyOf(Collections.EMPTY_LIST),
                 soundThreshold,pillThreshold,naturalLightStartHour,naturalLightStopHour,numMinutesInMeasPeriod,false,1.0,0.0);
 
-        final HmmBayesNetMeasurementParameters bayesNetMeasurementParameters = new HmmBayesNetMeasurementParameters(false,0.0,1.0,pillThreshold,naturalLightStartHour,naturalLightStopHour,true,numMinutesInMeasPeriod);
+        final OnlineHmmMeasurementParameters bayesNetMeasurementParameters = new OnlineHmmMeasurementParameters(false,0.0,1.0,pillThreshold,naturalLightStartHour,naturalLightStopHour,true,numMinutesInMeasPeriod);
 
 
         if ( (email == null && accountId == null) || fromTimestamp == null) {
@@ -787,7 +787,8 @@ public class DataScienceResource extends BaseResource {
                 deviceAccountPairOptional.get().internalDeviceId,
                 slotDurationInMinutes,
                 missingDataDefaultValue,
-                color
+                color,
+                Optional.<Calibration>absent()
         );
 
         final long startTimeUTC = startTs.getMillis() - timezoneOffset;
@@ -835,14 +836,14 @@ public class DataScienceResource extends BaseResource {
             default:
             {
                 LOGGER.debug("GETTING BINNED DATA FROM BAYES SOURCE");
-                final Optional<SleepHmmBayesNetSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmBayesNetSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, filteredPartnerData, bayesNetMeasurementParameters, startTimeUTC, stopTimeUTC, timezoneOffset);
+                final Optional<OnlineHmmSensorDataBinning.BinnedData> binnedDataOptional = OnlineHmmSensorDataBinning.getBinnedSensorData(sensorSamples, filteredTrackerData, filteredPartnerData, bayesNetMeasurementParameters, startTimeUTC, stopTimeUTC, timezoneOffset);
 
                 if (!binnedDataOptional.isPresent()) {
                     throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                             .entity(new JsonError(204, "failed to get binned data")).build());
                 }
 
-                final SleepHmmBayesNetSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
+                final OnlineHmmSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
 
                 final List<List<Double>> matrix = getMatrix(binnedData.data);
 
