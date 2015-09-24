@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.device.v2.Pill;
 
-import java.awt.*;
+import java.awt.Color;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;

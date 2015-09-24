@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.models.WifiInfo;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface WifiInfoDAO {
@@ -13,6 +14,7 @@ public interface WifiInfoDAO {
      * @return WifiInfo
      */
     Optional<WifiInfo> get(String senseId);
+    Map<String, Optional<WifiInfo>> getBatchStrict(List<String> senseIds);
 
     /**
      *

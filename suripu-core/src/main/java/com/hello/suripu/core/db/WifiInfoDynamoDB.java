@@ -5,6 +5,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemResult;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
@@ -13,6 +15,7 @@ import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
@@ -21,6 +24,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.WifiInfo;
@@ -46,7 +50,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
     public final static String RSSI_ATTRIBUTE_NAME = "rssi";
     public final static String LAST_UPDATED_ATTRIBUTE_NAME = "last_updated";
     public final static Integer MAXIMUM_BATCH_WRITE_SIZE = 25;
-
+    public final static Integer MAX_GET_SIZE = 100;
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String wifiTableName;
@@ -72,7 +76,55 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
             LOGGER.error("Failed to get wifi info for {}", senseId);
             return Optional.absent();
         }
+    }
 
+    @Override
+    public Map<String, Optional<WifiInfo>> getBatchStrict(List<String> senseIds) {
+        final Map<String, Optional<WifiInfo>> wifiInfoMap = Maps.newHashMap();
+        for (final String senseId : senseIds) {
+            wifiInfoMap.put(senseId, Optional.<WifiInfo>absent());
+        }
+
+        final List<String> senseIdsList = Lists.newArrayList(senseIds);
+        final List<List<String>> partitionedSenseIdsList = Lists.partition(senseIdsList, MAX_GET_SIZE);
+
+        for (final List<String> partitionedSenseIds : partitionedSenseIdsList ) {
+            final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
+            final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
+
+
+            for (final String senseId : partitionedSenseIds) {
+                final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
+                attributeValueMap.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
+                itemKeys.add(attributeValueMap);
+            }
+
+            final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(SENSE_ATTRIBUTE_NAME, SSID_ATTRIBUTE_NAME, RSSI_ATTRIBUTE_NAME, LAST_UPDATED_ATTRIBUTE_NAME);
+            final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
+            requestItems.put(wifiTableName, key);
+            batchGetItemRequest.withRequestItems(requestItems);
+
+
+            try {
+                final BatchGetItemResult batchGetItemResult = dynamoDBClient.batchGetItem(batchGetItemRequest);
+                for (final String item : batchGetItemResult.getResponses().keySet()) {
+                    final List<Map<String, AttributeValue>> responses = batchGetItemResult.getResponses().get(item);
+                    for (final Map<String, AttributeValue> response : responses) {
+                        final String senseId = response.get(SENSE_ATTRIBUTE_NAME).getS();
+                        final String ssid = response.get(SSID_ATTRIBUTE_NAME).getS();
+                        final Integer rssi = Integer.valueOf(response.get(RSSI_ATTRIBUTE_NAME).getN());
+                        final DateTime lastUpdated = response.containsKey(LAST_UPDATED_ATTRIBUTE_NAME)
+                                ? DateTime.parse(response.get(LAST_UPDATED_ATTRIBUTE_NAME).getS(), DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))
+                                : DateTime.now(DateTimeZone.UTC);
+
+                        wifiInfoMap.put(senseId, Optional.of(WifiInfo.create(senseId, ssid, rssi, lastUpdated)));
+                    }
+                }
+            } catch (AmazonServiceException ase) {
+                LOGGER.error("Failed to get wifi info for {}", partitionedSenseIds);
+            }
+        }
+        return wifiInfoMap;
     }
 
     @Override

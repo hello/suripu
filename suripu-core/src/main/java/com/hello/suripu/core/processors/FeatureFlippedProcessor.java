@@ -97,4 +97,12 @@ public class FeatureFlippedProcessor {
     protected boolean hasTimelineInSleepInsights(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_IN_SLEEP_INSIGHTS, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean isSenseLastSeenDynamoDBReadEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSE_LAST_SEEN_VIEW_DYNAMODB_READ, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean isSensorsDBUnavailable(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSORS_DB_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
+    }
 }

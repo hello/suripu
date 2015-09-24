@@ -83,6 +83,7 @@ import com.hello.suripu.core.filters.CacheFilterFactory;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.core.models.device.v2.DeviceProcessor;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
 import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
@@ -426,12 +427,22 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final AmazonDynamoDB passwordResetDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPasswordResetDBConfiguration().getEndpoint());
         final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
+        final DeviceProcessor deviceProcessor = new DeviceProcessor.Builder()
+                .withDeviceDAO(deviceDAO)
+                .withDeviceDataDAO(deviceDataDAO)
+                .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
+                .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
+                .withPillHeartbeatDAO(pillHeartBeatDAO)
+                .withTrackerMotionDAO(trackerMotionDAO)
+                .withWifiInfoDAO(wifiInfoDAO)
+                .withSenseColorDAO(senseColorDAO)
+                .build();
 
         environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));
 
         environment.addResource(new SupportResource(supportDAO));
         environment.addResource(new com.hello.suripu.app.v2.TimelineResource(timelineDAODynamoDB, timelineProcessor, timelineLogDAO, feedbackDAO, trackerMotionDAO, sleepStatsDAODynamoDB,timelineLogger));
-        environment.addResource(new DeviceResource(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB, wifiInfoDAO, senseColorDAO));
+        environment.addResource(new DeviceResource(deviceProcessor));
         environment.addResource(new com.hello.suripu.app.v2.AccountPreferencesResource(accountPreferencesDAO));
         StoreFeedbackDAO storeFeedbackDAO = commonDB.onDemand(StoreFeedbackDAO.class);
         environment.addResource(new StoreFeedbackResource(storeFeedbackDAO));
