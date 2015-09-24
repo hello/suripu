@@ -146,8 +146,11 @@ public class BedLightDuration {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(NIGHT_START_HOUR_LOCAL);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
+        final DateTime queryEndTimeLocal = queryEndTime.plusMillis(timeZoneOffset);
+        final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
+
         //Grab all night-time data for past week
-        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, LIGHT_ON_LEVEL.intValue() , queryStartTime, queryEndTime, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        return deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, LIGHT_ON_LEVEL.intValue() , queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
     }
 
     private static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
