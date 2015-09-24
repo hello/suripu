@@ -217,7 +217,7 @@ public class RingProcessor {
 
         // TODO: CHANGE THRESHOLD WHEN NECESSARY
         if(SleepCycleAlgorithm.isUserAwakeInGivenDataSpan(amplitudeData, kickOffCounts)){
-            // TODO: STATE CHECK NEEDED FOR ROUBUST IMPLEMENTATION
+            // TODO: STATE CHECK NEEDED FOR ROBUST IMPLEMENTATION
             final RingTime progressiveRingTime = new RingTime(
                     nowAlignedToStartOfMinute.plusMinutes(PROGRESSIVE_SAFE_GAP_MIN).getMillis(),
                     nextRingTimeFromWorker.expectedRingTimeUTC,

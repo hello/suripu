@@ -111,4 +111,11 @@ public class AlarmWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
         return this.featuresDynamoDBConfiguration;
     }
+
+
+    @Valid
+    @NotNull
+    @JsonProperty("maximum_record_age_minutes")
+    private Integer maximumRecordAgeMinutes;
+    public Integer getMaximumRecordAgeMinutes() { return this.maximumRecordAgeMinutes; }
 }
