@@ -91,7 +91,7 @@ public class SensorsViewsDynamoDB {
         items.put(HUMIDITY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientHumidity)));
         items.put(LIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientLight)));
         items.put(SOUND_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.audioPeakDisturbancesDB)));
-        items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientDustMax)));
+        items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientAirQualityRaw)));
 
         items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.firmwareVersion)));
         items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(deviceData.dateTimeUTC.toString(DATETIME_FORMAT)));
@@ -232,8 +232,14 @@ public class SensorsViewsDynamoDB {
         final GetItemRequest getItemRequest = new GetItemRequest()
                 .withKey(key)
                 .withTableName(lastSeenTableName);
-        final GetItemResult result = dynamoDBClient.getItem(getItemRequest);
-        return fromDynamoDB(result.getItem(), senseId, accountId, internalSenseId);
+        try{
+            final GetItemResult getItemResult  = dynamoDBClient.getItem(getItemRequest);
+            return fromDynamoDB(getItemResult.getItem(), senseId, accountId, internalSenseId);
+        }
+        catch (AmazonServiceException ase) {
+            LOGGER.error("Failed to get last seen for sense {} because {}", senseId, ase.getMessage());
+        }
+        return Optional.absent();
     }
 
     public Optional<List<FirmwareInfo>> lastSeenFirmwareBatch(final Set<String> deviceIds) {
@@ -341,7 +347,7 @@ public class SensorsViewsDynamoDB {
         final Integer ambientTemp = (item.containsKey(TEMP_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(TEMP_ATTRIBUTE_NAME).getN()) : 0);
         final Integer ambientHumidity = (item.containsKey(HUMIDITY_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(HUMIDITY_ATTRIBUTE_NAME).getN()) : 0);
         final Integer ambientLight = (item.containsKey(LIGHT_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(LIGHT_ATTRIBUTE_NAME).getN()) : 0);
-        final Integer maxDust = (item.containsKey(DUST_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(DUST_ATTRIBUTE_NAME).getN()) : 0);
+        final Integer ambientDustRaw = (item.containsKey(DUST_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(DUST_ATTRIBUTE_NAME).getN()) : 0);
 
 
         final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
@@ -355,7 +361,7 @@ public class SensorsViewsDynamoDB {
                 .withAmbientTemperature(ambientTemp)
                 .withAmbientHumidity(ambientHumidity)
                 .calibrateAmbientLight(ambientLight)
-                .withAmbientDustMax(maxDust)
+                .withAmbientAirQualityRaw(ambientDustRaw)
                 .withAlreadyCalibratedAudioPeakBackgroundDB(sound)
                 .withDateTimeUTC(dateTime)
                 .withOffsetMillis(offsetMillis)

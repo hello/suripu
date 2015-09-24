@@ -29,6 +29,7 @@ import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
@@ -169,6 +170,7 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
 
         // external data for insights computation
         final LightData lightData = new LightData(); // lights global distribution
+        final WakeStdDevData wakeStdDevData = new WakeStdDevData();
 
         final IRecordProcessorFactory factory = new InsightsGeneratorFactory(
                 accountDAO,
@@ -181,6 +183,7 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 questionResponseDAO,
                 sleepStatsDAODynamoDB,
                 lightData,
+                wakeStdDevData,
                 accountPreferencesDynamoDB);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

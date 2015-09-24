@@ -7,7 +7,8 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import com.hello.suripu.core.preferences.AccountPreference;
+import com.hello.suripu.core.preferences.TemperatureUnit;
+import com.hello.suripu.core.util.DataUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -52,7 +53,7 @@ public class TemperatureHumidity {
     public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId,
                                                     final DeviceDataDAO deviceDataDAO,
                                                     final AccountInfo.SleepTempType tempPref,
-                                                    final AccountPreference.TemperatureUnit tempUnit) {
+                                                    final TemperatureUnit tempUnit) {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(TEMP_END_HOUR); // today 6am
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS).withHourOfDay(TEMP_START_HOUR); // 11pm three days ago
 
@@ -66,7 +67,7 @@ public class TemperatureHumidity {
 
     public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data,
                                                     final AccountInfo.SleepTempType tempPref,
-                                                    final AccountPreference.TemperatureUnit tempUnit) {
+                                                    final TemperatureUnit tempUnit) {
 
         if (data.isEmpty()) {
             return Optional.absent();
@@ -77,7 +78,7 @@ public class TemperatureHumidity {
         // get min, max and average
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final DeviceData deviceData : data) {
-            stats.addValue(deviceData.ambientTemperature);
+            stats.addValue(DataUtils.calibrateTemperature(deviceData.ambientTemperature));
         }
 
         final double tmpMinValue = stats.getMin() / TEMP_MULTIPLIER;
@@ -121,7 +122,7 @@ public class TemperatureHumidity {
         int maxTemp = maxTempF;
         int idealMin = idealMinF;
         int idealMax = idealMaxF;
-        if (tempUnit == AccountPreference.TemperatureUnit.CELSIUS) {
+        if (tempUnit == TemperatureUnit.CELSIUS) {
             minTemp = fahrenheitToCelsius((double) minTempF);
             maxTemp = fahrenheitToCelsius((double) maxTempF);
             idealMin = fahrenheitToCelsius((double) idealMinF);

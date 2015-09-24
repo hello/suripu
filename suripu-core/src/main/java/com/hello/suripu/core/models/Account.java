@@ -8,6 +8,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 
 import javax.validation.constraints.NotNull;
 
@@ -59,7 +60,7 @@ public class Account {
     @JsonIgnore
     public final String password;
 
-    @JsonIgnore
+    @JsonProperty("created")
     public final DateTime created;
 
     @JsonProperty("last_modified")
@@ -234,7 +235,7 @@ public class Account {
             return this;
         }
 
-        @JsonIgnore
+        @JsonProperty("created")
         public Builder withCreated(final Long created) {
             this.created = new DateTime(created);
             return this;
@@ -315,7 +316,7 @@ public class Account {
     public static Account normalizeWithId(final Account account, final Long accountId) {
         return new Account(
                 Optional.fromNullable(accountId),
-                account.email.toLowerCase(),
+                account.email.toLowerCase().trim(),
                 account.password,
                 account.tzOffsetMillis,
                 account.name,
@@ -332,5 +333,10 @@ public class Account {
     public static Account forApplication(final Long aaplicationId, final Account account) {
 //        return new Account();
         return null;
+    }
+
+    @JsonIgnore
+    public int getAgeInDays() {
+        return Days.daysBetween(created, DateTime.now(DateTimeZone.UTC)).getDays();
     }
 }

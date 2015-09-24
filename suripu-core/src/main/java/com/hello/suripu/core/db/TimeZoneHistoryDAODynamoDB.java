@@ -17,8 +17,9 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.RateLimiter;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -26,7 +27,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +49,8 @@ public class TimeZoneHistoryDAODynamoDB {
     //public static final String OFFSET_MILLIS_ATTRIBUTE_NAME = "offset_millis";
     public static final String TIMEZONE_NAME_ATTRIBUTE_NAME = "time_zone_name";
 
-    private static int MAX_CALL_COUNT = 3;
+    private static final int DEFAULT_LIMIT = 500;
+    private static final DateTime HELLO_EPOCH = new DateTime(2015,2,1,0,0,0, DateTimeZone.UTC);
 
 
     public TimeZoneHistoryDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName){
@@ -93,10 +94,16 @@ public class TimeZoneHistoryDAODynamoDB {
     }
 
 
-    @Timed
-    public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end){
-        final Map<String, Condition> queryConditions = new HashMap<String, Condition>();
-        final double maxRateLimitSec = 100d;
+    public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start) {
+        return getTimeZoneHistory(accountId, HELLO_EPOCH, start, DEFAULT_LIMIT);
+    }
+
+    public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end) {
+        return getTimeZoneHistory(accountId, start, end, DEFAULT_LIMIT);
+    }
+
+    public List<TimeZoneHistory> getTimeZoneHistory(final long accountId, final DateTime start, final DateTime end, int limit){
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
         final Condition selectDateCondition = new Condition()
                 .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(start.getMillis())),
@@ -112,35 +119,27 @@ public class TimeZoneHistoryDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectAccountIdCondition);
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
-        final List<TimeZoneHistory> history = new ArrayList<>();
-        final Collection<String> targetAttributeSet = new HashSet<String>();
-        Collections.addAll(targetAttributeSet,
-                UPDATED_AT_ATTRIBUTE_NAME,
-                TIMEZONE_NAME_ATTRIBUTE_NAME);
+        final List<TimeZoneHistory> history = Lists.newArrayList();
+        final Collection<String> targetAttributeSet = Sets.newHashSet(UPDATED_AT_ATTRIBUTE_NAME, TIMEZONE_NAME_ATTRIBUTE_NAME);
 
-        final RateLimiter rateLimiter = RateLimiter.create(maxRateLimitSec);
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributeSet)
+                .withLimit(limit)
+                .withExclusiveStartKey(lastEvaluatedKey);
 
-        do {
-            rateLimiter.acquire();
-            final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(this.tableName)
-                    .withKeyConditions(queryConditions)
-                    .withAttributesToGet(targetAttributeSet)
-                    .withLimit(100)
-                    .withExclusiveStartKey(lastEvaluatedKey);
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
 
-            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
-            final List<Map<String, AttributeValue>> items = queryResult.getItems();
-
-            for (final Map<String, AttributeValue> item : items) {
-                final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryFromAttributeValues(item);
-                if(timeZoneHistoryOptional.isPresent()){
-                    history.add(timeZoneHistoryOptional.get());
-                }
+        for (final Map<String, AttributeValue> item : items) {
+            final Optional<TimeZoneHistory> timeZoneHistoryOptional = timeZoneHistoryFromAttributeValues(item);
+            if(timeZoneHistoryOptional.isPresent()){
+                history.add(timeZoneHistoryOptional.get());
             }
-        }while (lastEvaluatedKey != null);
+        }
+
 
         if (history.isEmpty()) {
             LOGGER.warn("Account {} get timezone failed, no data or aws error.", accountId);
@@ -170,7 +169,7 @@ public class TimeZoneHistoryDAODynamoDB {
     @Timed
     public Optional<TimeZoneHistory> getCurrentTimeZone(final long accountId){
         final DateTime now = DateTime.now();
-        final List<TimeZoneHistory> lastTimeZones = getTimeZoneHistory(accountId, now.withTimeAtStartOfDay(), now);
+        final List<TimeZoneHistory> lastTimeZones = getTimeZoneHistory(accountId, now);
         if(lastTimeZones.isEmpty()) {
             return Optional.absent();
         }

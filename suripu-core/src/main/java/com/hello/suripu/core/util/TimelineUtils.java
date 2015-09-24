@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -73,12 +74,21 @@ public class TimelineUtils {
     private static final long PRESLEEP_WINDOW_IN_MILLIS = 900000; // 15 mins
     private static final int LIGHTS_OUT_START_THRESHOLD = 19; // 7pm local time
     private static final int LIGHTS_OUT_END_THRESHOLD = 4; // 4am local time
+    private static final long FILTER_NON_SIGNIFICANT_EVENT_IN_MILLIS = 3600000; // 60 mins
 
     // for sound
     private static final int DEFAULT_QUIET_START_HOUR = 23; // 11pm
     private static final int DEFAULT_QUIET_END_HOUR = 7; // 7am
     private static final int SOUND_WINDOW_SIZE_MINS = 30; // smoothing windows, binning
     private static final int MAX_SOUND_EVENT_SIZE = 5; // max sound event allowed in timeline
+
+    private static final Sensor[] SLEEP_TIME_AVERAGE_SENSORS = {
+            Sensor.TEMPERATURE,
+            Sensor.HUMIDITY,
+            Sensor.PARTICULATES,
+            Sensor.SOUND,
+            Sensor.LIGHT,
+    };
 
     private final Logger LOGGER;
 
@@ -153,10 +163,6 @@ public class TimelineUtils {
 
         final Long trackerId = positiveMotions.get(0).trackerId;
         for(final TrackerMotion trackerMotion : positiveMotions) {
-            if (!trackerMotion.trackerId.equals(trackerId)) {
-                LOGGER.warn("User has multiple pills: {} and {}", trackerId, trackerMotion.trackerId);
-                break; // if user has multiple pill, only use data from the latest tracker_id
-            }
 
             final MotionEvent motionEvent = new MotionEvent(
                     trackerMotion.timestamp,
@@ -278,7 +284,9 @@ public class TimelineUtils {
     }
     public Optional<Event> getFirstSignificantEvent(final List<Event> events){
         for(final Event event:events){
-            if(event.getType() != Event.Type.NONE && event.getType() != Event.Type.MOTION){
+            // only consider in-bed or sleep as significant
+            final Event.Type eType = event.getType();
+            if (Event.Type.IN_BED.equals(eType) || Event.Type.SLEEP.equals(eType)) {
                 return Optional.of(event);
             }
         }
@@ -286,33 +294,23 @@ public class TimelineUtils {
         return Optional.absent();
     }
 
-    public boolean shouldRemoveEventsBeforeSignificantEvent(final Optional<Event> significantEvent,
-                                                                   final List<Event> events){
-        if(!significantEvent.isPresent()){
-            return false;
-        }
-
-        final Event firstEvent = events.get(0);
-        final Event lastEvent = events.get(events.size() - 1);
-        final Long eventSpanMillis = lastEvent.getEndTimestamp() - firstEvent.getStartTimestamp();
-
-        if(significantEvent.get().getStartTimestamp() - firstEvent.getStartTimestamp() > eventSpanMillis / 3){
-            return false;
-        }
-
-        return true;
-    }
-
     public List<Event> removeEventBeforeSignificant(final List<Event> events){
         final Optional<Event> significantEvent = getFirstSignificantEvent(events);
-        final boolean shouldRemoveEvents = shouldRemoveEventsBeforeSignificantEvent(significantEvent, events);
-        if(!shouldRemoveEvents){
+        if (!significantEvent.isPresent()) {
+            // nothing to remove
             return events;
         }
 
-        final List<Event> filteredEvents = new ArrayList<>();
+        final List<Event> filteredEvents = Lists.newArrayList();
         for(final Event event:events){
+
             if(event.getStartTimestamp() < significantEvent.get().getStartTimestamp()){
+                if (Event.Type.LIGHTS_OUT.equals(event.getType())) {
+                    // only keep lights-out if it is within 60 minutes of in-bed/sleep
+                    final Long timeDiff = significantEvent.get().getStartTimestamp() - event.getStartTimestamp();
+                    if (timeDiff < FILTER_NON_SIGNIFICANT_EVENT_IN_MILLIS)
+                        filteredEvents.add(event);
+                }
                 continue;
             }
 
@@ -836,7 +834,76 @@ public class TimelineUtils {
 
     }
 
-    public List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList, final Long sleepTimestampUTC, final Long accountId) {
+    public Optional<Float> calculateAverageSensorState(final List<Sample> samples,
+                                                       final long startTimestampUTC,
+                                                       final long endTimestampUTC) {
+        if (samples.isEmpty() || (startTimestampUTC == endTimestampUTC)) {
+            return Optional.absent();
+        }
+
+        float sum = 0;
+        int count = 0;
+        for (final Sample sample : samples) {
+            final long sampleTimestampUTC = sample.dateTime;
+            if (sampleTimestampUTC < startTimestampUTC) {
+                continue;
+            }
+
+            if (sampleTimestampUTC > endTimestampUTC) {
+                break;
+            }
+
+            sum += sample.value;
+            count++;
+
+        }
+
+        if (count > 0) {
+            final float average = sum / count;
+            return Optional.of(average);
+        } else {
+            return Optional.absent();
+        }
+    }
+
+    public List<Insight> generateInSleepInsights(final AllSensorSampleList allSensorSampleList,
+                                                 final Long sleepTimestampUTC,
+                                                 final Long wakeTimestampUTC) {
+        if (allSensorSampleList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final List<Insight> insights = Lists.newArrayList();
+        final DateTime sleepDateTime = new DateTime(sleepTimestampUTC, DateTimeZone.UTC);
+
+        for (final Sensor sensor : SLEEP_TIME_AVERAGE_SENSORS) {
+            final List<Sample> samples = allSensorSampleList.get(sensor);
+            final Optional<Float> sampleAverage = calculateAverageSensorState(samples,
+                    sleepTimestampUTC, wakeTimestampUTC);
+            if (!sampleAverage.isPresent()) {
+                continue;
+            }
+
+            final Optional<CurrentRoomState.State> sensorState = CurrentRoomState.getSensorState(sensor,
+                    sampleAverage.get(), sleepDateTime, false);
+            final Optional<Insight> insight = sensorState.transform(new Function<CurrentRoomState.State, Insight>() {
+                @Override
+                public Insight apply(CurrentRoomState.State state) {
+                    return Insight.create(sensor, state.condition, state.message);
+                }
+            });
+
+            if (insight.isPresent()) {
+                insights.add(insight.get());
+            }
+        }
+
+        return insights;
+    }
+
+    public List<Insight> generatePreSleepInsights(final AllSensorSampleList allSensorSampleList,
+                                                  final Long sleepTimestampUTC,
+                                                  final Long accountId) {
         final List<Insight> generatedInsights = Lists.newArrayList();
 
         if (allSensorSampleList.isEmpty()) {
@@ -1343,6 +1410,20 @@ public class TimelineUtils {
         }
 
         LOGGER.debug("Adding {} alarms to the timeline", events.size());
+        return events;
+    }
+
+    public List<Event> eventsFromOptionalEvents(final List<Optional<Event>> optionalEvents) {
+        final List<Event> events = Lists.newArrayList();
+
+        for (final Optional<Event> event : optionalEvents) {
+            if (!event.isPresent()) {
+                continue;
+            }
+
+            events.add(event.get());
+        }
+
         return events;
     }
 }

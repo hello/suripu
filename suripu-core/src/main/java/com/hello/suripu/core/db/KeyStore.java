@@ -28,6 +28,7 @@ public interface KeyStore {
     void put(String deviceId, String aesKey);
     void put(String deviceId, String aesKey, String serialNumber);
     void put(String deviceId, String aesKey, String serialNumber, DateTime createdAt);
+    boolean putOnlyIfAbsent(String deviceId, String aesKey, String serialNumber, DateTime createdAt);
 
 
     Map<String, Optional<byte[]>> getBatch(Set<String> deviceIds);

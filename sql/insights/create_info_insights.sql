@@ -88,7 +88,7 @@ The increase and decrease of light cues, trigger different chemical reactions ou
 '),
 ----
 ('sleep_duration', '', 'Sleep Duration: What''s the ideal amount?',
-'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need). Most current guidelines say school-age children should get at least 10 hours of sleep a night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but unique to the individual.'
+'Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" on the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but it is unique to the individual.''
 ),
 ----
 ('time_to_sleep', '', 'Sleep Onset',
@@ -176,3 +176,81 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 
 **Associate your bedroom with sleep**. Avoid non-sleep activities such as watching TV, working, or using the computer when in the bedroom.'
 );
+
+--jyfan 7/29/2015 Adding wake_variance insight category
+
+ALTER TYPE insight_category ADD VALUE 'wake_variance';
+
+INSERT INTO info_insight_cards (category, title, text)
+VALUES
+ ---
+('wake_variance',
+'Waking up to sleep better',
+'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
+);
+
+--jyfan 8/10/2015 Fix typo with wake_variance card.
+
+UPDATE info_insight_cards SET text=
+'The circadian clock is a sequence of timed chemical cues that tells your body when to wind down or wake up. Your ability to fall into quality sleep relies in large part on the strength of these signals. Disruptions to the clock, such as time zone changes or having a variable work schedule, can affect how well you sleep. Much of the clock is determined by genetics — you might just naturally be a “night owl” or “morning lark” that wakes up particularly late or early in the day. Whatever your sleep schedule, keeping it consistent — particularly your wake time — will keep these signals strong, and the quality of your sleep high.'
+WHERE category='wake_variance';
+
+--jyfan 8/25/2015 Adding bed_light_duration insight category
+
+ALTER TYPE insight_category ADD VALUE 'bed_light_duration';
+
+INSERT INTO info_insight_cards (category, title, text)
+VALUES
+ ---
+('bed_light_duration',
+'Associating Your Bedroom with Sleep',
+'Regularly watching television, using your phone, or engaging in other mentally stimulating activities just before bed can create a subconscious link between your bedroom and staying alert. This often makes it harder to fall asleep when you want to.
+
+On the other hand, reserving your bedroom for sleep and intimacy can create a link between your bedroom and sleep, which will help your body fall asleep more easily when it’s time for bed.'
+);
+
+-- Modify all titles to be title case 08/31/2015
+
+UPDATE info_insight_cards SET title = 'Effects of Ambient Light on Your Sleep' WHERE id = 1;
+UPDATE info_insight_cards SET title = 'Sound: Ambient Sound or Sudden Loud Noises' WHERE id = 3;
+UPDATE info_insight_cards SET title = 'Sleep Duration: What''s the Ideal Amount?' WHERE id = 6;
+UPDATE info_insight_cards SET title = 'Effects of Exercise on Your Sleep' WHERE id = 10;
+UPDATE info_insight_cards SET title = 'Waking Up to Sleep Better' WHERE id = 18;
+
+-- 09/04/2015 Text change for sleep_duration
+UPDATE info_insight_cards
+SET text='Most healthy adults, including the elderly need **between 7.5 to 9 hours** of sleep per night to function at their best.  Children need even more (the younger they are, the more they need); for example, current guidelines say school-age children should sleep at least 10 hours per night.  However, there is no "magic number" for the sleep duration that is ideal for everyone.  It is as individual as you are.  Not only do different age groups need different amounts of sleep, but the amount you need is also unique to you as an individual.'
+WHERE category='sleep_duration';
+
+
+-- Modify grammar 9/8/2015
+UPDATE info_insight_cards
+
+SET text='Maintaining good sleep habits is crucial to having regular, good quality sleep. The **most important habit** is to keep a consistent sleep and wake time for every day of the week. Other good habits to cultivate include:
+
+**Avoid napping** during the day as it may disrupt your sleep time.
+
+**Avoid caffeine** about 3 hours before bedtime. Caffeine stimulates your nervous system, making you more alert and less likely to fall asleep. Note that certain energy or soft drinks may also contain caffeine.
+
+**Stay away from stimulants** such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, your sleep might be disrupted at a later time when the effect has worn off.
+
+**Regular exercise** has been shown to promote good sleep. However, vigorous exercise close to bedtime may be too stimulating, try a more gentle exercise such as yoga.
+
+Get sufficient **exposure to natural light**, which helps to maintain a healthy sleep-wake cycle. Go for a 15-minute walk after lunch, or take a coffee break during the afternoon.
+
+**Avoid bright lights** close to bedtime to allow the production of melatonin, a sleep-inducing hormone. The “blue light” from many modern smartphones or tablets has been shown to **interfere with** the body’s melatonin levels. Try not to use such devices in bed.
+
+**Develop a bedtime routine**. Wind down about an hour before bedtime. Engage in relaxing activities such as reading, listening to soothing music, take a warm shower or bath.
+
+**Associate your bedroom with sleep**. Avoid non-sleep activities such as watching TV, working, or using the computer when in the bedroom.'
+
+--jyfan 9/22/2015 Update text for humidity card.
+
+UPDATE info_insight_cards SET text=
+'Humidity is an important part of an optimal sleeping environment. You should aim to keep your bedroom humidity level at around 50% year round.
+
+Air that is too dry can irritate your throat and nasal passages, which can make it more difficult for you to fall asleep. If this is the case, consider investing in a humidifier for use during drier seasons. Also remember to keep hydrated by drinking plenty of water, and apply lotion before bed to sooth dry skin.
+
+Conversely, dampness can lead to mold growth, which can affect your sleep if you suffer from mold allergies. High humidity paired with high temperatures can be especially uncomfortable, making it even more difficult to get restorative sleep. You may want to think about a fan or a dehumidifier to lower the humidity, or using cotton sheets and sweat-wicking pajamas to help you feel more comfortable.'
+
+WHERE category='humidity';

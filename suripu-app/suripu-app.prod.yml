@@ -122,6 +122,14 @@ http:
   # requests. Subject to the same limitations as "port".
   adminPort: 9998
 
+  requestLog:
+    file:
+      enabled: true
+      timeZone: UTC
+      currentLogFilename: /var/log/suripu-app/suripu-app-access.log
+      archive: true
+      archivedLogFilenamePattern: /var/log/suripu-app/suripu-app-access-%d{yyyy-MM-dd}.log.gz
+      archivedFileCount: 7
 # Logging settings.
 logging:
 
@@ -134,6 +142,18 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu: DEBUG
 
+  file:
+    enabled: true
+    threshold: DEBUG
+    currentLogFilename: /var/log/suripu-app/suripu-app.log
+    # When the log file rotates, the archived log will be renamed to this and gzipped. The
+    # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
+    # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
+    archivedLogFilenamePattern: /var/log/suripu-app/suripu-app-%d{yyyy-MM-dd}.log.gz
+    # The number of archived files to keep.
+    archivedFileCount: 7
+    # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
+    timeZone: UTC
 
 event_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
@@ -226,6 +246,7 @@ kinesis:
     encode_audio : encode_audio
     batch_pill_data : batch_pill_data
     sense_sensors_data : sense_sensors_data
+    logs : logs
 
 question_configs:
   num_skips : 5
@@ -294,12 +315,27 @@ sense_last_seen:
   region: us-east-1
   table_name: prod_sense_last_seen
 
-hmm_bayesnet_priors:
+feature_extraction_models:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_hmm_bayesnet_priors
+  table_name: prod_feature_extraction_models
 
-hmm_bayesnet_models:
+online_hmm_models:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: prod_hmm_bayesnet_models
+  table_name: prod_online_hmm_models
+
+calibration:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_calibration
+
+wifi_info:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_wifi_info
+
+app_stats:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_app_stats

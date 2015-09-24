@@ -28,8 +28,13 @@ public enum DynamoDBTableName {
     TIMEZONE_HISTORY("timezone_history"),
     ALARM_LOG("alarm_log"),
     SMART_ALARM_LOG("smart_alarm_log"),
-    BAYESNET_PRIORS("hmm_bayesnet_priors"),
-    BAYESNET_MODEL("hmm_bayesnet_models");
+    ONLINE_HMM_MODELS("online_hmm_models"),
+    FEATURE_EXTRACTION_MODELS("feature_extraction_models"),
+    CALIBRATION("calibration"),
+    INSIGHTS("insights"),
+    WIFI_INFO("wifi_info"),
+    PREFERENCES("preferences");
+
     private String value;
 
     private DynamoDBTableName(String value) {

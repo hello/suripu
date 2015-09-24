@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.preferences.AccountPreference;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
+import com.hello.suripu.core.preferences.PreferenceName;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class AccountPreferenceTest {
     @Test
     public void testSerialization() throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
-        final AccountPreference pref = new AccountPreference(AccountPreference.EnabledPreference.TEMP_CELSIUS, Boolean.FALSE);
+        final AccountPreference pref = new AccountPreference(PreferenceName.TEMP_CELSIUS, Boolean.FALSE);
         final String prefString = mapper.writeValueAsString(pref);
 
         final AccountPreference preference = mapper.readValue(prefString, AccountPreference.class);
@@ -33,27 +34,28 @@ public class AccountPreferenceTest {
     public void testDefaults() {
 
         final Map<String, AttributeValue> inDB = Maps.newHashMap();
-        final Map<AccountPreference.EnabledPreference, Boolean> accountPrefs = AccountPreferencesDynamoDB.itemToPreferences(inDB, Sets.newHashSet(AccountPreference.EnabledPreference.PUSH_SCORE));
+        final Map<PreferenceName, Boolean> accountPrefs = AccountPreferencesDynamoDB.itemToPreferences(inDB, Sets.newHashSet(PreferenceName.PUSH_SCORE));
 
-        assertThat(accountPrefs.get(AccountPreference.EnabledPreference.ENHANCED_AUDIO), is(Boolean.FALSE));
-        assertThat(accountPrefs.get(AccountPreference.EnabledPreference.PUSH_ALERT_CONDITIONS), is(Boolean.FALSE));
-        assertThat(accountPrefs.get(AccountPreference.EnabledPreference.TEMP_CELSIUS), is(Boolean.FALSE));
+        assertThat(accountPrefs.get(PreferenceName.ENHANCED_AUDIO), is(Boolean.FALSE));
+        assertThat(accountPrefs.get(PreferenceName.PUSH_ALERT_CONDITIONS), is(Boolean.FALSE));
+        assertThat(accountPrefs.get(PreferenceName.TEMP_CELSIUS), is(Boolean.FALSE));
 
-        assertThat(accountPrefs.get(AccountPreference.EnabledPreference.PUSH_SCORE), is(Boolean.TRUE));
-
+        assertThat(accountPrefs.get(PreferenceName.PUSH_SCORE), is(Boolean.TRUE));
+        assertThat(accountPrefs.get(PreferenceName.WEIGHT_METRIC), is(Boolean.FALSE));
+        assertThat(accountPrefs.get(PreferenceName.HEIGHT_METRIC), is(Boolean.FALSE));
     }
 
     @Test
     public void testDataInDB() {
 
         final Map<String, AttributeValue> inDB = Maps.newHashMap();
-        inDB.put(AccountPreference.EnabledPreference.ENHANCED_AUDIO.name(), new AttributeValue().withBOOL(Boolean.TRUE));
-        inDB.put(AccountPreference.EnabledPreference.PUSH_SCORE.name(), new AttributeValue().withBOOL(Boolean.FALSE));
+        inDB.put(PreferenceName.ENHANCED_AUDIO.name(), new AttributeValue().withBOOL(Boolean.TRUE));
+        inDB.put(PreferenceName.PUSH_SCORE.name(), new AttributeValue().withBOOL(Boolean.FALSE));
 
-        final Map<AccountPreference.EnabledPreference, Boolean> accountPrefs = AccountPreferencesDynamoDB.itemToPreferences(inDB, Sets.newHashSet(AccountPreference.EnabledPreference.PUSH_SCORE));
+        final Map<PreferenceName, Boolean> accountPrefs = AccountPreferencesDynamoDB.itemToPreferences(inDB, Sets.newHashSet(PreferenceName.PUSH_SCORE));
 
-        assertThat(accountPrefs.get(AccountPreference.EnabledPreference.ENHANCED_AUDIO), is(Boolean.TRUE));
-        assertThat(accountPrefs.get(AccountPreference.EnabledPreference.PUSH_SCORE), is(Boolean.FALSE));
+        assertThat(accountPrefs.get(PreferenceName.ENHANCED_AUDIO), is(Boolean.TRUE));
+        assertThat(accountPrefs.get(PreferenceName.PUSH_SCORE), is(Boolean.FALSE));
 
     }
 }

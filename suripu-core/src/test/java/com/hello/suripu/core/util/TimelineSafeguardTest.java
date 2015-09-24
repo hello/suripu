@@ -73,8 +73,8 @@ public class TimelineSafeguardTest {
 
         ImmutableList<Sample> light = ImmutableList.copyOf(getContiguousLightSensorData(t0, 8 * hourInMillis));
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, light));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsDurationFail, emptyEvents, light));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, light).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsDurationFail, emptyEvents, light).equals(TimelineError.NO_ERROR));
 
 
     }
@@ -188,8 +188,8 @@ public class TimelineSafeguardTest {
         TestCase.assertEquals(res1, 30);
         TestCase.assertEquals(res2, 120);
 
-        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithHalfHourGap));
-        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithOverOneHourGap));
+        TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
+        TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
 
     }
 }

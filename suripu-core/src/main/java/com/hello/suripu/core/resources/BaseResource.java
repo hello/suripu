@@ -109,12 +109,21 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.VIEW_TRENDS_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean isTimelineV2Enabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_V2_AVAILABLE, accountId, Collections.EMPTY_LIST);
-    }
-
     protected Boolean hasDelayCurrentRoomStateThreshold(final Long accountId) {
         return  featureFlipper.userFeatureActive(FeatureFlipper.DELAY_CURRENT_ROOM_STATE_THRESHOLD,accountId,Collections.EMPTY_LIST);
+    }
+
+    // Calibration is enabled on a per device basis
+    protected Boolean hasCalibrationEnabled(final String senseId) {
+        return featureFlipper.deviceFeatureActive(FeatureFlipper.CALIBRATION, senseId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasTimelineOrderEnforcement(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasDustSmoothEnabled(final String senseId) {
+        return featureFlipper.deviceFeatureActive(FeatureFlipper.DUST_SMOOTH, senseId, Collections.EMPTY_LIST);
     }
 
 }

@@ -256,55 +256,61 @@ public class FirmwareUpdateStore {
      */
     public List<SyncResponse.FileDownload> getFirmwareUpdate(final String deviceId, final String group, final Integer currentFirmwareVersion, final Boolean pchOTA) {
 
-        Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
+        try {
+            Pair<Integer, List<SyncResponse.FileDownload>> fw_files = new Pair(-1, Collections.EMPTY_LIST);
 
-        final Optional<String> s3ObjectKey = getCachedS3ObjectForDeviceInGroup(deviceId, group, currentFirmwareVersion);
-        if(!s3ObjectKey.isPresent()){
-            return Collections.EMPTY_LIST;
-        }
+            final Optional<String> s3ObjectKey = getCachedS3ObjectForDeviceInGroup(deviceId, group, currentFirmwareVersion);
+            if(!s3ObjectKey.isPresent()){
+                return Collections.EMPTY_LIST;
+            }
 
-        if(pchOTA) {
-            LOGGER.info("PCH Device attempting OTA. Getting non-cached file-list for: [{}] from {}.", s3ObjectKey, FIRMWARE_BUCKET_ASIA);
-            fw_files = getFirmwareFilesForS3ObjectKey(s3ObjectKey.get(), FIRMWARE_BUCKET_ASIA);
-        } else {
-            try {
-                fw_files = s3FWCache.get(s3ObjectKey.get(), new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
-                    @Override
-                    public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
-                        LOGGER.info("Nothing in cache found for S3 Object Key: [{}]. Grabbing info from S3.", s3ObjectKey.get());
-                        return getFirmwareFilesForS3ObjectKey(s3ObjectKey.get(), bucketName);
+            if(pchOTA) {
+                LOGGER.info("PCH Device attempting OTA. Getting non-cached file-list for: [{}] from {}.", s3ObjectKey, FIRMWARE_BUCKET_ASIA);
+                fw_files = getFirmwareFilesForS3ObjectKey(s3ObjectKey.get(), FIRMWARE_BUCKET_ASIA);
+            } else {
+                try {
+                    fw_files = s3FWCache.get(s3ObjectKey.get(), new Callable<Pair<Integer, List<SyncResponse.FileDownload>>>() {
+                        @Override
+                        public Pair<Integer, List<SyncResponse.FileDownload>> call() throws Exception {
+                            LOGGER.info("Nothing in cache found for S3 Object Key: [{}]. Grabbing info from S3.", s3ObjectKey.get());
+                            return getFirmwareFilesForS3ObjectKey(s3ObjectKey.get(), bucketName);
+                        }
+                    });
+
+                } catch (ExecutionException e) {
+                    LOGGER.error("Exception while retrieving S3 file list.");
+                }
+            }
+
+            final List<SyncResponse.FileDownload> fwList = fw_files.getValue();
+
+            if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion) && !fwList.isEmpty()) {
+
+                if (!isExpiredPresignedUrl(fwList.get(0).getUrl(), new Date())) {
+                    //Store OTA Data
+                    final List<String> urlList = new ArrayList<>();
+                    for (final SyncResponse.FileDownload fileDL : fwList) {
+                        urlList.add(fileDL.getHost() + fileDL.getUrl());
                     }
-                });
-
-            } catch (ExecutionException e) {
-                LOGGER.error("Exception while retrieving S3 file list.");
-            }
-        }
-
-        final List<SyncResponse.FileDownload> fwList = fw_files.getValue();
-
-        if (isValidFirmwareUpdate(fw_files, currentFirmwareVersion) && !fwList.isEmpty()) {
-
-            if (!isExpiredPresignedUrl(fwList.get(0).getUrl(), new Date())) {
-                //Store OTA Data
-                final List<String> urlList = new ArrayList<>();
-                for (final SyncResponse.FileDownload fileDL : fwList) {
-                    urlList.add(fileDL.getHost() + fileDL.getUrl());
+                    final DateTime eventTime = new DateTime().toDateTime(DateTimeZone.UTC);
+                    final OTAHistory newHistoryEntry = new OTAHistory(deviceId, eventTime, currentFirmwareVersion, fw_files.getKey(), urlList);
+                    final Optional<OTAHistory> insertedEntry = otaHistoryDAO.insertOTAEvent(newHistoryEntry);
+                    if (!insertedEntry.isPresent()) {
+                        LOGGER.error("OTA History Insertion Failed: {} => {} for {} at {}", currentFirmwareVersion, fw_files.getKey(), deviceId, eventTime);
+                    }
+                    LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fwList.size(), s3ObjectKey.get(), deviceId);
+                    return fwList;
                 }
-                final DateTime eventTime = new DateTime().toDateTime(DateTimeZone.UTC);
-                final OTAHistory newHistoryEntry = new OTAHistory(deviceId, eventTime, currentFirmwareVersion, fw_files.getKey(), urlList);
-                final Optional<OTAHistory> insertedEntry = otaHistoryDAO.insertOTAEvent(newHistoryEntry);
-                if (!insertedEntry.isPresent()) {
-                    LOGGER.error("OTA History Insertion Failed: {} => {} for {} at {}", currentFirmwareVersion, fw_files.getKey(), deviceId, eventTime);
-                }
-                LOGGER.info("{} files added to syncResponse for OTA of '{}' to DeviceId {}", fwList.size(), s3ObjectKey.get(), deviceId);
-                return fwList;
+
+                //Cache returned a valid update with an expired URL
+                LOGGER.info("Expired URL in S3 Cache. Forcing Cleanup.");
+                s3FWCache.cleanUp();
             }
 
-            //Cache returned a valid update with an expired URL
-            LOGGER.info("Expired URL in S3 Cache. Forcing Cleanup.");
-            s3FWCache.cleanUp();
+        } catch (Exception ex) {
+            LOGGER.error("OTA attempt failed for Device Id: {} on FW version: {}. {}", deviceId, currentFirmwareVersion, ex.getMessage());
         }
+
         return Collections.EMPTY_LIST;
     }
 

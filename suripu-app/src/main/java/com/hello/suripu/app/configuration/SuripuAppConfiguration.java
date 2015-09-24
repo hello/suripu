@@ -1,11 +1,11 @@
 package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.KinesisConfiguration;
+import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
-import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -355,21 +355,38 @@ public class SuripuAppConfiguration extends Configuration {
         return this.senseLastSeenConfiguration;
     }
 
+
     @Valid
     @NotNull
-    @JsonProperty("hmm_bayesnet_priors")
-    private DynamoDBConfiguration hmmBayesnetPriorsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetPriorsConfiguration() {
-        return this.hmmBayesnetPriorsConfiguration;
+    @JsonProperty("feature_extraction_models")
+    private DynamoDBConfiguration hmmFeatureExtractionModelsConfiguration;
+    public DynamoDBConfiguration getFeatureExtractionModelsConfiguration() {
+        return this.hmmFeatureExtractionModelsConfiguration;
     }
 
     @Valid
     @NotNull
-    @JsonProperty("hmm_bayesnet_models")
-    private DynamoDBConfiguration hmmBayesnetModelsConfiguration;
-    public DynamoDBConfiguration getHmmBayesnetModelsConfiguration() {
-        return this.hmmBayesnetModelsConfiguration;
+    @JsonProperty("online_hmm_models")
+    private DynamoDBConfiguration onlineHmmModelsConfiguration;
+    public DynamoDBConfiguration getOnlineHmmModelsConfiguration() {
+        return this.onlineHmmModelsConfiguration;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("calibration")
+    private DynamoDBConfiguration calibrationConfiguration;
+    public DynamoDBConfiguration getCalibrationConfiguration() {return this.calibrationConfiguration;}
 
+    @Valid
+    @NotNull
+    @JsonProperty("wifi_info")
+    private DynamoDBConfiguration wifiInfoConfiguration;
+    public DynamoDBConfiguration getWifiInfoConfiguration() {return this.wifiInfoConfiguration;}
+
+    @Valid
+    @NotNull
+    @JsonProperty("app_stats")
+    private DynamoDBConfiguration appStatsConfiguration;
+    public DynamoDBConfiguration getAppStatsConfiguration() {return this.appStatsConfiguration;}
 }
