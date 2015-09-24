@@ -9,14 +9,11 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
-import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.*;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
@@ -31,12 +28,14 @@ import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -125,11 +124,14 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
 
+        final Map<String, DateTime> senseIdLastProcessed = Maps.newHashMap();
+
         final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(mergedUserInfoDynamoDB,
                 scheduledRingTimeHistoryDAODynamoDB,
                 smartAlarmLoggerDynamoDB,
                 trackerMotionDAO,
-                configuration);
+                configuration,
+                senseIdLastProcessed);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }
