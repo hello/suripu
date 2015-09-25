@@ -133,9 +133,3 @@ dynamodb:
     pill_key_store : http://localhost:7777
     pill_last_seen : http://localhost:7777
 
-kinesis_logger:
-  stream_name: dev-logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO

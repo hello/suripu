@@ -127,10 +127,3 @@ dynamodb:
 redis:
   host: stats.xoe7je.0001.use1.cache.amazonaws.com
   port: 6379
-
-kinesis_logger:
-  stream_name: logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO

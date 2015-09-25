@@ -160,11 +160,4 @@ end_expire_time: 12
 max_cache_refresh_days: 20
 sleep_stats_version: v_0_2
 
-kinesis_logger:
-  stream_name: dev_logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO
-
 user_info_max_read_capacity_sec: 200

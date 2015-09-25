@@ -1,0 +1,34 @@
+metrics_enabled: false
+debug: false
+graphite:
+  host: carbon.hostedgraphite.com
+  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
+  reporting_interval_in_seconds: 30
+  include_metrics:
+    - com.yammer
+    - com.hello
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    sense_sensors_data : sense_sensors_data
+
+app_name: SenseLastSeen
+
+max_records: 100
+
+logging:
+  level: INFO
+  loggers:
+    com.hello.suripu.workers: DEBUG
+
+dynamodb:
+  region: us-east-1
+  tables:
+    features: features
+    wifi_info: wifi_info
+
+  endpoints:
+    features: http://localhost:7777
+    wifi_info: http://localhost:7777
+
