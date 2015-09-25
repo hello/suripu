@@ -168,10 +168,3 @@ sleep_stats_db:
     region : us-east-1
     table_name : sleep_stats
 sleep_stats_version: v_0_2
-
-kinesis_logger:
-  stream_name: dev-logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO
