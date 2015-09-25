@@ -4,11 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.converters.HttpUtils;
 import com.hello.suripu.core.logging.DataLogger;
-import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.ClientCredentials;
-import com.hello.suripu.core.oauth.OAuthScope;
-import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.oauth.Util;
+import com.hello.suripu.core.oauth.*;
 import com.sun.jersey.api.core.HttpContext;
 import com.sun.jersey.core.spi.component.ComponentContext;
 import com.sun.jersey.core.spi.component.ComponentScope;
@@ -62,6 +58,8 @@ public class OAuthProvider implements InjectableProvider<Scope, Type> {
                             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
                         }
                         accessToken  = result.get();
+                    } catch (MissingRequiredScopeAuthenticationException e) {
+                        throw new WebApplicationException(Response.Status.FORBIDDEN);
                     } catch (AuthenticationException e) {
                         LOGGER.warn("Error authenticating credentials {}", e);
                         throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);

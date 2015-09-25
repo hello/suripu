@@ -16,15 +16,12 @@ import com.hello.suripu.core.flipper.GroupFlipper;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.ClientCredentials;
-import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.*;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.HelloHttpHeader;
-import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.core.util.PairAction;
+import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.service.utils.RegistrationLogger;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
@@ -43,7 +40,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -217,6 +214,14 @@ public class RegisterResource extends BaseResource {
 
     }
 
+    private final Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
+        try {
+            return this.tokenStore.getClientDetailsByToken(credentials, now);
+        } catch (MissingRequiredScopeException e) {
+            return Optional.absent();
+        }
+    }
+
     protected final MorpheusCommand.Builder pair(final String senseIdFromHeader, final byte[] encryptedRequest, final KeyStore keyStore, final PairAction action) {
         final MorpheusCommand.Builder builder = MorpheusCommand.newBuilder()
                 .setVersion(PROTOBUF_VERSION);
@@ -261,7 +266,7 @@ public class RegisterResource extends BaseResource {
         LOGGER.debug("deviceId = {}", deviceId);
         LOGGER.debug("token = {}", token);
 
-        final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
+        final Optional<AccessToken> accessTokenOptional = getClientDetailsByToken(
                 new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
                 DateTime.now());
 
@@ -517,7 +522,7 @@ public class RegisterResource extends BaseResource {
         }
 
         // TODO: Remove this and get sense id from header after the firmware is fixed.
-        final Optional<AccessToken> accessTokenOptional = this.tokenStore.getClientDetailsByToken(
+        final Optional<AccessToken> accessTokenOptional = getClientDetailsByToken(
                 new ClientCredentials(new OAuthScope[]{OAuthScope.AUTH}, token),
                 DateTime.now());
 

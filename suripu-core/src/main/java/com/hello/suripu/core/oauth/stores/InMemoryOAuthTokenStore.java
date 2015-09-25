@@ -2,11 +2,7 @@ package com.hello.suripu.core.oauth.stores;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
-import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.ClientAuthenticationException;
-import com.hello.suripu.core.oauth.ClientCredentials;
-import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.*;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -52,7 +48,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
     }
 
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
+    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
 
         final AccessToken accessToken = tokens.get(credentials.tokenOrCode);
         if(accessToken == null) {
@@ -68,7 +64,7 @@ public class InMemoryOAuthTokenStore implements OAuthTokenStore<AccessToken, Cli
             LOGGER.debug("{}", requiredScopes);
             LOGGER.debug("{}", grantedScopes);
             LOGGER.warn("Scopes don't match", credentials.tokenOrCode);
-            return Optional.absent();
+            throw new MissingRequiredScopeException();
         }
 
         return Optional.of(accessToken);

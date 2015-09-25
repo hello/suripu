@@ -4,14 +4,11 @@ import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.ClientCredentials;
-import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.core.oauth.*;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.util.HelloHttpHeader;
-import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.core.util.PairAction;
+import com.hello.suripu.service.SignedMessage;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,11 +21,7 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by pangwu on 5/5/15.
@@ -40,14 +33,21 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     private static final byte[] KEY = "1234567891234567".getBytes();
     private RegisterResource registerResource;
 
+    private Optional<AccessToken> stubGetClientDetailsByToken(final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore) {
+        try {
+            return tokenStore.getClientDetailsByToken(any(ClientCredentials.class), any(DateTime.class));
+        } catch (MissingRequiredScopeException e) {
+            return Optional.absent();
+        }
+    }
 
     private void stubGetClientDetailsByTokenThatReuturnsNoAccessToken(final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore){
-        when(tokenStore.getClientDetailsByToken(any(ClientCredentials.class), any(DateTime.class))).thenReturn(Optional.<AccessToken>absent());
+        when(stubGetClientDetailsByToken(tokenStore)).thenReturn(Optional.<AccessToken>absent());
     }
 
     private void stubGetClientDetails(final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore,
                                       final Optional<AccessToken> returnValue){
-        when(tokenStore.getClientDetailsByToken(any(ClientCredentials.class), any(DateTime.class))).thenReturn(returnValue);
+        when(stubGetClientDetailsByToken(tokenStore)).thenReturn(returnValue);
     }
 
     private AccessToken getAccessToken(){

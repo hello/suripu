@@ -5,15 +5,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.hello.suripu.core.db.AccessTokenDAO;
-import com.hello.suripu.core.oauth.AccessToken;
-import com.hello.suripu.core.oauth.Application;
-import com.hello.suripu.core.oauth.ApplicationRegistration;
-import com.hello.suripu.core.oauth.ClientAuthenticationException;
-import com.hello.suripu.core.oauth.ClientCredentials;
-import com.hello.suripu.core.oauth.ClientDetails;
-import com.hello.suripu.core.oauth.OAuthScope;
-import com.hello.suripu.core.oauth.AccessTokenUtils;
+import com.hello.suripu.core.oauth.*;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -39,7 +33,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
 
     // This is called by the cache when it doesn't contain the key
     final CacheLoader loader = new CacheLoader<ClientCredentials, Optional<AccessToken>>() {
-        public Optional<AccessToken> load(final ClientCredentials clientCredentials) {
+        public Optional<AccessToken> load(final ClientCredentials clientCredentials) throws MissingRequiredScopeException {
             LOGGER.debug("{} not in cache, fetching from DB", clientCredentials.tokenOrCode);
             return fromDB(clientCredentials);
         }
@@ -95,6 +89,16 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return accessToken;
     }
 
+    private Optional<AccessToken> getToken(final ClientCredentials credentials) throws MissingRequiredScopeException {
+        try {
+            return cache.getUnchecked(credentials);
+        } catch (UncheckedExecutionException e) {
+            if (e.getCause().getClass() == MissingRequiredScopeException.class) {
+                throw new MissingRequiredScopeException();
+            }
+            throw e;
+        }
+    }
 
     /**
      * Converts the token to a proper UUID and attempts to retrieve the client details based on the token string
@@ -102,8 +106,9 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
      * @return
      */
     @Override
-    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) {
-        final Optional<AccessToken> token = cache.getUnchecked(credentials);
+    public Optional<AccessToken> getClientDetailsByToken(final ClientCredentials credentials, final DateTime now) throws MissingRequiredScopeException {
+        final Optional<AccessToken> token = getToken(credentials);
+
         if(!token.isPresent()) {
             return Optional.absent();
         }
@@ -177,7 +182,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         return valid;
     }
 
-    private Optional<AccessToken> fromDB(final ClientCredentials credentials) {
+    private Optional<AccessToken> fromDB(final ClientCredentials credentials) throws MissingRequiredScopeException {
         final Optional<UUID> optionalTokenUUID = AccessTokenUtils.cleanUUID(credentials.tokenOrCode);
         if(!optionalTokenUUID.isPresent()) {
             LOGGER.warn("Invalid format for token {}", credentials.tokenOrCode);
@@ -216,7 +221,7 @@ public class PersistentAccessTokenStore implements OAuthTokenStore<AccessToken, 
         boolean validScopes = hasRequiredScopes(applicationOptional.get().scopes, credentials.scopes);
         if(!validScopes) {
             LOGGER.warn("Scopes don't match for {}", credentials.tokenOrCode);
-            return Optional.absent();
+            throw new MissingRequiredScopeException();
         }
 
         return accessTokenOptional;
