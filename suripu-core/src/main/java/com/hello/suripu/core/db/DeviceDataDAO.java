@@ -164,8 +164,10 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
-            "WHERE account_id = :account_id AND device_id = :device_id AND ambient_light > :light_level " +
+            "WHERE account_id = :account_id AND device_id = :device_id " +
+            "AND ambient_light > :light_level " +
             "AND ts >= :start_ts AND ts <= :end_ts " +
+            "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts" +
             "AND (CAST(date_part('hour', local_utc_ts) AS integer) >= :start_hour " +
             "OR CAST(date_part('hour', local_utc_ts) AS integer) < :end_hour) " +
             "ORDER BY ts")
@@ -174,6 +176,8 @@ public abstract class DeviceDataDAO {
                                                                             @Bind("light_level") int lightLevel,
                                                                             @Bind("start_ts") DateTime startTimestamp,
                                                                             @Bind("end_ts") DateTime endTimestamp,
+                                                                            @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                            @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
                                                                             @Bind("start_hour") int startHour,
                                                                             @Bind("end_hour") int endHour);
 
