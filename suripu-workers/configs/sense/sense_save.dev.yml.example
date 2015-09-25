@@ -137,10 +137,3 @@ dynamodb:
 redis:
   host: localhost
   port: 6379
-
-kinesis_logger:
-  stream_name: logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO
