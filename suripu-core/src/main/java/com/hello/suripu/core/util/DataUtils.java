@@ -19,30 +19,50 @@ public class DataUtils{
     private static final int TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS = 389; // 389 => 7ºF, previous 278 => 5ºF;
     public static final float PEAK_DISTURBANCE_NOISE_FLOOR = 40.0f;
 
+
+    /**
+     * Dust count calibration
+     * @param rawDustCount raw dust count
+     * @param calibrationOptional calibration info if any, absent otherwise
+     * @param firmwareVersion firmware version
+     * @return dust density in microgram per cubic meter
+     */
     public static float convertRawDustCountsToDensity(final int rawDustCount, final Optional<Calibration> calibrationOptional, final int firmwareVersion) {
-        // Expected output unit: microgram per cubic meter
 
         if (calibrationOptional.isPresent()) {
             final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibrationOptional.get());
-            return convertDustDataFromCountsToDensity(calibratedRawDustCount, calibrationOptional.get().senseId) * 1000.0f;
+            return convertDustDataFromCountsToDensity(calibratedRawDustCount, calibrationOptional.get().senseId);
         }
         return convertDustDataFromCountsToDensity(rawDustCount, "");
     }
 
+
+    /**
+     * Dust count calibration. The offset (delta) is calculated in class Calibration
+     * @param rawDustCount raw dust count
+     * @param calibration calibration info
+     * @return calibrated dust count
+     */
     public static int calibrateRawDustCount(final int rawDustCount, final Calibration calibration) {
         return rawDustCount + calibration.dustCalibrationDelta;
     }
 
 
-    public static float convertDustDataFromCountsToDensity(final int calibratedDustCount, final String senseId) {
+    /**
+     * Dust count --> density conversion
+     * @param dustCount dust count, either raw or calibrated
+     * @param senseId external sense ID
+     * @return dust density in microgram per cubic meter
+     */
+    public static float convertDustDataFromCountsToDensity(final int dustCount, final String senseId) {
         // TODO: add checks for firmware version when we switch sensor
 
-        final float dustDensity = (calibratedDustCount / MAX_DUST_ANALOG_VALUE) * 4.1076f * (0.5f/2.9f);
+        final float dustDensity = (dustCount / MAX_DUST_ANALOG_VALUE) * 4.1076f * (0.5f/2.9f);
         if(dustDensity < 0.0f) {
             LOGGER.error("bad calibration for device_id = {}: value was: {}", senseId, dustDensity);
         }
 
-        return Math.max(0.001f, dustDensity); // milligram per cubic meter
+        return Math.max(0.001f, dustDensity) * 10000.0f;
     }
 
     public static float convertLightCountsToLux(final int rawCount) {
