@@ -21,7 +21,7 @@ public class DataUtils{
 
 
     /**
-     * Dust count calibration
+     * Dust count calibration & conversion
      * @param rawDustCount raw dust count
      * @param calibrationOptional calibration info if any, absent otherwise
      * @param firmwareVersion firmware version
