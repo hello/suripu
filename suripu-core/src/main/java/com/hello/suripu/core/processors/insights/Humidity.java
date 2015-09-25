@@ -41,7 +41,7 @@ public class Humidity {
                                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
 
-        final Optional<Integer> timeZoneOffsetOptional = getTimeZoneOffsetOptional(sleepStatsDAODynamoDB, accountId, DateTime.now());
+        final Optional<Integer> timeZoneOffsetOptional = getTimeZoneOffsetOptional(sleepStatsDAODynamoDB, accountId, DateTime.now(DateTimeZone.UTC));
         if (!timeZoneOffsetOptional.isPresent()) {
             LOGGER.debug("Could not get timeZoneOffset, not generating humidity insight for accountId {}", accountId);
             return Optional.absent();
