@@ -41,7 +41,7 @@ public class Humidity {
                                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
 
-        final Optional<Integer> timeZoneOffsetOptional = getTimeZoneOffsetOptional(sleepStatsDAODynamoDB, accountId, DateTime.now(DateTimeZone.UTC));
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffsetOptional(accountId, DateTime.now(DateTimeZone.UTC).minusDays(1));
         if (!timeZoneOffsetOptional.isPresent()) {
             LOGGER.debug("Could not get timeZoneOffset, not generating humidity insight for accountId {}", accountId);
             return Optional.absent();
@@ -97,20 +97,6 @@ public class Humidity {
 
         //Grab all pre-bed data for past week
         return deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, PRE_BED_BEGIN_HOUR_LOCAL, PRE_BED_END_HOUR_LOCAL);
-    }
-
-    private static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
-        final String sleepStatsQueryEndDate = DateTimeUtil.dateToYmdString(queryEndDate);
-        final String sleepStatsQueryStartDate = DateTimeUtil.dateToYmdString(queryEndDate.minusDays(1));
-
-        final List<AggregateSleepStats> sleepStats = sleepStatsDAODynamoDB.getBatchStats(accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
-
-        if (!sleepStats.isEmpty()) {
-            return Optional.of(sleepStats.get(0).offsetMillis);
-        }
-
-        LOGGER.debug("SleepStats empty, fail to retrieve timeZoneOffset for accountId {} from {} to {}", accountId, sleepStatsQueryStartDate, sleepStatsQueryEndDate);
-        return Optional.absent();
     }
 
 }

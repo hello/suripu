@@ -146,6 +146,18 @@ public class SleepStatsDAODynamoDB {
 
     }
 
+    public Optional<Integer> getTimeZoneOffsetOptional(final Long accountId, final DateTime queryDate) {
+        final String queryDateString = DateTimeUtil.dateToYmdString(queryDate);
+        final Optional<AggregateSleepStats> sleepStats = this.getSingleStat(accountId, queryDateString);
+
+        if (!sleepStats.isPresent()) {
+            return Optional.of(sleepStats.get().offsetMillis);
+        }
+
+        LOGGER.debug("SleepStats empty, fail to retrieve timeZoneOffset for accountId {} for {}", accountId, queryDate);
+        return Optional.absent();
+    }
+
     public Optional<AggregateSleepStats> getSingleStat(final Long accountId, final String date) {
 
         final Map<String, AttributeValue> key = new HashMap<>();
@@ -177,7 +189,7 @@ public class SleepStatsDAODynamoDB {
     
     public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId, final String startDate, final String endDate) {
 
-        final Condition selectByAccountId  = new Condition()
+        final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
 
