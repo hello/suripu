@@ -203,7 +203,7 @@ public class AccountDAOTest {
     public void updateAccountRaceCondition() {
         final Registration registration = newRegistration("test@test.com", "test");
         final Account account = accountDAO.register(registration);
-        final Account updatedAccount = new Account.Builder(account).withLastModified(DateTime.now().getMillis()).build();
+        final Account updatedAccount = new Account.Builder(account).withLastModified(DateTime.now().plusMillis(1).getMillis()).build();
         final Optional<Account> updated = accountDAO.update(updatedAccount, account.id.get());
         assertThat(updated.isPresent(), is(false));
     }
