@@ -244,6 +244,7 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 
 **Associate your bedroom with sleep**. Avoid non-sleep activities such as watching TV, working, or using the computer when in the bedroom.'
 
+
 --jyfan 9/22/2015 Update text for humidity card.
 
 UPDATE info_insight_cards SET text=
@@ -254,3 +255,22 @@ Air that is too dry can irritate your throat and nasal passages, which can make 
 Conversely, dampness can lead to mold growth, which can affect your sleep if you suffer from mold allergies. High humidity paired with high temperatures can be especially uncomfortable, making it even more difficult to get restorative sleep. You may want to think about a fan or a dehumidifier to lower the humidity, or using cotton sheets and sweat-wicking pajamas to help you feel more comfortable.'
 
 WHERE category='humidity';
+
+
+--jyfan 9/23/2015 Adding bed_light_intensity insight category
+
+ALTER TYPE insight_category ADD VALUE 'bed_light_intensity';
+
+INSERT INTO info_insight_cards (category, title, text)
+VALUES
+ ---
+('bed_light_duration',
+'Associating Your Bedroom with Sleep',
+'The right exposure to light can promote healthy sleep, boost productivity, and improve your overall well being.
+
+Light, whether it be artificial or natural, is the primary signal for your circadian rhythm. This governs not only your sleep, but also your mood, appetite, and more. In the morning, light prompts your body to wake up while blood flow and alertness increases. In the evening, the dimming of light tells your body to cool down, relax, and rest.
+
+Too little light early in the day confuses your internal clock, which can feel like a miniature dose of jet lag. Similarly, too much exposure to bright or blue light in the evening can artificially pump you up when you’re trying to unwind.
+
+If you use a lot of artificial light at night, make sure you balance it out by exposing yourself to more light during the morning and during the day. Exposure to light can enhance your sleep as long as it is synced with the natural patterns of your internal clock.'
+);
