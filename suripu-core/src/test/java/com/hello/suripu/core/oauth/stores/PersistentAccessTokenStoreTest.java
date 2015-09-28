@@ -6,6 +6,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.Application;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.GrantTypeParam;
+import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.OAuthScope;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -72,7 +73,7 @@ public class PersistentAccessTokenStoreTest {
     }
 
     @Test
-    public void testMissingAccessToken() {
+    public void testMissingAccessToken() throws MissingRequiredScopeException {
         final UUID uuid = UUID.randomUUID();
         accessToken = new AccessToken.Builder()
                 .withAccountId(123L)
@@ -92,7 +93,7 @@ public class PersistentAccessTokenStoreTest {
     }
 
     @Test
-    public void testMissingApplication() {
+    public void testMissingApplication() throws MissingRequiredScopeException {
         when(accessTokenDAO.getByAccessToken(accessToken.token)).thenReturn(Optional.of(accessToken));
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.absent());
 
@@ -101,18 +102,17 @@ public class PersistentAccessTokenStoreTest {
         assertThat(accessTokenOptional.isPresent(), is(false));
     }
 
-    @Test
-    public void testInvalidScopes() {
+    @Test(expected = MissingRequiredScopeException.class)
+    public void testInvalidScopes() throws MissingRequiredScopeException {
         when(accessTokenDAO.getByAccessToken(accessToken.token)).thenReturn(Optional.of(accessToken));
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.of(application));
 
         final ClientCredentials credentials = new ClientCredentials(new OAuthScope[]{}, accessToken.serializeAccessToken());
-        final Optional<AccessToken> accessTokenOptional = store.getClientDetailsByToken(credentials, now);
-        assertThat(accessTokenOptional.isPresent(), is(false));
+        store.getClientDetailsByToken(credentials, now);
     }
 
     @Test
-    public void testBehaviorWithCorrectEnvironment() {
+    public void testBehaviorWithCorrectEnvironment() throws MissingRequiredScopeException {
         when(accessTokenDAO.getByAccessToken(validUUID)).thenReturn(Optional.of(accessToken));
         when(applicationStore.getApplicationById(accessToken.appId)).thenReturn(Optional.of(application));
 

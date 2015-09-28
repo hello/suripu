@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.ClientCredentials;
 import com.hello.suripu.core.oauth.ClientDetails;
+import com.hello.suripu.core.oauth.MissingRequiredScopeException;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.yammer.dropwizard.auth.AuthenticationException;
 import com.yammer.dropwizard.auth.Authenticator;
@@ -36,10 +37,15 @@ public class OAuthAuthenticator implements Authenticator<ClientCredentials, Acce
      * data for the student that authorized the client application (which we
      * currently don't do)
      */
-        final Optional<AccessToken> token = tokenStore.getClientDetailsByToken(credentials, DateTime.now());
-        if(!token.isPresent()) {
-            LOGGER.warn("Token {} was not present in OAuthAuthenticator", credentials.tokenOrCode);
+        final Optional<AccessToken> token;
+        try {
+            token = tokenStore.getClientDetailsByToken(credentials, DateTime.now());
+            if(!token.isPresent()) {
+                LOGGER.warn("Token {} was not present in OAuthAuthenticator", credentials.tokenOrCode);
+            }
+            return token;
+        } catch (MissingRequiredScopeException e) {
+            throw new MissingRequiredScopeAuthenticationException(e);
         }
-        return token;
     }
 }
