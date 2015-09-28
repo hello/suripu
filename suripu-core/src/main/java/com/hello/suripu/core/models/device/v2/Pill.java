@@ -34,7 +34,7 @@ public class Pill {
     @JsonIgnore
     public final Long internalId;
 
-    @JsonProperty("external_id")
+    @JsonProperty("id")
     public final String externalId;
 
     @JsonProperty("firmware_version")
@@ -52,7 +52,7 @@ public class Pill {
     @JsonProperty("color")
     public final Color color;
 
-    public Pill(final Long internalId, final String externalId, final Optional<String> firmwareVersionOptional, final Optional<Integer> batteryLevelOptional, final Optional<DateTime> lastUpdatedOptional, final State state, final Color color) {
+    private Pill(final Long internalId, final String externalId, final Optional<String> firmwareVersionOptional, final Optional<Integer> batteryLevelOptional, final Optional<DateTime> lastUpdatedOptional, final State state, final Color color) {
         this.internalId = internalId;
         this.externalId = externalId;
         this.firmwareVersionOptional = firmwareVersionOptional;
