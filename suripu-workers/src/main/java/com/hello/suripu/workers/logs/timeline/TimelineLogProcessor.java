@@ -5,7 +5,6 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
@@ -14,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class TimelineLogProcessor extends HelloBaseRecordProcessor {
@@ -69,7 +69,7 @@ public class TimelineLogProcessor extends HelloBaseRecordProcessor {
     @Override
     public void shutdown(IRecordProcessorCheckpointer checkpointer, ShutdownReason reason) {
         LOGGER.warn("SHUTDOWN: {}", reason.toString());
-        if(reason == ShutdownReason.TERMINATE) {
+        if (Objects.equals(ShutdownReason.TERMINATE, reason)) {
             try {
                 checkpointer.checkpoint();
             } catch (InvalidStateException e) {
