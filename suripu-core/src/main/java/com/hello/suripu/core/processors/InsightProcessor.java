@@ -302,7 +302,7 @@ public class InsightProcessor {
                 insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
                 break;
             case "WAKE_VARIANCE":
-                final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
+                final DateTime queryEndDate = DateTime.now(DateTimeZone.UTC).minusDays(1);
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
                 break;
             case "BED_LIGHT_DURATION":
