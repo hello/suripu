@@ -362,7 +362,7 @@ public abstract class DeviceDataDAO {
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibrationOptional);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;
@@ -538,4 +538,8 @@ public abstract class DeviceDataDAO {
     public abstract Optional<DeviceData> getAverageForNight(@Bind("account_id") final Long accountId,
                                                             @Bind("start_ts") final DateTime targetDate,
                                                             @Bind("end_ts") final DateTime endDate);
+
+
+    @SqlQuery("SELECT ROUND(AVG(ambient_air_quality_raw)) FROM device_sensors_master WHERE device_id = :device_id AND account_id := :account_id AND ts > now() - interval '10 days';")
+    public abstract Integer getAverageDustForLast10Days(@Bind("account_id") final Long accountId, @Bind("device_id") final Long deviceId);
 }
