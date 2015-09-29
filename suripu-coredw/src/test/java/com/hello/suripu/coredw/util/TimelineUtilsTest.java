@@ -1062,6 +1062,23 @@ public class TimelineUtilsTest extends FixtureTest {
     }
 
     @Test
+    public void generateInSleepSoundInsight() {
+        final Insight ideal = timelineUtils.generateInSleepSoundInsight(0);
+        assertThat(ideal.condition, is(equalTo(CurrentRoomState.State.Condition.IDEAL)));
+        assertThat(ideal.sensor, is(equalTo(Sensor.SOUND)));
+
+
+        final Insight warning = timelineUtils.generateInSleepSoundInsight(2);
+        assertThat(warning.condition, is(equalTo(CurrentRoomState.State.Condition.WARNING)));
+        assertThat(warning.sensor, is(equalTo(Sensor.SOUND)));
+
+
+        final Insight alert = timelineUtils.generateInSleepSoundInsight(4);
+        assertThat(alert.condition, is(equalTo(CurrentRoomState.State.Condition.ALERT)));
+        assertThat(alert.sensor, is(equalTo(Sensor.SOUND)));
+    }
+
+    @Test
     public void calculateAverageSensorStateEmptySamples() {
         final Optional<Float> average = timelineUtils.calculateAverageSensorState(Collections.<Sample>emptyList(), 0L, 10L);
         assertThat(average.isPresent(), is(false));
@@ -1099,7 +1116,7 @@ public class TimelineUtilsTest extends FixtureTest {
     @Test
     public void testGenerateInSleepInsightsMissingSensorData() {
         final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
-        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 0L, 999L);
+        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 0, 0L, 999L);
         assertThat(insights.isEmpty(), is(true));
     }
 
@@ -1107,7 +1124,7 @@ public class TimelineUtilsTest extends FixtureTest {
     public void testGenerateInSleepInsightsEmptyData() {
         final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
         allSensorSampleList.add(Sensor.LIGHT, Collections.<Sample>emptyList());
-        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 0L, 999L);
+        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 0, 0L, 999L);
         assertThat(insights.isEmpty(), is(true));
     }
 
@@ -1122,7 +1139,7 @@ public class TimelineUtilsTest extends FixtureTest {
         samples.add(new Sample(500L, 80f, 0));
         allSensorSampleList.add(Sensor.LIGHT, samples);
 
-        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 10L, 100L);
+        final List<Insight> insights = timelineUtils.generateInSleepInsights(allSensorSampleList, 0, 10L, 100L);
         assertThat(insights.isEmpty(), is(false));
         assertThat(insights.get(0).condition, is(equalTo(CurrentRoomState.State.Condition.IDEAL)));
     }
