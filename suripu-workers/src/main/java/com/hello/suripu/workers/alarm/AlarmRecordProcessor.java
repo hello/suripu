@@ -13,12 +13,16 @@ import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Histogram;
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,11 +37,17 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AlarmWorkerConfiguration configuration;
 
+    private final Histogram recordAgesMinutes;
+    private final Histogram alarmUpdateLatencyHistogram;
+
+    private final Map<String, DateTime> senseIdLastProcessed;
+
     public AlarmRecordProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                 final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                 final TrackerMotionDAO trackerMotionDAO,
-                                final AlarmWorkerConfiguration configuration){
+                                final AlarmWorkerConfiguration configuration,
+                                final Map<String, DateTime> senseIdLastProcessed){
 
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.scheduledRingTimeHistoryDAODynamoDB = scheduledRingTimeHistoryDAODynamoDB;
@@ -46,11 +56,33 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
 
         this.configuration = configuration;
 
+        this.senseIdLastProcessed = senseIdLastProcessed;
+
+        // Create a histogram of the ages of records in minutes, biased towards newer values.
+        this.recordAgesMinutes = Metrics.defaultRegistry().newHistogram(AlarmRecordProcessor.class, "records", "record-age-minutes", true);
+        // Histogram of the time delta in ms from the last time a given senseId was processed by this worker.
+        this.alarmUpdateLatencyHistogram = Metrics.defaultRegistry().newHistogram(AlarmRecordProcessor.class, "alarms", "alarm-update-latency-millis", true);
     }
 
     @Override
     public void initialize(String s) {
         LOGGER.info("AlarmRecordProcessor initialized: " + s);
+    }
+
+    private Boolean isRecordTooOld(DateTime endDateTime, DateTime recordDateTime) {
+        final Interval interval = new Interval(recordDateTime, endDateTime);
+        final int currentRecordAgeMinutes = interval.toPeriod().getMinutes();
+        recordAgesMinutes.update(currentRecordAgeMinutes);
+        return currentRecordAgeMinutes > configuration.getMaximumRecordAgeMinutes();
+    }
+
+    private void updateLatencyHistogram(final String senseId, final DateTime newDateTime) {
+        if (senseIdLastProcessed.containsKey(senseId)) {
+            final DateTime lastProcessedTime = senseIdLastProcessed.get(senseId);
+            final long deltaSinceSenseIdLastProcessed = new Interval(lastProcessedTime, newDateTime).toDurationMillis();
+            alarmUpdateLatencyHistogram.update(deltaSinceSenseIdLastProcessed);
+        }
+        senseIdLastProcessed.put(senseId, newDateTime);
     }
 
     @Override
@@ -68,6 +100,12 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
                 }
 
                 final String senseId = pb.getData().getDeviceId();
+
+                // If the record is too old, don't process it so that we can catch up to newer messages.
+                if (isRecordTooOld(DateTime.now(), new DateTime(pb.getReceivedAt())) && hasAlarmWorkerDropIfTooOldEnabled(senseId)) {
+                    continue;
+                }
+
                 senseIds.add(senseId);
 
 
@@ -79,6 +117,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
         LOGGER.info("Processing {} unique senseIds.", senseIds.size());
         for(final String senseId : senseIds) {
             try {
+                updateLatencyHistogram(senseId, DateTime.now());
                 RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                         this.scheduledRingTimeHistoryDAODynamoDB,
                         this.smartAlarmLoggerDynamoDB,
@@ -91,6 +130,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
                         flipper
                 );
             }catch (Exception ex){
+                // Currently catching all exceptions, which means that we could checkpoint after a failure.
                 LOGGER.error("Update next ring time for sense {} failed at {}, error {}",
                         senseId,
                         DateTime.now(),
@@ -107,6 +147,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
+        // Optimization in cases where we have very few new messages
         if(records.size() < 5) {
             LOGGER.info("Batch size was small. Sleeping for 10s");
             try {

@@ -1,5 +1,6 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.base.Optional;
 import com.sun.jersey.api.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,27 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
         return defaultResponse;
     }
 
+    private Optional<JsonError> getJsonError(int statusCode) {
+        switch (statusCode) {
+            case 401:
+                return Optional.of(notAuthorized);
+            case 404:
+                return Optional.of(notFoundError);
+            case 400:
+                return Optional.of(new JsonError(statusCode, "Malformed request"));
+            case 405:
+                return Optional.of(new JsonError(statusCode, "Method not allowed"));
+            case 409:
+                return Optional.of(new JsonError(statusCode, "conflict"));
+            case 415:
+                return Optional.of(new JsonError(statusCode, "Unsupported Media Type"));
+            case 403:
+                return Optional.of(new JsonError(statusCode, "Forbidden"));
+            default:
+                return Optional.absent();
+        }
+    }
+
     /**
      * If we have a Webapplication Exception, let's make our error look nice
      * @param exception
@@ -86,54 +108,15 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
     private Response handleWebApplicationException(Throwable exception, Response defaultResponse) {
         WebApplicationException webAppException = (WebApplicationException) exception;
 
-        if (webAppException.getResponse().getStatus() == 401) {
+        Optional<JsonError> error = getJsonError(webAppException.getResponse().getStatus());
+
+        if (error.isPresent()) {
             return Response
-                    .status(Response.Status.UNAUTHORIZED)
-                    .entity(notAuthorized)
+                    .status(webAppException.getResponse().getStatus())
                     .type(MediaType.APPLICATION_JSON)
+                    .entity(error.get())
                     .build();
         }
-        if (webAppException.getResponse().getStatus() == 404) {
-            return Response
-                    .status(Response.Status.NOT_FOUND)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(notFoundError)
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 400) {
-            return Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(400, "Malformed request"))
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 405) {
-            return Response
-                    .status(405)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(405, "Method not allowed"))
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 409) {
-            return Response
-                    .status(409)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(409, "conflict."))
-                    .build();
-        }
-
-        if (webAppException.getResponse().getStatus() == 415) {
-            return Response
-                    .status(415)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(new JsonError(415, "Unsupported Media Type"))
-                    .build();
-        }
-
-
 
         LOGGER.error("WebApplicationException not caught: {} {}", webAppException.getResponse().getStatus(), webAppException.getMessage());
 

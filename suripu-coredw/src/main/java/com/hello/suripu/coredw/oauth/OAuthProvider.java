@@ -62,6 +62,8 @@ public class OAuthProvider implements InjectableProvider<Scope, Type> {
                             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
                         }
                         accessToken  = result.get();
+                    } catch (MissingRequiredScopeAuthenticationException e) {
+                        throw new WebApplicationException(Response.Status.FORBIDDEN);
                     } catch (AuthenticationException e) {
                         LOGGER.warn("Error authenticating credentials {}", e);
                         throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);

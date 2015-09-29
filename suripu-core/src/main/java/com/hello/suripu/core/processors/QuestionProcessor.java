@@ -32,6 +32,9 @@ import java.util.regex.Matcher;
  * Created by kingshy on 10/24/14.
  */
 public class QuestionProcessor {
+    public static final int DEFAULT_NUM_QUESTIONS = 2;
+    public static final int DEFAULT_NUM_MORE_QUESTIONS = 5;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(QuestionProcessor.class);
 
     private static final int MAX_SKIPS_ALLOWED = 8;

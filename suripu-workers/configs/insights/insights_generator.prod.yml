@@ -171,10 +171,3 @@ sleep_stats_db:
     table_name: prod_sleep_stats
 sleep_stats_version: v_0_2
 
-kinesis_logger:
-  stream_name: logs
-  enabled : true
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO
-

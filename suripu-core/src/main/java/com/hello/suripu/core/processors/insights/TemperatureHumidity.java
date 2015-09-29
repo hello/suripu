@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
 import com.hello.suripu.core.preferences.TemperatureUnit;
+import com.hello.suripu.core.util.DataUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -21,8 +22,6 @@ import java.util.List;
  */
 public class TemperatureHumidity {
     private static final Logger LOGGER = LoggerFactory.getLogger(TemperatureHumidity.class);
-
-    private static final double TEMP_MULTIPLIER = 100.0;
 
     public static final int IDEAL_TEMP_MIN = 59;
     public static final int IDEAL_TEMP_MAX = 73;
@@ -77,14 +76,14 @@ public class TemperatureHumidity {
         // get min, max and average
         final DescriptiveStatistics stats = new DescriptiveStatistics();
         for (final DeviceData deviceData : data) {
-            stats.addValue(deviceData.ambientTemperature);
+            stats.addValue(DataUtils.calibrateTemperature(deviceData.ambientTemperature));
         }
 
-        final double tmpMinValue = stats.getMin() / TEMP_MULTIPLIER;
+        final double tmpMinValue = stats.getMin();
         final int minTempC = (int) tmpMinValue;
         final int minTempF = celsiusToFahrenheit(tmpMinValue);
 
-        final double tmpMaxValue = stats.getMax() / TEMP_MULTIPLIER;
+        final double tmpMaxValue = stats.getMax();
         final int maxTempC = (int) tmpMaxValue;
         final int maxTempF = celsiusToFahrenheit(tmpMaxValue);
 

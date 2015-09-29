@@ -164,8 +164,10 @@ public abstract class DeviceDataDAO {
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
-            "WHERE account_id = :account_id AND device_id = :device_id AND ambient_light > :light_level " +
+            "WHERE account_id = :account_id AND device_id = :device_id " +
+            "AND ambient_light > :light_level " +
             "AND ts >= :start_ts AND ts <= :end_ts " +
+            "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts" +
             "AND (CAST(date_part('hour', local_utc_ts) AS integer) >= :start_hour " +
             "OR CAST(date_part('hour', local_utc_ts) AS integer) < :end_hour) " +
             "ORDER BY ts")
@@ -174,8 +176,36 @@ public abstract class DeviceDataDAO {
                                                                             @Bind("light_level") int lightLevel,
                                                                             @Bind("start_ts") DateTime startTimestamp,
                                                                             @Bind("end_ts") DateTime endTimestamp,
+                                                                            @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                            @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
                                                                             @Bind("start_hour") int startHour,
                                                                             @Bind("end_hour") int endHour);
+
+    @RegisterMapper(DeviceDataMapper.class)
+    @SqlQuery("SELECT * FROM device_sensors_master" +
+            "WHERE account_id = :account_id AND device_id = :device_id" +
+            "AND ts >= :start_ts AND ts <= :end_ts" +
+            "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour" +
+            "AND CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)")
+    public abstract ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(@Bind("account_id") Long accountId,
+                                                                     @Bind("device_id") Long deviceId,
+                                                                     @Bind("start_ts") DateTime startTimestamp,
+                                                                     @Bind("end_ts") DateTime endTimestamp,
+                                                                     @Bind("start_hour") int startHour,
+                                                                     @Bind("end_hour") int endHour);
+
+    @RegisterMapper(DeviceDataMapper.class)
+    @SqlQuery("SELECT * FROM device_sensors_master" +
+            "WHERE account_id = :account_id AND device_id = :device_id" +
+            "AND ts >= :start_ts AND ts <= :end_ts" +
+            "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour" +
+            "OR CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)")
+    public abstract ImmutableList<DeviceData> getBetweenHourDateByTS(@Bind("account_id") Long accountId,
+                                                                     @Bind("device_id") Long deviceId,
+                                                                     @Bind("start_ts") DateTime startTimestamp,
+                                                                     @Bind("end_ts") DateTime endTimestamp,
+                                                                     @Bind("start_hour") int startHour,
+                                                                     @Bind("end_hour") int endHour);
 
     @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
@@ -300,6 +330,7 @@ public abstract class DeviceDataDAO {
 
         final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
         return sortedList;
+
     }
 
     // used by timeline, query by local_utc_ts
@@ -391,7 +422,6 @@ public abstract class DeviceDataDAO {
 
                 final List<Sample> sortedList = Bucketing.sortResults(merged, startOffsetMillis);
                 sensorDataResults.add(sensor, sortedList);
-
             }
         }
 
@@ -469,7 +499,9 @@ public abstract class DeviceDataDAO {
             if (!mergedMaps.get(sensor).isEmpty()) {
                 LOGGER.trace("New map size = {}", mergedMaps.get(sensor).size());
                 final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.get(sensor), currentOffsetMillis);
+
                 sensorDataResults.add(sensor, sortedList);
+
             }
         }
 

@@ -7,6 +7,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.util.AlgorithmType;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.TimelineError;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
@@ -31,6 +32,7 @@ public class TimelineLog {
 
     private final LoggingProtos.BatchLogMessage.Builder builder; //mutable, but only to add timeline log messages
     private final long dateOfNight;
+    private final String dateOfNightString;
     private final long accountId; //use for partition as well
 
     private static final BiMap<TimelineError, ErrorType> invalidNightErrorMap;
@@ -74,6 +76,7 @@ public class TimelineLog {
     }
 
 
+
     public static Optional<TimelineLog> createFromProtobuf (final  String protobufBase64)  {
         return createFromProtobuf(Base64.decodeBase64(protobufBase64));
     }
@@ -106,17 +109,21 @@ public class TimelineLog {
 
     public TimelineLog(final Long accountId, final long dateOfNight) {
         this.dateOfNight = dateOfNight;
+        this.dateOfNightString = DateTimeUtil.dateToYmdString(new DateTime().withZone(DateTimeZone.UTC).withMillis(dateOfNight));
         this.accountId = accountId;
 
         builder = LoggingProtos.BatchLogMessage.newBuilder();
         builder.setLogType(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG);
         builder.setReceivedAt(DateTime.now().withZone(DateTimeZone.UTC).getMillis());
+
+
     }
 
     private TimelineLog(final LoggingProtos.BatchLogMessage.Builder builder, final long accountId, final long dateOfNight) {
         this.builder = builder;
         this.accountId = accountId;
         this.dateOfNight = dateOfNight;
+        this.dateOfNightString = DateTimeUtil.dateToYmdString(new DateTime().withZone(DateTimeZone.UTC).withMillis(dateOfNight));
     }
 
     public byte [] toProtoBuf() {
@@ -158,6 +165,7 @@ public class TimelineLog {
                         .setNightOfTimeline(dateOfNight)
                         .setAlgorithm(AlgType.NO_ALGORITHM)
                         .setError(errorType)
+                        .setNightOf(dateOfNightString)
                         .build());
 
     }
@@ -176,6 +184,7 @@ public class TimelineLog {
                         .setAlgorithm(AlgType.NO_ALGORITHM)
                         .setMessage(message)
                         .setError(errorType)
+                        .setNightOf(dateOfNightString)
                         .build());
 
     }
@@ -191,8 +200,9 @@ public class TimelineLog {
                 .setAccountId(accountId)
                 .setNightOfTimeline(dateOfNight)
                 .setAlgorithm(algType)
-                .setError(ErrorType.NO_ERROR);
-        
+                .setError(ErrorType.NO_ERROR)
+                .setNightOf(dateOfNightString);
+
         for (final Event event : predictions) {
             final Optional<Prediction> predictionOptional = predictionFromEvent(event);
 
@@ -225,6 +235,7 @@ public class TimelineLog {
                         .setNightOfTimeline(dateOfNight)
                         .setAlgorithm(algType)
                         .setError(error)
+                        .setNightOf(dateOfNightString)
                         .build());
     }
 
@@ -248,6 +259,7 @@ public class TimelineLog {
                         .setAlgorithm(algType)
                         .setError(error)
                         .setMessage(message)
+                        .setNightOf(dateOfNightString)
                         .build());
     }
 
@@ -266,6 +278,7 @@ public class TimelineLog {
                         .setError(ErrorType.NO_ERROR)
                         .setModelName(model)
                         .setModelScore(score)
+                        .setNightOf(dateOfNightString)
                         .build());
     }
 

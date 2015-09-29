@@ -11,6 +11,7 @@ import com.hello.suripu.workers.notifications.PushNotificationsProcessor;
 import com.hello.suripu.workers.pill.S3RecordProcessor;
 import com.hello.suripu.workers.pill.SavePillDataProcessor;
 import com.hello.suripu.workers.sense.SenseSaveProcessor;
+import com.hello.suripu.workers.sense.lastSeen.SenseLastSeenProcessor;
 import com.hello.suripu.workers.timeline.TimelineRecordProcessor;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
@@ -32,7 +33,8 @@ import javax.inject.Singleton;
         PushNotificationsProcessor.class,
         TimelineRecordProcessor.class,
         TimelineProcessor.class,
-        TimelineLogProcessor.class
+        TimelineLogProcessor.class,
+        SenseLastSeenProcessor.class
 })
 public class WorkerRolloutModule {
     private final FeatureStore featureStore;

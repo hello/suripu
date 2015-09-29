@@ -349,4 +349,24 @@ public class CurrentRoomState {
 
         return new State(sound, message, idealSoundCondition, condition, dataTimestampUTC, State.Unit.DB);
     }
+
+    public static Optional<State> getSensorState(final Sensor sensor,
+                                                 final float value,
+                                                 final DateTime dataTimestampUTC,
+                                                 final boolean preSleep) {
+        switch (sensor) {
+            case LIGHT:
+                return Optional.of(CurrentRoomState.getLightState(value, dataTimestampUTC, preSleep));
+            case SOUND:
+                return Optional.of(CurrentRoomState.getSoundState(value, dataTimestampUTC, preSleep));
+            case HUMIDITY:
+                return Optional.of(CurrentRoomState.getHumidityState(value, dataTimestampUTC, preSleep));
+            case TEMPERATURE:
+                return Optional.of(CurrentRoomState.getTemperatureState(value, dataTimestampUTC, CurrentRoomState.DEFAULT_TEMP_UNIT, preSleep));
+            case PARTICULATES:
+                return Optional.of(CurrentRoomState.getParticulatesState(value, dataTimestampUTC, preSleep));
+            default:
+                return Optional.absent();
+        }
+    }
 }

@@ -26,10 +26,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -66,21 +64,18 @@ public class InsightProcessorTest {
         final LightData lightData = Mockito.mock(LightData.class);
         final WakeStdDevData wakeStdDevData = Mockito.mock(WakeStdDevData.class);
         final AccountInfoProcessor accountInfoProcessor = Mockito.mock(AccountInfoProcessor.class);
-        final Map<String, String> insightInfoPreview =  Mockito.mock(HashMap.class);
 
         //Prepping for taking care of @NotNull check
-        final Long accountId = FAKE_ACCOUNT_ID;
-        final Long deviceId = FAKE_DEVICE_ID;
         final int light = 2;
         final int zeroLight = 0;
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
         final int offsetMillis = -28800000;
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(10), offsetMillis, 1, 1, 1, 0, 0, 0));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0));
-        data.add(new DeviceData(accountId, deviceId, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(10), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, light + 1,light + 1, 0, 0, timestamp.withMinuteOfHour(30), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, light,light, 0, 0, timestamp.withMinuteOfHour(45), offsetMillis, 1, 1, 1, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, zeroLight,zeroLight, 0, 0, timestamp.withHourOfDay(21), offsetMillis, 1, 1, 1, 0, 0, 0));
 
         final List<InfoInsightCards> mockInfoInsightCardsList = Lists.newArrayList(Mockito.mock(InfoInsightCards.class));
         final DeviceStatus mockDeviceStatus = Mockito.mock(DeviceStatus.class);
@@ -107,7 +102,6 @@ public class InsightProcessorTest {
         Mockito.when(accountInfoProcessor.toString()).thenReturn("someString");
         Mockito.when(lightData.getLightPercentile(Mockito.any(Integer.class))).thenReturn(1);
         Mockito.when(wakeStdDevData.getWakeStdDevPercentile(Mockito.any(Integer.class))).thenReturn(1);
-        Mockito.when(insightInfoPreview.toString()).thenReturn("someString");
 
         //Initialize InsightProcessor
         final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAO, deviceDAO,
@@ -119,8 +113,7 @@ public class InsightProcessorTest {
                 preferencesDAO,
                 accountInfoProcessor,
                 lightData,
-                wakeStdDevData,
-                insightInfoPreview);
+                wakeStdDevData);
 
         //only to get rid of null pointer exception
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);

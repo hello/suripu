@@ -122,4 +122,8 @@ public class BaseResource {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasDustSmoothEnabled(final String senseId) {
+        return featureFlipper.deviceFeatureActive(FeatureFlipper.DUST_SMOOTH, senseId, Collections.EMPTY_LIST);
+    }
+
 }

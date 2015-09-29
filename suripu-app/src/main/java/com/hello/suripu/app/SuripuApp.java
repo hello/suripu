@@ -13,7 +13,6 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
-import com.hello.suripu.app.cli.PopulateSleepScoreTable;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
@@ -22,6 +21,7 @@ import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
 import com.hello.suripu.app.resources.v1.AccountResource;
 import com.hello.suripu.app.resources.v1.AlarmResource;
 import com.hello.suripu.app.resources.v1.AppCheckinResource;
+import com.hello.suripu.app.resources.v1.AppStatsResource;
 import com.hello.suripu.app.resources.v1.DeviceResources;
 import com.hello.suripu.app.resources.v1.FeedbackResource;
 import com.hello.suripu.app.resources.v1.InsightsResource;
@@ -43,35 +43,32 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
+import com.hello.suripu.core.db.AppStatsDAO;
+import com.hello.suripu.core.db.AppStatsDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelDAODynamoDB;
-import com.hello.suripu.core.db.BayesNetModelDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.CalibrationDynamoDB;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAO;
-import com.hello.suripu.core.db.BayesNetHmmModelPriorsDAODynamoDB;
+import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
-import com.hello.suripu.core.store.StoreFeedbackDAO;
-import com.hello.suripu.core.processors.insights.WakeStdDevData;
-import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TeamStoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
-import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
-import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
@@ -86,8 +83,6 @@ import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
 import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
-import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
-import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
@@ -95,13 +90,21 @@ import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.core.processors.AccountInfoProcessor;
 import com.hello.suripu.core.processors.InsightProcessor;
+import com.hello.suripu.core.processors.QuestionProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.core.processors.insights.LightData;
+import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.provision.PillProvisionDAO;
+import com.hello.suripu.core.store.StoreFeedbackDAO;
 import com.hello.suripu.core.support.SupportDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.KeyStoreUtils;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
+import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
+import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -136,7 +139,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addBundle(new DBIExceptionsBundle());
         bootstrap.addCommand(new CreateDynamoDBTables());
         bootstrap.addCommand(new RecreatePillColorCommand());
-        bootstrap.addCommand(new PopulateSleepScoreTable());
         bootstrap.addCommand(new ScanInvalidNightsCommand());
     }
 
@@ -242,6 +244,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(ringTimeHistoryDynamoDBClient,
                 configuration.getRingTimeHistoryDBConfiguration().getTableName());
 
+        final AmazonDynamoDB appStatsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAppStatsConfiguration().getEndpoint());
+        final AppStatsDAO appStatsDAO = new AppStatsDAODynamoDB(appStatsDynamoDBClient, configuration.getAppStatsConfiguration().getTableName());
+
         final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper = NotificationSubscriptionDAOWrapper.create(
                 notificationSubscriptionsDAO,
                 snsClient,
@@ -255,15 +260,15 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
-        /* Priors for bayesnet  */
-        final String priorDbTableName = configuration.getHmmBayesnetPriorsConfiguration().getTableName();
-        final AmazonDynamoDB priorsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetPriorsConfiguration().getEndpoint());
-        final BayesNetHmmModelPriorsDAO priorsDAO = new BayesNetHmmModelPriorsDAODynamoDB(priorsDb,priorDbTableName);
+        /* Individual models for users  */
+        final String onlineHmmModelsTableName = configuration.getOnlineHmmModelsConfiguration().getTableName();
+        final AmazonDynamoDB onlineHmmModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getOnlineHmmModelsConfiguration().getEndpoint());
+        final OnlineHmmModelsDAO onlineHmmModelsDAO = OnlineHmmModelsDAODynamoDB.create(onlineHmmModelsDb,onlineHmmModelsTableName);
 
-        /* Models for bayesnet */
-        final String modelDbTableName = configuration.getHmmBayesnetModelsConfiguration().getTableName();
-        final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getHmmBayesnetModelsConfiguration().getEndpoint());
-        final BayesNetModelDAO modelDAO = new BayesNetHmmModelDAODynamoDB(modelsDb,modelDbTableName);
+        /* Models for feature extraction layer */
+        final String featureExtractionModelsTableName = configuration.getFeatureExtractionModelsConfiguration().getTableName();
+        final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
+        final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
@@ -340,6 +345,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 configuration.getSenseLastSeenConfiguration().getTableName()
         );
 
+
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
         final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
 
@@ -361,9 +367,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 accountDAO,
                 sleepStatsDAODynamoDB,
                 senseColorDAO,
-                priorsDAO,
-                modelDAO,
+                onlineHmmModelsDAO,
+                featureExtractionDAO,
                 calibrationDAO);
+                
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO,timelineLogger, timelineProcessor));
 
@@ -372,7 +379,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new MobilePushRegistrationResource(notificationSubscriptionDAOWrapper, mobilePushNotificationProcessor, accountDAO));
 
-        environment.addResource(new QuestionsResource(accountDAO, questionResponseDAO, timeZoneHistoryDAODynamoDB, configuration.getQuestionConfigs().getNumSkips()));
+        final QuestionProcessor questionProcessor = new QuestionProcessor.Builder()
+                .withQuestionResponseDAO(questionResponseDAO)
+                .withCheckSkipsNum(configuration.getQuestionConfigs().getNumSkips())
+                .withQuestions(questionResponseDAO)
+                .build();
+        environment.addResource(new QuestionsResource(accountDAO, timeZoneHistoryDAODynamoDB, questionProcessor));
         environment.addResource(new FeedbackResource(feedbackDAO, timelineDAODynamoDB));
         environment.addResource(new AppCheckinResource(2015000000));
 
@@ -416,5 +428,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new com.hello.suripu.app.v2.AccountPreferencesResource(accountPreferencesDAO));
         StoreFeedbackDAO storeFeedbackDAO = commonDB.onDemand(StoreFeedbackDAO.class);
         environment.addResource(new StoreFeedbackResource(storeFeedbackDAO));
+        environment.addResource(new AppStatsResource(appStatsDAO, insightsDAODynamoDB, questionProcessor, accountDAO, timeZoneHistoryDAODynamoDB));
     }
 }

@@ -1,5 +1,6 @@
 package com.hello.suripu.core.metrics;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import org.joda.time.DateTime;
@@ -9,8 +10,14 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DeviceEvents {
+
+    @JsonProperty("device_id")
     public final String deviceId;
+
+    @JsonProperty("created_at")
     public final DateTime createdAt;
+
+    @JsonProperty("events")
     public final Set<String> events;
 
     public DeviceEvents(final String deviceId, final DateTime createdAt, final Set<String> events) {
