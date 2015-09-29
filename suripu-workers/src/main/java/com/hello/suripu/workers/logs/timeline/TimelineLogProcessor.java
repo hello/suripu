@@ -34,30 +34,26 @@ public class TimelineLogProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer checkpointer) {
-        final List<LoggingProtos.TimelineLog> logs = Lists.newArrayList();
-        final Set<LoggingProtos.TimelineLog> uniqueLogs = Sets.newHashSet();
+        final Set<LoggingProtos.TimelineLog> uniqueLogs = Sets.newLinkedHashSet();
 
         for(final Record record : records) {
+            final LoggingProtos.BatchLogMessage batchLogMessage;
             try {
-                final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(record.getData().array());
-                if(!batchLogMessage.hasLogType() && batchLogMessage.getLogType().equals(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG) && batchLogMessage.getTimelineLogCount() > 0) {
-                    continue;
-                }
-
-                for(final LoggingProtos.TimelineLog timelineLog : batchLogMessage.getTimelineLogList()) {
-                    if(uniqueLogs.contains(timelineLog)) {
-                        continue;
-                    }
-
-                    logs.add(timelineLog);
-                    uniqueLogs.add(timelineLog);
-                }
+                batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(record.getData().array());
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed converting protobuf: {}", e.getMessage());
+                continue;
+            }
+
+            if(batchLogMessage.hasLogType()
+                    && batchLogMessage.getLogType().equals(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG)) {
+                for(final LoggingProtos.TimelineLog timelineLog : batchLogMessage.getTimelineLogList()) {
+                    uniqueLogs.add(timelineLog);
+                }
             }
         }
 
-        timelineAnalytics.insertBatchWithIndividualRetry(logs);
+        timelineAnalytics.insertBatchWithIndividualRetry(uniqueLogs);
         // TODO: checkpoint here
     }
 

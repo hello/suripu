@@ -9,7 +9,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.regex.Matcher;
 
 public abstract class TimelineAnalytics {
@@ -21,10 +21,10 @@ public abstract class TimelineAnalytics {
 
     @BatchChunkSize(100)
     @SqlBatch
-    abstract void insert(@BindTimelineLog List<LoggingProtos.TimelineLog> timelineLogs);
+    abstract void insert(@BindTimelineLog Collection<LoggingProtos.TimelineLog> timelineLogs);
 
 
-    int insertBatchWithIndividualRetry(final List<LoggingProtos.TimelineLog> timelineLogs) {
+    int insertBatchWithIndividualRetry(final Collection<LoggingProtos.TimelineLog> timelineLogs) {
         int i = 0;
         if(timelineLogs.isEmpty()) {
             return 0;
