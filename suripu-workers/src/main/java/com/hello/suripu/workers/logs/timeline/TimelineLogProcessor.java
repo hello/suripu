@@ -1,5 +1,7 @@
 package com.hello.suripu.workers.logs.timeline;
 
+import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
+import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
@@ -54,7 +56,14 @@ public class TimelineLogProcessor extends HelloBaseRecordProcessor {
         }
 
         timelineAnalytics.insertBatchWithIndividualRetry(uniqueLogs);
-        // TODO: checkpoint here
+
+        try {
+            checkpointer.checkpoint();
+        } catch (InvalidStateException e) {
+            LOGGER.error(e.getMessage());
+        } catch (ShutdownException e) {
+            LOGGER.error("Received shutdown command, bailing. {}", e.getMessage());
+        }
     }
 
     @Override

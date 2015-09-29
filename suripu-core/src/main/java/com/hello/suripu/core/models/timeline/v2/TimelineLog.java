@@ -166,6 +166,7 @@ public class TimelineLog {
                         .setAlgorithm(AlgType.NO_ALGORITHM)
                         .setError(errorType)
                         .setNightOf(dateOfNightString)
+                        .setTimestampWhenLogGenerated(DateTime.now().getMillis())
                         .build());
 
     }

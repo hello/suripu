@@ -16,16 +16,21 @@ public abstract class TimelineAnalytics {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineAnalytics.class);
 
-    @SqlUpdate("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error) VALUES (:account_id, :date_of_night, :algorithm, :error);")
+    @SqlUpdate("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at)" +
+            " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at);")
     abstract void insert(@BindTimelineLog LoggingProtos.TimelineLog timelineLog);
 
     @BatchChunkSize(100)
     @SqlBatch
     abstract void insert(@BindTimelineLog Collection<LoggingProtos.TimelineLog> timelineLogs);
 
-
+    /**
+     * Attempt to batch insert all timeLineLogs.
+     * If batch insert fails, attempt to insert each log individually.
+     * @param timelineLogs
+     * @return count of logs that were successfully inserted into the DB.
+     */
     int insertBatchWithIndividualRetry(final Collection<LoggingProtos.TimelineLog> timelineLogs) {
-        int i = 0;
         if(timelineLogs.isEmpty()) {
             return 0;
         }
@@ -34,7 +39,7 @@ public abstract class TimelineAnalytics {
             insert(timelineLogs);
             return timelineLogs.size();
         } catch (UnableToExecuteStatementException exception) {
-
+            int i = 0;
             for(final LoggingProtos.TimelineLog timelineLog : timelineLogs) {
 
                 try {
@@ -47,7 +52,7 @@ public abstract class TimelineAnalytics {
                     }
                 }
             }
+            return i;
         }
-        return i;
     }
 }
