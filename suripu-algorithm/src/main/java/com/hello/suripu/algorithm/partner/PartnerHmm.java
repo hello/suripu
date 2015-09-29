@@ -25,7 +25,7 @@ public class PartnerHmm {
     static final Double DECISION_FRACTION = 0.5;
     static final int NUM_STATES = 7;
     static final int NUM_OBS = 4;
-    static final Double PROB_NOT_ON_BED = 0.999;
+    static final Double PROB_ON_BED_WHEN_THER_IS_ACTIVITY = 1e-10;
 
     static final double MIN_LIKELIHOOD = 1e-100;
 
@@ -131,10 +131,10 @@ public class PartnerHmm {
     private static  HmmPdfInterface [] getObservationModel() {
         final List<Double> probsOfNobodyOnBed = Lists.newArrayList();
         for (int i = 0; i < NUM_OBS; i++) {
-            probsOfNobodyOnBed.add((1.0 - PROB_NOT_ON_BED) / (double)(NUM_STATES - 1));
+            probsOfNobodyOnBed.add(PROB_ON_BED_WHEN_THER_IS_ACTIVITY / (double)(NUM_STATES - 1));
         }
 
-        probsOfNobodyOnBed.set(0,PROB_NOT_ON_BED);
+        probsOfNobodyOnBed.set(0,1.0 - PROB_ON_BED_WHEN_THER_IS_ACTIVITY);
 
 
         /*
