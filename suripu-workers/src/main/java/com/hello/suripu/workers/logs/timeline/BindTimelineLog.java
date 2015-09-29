@@ -24,7 +24,7 @@ public @interface BindTimelineLog {
                 public void bind(SQLStatement q, BindTimelineLog bind, LoggingProtos.TimelineLog arg) {
                     // TODO elegantly handle optional fields
                     q.bind("account_id", arg.getAccountId());
-                    q.bind("date_of_night", String.valueOf(arg.getNightOfTimeline())); // TODO replace by arg.getNightOf() when prod has this new property
+                    q.bind("date_of_night", arg.getNightOf());
                     q.bind("algorithm", arg.getAlgorithm().getNumber());
                     q.bind("error", arg.getError().getNumber());
                     if (arg.hasTimestampWhenLogGenerated()) {
