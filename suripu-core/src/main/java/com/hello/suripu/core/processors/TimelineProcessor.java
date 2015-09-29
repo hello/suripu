@@ -9,10 +9,10 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
@@ -46,7 +46,6 @@ import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
@@ -62,7 +61,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -705,8 +703,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final List<Insight> insights;
         if (hasTimelineInSleepInsights(accountId)) {
-            insights = timelineUtils.generateInSleepInsights(allSensorSampleList, sleepStats.sleepTime,
-                    sleepStats.wakeTime);
+            insights = timelineUtils.generateInSleepInsights(allSensorSampleList, numSoundEvents,
+                    sleepStats.sleepTime, sleepStats.wakeTime);
         } else {
             insights = timelineUtils.generatePreSleepInsights(allSensorSampleList,
                     sleepStats.sleepTime, accountId);

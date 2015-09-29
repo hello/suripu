@@ -86,7 +86,6 @@ public class TimelineUtils {
             Sensor.TEMPERATURE,
             Sensor.HUMIDITY,
             Sensor.PARTICULATES,
-            Sensor.SOUND,
             Sensor.LIGHT,
     };
 
@@ -866,7 +865,22 @@ public class TimelineUtils {
         }
     }
 
+    public Insight generateInSleepSoundInsight(final int soundEventCount) {
+        final int soundScore = SleepScoreUtils.calculateSoundScore(soundEventCount);
+        if (soundScore <= 20) {
+            return new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.ALERT,
+                    English.ALERT_SOUND_PRE_SLEEP_MESSAGE);
+        } else if (soundScore <= 60) {
+            return new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.WARNING,
+                    English.WARNING_SOUND_PRE_SLEEP_MESSAGE);
+        } else {
+            return new Insight(Sensor.SOUND, CurrentRoomState.State.Condition.IDEAL,
+                    English.IDEAL_SOUND_PRE_SLEEP_MESSAGE);
+        }
+    }
+
     public List<Insight> generateInSleepInsights(final AllSensorSampleList allSensorSampleList,
+                                                 final int soundEventCount,
                                                  final Long sleepTimestampUTC,
                                                  final Long wakeTimestampUTC) {
         if (allSensorSampleList.isEmpty()) {
@@ -897,6 +911,9 @@ public class TimelineUtils {
                 insights.add(insight.get());
             }
         }
+
+        final Insight soundInsight = generateInSleepSoundInsight(soundEventCount);
+        insights.add(soundInsight);
 
         return insights;
     }
