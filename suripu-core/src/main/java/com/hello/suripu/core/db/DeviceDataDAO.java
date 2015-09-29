@@ -540,6 +540,10 @@ public abstract class DeviceDataDAO {
                                                             @Bind("end_ts") final DateTime endDate);
 
 
-    @SqlQuery("SELECT ROUND(AVG(ambient_air_quality_raw)) FROM device_sensors_master WHERE device_id = :device_id AND account_id := :account_id AND ts > now() - interval '10 days';")
-    public abstract Integer getAverageDustForLast10Days(@Bind("account_id") final Long accountId, @Bind("device_id") final Long deviceId);
+    @SqlQuery("SELECT ROUND(AVG(ambient_air_quality_raw)) FROM device_sensors_master WHERE device_id = :device_id AND account_id := :account_id AND ts > :then;")
+    protected abstract Integer getAverageDustForLastNDays(@Bind("account_id") final Long accountId, @Bind("device_id") final Long deviceId, @Bind("then") final DateTime then);
+
+    public Integer getAverageDustForLast10Days(final Long accountId, final Long deviceId) {
+        return this.getAverageDustForLastNDays(accountId, deviceId, DateTime.now(DateTimeZone.UTC).minusDays(10));
+    }
 }
