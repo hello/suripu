@@ -68,6 +68,15 @@ public class TimelineLogProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer checkpointer, ShutdownReason reason) {
-
+        LOGGER.warn("SHUTDOWN: {}", reason.toString());
+        if(reason == ShutdownReason.TERMINATE) {
+            try {
+                checkpointer.checkpoint();
+            } catch (InvalidStateException e) {
+                LOGGER.error(e.getMessage());
+            } catch (ShutdownException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
     }
 }
