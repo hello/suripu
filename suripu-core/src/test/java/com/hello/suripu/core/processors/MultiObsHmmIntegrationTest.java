@@ -137,7 +137,7 @@ public class MultiObsHmmIntegrationTest {
                     new Transition(0,1,34),
                     new Transition(0,1,39),
                     new Transition(0,1,39)};
-
+/* if there are two motion periods required to wake
             final Transition [] wakes = {
                     new Transition(1,2,124),
                     new Transition(1,2,137),
@@ -159,7 +159,29 @@ public class MultiObsHmmIntegrationTest {
                     new Transition(1,2,113),
                     new Transition(1,2,113),
                     new Transition(1,2,116)};
+*/
 
+            final Transition [] wakes = {
+                    new Transition(1,2,127),
+                    new Transition(1,2,137),
+                    new Transition(1,2,129),
+                    new Transition(1,2,170),
+                    new Transition(1,2,127),
+                    new Transition(1,2,124),
+                    new Transition(1,2,132),
+                    new Transition(1,2,131),
+                    new Transition(1,2,113),
+                    new Transition(1,2,116),
+                    new Transition(1,2,113),
+                    new Transition(1,2,107),
+                    new Transition(1,2,125),
+                    new Transition(1,2,127),
+                    new Transition(1,2,136),
+                    new Transition(1,2,117),
+                    new Transition(1,2,101),
+                    new Transition(1,2,113),
+                    new Transition(1,2,113),
+                    new Transition(1,2,116)};
             //get model
             final byte[] protobuf = HmmUtils.loadFile("fixtures/algorithm/default_model.bin");
             final Optional<OnlineHmmPriors> modelOptional = OnlineHmmPriors.createFromProtoBuf(protobuf);
@@ -202,13 +224,13 @@ public class MultiObsHmmIntegrationTest {
                 //System.out.print(String.format("COST: %f\n",results.get(outputId).pathcost));
                 List<Transition> transitions = results.get(outputId).transitions;
 
-
                 for (final Transition transition : transitions) {
 
                     if (transition.fromState == 0) {
                         TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
                     }
                     else if (transition.fromState == 1) {
+                        System.out.print(String.format("%d\n",count));
                         TestCase.assertEquals(wakes[count].idx,transition.idx,1);
                     }
                 }
