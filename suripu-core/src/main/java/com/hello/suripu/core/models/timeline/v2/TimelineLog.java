@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models.timeline.v2;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -34,6 +35,7 @@ public class TimelineLog {
     private final long dateOfNight;
     private final String dateOfNightString;
     private final long accountId; //use for partition as well
+    private final long timestamp;
 
     private static final BiMap<TimelineError, ErrorType> invalidNightErrorMap;
     private static final BiMap<AlgorithmType,AlgType> algorithmTypeMap;
@@ -96,7 +98,7 @@ public class TimelineLog {
                 return Optional.absent();
             }
 
-            return Optional.of(new TimelineLog(log.toBuilder(),timelineLog.getAccountId(),timelineLog.getNightOfTimeline()));
+            return Optional.of(new TimelineLog(log.toBuilder(),timelineLog.getAccountId(),timelineLog.getNightOfTimeline(), timelineLog.getTimestampWhenLogGenerated()));
 
         }
         catch (InvalidProtocolBufferException e) {
@@ -106,8 +108,7 @@ public class TimelineLog {
         return Optional.absent();
     }
 
-
-    public TimelineLog(final Long accountId, final long dateOfNight) {
+    public TimelineLog(final long accountId, final long dateOfNight, final long timestamp) {
         this.dateOfNight = dateOfNight;
         this.dateOfNightString = DateTimeUtil.dateToYmdString(new DateTime().withZone(DateTimeZone.UTC).withMillis(dateOfNight));
         this.accountId = accountId;
@@ -115,19 +116,28 @@ public class TimelineLog {
         builder = LoggingProtos.BatchLogMessage.newBuilder();
         builder.setLogType(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG);
         builder.setReceivedAt(DateTime.now().withZone(DateTimeZone.UTC).getMillis());
-
-
+        this.timestamp = timestamp;
     }
 
-    private TimelineLog(final LoggingProtos.BatchLogMessage.Builder builder, final long accountId, final long dateOfNight) {
+    public TimelineLog(final Long accountId, final long dateOfNight) {
+        this(accountId, dateOfNight, DateTime.now().getMillis());
+    }
+
+    private TimelineLog(final LoggingProtos.BatchLogMessage.Builder builder, final long accountId, final long dateOfNight, final long timestamp) {
         this.builder = builder;
         this.accountId = accountId;
         this.dateOfNight = dateOfNight;
+        this.timestamp = timestamp;
         this.dateOfNightString = DateTimeUtil.dateToYmdString(new DateTime().withZone(DateTimeZone.UTC).withMillis(dateOfNight));
     }
 
+    @VisibleForTesting
+    public LoggingProtos.BatchLogMessage build() {
+        return builder.build();
+    }
+
     public byte [] toProtoBuf() {
-        return builder.build().toByteArray();
+        return build().toByteArray();
     }
 
     public String toProtobufBase64() {
@@ -152,6 +162,14 @@ public class TimelineLog {
 
     }
 
+    private Builder getTimelineLogBuilder() {
+        return LoggingProtos.TimelineLog.newBuilder()
+                .setAccountId(accountId)
+                .setNightOfTimeline(dateOfNight)
+                .setNightOf(dateOfNightString)
+                .setTimestampWhenLogGenerated(timestamp);
+    }
+
     public void addMessage(final TimelineError timelineError) {
         final ErrorType errorType = invalidNightErrorMap.get(timelineError);
 
@@ -160,14 +178,10 @@ public class TimelineLog {
         }
 
         builder.addTimelineLog(
-                LoggingProtos.TimelineLog.newBuilder()
-                        .setAccountId(accountId)
-                        .setNightOfTimeline(dateOfNight)
-                        .setAlgorithm(AlgType.NO_ALGORITHM)
-                        .setError(errorType)
-                        .setNightOf(dateOfNightString)
-                        .build());
-
+                getTimelineLogBuilder()
+                .setAlgorithm(AlgType.NO_ALGORITHM)
+                .setError(errorType)
+                .build());
     }
 
     public void addMessage(final TimelineError timelineError, final String message) {
@@ -176,17 +190,12 @@ public class TimelineLog {
         if (errorType == null) {
             return;
         }
-
         builder.addTimelineLog(
-                LoggingProtos.TimelineLog.newBuilder()
-                        .setAccountId(accountId)
-                        .setNightOfTimeline(dateOfNight)
+                getTimelineLogBuilder()
                         .setAlgorithm(AlgType.NO_ALGORITHM)
-                        .setMessage(message)
                         .setError(errorType)
-                        .setNightOf(dateOfNightString)
+                        .setMessage(message)
                         .build());
-
     }
 
     public void addMessage(final AlgorithmType algorithmType,final List<Event> predictions) {
@@ -196,12 +205,9 @@ public class TimelineLog {
             return;
         }
 
-        final LoggingProtos.TimelineLog.Builder timelineLogBuilder = LoggingProtos.TimelineLog.newBuilder()
-                .setAccountId(accountId)
-                .setNightOfTimeline(dateOfNight)
+        final LoggingProtos.TimelineLog.Builder timelineLogBuilder = getTimelineLogBuilder()
                 .setAlgorithm(algType)
-                .setError(ErrorType.NO_ERROR)
-                .setNightOf(dateOfNightString);
+                .setError(ErrorType.NO_ERROR);
 
         for (final Event event : predictions) {
             final Optional<Prediction> predictionOptional = predictionFromEvent(event);
@@ -230,12 +236,9 @@ public class TimelineLog {
         }
 
         builder.addTimelineLog(
-                LoggingProtos.TimelineLog.newBuilder()
-                        .setAccountId(accountId)
-                        .setNightOfTimeline(dateOfNight)
+                getTimelineLogBuilder()
                         .setAlgorithm(algType)
                         .setError(error)
-                        .setNightOf(dateOfNightString)
                         .build());
     }
 
@@ -253,13 +256,10 @@ public class TimelineLog {
         }
 
         builder.addTimelineLog(
-                LoggingProtos.TimelineLog.newBuilder()
-                        .setAccountId(accountId)
-                        .setNightOfTimeline(dateOfNight)
+                getTimelineLogBuilder()
                         .setAlgorithm(algType)
                         .setError(error)
                         .setMessage(message)
-                        .setNightOf(dateOfNightString)
                         .build());
     }
 
@@ -271,14 +271,11 @@ public class TimelineLog {
         }
 
         builder.addTimelineLog(
-                LoggingProtos.TimelineLog.newBuilder()
-                        .setAccountId(accountId)
-                        .setNightOfTimeline(dateOfNight)
+                getTimelineLogBuilder()
                         .setAlgorithm(algType)
                         .setError(ErrorType.NO_ERROR)
                         .setModelName(model)
                         .setModelScore(score)
-                        .setNightOf(dateOfNightString)
                         .build());
     }
 
