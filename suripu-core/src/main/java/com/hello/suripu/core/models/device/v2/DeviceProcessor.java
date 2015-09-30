@@ -2,6 +2,7 @@ package com.hello.suripu.core.models.device.v2;
 
 
 import com.amazonaws.AmazonServiceException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -14,12 +15,12 @@ import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PairingInfo;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.WifiInfo;
-import com.hello.suripu.core.processors.FeatureFlippedProcessor;
 import com.hello.suripu.core.util.PillColorUtil;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
@@ -33,7 +34,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 
-public class DeviceProcessor extends FeatureFlippedProcessor {
+public class DeviceProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceProcessor.class);
 
@@ -193,20 +194,23 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
      * @param accountId internal account ID
      * @return a Devices object which contains list of all associated senses and pills
      */
-    public Devices getAllDevices(final Long accountId) {
-        final List<DeviceAccountPair> senseAccountPairs = deviceDAO.getSensesForAccountId(accountId);
-        final List<DeviceAccountPair> pillAccountPairs = deviceDAO.getPillsForAccountId(accountId);
+    public Devices getAllDevices(final DeviceQueryInfo deviceQueryInfo) {
+        final List<DeviceAccountPair> senseAccountPairs = deviceDAO.getSensesForAccountId(deviceQueryInfo.accountId);
+        final List<DeviceAccountPair> pillAccountPairs = deviceDAO.getPillsForAccountId(deviceQueryInfo.accountId);
         final Map<String, Optional<WifiInfo>> wifiInfoMap = retrieveWifiInfoMap(senseAccountPairs);
-        final Optional<Pill.Color> pillColorOptional = retrievePillColor(accountId, senseAccountPairs);
+        final Optional<Pill.Color> pillColorOptional = retrievePillColor(deviceQueryInfo.accountId, senseAccountPairs);
 
-        return new Devices(getSenses(senseAccountPairs, wifiInfoMap), getPills(pillAccountPairs, pillColorOptional));
+        final List<Sense> senses = getSenses(deviceQueryInfo, senseAccountPairs, wifiInfoMap);
+        final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
+
+        return new Devices(senses, pills);
     }
 
-    private List<Sense> getSenses(final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
+    private List<Sense> getSenses(final DeviceQueryInfo deviceQueryInfo, final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
         final List<Sense> senses = Lists.newArrayList();
 
         for (final DeviceAccountPair senseAccountPair : senseAccountPairs) {
-            final Optional<DeviceStatus> senseStatusOptional = retrieveSenseStatus(senseAccountPair);
+            final Optional<DeviceStatus> senseStatusOptional = retrieveSenseStatus(senseAccountPair, deviceQueryInfo.isLastSeenDBEnabled, deviceQueryInfo.isSensorsDBUnavailable);
             final Optional<WifiInfo> wifiInfoOptional = wifiInfoMap.get(senseAccountPair.externalDeviceId);
             final Optional<Sense.Color> senseColorOptional = senseColorDAO.get(senseAccountPair.externalDeviceId);
             senses.add(Sense.create(senseAccountPair, senseStatusOptional, senseColorOptional, wifiInfoOptional));
@@ -223,13 +227,15 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         return pills;
     }
 
-    private Optional<DeviceStatus> retrieveSenseStatus(final DeviceAccountPair senseAccountPair) {
+
+    @VisibleForTesting
+    public Optional<DeviceStatus> retrieveSenseStatus(final DeviceAccountPair senseAccountPair, final Boolean isLastSeenDBEnabled, final Boolean isSensorsDBUnavailable) {
         // First attempt: get it from last seen record in dynamo db
-        if (this.isSenseLastSeenDynamoDBReadEnabled(senseAccountPair.accountId)) {
+        if (isLastSeenDBEnabled) {
             return sensorsViewsDynamoDB.senseStatus(senseAccountPair.externalDeviceId, senseAccountPair.accountId, senseAccountPair.internalDeviceId);
         }
 
-        if (this.isSensorsDBUnavailable(senseAccountPair.accountId)) {
+        if (isSensorsDBUnavailable) {
             return Optional.absent();
         }
         // Second attempt: get it from sensor db with assumption that such sense has been active since an hour ago
@@ -242,7 +248,9 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         return senseStatusOptional;
     }
 
-    private Optional<DeviceStatus> retrievePillStatus(final DeviceAccountPair pillAccountPair) {
+
+    @VisibleForTesting
+    public Optional<DeviceStatus> retrievePillStatus(final DeviceAccountPair pillAccountPair) {
         // First attempt: get it from heartbeat
         Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pillAccountPair.internalDeviceId);
 
@@ -253,7 +261,9 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         return pillStatusOptional;
     }
 
-    private Optional<Pill.Color> retrievePillColor(final Long accountId, final List<DeviceAccountPair> senseAccountPairs) {
+
+    @VisibleForTesting
+    public Optional<Pill.Color> retrievePillColor(final Long accountId, final List<DeviceAccountPair> senseAccountPairs) {
         for (final DeviceAccountPair senseAccountPair : senseAccountPairs) {
             if (!accountId.equals(senseAccountPair.accountId)) {
                 continue;
@@ -271,7 +281,9 @@ public class DeviceProcessor extends FeatureFlippedProcessor {
         return Optional.absent();
     }
 
-    private Map<String, Optional<WifiInfo>> retrieveWifiInfoMap(final List<DeviceAccountPair> senseAccountPairs) {
+
+    @VisibleForTesting
+    public Map<String, Optional<WifiInfo>> retrieveWifiInfoMap(final List<DeviceAccountPair> senseAccountPairs) {
         final List<String> senseIds = Lists.newArrayList();
         for (final DeviceAccountPair senseAccountPair : senseAccountPairs) {
             senseIds.add(senseAccountPair.externalDeviceId);

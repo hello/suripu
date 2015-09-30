@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.models.PairingInfo;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.core.models.device.v2.DeviceProcessor;
+import com.hello.suripu.core.models.device.v2.DeviceQueryInfo;
 import com.hello.suripu.core.models.device.v2.Devices;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -40,8 +41,13 @@ public class DeviceResource extends BaseResource {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     public Devices getDevices(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
+        final DeviceQueryInfo deviceQueryInfo = DeviceQueryInfo.create(
+                accessToken.accountId,
+                this.isSenseLastSeenDynamoDBReadEnabled(accessToken.accountId),
+                this.isSensorsDBUnavailable(accessToken.accountId)
+        );
+        return deviceProcessor.getAllDevices(deviceQueryInfo);
 
-        return deviceProcessor.getAllDevices(accessToken.accountId);
     }
 
     @GET
