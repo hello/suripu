@@ -42,6 +42,7 @@ public class MultiObsHmmIntegrationTest {
     @Test
     public void testMultiDayEvaluation() {
         //reference from C++ code
+        /*  for wakes that require two consecutive periods
         final Transition [] wakes = {
                 new Transition( 1,2,158),
                 new Transition(1,2,147),
@@ -53,6 +54,18 @@ public class MultiObsHmmIntegrationTest {
                 new Transition(1,2,142),
                 new Transition(1,2,145),
                 new Transition(1,2,159)};
+         */
+        final Transition [] wakes = {
+                new Transition( 1,2,166),
+                new Transition(1,2,147),
+                new Transition(1,2,158),
+                new Transition(1,2,132),
+                new Transition(1,2,145),
+                new Transition(1,2,151),
+                new Transition(1,2,174),
+                new Transition(1,2,142),
+                new Transition(1,2,160),
+                new Transition(1,2,177)};
 
         final Transition [] sleeps = {
                 new Transition(0,1,55),
@@ -91,7 +104,6 @@ public class MultiObsHmmIntegrationTest {
                 final List<Transition> transitions = results.get(outputId).transitions;
 
                 for (final Transition transition : transitions) {
-
                     if (transition.fromState == 0) {
                         TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
                     }
@@ -230,8 +242,7 @@ public class MultiObsHmmIntegrationTest {
                         TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
                     }
                     else if (transition.fromState == 1) {
-                        System.out.print(String.format("%d\n",count));
-                        TestCase.assertEquals(wakes[count].idx,transition.idx,1);
+                        TestCase.assertEquals(wakes[count].idx, transition.idx, 1);
                     }
                 }
 
