@@ -115,12 +115,12 @@ public class TimelineLog {
 
         builder = LoggingProtos.BatchLogMessage.newBuilder();
         builder.setLogType(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG);
-        builder.setReceivedAt(DateTime.now().withZone(DateTimeZone.UTC).getMillis());
+        builder.setReceivedAt(timestamp);
         this.timestamp = timestamp;
     }
 
     public TimelineLog(final Long accountId, final long dateOfNight) {
-        this(accountId, dateOfNight, DateTime.now().getMillis());
+        this(accountId, dateOfNight, DateTime.now(DateTimeZone.UTC).getMillis());
     }
 
     private TimelineLog(final LoggingProtos.BatchLogMessage.Builder builder, final long accountId, final long dateOfNight, final long timestamp) {
