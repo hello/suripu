@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
+import org.joda.time.Minutes;
 import org.joda.time.format.DateTimeFormat;
 
 /**
@@ -38,6 +39,30 @@ public class DateTimeUtil {
         }
 
         return localTime.plusMillis(localTime.getZone().getOffset(localTime)).withZone(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
+    }
+
+    /**
+     * Attempts to correct timestamp if it matches a specific condition
+     * This is intended to only check for the pathological case of Sense thinking we're 5 months ahead.
+     * It is expected that whoever is calling this method will still apply the normal clockSkew check
+     * Outage of Sept 30th.
+     *
+     * if this is not the exact case we return the sample datetime untouched.
+     *
+     *
+     * @param referenceTime
+     * @param sampleTime
+     * @param clockSkewInHours
+     * @return
+     */
+    public static DateTime possiblySanitizeSampleTime(final DateTime referenceTime, final DateTime sampleTime, final Integer clockSkewInHours) {
+
+        final Integer diffInMinutes = Minutes.minutesBetween(referenceTime, sampleTime.minusMonths(5)).getMinutes();
+        if(Math.abs(diffInMinutes) < clockSkewInHours * 60) {
+            return sampleTime.minusMonths(5).withMinuteOfHour(sampleTime.getMinuteOfHour()).withHourOfDay(sampleTime.getHourOfDay());
+        }
+
+        return sampleTime;
     }
 
 }
