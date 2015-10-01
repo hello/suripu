@@ -22,6 +22,7 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
@@ -165,7 +166,11 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
                 final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
                 final Long timestampMillis = periodicData.getUnixTime() * 1000L;
-                final DateTime periodicDataSampleDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
+                final DateTime rawDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
+
+                // This is intended to check for very specific clock bugs from Sense.
+                final DateTime periodicDataSampleDateTime = DateTimeUtil.possiblySanitizeSampleTime(createdAtRounded, rawDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS);
+
 
                 if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtRounded.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
