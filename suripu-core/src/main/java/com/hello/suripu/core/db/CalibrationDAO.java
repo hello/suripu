@@ -22,7 +22,7 @@ public interface CalibrationDAO {
      * @param calibration Calibration
      * @return int
      */
-    Boolean putForce(Calibration calibration);
+    Optional<Boolean> putForce(Calibration calibration);
     Optional<Boolean> put(Calibration calibration);
 
 
@@ -42,9 +42,9 @@ public interface CalibrationDAO {
 
     /**
      * Put calibration by Batch
-     * @param List<Calibration>
+     * @param calibrations List<Calibration>
      */
 
-    Map<String, Boolean> putBatchForce(List<Calibration> calibrations);
+    Map<String, Optional<Boolean>> putBatchForce(List<Calibration> calibrations);
     Map<String, Optional<Boolean>> putBatch(List<Calibration> calibration);
 }
