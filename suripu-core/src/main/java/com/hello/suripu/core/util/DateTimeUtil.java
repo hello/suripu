@@ -57,8 +57,7 @@ public class DateTimeUtil {
      */
     public static DateTime possiblySanitizeSampleTime(final DateTime referenceTime, final DateTime sampleTime, final Integer clockSkewInHours) {
 
-        final DateTime copySampleTime = new DateTime(sampleTime);
-        final Integer diffInMinutes = Minutes.minutesBetween(referenceTime, copySampleTime.minusMonths(5)).getMinutes();
+        final Integer diffInMinutes = Minutes.minutesBetween(referenceTime, sampleTime.minusMonths(5)).getMinutes();
         if(Math.abs(diffInMinutes) < clockSkewInHours * 60) {
             return sampleTime.minusMonths(5).withMinuteOfHour(sampleTime.getMinuteOfHour()).withHourOfDay(sampleTime.getHourOfDay());
         }
