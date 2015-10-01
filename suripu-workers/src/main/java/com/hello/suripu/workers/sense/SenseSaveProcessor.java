@@ -168,8 +168,10 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 final Long timestampMillis = periodicData.getUnixTime() * 1000L;
                 final DateTime rawDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
 
-                // This is intended to check for very specific clock bugs from Sense.
-                final DateTime periodicDataSampleDateTime = DateTimeUtil.possiblySanitizeSampleTime(createdAtRounded, rawDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS);
+                // This is intended to check for very specific clock bugs from Sense
+                final DateTime periodicDataSampleDateTime = attemptToRecoverSenseReportedTimeStamp(deviceName)
+                        ? DateTimeUtil.possiblySanitizeSampleTime(createdAtRounded, rawDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS)
+                        : rawDateTime;
 
 
                 if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtRounded.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
