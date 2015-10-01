@@ -9,11 +9,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.hmm.Transition;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.LabelMaker;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
@@ -38,6 +40,56 @@ import java.util.UUID;
  */
 public class MultiObsHmmIntegrationTest {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(MultiObsHmmIntegrationTest.class);
+
+    @Test
+    public void testAllFourEvents() {
+        try {
+            //get model
+            final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/allfoureventsmodel.bin");
+            final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
+            TestCase.assertTrue(model.isPresent());
+
+            //get feature data -- it should be a list of days, each day has a bunch of key value pairs that correspond to different sensor data streams for that day
+            List<Map<String,ImmutableList<Integer>>> featureData = HmmUtils.getFeatureDataFromFile("fixtures/algorithm/1012-August2.json");
+            TestCase.assertFalse(featureData.isEmpty());
+
+            //evaluate
+            final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
+
+            final Map<String,ImmutableList<Integer>> features = featureData.get(0);
+            final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features);
+
+            TestCase.assertTrue(results.size() == 2);
+            TestCase.assertTrue(results.containsKey("SLEEP"));
+            TestCase.assertTrue(results.containsKey("BED"));
+
+            final SleepEvents<Optional<Event>> events = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, STATIC_LOGGER);
+
+            TestCase.assertTrue(events.goToBed.get().getStartTimestamp() < events.fallAsleep.get().getStartTimestamp());
+            TestCase.assertTrue(events.outOfBed.get().getStartTimestamp() > events.wakeUp.get().getStartTimestamp());
+
+
+            //now we do something sneaky, by putting a copy of bed events in for sleep
+            results.put("SLEEP",results.get("BED"));
+
+            final MultiEvalHmmDecodedResult sleepResult = results.get("SLEEP");
+            final MultiEvalHmmDecodedResult bedResult = results.get("BED");
+
+            Collections.sort(sleepResult.transitions);
+            Collections.sort(bedResult.transitions);
+
+            TestCase.assertTrue(sleepResult.transitions.get(0).idx == bedResult.transitions.get(0).idx);
+            TestCase.assertTrue(sleepResult.transitions.get(1).idx == bedResult.transitions.get(1).idx);
+
+            final SleepEvents<Optional<Event>> eventsMatched = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, STATIC_LOGGER);
+            TestCase.assertTrue(eventsMatched.goToBed.get().getStartTimestamp() + 60000L == eventsMatched.fallAsleep.get().getStartTimestamp());
+            TestCase.assertTrue(eventsMatched.outOfBed.get().getStartTimestamp() == eventsMatched.wakeUp.get().getStartTimestamp() + 60000L);
+
+        } catch (IOException e) {
+            TestCase.assertTrue(false);
+        }
+
+    }
 
     @Test
     public void testMultiDayEvaluation() {

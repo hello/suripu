@@ -210,7 +210,8 @@ public class OnlineHmm {
         return idx * periodInMinutes * NUM_MILLIS_IN_A_MINUTE  + t0;
     }
 
-    private SleepEvents<Optional<Event>> getSleepEventsFromPredictions(final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId, final long t0,final int numMinutesInPeriod, final int tzOffset) {
+    //static for easy external testing
+    public static SleepEvents<Optional<Event>> getSleepEventsFromPredictions(final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId, final long t0,final int numMinutesInPeriod, final int tzOffset, final Logger logger) {
           /*  DO SOMETHING WITH THE BEST PREDICTIONS */
 
         Optional<Event> sleep = Optional.absent();
@@ -222,7 +223,7 @@ public class OnlineHmm {
             final MultiEvalHmmDecodedResult result = bestDecodedResultsByOutputId.get(outputId);
 
             if (result.transitions.size() < 2) {
-                LOGGER.info("not enough transitions found for output id {}",outputId);
+                logger.info("not enough transitions found for output id {}",outputId);
                 continue;
             }
 
@@ -394,7 +395,7 @@ public class OnlineHmm {
 
 
         /* GET PREDICTIONS  */
-        predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset);
+        predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset,LOGGER);
 
 
         //get filtered feedback
