@@ -76,4 +76,12 @@ public class DateTimeUtilTest {
         final DateTime sampleTime = ref.plusHours(1);
         assertThat(DateTimeUtil.possiblySanitizeSampleTime(ref, sampleTime, 2), equalTo(sampleTime));
     }
+
+    @Test
+    public void testSanitizeDateTimeClockNegativeSkew() {
+        // Clock is slightly skewed, we expect the sample time to be untouched
+        final DateTime ref = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+        final DateTime sampleTime = ref.minusHours(1);
+        assertThat(DateTimeUtil.possiblySanitizeSampleTime(ref, sampleTime, 2), equalTo(sampleTime));
+    }
 }

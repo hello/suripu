@@ -41,18 +41,28 @@ public class DateTimeUtil {
         return localTime.plusMillis(localTime.getZone().getOffset(localTime)).withZone(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(1);
     }
 
+    /**
+     * Attempts to correct timestamp if it matches a specific condition
+     * This is intended to only check for the pathological case of Sense thinking we're 5 months ahead.
+     * It is expected that whoever is calling this method will still apply the normal clockSkew check
+     * Outage of Sept 30th.
+     *
+     * if this is not the exact case we return the sample datetime untouched.
+     *
+     *
+     * @param referenceTime
+     * @param sampleTime
+     * @param clockSkewInHours
+     * @return
+     */
     public static DateTime possiblySanitizeSampleTime(final DateTime referenceTime, final DateTime sampleTime, final Integer clockSkewInHours) {
 
-        // This is intended to only check for the pathological case of Sense thinking we're 5 months ahead.
-        // It is expected that whoever is calling this method will still apply the normal clockSkew check
-        // Outage of Sept 30th.
         final DateTime copySampleTime = new DateTime(sampleTime);
         final Integer diffInMinutes = Minutes.minutesBetween(referenceTime, copySampleTime.minusMonths(5)).getMinutes();
         if(Math.abs(diffInMinutes) < clockSkewInHours * 60) {
             return sampleTime.minusMonths(5).withMinuteOfHour(sampleTime.getMinuteOfHour()).withHourOfDay(sampleTime.getHourOfDay());
         }
 
-        // if this is not the exact case above, we return the sample datetime untouched.
         return sampleTime;
     }
 
