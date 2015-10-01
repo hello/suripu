@@ -101,32 +101,34 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
 
     @Override
-    public Boolean putForce(final Calibration calibration) {
-        final Boolean hasPutItem = putWithoutCondition(calibration, false);
+    public Optional<Boolean> putForce(final Calibration calibration) {
+        final Optional<Boolean> hasPutItem = putWithoutCondition(calibration, false);
         return hasPutItem;
     }
 
 
     @Override
     public Optional<Boolean> put(final Calibration calibration) {
-        final Boolean hasAddedItem = putWithoutCondition(calibration, true);
-        if (!hasAddedItem) {
-            final Optional<Boolean> hasUpdatedItem = putWithConditionIfExist(calibration);
-            return hasUpdatedItem;
+        final Optional<Boolean> hasAddedItem = putWithoutCondition(calibration, true);
+        if (hasAddedItem.isPresent()) {
+            if(!hasAddedItem.get()) {
+                final Optional<Boolean> hasUpdatedItem = putWithConditionIfExist(calibration);
+                return hasUpdatedItem;
+            }
         }
-        return Optional.of(hasAddedItem);
+        return hasAddedItem;
     }
 
 
     @Override
-    public Map<String, Boolean> putBatchForce(final List<Calibration> calibrations) {
+    public Map<String, Optional<Boolean>> putBatchForce(final List<Calibration> calibrations) {
         if (calibrations.isEmpty()) {
             return Collections.emptyMap();
         }
-        final Map<String, Boolean> putResults = Maps.newHashMap();
+        final Map<String, Optional<Boolean>> putResults = Maps.newHashMap();
 
         for (final Calibration calibration : calibrations) {
-            putResults.put(calibration.senseId, Boolean.TRUE);
+            putResults.put(calibration.senseId, Optional.of(Boolean.TRUE));
         }
 
         final List<List<Calibration>> partitionedCalibrationsList = Lists.partition(calibrations, MAX_PUT_FORCE_SIZE_PER_BATCH);
@@ -144,7 +146,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
                 final Map<String, List<WriteRequest>> unprocessedItems = batchWriteItemResult.getUnprocessedItems();
                 if (unprocessedItems.containsKey(calibrationTableName)) {
                     for (final WriteRequest writeRequest : unprocessedItems.get(calibrationTableName)) {
-                        putResults.put(writeRequest.getPutRequest().getItem().get(SENSE_ATTRIBUTE_NAME).getS(), Boolean.FALSE);
+                        putResults.put(writeRequest.getPutRequest().getItem().get(SENSE_ATTRIBUTE_NAME).getS(), Optional.<Boolean>absent());
                     }
                 }
             }
@@ -171,7 +173,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     }
 
 
-    private Boolean putWithoutCondition(final Calibration calibration, final Boolean checkExist) {
+    private Optional<Boolean> putWithoutCondition(final Calibration calibration, final Boolean checkExist) {
         final Map<String, AttributeValue> attributes = getAttributeMapFromCalibration(calibration);
 
         PutItemRequest putItemRequest = new PutItemRequest()
@@ -190,16 +192,19 @@ public class CalibrationDynamoDB implements CalibrationDAO {
 
         try {
             final PutItemResult putItemResult = dynamoDBClient.putItem(putItemRequest);
-            return putItemResult != null;
+            if (putItemResult != null) {
+                return Optional.of(Boolean.TRUE);
+            };
         }
         catch (ConditionalCheckFailedException cce) {
             LOGGER.info("Put condition failed for sense_id {} - tested_at {}", calibration.senseId, calibration.testedAt);
+            return Optional.of(Boolean.FALSE);
         }
         catch (AmazonServiceException ase) {
             LOGGER.error(ase.getMessage());
         }
 
-        return Boolean.FALSE;
+        return Optional.absent();
     }
 
     private Optional<Boolean> putWithConditionIfExist(final Calibration calibration) {
@@ -231,12 +236,12 @@ public class CalibrationDynamoDB implements CalibrationDAO {
         }
         catch (ConditionalCheckFailedException cce) {
             LOGGER.info("Update condition failed for sense_id {} - tested_at {}", calibration.senseId, calibration.testedAt);
-            return Optional.absent();
+            return Optional.of(Boolean.FALSE);
         }
         catch (AmazonServiceException ase) {
             LOGGER.error(ase.getMessage());
         }
-        return Optional.of(Boolean.FALSE);
+        return Optional.absent();
     }
 
 

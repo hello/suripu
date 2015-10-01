@@ -23,8 +23,6 @@ import java.util.List;
 public class TemperatureHumidity {
     private static final Logger LOGGER = LoggerFactory.getLogger(TemperatureHumidity.class);
 
-    private static final double TEMP_MULTIPLIER = 100.0;
-
     public static final int IDEAL_TEMP_MIN = 59;
     public static final int IDEAL_TEMP_MAX = 73;
 
@@ -81,11 +79,11 @@ public class TemperatureHumidity {
             stats.addValue(DataUtils.calibrateTemperature(deviceData.ambientTemperature));
         }
 
-        final double tmpMinValue = stats.getMin() / TEMP_MULTIPLIER;
+        final double tmpMinValue = stats.getMin();
         final int minTempC = (int) tmpMinValue;
         final int minTempF = celsiusToFahrenheit(tmpMinValue);
 
-        final double tmpMaxValue = stats.getMax() / TEMP_MULTIPLIER;
+        final double tmpMaxValue = stats.getMax();
         final int maxTempC = (int) tmpMaxValue;
         final int maxTempF = celsiusToFahrenheit(tmpMaxValue);
 

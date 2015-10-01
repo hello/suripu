@@ -20,6 +20,7 @@ import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.Humidity;
+import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.SleepMotion;
@@ -288,28 +289,30 @@ public class InsightProcessor {
     public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
-        switch (category.toString()) {
-            case "LIGHT":
+        switch (category) {
+            case LIGHT:
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
                 break;
-            case "TEMPERATURE":
+            case TEMPERATURE:
                 final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
                 final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
                 break;
-            case "SLEEP_QUALITY":
+            case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
                 break;
-            case "WAKE_VARIANCE":
+            case WAKE_VARIANCE:
                 final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
                 break;
-            case "BED_LIGHT_DURATION":
+            case BED_LIGHT_DURATION:
                 insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
                 break;
-            case "HUMIDITY":
+            case HUMIDITY:
                 insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
                 break;
+            case BED_LIGHT_INTENSITY_RATIO:
+                insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
         }
 
         if (insightCardOptional.isPresent()) {

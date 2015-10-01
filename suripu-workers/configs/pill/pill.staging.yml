@@ -122,11 +122,3 @@ dynamodb:
     features : http://dynamodb.us-east-1.amazonaws.com
     pill_key_store : http://dynamodb.us-east-1.amazonaws.com
     pill_last_seen : http://dynamodb.us-east-1.amazonaws.com
-
-
-kinesis_logger:
-  stream_name: dev-logs
-  enabled : false
-  buffer_size: 100
-  origin: suripu-workers
-  min_log_level : INFO

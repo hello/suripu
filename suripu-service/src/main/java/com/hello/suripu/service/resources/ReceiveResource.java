@@ -287,7 +287,8 @@ public class ReceiveResource extends BaseResource {
                 // TODO: throw exception?
                 senseClockOutOfSync.mark(1);
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.REBOOT_CLOCK_OUT_OF_SYNC_DEVICES, deviceName, groups)) {
-                    responseBuilder.setResetDevice(true);
+                    LOGGER.warn("Reset MCU set for sense {}", deviceName);
+                    responseBuilder.setResetMcu(true);
                 } else {
                     continue;
                 }

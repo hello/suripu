@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.5.36-SNAPSHOT</version>
+        <version>0.5.43-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -11,8 +11,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>suripu-jodatime</groupId>
-            <artifactId>suripu-jodatime</artifactId>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
         </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>

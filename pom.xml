@@ -5,12 +5,11 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.36-SNAPSHOT</version>
+    <version>0.5.43-SNAPSHOT</version>
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
         <aws.sdk.version>1.9.37</aws.sdk.version>
-        <jodatime.version>20150319</jodatime.version>
         <librato.reporter.version>2.2.0.5</librato.reporter.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -63,9 +62,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>suripu-jodatime</groupId>
-                <artifactId>suripu-jodatime</artifactId>
-                <version>${jodatime.version}</version>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>2.8.2</version>
             </dependency>
             <dependency>
                 <groupId>com.hello.dropwizard</groupId>

@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.amazonaws.AmazonServiceException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -269,9 +270,9 @@ public class DeviceResources extends BaseResource {
 
 
     }
-    // Just for testing
+
+    @VisibleForTesting
     public List<Device> getDevices(final Long accountId) {
         return getDevicesByAccountId(accountId);
     }
-
 }

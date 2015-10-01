@@ -27,8 +27,8 @@ import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +146,22 @@ public class SleepStatsDAODynamoDB {
 
     }
 
+    public Optional<Integer> getTimeZoneOffset(final Long accountId) {
+        return this.getTimeZoneOffset(accountId, DateTime.now(DateTimeZone.UTC).minusDays(3)); //3 is min minus needed to "guarantee" sleep stats because of 1) timezone conversion 2) morning edge case
+    }
+
+    public Optional<Integer> getTimeZoneOffset(final Long accountId, final DateTime queryDate) {
+        final String queryDateString = DateTimeUtil.dateToYmdString(queryDate);
+        final Optional<AggregateSleepStats> sleepStats = this.getSingleStat(accountId, queryDateString);
+
+        if (sleepStats.isPresent()) {
+            return Optional.of(sleepStats.get().offsetMillis);
+        }
+
+        LOGGER.debug("SleepStats empty, fail to retrieve timeZoneOffset for accountId {} for {}", accountId, queryDate);
+        return Optional.absent();
+    }
+
     public Optional<AggregateSleepStats> getSingleStat(final Long accountId, final String date) {
 
         final Map<String, AttributeValue> key = new HashMap<>();
@@ -177,7 +193,7 @@ public class SleepStatsDAODynamoDB {
     
     public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId, final String startDate, final String endDate) {
 
-        final Condition selectByAccountId  = new Condition()
+        final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
 

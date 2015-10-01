@@ -2,10 +2,9 @@ package com.hello.suripu.workers.framework;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 
 import javax.validation.Valid;
@@ -59,10 +58,4 @@ public class WorkerConfiguration extends Configuration {
     private Boolean debug = Boolean.FALSE;
 
     public Boolean getDebug() { return debug; }
-
-    @JsonProperty("kinesis_logger")
-    private KinesisLoggerConfiguration kinesisLoggerConfiguration;
-    public KinesisLoggerConfiguration getKinesisLoggerConfiguration() {
-        return kinesisLoggerConfiguration;
-    }
 }

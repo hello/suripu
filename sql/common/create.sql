@@ -269,3 +269,20 @@ CREATE TABLE store_feedback (id SERIAL PRIMARY KEY, account_id BIGINT NOT NULL, 
 
 GRANT ALL PRIVILEGES ON store_feedback TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE store_feedback_id_seq TO ingress_user;
+
+
+-- TIMELINE ANALYTICS
+
+CREATE TABLE timeline_analytics (
+    id BIGSERIAL PRIMARY KEY,
+    account_id BIGINT,
+    date_of_night VARCHAR,
+    algorithm INTEGER,
+    error INTEGER,
+    created_at TIMESTAMP
+);
+
+CREATE UNIQUE INDEX uniq_per_night ON timeline_analytics(account_id, date_of_night, algorithm, error);
+
+GRANT ALL PRIVILEGES ON timeline_analytics TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE timeline_analytics_id_seq TO ingress_user;

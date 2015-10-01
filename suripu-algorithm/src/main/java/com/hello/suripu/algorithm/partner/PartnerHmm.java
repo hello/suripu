@@ -25,7 +25,7 @@ public class PartnerHmm {
     static final Double DECISION_FRACTION = 0.5;
     static final int NUM_STATES = 7;
     static final int NUM_OBS = 4;
-    static final Double PROB_NOT_ON_BED = 0.999;
+    static final Double PROB_ON_BED_WHEN_THERE_IS_ACTIVITY = 1e-10;
 
     static final double MIN_LIKELIHOOD = 1e-100;
 
@@ -131,10 +131,10 @@ public class PartnerHmm {
     private static  HmmPdfInterface [] getObservationModel() {
         final List<Double> probsOfNobodyOnBed = Lists.newArrayList();
         for (int i = 0; i < NUM_OBS; i++) {
-            probsOfNobodyOnBed.add((1.0 - PROB_NOT_ON_BED) / (double)(NUM_STATES - 1));
+            probsOfNobodyOnBed.add(PROB_ON_BED_WHEN_THERE_IS_ACTIVITY / (double)(NUM_STATES - 1));
         }
 
-        probsOfNobodyOnBed.set(0,PROB_NOT_ON_BED);
+        probsOfNobodyOnBed.set(0,1.0 - PROB_ON_BED_WHEN_THERE_IS_ACTIVITY);
 
 
         /*
@@ -146,17 +146,18 @@ public class PartnerHmm {
 
 
         //these numbers are made up
+        final double partnerWeight = 1e-10;
         final List<Double> probsOfMeOnBed = Lists.newArrayList();
         probsOfMeOnBed.add(0.3);
-        probsOfMeOnBed.add(0.3999);
-        probsOfMeOnBed.add(0.0001);
+        probsOfMeOnBed.add(0.4 - partnerWeight);
+        probsOfMeOnBed.add(partnerWeight);
         probsOfMeOnBed.add(0.3);
 
 
         final List<Double> probsOfYouOnBed = Lists.newArrayList();
         probsOfYouOnBed.add(0.3);
-        probsOfYouOnBed.add(0.0001);
-        probsOfYouOnBed.add(0.3999);
+        probsOfYouOnBed.add(partnerWeight);
+        probsOfYouOnBed.add(0.4 - partnerWeight);
         probsOfYouOnBed.add(0.3);
 
         final List<Double> probsItsAParty = Lists.newArrayList();

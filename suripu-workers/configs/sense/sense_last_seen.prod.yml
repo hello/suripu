@@ -1,0 +1,54 @@
+metrics_enabled: true
+debug: false
+graphite:
+  host: carbon.hostedgraphite.com
+  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
+  reporting_interval_in_seconds: 30
+  include_metrics:
+    - com.yammer
+    - com.hello
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    sense_sensors_data : sense_sensors_data
+
+app_name: SenseLastSeenProd
+max_records: 100
+trim_horizon: false
+
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.hello.suripu.workers: DEBUG
+  # Settings for logging to a file.
+  file:
+    enabled: true
+    threshold: DEBUG
+    currentLogFilename: /var/log/suripu-workers/suripu-workers-sense-last-seen.log
+    # When the log file rotates, the archived log will be renamed to this and gzipped. The
+    # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
+    # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
+    archivedLogFilenamePattern: /var/log/suripu-workers/suripu-workers-sense-last-seen-%d{yyyy-MM-dd}.log.gz
+    # The number of archived files to keep.
+    archivedFileCount: 7
+    # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
+    timeZone: UTC
+
+
+dynamodb:
+  region: us-east-1
+  tables:
+    features: features
+    wifi_info: prod_wifi_info
+
+  endpoints:
+    features: http://dynamodb.us-east-1.amazonaws.com
+    wifi_info: http://dynamodb.us-east-1.amazonaws.com
+
