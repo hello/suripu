@@ -49,7 +49,7 @@ public class DateTimeUtilTest {
     public void testSanitizeDateTimeSenseThinksIts2016() {
         // This attempts to simulate the bug where Sense is off by 5 months
         final DateTime ref = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
-        final DateTime sampleTime = ref.plusMonths(5);
+        final DateTime sampleTime = ref.plusMonths(DateTimeUtil.MONTH_OFFSET_FOR_CLOCK_BUG);
         assertThat(DateTimeUtil.possiblySanitizeSampleTime(ref, sampleTime, 2), equalTo(ref));
     }
 
