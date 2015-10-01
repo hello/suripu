@@ -75,7 +75,7 @@ restart suripuworkers-index-logs
 sleep 1
 
 echo "Moving timeline log worker configs to /etc/"
-cp /home/build/build/timeline_logs_worker.staging.yml /etc/
+cp /home/build/build/timeline_logs.staging.yml /etc/
 
 echo "restarting"
 restart suripuworkers-timeline-logs
