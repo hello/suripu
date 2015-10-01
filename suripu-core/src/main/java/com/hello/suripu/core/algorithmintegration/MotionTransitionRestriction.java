@@ -93,7 +93,7 @@ public class MotionTransitionRestriction implements TransitionRestriction {
         for (int t = 0; t < motionFeatures.size() - 1; t++) {
 
             //if not two consecutive motion indicies, then FORBIDDEN!!!!!
-            if ( !(isMotion(motionFeatures.get(t)) && isMotion(motionFeatures.get(t+1))) ) {
+            if ( !(isMotion(motionFeatures.get(t)) /* && isMotion(motionFeatures.get(t+1)) */ ) ) {
 
                 for (final Transition forbidden : forbiddenTransitions) {
                     forbiddenTransitionsByTimeIndex.put(t,forbidden);

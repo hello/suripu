@@ -210,7 +210,8 @@ public class OnlineHmm {
         return idx * periodInMinutes * NUM_MILLIS_IN_A_MINUTE  + t0;
     }
 
-    private SleepEvents<Optional<Event>> getSleepEventsFromPredictions(final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId, final long t0,final int numMinutesInPeriod, final int tzOffset) {
+    //static for easy external testing
+    public static SleepEvents<Optional<Event>> getSleepEventsFromPredictions(final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId, final long t0,final int numMinutesInPeriod, final int tzOffset, final Logger logger) {
           /*  DO SOMETHING WITH THE BEST PREDICTIONS */
 
         Optional<Event> sleep = Optional.absent();
@@ -222,7 +223,7 @@ public class OnlineHmm {
             final MultiEvalHmmDecodedResult result = bestDecodedResultsByOutputId.get(outputId);
 
             if (result.transitions.size() < 2) {
-                LOGGER.info("not enough transitions found for output id {}",outputId);
+                logger.info("not enough transitions found for output id {}",outputId);
                 continue;
             }
 
@@ -251,8 +252,8 @@ public class OnlineHmm {
                     final long inBedTime = indexToTimestamp(t0,numMinutesInPeriod,inBedIdx);
                     final long outOfBedTime = indexToTimestamp(t0,numMinutesInPeriod,outOfBedIdx);
 
-                    inbed = Optional.of(Event.createFromType(Event.Type.SLEEP, inBedTime, inBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
-                    outofbed = Optional.of(Event.createFromType(Event.Type.WAKE_UP, outOfBedTime, outOfBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.WAKE_UP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+                    inbed = Optional.of(Event.createFromType(Event.Type.IN_BED, inBedTime, inBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+                    outofbed = Optional.of(Event.createFromType(Event.Type.OUT_OF_BED, outOfBedTime, outOfBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.OUT_OF_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
 
 
                     break;
@@ -260,6 +261,23 @@ public class OnlineHmm {
 
             }
 
+        }
+
+        //reconcile bed and sleep, giving priority to sleep
+
+        if (inbed.isPresent() && sleep.isPresent()) {
+            if (inbed.get().getStartTimestamp() >= sleep.get().getStartTimestamp()) {
+                //need to adjust in-bed
+                final long inBedTime = sleep.get().getStartTimestamp() - NUM_MILLIS_IN_A_MINUTE;
+                inbed = Optional.of(Event.createFromType(Event.Type.IN_BED, inBedTime, inBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+            }
+        }
+
+        if (outofbed.isPresent() && wake.isPresent()) {
+            if (outofbed.get().getStartTimestamp() <= wake.get().getStartTimestamp()) {
+                final long outOfBedTime = wake.get().getStartTimestamp() + NUM_MILLIS_IN_A_MINUTE;
+                outofbed = Optional.of(Event.createFromType(Event.Type.OUT_OF_BED, outOfBedTime, outOfBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.OUT_OF_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+            }
         }
 
         return SleepEvents.create(inbed,sleep,wake,outofbed);
@@ -377,7 +395,7 @@ public class OnlineHmm {
 
 
         /* GET PREDICTIONS  */
-        predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset);
+        predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset,LOGGER);
 
 
         //get filtered feedback

@@ -5,7 +5,7 @@ import com.google.common.base.Objects;
 /**
  * Created by benjo on 8/20/15.
  */
-public class Transition {
+public class Transition implements Comparable<Transition> {
     public final int fromState;
     public final int toState;
     public final int idx;
@@ -41,5 +41,19 @@ public class Transition {
                     .add("from",fromState)
                     .add("to",toState).toString();
         }
+    }
+
+    //sort by index
+    @Override
+    public int compareTo(final Transition o) {
+        if (idx < o.idx) {
+            return -1;
+        }
+
+        if (idx > o.idx) {
+            return 1;
+        }
+
+        return 0;
     }
 }

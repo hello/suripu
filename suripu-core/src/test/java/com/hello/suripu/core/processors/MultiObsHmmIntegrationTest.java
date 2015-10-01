@@ -9,11 +9,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.hmm.Transition;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.LabelMaker;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
+import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
@@ -40,8 +42,59 @@ public class MultiObsHmmIntegrationTest {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(MultiObsHmmIntegrationTest.class);
 
     @Test
+    public void testAllFourEvents() {
+        try {
+            //get model
+            final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/allfoureventsmodel.bin");
+            final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
+            TestCase.assertTrue(model.isPresent());
+
+            //get feature data -- it should be a list of days, each day has a bunch of key value pairs that correspond to different sensor data streams for that day
+            List<Map<String,ImmutableList<Integer>>> featureData = HmmUtils.getFeatureDataFromFile("fixtures/algorithm/1012-August2.json");
+            TestCase.assertFalse(featureData.isEmpty());
+
+            //evaluate
+            final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
+
+            final Map<String,ImmutableList<Integer>> features = featureData.get(0);
+            final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features);
+
+            TestCase.assertTrue(results.size() == 2);
+            TestCase.assertTrue(results.containsKey("SLEEP"));
+            TestCase.assertTrue(results.containsKey("BED"));
+
+            final SleepEvents<Optional<Event>> events = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, STATIC_LOGGER);
+
+            TestCase.assertTrue(events.goToBed.get().getStartTimestamp() < events.fallAsleep.get().getStartTimestamp());
+            TestCase.assertTrue(events.outOfBed.get().getStartTimestamp() > events.wakeUp.get().getStartTimestamp());
+
+
+            //now we do something sneaky, by putting a copy of bed events in for sleep
+            results.put("SLEEP",results.get("BED"));
+
+            final MultiEvalHmmDecodedResult sleepResult = results.get("SLEEP");
+            final MultiEvalHmmDecodedResult bedResult = results.get("BED");
+
+            Collections.sort(sleepResult.transitions);
+            Collections.sort(bedResult.transitions);
+
+            TestCase.assertTrue(sleepResult.transitions.get(0).idx == bedResult.transitions.get(0).idx);
+            TestCase.assertTrue(sleepResult.transitions.get(1).idx == bedResult.transitions.get(1).idx);
+
+            final SleepEvents<Optional<Event>> eventsMatched = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, STATIC_LOGGER);
+            TestCase.assertTrue(eventsMatched.goToBed.get().getStartTimestamp() + 60000L == eventsMatched.fallAsleep.get().getStartTimestamp());
+            TestCase.assertTrue(eventsMatched.outOfBed.get().getStartTimestamp() == eventsMatched.wakeUp.get().getStartTimestamp() + 60000L);
+
+        } catch (IOException e) {
+            TestCase.assertTrue(false);
+        }
+
+    }
+
+    @Test
     public void testMultiDayEvaluation() {
         //reference from C++ code
+        /*  for wakes that require two consecutive periods
         final Transition [] wakes = {
                 new Transition( 1,2,158),
                 new Transition(1,2,147),
@@ -53,6 +106,18 @@ public class MultiObsHmmIntegrationTest {
                 new Transition(1,2,142),
                 new Transition(1,2,145),
                 new Transition(1,2,159)};
+         */
+        final Transition [] wakes = {
+                new Transition( 1,2,166),
+                new Transition(1,2,147),
+                new Transition(1,2,158),
+                new Transition(1,2,132),
+                new Transition(1,2,145),
+                new Transition(1,2,151),
+                new Transition(1,2,174),
+                new Transition(1,2,142),
+                new Transition(1,2,160),
+                new Transition(1,2,177)};
 
         final Transition [] sleeps = {
                 new Transition(0,1,55),
@@ -91,7 +156,6 @@ public class MultiObsHmmIntegrationTest {
                 final List<Transition> transitions = results.get(outputId).transitions;
 
                 for (final Transition transition : transitions) {
-
                     if (transition.fromState == 0) {
                         TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
                     }
@@ -137,7 +201,7 @@ public class MultiObsHmmIntegrationTest {
                     new Transition(0,1,34),
                     new Transition(0,1,39),
                     new Transition(0,1,39)};
-
+/* if there are two motion periods required to wake
             final Transition [] wakes = {
                     new Transition(1,2,124),
                     new Transition(1,2,137),
@@ -159,7 +223,29 @@ public class MultiObsHmmIntegrationTest {
                     new Transition(1,2,113),
                     new Transition(1,2,113),
                     new Transition(1,2,116)};
+*/
 
+            final Transition [] wakes = {
+                    new Transition(1,2,127),
+                    new Transition(1,2,137),
+                    new Transition(1,2,129),
+                    new Transition(1,2,170),
+                    new Transition(1,2,127),
+                    new Transition(1,2,124),
+                    new Transition(1,2,132),
+                    new Transition(1,2,131),
+                    new Transition(1,2,113),
+                    new Transition(1,2,116),
+                    new Transition(1,2,113),
+                    new Transition(1,2,107),
+                    new Transition(1,2,125),
+                    new Transition(1,2,127),
+                    new Transition(1,2,136),
+                    new Transition(1,2,117),
+                    new Transition(1,2,101),
+                    new Transition(1,2,113),
+                    new Transition(1,2,113),
+                    new Transition(1,2,116)};
             //get model
             final byte[] protobuf = HmmUtils.loadFile("fixtures/algorithm/default_model.bin");
             final Optional<OnlineHmmPriors> modelOptional = OnlineHmmPriors.createFromProtoBuf(protobuf);
@@ -202,14 +288,13 @@ public class MultiObsHmmIntegrationTest {
                 //System.out.print(String.format("COST: %f\n",results.get(outputId).pathcost));
                 List<Transition> transitions = results.get(outputId).transitions;
 
-
                 for (final Transition transition : transitions) {
 
                     if (transition.fromState == 0) {
                         TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
                     }
                     else if (transition.fromState == 1) {
-                        TestCase.assertEquals(wakes[count].idx,transition.idx,1);
+                        TestCase.assertEquals(wakes[count].idx, transition.idx, 1);
                     }
                 }
 
