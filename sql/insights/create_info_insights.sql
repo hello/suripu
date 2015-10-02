@@ -250,7 +250,7 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 UPDATE info_insight_cards SET text=
 'Humidity is an important part of an optimal sleeping environment. You should aim to keep your bedroom humidity level at around 50% year round.
 
-Air that is too dry can irritate your throat and nasal passages, which can make it more difficult for you to fall asleep. If this is the case, consider investing in a humidifier for use during drier seasons. Also remember to keep hydrated by drinking plenty of water, and apply lotion before bed to sooth dry skin.
+Air that is too dry can irritate your throat and nasal passages, which can make it more difficult for you to fall asleep. If this is the case, consider investing in a humidifier for use during drier seasons. Also remember to keep hydrated by drinking plenty of water, and apply lotion before bed to soothe dry skin.
 
 Conversely, dampness can lead to mold growth, which can affect your sleep if you suffer from mold allergies. High humidity paired with high temperatures can be especially uncomfortable, making it even more difficult to get restorative sleep. You may want to think about a fan or a dehumidifier to lower the humidity, or using cotton sheets and sweat-wicking pajamas to help you feel more comfortable.'
 
