@@ -98,6 +98,7 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
         return new OnlineHmmData(priors,scratchPad);
     }
 
+    /*
     @Override
     public boolean updateModelPriors(final Long accountId,final DateTime date, final  OnlineHmmPriors priors) {
         final Map<String,byte []> payloads = Maps.newHashMap();
@@ -109,6 +110,7 @@ public class OnlineHmmModelsDAODynamoDB implements OnlineHmmModelsDAO {
 
         return dbDAO.update(accountId.toString(), dateString, payloads);
     }
+    */
 
     @Override
     public boolean updateScratchpad(final Long accountId,final DateTime date, final OnlineHmmScratchPad scratchPad) {

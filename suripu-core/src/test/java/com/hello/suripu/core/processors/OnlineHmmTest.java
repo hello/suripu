@@ -97,6 +97,7 @@ public class OnlineHmmTest {
             return entry.getValue();
         }
 
+        /*
         @Override
         public boolean updateModelPriors(Long accountId, DateTime date, OnlineHmmPriors priors) {
 
@@ -109,6 +110,7 @@ public class OnlineHmmTest {
             priorByDate.put(date, newOnlineHmmData);
             return true;
         }
+        */
 
         @Override
         public boolean updateModelPriorsAndZeroOutScratchpad(Long accountId, DateTime date, OnlineHmmPriors priors) {

@@ -23,7 +23,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Time;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -177,7 +176,7 @@ public class OnlineHmm {
             modelPriors = defaultPrior;
 
             //update dynamo
-            userModelDAO.updateModelPriors(accountId,evening,modelPriors);
+            userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,evening,modelPriors);
 
         }
         else {
@@ -413,7 +412,7 @@ public class OnlineHmm {
         if (isFeedbackReady) {
             //1) turn feedback into labels
             final LabelMaker labelMaker = new LabelMaker(uuid);
-            final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvent(timezoneOffset,binnedData.t0,endTimeUtc,binnedData.numMinutesInWindow,feedbackList);
+            final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvents(timezoneOffset, binnedData.t0, endTimeUtc, binnedData.numMinutesInWindow, feedbackList);
 
             //2) reestimate on top of the models that were actually used by the user
             final Map<String,String> usedModelsByOutputId = Maps.newHashMap();
