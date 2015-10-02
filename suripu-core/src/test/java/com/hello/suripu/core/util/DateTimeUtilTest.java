@@ -54,6 +54,14 @@ public class DateTimeUtilTest {
     }
 
     @Test
+    public void testSanitizeDateTimeSense() {
+        // This attempts to simulate the bug where Sense is off by 5 months on a specific day
+        final DateTime ref = new DateTime(2015,10,1,0,0,0, DateTimeZone.UTC);
+        final DateTime sampleTime = new DateTime(2016,4,1,0,0,0,DateTimeZone.UTC);
+        assertThat(DateTimeUtil.possiblySanitizeSampleTime(ref, sampleTime, 2), equalTo(ref));
+    }
+
+    @Test
     public void testSanitizeDateTimeSenseClockIsWayTooSkewed() {
         // Clock is way too skewed, we expect the sample time to be untouched
         final DateTime ref = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
