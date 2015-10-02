@@ -10,6 +10,7 @@ import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,7 +102,15 @@ public class DeviceResource extends BaseResource {
     @Path("/wifi_info")
     public Response updateWifiInfo(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                                    @Valid final WifiInfo wifiInfo){
-        deviceProcessor.upsertWifiInfo(accessToken.accountId, wifiInfo);
+        final Boolean hasUpserted = deviceProcessor.upsertWifiInfo(accessToken.accountId, wifiInfo);
+
+        if (!hasUpserted) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                            String.format("Failed to upsert wifi info for sense %s", wifiInfo.senseId))).build());
+        }
+
         return Response.noContent().build();
     }
+
 }

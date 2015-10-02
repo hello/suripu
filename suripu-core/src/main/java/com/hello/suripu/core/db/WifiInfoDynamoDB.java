@@ -50,7 +50,7 @@ public class WifiInfoDynamoDB implements WifiInfoDAO {
     public final static String RSSI_ATTRIBUTE_NAME = "rssi";
     public final static String LAST_UPDATED_ATTRIBUTE_NAME = "last_updated";
     public final static Integer MAXIMUM_BATCH_WRITE_SIZE = 25;
-    public final static Integer MAX_GET_SIZE = 100;
+    public final static Integer MAX_GET_SIZE = 100; // hard limit set by amazon for batch get
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String wifiTableName;

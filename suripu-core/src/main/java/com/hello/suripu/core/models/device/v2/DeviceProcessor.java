@@ -41,7 +41,7 @@ public class DeviceProcessor {
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    private  final SensorsViewsDynamoDB sensorsViewsDynamoDB;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final WifiInfoDAO wifiInfoDAO;
@@ -92,6 +92,7 @@ public class DeviceProcessor {
         final List<DeviceAccountPair> sensePairedWithAccount = this.deviceDAO.getSensesForAccountId(accountId);
         if(sensePairedWithAccount.isEmpty()){
             LOGGER.error("No sense paired with account {}", accountId);
+            return;
         }
 
         final String senseId = sensePairedWithAccount.get(0).externalDeviceId;
@@ -156,7 +157,6 @@ public class DeviceProcessor {
                                     awsEx.getErrorMessage());
                         }
                     }
-
                     return null;
                 }
             });
@@ -173,18 +173,17 @@ public class DeviceProcessor {
      * @param accountId internal account ID
      * @param wifiInfo container of wifi specs
      */
-    public void upsertWifiInfo(final Long accountId, final WifiInfo wifiInfo) {
+    public Boolean upsertWifiInfo(final Long accountId, final WifiInfo wifiInfo) {
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
 
         if (deviceAccountPairOptional.isPresent()) {
             final String mostRecentlyPairedSenseId = deviceAccountPairOptional.get().externalDeviceId;
             if (mostRecentlyPairedSenseId.equals(wifiInfo.senseId)) {
-                wifiInfoDAO.put(wifiInfo);
+                return wifiInfoDAO.put(wifiInfo);
             }
-            else {
-                LOGGER.debug("Account {} attempted to update wifi info for not sense {} but the most recently paired sense is {}", accountId, wifiInfo.senseId, mostRecentlyPairedSenseId);
-            }
+            LOGGER.debug("Account {} attempted to update wifi info for sense {} but the most recently paired sense is {}", accountId, wifiInfo.senseId, mostRecentlyPairedSenseId);
         }
+        return Boolean.FALSE;
     }
 
 
