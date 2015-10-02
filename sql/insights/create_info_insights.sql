@@ -257,15 +257,15 @@ Conversely, dampness can lead to mold growth, which can affect your sleep if you
 WHERE category='humidity';
 
 
---jyfan 9/23/2015 Adding bed_light_intensity insight category
+--jyfan 10/02/2015 Adding bed_light_intensity insight category
 
-ALTER TYPE insight_category ADD VALUE 'bed_light_intensity';
+ALTER TYPE insight_category ADD VALUE 'bed_light_intensity_ratio';
 
 INSERT INTO info_insight_cards (category, title, text)
 VALUES
  ---
-('bed_light_duration',
-'Associating Your Bedroom with Sleep',
+('bed_light_intensity_ratio',
+'Light Exposure and Your Biological Clock',
 'The right exposure to light can promote healthy sleep, boost productivity, and improve your overall well being.
 
 Light, whether it be artificial or natural, is the primary signal for your circadian rhythm. This governs not only your sleep, but also your mood, appetite, and more. In the morning, light prompts your body to wake up while blood flow and alertness increases. In the evening, the dimming of light tells your body to cool down, relax, and rest.
