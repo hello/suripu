@@ -102,12 +102,17 @@ public class DeviceResource extends BaseResource {
     @Path("/wifi_info")
     public Response updateWifiInfo(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                                    @Valid final WifiInfo wifiInfo){
-        final Boolean hasUpserted = deviceProcessor.upsertWifiInfo(accessToken.accountId, wifiInfo);
+        try {
+            final Boolean hasUpserted = deviceProcessor.upsertWifiInfo(accessToken.accountId, wifiInfo);
+            if (!hasUpserted) {
+                throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                                String.format("Failed to upsert wifi info for sense %s", wifiInfo.senseId))).build());
+            }
 
-        if (!hasUpserted) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new JsonError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                            String.format("Failed to upsert wifi info for sense %s", wifiInfo.senseId))).build());
+        } catch (DeviceProcessor.InvalidWifiInfoException iwe) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), iwe.getMessage())).build());
         }
 
         return Response.noContent().build();

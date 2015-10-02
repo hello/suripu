@@ -15,7 +15,6 @@ import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
-import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PairingInfo;
@@ -173,7 +172,7 @@ public class DeviceProcessor {
      * @param accountId internal account ID
      * @param wifiInfo container of wifi specs
      */
-    public Boolean upsertWifiInfo(final Long accountId, final WifiInfo wifiInfo) {
+    public Boolean upsertWifiInfo(final Long accountId, final WifiInfo wifiInfo) throws InvalidWifiInfoException {
         final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceDAO.getMostRecentSensePairByAccountId(accountId);
 
         if (deviceAccountPairOptional.isPresent()) {
@@ -182,15 +181,16 @@ public class DeviceProcessor {
                 return wifiInfoDAO.put(wifiInfo);
             }
             LOGGER.debug("Account {} attempted to update wifi info for sense {} but the most recently paired sense is {}", accountId, wifiInfo.senseId, mostRecentlyPairedSenseId);
+            throw new InvalidWifiInfoException(String.format("Mismatch account id from token and input object"));
         }
-        return Boolean.FALSE;
+        throw new InvalidWifiInfoException(String.format("No associated account found for sense %s", wifiInfo.senseId));
     }
 
 
     /**
      * Get all senses and pills for an account
      *
-     * @param accountId internal account ID
+     * @param deviceQueryInfo all the info needed to do queries
      * @return a Devices object which contains list of all associated senses and pills
      */
     public Devices getAllDevices(final DeviceQueryInfo deviceQueryInfo) {
@@ -342,6 +342,12 @@ public class DeviceProcessor {
 
         public DeviceProcessor build() {
             return new DeviceProcessor(deviceDAO, deviceDataDAO, mergedUserInfoDynamoDB, sensorsViewsDynamoDB, pillHeartBeatDAO, trackerMotionDAO, wifiInfoDAO, senseColorDAO);
+        }
+    }
+
+    public static class InvalidWifiInfoException extends Exception {
+        public InvalidWifiInfoException(final String message) {
+            super(message);
         }
     }
 
