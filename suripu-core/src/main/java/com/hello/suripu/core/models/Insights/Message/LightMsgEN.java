@@ -36,7 +36,7 @@ public class LightMsgEN {
         return new Text("It's Too Bright",
                 String.format("Your bedroom light level of %d lux is as bright as a warehouse aisle! ", medianLight) +
                         String.format("It is **brighter than** %d%% of all Sense users.", percentile) +
-                        "\n\n.Make sure the lights in your bedroom are turned down 15 minutes before sleep.");
+                        "\n\nMake sure the lights in your bedroom are turned down 15 minutes before sleep.");
     }
 
     public static Text getLightWayTooBright(final int medianLight, final int percentile) {
