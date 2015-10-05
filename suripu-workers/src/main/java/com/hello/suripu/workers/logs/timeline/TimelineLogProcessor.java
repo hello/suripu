@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.db.TimelineAnalyticsDAO;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
@@ -23,14 +24,14 @@ import java.util.concurrent.TimeUnit;
 public class TimelineLogProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineLogProcessor.class);
-    private final TimelineAnalytics timelineAnalytics;
+    private final TimelineAnalyticsDAO timelineAnalyticsDAO;
 
     private final Meter timelineLogsReceived;
     private final Meter successfulTimelineLogInsertions;
     private final RatioGauge ratioOfSuccessfulInsertionsToReceived;
 
-    public TimelineLogProcessor(final TimelineAnalytics timelineAnalytics) {
-        this.timelineAnalytics = timelineAnalytics;
+    public TimelineLogProcessor(final TimelineAnalyticsDAO timelineAnalyticsDAO) {
+        this.timelineAnalyticsDAO = timelineAnalyticsDAO;
         this.timelineLogsReceived = Metrics.defaultRegistry()
                 .newMeter(TimelineLogProcessor.class, "received", "timeline-logs", TimeUnit.SECONDS);
         this.successfulTimelineLogInsertions= Metrics.defaultRegistry()
@@ -53,8 +54,8 @@ public class TimelineLogProcessor extends HelloBaseRecordProcessor {
                 ratioOfSuccessfulInsertionsToReceived);
     }
 
-    public static TimelineLogProcessor create(final TimelineAnalytics timelineAnalytics) {
-        return new TimelineLogProcessor(timelineAnalytics);
+    public static TimelineLogProcessor create(final TimelineAnalyticsDAO timelineAnalyticsDAO) {
+        return new TimelineLogProcessor(timelineAnalyticsDAO);
     }
 
     @Override
@@ -85,7 +86,7 @@ public class TimelineLogProcessor extends HelloBaseRecordProcessor {
 
         timelineLogsReceived.mark(uniqueLogs.size());
 
-        final int successfulInsertions = timelineAnalytics.insertBatchWithIndividualRetry(uniqueLogs);
+        final int successfulInsertions = timelineAnalyticsDAO.insertBatchWithIndividualRetry(uniqueLogs);
         successfulTimelineLogInsertions.mark(successfulInsertions);
 
         try {
