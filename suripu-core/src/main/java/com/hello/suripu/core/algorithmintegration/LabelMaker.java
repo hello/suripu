@@ -8,15 +8,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmData;
-import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.util.FeedbackUtils;
-import org.eclipse.jetty.util.MultiMap;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,12 +30,12 @@ public class LabelMaker {
     private static final long NUMBER_OF_MILLIS_IN_A_MINUTE = 60000L;
 
 
-    private static final int LABEL_PRE_SLEEP = 0;
-    private static final int LABEL_DURING_SLEEP = 1;
-    private static final int LABEL_POST_SLEEP = 2;
-    private static final int LABEL_PRE_BED = 0;
-    private static final int LABEL_DURING_BED = 1;
-    private static final int LABEL_POST_BED = 2;
+    public static final int LABEL_PRE_SLEEP = 0;
+    public static final int LABEL_DURING_SLEEP = 1;
+    public static final int LABEL_POST_SLEEP = 2;
+    public static final int LABEL_PRE_BED = 0;
+    public static final int LABEL_DURING_BED = 1;
+    public static final int LABEL_POST_BED = 2;
 
 
     public LabelMaker(final Optional<UUID> uuid) {
@@ -120,8 +115,8 @@ public class LabelMaker {
         return timestamps;
     }
 
-    public final Map<String,Map<Integer,Integer>> getLabelsFromEvent(final int tzOffset, final long startTime, final long endTime,
-                                                                     final int numMinutesPerPeriod,final ImmutableList<TimelineFeedback> timelineFeedbacks) {
+    public final Map<String,Map<Integer,Integer>> getLabelsFromEvents(final int tzOffset, final long startTime, final long endTime,
+                                                                      final int numMinutesPerPeriod, final ImmutableList<TimelineFeedback> timelineFeedbacks) {
 
         final Map<Event.Type,Event> eventByType =  FeedbackUtils.getFeedbackAsEventsByType(timelineFeedbacks, tzOffset);
 
@@ -136,12 +131,18 @@ public class LabelMaker {
         final List<Long> inbedTimes = eventsToTimestamps(eventsByType.get(Event.Type.IN_BED));
         final List<Long> outofbedTimes = eventsToTimestamps(eventsByType.get(Event.Type.OUT_OF_BED));
 
-        return getLabelsFromEvent(startTime,endTime,numMinutesPerPeriod,wakeTimes,sleepTimes);
+        final Map<String,Map<Integer,Integer>> labels = Maps.newHashMap();
+
+        labels.putAll(getSleepLabelsFromEvents(startTime, endTime, numMinutesPerPeriod, wakeTimes, sleepTimes));
+
+        labels.putAll(getBedLabelsFromEvents(startTime, endTime, numMinutesPerPeriod, outofbedTimes, inbedTimes));
+
+        return labels;
     }
 
 
-    public final Map<String,Map<Integer,Integer>> getLabelsFromEvent(final long startTime, final long endTime, final int numMinutesPerPeriod,
-                                                                     final List<Long> wakes ,final List<Long> sleeps) {
+    public final Map<String,Map<Integer,Integer>> getSleepLabelsFromEvents(final long startTime, final long endTime, final int numMinutesPerPeriod,
+                                                                      final List<Long> wakes, final List<Long> sleeps) {
 
 
         final Map<String,Map<Integer,Integer>> labelsByOutputId = Maps.newHashMap();
@@ -173,6 +174,38 @@ public class LabelMaker {
 
         }
 
+
+        return labelsByOutputId;
+    }
+
+    public final  Map<String,Map<Integer,Integer>> getBedLabelsFromEvents(final long startTime, final long endTime, final int numMinutesPerPeriod,
+                                                                            final List<Long> outofbeds, final List<Long> inbeds) {
+        final Map<String,Map<Integer,Integer>> labelsByOutputId = Maps.newHashMap();
+
+        if (outofbeds.size() > 0 && inbeds.size() > 0) {
+            final long inbed = inbeds.get(0);
+            final long outofbed = outofbeds.get(0);
+
+            final Map<Integer,Integer> labels = labelEventPair(inbed,outofbed,startTime,endTime,numMinutesPerPeriod,LABEL_PRE_BED,LABEL_DURING_BED,LABEL_POST_BED);
+
+            labelsByOutputId.put(OnlineHmmData.OUTPUT_MODEL_BED,labels);
+        }
+        else if (outofbeds.size() > 0) {
+            final long outofbed = outofbeds.get(0);
+
+            final Map<Integer,Integer> labels = labelSingleEvent(outofbed,startTime,endTime,numMinutesPerPeriod,LABEL_DURING_BED,LABEL_POST_BED,false);
+
+            labelsByOutputId.put(OnlineHmmData.OUTPUT_MODEL_BED,labels);
+
+        }
+        else if (inbeds.size() > 0) {
+            final long inbed = inbeds.get(0);
+
+            final Map<Integer,Integer> labels = labelSingleEvent(inbed,startTime,endTime,numMinutesPerPeriod,LABEL_PRE_BED,LABEL_DURING_BED,true);
+
+            labelsByOutputId.put(OnlineHmmData.OUTPUT_MODEL_BED,labels);
+
+        }
 
         return labelsByOutputId;
     }

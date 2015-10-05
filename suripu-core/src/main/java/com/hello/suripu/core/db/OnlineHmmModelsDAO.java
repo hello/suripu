@@ -11,7 +11,6 @@ import org.joda.time.DateTime;
  */
 public interface OnlineHmmModelsDAO {
     OnlineHmmData getModelDataByAccountId(final Long accountId,final DateTime date);
-    boolean updateModelPriors(final Long accountId,final DateTime date, final OnlineHmmPriors priors);
     boolean updateModelPriorsAndZeroOutScratchpad(final Long accountId,final DateTime date, final OnlineHmmPriors priors);
     boolean updateScratchpad(final Long accountId,final DateTime date, final OnlineHmmScratchPad scratchPad);
 
