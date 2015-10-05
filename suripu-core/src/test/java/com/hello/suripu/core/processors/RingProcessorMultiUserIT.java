@@ -116,7 +116,7 @@ public class RingProcessorMultiUserIT {
     @After
     public void cleanUp(){
         this.userInfoList.clear();
-        //setUp();
+        //init();
         final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
                 .withTableName(ringTimeTableName);
         try {

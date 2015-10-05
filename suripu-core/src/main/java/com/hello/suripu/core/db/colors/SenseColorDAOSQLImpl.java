@@ -3,6 +3,7 @@ package com.hello.suripu.core.db.colors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Device;
+import com.hello.suripu.core.models.device.v2.Sense;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -20,6 +21,11 @@ public abstract class SenseColorDAOSQLImpl implements SenseColorDAO {
     @RegisterMapper(DeviceColorMapper.class)
     @SqlQuery("SELECT * FROM sense_colors WHERE sense_id = :sense_id LIMIT 1")
     public abstract Optional<Device.Color> getColorForSense(@Bind("sense_id") final String senseId);
+
+    @SingleValueResult
+    @RegisterMapper(SenseColorMapper.class)
+    @SqlQuery("SELECT * FROM sense_colors WHERE sense_id = :sense_id LIMIT 1")
+    public abstract Optional<Sense.Color> get(@Bind("sense_id") final String senseId);
 
     @SqlUpdate("INSERT INTO sense_colors (sense_id, color) VALUES(:sense_id, :color);")
     protected abstract int saveColor(@Bind("sense_id") final String senseId, @Bind("color") final String color);
