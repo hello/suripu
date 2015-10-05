@@ -93,8 +93,11 @@ public class Humidity {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(PRE_BED_BEGIN_HOUR_LOCAL);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
+        final DateTime queryEndTimeLocal = queryEndTime.plusMillis(timeZoneOffset);
+        final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
+
         //Grab all pre-bed data for past week
-        return deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, PRE_BED_BEGIN_HOUR_LOCAL, PRE_BED_END_HOUR_LOCAL);
+        return deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, PRE_BED_BEGIN_HOUR_LOCAL, PRE_BED_END_HOUR_LOCAL);
     }
 
 }

@@ -107,8 +107,11 @@ public class BedLightIntensity {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(0);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
 
+        final DateTime queryEndTimeLocal = queryEndTime.plusMillis(timeZoneOffset);
+        final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
+
 //        TODO: add safeguard for patchy missing data
-        return deviceDataDAO.getBetweenHourDateByTSSameDay(accountId, deviceId, queryStartTime, queryEndTime, startHour, endHour);
+        return deviceDataDAO.getBetweenHourDateByTSSameDay(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, startHour, endHour);
     }
 
 }
