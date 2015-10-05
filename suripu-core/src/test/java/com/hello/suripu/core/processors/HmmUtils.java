@@ -125,7 +125,7 @@ public class HmmUtils {
                     sleeps = Lists.newArrayList();
                 }
 
-                result.add(labelMaker.getLabelsFromEvents(0, 60000L * 60 * 16, 5, wakes, sleeps));
+                result.add(labelMaker.getSleepLabelsFromEvents(0, 60000L * 60 * 16, 5, wakes, sleeps));
 
             }
 

@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
@@ -16,9 +17,11 @@ import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
+import com.hello.suripu.core.models.TimelineFeedback;
 import junit.framework.TestCase;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -33,6 +36,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -40,6 +44,116 @@ import java.util.UUID;
  */
 public class MultiObsHmmIntegrationTest {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(MultiObsHmmIntegrationTest.class);
+
+    static private Set<Integer> getUniqueValues( final Map<Integer,Integer> labels) {
+
+        final Set<Integer> uniqueValues = Sets.newHashSet();
+        for (final Map.Entry<Integer,Integer> entry : labels.entrySet()) {
+            uniqueValues.add(entry.getValue());
+        }
+
+        return uniqueValues;
+    }
+
+    @Test
+    public void testLabelMaker() {
+        final LabelMaker labelMaker = new LabelMaker(Optional.<UUID>absent());
+
+        final TimelineFeedback inbed = TimelineFeedback.create("1970-01-01","22:00","22:00",Event.Type.IN_BED,42L);
+        final TimelineFeedback sleep = TimelineFeedback.create("1970-01-01","23:00","23:00",Event.Type.SLEEP,42L);
+        final TimelineFeedback wake = TimelineFeedback.create("1970-01-01","07:00","07:00",Event.Type.WAKE_UP,42L);
+        final TimelineFeedback outofbed = TimelineFeedback.create("1970-01-01","08:00","08:00",Event.Type.OUT_OF_BED,42L);
+
+        final List<TimelineFeedback> partialSleep = Lists.newArrayList(sleep);
+        final List<TimelineFeedback> partialWake = Lists.newArrayList(wake);
+        final List<TimelineFeedback> allSleep = Lists.newArrayList(sleep,wake);
+
+        final List<TimelineFeedback> partialInBed = Lists.newArrayList(inbed);
+        final List<TimelineFeedback> partialOutOfBed = Lists.newArrayList(outofbed);
+        final List<TimelineFeedback> allBeds = Lists.newArrayList(inbed,outofbed);
+
+        final List<TimelineFeedback> allEvents = Lists.newArrayList(inbed,sleep, wake, outofbed);
+
+
+        final long t1 = 3600000L * 20;
+        final long t2 = t1 + 3600000L * 16;
+        final int interval = 5;
+        final int tzOffset = 0;
+        final int idxInBed = 12 * 2 + 1;
+        final int idxSleep = 12 * 3 + 1;
+        final int idxWake = 12 * 11 - 1;
+        final int idxOutOfBed = 12 * 12 - 1;
+
+        final int expectedNumberOfLabels = (int) ((t2 - t1) / 60000L / interval);
+
+        {
+            final Map<String, Map<Integer, Integer>> labels = labelMaker.getLabelsFromEvents(tzOffset,t1,t2,interval, ImmutableList.copyOf(allEvents));
+
+            TestCase.assertTrue(labels.keySet().contains(OnlineHmmData.OUTPUT_MODEL_SLEEP));
+            TestCase.assertEquals(expectedNumberOfLabels,labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).size());
+            TestCase.assertEquals(3,getUniqueValues(labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP)).size());
+
+            TestCase.assertEquals(LabelMaker.LABEL_PRE_SLEEP, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).get(0));
+            TestCase.assertEquals(LabelMaker.LABEL_DURING_SLEEP, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).get(idxSleep));
+            TestCase.assertEquals(LabelMaker.LABEL_POST_SLEEP, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).get(expectedNumberOfLabels - 1));
+
+
+            TestCase.assertTrue(labels.keySet().contains(OnlineHmmData.OUTPUT_MODEL_BED));
+            TestCase.assertEquals(expectedNumberOfLabels,labels.get(OnlineHmmData.OUTPUT_MODEL_BED).size());
+            TestCase.assertEquals(3,getUniqueValues(labels.get(OnlineHmmData.OUTPUT_MODEL_BED)).size());
+            TestCase.assertEquals(LabelMaker.LABEL_PRE_BED, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_BED).get(0));
+            TestCase.assertEquals(LabelMaker.LABEL_DURING_BED, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_BED).get(idxInBed));
+            TestCase.assertEquals(LabelMaker.LABEL_POST_BED, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_BED).get(expectedNumberOfLabels - 1));
+
+
+        }
+
+        {
+            final Map<String, Map<Integer, Integer>> labels = labelMaker.getLabelsFromEvents(tzOffset,t1,t2,interval, ImmutableList.copyOf(partialSleep));
+            TestCase.assertTrue(labels.keySet().contains(OnlineHmmData.OUTPUT_MODEL_SLEEP));
+            TestCase.assertFalse(labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).isEmpty());
+            TestCase.assertEquals(2,getUniqueValues(labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP)).size());
+
+            //make sure first is there
+            TestCase.assertEquals(LabelMaker.LABEL_PRE_SLEEP, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).get(0));
+            TestCase.assertEquals(LabelMaker.LABEL_DURING_SLEEP, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).get(idxSleep));
+        }
+
+        {
+            final Map<String, Map<Integer, Integer>> labels = labelMaker.getLabelsFromEvents(tzOffset,t1,t2,interval, ImmutableList.copyOf(partialWake));
+            TestCase.assertTrue(labels.keySet().contains(OnlineHmmData.OUTPUT_MODEL_SLEEP));
+            TestCase.assertFalse(labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).isEmpty());
+            TestCase.assertEquals(2,getUniqueValues(labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP)).size());
+
+            //make sure last is there
+            TestCase.assertEquals(LabelMaker.LABEL_POST_SLEEP, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).get(expectedNumberOfLabels - 1));
+            TestCase.assertEquals(LabelMaker.LABEL_DURING_SLEEP, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_SLEEP).get(idxWake - 2));
+        }
+
+        {
+            final Map<String, Map<Integer, Integer>> labels = labelMaker.getLabelsFromEvents(tzOffset,t1,t2,interval, ImmutableList.copyOf(partialInBed));
+            TestCase.assertTrue(labels.keySet().contains(OnlineHmmData.OUTPUT_MODEL_BED));
+            TestCase.assertFalse(labels.get(OnlineHmmData.OUTPUT_MODEL_BED).isEmpty());
+            TestCase.assertEquals(2,getUniqueValues(labels.get(OnlineHmmData.OUTPUT_MODEL_BED)).size());
+
+            //make sure first is there
+            TestCase.assertEquals(LabelMaker.LABEL_PRE_BED, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_BED).get(0));
+            TestCase.assertEquals(LabelMaker.LABEL_DURING_BED, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_BED).get(idxInBed));
+
+        }
+
+        {
+            final Map<String, Map<Integer, Integer>> labels = labelMaker.getLabelsFromEvents(tzOffset,t1,t2,interval, ImmutableList.copyOf(partialOutOfBed));
+            TestCase.assertTrue(labels.keySet().contains(OnlineHmmData.OUTPUT_MODEL_BED));
+            TestCase.assertFalse(labels.get(OnlineHmmData.OUTPUT_MODEL_BED).isEmpty());
+            TestCase.assertEquals(2,getUniqueValues(labels.get(OnlineHmmData.OUTPUT_MODEL_BED)).size());
+
+            //make sure last is there
+            TestCase.assertEquals(LabelMaker.LABEL_POST_BED, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_BED).get(expectedNumberOfLabels - 1));
+            TestCase.assertEquals(LabelMaker.LABEL_DURING_BED, (int) labels.get(OnlineHmmData.OUTPUT_MODEL_BED).get(idxOutOfBed - 2));
+
+        }
+    }
 
     @Test
     public void testAllFourEvents() {

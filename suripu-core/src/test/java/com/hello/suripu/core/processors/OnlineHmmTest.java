@@ -25,9 +25,7 @@ import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -60,13 +58,17 @@ public class OnlineHmmTest {
 
     final static class LocalOnlineHmmModelsDAO implements OnlineHmmModelsDAO  {
 
+        public int putModelCounts = 0;
+        public int putScratchpadCounts = 0;
+        public int getCounts = 0;
+
         public LocalOnlineHmmModelsDAO(boolean startEmpty) {
             priorByDate = Maps.newTreeMap();
 
             if (!startEmpty) {
                 //get model
                 try {
-                    final byte[] protobuf = HmmUtils.loadFile("fixtures/algorithm/default_model.bin");
+                    final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/allfoureventsmodel.bin");
                     final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
 
                     TestCase.assertTrue(model.isPresent());
@@ -88,6 +90,8 @@ public class OnlineHmmTest {
 
         @Override
         public OnlineHmmData getModelDataByAccountId(Long accountId, DateTime date) {
+            getCounts++;
+
             final Map.Entry<DateTime,OnlineHmmData> entry = priorByDate.floorEntry(date);
 
             if (entry == null) {
@@ -114,6 +118,7 @@ public class OnlineHmmTest {
 
         @Override
         public boolean updateModelPriorsAndZeroOutScratchpad(Long accountId, DateTime date, OnlineHmmPriors priors) {
+            putModelCounts++;
             final OnlineHmmData newOnlineHmmData = new OnlineHmmData( priors,OnlineHmmScratchPad.createEmpty());
             priorByDate.put(date,newOnlineHmmData);
             return true;
@@ -121,7 +126,7 @@ public class OnlineHmmTest {
 
         @Override
         public boolean updateScratchpad(Long accountId, DateTime date, OnlineHmmScratchPad scratchPad) {
-
+            putScratchpadCounts++;
             final DateTime key  =  priorByDate.floorKey(date);
 
             if (key != null) {
@@ -130,6 +135,12 @@ public class OnlineHmmTest {
             }
 
             return false;
+        }
+
+        public void setZeroCounts() {
+            putModelCounts = 0;
+            putScratchpadCounts = 0;
+            getCounts = 0;
         }
     };
 
@@ -208,6 +219,8 @@ public class OnlineHmmTest {
 
         final OnlineHmm onlineHmm = new OnlineHmm(localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
 
+        modelsDAO.setZeroCounts();
+
         DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
         DateTime startTime = date.withHourOfDay(18);
         DateTime endTime = startTime.plusHours(18);
@@ -233,6 +246,7 @@ public class OnlineHmmTest {
 
         ////--------------------
         //step 2) the second day.... with FEEDBACK!
+        modelsDAO.setZeroCounts();
         date = date.plusDays(1);
         startTime = startTime.plusDays(1);
         endTime = endTime.plusDays(1);
@@ -240,25 +254,38 @@ public class OnlineHmmTest {
         pillData = getTypicalDayOfPill(startTime,endTime,0);
         final List<TimelineFeedback> timelineFeedbacks = Lists.newArrayList();
         final TimelineFeedback feedbackForNight2 = new TimelineFeedback(date,"00:00","23:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()));
+        final TimelineFeedback feedbackForNight2bed = new TimelineFeedback(date,"00:00","23:00", Event.Type.IN_BED,Optional.of(0L),Optional.of(endTime.getMillis()));
+
         timelineFeedbacks.add(feedbackForNight2);
+        timelineFeedbacks.add(feedbackForNight2bed);
         final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),0);
 
+        //////////////////////////////////////
+        // since there is feedback for this day,
+        // I expect the scratchpad of the previous day
+        // to be updated
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData2,true,false);
 
-        //make sure that no new entries were created, and that there is a scratchpad
+        //make sure that no new entries were created, and that there is a scratchpad with two entries
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
-
+        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.paramsByOutputId.size() == 2);
+        TestCase.assertTrue(modelsDAO.putScratchpadCounts == 1);
+        TestCase.assertTrue(modelsDAO.putModelCounts == 0);
+        TestCase.assertTrue(modelsDAO.getCounts == 1);
 
         //run again, this time with no update, and make sure that no new entries are created
+        modelsDAO.setZeroCounts();
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData2,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
-
+        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.paramsByOutputId.size() == 2);
+        TestCase.assertTrue(modelsDAO.putScratchpadCounts == 0);
+        TestCase.assertTrue(modelsDAO.putModelCounts == 0);
+        TestCase.assertTrue(modelsDAO.getCounts == 1);
 
 
         ////--------------------
         //step 3) the third day, make sure a new model got generated from the scratchpad
+        modelsDAO.setZeroCounts();
         date = date.plusDays(1);
         startTime = startTime.plusDays(1);
         endTime = endTime.plusDays(1);
@@ -268,7 +295,35 @@ public class OnlineHmmTest {
 
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData3,false,false);
 
+        //make sure the model was only put once
+        TestCase.assertTrue(modelsDAO.putModelCounts == 1);
+
+        //make sure the no scratchpads were put
+        TestCase.assertTrue(modelsDAO.putScratchpadCounts == 0);
+
+        //and make sure we did only one get
+        TestCase.assertTrue(modelsDAO.getCounts == 1);
+
+        //test that a new prior got created
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 2);
+
+        //and it's for today
+        TestCase.assertTrue(modelsDAO.priorByDate.get(date) != null);
+
+        //and it's not empty
+        TestCase.assertFalse(modelsDAO.priorByDate.get(date).modelPriors.isEmpty());
+
+        //also test that yesterday's scratchpad is still around
+        TestCase.assertFalse(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
+
+        //and ensure that today's scratchpad is empty
+        TestCase.assertTrue(modelsDAO.priorByDate.get(date).scratchPad.isEmpty());
+
+        //redo get, make sure we don't update the models again
+        modelsDAO.setZeroCounts();
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData3,false,false);
+        TestCase.assertTrue(modelsDAO.putModelCounts == 0);
+
 
     }
 

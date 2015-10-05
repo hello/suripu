@@ -30,12 +30,12 @@ public class LabelMaker {
     private static final long NUMBER_OF_MILLIS_IN_A_MINUTE = 60000L;
 
 
-    private static final int LABEL_PRE_SLEEP = 0;
-    private static final int LABEL_DURING_SLEEP = 1;
-    private static final int LABEL_POST_SLEEP = 2;
-    private static final int LABEL_PRE_BED = 0;
-    private static final int LABEL_DURING_BED = 1;
-    private static final int LABEL_POST_BED = 2;
+    public static final int LABEL_PRE_SLEEP = 0;
+    public static final int LABEL_DURING_SLEEP = 1;
+    public static final int LABEL_POST_SLEEP = 2;
+    public static final int LABEL_PRE_BED = 0;
+    public static final int LABEL_DURING_BED = 1;
+    public static final int LABEL_POST_BED = 2;
 
 
     public LabelMaker(final Optional<UUID> uuid) {
@@ -133,7 +133,7 @@ public class LabelMaker {
 
         final Map<String,Map<Integer,Integer>> labels = Maps.newHashMap();
 
-        labels.putAll(getLabelsFromEvents(startTime, endTime, numMinutesPerPeriod, wakeTimes, sleepTimes));
+        labels.putAll(getSleepLabelsFromEvents(startTime, endTime, numMinutesPerPeriod, wakeTimes, sleepTimes));
 
         labels.putAll(getBedLabelsFromEvents(startTime, endTime, numMinutesPerPeriod, outofbedTimes, inbedTimes));
 
@@ -141,7 +141,7 @@ public class LabelMaker {
     }
 
 
-    public final Map<String,Map<Integer,Integer>> getLabelsFromEvents(final long startTime, final long endTime, final int numMinutesPerPeriod,
+    public final Map<String,Map<Integer,Integer>> getSleepLabelsFromEvents(final long startTime, final long endTime, final int numMinutesPerPeriod,
                                                                       final List<Long> wakes, final List<Long> sleeps) {
 
 
