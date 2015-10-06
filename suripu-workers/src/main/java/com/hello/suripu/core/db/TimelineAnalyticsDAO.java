@@ -1,27 +1,35 @@
-package com.hello.suripu.workers.logs.timeline;
+package com.hello.suripu.core.db;
 
 import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.db.mappers.GroupedTimelineLogsSummaryMapper;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.GroupedTimelineLogSummary;
+import com.hello.suripu.core.db.binders.BindTimelineLog;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
+import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 
-public abstract class TimelineAnalytics {
+public abstract class TimelineAnalyticsDAO {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineAnalytics.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimelineAnalyticsDAO.class);
 
     @SqlUpdate("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at)" +
             " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at);")
     abstract void insert(@BindTimelineLog LoggingProtos.TimelineLog timelineLog);
 
     @BatchChunkSize(100)
-    @SqlBatch
+    @SqlBatch("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at)" +
+            " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at);")
     abstract void insert(@BindTimelineLog Collection<LoggingProtos.TimelineLog> timelineLogs);
 
     /**
@@ -30,7 +38,7 @@ public abstract class TimelineAnalytics {
      * @param timelineLogs
      * @return count of logs that were successfully inserted into the DB.
      */
-    int insertBatchWithIndividualRetry(final Collection<LoggingProtos.TimelineLog> timelineLogs) {
+    public int insertBatchWithIndividualRetry(final Collection<LoggingProtos.TimelineLog> timelineLogs) {
         if(timelineLogs.isEmpty()) {
             return 0;
         }
@@ -55,4 +63,11 @@ public abstract class TimelineAnalytics {
             return i;
         }
     }
+
+    @RegisterMapper(GroupedTimelineLogsSummaryMapper.class)
+    @SqlQuery("SELECT algorithm, error, COUNT(*) AS count " +
+              "FROM timeline_analytics " +
+              "WHERE date_of_night= :date_of_night " +
+              "GROUP BY algorithm, error;")
+    public abstract List<GroupedTimelineLogSummary> getGroupedSummary(@Bind("date_of_night") String date);
 }
