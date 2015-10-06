@@ -1,11 +1,10 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.mappers.GroupedTimelineLogsSummaryMapper;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.GroupedTimelineLogSummary;
-import com.hello.suripu.workers.logs.timeline.BindTimelineLog;
+import com.hello.suripu.core.db.binders.BindTimelineLog;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
