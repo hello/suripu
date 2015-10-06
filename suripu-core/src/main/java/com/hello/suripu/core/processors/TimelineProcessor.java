@@ -689,9 +689,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
-        if(sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
-            LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
-            sleepScore = 0;
+        if (!this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
+            //ORIGINAL BEHAVIOR
+            if (sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
+                LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
+                sleepScore = 0;
+            }
         }
 
         boolean isValidSleepScore = sleepScore > 0;
@@ -1058,13 +1061,26 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                              final SleepStats sleepStats) {
 
         // Movement score
-        final MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
+        MotionScore motionScore = SleepScoreUtils.getSleepMotionScore(targetDate.withTimeAtStartOfDay(),
                 trackerMotions, sleepStats.sleepTime, sleepStats.wakeTime);
 
-        if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
-            // if motion score is zero, something is not quite right, don't save score
-            LOGGER.error("No motion score generated for {} on {}", accountId, targetDate);
-            return 0;
+
+
+
+
+        if (this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
+            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN)  {
+                LOGGER.warn("enforced minimum motion score for {} on {}", accountId, targetDate);
+                motionScore = new MotionScore(motionScore.numMotions, motionScore.motionPeriodMinutes, motionScore.avgAmplitude, motionScore.maxAmplitude, (int) SleepScoreUtils.MOTION_SCORE_MIN);
+            }
+        }
+        else {
+            //original behavior
+            if (motionScore.score < (int) SleepScoreUtils.MOTION_SCORE_MIN) {
+                // if motion score is zero, something is not quite right, don't save score
+                LOGGER.error("No motion score generated for {} on {}", accountId, targetDate);
+                return 0;
+            }
         }
 
         final Integer durationScore = computeSleepDurationScore(accountId, sleepStats);

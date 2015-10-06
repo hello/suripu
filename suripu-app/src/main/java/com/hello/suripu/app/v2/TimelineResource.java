@@ -229,11 +229,13 @@ public class TimelineResource extends BaseResource {
 
         //proposed event is valid
         if (!feedbackUtils.checkEventValidity(timelineFeedback,offsetMillis)) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because new event was not valid",accountId,timelineFeedback.dateOfNight);
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_AT_INVALID_TIME)).build());
         }
 
         //events out of order
         if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timelineFeedback,offsetMillis)) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because new event was out of order",accountId,timelineFeedback.dateOfNight);
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
         }
     }
@@ -247,6 +249,13 @@ public class TimelineResource extends BaseResource {
         //IF there was new feedback being tried out, and if it resulted in the score condition becoming unavailable
         //THEN throw an error to the user
         if (timeline.scoreCondition.equals(ScoreCondition.UNAVAILABLE) ) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because it resulted in the sleep score becoming unavailable",accountId,timeline.dateNight);
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_CAUSED_INVALID_SLEEP_SCORE)).build());
+        }
+
+
+        if (timeline.events.isEmpty()) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because it resulted in an empty timeline",accountId,timeline.dateNight);
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_CAUSED_INVALID_SLEEP_SCORE)).build());
         }
     }
