@@ -198,7 +198,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
-        final TimelineError discardReason = isValidNight(accountId, sensorData.trackerMotions);
+        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions);
 
         switch (discardReason){
             case TIMESPAN_TOO_SHORT:
@@ -397,17 +397,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         LOGGER.debug("Length of originalTrackerMotion is {} for {} on {}", originalTrackerMotions.size(), accountId, targetDate);
 
         // get partner tracker motion, if available
-        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+        final List<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        if (!partnerMotions.isEmpty()) {
+        if (!originalPartnerMotions.isEmpty()) {
 
             final int tzOffsetMillis = originalTrackerMotions.get(0).offsetMillis;
 
             if (this.hasPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using original partner filter");
                 try {
-                    PartnerDataUtils.PartnerMotions motions = partnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
+                    PartnerDataUtils.PartnerMotions motions = partnerDataUtils.getMyMotion(originalTrackerMotions, originalPartnerMotions);
                     trackerMotions.addAll(motions.myMotions);
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
@@ -422,7 +422,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                     targetDate.minusMillis(tzOffsetMillis),
                                     endDate.minusMillis(tzOffsetMillis),
                                     ImmutableList.copyOf(originalTrackerMotions),
-                                    ImmutableList.copyOf(partnerMotions)));
+                                    ImmutableList.copyOf(originalPartnerMotions)));
 
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
@@ -495,7 +495,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             feedbackList.add(newFeedback.get());
         }
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),ImmutableList.copyOf(feedbackList),tzOffsetMillis));
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,
+                ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(originalPartnerMotions),
+                ImmutableList.copyOf(feedbackList),
+                ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(originalPartnerMotions),
+                tzOffsetMillis));
 
     }
 
