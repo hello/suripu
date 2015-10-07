@@ -2,6 +2,7 @@ package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -130,16 +131,16 @@ public class ReceiveResourceTest {
 
     @Test
     public void testFWBugClockSkewNotCorrected() {
-        DateTime sampleDatetime = DateTime.now().plusHours(10);
-        final Optional<Long> notCorrectedFutureDT = ReceiveResource.checkForPillClockSkewBug(sampleDatetime, DateTime.now());
+        DateTime sampleDateTime = DateTime.now().plusHours(10);
+        final Optional<Long> notCorrectedFutureDT = ReceiveResource.correctForPillClockSkewBug(sampleDateTime, DateTime.now());
         Long timestamp = 0L;
         if (notCorrectedFutureDT.isPresent()) {
             timestamp = notCorrectedFutureDT.get();
         }
         assertThat(timestamp, is(0L));
 
-        sampleDatetime = DateTime.now().minusHours(10);
-        final Optional<Long> notCorrectedPastDT = ReceiveResource.checkForPillClockSkewBug(sampleDatetime, DateTime.now());
+        sampleDateTime = DateTime.now().minusHours(10);
+        final Optional<Long> notCorrectedPastDT = ReceiveResource.correctForPillClockSkewBug(sampleDateTime, DateTime.now());
         if (notCorrectedPastDT.isPresent()) {
             timestamp = notCorrectedFutureDT.get();
         }
@@ -149,13 +150,26 @@ public class ReceiveResourceTest {
     @Test
     public void testFWClockSkewBugCorrected(){
         final DateTime now = DateTime.now();
-        DateTime sampleDatetime = now.plusMonths(6).plusSeconds(1);
-        final Optional<Long> correctedDT = ReceiveResource.checkForPillClockSkewBug(sampleDatetime, now);
+        DateTime sampleDateTime = now.plusMonths(6).plusSeconds(1);
+        final Optional<Long> correctedDT = ReceiveResource.correctForPillClockSkewBug(sampleDateTime, now);
         Long timestamp = 0L;
         if (correctedDT.isPresent()) {
             timestamp = correctedDT.get();
         }
         final DateTime correctDT = now.plusSeconds(1);
         assertThat(timestamp, is(correctDT.getMillis()));
+    }
+
+    @Test
+    public void testFWClockSkewBugWithFixedDate() {
+        final DateTime now = DateTimeUtil.datetimeStringToDateTime("2015-10-07 17:56:53");
+        final DateTime sampleDateTime = DateTimeUtil.datetimeStringToDateTime("2016-04-07 17:56:49");
+        final Optional<Long> correctedDT = ReceiveResource.correctForPillClockSkewBug(sampleDateTime, now);
+        Long timestamp = 0L;
+        if (correctedDT.isPresent()) {
+            timestamp = correctedDT.get();
+        }
+        final Long expectedTimestamp = sampleDateTime.minusMonths(DateTimeUtil.MONTH_OFFSET_FOR_CLOCK_BUG).getMillis();
+        assertThat(timestamp, is(expectedTimestamp));
     }
 }

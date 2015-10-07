@@ -525,7 +525,7 @@ public class ReceiveResource extends BaseResource {
 
                 // This is intended to check for very specific clock bugs from Sense on 10/01/2015
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.ATTEMPT_TO_CORRECT_PILL_REPORTED_TIMESTAMP, pill.getDeviceId(), Collections.EMPTY_LIST)) {
-                    final Optional<Long> optionalCorrectedTimestamp = checkForPillClockSkewBug(outOfSyncDateTime, now);
+                    final Optional<Long> optionalCorrectedTimestamp = correctForPillClockSkewBug(outOfSyncDateTime, now);
                     if (optionalCorrectedTimestamp.isPresent()) {
                         // add pill data with corrected timestamp to Kinesis
                         final SenseCommandProtos.pill_data correctedPill = SenseCommandProtos.pill_data.newBuilder(pill).
@@ -560,7 +560,7 @@ public class ReceiveResource extends BaseResource {
         return signedResponse.get();
     }
 
-    public static Optional<Long> checkForPillClockSkewBug(final DateTime pillDateTime, DateTime referenceDateTime) {
+    public static Optional<Long> correctForPillClockSkewBug(final DateTime pillDateTime, DateTime referenceDateTime) {
         // check if pill datetime is 6 months ahead
         if (pillDateTime.isAfter(referenceDateTime.plusHours(CLOCK_BUG_SKEW_IN_HOURS))) {
             // attempt to correct for 6 months clock skew
