@@ -1,5 +1,6 @@
 package com.hello.suripu.service.resources;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.core.models.RingTime;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
 import org.joda.time.DateTime;
@@ -125,5 +126,36 @@ public class ReceiveResourceTest {
 
         assertThat(SenseUploadConfiguration.REDUCED_LONG_INTERVAL.equals(reducedUploadCycle), is(true));
         assertThat(reducedUploadCycle < uploadCycle, is(true));
+    }
+
+    @Test
+    public void testFWBugClockSkewNotCorrected() {
+        DateTime sampleDatetime = DateTime.now().plusHours(10);
+        final Optional<Long> notCorrectedFutureDT = ReceiveResource.checkForPillClockSkewBug(sampleDatetime, DateTime.now());
+        Long timestamp = 0L;
+        if (notCorrectedFutureDT.isPresent()) {
+            timestamp = notCorrectedFutureDT.get();
+        }
+        assertThat(timestamp, is(0L));
+
+        sampleDatetime = DateTime.now().minusHours(10);
+        final Optional<Long> notCorrectedPastDT = ReceiveResource.checkForPillClockSkewBug(sampleDatetime, DateTime.now());
+        if (notCorrectedPastDT.isPresent()) {
+            timestamp = notCorrectedFutureDT.get();
+        }
+        assertThat(timestamp, is(0L));
+    }
+
+    @Test
+    public void testFWClockSkewBugCorrected(){
+        final DateTime now = DateTime.now();
+        DateTime sampleDatetime = now.plusMonths(6).plusSeconds(1);
+        final Optional<Long> correctedDT = ReceiveResource.checkForPillClockSkewBug(sampleDatetime, now);
+        Long timestamp = 0L;
+        if (correctedDT.isPresent()) {
+            timestamp = correctedDT.get();
+        }
+        final DateTime correctDT = now.plusSeconds(1);
+        assertThat(timestamp, is(correctDT.getMillis()));
     }
 }
