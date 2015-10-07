@@ -157,7 +157,7 @@ public class ReceiveResourceTest {
             timestamp = correctedDT.get();
         }
         final DateTime correctDT = now.plusSeconds(1);
-        assertThat(timestamp, is(correctDT.getMillis()));
+        assertThat(timestamp, is(correctDT.getMillis()/1000L));
     }
 
     @Test
@@ -169,7 +169,7 @@ public class ReceiveResourceTest {
         if (correctedDT.isPresent()) {
             timestamp = correctedDT.get();
         }
-        final Long expectedTimestamp = sampleDateTime.minusMonths(DateTimeUtil.MONTH_OFFSET_FOR_CLOCK_BUG).getMillis();
+        final Long expectedTimestamp = sampleDateTime.minusMonths(DateTimeUtil.MONTH_OFFSET_FOR_CLOCK_BUG).getMillis()/1000L;
         assertThat(timestamp, is(expectedTimestamp));
     }
 }
