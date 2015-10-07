@@ -70,4 +70,5 @@ public class FeatureFlipper {
 
     public final static String ALARM_WORKER_DROP_IF_TOO_OLD = "alarm_worker_drop_if_too_old";
     public final static String ATTEMPT_TO_CORRECT_SENSE_REPORTED_TIMESTAMP = "attempt_to_correct_sense_reported_timestamp";
+    public final static String ATTEMPT_TO_CORRECT_PILL_REPORTED_TIMESTAMP = "attempt_to_correct_pill_reported_timestamp";
 }

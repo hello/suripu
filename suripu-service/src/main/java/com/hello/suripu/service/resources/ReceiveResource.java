@@ -30,6 +30,7 @@ import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.processors.OTAProcessor;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
 import com.hello.suripu.service.SignedMessage;
@@ -74,6 +75,7 @@ public class ReceiveResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveResource.class);
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
+    private static final int CLOCK_BUG_SKEW_IN_HOURS = 6 * 30 * 24 - 1; // 6 months in hours
     private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
     private final int ringDurationSec;
 
@@ -514,11 +516,26 @@ public class ReceiveResource extends BaseResource {
             final DateTime now = DateTime.now();
             final Long pillTimestamp = pill.getTimestamp() * 1000L;
             if(pillTimestamp > now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS).getMillis()) {
+                final DateTime outOfSyncDateTime = new DateTime(pillTimestamp, DateTimeZone.UTC);
                 LOGGER.warn("Pill data timestamp from {} is too much in the future. now = {}, timestamp = {}",
                         pill.getDeviceId(),
                         now,
-                        new DateTime(pillTimestamp, DateTimeZone.UTC));
+                        outOfSyncDateTime);
                 pillClockOutOfSync.mark(1);
+
+                // This is intended to check for very specific clock bugs from Sense on 10/01/2015
+                if (featureFlipper.deviceFeatureActive(FeatureFlipper.ATTEMPT_TO_CORRECT_PILL_REPORTED_TIMESTAMP, pill.getDeviceId(), Collections.EMPTY_LIST)) {
+                    final Optional<Long> optionalCorrectedTimestamp = correctForPillClockSkewBug(outOfSyncDateTime, now);
+                    if (optionalCorrectedTimestamp.isPresent()) {
+                        // add pill data with corrected timestamp to Kinesis
+                        final SenseCommandProtos.pill_data correctedPill = SenseCommandProtos.pill_data.newBuilder(pill).
+                                setTimestamp(optionalCorrectedTimestamp.get()).
+                                build();
+                        cleanBatch.addPills(correctedPill);
+                    }
+                }
+
+                // skip saving to Kinesis regular clock skew data
                 continue;
             }
             cleanBatch.addPills(pill);
@@ -526,7 +543,7 @@ public class ReceiveResource extends BaseResource {
 
         // Put raw pill data into Kinesis
         final DataLogger batchDataLogger = kinesisLoggerFactory.get(QueueName.BATCH_PILL_DATA);
-        batchDataLogger.put(batchPilldata.getDeviceId(),  cleanBatch.build().toByteArray());
+        batchDataLogger.put(batchPilldata.getDeviceId(), cleanBatch.build().toByteArray());
 
 
         final SenseCommandProtos.MorpheusCommand responseCommand = SenseCommandProtos.MorpheusCommand.newBuilder()
@@ -541,6 +558,18 @@ public class ReceiveResource extends BaseResource {
         }
 
         return signedResponse.get();
+    }
+
+    public static Optional<Long> correctForPillClockSkewBug(final DateTime pillDateTime, DateTime referenceDateTime) {
+        // check if pill datetime is 6 months ahead
+        if (pillDateTime.isAfter(referenceDateTime.plusHours(CLOCK_BUG_SKEW_IN_HOURS))) {
+            // attempt to correct for 6 months clock skew
+            final DateTime correctedDateTime = DateTimeUtil.possiblySanitizeSampleTime(referenceDateTime, pillDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS);
+            if (!correctedDateTime.equals(pillDateTime)) {
+                return Optional.of(correctedDateTime.getMillis());
+            }
+        }
+        return Optional.absent();
     }
 
     private Optional<DateTimeZone> getUserTimeZone(List<UserInfo> userInfoList) {
