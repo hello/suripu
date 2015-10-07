@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
@@ -121,40 +122,28 @@ public class TimelineResource extends BaseResource {
             LOGGER.info("{} No cached timeline, reprocess timeline for account {}, date {}",sessionUUID, accountId, targetDate);
 
             //generate timeline from one of our many algorithms
-            final Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,true);
+            final TimelineResult result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate, Optional.<TimelineFeedback>absent());
 
-            //if it was successful,
-            if (result.isPresent()) {
-
-                // Timeline result could be present but no timeline if not enough data for the night
-                if(result.get().timelines.isEmpty()) {
-                    return result.get();
-                }
-
-                //place in cache cache, money money, yo.
-                cacheTimeline(accountId, targetDate, result.get());
-
-                //log it, too
-                //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
-                final Optional<TimelineLog> logV2 = result.get().logV2;
-
-                if (logV2.isPresent()) {
-                    timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
-
-                    final String partitionKey = logV2.get().getPartitionKey();
-                    timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
-                }
-
-
-                return result.get();
-
+            // Timeline result could be present but no timeline if not enough data for the night
+            if(result.timelines.isEmpty()) {
+                return result;
             }
-            else {
 
-                //not successful in generating timeline for whatever reason,
-                //no cache, no log, just return empty
-                return TimelineResult.createEmpty();
+            //place in cache cache, money money, yo.
+            cacheTimeline(accountId, targetDate, result);
+
+            //log it, too
+            //log the cached result (why here? things can get put in the cache without first going through "timelineProcessor.retrieveTimelinesFast")
+            final Optional<TimelineLog> logV2 = result.logV2;
+
+            if (logV2.isPresent()) {
+                timelineLogDAOV1.putTimelineLog(accountId, logV2.get().getAsV1Log());
+
+                final String partitionKey = logV2.get().getPartitionKey();
+                timelineLogDAOV2.putAsync(partitionKey, logV2.get().toProtoBuf());
             }
+
+            return result;
         }
     }
 
@@ -193,11 +182,9 @@ public class TimelineResource extends BaseResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        final Optional<TimelineResult> timelineResultOptional = timelineProcessor.retrieveTimelinesFast(accountId.get(), DateTimeUtil.ymdStringToDateTime(date),true);
-        if (!timelineResultOptional.isPresent()) {
-            return TimelineResult.createEmpty().timelines;
-        }
-        return timelineResultOptional.get().timelines;
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(accountId.get(), DateTimeUtil.ymdStringToDateTime(date), Optional.<TimelineFeedback>absent());
+
+        return timelineResult.timelines;
     }
 
     @Timed

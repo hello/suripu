@@ -13,6 +13,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -188,13 +189,14 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
 
                 this.timelineReadyToProcess.mark(1);
                 try {
-                    final Optional<TimelineResult> result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC,false);
-                    if(!result.isPresent()){
+                    final TimelineResult result = this.timelineProcessor.retrieveTimelinesFast(accountId, targetDateLocalUTC, Optional.<TimelineFeedback>absent());
+
+                    if(result.timelines.isEmpty()){
                         this.emptyTimelineAfterProcess.mark(1);
                         continue;
                     }
 
-                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, result.get());
+                    this.timelineDAODynamoDB.saveTimelinesForDate(accountId, targetDateLocalUTC, result);
                     timelinesSaved.mark(1);
 
                     LOGGER.info("{} Timeline saved for account {} at local utc {}",

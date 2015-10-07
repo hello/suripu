@@ -126,4 +126,8 @@ public class BaseResource {
         return featureFlipper.deviceFeatureActive(FeatureFlipper.DUST_SMOOTH, senseId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasInvalidSleepScoreFromFeedbackChecking(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
+
 }

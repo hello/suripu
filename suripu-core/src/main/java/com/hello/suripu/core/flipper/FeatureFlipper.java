@@ -60,6 +60,7 @@ public class FeatureFlipper {
     public final static String CALIBRATION = "calibration";
     public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
+    public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
 
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";
