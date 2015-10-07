@@ -526,11 +526,17 @@ public class ReceiveResource extends BaseResource {
                 // This is intended to check for very specific clock bugs from Sense on 10/01/2015
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.ATTEMPT_TO_CORRECT_PILL_REPORTED_TIMESTAMP, pill.getDeviceId(), Collections.EMPTY_LIST)) {
                     final Optional<Long> optionalCorrectedTimestamp = correctForPillClockSkewBug(outOfSyncDateTime, now);
+                    LOGGER.warn("Attempt to correct pill data timestamp for {}", pill.getDeviceId());
                     if (optionalCorrectedTimestamp.isPresent()) {
                         // add pill data with corrected timestamp to Kinesis
+                        final Long correctedTimestamp = optionalCorrectedTimestamp.get();
                         final SenseCommandProtos.pill_data correctedPill = SenseCommandProtos.pill_data.newBuilder(pill).
-                                setTimestamp(optionalCorrectedTimestamp.get()).
+                                setTimestamp(correctedTimestamp).
                                 build();
+
+                        LOGGER.warn("Pill data timestamp corrected for {} to {}", correctedPill.getDeviceId(),
+                                new DateTime(correctedPill.getTimestamp() * 1000L, DateTimeZone.UTC));
+
                         cleanBatch.addPills(correctedPill);
                     }
                 }
@@ -566,7 +572,7 @@ public class ReceiveResource extends BaseResource {
             // attempt to correct for 6 months clock skew
             final DateTime correctedDateTime = DateTimeUtil.possiblySanitizeSampleTime(referenceDateTime, pillDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS);
             if (!correctedDateTime.equals(pillDateTime)) {
-                return Optional.of(correctedDateTime.getMillis());
+                return Optional.of(correctedDateTime.getMillis() / 1000L); // return data in seconds!!!
             }
         }
         return Optional.absent();
