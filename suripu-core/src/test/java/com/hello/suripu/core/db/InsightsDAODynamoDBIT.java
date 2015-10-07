@@ -7,7 +7,6 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -25,9 +24,9 @@ import static org.hamcrest.core.Is.is;
 /**
  * Created by jakepiccolo on 10/7/15.
  */
-public class InsightsDAODynamoDBTest {
+public class InsightsDAODynamoDBIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(InsightsDAODynamoDBTest.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(InsightsDAODynamoDBIT.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;
