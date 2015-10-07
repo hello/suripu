@@ -101,6 +101,13 @@ public class KeyStoreUtils {
             final PEMReader pemReader = new PEMReader(reader);
             final KeyPair keyPair = (KeyPair) pemReader.readObject();
             final PrivateKey privateKey = keyPair.getPrivate();
+
+            try {
+                s3Object.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed closing S3 stream");
+            }
+
             return Optional.fromNullable(privateKey);
         } catch (IOException e) {
             LOGGER.error("Failed getting private key: {}", e.getMessage());
