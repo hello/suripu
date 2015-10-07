@@ -31,4 +31,17 @@ public class OneDaysSensorData {
         this.timezoneOffsetMillis = timezoneOffsetMillis;
     }
 
+    public OneDaysSensorData(final AllSensorSampleList allSensorSampleList,
+                             final ImmutableList<TrackerMotion> trackerMotions, final ImmutableList<TrackerMotion> partnerMotions,
+                             final ImmutableList<TimelineFeedback> feedbackList,
+                             final int timezoneOffsetMillis) {
+        this.allSensorSampleList = allSensorSampleList;
+        this.trackerMotions = trackerMotions;
+        this.partnerMotions = partnerMotions;
+        this.feedbackList = feedbackList;
+        this.originalTrackerMotions = trackerMotions;
+        this.originalPartnerTrackerMotions = partnerMotions;
+        this.timezoneOffsetMillis = timezoneOffsetMillis;
+    }
+
 }
