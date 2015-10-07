@@ -129,7 +129,7 @@ public class InsightsDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
         queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByDate);
 
-        return this.getData(queryConditions, limit);
+        return this.getData(queryConditions, limit, chronological);
     }
 
     @Timed
@@ -176,10 +176,10 @@ public class InsightsDAODynamoDB {
         queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
         queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByCategory);
 
-        return this.getData(queryConditions, limit);
+        return this.getData(queryConditions, limit, true);
     }
 
-    private ImmutableList<InsightCard> getData(final Map<String, Condition> queryConditions, final int limit) {
+    private ImmutableList<InsightCard> getData(final Map<String, Condition> queryConditions, final int limit, final Boolean scanForward) {
         final List<InsightCard> insightCards = new ArrayList<>();
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int loopCount = 0;
@@ -190,6 +190,7 @@ public class InsightsDAODynamoDB {
                     .withKeyConditions(queryConditions)
                     .withAttributesToGet(this.targetAttributes)
                     .withLimit(limit)
+                    .withScanIndexForward(scanForward)
                     .withExclusiveStartKey(lastEvaluatedKey);
 
             final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
@@ -211,7 +212,10 @@ public class InsightsDAODynamoDB {
 
         } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT && insightCards.size() < limit);
 
-        Collections.sort(insightCards, Collections.reverseOrder());
+        if (scanForward) {
+            // We scanned from the beginning, but we still want to return the results reverse chronologically
+            Collections.sort(insightCards, Collections.reverseOrder());
+        }
         return ImmutableList.copyOf(insightCards);
 
     }
