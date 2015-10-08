@@ -13,6 +13,7 @@ import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.TimelineAnalyticsDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
@@ -67,12 +68,12 @@ public class TimelineLogCommand extends WorkerEnvironmentCommand<TimelineLogConf
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
-        final TimelineAnalytics timelineAnalytics = commonDB.onDemand(TimelineAnalytics.class);
+        final TimelineAnalyticsDAO timelineAnalyticsDAO = commonDB.onDemand(TimelineAnalyticsDAO.class);
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
-        final IRecordProcessorFactory factory = new TimelineLogProcessorFactory(timelineAnalytics);
+        final IRecordProcessorFactory factory = new TimelineLogProcessorFactory(timelineAnalyticsDAO);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }

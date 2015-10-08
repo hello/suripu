@@ -160,7 +160,7 @@ public class RingProcessorSingleUserIT {
     public void cleanUp(){
         this.userInfoList1.clear();
         this.userInfoList2.clear();
-        //setUp();
+        //init();
         final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
                 .withTableName(ringTimeTableName);
         try {

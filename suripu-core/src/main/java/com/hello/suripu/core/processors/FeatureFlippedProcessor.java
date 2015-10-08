@@ -66,10 +66,6 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.ALL_SENSOR_QUERY_USE_UTC_TS, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasNewInvalidNightFilterEnabled(final Long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.NEW_INVALID_NIGHT_FILTER, accountId, Collections.EMPTY_LIST);
-    }
-
     protected Boolean hasRemoveMotionEventsOutsideSleep(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.REMOVE_MOTION_EVENTS_OUTSIDE_SLEEP, accountId, Collections.EMPTY_LIST);
     }
@@ -90,11 +86,23 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_ORDER_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasInvalidSleepScoreFromFeedbackChecking(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasDustSmoothEnabled(final String senseId) {
         return featureFlipper.deviceFeatureActive(FeatureFlipper.DUST_SMOOTH, senseId, Collections.EMPTY_LIST);
     }
 
     protected boolean hasTimelineInSleepInsights(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.TIMELINE_IN_SLEEP_INSIGHTS, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean isSenseLastSeenDynamoDBReadEnabled(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSE_LAST_SEEN_VIEW_DYNAMODB_READ, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean isSensorsDBUnavailable(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SENSORS_DB_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
 }

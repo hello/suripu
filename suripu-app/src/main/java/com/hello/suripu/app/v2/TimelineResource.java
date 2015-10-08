@@ -7,6 +7,7 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
+import com.hello.suripu.core.models.timeline.v2.ScoreCondition;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
@@ -39,13 +40,11 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -90,7 +89,7 @@ public class TimelineResource extends BaseResource {
     public Timeline getTimelineForNight(@Scope(OAuthScope.SLEEP_TIMELINE) final AccessToken accessToken,
                                         @PathParam("date") final String night) {
 
-        return getTimelineForNightInternal(accessToken.accountId, night, false);
+        return getTimelineForNightInternal(accessToken.accountId, night, Optional.<TimelineFeedback>absent());
     }
 
 
@@ -112,10 +111,22 @@ public class TimelineResource extends BaseResource {
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
 
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
+
+        //make sure the feedback event order and times make sense
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
-        feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
+
         timelineDAODynamoDB.invalidateCache(accessToken.accountId, timelineFeedback.dateOfNight, DateTime.now());
-        return getTimelineForNightInternal(accessToken.accountId, date,true);
+
+        //get the updated timeline
+        final Timeline timeline = getTimelineForNightInternal(accessToken.accountId, date, Optional.of(timelineFeedback));
+
+        //make sure the feedback did not screw up the timeline
+        checkValidTimelineOrThrow(accessToken.accountId,timeline);
+
+        //if we made it this far, insert
+        feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
+
+        return timeline;
     }
 
     @DELETE
@@ -127,9 +138,10 @@ public class TimelineResource extends BaseResource {
                                 @PathParam("type") String type,
                                 @PathParam("timestamp") long timestamp) {
 
+        //TODO in the future, if we delete an intermediate event (bathroom break at night), we will have to change the internal API to let retrieveTimelinesFast know that an event was removed
         return Response.status(Response.Status.ACCEPTED)
-                       .entity(getTimelineForNightInternal(accessToken.accountId, date,true))
-                       .build();
+                       .entity(getTimelineForNightInternal(accessToken.accountId, date, Optional.<TimelineFeedback>absent()))
+                .build();
     }
 
     @PUT
@@ -152,10 +164,15 @@ public class TimelineResource extends BaseResource {
         // Correct event means feedback = prediction
         final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback,offsetMillis);
-        feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
 
-        //recalculate with feedback
-        getTimelineForNightInternal(accessToken.accountId, date,true);
+        //recalculate with feedback and check
+        final Timeline timeline = getTimelineForNightInternal(accessToken.accountId, date, Optional.of(timelineFeedback));
+
+        //check to make sure sleep score did not get screwed up
+        checkValidTimelineOrThrow(accessToken.accountId,timeline);
+
+        //if we made it this far, insert
+        feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
 
         return Response.status(Response.Status.ACCEPTED).build();
     }
@@ -212,32 +229,58 @@ public class TimelineResource extends BaseResource {
 
         //proposed event is valid
         if (!feedbackUtils.checkEventValidity(timelineFeedback,offsetMillis)) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because new event was not valid",accountId,timelineFeedback.dateOfNight);
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_AT_INVALID_TIME)).build());
         }
 
         //events out of order
         if (!feedbackUtils.checkEventOrdering(existingFeedbacks,timelineFeedback,offsetMillis)) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because new event was out of order",accountId,timelineFeedback.dateOfNight);
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_INCONSISTENT)).build());
         }
     }
 
-    private Timeline getTimelineForNightInternal(final long accountId,final String night, final boolean hasFeedback) {
-        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
-        final Optional<TimelineResult> timeline = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,hasFeedback);
-        if(!timeline.isPresent()) {
-            return Timeline.createEmpty(targetDate);
+    private void checkValidTimelineOrThrow(final long accountId,final Timeline timeline) {
+
+        if (!this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
+            return;
         }
-        // That's super ugly. Need to find a more elegant way to write this
-        if (timeline.get().logV2.isPresent()) {
-            final TimelineLog logV2 = timeline.get().logV2.get();
+
+        //IF there was new feedback being tried out, and if it resulted in the score condition becoming unavailable
+        //THEN throw an error to the user
+        if (timeline.scoreCondition.equals(ScoreCondition.UNAVAILABLE) ) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because it resulted in the sleep score becoming unavailable",accountId,timeline.dateNight);
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_CAUSED_INVALID_SLEEP_SCORE)).build());
+        }
+
+
+        if (timeline.events.isEmpty()) {
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because it resulted in an empty timeline",accountId,timeline.dateNight);
+            throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_CAUSED_INVALID_SLEEP_SCORE)).build());
+        }
+    }
+
+    private Timeline getTimelineForNightInternal(final long accountId, final String night, final Optional<TimelineFeedback> newFeedback) {
+        final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(night);
+
+        //GET THE TIMELINE WITH THE NEW FEEDBACK (or no new feedback)
+        //TODO change timeline result to a V2 timeline result
+        final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,newFeedback);
+
+        //GET THE V2 RESULT
+        final Timeline timeline = Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
+
+        //SEND LOG TO KINESIS
+        if (timelineResult.logV2.isPresent()) {
+            final TimelineLog logV2 = timelineResult.logV2.get();
             final String partitionKey = logV2.getPartitionKey();
             timelineLogDAOV2.putAsync(partitionKey, logV2.toProtoBuf());
+
+            //TODO deprecate this sometime soon
             timelineLogDAO.putTimelineLog(accountId, logV2.getAsV1Log());
         }
 
-        // That's super ugly. Need to find a more elegant way to write this
-        final TimelineResult timelineResult = timeline.get();
-        return Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
+        return timeline;
     }
 
 }

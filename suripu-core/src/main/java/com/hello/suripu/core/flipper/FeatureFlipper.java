@@ -60,6 +60,7 @@ public class FeatureFlipper {
     public final static String CALIBRATION = "calibration";
     public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
+    public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
 
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";
@@ -69,4 +70,5 @@ public class FeatureFlipper {
 
     public final static String ALARM_WORKER_DROP_IF_TOO_OLD = "alarm_worker_drop_if_too_old";
     public final static String ATTEMPT_TO_CORRECT_SENSE_REPORTED_TIMESTAMP = "attempt_to_correct_sense_reported_timestamp";
+    public final static String ATTEMPT_TO_CORRECT_PILL_REPORTED_TIMESTAMP = "attempt_to_correct_pill_reported_timestamp";
 }

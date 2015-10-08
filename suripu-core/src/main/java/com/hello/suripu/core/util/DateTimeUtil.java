@@ -14,6 +14,7 @@ public class DateTimeUtil {
     public static final String DYNAMO_DB_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final int DAY_STARTS_AT_HOUR = 20;
     public static final int DAY_ENDS_AT_HOUR = 12;
+    public static final int MONTH_OFFSET_FOR_CLOCK_BUG = 6;
 
     public static final DateTime MORPHEUS_DAY_ONE = DateTime.parse("2014-04-08", DateTimeFormat.forPattern(DYNAMO_DB_DATE_FORMAT));
 
@@ -25,6 +26,12 @@ public class DateTimeUtil {
         return DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withTimeAtStartOfDay();
 
+    }
+
+    public static DateTime datetimeStringToDateTime(final String datetimeString) {
+        return  DateTime.parse(datetimeString,
+                DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))
+                .withZone(DateTimeZone.UTC);
     }
 
     public static int getDateDiffFromNowInDays(final DateTime datetime) {
@@ -57,9 +64,9 @@ public class DateTimeUtil {
      */
     public static DateTime possiblySanitizeSampleTime(final DateTime referenceTime, final DateTime sampleTime, final Integer clockSkewInHours) {
 
-        final Integer diffInMinutes = Minutes.minutesBetween(referenceTime, sampleTime.minusMonths(5)).getMinutes();
+        final Integer diffInMinutes = Minutes.minutesBetween(referenceTime, sampleTime.minusMonths(MONTH_OFFSET_FOR_CLOCK_BUG)).getMinutes();
         if(Math.abs(diffInMinutes) < clockSkewInHours * 60) {
-            return sampleTime.minusMonths(5).withMinuteOfHour(sampleTime.getMinuteOfHour()).withHourOfDay(sampleTime.getHourOfDay());
+            return sampleTime.minusMonths(MONTH_OFFSET_FOR_CLOCK_BUG).withMinuteOfHour(sampleTime.getMinuteOfHour()).withHourOfDay(sampleTime.getHourOfDay());
         }
 
         return sampleTime;

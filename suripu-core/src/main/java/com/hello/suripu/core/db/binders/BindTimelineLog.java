@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.logs.timeline;
+package com.hello.suripu.core.db.binders;
 
 import com.hello.suripu.api.logging.LoggingProtos;
 import org.skife.jdbi.v2.SQLStatement;

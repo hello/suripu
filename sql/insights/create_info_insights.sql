@@ -250,22 +250,22 @@ Get sufficient **exposure to natural light**, which helps to maintain a healthy 
 UPDATE info_insight_cards SET text=
 'Humidity is an important part of an optimal sleeping environment. You should aim to keep your bedroom humidity level at around 50% year round.
 
-Air that is too dry can irritate your throat and nasal passages, which can make it more difficult for you to fall asleep. If this is the case, consider investing in a humidifier for use during drier seasons. Also remember to keep hydrated by drinking plenty of water, and apply lotion before bed to sooth dry skin.
+Air that is too dry can irritate your throat and nasal passages, which can make it more difficult for you to fall asleep. If this is the case, consider investing in a humidifier for use during drier seasons. Also remember to keep hydrated by drinking plenty of water, and apply lotion before bed to soothe dry skin.
 
 Conversely, dampness can lead to mold growth, which can affect your sleep if you suffer from mold allergies. High humidity paired with high temperatures can be especially uncomfortable, making it even more difficult to get restorative sleep. You may want to think about a fan or a dehumidifier to lower the humidity, or using cotton sheets and sweat-wicking pajamas to help you feel more comfortable.'
 
 WHERE category='humidity';
 
 
---jyfan 9/23/2015 Adding bed_light_intensity insight category
+--jyfan 10/02/2015 Adding bed_light_intensity insight category
 
-ALTER TYPE insight_category ADD VALUE 'bed_light_intensity';
+ALTER TYPE insight_category ADD VALUE 'bed_light_intensity_ratio';
 
 INSERT INTO info_insight_cards (category, title, text)
 VALUES
  ---
-('bed_light_duration',
-'Associating Your Bedroom with Sleep',
+('bed_light_intensity_ratio',
+'Light Exposure and Your Biological Clock',
 'The right exposure to light can promote healthy sleep, boost productivity, and improve your overall well being.
 
 Light, whether it be artificial or natural, is the primary signal for your circadian rhythm. This governs not only your sleep, but also your mood, appetite, and more. In the morning, light prompts your body to wake up while blood flow and alertness increases. In the evening, the dimming of light tells your body to cool down, relax, and rest.

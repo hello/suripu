@@ -99,7 +99,7 @@ public abstract class DeviceDataDAO {
     @RegisterMapper(SenseDeviceStatusMapper.class)
     @SingleValueResult(DeviceStatus.class)
     @SqlQuery("SELECT id, device_id, firmware_version, ts AS last_seen from device_sensors_master WHERE device_id = :sense_id AND ts > now() - interval '7 days'  ORDER BY ts DESC LIMIT 1;")
-    public abstract Optional<DeviceStatus> senseStatus(@Bind("sense_id") final Long senseId);
+    public abstract Optional<DeviceStatus> senseStatusLastWeek(@Bind("sense_id") final Long senseId);
 
 
     @RegisterMapper(SenseDeviceStatusMapper.class)
@@ -185,25 +185,31 @@ public abstract class DeviceDataDAO {
     @SqlQuery("SELECT * FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
             "AND ts >= :start_ts AND ts <= :end_ts " +
+            "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts " +
             "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour " +
             "AND CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)")
     public abstract ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(@Bind("account_id") Long accountId,
-                                                                     @Bind("device_id") Long deviceId,
-                                                                     @Bind("start_ts") DateTime startTimestamp,
-                                                                     @Bind("end_ts") DateTime endTimestamp,
-                                                                     @Bind("start_hour") int startHour,
-                                                                     @Bind("end_hour") int endHour);
+                                                                            @Bind("device_id") Long deviceId,
+                                                                            @Bind("start_ts") DateTime startTimestamp,
+                                                                            @Bind("end_ts") DateTime endTimestamp,
+                                                                            @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                            @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
+                                                                            @Bind("start_hour") int startHour,
+                                                                            @Bind("end_hour") int endHour);
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
             "AND ts >= :start_ts AND ts <= :end_ts " +
+            "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts " +
             "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour " +
             "OR CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)")
     public abstract ImmutableList<DeviceData> getBetweenHourDateByTS(@Bind("account_id") Long accountId,
                                                                      @Bind("device_id") Long deviceId,
                                                                      @Bind("start_ts") DateTime startTimestamp,
                                                                      @Bind("end_ts") DateTime endTimestamp,
+                                                                     @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                     @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
                                                                      @Bind("start_hour") int startHour,
                                                                      @Bind("end_hour") int endHour);
 
