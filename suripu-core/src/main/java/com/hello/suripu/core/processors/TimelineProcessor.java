@@ -95,6 +95,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
+    public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
+    public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
+    public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
     public final static int MIN_MOTION_AMPLITUDE = 1000;
 
     public final static String ALGORITHM_NAME_REGULAR = "wupang";
@@ -198,7 +201,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
-        final TimelineError discardReason = isValidNight(accountId, sensorData.trackerMotions);
+        final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions,sensorData.trackerMotions);
 
         switch (discardReason){
             case TIMESPAN_TOO_SHORT:
@@ -218,8 +221,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             case LOW_AMP_DATA:
                 log.addMessage(discardReason);
-                LOGGER.info("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
+                LOGGER.info("tracker motion did not exceed minimum threshold for account_id = {} and day = {}", accountId, targetDate);
                 return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+
+            case PARTNER_FILTER_REJECTED_DATA:
+                log.addMessage(discardReason);
+                LOGGER.info("tracker motion was discarded because of partner filter account_id = {} and day = {}", accountId, targetDate);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+
 
             default:
                 break;
@@ -397,17 +406,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         LOGGER.debug("Length of originalTrackerMotion is {} for {} on {}", originalTrackerMotions.size(), accountId, targetDate);
 
         // get partner tracker motion, if available
-        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
+        final List<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
         final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-        if (!partnerMotions.isEmpty()) {
+        if (!originalPartnerMotions.isEmpty()) {
 
             final int tzOffsetMillis = originalTrackerMotions.get(0).offsetMillis;
 
             if (this.hasPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using original partner filter");
                 try {
-                    PartnerDataUtils.PartnerMotions motions = partnerDataUtils.getMyMotion(originalTrackerMotions, partnerMotions);
+                    PartnerDataUtils.PartnerMotions motions = partnerDataUtils.getMyMotion(originalTrackerMotions, originalPartnerMotions);
                     trackerMotions.addAll(motions.myMotions);
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
@@ -422,7 +431,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                     targetDate.minusMillis(tzOffsetMillis),
                                     endDate.minusMillis(tzOffsetMillis),
                                     ImmutableList.copyOf(originalTrackerMotions),
-                                    ImmutableList.copyOf(partnerMotions)));
+                                    ImmutableList.copyOf(originalPartnerMotions)));
 
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
@@ -495,7 +504,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             feedbackList.add(newFeedback.get());
         }
 
-        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(partnerMotions),ImmutableList.copyOf(feedbackList),tzOffsetMillis));
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,
+                ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(originalPartnerMotions),
+                ImmutableList.copyOf(feedbackList),
+                ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(originalPartnerMotions),
+                tzOffsetMillis));
 
     }
 
@@ -724,26 +737,23 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
     /*
-     * PRELIMINARY SANITY CHECK
+     * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    protected TimelineError isValidNight(final Long accountId, final List<TrackerMotion> motionData){
-        if(!hasNewInvalidNightFilterEnabled(accountId)){
-            if(motionData.size() >= MIN_TRACKER_MOTION_COUNT){
-                return TimelineError.NO_ERROR;
-            }
-            else {
-                return TimelineError.NOT_ENOUGH_DATA;  // This needs to align to the old behavior before the new filter has been discussed.
-            }
+    static public TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData){
+
+        if(originalMotionData.size() == 0){
+            return TimelineError.NO_DATA;
         }
 
-        if(motionData.size() == 0){
-            return TimelineError.NO_DATA;
+        //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
+        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT){
+            return TimelineError.NOT_ENOUGH_DATA;
         }
 
         //CHECK TO SEE IF MOTION AMPLITUDE IS EVER ABOVE MINIMUM THRESHOLD
         boolean isMotionAmplitudeAboveMinimumThreshold = false;
 
-        for(final TrackerMotion trackerMotion : motionData){
+        for(final TrackerMotion trackerMotion : originalMotionData){
             if(trackerMotion.value > MIN_MOTION_AMPLITUDE){
                 isMotionAmplitudeAboveMinimumThreshold = true;
                 break;
@@ -756,13 +766,32 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT IS ABOVE 5 HOURS
-        if(motionData.get(motionData.size() - 1).timestamp - motionData.get(0).timestamp < 5 * DateTimeConstants.MILLIS_PER_HOUR) {
+        if(originalMotionData.get(originalMotionData.size() - 1).timestamp - originalMotionData.get(0).timestamp < MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
             return TimelineError.TIMESPAN_TOO_SHORT;
         }
 
-        //LAST, CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
-        if(motionData.size() < MIN_TRACKER_MOTION_COUNT){
-            return TimelineError.NOT_ENOUGH_DATA;
+        //IF THE FILTERING WAS NOT USED (OR HAD NO EFFECT) WE ARE DONE
+        if (originalMotionData.size() == filteredMotionData.size()) {
+            return TimelineError.NO_ERROR;
+        }
+
+        ///////////////////////////
+        //PARTNER FILTERED DATA CHECKS ////
+        //////////////////////////
+
+        //"not enough", not "no data", because there must have been some original data to get to this point
+        if (filteredMotionData.isEmpty()) {
+            return TimelineError.PARTNER_FILTER_REJECTED_DATA;
+        }
+
+        //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS, post partner-filtering.  trying to avoid case where partner filter lets a couple through even though the user is not there.
+        if (filteredMotionData.size() < MIN_PARTNER_FILTERED_MOTION_COUNT) {
+            return TimelineError.PARTNER_FILTER_REJECTED_DATA;
+        }
+
+        //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT OF PARTNER-FILTERED DATA IS ABOVE 3 HOURS
+        if(filteredMotionData.get(filteredMotionData.size() - 1).timestamp - filteredMotionData.get(0).timestamp < MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
+            return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
         return TimelineError.NO_ERROR;
