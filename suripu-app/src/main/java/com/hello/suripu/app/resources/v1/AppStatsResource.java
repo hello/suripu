@@ -83,7 +83,7 @@ public class AppStatsResource {
         final Optional<Boolean> hasUnreadInsights = insightsLastViewed.transform(new Function<DateTime, Boolean>() {
             @Override
             public Boolean apply(DateTime insightsLastViewed) {
-                final int count = insightsDAO.getInsightCountByDate(accountId, insightsLastViewed, 1);
+                final int count = insightsDAO.getInsightCountAfterDate(accountId, insightsLastViewed, 1);
                 return (count > 0);
             }
         });

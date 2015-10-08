@@ -93,7 +93,7 @@ public class AppStatsResourceTests {
                 .getInsightsLastViewed(ACCOUNT_ID);
         doReturn(1)
                 .when(insightsDAO)
-                .getInsightCountByDate(ACCOUNT_ID, insightsLastViewed, 1);
+                .getInsightCountAfterDate(ACCOUNT_ID, insightsLastViewed, 1);
 
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(true));
@@ -111,7 +111,7 @@ public class AppStatsResourceTests {
                 .getInsightsLastViewed(ACCOUNT_ID);
         doReturn(0)
                 .when(insightsDAO)
-                .getInsightCountByDate(ACCOUNT_ID, insightsLastViewed, 1);
+                .getInsightCountAfterDate(ACCOUNT_ID, insightsLastViewed, 1);
 
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(false));
