@@ -28,6 +28,12 @@ public class DateTimeUtil {
 
     }
 
+    public static DateTime datetimeStringToDateTime(final String datetimeString) {
+        return  DateTime.parse(datetimeString,
+                DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT))
+                .withZone(DateTimeZone.UTC);
+    }
+
     public static int getDateDiffFromNowInDays(final DateTime datetime) {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
         final Duration duration = new Duration(datetime, now);

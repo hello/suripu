@@ -134,6 +134,12 @@ public class FirmwareUpdateStore {
                 } catch (IOException e) {
                     LOGGER.error("Failed reading build_info from s3: {}", e.getMessage());
                     return emptyPair;
+                } finally {
+                    try {
+                        s3Object.close();
+                    } catch (IOException e) {
+                        LOGGER.error("Failed closing S3 stream");
+                    }
                 }
 
                 final Iterable<String> strings = Splitter.on("\n").split(text);
