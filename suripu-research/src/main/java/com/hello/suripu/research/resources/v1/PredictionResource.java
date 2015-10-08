@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
-import com.hello.suripu.algorithm.partner.PartnerHmm;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.sleep.Vote;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
@@ -33,7 +32,6 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
-import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -91,7 +89,7 @@ public class PredictionResource extends BaseResource {
     private static final String ALGORITHM_SLEEP_SCORED = "sleep_score";
     private static final String ALGORITHM_VOTING = "voting";
     private static final String ALGORITHM_HIDDEN_MARKOV = "hmm";
-    private static final String ALGORITHM_BAYESNETHMM = "bayes";
+    private static final String ALGORITHM_ONLINEHMM = "online";
 
     private static final Integer MISSING_DATA_DEFAULT_VALUE = 0;
     private static final Integer SLOT_DURATION_MINUTES = 1;
@@ -149,7 +147,7 @@ public class PredictionResource extends BaseResource {
 
 
     private ImmutableList<Event> getOnlineHmmEvents(final DateTime dateOfNight, final DateTime startTime, final DateTime endTime, final long accountId,
-                                                    final OneDaysSensorData oneDaysSensorData) {
+                                                    final OneDaysSensorData oneDaysSensorData, final boolean forceLearning) {
 
         //get model from DB
         final FeatureExtractionModelData featureExtractor = featureExtractionModelsDAO.getLatestModelForDate(accountId, dateOfNight, Optional.<UUID>absent());
@@ -161,7 +159,7 @@ public class PredictionResource extends BaseResource {
             final OnlineHmm onlineHmm = new OnlineHmm(featureExtractionModelsDAO,priorsDAO,Optional.<UUID>absent());
 
             //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
-            final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(accountId, dateOfNight, startTime, endTime, oneDaysSensorData, false, false);
+            final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(accountId, dateOfNight, startTime, endTime, oneDaysSensorData, false, forceLearning);
 
             final List<Event> predictions = Lists.newArrayList();
             for (final Optional<Event> event : events.toList()) {
@@ -349,17 +347,14 @@ public class PredictionResource extends BaseResource {
         final DateTime endDate = targetDate.plusHours(16);
 
 
-        Optional<TimelineResult> result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,false);
+        TimelineResult result = timelineProcessor.retrieveTimelinesFast(accountId, targetDate, Optional.<TimelineFeedback>absent());
 
-        if (!result.isPresent()) {
+
+        if (result.timelines.isEmpty()) {
             return ImmutableList.copyOf(Collections.EMPTY_LIST);
         }
 
-        if (result.get().timelines.isEmpty()) {
-            return ImmutableList.copyOf(Collections.EMPTY_LIST);
-        }
-
-        return result.get().timelines;
+        return result.timelines;
     }
 
 
@@ -549,8 +544,9 @@ public class PredictionResource extends BaseResource {
 
             @DefaultValue("") @QueryParam("hmm_protobuf") final String protobuf,
 
-            @DefaultValue("true") @QueryParam("partner_filter") final Boolean usePartnerFilter
+            @DefaultValue("true") @QueryParam("partner_filter") final Boolean usePartnerFilter,
 
+            @DefaultValue("false") @QueryParam("force_learning") final Boolean forceLearning
 
     ) {
 
@@ -586,6 +582,16 @@ public class PredictionResource extends BaseResource {
             throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                     .entity(new JsonError(204, "no sense found")).build());
         }
+
+
+        //get feedback for this day
+        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
+
+        if (forceLearning && feedbacks.isEmpty()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "skipping day because force_learning == true and there is no feedback")).build());
+        }
+
 
         /* Get "Pill" data  */
         final List<TrackerMotion> myMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
@@ -632,9 +638,6 @@ public class PredictionResource extends BaseResource {
 
         final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
 
-        //get feedback for this day
-        ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
-
 
         allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 targetDate.minusMillis(tzOffsetMillis).getMillis(),
@@ -658,8 +661,8 @@ public class PredictionResource extends BaseResource {
                 events = getHmmEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,motions,hmmDAO);
                 break;
 
-            case ALGORITHM_BAYESNETHMM:
-                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData);
+            case ALGORITHM_ONLINEHMM:
+                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData,forceLearning);
                 break;
 
             default:
