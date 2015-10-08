@@ -54,6 +54,7 @@ public class TimelineLog {
         invalidNightErrorMap.put(TimelineError.NOT_ENOUGH_HOURS_OF_SLEEP, ErrorType.NOT_ENOUGH_SLEEP_TIME);
         invalidNightErrorMap.put(TimelineError.DATA_GAP_TOO_LARGE, ErrorType.DATA_GAP_TOO_LARGE);
         invalidNightErrorMap.put(TimelineError.EVENTS_OUT_OF_ORDER, ErrorType.EVENTS_OUT_OF_ORDER);
+        invalidNightErrorMap.put(TimelineError.PARTNER_FILTER_REJECTED_DATA,ErrorType.PARTNER_FILTER_REJECTED_MY_DATA);
         invalidNightErrorMap.put(TimelineError.UNEXEPECTED, ErrorType.UNEXEPECTED);
 
 

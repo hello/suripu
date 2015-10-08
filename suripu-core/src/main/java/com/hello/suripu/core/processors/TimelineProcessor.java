@@ -221,8 +221,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             case LOW_AMP_DATA:
                 log.addMessage(discardReason);
-                LOGGER.info("tracker motion did not exceed minimu threshold for account_id = {} and day = {}", accountId, targetDate);
+                LOGGER.info("tracker motion did not exceed minimum threshold for account_id = {} and day = {}", accountId, targetDate);
                 return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+
+            case PARTNER_FILTER_REJECTED_DATA:
+                log.addMessage(discardReason);
+                LOGGER.info("tracker motion was discarded because of partner filter account_id = {} and day = {}", accountId, targetDate);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+
 
             default:
                 break;
@@ -731,20 +737,17 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     }
 
     /*
-     * PRELIMINARY SANITY CHECK
+     * PRELIMINARY SANITY CHECK (static and public for testing purposes)
      */
-    protected TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData){
-        if(!hasNewInvalidNightFilterEnabled(accountId)){
-            if(originalMotionData.size() >= MIN_TRACKER_MOTION_COUNT){
-                return TimelineError.NO_ERROR;
-            }
-            else {
-                return TimelineError.NOT_ENOUGH_DATA;  // This needs to align to the old behavior before the new filter has been discussed.
-            }
-        }
+    static public TimelineError isValidNight(final Long accountId, final List<TrackerMotion> originalMotionData, final List<TrackerMotion> filteredMotionData){
 
         if(originalMotionData.size() == 0){
             return TimelineError.NO_DATA;
+        }
+
+        //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
+        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT){
+            return TimelineError.NOT_ENOUGH_DATA;
         }
 
         //CHECK TO SEE IF MOTION AMPLITUDE IS EVER ABOVE MINIMUM THRESHOLD
@@ -767,19 +770,28 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return TimelineError.TIMESPAN_TOO_SHORT;
         }
 
-        //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT OF PARTNER-FILTERED DATA IS ABOVE 3 HOURS
-        if(filteredMotionData.get(filteredMotionData.size() - 1).timestamp - filteredMotionData.get(0).timestamp < MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
-            return TimelineError.TIMESPAN_TOO_SHORT;
+        //IF THE FILTERING WAS NOT USED (OR HAD NO EFFECT) WE ARE DONE
+        if (originalMotionData.size() == filteredMotionData.size()) {
+            return TimelineError.NO_ERROR;
         }
 
-        //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS
-        if(originalMotionData.size() < MIN_TRACKER_MOTION_COUNT){
-            return TimelineError.NOT_ENOUGH_DATA;
+        ///////////////////////////
+        //PARTNER FILTERED DATA CHECKS ////
+        //////////////////////////
+
+        //"not enough", not "no data", because there must have been some original data to get to this point
+        if (filteredMotionData.isEmpty()) {
+            return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
         //CHECK TO SEE IF THERE ARE "ENOUGH" MOTION EVENTS, post partner-filtering.  trying to avoid case where partner filter lets a couple through even though the user is not there.
         if (filteredMotionData.size() < MIN_PARTNER_FILTERED_MOTION_COUNT) {
-            return TimelineError.NOT_ENOUGH_DATA;
+            return TimelineError.PARTNER_FILTER_REJECTED_DATA;
+        }
+
+        //CHECK TO SEE IF TIME SPAN FROM FIRST TO LAST MEASUREMENT OF PARTNER-FILTERED DATA IS ABOVE 3 HOURS
+        if(filteredMotionData.get(filteredMotionData.size() - 1).timestamp - filteredMotionData.get(0).timestamp < MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS * DateTimeConstants.MILLIS_PER_HOUR) {
+            return TimelineError.PARTNER_FILTER_REJECTED_DATA;
         }
 
         return TimelineError.NO_ERROR;

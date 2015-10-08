@@ -2,10 +2,13 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.SleepSegment;
+import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.processors.TimelineProcessor;
 import junit.framework.TestCase;
 import org.junit.Test;
 
@@ -190,6 +193,66 @@ public class TimelineSafeguardTest {
 
         TestCase.assertTrue(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithHalfHourGap).equals(TimelineError.NO_ERROR));
         TestCase.assertFalse(safeguards.checkIfValidTimeline(mainEventsSucceed, emptyEvents, lightWithOverOneHourGap).equals(TimelineError.NO_ERROR));
+
+    }
+
+    @Test
+    public void testInvalidNight() {
+
+
+        final List<TrackerMotion> originalMotionData = Lists.newArrayList();
+        final List<TrackerMotion> filteredMotionData = Lists.newArrayList();
+
+
+        TestCase.assertTrue(TimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData) == TimelineError.NO_DATA);
+        /*@JsonProperty("id") final long id,
+                         @JsonProperty("account_id") final long accountId,
+                         @JsonProperty("tracker_id") final Long trackerId,
+                         @JsonProperty("timestamp") final long timestamp,
+                         @JsonProperty("value") final int value,
+                         @JsonProperty("timezone_offset") final int timeZoneOffset,
+                         final Long motionRange,
+                         final Long kickOffCounts,
+                         final Long onDurationInSeconds){*/
+
+        final long t1 = 1444331495000L;
+        final int lowval = 100;
+        final int highval = 10000;
+
+        //add a bunch of low values, not separated in time
+        for (int i = 0; i < TimelineProcessor.MIN_TRACKER_MOTION_COUNT - 1; i++) {
+            originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * i,lowval,0,0L,0L,0L));
+        }
+
+        TestCase.assertEquals(TimelineError.NOT_ENOUGH_DATA,TimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+
+        originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * TimelineProcessor.MIN_TRACKER_MOTION_COUNT,lowval,0,0L,0L,0L));
+
+        TestCase.assertEquals(TimelineError.LOW_AMP_DATA, TimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+
+        originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * (TimelineProcessor.MIN_TRACKER_MOTION_COUNT + 1),highval,0,0L,0L,0L));
+
+        TestCase.assertEquals(TimelineError.TIMESPAN_TOO_SHORT, TimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+
+        originalMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,highval,0,0L,0L,0L));
+
+        TestCase.assertEquals(TimelineError.NO_ERROR,TimelineProcessor.isValidNight(0L, originalMotionData, originalMotionData));
+
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,TimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+
+        for (int i = 0; i < TimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT - 1; i++) {
+            filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * i,lowval,0,0L,0L,0L));
+        }
+
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,TimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+
+        filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * TimelineProcessor.MIN_PARTNER_FILTERED_MOTION_COUNT,lowval,0,0L,0L,0L));
+
+        TestCase.assertEquals(TimelineError.PARTNER_FILTER_REJECTED_DATA,TimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+
+        filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,lowval,0,0L,0L,0L));
+
+        TestCase.assertEquals(TimelineError.NO_ERROR,TimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
 
     }
 }
