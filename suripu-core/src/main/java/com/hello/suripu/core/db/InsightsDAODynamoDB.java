@@ -212,10 +212,8 @@ public class InsightsDAODynamoDB {
 
         } while (lastEvaluatedKey != null && loopCount < MAX_CALL_COUNT && insightCards.size() < limit);
 
-        if (scanForward) {
-            // We scanned from the beginning, but we still want to return the results reverse chronologically
-            Collections.sort(insightCards, Collections.reverseOrder());
-        }
+        Collections.sort(insightCards, Collections.reverseOrder());
+
         return ImmutableList.copyOf(insightCards);
 
     }
