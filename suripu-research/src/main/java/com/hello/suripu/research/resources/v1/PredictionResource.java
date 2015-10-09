@@ -674,8 +674,8 @@ public class PredictionResource extends BaseResource {
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
 
         if (!deviceIdPair.isPresent()) {
-            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "no sense found")).build());
+            LOGGER.warn("no sense found");
+            return Optional.absent();
         }
 
 
@@ -693,14 +693,12 @@ public class PredictionResource extends BaseResource {
         LOGGER.debug("Length of trackerMotion: {}, partnerTrackerMotion: {}", myMotions.size(),partnerMotions.size());
 
         if (myMotions.isEmpty()) {
-            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "no motion data found")).build());
+            LOGGER.warn("no motion data found");
+            return Optional.absent();
         }
 
-
         final int tzOffsetMillis = myMotions.get(0).offsetMillis;
-
-
+        
         final List<TrackerMotion> motions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty() && usePartnerFilter ) {
@@ -711,8 +709,8 @@ public class PredictionResource extends BaseResource {
         }
 
         if (TimelineProcessor.isValidNight(accountId,myMotions,motions) != TimelineError.NO_ERROR) {
-            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "not a valid amount of data to work with")).build());
+            LOGGER.warn("not a valid night");
+            return Optional.absent();
         };
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
