@@ -93,10 +93,11 @@ public class AppStatsResourceTests {
 
     @Test
     public void unreadWithUnreadInsights() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
         doReturn(Optional.absent())
                 .when(accountDAO)
                 .getById(ACCOUNT_ID);
-        final DateTime insightsLastViewed = FIXED_NOW.minusDays(1);
+        final DateTime insightsLastViewed = nowUTC.minusDays(1);
         doReturn(Optional.of(insightsLastViewed))
                 .when(appStatsDAO)
                 .getInsightsLastViewed(ACCOUNT_ID);
@@ -112,7 +113,7 @@ public class AppStatsResourceTests {
         final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
         doReturn(fakeInsights)
                 .when(insightsDAO)
-                .getInsightsByDate(ACCOUNT_ID, insightsLastViewed, false, 1);
+                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(true));
         assertThat(unread.hasUnansweredQuestions, is(false));
@@ -120,16 +121,17 @@ public class AppStatsResourceTests {
 
     @Test
     public void unreadWithReadInsights() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
         doReturn(Optional.absent())
                 .when(accountDAO)
                 .getById(ACCOUNT_ID);
-        final DateTime insightsLastViewed = FIXED_NOW.minusDays(1);
+        final DateTime insightsLastViewed = nowUTC.minusDays(1);
         doReturn(Optional.of(insightsLastViewed))
                 .when(appStatsDAO)
                 .getInsightsLastViewed(ACCOUNT_ID);
         doReturn(ImmutableList.of())
                 .when(insightsDAO)
-                .getInsightsByDate(ACCOUNT_ID, insightsLastViewed, false, 1);
+                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
 
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(false));
@@ -138,10 +140,11 @@ public class AppStatsResourceTests {
 
     @Test
     public void unreadWithJustReadInsight() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
         doReturn(Optional.absent())
                 .when(accountDAO)
                 .getById(ACCOUNT_ID);
-        final DateTime insightsLastViewed = FIXED_NOW.minusDays(1);
+        final DateTime insightsLastViewed = nowUTC.minusDays(1);
         doReturn(Optional.of(insightsLastViewed))
                 .when(appStatsDAO)
                 .getInsightsLastViewed(ACCOUNT_ID);
@@ -155,7 +158,7 @@ public class AppStatsResourceTests {
         final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
         doReturn(fakeInsights)
                 .when(insightsDAO)
-                .getInsightsByDate(ACCOUNT_ID, insightsLastViewed, false, 1);
+                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(false));
         assertThat(unread.hasUnansweredQuestions, is(false));

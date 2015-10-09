@@ -86,7 +86,8 @@ public class AppStatsResource {
             @Override
             public Boolean apply(DateTime insightsLastViewed) {
                 final Boolean chronological = false; // most recent first
-                final ImmutableList<InsightCard> insights = insightsDAO.getInsightsByDate(accountId, insightsLastViewed, chronological, 1);
+                final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(1); // matches InsightsResource
+                final ImmutableList<InsightCard> insights = insightsDAO.getInsightsByDate(accountId, queryDate, chronological, 1);
                 final Boolean hasUnread;
                 if (!insights.isEmpty()) {
                     hasUnread = insights.get(0).timestamp.isAfter(insightsLastViewed);
