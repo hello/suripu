@@ -566,9 +566,10 @@ public class PredictionResource extends BaseResource {
         final DateTime dateOfStartNight = DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
                 .withZone(DateTimeZone.UTC).withHourOfDay(0);
 
+        final TreeMap<DateTime, OnlineHmmData> priors = Maps.newTreeMap();
 
         final OnlineHmmModelsDAO inMemoryModelsDao = new OnlineHmmModelsDAO() {
-            public final TreeMap<DateTime, OnlineHmmData> priorByDate = Maps.newTreeMap();
+            public final TreeMap<DateTime, OnlineHmmData> priorByDate = priors;
 
             @Override
             public OnlineHmmData getModelDataByAccountId(Long accountId, DateTime date) {
@@ -576,8 +577,16 @@ public class PredictionResource extends BaseResource {
                 final Map.Entry<DateTime,OnlineHmmData> entry = priorByDate.floorEntry(date);
 
                 if (entry == null) {
+                    LOGGER.warn("GET got nothing ");
                     return OnlineHmmData.createEmpty();
                 }
+
+                int numModels = 0;
+                for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> item : entry.getValue().modelPriors.modelsByOutputId.entrySet()) {
+                    numModels += item.getValue().size();
+                }
+
+                LOGGER.info("GET {} models: {} from date {}",numModels,entry.getValue().modelPriors.modelsByOutputId.keySet(),DateTimeUtil.dateToYmdString(entry.getKey()));
 
                 return entry.getValue();
             }
@@ -585,7 +594,14 @@ public class PredictionResource extends BaseResource {
             @Override
             public boolean updateModelPriorsAndZeroOutScratchpad(Long accountId, DateTime date, OnlineHmmPriors priors) {
                 final OnlineHmmData newOnlineHmmData = new OnlineHmmData( priors,OnlineHmmScratchPad.createEmpty());
+
+                int numModels = 0;
+                for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : priors.modelsByOutputId.entrySet()) {
+                    numModels += entry.getValue().size();
+                }
+
                 priorByDate.put(date,newOnlineHmmData);
+                LOGGER.info("PUT {} models: {} on date {}",numModels,priors.modelsByOutputId.keySet(),DateTimeUtil.dateToYmdString(date));
                 return true;
             }
 
@@ -594,6 +610,7 @@ public class PredictionResource extends BaseResource {
                 final DateTime key  =  priorByDate.floorKey(date);
 
                 if (key != null) {
+                    LOGGER.info("PUT scratchpad items {} on date {}",scratchPad.paramsByOutputId.keySet(),DateTimeUtil.dateToYmdString(date));
                     priorByDate.put(key,new OnlineHmmData(priorByDate.get(key).modelPriors,scratchPad));
                     return true;
                 }
@@ -698,7 +715,7 @@ public class PredictionResource extends BaseResource {
         }
 
         final int tzOffsetMillis = myMotions.get(0).offsetMillis;
-        
+
         final List<TrackerMotion> motions = new ArrayList<>();
 
         if (!partnerMotions.isEmpty() && usePartnerFilter ) {
