@@ -105,10 +105,8 @@ public class OnlineHmm {
             final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList();
 
             //populate a new list (we will need to sort it later) for this output id
-            for (final Map.Entry<String,OnlineHmmModelParams> params : existingModels.modelsByOutputId.get(outputId).entrySet()) {
-                modelsForThisOutput.add(params.getValue());
-            }
-
+            modelsForThisOutput.addAll(existingModels.modelsByOutputId.get(outputId).values());
+            
             //add the scratchpad model
             modelsForThisOutput.add(param);
 
