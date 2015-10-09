@@ -1,6 +1,7 @@
 package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AppStatsDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -8,12 +9,14 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AppStats;
 import com.hello.suripu.core.models.AppUnreadStats;
+import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.processors.QuestionProcessor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,17 +87,27 @@ public class AppStatsResourceTests {
 
     @Test
     public void unreadWithUnreadInsights() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
         doReturn(Optional.absent())
                 .when(accountDAO)
                 .getById(ACCOUNT_ID);
-        final DateTime insightsLastViewed = FIXED_NOW.minusDays(1);
+        final DateTime insightsLastViewed = nowUTC.minusDays(1);
         doReturn(Optional.of(insightsLastViewed))
                 .when(appStatsDAO)
                 .getInsightsLastViewed(ACCOUNT_ID);
-        doReturn(1)
+        // would prefer to mock the insight card, but it doesn't support
+        // mocking public member variables (for the timestamp)
+        final InsightCard fakeInsight = new InsightCard(
+                Long.valueOf(1),
+                "fake",
+                "fake body",
+                InsightCard.Category.GENERIC,
+                InsightCard.TimePeriod.ANNUALLY,
+                insightsLastViewed.plusSeconds(1));
+        final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
+        doReturn(fakeInsights)
                 .when(insightsDAO)
-                .getInsightCountByDate(ACCOUNT_ID, insightsLastViewed, 1);
-
+                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(true));
         assertThat(unread.hasUnansweredQuestions, is(false));
@@ -102,17 +115,44 @@ public class AppStatsResourceTests {
 
     @Test
     public void unreadWithReadInsights() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
         doReturn(Optional.absent())
                 .when(accountDAO)
                 .getById(ACCOUNT_ID);
-        final DateTime insightsLastViewed = FIXED_NOW.minusDays(1);
+        final DateTime insightsLastViewed = nowUTC.minusDays(1);
         doReturn(Optional.of(insightsLastViewed))
                 .when(appStatsDAO)
                 .getInsightsLastViewed(ACCOUNT_ID);
-        doReturn(0)
+        doReturn(ImmutableList.of())
                 .when(insightsDAO)
-                .getInsightCountByDate(ACCOUNT_ID, insightsLastViewed, 1);
+                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
 
+        final AppUnreadStats unread = resource.unread(accessToken);
+        assertThat(unread.hasUnreadInsights, is(false));
+        assertThat(unread.hasUnansweredQuestions, is(false));
+    }
+
+    @Test
+    public void unreadWithJustReadInsight() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
+        doReturn(Optional.absent())
+                .when(accountDAO)
+                .getById(ACCOUNT_ID);
+        final DateTime insightsLastViewed = nowUTC.minusDays(1);
+        doReturn(Optional.of(insightsLastViewed))
+                .when(appStatsDAO)
+                .getInsightsLastViewed(ACCOUNT_ID);
+        final InsightCard fakeInsight = new InsightCard(
+                Long.valueOf(1),
+                "fake",
+                "fake body",
+                InsightCard.Category.GENERIC,
+                InsightCard.TimePeriod.ANNUALLY,
+                insightsLastViewed);
+        final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
+        doReturn(fakeInsights)
+                .when(insightsDAO)
+                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(false));
         assertThat(unread.hasUnansweredQuestions, is(false));
