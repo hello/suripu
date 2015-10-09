@@ -132,40 +132,6 @@ public class InsightsDAODynamoDB {
         return this.getData(queryConditions, limit);
     }
 
-    /**
-     * Get a count of existing insights that have been generated after the date specified
-     *
-     * @param accountId the id of the account to check insights for
-     * @param date      the reference date to use when querying for insights generated after this date
-     * @param limit     a number to limit the count to if you only care if there are anything new
-     */
-    @Timed
-    public int getInsightCountAfterDate(final Long accountId, final DateTime date, final int limit) {
-        final Condition selectByAccountId = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
-
-        final DateTime nextDay = date.plusDays(1);
-        final String lowestCategoryId = InsightCard.Category.GENERIC.toCategoryString();
-        final String rangeKey = this.createDateCategoryKey(nextDay, lowestCategoryId);
-        final Condition selectByDate = new Condition()
-                .withComparisonOperator(ComparisonOperator.GE.toString())
-                .withAttributeValueList(new AttributeValue().withS(rangeKey));
-
-        final Map<String, Condition> queryConditions = new HashMap<>();
-        queryConditions.put(ACCOUNT_ID_ATTRIBUTE_NAME, selectByAccountId);
-        queryConditions.put(DATE_CATEGORY_ATTRIBUTE_NAME, selectByDate);
-
-        final QueryRequest queryRequest = new QueryRequest()
-                .withTableName(this.tableName)
-                .withKeyConditions(queryConditions)
-                .withSelect(Select.COUNT)
-                .withLimit(limit);
-
-        final QueryResult queryResult = dynamoDBClient.query(queryRequest);
-        return queryResult.getCount();
-    }
-
     @Timed
     public ImmutableList<InsightCard> getInsightsByCategory(final Long accountId, final InsightCard.Category category, final int limit) {
 

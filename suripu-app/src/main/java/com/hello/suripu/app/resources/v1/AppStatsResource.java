@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AppStatsDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -9,6 +10,7 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AppStats;
 import com.hello.suripu.core.models.AppUnreadStats;
+import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -83,8 +85,15 @@ public class AppStatsResource {
         final Optional<Boolean> hasUnreadInsights = insightsLastViewed.transform(new Function<DateTime, Boolean>() {
             @Override
             public Boolean apply(DateTime insightsLastViewed) {
-                final int count = insightsDAO.getInsightCountAfterDate(accountId, insightsLastViewed, 1);
-                return (count > 0);
+                final Boolean chronological = false; // most recent first
+                final ImmutableList<InsightCard> insights = insightsDAO.getInsightsByDate(accountId, insightsLastViewed, chronological, 1);
+                final Boolean hasUnread;
+                if (!insights.isEmpty()) {
+                    hasUnread = insights.get(0).timestamp.isAfter(insightsLastViewed);
+                } else {
+                    hasUnread = false;
+                }
+                return hasUnread;
             }
         });
 
