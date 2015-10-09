@@ -22,10 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,10 +30,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class AppStatsResourceTests {
     private static final DateTime FIXED_NOW = new DateTime(2015, 9, 17, 12, 30, 0);
