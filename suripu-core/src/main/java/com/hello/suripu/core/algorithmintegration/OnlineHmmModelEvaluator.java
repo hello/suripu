@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.MultiObsSequence;
 import com.hello.suripu.algorithm.hmm.MultiObsSequenceAlphabetHiddenMarkovModel;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.UUID;
 
 /**
@@ -46,8 +48,8 @@ public class OnlineHmmModelEvaluator {
     }
 
 
-    static private String createNewModelId(final String oldModelId) {
-        final String [] tokens = oldModelId.split("-");
+    static private String createNewModelId(final String latestModelId) {
+        final String [] tokens = latestModelId.split("-");
 
 
         if (tokens.length == 1) {
@@ -128,8 +130,11 @@ public class OnlineHmmModelEvaluator {
 
             hmm.reestimate(meas,PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES);
 
+            //insert sort
+            final TreeSet<String> oldModelIds = Sets.newTreeSet(priors.modelsByOutputId.get(outputId).keySet());
+
             //create new model ID
-            final String newModelId = createNewModelId(modelId);
+            final String newModelId = createNewModelId(oldModelIds.last());
 
             final OnlineHmmModelParams newParams = new OnlineHmmModelParams(hmm.getLogAlphabetNumerator(),hmm.getLogANumerator(),hmm.getLogDenominator(),hmm.getPi(),params.endStates,params.minStateDurations,params.timeCreatedUtc,currentTime,newModelId,outputId,params.transitionRestrictions);
 
@@ -213,6 +218,7 @@ public class OnlineHmmModelEvaluator {
 
             LOGGER.info("models = {}",ids);
             LOGGER.info("scores = {}",scores);
+            LOGGER.info("picked model {}",bestModel);
 
             if (bestResult == null) {
                 LOGGER.info("no success in finding a viable model for output {}",outputId);
