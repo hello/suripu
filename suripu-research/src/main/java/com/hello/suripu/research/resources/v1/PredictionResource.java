@@ -33,6 +33,7 @@ import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.OnlineHmmData;
+import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.Sensor;
@@ -58,6 +59,7 @@ import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.hello.suripu.research.models.AlphabetsAndLabels;
 import com.hello.suripu.research.models.EventsWithLabels;
 import com.hello.suripu.research.models.FeedbackAsIndices;
+import com.hello.suripu.research.models.GeneratedModel;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -536,7 +538,7 @@ public class PredictionResource extends BaseResource {
     @Path("/generate_models/{account_id}/{date_string}/{num_days}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSleepPredictionsByUserAndAlgorithm( @Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+    public GeneratedModel generateModelsForUser( @Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
                                                                    @PathParam("account_id") final  Long accountId,
                                                                    @PathParam("date_string") final  String dateString,
                                                                    @PathParam("num_days") final  Integer numDays,
@@ -599,6 +601,15 @@ public class PredictionResource extends BaseResource {
             }
         };
 
+        final FeatureExtractionModelData featureExtractionModels = featureExtractionModelsDAO.getLatestModelForDate(accountId, dateOfStartNight, Optional.<UUID>absent());
+
+        final FeatureExtractionModelsDAO inMemoryFeatureExtraction = new FeatureExtractionModelsDAO() {
+            @Override
+            public FeatureExtractionModelData getLatestModelForDate(Long accountId, DateTime dateTimeLocalUTC, Optional<UUID> uuidForLogger) {
+                return featureExtractionModels;
+            }
+        };
+
         DateTime night = dateOfStartNight;
 
 
@@ -606,19 +617,32 @@ public class PredictionResource extends BaseResource {
             final DateTime startTime = night.withHourOfDay(20);
             final DateTime endTime = startTime.plusHours(16);
 
-            final OneDaysSensorData oneDaysSensorData = getOneDaysSensorData(accountId,dateOfStartNight,startTime,endTime,usePartnerFilter);
+            final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,dateOfStartNight,startTime,endTime,usePartnerFilter,true);
 
+            if (!oneDaysSensorDataOptional.isPresent()) {
+                continue;
+            }
+
+            final OneDaysSensorData oneDaysSensorData = oneDaysSensorDataOptional.get();
             //this should automatically update the database for the user
-            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,featureExtractionModelsDAO, inMemoryModelsDao,true);
+            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,inMemoryFeatureExtraction, inMemoryModelsDao,true);
 
             night = night.plusDays(1);
         }
 
-        final OnlineHmmData data = inMemoryModelsDao.getModelDataByAccountId(accountId,night);
+        final OnlineHmmData data = inMemoryModelsDao.getModelDataByAccountId(accountId, night);
 
-        return Base64.encodeBase64String(data.modelPriors.serializeToProtobuf());
+        int numModels = 0;
+        for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : data.modelPriors.modelsByOutputId.entrySet()) {
+            numModels += entry.getValue().size();
+        }
 
-
+        return new GeneratedModel(
+                accountId,
+                DateTimeUtil.dateToYmdString(dateOfStartNight),
+                numDays,
+                numModels,
+                Base64.encodeBase64String(data.modelPriors.serializeToProtobuf()));
     }
 
     private List<TrackerMotion> getPartnerMotionData(final DateTime timeStartLocalUtc, final DateTime timeEndLocalUtc,final int tzOffsetMillis, final List<TrackerMotion> myMotion, final List<TrackerMotion> partnerMotion) {
@@ -641,7 +665,7 @@ public class PredictionResource extends BaseResource {
         return motions;
     }
 
-    private OneDaysSensorData getOneDaysSensorData(final long accountId,final DateTime dateOfEvening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc, boolean usePartnerFilter) {
+    private Optional<OneDaysSensorData> getOneDaysSensorData(final long accountId,final DateTime dateOfEvening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc, boolean usePartnerFilter,boolean failIfNofeedback) {
 
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
 
@@ -654,6 +678,9 @@ public class PredictionResource extends BaseResource {
         //get feedback for this day
         final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfEvening);
 
+        if (feedbacks.isEmpty() && failIfNofeedback) {
+            return Optional.absent();
+        }
 
         /* Get "Pill" data  */
         final List<TrackerMotion> myMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, startTimeLocalUtc, endTimeLocalUtc);
@@ -692,7 +719,7 @@ public class PredictionResource extends BaseResource {
                 endTimeLocalUtc.minusMillis(tzOffsetMillis).getMillis(),
                 accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color, Optional.<Calibration>absent());
 
-        return new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(motions),ImmutableList.copyOf(partnerMotions),feedbacks,tzOffsetMillis);
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(motions),ImmutableList.copyOf(partnerMotions),feedbacks,tzOffsetMillis));
 
     }
 
@@ -740,13 +767,14 @@ public class PredictionResource extends BaseResource {
 
 
 
-        final OneDaysSensorData oneDaysSensorData = getOneDaysSensorData(accessToken.accountId,dateOfNight,targetDate,endDate,usePartnerFilter);
+        final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accessToken.accountId,dateOfNight,targetDate,endDate,usePartnerFilter,forceLearning);
 
-
-        if (forceLearning && oneDaysSensorData.feedbackList.isEmpty()) {
+        if (!oneDaysSensorDataOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "skipping day because force_learning == true and there is no feedback")).build());
+                    .entity(new JsonError(204, "skipping day because no feedback")).build());
         }
+
+        final OneDaysSensorData oneDaysSensorData = oneDaysSensorDataOptional.get();
 
 
          /*  pull out algorithm type */
