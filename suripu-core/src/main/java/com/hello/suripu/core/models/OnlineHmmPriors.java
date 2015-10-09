@@ -55,9 +55,9 @@ public class  OnlineHmmPriors {
     public List<String> getModelIds() {
         final List<String> modelIds = Lists.newArrayList();
 
-        for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : modelsByOutputId.entrySet()) {
-            for (final Map.Entry<String,OnlineHmmModelParams> modelEntry : entry.getValue().entrySet()) {
-                modelIds.add(modelEntry.getValue().id);
+        for (final Map<String,OnlineHmmModelParams> maps : modelsByOutputId.values()) {
+            for (final OnlineHmmModelParams value : maps.values()) {
+                modelIds.add(value.id);
             }
         }
 
@@ -298,10 +298,8 @@ public class  OnlineHmmPriors {
         final AlphabetHmmUserModel.Builder builder = AlphabetHmmUserModel.newBuilder();
 
         for (final String key : modelsByOutputId.keySet()) {
-            final Map<String,OnlineHmmModelParams> paramsMap = modelsByOutputId.get(key);
-
-            for (final Map.Entry<String,OnlineHmmModelParams> params : paramsMap.entrySet()) {
-                builder.addModels(protobufFromParams(params.getValue()));
+            for (final OnlineHmmModelParams value : modelsByOutputId.get(key).values()) {
+                builder.addModels(protobufFromParams(value));
             }
         }
 
