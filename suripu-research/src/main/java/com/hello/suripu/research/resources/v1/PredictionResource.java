@@ -33,6 +33,8 @@ import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
 import com.hello.suripu.core.models.OnlineHmmData;
+import com.hello.suripu.core.models.OnlineHmmPriors;
+import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -78,6 +80,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -147,8 +150,9 @@ public class PredictionResource extends BaseResource {
     }
 
 
-    private ImmutableList<Event> getOnlineHmmEvents(final DateTime dateOfNight, final DateTime startTime, final DateTime endTime, final long accountId,
-                                                    final OneDaysSensorData oneDaysSensorData, final boolean forceLearning) {
+    private static ImmutableList<Event> getOnlineHmmEvents(final DateTime dateOfNight, final DateTime startTime, final DateTime endTime, final long accountId,
+                                                    final OneDaysSensorData oneDaysSensorData, final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                                                           final OnlineHmmModelsDAO priorsDAO,final boolean forceLearning) {
 
         //get model from DB
         final FeatureExtractionModelData featureExtractor = featureExtractionModelsDAO.getLatestModelForDate(accountId, dateOfNight, Optional.<UUID>absent());
@@ -560,6 +564,41 @@ public class PredictionResource extends BaseResource {
                 .withZone(DateTimeZone.UTC).withHourOfDay(0);
 
 
+        final OnlineHmmModelsDAO inMemoryModelsDao = new OnlineHmmModelsDAO() {
+            public final TreeMap<DateTime, OnlineHmmData> priorByDate = Maps.newTreeMap();
+
+            @Override
+            public OnlineHmmData getModelDataByAccountId(Long accountId, DateTime date) {
+
+                final Map.Entry<DateTime,OnlineHmmData> entry = priorByDate.floorEntry(date);
+
+                if (entry == null) {
+                    return OnlineHmmData.createEmpty();
+                }
+
+                return entry.getValue();
+            }
+
+            @Override
+            public boolean updateModelPriorsAndZeroOutScratchpad(Long accountId, DateTime date, OnlineHmmPriors priors) {
+                final OnlineHmmData newOnlineHmmData = new OnlineHmmData( priors,OnlineHmmScratchPad.createEmpty());
+                priorByDate.put(date,newOnlineHmmData);
+                return true;
+            }
+
+            @Override
+            public boolean updateScratchpad(Long accountId, DateTime date, OnlineHmmScratchPad scratchPad) {
+                final DateTime key  =  priorByDate.floorKey(date);
+
+                if (key != null) {
+                    priorByDate.put(key,new OnlineHmmData(priorByDate.get(key).modelPriors,scratchPad));
+                    return true;
+                }
+
+                return false;
+            }
+        };
+
         DateTime night = dateOfStartNight;
 
 
@@ -570,12 +609,12 @@ public class PredictionResource extends BaseResource {
             final OneDaysSensorData oneDaysSensorData = getOneDaysSensorData(accountId,dateOfStartNight,startTime,endTime,usePartnerFilter);
 
             //this should automatically update the database for the user
-            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,true);
+            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,featureExtractionModelsDAO, inMemoryModelsDao,true);
 
             night = night.plusDays(1);
         }
 
-        final OnlineHmmData data = this.priorsDAO.getModelDataByAccountId(accountId,night);
+        final OnlineHmmData data = inMemoryModelsDao.getModelDataByAccountId(accountId,night);
 
         return Base64.encodeBase64String(data.modelPriors.serializeToProtobuf());
 
@@ -725,7 +764,7 @@ public class PredictionResource extends BaseResource {
                 break;
 
             case ALGORITHM_ONLINEHMM:
-                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData,forceLearning);
+                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData,featureExtractionModelsDAO,priorsDAO,forceLearning);
                 break;
 
             default:
