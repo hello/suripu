@@ -218,6 +218,7 @@ public class OnlineHmmModelEvaluator {
 
             LOGGER.info("models = {}",ids);
             LOGGER.info("scores = {}",scores);
+            LOGGER.info("picked model {}",bestModel);
 
             if (bestResult == null) {
                 LOGGER.info("no success in finding a viable model for output {}",outputId);
