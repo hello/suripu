@@ -609,25 +609,26 @@ public class PredictionResource extends BaseResource {
                 return featureExtractionModels;
             }
         };
-
-        DateTime night = dateOfStartNight;
-
-
+        
         for (int iDay = 0; iDay < numDays; iDay++) {
-            final DateTime startTime = night.withHourOfDay(20);
-            final DateTime endTime = startTime.plusHours(16);
+            final DateTime startTime = dateOfStartNight.plusDays(iDay).withHourOfDay(20);
+            final DateTime endTime = startTime.plusDays(iDay).plusHours(16);
 
-            final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,dateOfStartNight,startTime,endTime,usePartnerFilter,true);
+            final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,dateOfStartNight.plusDays(iDay),startTime,endTime,usePartnerFilter,true);
 
             if (!oneDaysSensorDataOptional.isPresent()) {
+                LOGGER.info("skipping {} because no feedback found",DateTimeUtil.dateToYmdString(dateOfStartNight.plusDays(iDay)));
                 continue;
             }
 
-            final OneDaysSensorData oneDaysSensorData = oneDaysSensorDataOptional.get();
-            //this should automatically update the database for the user
-            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,inMemoryFeatureExtraction, inMemoryModelsDao,true);
 
-            night = night.plusDays(1);
+            final OneDaysSensorData oneDaysSensorData = oneDaysSensorDataOptional.get();
+
+            LOGGER.info("Found {} pieces of feedback",oneDaysSensorData.feedbackList.size());
+
+            //this should automatically update the database for the user
+            getOnlineHmmEvents(dateOfStartNight.plusDays(iDay), startTime, endTime, accountId,oneDaysSensorData,inMemoryFeatureExtraction, inMemoryModelsDao,true);
+
         }
 
         final OnlineHmmData data = inMemoryModelsDao.getModelDataByAccountId(accountId, night);
@@ -667,6 +668,7 @@ public class PredictionResource extends BaseResource {
 
     private Optional<OneDaysSensorData> getOneDaysSensorData(final long accountId,final DateTime dateOfEvening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc, boolean usePartnerFilter,boolean failIfNofeedback) {
 
+        LOGGER.info("Getting sensor data for account_id={},date={}",accountId,DateTimeUtil.dateToYmdString(dateOfEvening));
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
 
         if (!deviceIdPair.isPresent()) {
