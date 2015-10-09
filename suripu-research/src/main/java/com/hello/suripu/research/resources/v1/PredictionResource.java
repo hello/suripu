@@ -609,10 +609,10 @@ public class PredictionResource extends BaseResource {
                 return featureExtractionModels;
             }
         };
-        
+
         for (int iDay = 0; iDay < numDays; iDay++) {
             final DateTime startTime = dateOfStartNight.plusDays(iDay).withHourOfDay(20);
-            final DateTime endTime = startTime.plusDays(iDay).plusHours(16);
+            final DateTime endTime = startTime.plusHours(16);
 
             final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,dateOfStartNight.plusDays(iDay),startTime,endTime,usePartnerFilter,true);
 
@@ -631,7 +631,7 @@ public class PredictionResource extends BaseResource {
 
         }
 
-        final OnlineHmmData data = inMemoryModelsDao.getModelDataByAccountId(accountId, night);
+        final OnlineHmmData data = inMemoryModelsDao.getModelDataByAccountId(accountId, dateOfStartNight.plusDays(numDays));
 
         int numModels = 0;
         for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : data.modelPriors.modelsByOutputId.entrySet()) {
