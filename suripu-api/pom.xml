@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.hello.suripu</groupId>
         <artifactId>suripu-parent</artifactId>
-        <version>0.5.49-SNAPSHOT</version>
+        <version>0.5.49</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
