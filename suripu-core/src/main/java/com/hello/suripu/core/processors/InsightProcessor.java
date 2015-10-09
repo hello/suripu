@@ -3,7 +3,6 @@ package com.hello.suripu.core.processors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
@@ -14,7 +13,6 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
-import com.hello.suripu.core.models.Feature;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
@@ -51,8 +49,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by kingshy on 10/24/14.
  */
 public class InsightProcessor {
-
-    private RolloutClient featureFlipper;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
 
@@ -99,7 +95,6 @@ public class InsightProcessor {
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
-        this.featureFlipper = featureFlipper;
         final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountCreated);
         if (accountAge < 1) {
             return; // not slept one night yet
@@ -117,8 +112,7 @@ public class InsightProcessor {
             return;
         }
 
-        this.generateGeneralInsights(accountId, deviceId);
-
+        this.generateGeneralInsights(accountId, deviceId, featureFlipper);
     }
 
     /**
@@ -162,7 +156,7 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId) {
+    private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId, final RolloutClient featureFlipper) {
         final Set<InsightCard.Category> recentCategories  = this.getRecentInsightsCategories(accountId);
         final DateTime currentTime = DateTime.now();
         return generateGeneralInsights(accountId, deviceId, recentCategories, currentTime, featureFlipper);
