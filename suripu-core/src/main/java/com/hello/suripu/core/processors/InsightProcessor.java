@@ -172,10 +172,10 @@ public class InsightProcessor {
         final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(accountId, recentCategories, currentTime);
 
         if (toGenerateWeeklyCategory.isPresent()) {
-            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory, accountId);
+            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedWeeklyCategory = this.generateInsightsByCategory(accountId, deviceId, toGenerateWeeklyCategory.get());
             if (generatedWeeklyCategory.isPresent()) {
-                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedWeeklyCategory, accountId);
+                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedWeeklyCategory.get(), accountId);
                 return generatedWeeklyCategory;
             }
             //else try to generate an old Random Insight
@@ -188,10 +188,10 @@ public class InsightProcessor {
         //logic for generating current high-priority Insight
         final Optional<InsightCard.Category> toGenerateHighPriorityCategory = selectHighPriorityInsightToGenerate(accountId, recentCategories, currentTime, featureFlipper);
         if (toGenerateHighPriorityCategory.isPresent()) {
-            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateHighPriorityCategory, accountId);
+            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateHighPriorityCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedHighPriorityCategory = this.generateInsightsByCategory(accountId, deviceId, toGenerateHighPriorityCategory.get());
             if (generatedHighPriorityCategory.isPresent()) {
-                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedHighPriorityCategory, accountId);
+                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedHighPriorityCategory.get(), accountId);
                 return generatedHighPriorityCategory;
             }
         }
@@ -299,13 +299,6 @@ public class InsightProcessor {
                     return Optional.of(InsightCard.Category.TEMPERATURE);
                 }
                 break;
-            /* TODO: uncomment me once bed_light_duration is sufficiently tested to make it generate randomly
-            case 25:
-                if (!recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
-                    return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
-                }
-                break;
-                */
             default:
                 return Optional.absent();
         }
