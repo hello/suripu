@@ -17,6 +17,7 @@ import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.translations.English;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.DeserializedFeatureExtractionWithParams;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import org.joda.time.DateTime;
@@ -74,77 +75,86 @@ public class OnlineHmm {
         final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
 
 
-        final OnlineHmmPriors updatedModels = OnlineHmmPriors.createEmpty();
-
         //check to see if this scratchpad is old enough
         //old enough == it was created yesterday or earlier
-        if (newModel.lastUpdateTimeUtc < startTimeUtc || forceUpdate) {
+        if (newModel.isEmpty()) {
+            logger.info("no scratchpad");
+            return OnlineHmmPriors.createEmpty();
+        }
 
-            //go through each and every model, first matching by output id
-            for (final String outputId : newModel.paramsByOutputId.keySet()) {
-                final OnlineHmmModelParams param = newModel.paramsByOutputId.get(outputId);
+        if (newModel.lastUpdateTimeUtc >= startTimeUtc && !forceUpdate)  {
+            logger.info("scratchpad not old enough -- not updating models");
+            return OnlineHmmPriors.createEmpty();
+        }
 
-                //find the existing model params with this id
-                if (!existingModels.modelsByOutputId.containsKey(outputId)) {
-                    logger.error("did not find models with output id = {}",outputId);
+        final OnlineHmmPriors updatedModels = OnlineHmmPriors.createEmpty();
+
+        //go through each output id
+        for (final String outputId : existingModels.modelsByOutputId.keySet()) {
+
+            //if this key does not exist in the updated models, just bring over the existing models
+            if (!newModel.paramsByOutputId.containsKey(outputId)) {
+                updatedModels.modelsByOutputId.put(outputId,existingModels.modelsByOutputId.get(outputId));
+                logger.info("no update for {} found",outputId);
+                continue;
+            }
+
+            //get models from the scratchpad for this output id
+            final OnlineHmmModelParams param = newModel.paramsByOutputId.get(outputId);
+
+            final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList();
+
+            //populate a new list (we will need to sort it later) for this output id
+            modelsForThisOutput.addAll(existingModels.modelsByOutputId.get(outputId).values());
+            
+            //add the scratchpad model
+            modelsForThisOutput.add(param);
+
+            //sort by date last used and then updated
+            Collections.sort(modelsForThisOutput, new Comparator<OnlineHmmModelParams>() {
+                @Override
+                public int compare(final OnlineHmmModelParams o1, final OnlineHmmModelParams o2) {
+                    if (o1.timeUpdatedUtc < o2.timeUpdatedUtc) {
+                        return 1;
+                    }
+
+                    if (o1.timeUpdatedUtc > o2.timeUpdatedUtc) {
+                        return -1;
+                    }
+
+                    return 0;
+                }
+            });
+
+            //ENFORCE MODEL LIMIT
+            //exceed model count?  trim the oldest used
+            for (int i = modelsForThisOutput.size() - 1; i >= 0; i--) {
+
+                if (i <= MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT)  {
+                    break;
+                }
+
+                //skip default model
+                if (DEFAULT_MODEL_KEYS.contains(modelsForThisOutput.get(i).id)) {
                     continue;
                 }
 
-                final List<OnlineHmmModelParams> modelsForThisOutput = Lists.newArrayList();
-
-                //populate a new list (we will need to sort it later) for this output id
-                for (final Map.Entry<String,OnlineHmmModelParams> params : existingModels.modelsByOutputId.get(outputId).entrySet()) {
-                    modelsForThisOutput.add(params.getValue());
-                }
-
-                //add the scratchpad model
-                modelsForThisOutput.add(param);
-
-                //sort by date last used and then updated
-                Collections.sort(modelsForThisOutput, new Comparator<OnlineHmmModelParams>() {
-                    @Override
-                    public int compare(final OnlineHmmModelParams o1, final OnlineHmmModelParams o2) {
-                        if (o1.timeUpdatedUtc < o2.timeUpdatedUtc) {
-                            return 1;
-                        }
-
-                        if (o1.timeUpdatedUtc > o2.timeUpdatedUtc) {
-                            return -1;
-                        }
-
-                        return 0;
-                    }
-                });
-
-                //ENFORCE MODEL LIMIT
-                //exceed model count?  trim the oldest used
-                for (int i = modelsForThisOutput.size() - 1; i >= 0; i--) {
-
-                    if (i <= MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT)  {
-                        break;
-                    }
-
-                    //skip default model
-                    if (DEFAULT_MODEL_KEYS.contains(modelsForThisOutput.get(i).id)) {
-                        continue;
-                    }
-
-                    logger.info("removing model {}:{} because it exceeded the model limit and was the oldest",outputId,modelsForThisOutput.get(i).id);
-                    modelsForThisOutput.remove(i);
-                }
-
-                //turn back into map by model id
-                final Map<String,OnlineHmmModelParams> trimmedParams = Maps.newHashMap();
-
-                for (final OnlineHmmModelParams params : modelsForThisOutput) {
-                    trimmedParams.put(params.id,params);
-                }
-
-                updatedModels.modelsByOutputId.put(outputId,trimmedParams);
-
+                logger.info("removing model {}:{} because it exceeded the model limit and was the oldest",outputId,modelsForThisOutput.get(i).id);
+                modelsForThisOutput.remove(i);
             }
 
+            //turn back into map by model id
+            final Map<String,OnlineHmmModelParams> trimmedParams = Maps.newHashMap();
+
+            for (final OnlineHmmModelParams params : modelsForThisOutput) {
+                trimmedParams.put(params.id,params);
+            }
+
+            updatedModels.modelsByOutputId.put(outputId,trimmedParams);
+
         }
+
+
 
         return updatedModels;
 
@@ -158,10 +168,11 @@ public class OnlineHmm {
         final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId,evening);
 
         //sort out the differences between the default model and the user models
-        OnlineHmmPriors modelPriors = null;
+        OnlineHmmPriors modelPriors = userModelData.modelPriors;
+
         final Optional<OnlineHmmPriors> defaultPriorOptional = OnlineHmmPriors.createDefaultPrior();
 
-        if (!defaultPriorOptional.isPresent()) {
+        if (!defaultPriorOptional.isPresent() && userModelData.modelPriors.isEmpty()) {
             LOGGER.error("could not get valid default prior.  This is astoundingly bad.");
             return emptyResult;
         }
@@ -179,7 +190,11 @@ public class OnlineHmm {
             userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,evening,modelPriors);
 
         }
+
+
+        /*  intentionally commented out -- BEJ 2015-10-09
         else {
+
             //verify that the default prior doesn't contain any more output ids
             //otherwise that means there are new outputs available in the default models
             modelPriors = userModelData.modelPriors;
@@ -196,10 +211,11 @@ public class OnlineHmm {
                 }
             }
 
+
             // TODO  last but not least, got through each model and see if it is missing anything that is in the default
             //i.e. I could have updated the feature extraction layer with a model that replaces "light2" with one called "light3"
             // "light3" does not exist in the user models, so we copy over that one from the default
-        }
+        }*/
 
 
         return new OnlineHmmData(modelPriors,userModelData.scratchPad);
@@ -423,12 +439,29 @@ public class OnlineHmm {
 
             final OnlineHmmScratchPad scratchPad = evaluator.reestimate(usedModelsByOutputId, modelPriors, pathsByModelId, labelsByOutputId, startTimeUtc);
 
+            if (scratchPad.isEmpty()) {
+                LOGGER.error("scratchpad is empty!!!");
+            }
+            else {
+                final List<String> modelIds = Lists.newArrayList();
+                for (final Map.Entry<String,OnlineHmmModelParams> entry : scratchPad.paramsByOutputId.entrySet()) {
+                    modelIds.add(entry.getValue().id);
+                }
+
+                LOGGER.info("new scratchpad models: {}",modelIds);
+                LOGGER.info("existing models: {}",modelPriors.getModelIds());
+
+            }
+
             //3) update scratchpad in dynamo
             if (forceLearning) {
                 //update right now
                 final OnlineHmmPriors updatedModelPriors = updateModelPriorsWithScratchpad(modelPriors, scratchPad, startTimeUtc, true,LOGGER);
 
-                userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,evening,updatedModelPriors);
+                if (!updatedModelPriors.isEmpty()) {
+                    LOGGER.info("force updating models for date {}", DateTimeUtil.dateToYmdString(evening));
+                    userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId, evening, updatedModelPriors);
+                }
             }
             else {
                 //otherwise just update the scratchpad
