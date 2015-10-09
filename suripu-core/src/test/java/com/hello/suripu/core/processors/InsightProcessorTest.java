@@ -10,6 +10,7 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.DeviceData;
@@ -21,11 +22,13 @@ import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
+import com.librato.rollout.RolloutClient;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +41,8 @@ import static org.hamcrest.Matchers.is;
  */
 public class InsightProcessorTest {
 
+
+
     private final Long FAKE_ACCOUNT_ID = 9999L;
     private final Long FAKE_DEVICE_ID = 9998L;
 
@@ -46,8 +51,28 @@ public class InsightProcessorTest {
 
     private final DateTime FAKE_DATE_1 = DateTime.parse("2015-09-01").withTimeAtStartOfDay();
     private final DateTime FAKE_DATE_10 = DateTime.parse("2015-09-10").withTimeAtStartOfDay();
+    private final DateTime FAKE_DATE_NONE = DateTime.parse("2015-09-11").withTimeAtStartOfDay();
+
+    private static RolloutClient featureFlipOn() {
+        final Long FAKE_ACCOUNT_ID = 9999L;
+
+        RolloutClient mockFeatureFlipper = Mockito.mock(RolloutClient.class);
+        Mockito.when(mockFeatureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_HUMIDITY, FAKE_ACCOUNT_ID, Collections.EMPTY_LIST)).thenReturn(Boolean.TRUE);
+
+        return mockFeatureFlipper;
+    }
+
+    private static RolloutClient featureFlipOff() {
+        final Long FAKE_ACCOUNT_ID = 9999L;
+
+        RolloutClient mockFeatureFlipper = Mockito.mock(RolloutClient.class);
+        Mockito.when(mockFeatureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_HUMIDITY, FAKE_ACCOUNT_ID, Collections.EMPTY_LIST)).thenReturn(Boolean.FALSE);
+
+        return mockFeatureFlipper;
+    }
 
     private static InsightProcessor setUp() {
+
         final Long FAKE_ACCOUNT_ID = 9999L;
         final Long FAKE_DEVICE_ID = 9998L;
         final Long FAKE_PILL_ID = 9997L;
@@ -65,7 +90,7 @@ public class InsightProcessorTest {
         final WakeStdDevData wakeStdDevData = Mockito.mock(WakeStdDevData.class);
         final AccountInfoProcessor accountInfoProcessor = Mockito.mock(AccountInfoProcessor.class);
 
-        //Prepping for taking care of @NotNull check
+        //Prepping for taking care of @NotNull check for light
         final int light = 2;
         final int zeroLight = 0;
         final DateTime timestamp = DateTime.now(DateTimeZone.UTC).withHourOfDay(19).withMinuteOfHour(0);
@@ -87,7 +112,7 @@ public class InsightProcessorTest {
         final List<AggregateSleepStats> fakeAggregateSleepStatsList = Lists.newArrayList();
         fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, fakeSleepStat));
 
-        //Taking care of @NotNull check
+        //Taking care of @NotNull check for light
         Mockito.when(deviceDataDAO.getLightByBetweenHourDate(Mockito.any(Long.class), Mockito.any(Long.class), Mockito.any(Integer.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class))).thenReturn(ImmutableList.copyOf(data));
 
         Mockito.when(deviceDataDAO.toString()).thenReturn("someString");
@@ -102,6 +127,12 @@ public class InsightProcessorTest {
         Mockito.when(accountInfoProcessor.toString()).thenReturn("someString");
         Mockito.when(lightData.getLightPercentile(Mockito.any(Integer.class))).thenReturn(1);
         Mockito.when(wakeStdDevData.getWakeStdDevPercentile(Mockito.any(Integer.class))).thenReturn(1);
+
+        //Taking care of @NotNull check for humidity
+        Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(offsetMillis));
+        Mockito.when(deviceDataDAO.getBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(Long.class),Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class)))
+                .thenReturn(ImmutableList.copyOf(data));
+        Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.HUMIDITY, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
 
         //Initialize InsightProcessor
         final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAO, deviceDAO,
@@ -126,6 +157,7 @@ public class InsightProcessorTest {
     @Test
     public void test_generateGeneralInsights() {
 
+        final RolloutClient mockFeatureFlipper = featureFlipOff();
         final InsightProcessor insightProcessor = setUp();
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
@@ -134,24 +166,33 @@ public class InsightProcessorTest {
         recentCategories.add(InsightCard.Category.LIGHT);
         recentCategories.add(InsightCard.Category.TEMPERATURE);
 
-        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_SATURDAY);
+        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, try to generate wake variance, get Optional.absent(), look for random Insight, try to generate nothing else
-        assertThat(InsightProcessor.selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY), is(Optional.of(InsightCard.Category.WAKE_VARIANCE)));
+        //Tests - Look for weekly Insight, try to generate wake variance, get Optional.absent() b/c no data
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
 
         final Optional<InsightCard.Category> wakeCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
         assertThat(wakeCardCategory.isPresent(), is(Boolean.FALSE));
 
-        assertThat(InsightProcessor.selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY).isPresent(), is(Boolean.FALSE));
+        //look for high priority Insight - get nothing b/c feature flip off, wrong date
+        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+
+        //look for random old Insight - get nothing b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.LIGHT);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.SLEEP_QUALITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
     }
 
     @Test
     public void test_generateGeneralInsights_2() {
 
+        final RolloutClient mockFeatureFlipper = featureFlipOn();
         final InsightProcessor insightProcessor = setUp();
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
@@ -159,26 +200,34 @@ public class InsightProcessorTest {
         final Set<InsightCard.Category> recentCategories = new HashSet<>();
         recentCategories.add(InsightCard.Category.LIGHT);
         recentCategories.add(InsightCard.Category.TEMPERATURE);
-        recentCategories.add(InsightCard.Category.SLEEP_QUALITY);
 
-        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_SATURDAY);
+        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, try to generate wake variance, get Optional.absent(), do not look for random Insight, try to generate nothing else
-        assertThat(InsightProcessor.selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY), is(Optional.of(InsightCard.Category.WAKE_VARIANCE)));
+        //Tests - Look for weekly Insight, try to generate wake variance, get Optional.absent() b/c no data
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
 
         final Optional<InsightCard.Category> wakeCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
         assertThat(wakeCardCategory.isPresent(), is(Boolean.FALSE));
 
-        assertThat(InsightProcessor.selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY).isPresent(), is(Boolean.FALSE));
+        //look for high priority Insight - get nothing b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+
+        //look for random old Insight - get nothing b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.LIGHT);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.SLEEP_QUALITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
     }
 
     @Test
     public void test_generateGeneralInsights_3() {
 
+        final RolloutClient mockFeatureFlipper = featureFlipOn();
         final InsightProcessor insightProcessor = setUp();
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
@@ -187,42 +236,128 @@ public class InsightProcessorTest {
         recentCategories.add(InsightCard.Category.LIGHT);
         recentCategories.add(InsightCard.Category.WAKE_VARIANCE);
 
-        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_SATURDAY);
+        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, do not try to generate wake variance b/c recent, look for random Insight, try to generate nothing else
-        assertThat(InsightProcessor.selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY).isPresent(), is(Boolean.FALSE));
+        //Tests - Look for weekly Insight, do not try to generate b/c recent
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
 
         final Optional<InsightCard.Category> wakeCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
         assertThat(wakeCardCategory.isPresent(), is(Boolean.FALSE));
 
-        assertThat(InsightProcessor.selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY).isPresent(), is(Boolean.FALSE));
+        //look for high priority Insight - get nothing b/c feature wrong date
+        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+
+        //look for random old Insight - get nothing b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.LIGHT);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.SLEEP_QUALITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
     }
 
     @Test
     public void test_generateGeneralInsights_4() {
 
+        final RolloutClient mockFeatureFlipper = featureFlipOn();
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        //actually simulating recent categories
+        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+        recentCategories.add(InsightCard.Category.LIGHT);
+        recentCategories.add(InsightCard.Category.TEMPERATURE);
+
+        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
+
+        //Tests - Look for weekly Insight, do not try to generate b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
+
+        //look for high priority Insight - try to generate humdity, get humidity
+        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+
+        final Optional<InsightCard.Category> humidityCardCategory = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+        assertThat(humidityCardCategory.isPresent(), is(Boolean.TRUE));
+
+        //do not look for random old Insight b/c already generated high priority
+        Mockito.verify(spyInsightProcessor, Mockito.never()).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.LIGHT);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.TEMPERATURE);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.SLEEP_QUALITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+    }
+
+    @Test
+    public void test_generateGeneralInsights_5() {
+
+        final RolloutClient mockFeatureFlipper = featureFlipOff();
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        //actually simulating recent categories
+        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+//        recentCategories.add(InsightCard.Category.LIGHT);
+        recentCategories.add(InsightCard.Category.TEMPERATURE);
+        recentCategories.add(InsightCard.Category.WAKE_VARIANCE);
+//        recentCategories.add(InsightCard.Category.HUMIDITY);
+
+        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
+
+        //Tests - Look for weekly Insight, do not try to generate b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
+
+        //look for high priority Insight - do not try to generate humidity b/c featureFlip Off
+        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+
+        //look for random old Insight, try to generate light
+        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
+        Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.LIGHT);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.TEMPERATURE);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.SLEEP_QUALITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+    }
+
+    @Test
+    public void test_generateGeneralInsights_6() {
+
+        final RolloutClient mockFeatureFlipper = featureFlipOn();
         final InsightProcessor insightProcessor = setUp();
         final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
 
         //actually simulating recent categories
         final Set<InsightCard.Category> recentCategories = new HashSet<>();
         recentCategories.add(InsightCard.Category.TEMPERATURE);
-        recentCategories.add(InsightCard.Category.SLEEP_QUALITY);
+        recentCategories.add(InsightCard.Category.HUMIDITY);
 
-        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_DATE_1);
+        spyInsightProcessor.generateGeneralInsights(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
-        //Tests - Look for weekly Insight, do not try to generate wake variance wrong day, look for random Insight, try to generate light and nothing else
-        assertThat(InsightProcessor.selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1).isPresent(), is(Boolean.FALSE));
+        //Tests - Look for weekly Insight, do not try to generate b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.WAKE_VARIANCE);
 
-        assertThat(InsightProcessor.selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1), is(Optional.of(InsightCard.Category.LIGHT)));
+        //look for high priority Insight - do not try to generate humidity b/c wrong date
+        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+
+        //look for random old Insight, try to generate light
+        Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
         Mockito.verify(spyInsightProcessor).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.LIGHT);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.TEMPERATURE);
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.SLEEP_QUALITY);
+        Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.BED_LIGHT_DURATION);
     }
 
     @Test
@@ -237,6 +372,18 @@ public class InsightProcessorTest {
     }
 
     @Test
+    public void test_generateCategory_humidity() {
+
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        final Optional<InsightCard.Category> generatedInsight = spyInsightProcessor.generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, InsightCard.Category.HUMIDITY);
+
+        assertThat(generatedInsight.isPresent(), is(Boolean.TRUE));
+    }
+
+
+    @Test
     public void test_generateCategory_wakeVariance() {
 
         final InsightProcessor insightProcessor = setUp();
@@ -246,63 +393,5 @@ public class InsightProcessorTest {
 
         //no real data for wake variance, will not generate Insight
         assertThat(generatedInsight.isPresent(), is(Boolean.FALSE));
-    }
-
-
-    @Test
-    public void test_generateWeeklyInsights_no() {
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.WAKE_VARIANCE);
-
-        final Optional<InsightCard.Category> insightToGenerate = InsightProcessor.selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
-        assertThat(insightToGenerate.isPresent(), is(Boolean.FALSE));
-    }
-
-    @Test
-    public void test_generateWeeklyInsights_no2() {
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.LIGHT);
-
-        final Optional<InsightCard.Category> insightToGenerate = InsightProcessor.selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_FRIDAY);
-        assertThat(insightToGenerate.isPresent(), is(Boolean.FALSE));
-    }
-
-    @Test
-    public void test_generateWeeklyInsights_light() {
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.LIGHT);
-
-        final Optional<InsightCard.Category> insightToGenerate = InsightProcessor.selectWeeklyInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY);
-        assertThat(insightToGenerate.isPresent(), is(Boolean.TRUE));
-    }
-
-    @Test
-    public void test_generateRandomOldInsight_no() {
-        //correct date, but light has already been generated
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.LIGHT);
-
-        final Optional<InsightCard.Category> insightToGenerate = InsightProcessor.selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
-        assertThat(insightToGenerate.isPresent(), is(Boolean.FALSE));
-    }
-
-    @Test
-    public void test_generateRandomOldInsight_light() {
-        //correct date & light not recently generated
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.TEMPERATURE);
-
-        final Optional<InsightCard.Category> insightToGenerate = InsightProcessor.selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1);
-        assertThat(insightToGenerate.isPresent(), is(Boolean.TRUE));
-    }
-
-    @Test
-    public void test_generateRandomOldInsight_temp() {
-        //correct date & temp not recently generated
-        final Set<InsightCard.Category> recentCategories = new HashSet<>();
-        recentCategories.add(InsightCard.Category.LIGHT);
-
-        final Optional<InsightCard.Category> insightToGenerate = InsightProcessor.selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_10);
-        assertThat(insightToGenerate.isPresent(), is(Boolean.TRUE));
     }
 }
