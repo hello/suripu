@@ -54,6 +54,7 @@ import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SoundUtils;
+import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.hello.suripu.research.models.AlphabetsAndLabels;
@@ -611,13 +612,14 @@ public class PredictionResource extends BaseResource {
         };
 
         for (int iDay = 0; iDay < numDays; iDay++) {
-            final DateTime startTime = dateOfStartNight.plusDays(iDay).withHourOfDay(20);
+            final DateTime night = dateOfStartNight.plusDays(iDay);
+            final DateTime startTime = night.withHourOfDay(20);
             final DateTime endTime = startTime.plusHours(16);
 
-            final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,dateOfStartNight.plusDays(iDay),startTime,endTime,usePartnerFilter,true);
+            final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,night,startTime,endTime,usePartnerFilter,true);
 
             if (!oneDaysSensorDataOptional.isPresent()) {
-                LOGGER.info("skipping {} because no feedback found",DateTimeUtil.dateToYmdString(dateOfStartNight.plusDays(iDay)));
+                LOGGER.info("skipping {} because no feedback found or is invalid night",DateTimeUtil.dateToYmdString(night));
                 continue;
             }
 
@@ -627,7 +629,7 @@ public class PredictionResource extends BaseResource {
             LOGGER.info("Found {} pieces of feedback",oneDaysSensorData.feedbackList.size());
 
             //this should automatically update the database for the user
-            getOnlineHmmEvents(dateOfStartNight.plusDays(iDay), startTime, endTime, accountId,oneDaysSensorData,inMemoryFeatureExtraction, inMemoryModelsDao,true);
+            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,inMemoryFeatureExtraction, inMemoryModelsDao,true);
 
         }
 
@@ -690,7 +692,6 @@ public class PredictionResource extends BaseResource {
 
         LOGGER.debug("Length of trackerMotion: {}, partnerTrackerMotion: {}", myMotions.size(),partnerMotions.size());
 
-
         if (myMotions.isEmpty()) {
             throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                     .entity(new JsonError(204, "no motion data found")).build());
@@ -709,6 +710,10 @@ public class PredictionResource extends BaseResource {
             motions.addAll(myMotions);
         }
 
+        if (TimelineProcessor.isValidNight(accountId,myMotions,motions) != TimelineError.NO_ERROR) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "not a valid amount of data to work with")).build());
+        };
 
         // get all sensor data, used for light and sound disturbances, and presleep-insights
         AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
