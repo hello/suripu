@@ -32,6 +32,10 @@ import com.hello.suripu.core.models.Events.FallingAsleepEvent;
 import com.hello.suripu.core.models.Events.InBedEvent;
 import com.hello.suripu.core.models.Events.OutOfBedEvent;
 import com.hello.suripu.core.models.Events.WakeupEvent;
+import com.hello.suripu.core.models.OnlineHmmData;
+import com.hello.suripu.core.models.OnlineHmmModelParams;
+import com.hello.suripu.core.models.OnlineHmmPriors;
+import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
@@ -50,17 +54,19 @@ import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SoundUtils;
+import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineUtils;
 import com.hello.suripu.core.util.TrackerMotionUtils;
 import com.hello.suripu.research.models.AlphabetsAndLabels;
 import com.hello.suripu.research.models.EventsWithLabels;
 import com.hello.suripu.research.models.FeedbackAsIndices;
+import com.hello.suripu.research.models.GeneratedModel;
+import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.BASE64Decoder;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -77,6 +83,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -146,8 +153,9 @@ public class PredictionResource extends BaseResource {
     }
 
 
-    private ImmutableList<Event> getOnlineHmmEvents(final DateTime dateOfNight, final DateTime startTime, final DateTime endTime, final long accountId,
-                                                    final OneDaysSensorData oneDaysSensorData, final boolean forceLearning) {
+    private static ImmutableList<Event> getOnlineHmmEvents(final DateTime dateOfNight, final DateTime startTime, final DateTime endTime, final long accountId,
+                                                    final OneDaysSensorData oneDaysSensorData, final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                                                           final OnlineHmmModelsDAO priorsDAO,final boolean forceLearning) {
 
         //get model from DB
         final FeatureExtractionModelData featureExtractor = featureExtractionModelsDAO.getLatestModelForDate(accountId, dateOfNight, Optional.<UUID>absent());
@@ -301,10 +309,10 @@ public class PredictionResource extends BaseResource {
 
             if (base64data.length() > 0) {
 
-                BASE64Decoder decoder = new BASE64Decoder();
 
                 try {
-                    final byte[] decodedBytes = decoder.decodeBuffer(base64data);
+
+                    final byte[] decodedBytes = Base64.decodeBase64(base64data);
 
                     final SleepHmmProtos.SleepHmmModelSet proto = SleepHmmProtos.SleepHmmModelSet.parseFrom(decodedBytes);
 
@@ -527,25 +535,228 @@ public class PredictionResource extends BaseResource {
 
     }
 
+    @GET
+    @Path("/generate_models/{account_id}/{date_string}/{num_days}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public GeneratedModel generateModelsForUser( @Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
+                                                                   @PathParam("account_id") final  Long accountId,
+                                                                   @PathParam("date_string") final  String dateString,
+                                                                   @PathParam("num_days") final  Integer numDays,
+                                                                   @DefaultValue("true") @QueryParam("partner_filter") final Boolean usePartnerFilter) {
+
+
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+
+        if (!deviceIdPair.isPresent()) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "no sense found")).build());
+        }
+
+        if (numDays <= 0) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "number of days must be greater than zero")).build());
+        }
+
+        if (numDays > 200) {
+            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+                    .entity(new JsonError(204, "limited to doing 200 days at a time, which is completely arbitrary")).build());
+        }
+
+        final DateTime dateOfStartNight = DateTime.parse(dateString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATE_FORMAT))
+                .withZone(DateTimeZone.UTC).withHourOfDay(0);
+
+        final TreeMap<DateTime, OnlineHmmData> priors = Maps.newTreeMap();
+
+        final OnlineHmmModelsDAO inMemoryModelsDao = new OnlineHmmModelsDAO() {
+            public final TreeMap<DateTime, OnlineHmmData> priorByDate = priors;
+
+            @Override
+            public OnlineHmmData getModelDataByAccountId(Long accountId, DateTime date) {
+
+                final Map.Entry<DateTime,OnlineHmmData> entry = priorByDate.floorEntry(date);
+
+                if (entry == null) {
+                    LOGGER.warn("GET got nothing ");
+                    return OnlineHmmData.createEmpty();
+                }
+
+                int numModels = 0;
+                for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> item : entry.getValue().modelPriors.modelsByOutputId.entrySet()) {
+                    numModels += item.getValue().size();
+                }
+
+                LOGGER.info("GET {} models: {} from date {}",numModels,entry.getValue().modelPriors.modelsByOutputId.keySet(),DateTimeUtil.dateToYmdString(entry.getKey()));
+
+                return entry.getValue();
+            }
+
+            @Override
+            public boolean updateModelPriorsAndZeroOutScratchpad(Long accountId, DateTime date, OnlineHmmPriors priors) {
+                final OnlineHmmData newOnlineHmmData = new OnlineHmmData( priors,OnlineHmmScratchPad.createEmpty());
+
+                int numModels = 0;
+                for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : priors.modelsByOutputId.entrySet()) {
+                    numModels += entry.getValue().size();
+                }
+
+                priorByDate.put(date,newOnlineHmmData);
+                LOGGER.info("PUT {} models: {} on date {}",numModels,priors.modelsByOutputId.keySet(),DateTimeUtil.dateToYmdString(date));
+                return true;
+            }
+
+            @Override
+            public boolean updateScratchpad(Long accountId, DateTime date, OnlineHmmScratchPad scratchPad) {
+                final DateTime key  =  priorByDate.floorKey(date);
+
+                if (key != null) {
+                    LOGGER.info("PUT scratchpad items {} on date {}",scratchPad.paramsByOutputId.keySet(),DateTimeUtil.dateToYmdString(date));
+                    priorByDate.put(key,new OnlineHmmData(priorByDate.get(key).modelPriors,scratchPad));
+                    return true;
+                }
+
+                return false;
+            }
+        };
+
+        final FeatureExtractionModelData featureExtractionModels = featureExtractionModelsDAO.getLatestModelForDate(accountId, dateOfStartNight, Optional.<UUID>absent());
+
+        final FeatureExtractionModelsDAO inMemoryFeatureExtraction = new FeatureExtractionModelsDAO() {
+            @Override
+            public FeatureExtractionModelData getLatestModelForDate(Long accountId, DateTime dateTimeLocalUTC, Optional<UUID> uuidForLogger) {
+                return featureExtractionModels;
+            }
+        };
+
+        for (int iDay = 0; iDay < numDays; iDay++) {
+            final DateTime night = dateOfStartNight.plusDays(iDay);
+            final DateTime startTime = night.withHourOfDay(20);
+            final DateTime endTime = startTime.plusHours(16);
+
+            final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,night,startTime,endTime,usePartnerFilter,true);
+
+            if (!oneDaysSensorDataOptional.isPresent()) {
+                LOGGER.info("skipping {} because no feedback found or is invalid night",DateTimeUtil.dateToYmdString(night));
+                continue;
+            }
+
+
+            final OneDaysSensorData oneDaysSensorData = oneDaysSensorDataOptional.get();
+
+            LOGGER.info("Found {} pieces of feedback",oneDaysSensorData.feedbackList.size());
+
+            //this should automatically update the database for the user
+            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,inMemoryFeatureExtraction, inMemoryModelsDao,true);
+
+        }
+
+        final OnlineHmmData data = inMemoryModelsDao.getModelDataByAccountId(accountId, dateOfStartNight.plusDays(numDays));
+
+        int numModels = 0;
+        for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : data.modelPriors.modelsByOutputId.entrySet()) {
+            numModels += entry.getValue().size();
+        }
+
+        return new GeneratedModel(
+                accountId,
+                DateTimeUtil.dateToYmdString(dateOfStartNight),
+                numDays,
+                numModels,
+                Base64.encodeBase64String(data.modelPriors.serializeToProtobuf()));
+    }
+
+    private List<TrackerMotion> getPartnerMotionData(final DateTime timeStartLocalUtc, final DateTime timeEndLocalUtc,final int tzOffsetMillis, final List<TrackerMotion> myMotion, final List<TrackerMotion> partnerMotion) {
+        final List<TrackerMotion> motions = Lists.newArrayList();
+        final PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
+
+        try {
+            motions.addAll(
+                    partnerDataUtils.partnerFilterWithDurationsDiffHmm(
+                            timeStartLocalUtc.minusMillis(tzOffsetMillis),
+                            timeEndLocalUtc.minusMillis(tzOffsetMillis),
+                            ImmutableList.copyOf(myMotion),
+                            ImmutableList.copyOf(partnerMotion)));
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            motions.addAll(myMotion);
+        }
+
+        return motions;
+    }
+
+    private Optional<OneDaysSensorData> getOneDaysSensorData(final long accountId,final DateTime dateOfEvening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc, boolean usePartnerFilter,boolean failIfNofeedback) {
+
+        LOGGER.info("Getting sensor data for account_id={},date={}",accountId,DateTimeUtil.dateToYmdString(dateOfEvening));
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("no sense found");
+            return Optional.absent();
+        }
+
+
+        //get feedback for this day
+        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfEvening);
+
+        if (feedbacks.isEmpty() && failIfNofeedback) {
+            return Optional.absent();
+        }
+
+        /* Get "Pill" data  */
+        final List<TrackerMotion> myMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, startTimeLocalUtc, endTimeLocalUtc);
+        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, startTimeLocalUtc, endTimeLocalUtc);
+
+        LOGGER.debug("Length of trackerMotion: {}, partnerTrackerMotion: {}", myMotions.size(),partnerMotions.size());
+
+        if (myMotions.isEmpty()) {
+            LOGGER.warn("no motion data found");
+            return Optional.absent();
+        }
+
+        final int tzOffsetMillis = myMotions.get(0).offsetMillis;
+
+        final List<TrackerMotion> motions = new ArrayList<>();
+
+        if (!partnerMotions.isEmpty() && usePartnerFilter ) {
+            motions.addAll(getPartnerMotionData(startTimeLocalUtc, endTimeLocalUtc, tzOffsetMillis, myMotions, partnerMotions));
+        }
+        else {
+            motions.addAll(myMotions);
+        }
+
+        if (TimelineProcessor.isValidNight(accountId,myMotions,motions) != TimelineError.NO_ERROR) {
+            LOGGER.warn("not a valid night");
+            return Optional.absent();
+        };
+
+        // get all sensor data, used for light and sound disturbances, and presleep-insights
+        AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+
+        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
+
+
+        allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                startTimeLocalUtc.minusMillis(tzOffsetMillis).getMillis(),
+                endTimeLocalUtc.minusMillis(tzOffsetMillis).getMillis(),
+                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color, Optional.<Calibration>absent());
+
+        return Optional.of(new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(motions),ImmutableList.copyOf(partnerMotions),feedbacks,tzOffsetMillis));
+
+    }
+
 
     @GET
     @Path("/sleep_events/{account_id}/{query_date_local_utc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public EventsWithLabels getSleepPredictionsByUserAndAlgorithm(
-
             @Scope({OAuthScope.RESEARCH}) final AccessToken accessToken,
-
             @PathParam("account_id") final  Long accountId,
-
             @PathParam("query_date_local_utc") final String strTargetDate,
-
             @DefaultValue(ALGORITHM_HIDDEN_MARKOV) @QueryParam("algorithm") final String algorithm,
-
             @DefaultValue("") @QueryParam("hmm_protobuf") final String protobuf,
-
             @DefaultValue("true") @QueryParam("partner_filter") final Boolean usePartnerFilter,
-
             @DefaultValue("false") @QueryParam("force_learning") final Boolean forceLearning
 
     ) {
@@ -576,93 +787,34 @@ public class PredictionResource extends BaseResource {
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
 
-        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
 
-        if (!deviceIdPair.isPresent()) {
+
+        final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accessToken.accountId,dateOfNight,targetDate,endDate,usePartnerFilter,forceLearning);
+
+        if (!oneDaysSensorDataOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "no sense found")).build());
+                    .entity(new JsonError(204, "skipping day because no feedback")).build());
         }
 
-
-        //get feedback for this day
-        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForNight(accountId, dateOfNight);
-
-        if (forceLearning && feedbacks.isEmpty()) {
-            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "skipping day because force_learning == true and there is no feedback")).build());
-        }
-
-
-        /* Get "Pill" data  */
-        final List<TrackerMotion> myMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
-        final List<TrackerMotion> partnerMotions = getPartnerTrackerMotion(accountId, targetDate, endDate);
-
-        LOGGER.debug("Length of trackerMotion: {}, partnerTrackerMotion: {}", myMotions.size(),partnerMotions.size());
-
-
-        if (myMotions.isEmpty()) {
-            throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "no motion data found")).build());
-        }
-
-
-        final int tzOffsetMillis = myMotions.get(0).offsetMillis;
-
-        final PartnerDataUtils partnerDataUtils = new PartnerDataUtils();
-
-        final List<TrackerMotion> motions = new ArrayList<>();
-
-        if (!partnerMotions.isEmpty() && usePartnerFilter ) {
-            try {
-                motions.addAll(
-                        partnerDataUtils.partnerFilterWithDurationsDiffHmm(
-                                targetDate.minusMillis(tzOffsetMillis),
-                                endDate.minusMillis(tzOffsetMillis),
-                                ImmutableList.copyOf(myMotions),
-                                ImmutableList.copyOf(partnerMotions)));
-
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage());
-                motions.addAll(myMotions);
-            }
-        }
-        else {
-            motions.addAll(myMotions);
-        }
-
-
-        // get all sensor data, used for light and sound disturbances, and presleep-insights
-        AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
-
-
-
-        final Optional<Device.Color> color = senseColorDAO.getColorForSense(deviceIdPair.get().externalDeviceId);
-
-
-        allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                targetDate.minusMillis(tzOffsetMillis).getMillis(),
-                endDate.minusMillis(tzOffsetMillis).getMillis(),
-                accountId, deviceIdPair.get().internalDeviceId, SLOT_DURATION_MINUTES, MISSING_DATA_DEFAULT_VALUE,color, Optional.<Calibration>absent());
-
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(allSensorSampleList,ImmutableList.copyOf(motions),ImmutableList.copyOf(partnerMotions),feedbacks,tzOffsetMillis);
+        final OneDaysSensorData oneDaysSensorData = oneDaysSensorDataOptional.get();
 
 
          /*  pull out algorithm type */
 
         switch (algorithm) {
             case ALGORITHM_VOTING:
-                events = getVotingEvents(allSensorSampleList, motions);
+                events = getVotingEvents(oneDaysSensorData.allSensorSampleList, oneDaysSensorData.trackerMotions);
                 break;
             case ALGORITHM_SLEEP_SCORED:
-                events = getSleepScoreEvents(targetDate, allSensorSampleList, motions);
+                events = getSleepScoreEvents(targetDate, oneDaysSensorData.allSensorSampleList, oneDaysSensorData.trackerMotions);
                 break;
 
             case ALGORITHM_HIDDEN_MARKOV:
-                events = getHmmEvents(targetDate,endDate,currentTimeMillis,accountId,allSensorSampleList,motions,hmmDAO);
+                events = getHmmEvents(targetDate,endDate,currentTimeMillis,accountId,oneDaysSensorData.allSensorSampleList,oneDaysSensorData.trackerMotions,hmmDAO);
                 break;
 
             case ALGORITHM_ONLINEHMM:
-                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData,forceLearning);
+                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData,featureExtractionModelsDAO,priorsDAO,forceLearning);
                 break;
 
             default:
@@ -674,7 +826,7 @@ public class PredictionResource extends BaseResource {
 
 
 
-        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsWithOriginalTime(feedbacks.asList(), myMotions.get(0).offsetMillis);
+        final List<FeedbackUtils.EventWithTime> feedbacksAsEvents = FeedbackUtils.getFeedbackEventsWithOriginalTime(oneDaysSensorData.feedbackList.asList(), oneDaysSensorData.timezoneOffsetMillis);
 
         LOGGER.debug("got {} pieces of feedback",feedbacksAsEvents.size());
 
