@@ -789,11 +789,11 @@ public class PredictionResource extends BaseResource {
 
 
 
-        final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accessToken.accountId,dateOfNight,targetDate,endDate,usePartnerFilter,forceLearning);
+        final Optional<OneDaysSensorData> oneDaysSensorDataOptional = getOneDaysSensorData(accountId,dateOfNight,targetDate,endDate,usePartnerFilter,forceLearning);
 
         if (!oneDaysSensorDataOptional.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
-                    .entity(new JsonError(204, "skipping day because no feedback")).build());
+                    .entity(new JsonError(204, "failed to get sensor data for the day")).build());
         }
 
         final OneDaysSensorData oneDaysSensorData = oneDaysSensorDataOptional.get();
