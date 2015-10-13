@@ -59,6 +59,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
+    private final Meter batchSaveFailures;
     private final Meter clockOutOfSync;
     private final Timer fetchTimezones;
     private final Meter capacity;
@@ -77,6 +78,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
+        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
         this.fetchTimezones = Metrics.defaultRegistry().newTimer(SenseSaveProcessor.class, "fetch-timezones");
         this.capacity = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
@@ -236,6 +238,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
 
             batchSaved.mark(inserted);
+            batchSaveFailures.mark(deviceDataList.size() - inserted);
         } catch (Exception exception) {
             LOGGER.error("Error saving data from {} to {}, {} data discarded",
                     deviceDataList.getFirst().dateTimeUTC,
