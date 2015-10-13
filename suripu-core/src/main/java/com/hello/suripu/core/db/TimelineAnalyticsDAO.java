@@ -23,6 +23,11 @@ public abstract class TimelineAnalyticsDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineAnalyticsDAO.class);
 
+    private final static String PERCENT_TOTAL_QUERY = "ROUND((100.0 * COUNT(*) / " +
+            "(SELECT COUNT(DISTINCT account_id) " +
+            "FROM timeline_analytics " +
+            "WHERE date_of_night= :date_of_night )), 1)";
+
     @SqlUpdate("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at)" +
             " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at);")
     abstract void insert(@BindTimelineLog LoggingProtos.TimelineLog timelineLog);
@@ -64,10 +69,20 @@ public abstract class TimelineAnalyticsDAO {
         }
     }
 
+
+    public List<GroupedTimelineLogSummary> getGroupedSummary(String date) {
+        return getGroupedSummariesForDateRange(date, date);
+    }
+
+
     @RegisterMapper(GroupedTimelineLogsSummaryMapper.class)
-    @SqlQuery("SELECT algorithm, error, COUNT(*) AS count " +
+    @SqlQuery("SELECT date_of_night, algorithm, error, COUNT(*) AS count " +
               "FROM timeline_analytics " +
-              "WHERE date_of_night= :date_of_night " +
-              "GROUP BY algorithm, error;")
-    public abstract List<GroupedTimelineLogSummary> getGroupedSummary(@Bind("date_of_night") String date);
+              "WHERE date_of_night BETWEEN :start_date AND :end_date " +
+              "GROUP BY date_of_night, algorithm, error " +
+              "ORDER BY date_of_night;")
+    public abstract List<GroupedTimelineLogSummary> getGroupedSummariesForDateRange(
+            @Bind("start_date") String start,
+            @Bind("end_date") String end);
 }
+
