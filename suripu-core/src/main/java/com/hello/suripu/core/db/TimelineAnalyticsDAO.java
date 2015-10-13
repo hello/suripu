@@ -22,12 +22,7 @@ import java.util.regex.Matcher;
 public abstract class TimelineAnalyticsDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineAnalyticsDAO.class);
-
-    private final static String PERCENT_TOTAL_QUERY = "ROUND((100.0 * COUNT(*) / " +
-            "(SELECT COUNT(DISTINCT account_id) " +
-            "FROM timeline_analytics " +
-            "WHERE date_of_night= :date_of_night )), 1)";
-
+    
     @SqlUpdate("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at)" +
             " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at);")
     abstract void insert(@BindTimelineLog LoggingProtos.TimelineLog timelineLog);
