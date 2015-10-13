@@ -19,6 +19,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
@@ -103,7 +104,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     @Timed
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
+        final LinkedList<DeviceData> deviceDataList = new LinkedList<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
 
@@ -121,11 +122,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             final String deviceName = batchPeriodicDataWorker.getData().getDeviceId();
 
-            if(!deviceDataGroupedByDeviceId.containsKey(deviceName)){
-                deviceDataGroupedByDeviceId.put(deviceName, new LinkedList<DeviceData>());
-            }
-
-            final LinkedList<DeviceData> dataForDevice = deviceDataGroupedByDeviceId.get(deviceName);
             final List<DeviceAccountPair> deviceAccountPairs = Lists.newArrayList();
 
             if(!flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST) || batchPeriodicDataWorker.getUptimeInSecond() < MIN_UPTIME_IN_SECONDS_FOR_CACHING) {
@@ -224,35 +220,27 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         lastSeenDeviceData.put(deviceName, deviceData);
                     }
 
-                    dataForDevice.add(deviceData);
+                    deviceDataList.add(deviceData);
                 }
             }
         }
 
 
-        for(final String deviceId: deviceDataGroupedByDeviceId.keySet()){
-            final LinkedList<DeviceData> data = deviceDataGroupedByDeviceId.get(deviceId);
-            if(data.size() == 0){
-                continue;
+        try {
+            int inserted = deviceDataDAO.batchInsertWithFailureFallback(deviceDataList);
+
+            if(inserted == deviceDataList.size()) {
+                LOGGER.trace("Batch saved {} data to DB", inserted);
+            }else{
+                LOGGER.warn("Batch save failed, save {} data using itemize insert.", inserted);
             }
 
-            try {
-                int inserted = deviceDataDAO.batchInsertWithFailureFallback(data);
-
-                if(inserted == data.size()) {
-                    LOGGER.trace("Batch saved {} data to DB for device {}", data.size(), deviceId);
-                }else{
-                    LOGGER.warn("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
-                }
-
-                batchSaved.mark(inserted);
-            } catch (Exception exception) {
-                LOGGER.error("Error saving data for device {} from {} to {}, {} data discarded",
-                        deviceId,
-                        data.getFirst().dateTimeUTC,
-                        data.getLast().dateTimeUTC,  // I love linkedlist
-                        data.size());
-            }
+            batchSaved.mark(inserted);
+        } catch (Exception exception) {
+            LOGGER.error("Error saving data from {} to {}, {} data discarded",
+                    deviceDataList.getFirst().dateTimeUTC,
+                    deviceDataList.getLast().dateTimeUTC,  // I love linkedlist
+                    deviceDataList.size());
         }
 
         messagesProcessed.mark(records.size());
