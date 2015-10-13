@@ -246,8 +246,7 @@ public abstract class DeviceDataDAO {
             this.batchInsert(data.iterator());
             return data.size();
         } catch (UnableToExecuteStatementException exception) {
-            LOGGER.error("Failed to insert batch data for sense: {}", exception.getMessage());
-            LOGGER.error("Failed to insert batch data for sense internal id= {}", data.get(0).deviceId);
+            LOGGER.error("Failed to insert batch data: {}", exception.getMessage());
         }
 
         for(final DeviceData datum:data){
