@@ -77,6 +77,8 @@ public class ReceiveResource extends BaseResource {
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private static final int CLOCK_BUG_SKEW_IN_HOURS = 6 * 30 * 24 - 1; // 6 months in hours
     private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
+    private static final Integer FW_VERSION_0_9_22_RC7 = 1530439804;
+    private static final Integer CLOCK_SYNC_SPECIAL_OTA_UPTIME_MINS = 15;
     private final int ringDurationSec;
 
     private final KeyStore keyStore;
@@ -275,6 +277,7 @@ public class ReceiveResource extends BaseResource {
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
         final List<String> groups = groupFlipper.getGroups(deviceName);
+        Boolean deviceHasOutOfSyncClock = false;
 
         for(int i = 0; i < batch.getDataCount(); i ++) {
             final DataInputProtos.periodic_data data = batch.getData(i);
@@ -288,6 +291,7 @@ public class ReceiveResource extends BaseResource {
                 );
                 // TODO: throw exception?
                 senseClockOutOfSync.mark(1);
+                deviceHasOutOfSyncClock = true;
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.REBOOT_CLOCK_OUT_OF_SYNC_DEVICES, deviceName, groups)) {
                     LOGGER.warn("Reset MCU set for sense {}", deviceName);
                     responseBuilder.setResetMcu(true);
@@ -369,9 +373,10 @@ public class ReceiveResource extends BaseResource {
 
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
                 //Perform all OTA checks and compute the update file list (if necessary)
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch, userInfoList, deviceHasOutOfSyncClock);
                 if (!fileDownloadList.isEmpty()) {
                     responseBuilder.addAllFiles(fileDownloadList);
+                    responseBuilder.setResetMcu(false); //Clear the reset MCU command since in the fw it will take precedence over the OTA
                 }
             }
 
@@ -399,11 +404,12 @@ public class ReceiveResource extends BaseResource {
             responseBuilder.setAudioControl(audioControl);
             setPillColors(userInfoList, responseBuilder);
         }else{
-            LOGGER.error("NO TIMEZONE IS A BIG DEAL.");
+            LOGGER.error("NO TIMEZONE IS A BIG DEAL. Defaulting to UTC for OTA purposes.");
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch, userInfoList, deviceHasOutOfSyncClock);
                 if (!fileDownloadList.isEmpty()) {
                     responseBuilder.addAllFiles(fileDownloadList);
+                    responseBuilder.setResetMcu(false);
                 }
             }
         }
@@ -614,7 +620,9 @@ public class ReceiveResource extends BaseResource {
     private List<OutputProtos.SyncResponse.FileDownload> computeOTAFileList(final String deviceID,
                                                                             final List<String> deviceGroups,
                                                                             final DateTimeZone userTimeZone,
-                                                                            final DataInputProtos.batched_periodic_data batchData) {
+                                                                            final DataInputProtos.batched_periodic_data batchData,
+                                                                            final List<UserInfo> userInfoList,
+                                                                            final Boolean hasOutOfSyncClock) {
         final int currentFirmwareVersion = batchData.getFirmwareVersion();
         final int uptimeInSeconds = (batchData.hasUptimeInSecond()) ? batchData.getUptimeInSecond() : -1;
         final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
@@ -625,15 +633,19 @@ public class ReceiveResource extends BaseResource {
         final Boolean bypassOTAChecks = (featureFlipper.deviceFeatureActive(FeatureFlipper.BYPASS_OTA_CHECKS, deviceID, deviceGroups));
         final String ipAddress = getIpAddress(request);
 
+
+        // OTA SPECIAL CASES
+
+        // If device is coming from PCH, immediately allow OTA
         final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
         final boolean pchOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceID, deviceGroups) &&
                 OTAProcessor.isPCH(ipAddress, ipGroups));
-
         if(pchOTA) {
             LOGGER.debug("PCH Special OTA for device: {}", deviceID);
             return firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
         }
 
+        // Allow OTA updates only to specified devices in the Hello offices
         final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (isOfficeDeviceWithOverride) {
@@ -646,7 +658,31 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, bypassOTAChecks, ipAddress);
+        // Allow special handling for devices coming from factory on 0.9.22_rc7 with the clock sync issue
+        if (hasOutOfSyncClock && currentFirmwareVersion == FW_VERSION_0_9_22_RC7) {
+            if (userInfoList.size() > 1 || uptimeInSeconds > (CLOCK_SYNC_SPECIAL_OTA_UPTIME_MINS * DateTimeConstants.SECONDS_PER_MINUTE)) {
+                if (!deviceGroups.isEmpty()) {
+                    final String updateGroup = deviceGroups.get(0);
+                    LOGGER.info("Clock Sync OTA Override for DeviceId {}", deviceID);
+                    return firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
+                }
+            }
+            return Collections.emptyList();
+        }
+
+        // Primary OTA code path
+        final boolean canOTA = OTAProcessor.canDeviceOTA(
+                deviceID,
+                deviceGroups,
+                ipGroups,
+                alwaysOTAGroups,
+                deviceUptimeDelay,
+                uptimeInSeconds,
+                currentDTZ,
+                startOTAWindow,
+                endOTAWindow,
+                bypassOTAChecks,
+                ipAddress);
 
         if(canOTA) {
 
