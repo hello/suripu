@@ -65,7 +65,7 @@ public abstract class TimelineAnalyticsDAO {
     }
 
 
-    public List<GroupedTimelineLogSummary> getGroupedSummary(String date) {
+    public List<GroupedTimelineLogSummary> getGroupedSummary(final String date) {
         return getGroupedSummariesForDateRange(date, date);
     }
 
