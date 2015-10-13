@@ -660,10 +660,16 @@ public class ReceiveResource extends BaseResource {
 
         // Allow special handling for devices coming from factory on 0.9.22_rc7 with the clock sync issue
         if (hasOutOfSyncClock && currentFirmwareVersion == FW_VERSION_0_9_22_RC7) {
-            if (userInfoList.size() > 1 || uptimeInSeconds > (CLOCK_SYNC_SPECIAL_OTA_UPTIME_MINS * DateTimeConstants.SECONDS_PER_MINUTE)) {
+            Integer pillCount = 0;
+            for(final UserInfo userInfo:userInfoList){
+                if(userInfo.pillColor.isPresent()){
+                    pillCount++;
+                }
+            }
+            if (pillCount > 1 || uptimeInSeconds > (CLOCK_SYNC_SPECIAL_OTA_UPTIME_MINS * DateTimeConstants.SECONDS_PER_MINUTE)) {
                 if (!deviceGroups.isEmpty()) {
                     final String updateGroup = deviceGroups.get(0);
-                    LOGGER.info("Clock Sync OTA Override for DeviceId {}", deviceID);
+                    LOGGER.warn("Clock Sync OTA Override for DeviceId {}", deviceID);
                     return firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
                 }
             }
