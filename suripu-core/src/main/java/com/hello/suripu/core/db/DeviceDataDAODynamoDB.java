@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -14,8 +13,6 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
-import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
@@ -23,7 +20,6 @@ import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.models.DeviceData;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -66,10 +62,7 @@ public class DeviceDataDAODynamoDB {
         public static final String OFFSET_MILLIS            = "offset_millis";
     }
 
-    private static final int MAX_GET_ITEMS = 100;   // Doesn't apply to Query requests, only BatchGetItem
     private static final int MAX_PUT_ITEMS = 25;
-    public static final int DEFAULT_MAX_WRITE_ATTEMPTS = 3;
-    public static final int DEFAULT_MAX_QUERY_ATTEMPTS = 3;
 
     private static final String RANGE_KEY_NAME = "account_id:timestamp";
 
@@ -178,43 +171,31 @@ public class DeviceDataDAODynamoDB {
         dynamoDBClient.putItem(tableName, item);
     }
 
+    public void batchInsert(final List<DeviceData> deviceDataList) {
+        final List<WriteRequest> writeRequestList = new LinkedList<>();
+        for (final DeviceData data : deviceDataList) {
+            final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(data);
+            writeRequestList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
+        }
+
+        Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+        requestItems.put(this.tableName, writeRequestList);
+
+        do {
+            final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
+            final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+            // check for unprocessed items
+            requestItems = result.getUnprocessedItems();
+            LOGGER.debug("Unprocessed put request count {}", requestItems.size());
+
+        } while (requestItems.size() > 0);
+    }
+
     /**
-     * Returns the number of items that failed to insert
+     * Returns the number of items that were successfully inserted
      * @param deviceDataList
      * @return
      */
-    public int batchInsert(final List<DeviceData> deviceDataList) {
-        final List<List<DeviceData>> deviceDataLists = Lists.partition(deviceDataList, MAX_PUT_ITEMS);
-        int failedItemsCount = 0;
-
-        // Insert each chunk
-        for (final List<DeviceData> deviceDataListToWrite: deviceDataLists) {
-            final List<WriteRequest> writeRequestList = new LinkedList<>();
-            for (final DeviceData data : deviceDataListToWrite) {
-                final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(data);
-                writeRequestList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
-            }
-
-            Map<String, List<WriteRequest>> requestItems = new HashMap<>();
-            requestItems.put(this.tableName, writeRequestList);
-
-            do {
-                final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
-                final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-                // check for unprocessed items
-                requestItems = result.getUnprocessedItems();
-                LOGGER.debug("Unprocessed put request count {}", requestItems.size());
-
-            } while (requestItems.size() > 0);
-
-            if (!requestItems.isEmpty()) {
-                failedItemsCount += requestItems.get(tableName).size();
-            }
-        }
-
-        return deviceDataList.size() - failedItemsCount;
-    }
-
     public int batchInsertWithFailureFallback(final List<DeviceData> deviceDataList) {
         final List<List<DeviceData>> deviceDataLists = Lists.partition(deviceDataList, MAX_PUT_ITEMS);
         int successfulInsertions = 0;
@@ -223,7 +204,7 @@ public class DeviceDataDAODynamoDB {
         for (final List<DeviceData> deviceDataListToWrite: deviceDataLists) {
             try {
                 batchInsert(deviceDataListToWrite);
-                successfulInsertions += deviceDataList.size();
+                successfulInsertions += deviceDataListToWrite.size();
             } catch (AmazonClientException e) {
                 LOGGER.error("Got exception while attempting to batchInsert to DynamoDB: {}", e);
 
@@ -241,8 +222,6 @@ public class DeviceDataDAODynamoDB {
 
         return successfulInsertions;
     }
-
-    // TODO batchInsertWithFailureFallback
 
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             final Long deviceId,
@@ -271,7 +250,6 @@ public class DeviceDataDAODynamoDB {
         final List<DeviceData> results = new ArrayList<>();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
-        int numAttempts = 0;
 
         do {
             final QueryRequest queryRequest = new QueryRequest()
@@ -294,9 +272,8 @@ public class DeviceDataDAODynamoDB {
             }
 
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-            numAttempts++;
 
-        } while (lastEvaluatedKey != null && numAttempts < DEFAULT_MAX_QUERY_ATTEMPTS);
+        } while (lastEvaluatedKey != null);
 
         return ImmutableList.copyOf(results);
     }

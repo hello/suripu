@@ -78,7 +78,7 @@ public class DeviceDataDAODynamoDBIT {
     }
 
     @Test
-    public void testBatchInsert() {
+    public void testBatchInsertWithFailureFallback() {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         final List<Long> accountIds = new ImmutableList.Builder<Long>().add(new Long(1)).add(new Long(2)).build();
         final Long deviceId = new Long(100);
@@ -95,14 +95,30 @@ public class DeviceDataDAODynamoDBIT {
             }
         }
 
-        final int initialItemsInserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
+        final int initialItemsInserted = deviceDataDAODynamoDB.batchInsertWithFailureFallback(deviceDataList);
         assertThat(initialItemsInserted, is(deviceDataList.size()));
         assertThat(getTableCount(), is(deviceDataList.size()));
 
         // Now insert the exact same thing again. Should work fine in DynamoDB.
-        final int duplicateItemsInserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
+        final int duplicateItemsInserted = deviceDataDAODynamoDB.batchInsertWithFailureFallback(deviceDataList);
         assertThat(duplicateItemsInserted, is(deviceDataList.size()));
         assertThat(getTableCount(), is(deviceDataList.size()));
+    }
+
+    @Test
+    public void testBatchInsertWithFailureFallbackDuplicateKeys() {
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withAccountId(new Long(0))
+                .withDeviceId(new Long(0))
+                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0))
+                .withOffsetMillis(0);
+        final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
+                .add(builder.build())
+                .add(builder.build())
+                .build();
+        final int insertions = deviceDataDAODynamoDB.batchInsertWithFailureFallback(deviceDataList);
+        assertThat(insertions, is(2));
+        assertThat(getTableCount(), is(1));
     }
 
     @Test(expected = AmazonServiceException.class)
