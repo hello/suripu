@@ -13,16 +13,22 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
+import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.WifiInfoDynamoDB;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
+import com.yammer.dropwizard.jdbi.DBIFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +46,10 @@ public final class SenseLastSeenWorkerCommand extends WorkerEnvironmentCommand<S
 
     @Override
     protected void run(Environment environment, Namespace namespace, SenseLastSeenWorkerConfiguration configuration) throws Exception {
+        final DBIFactory dbiFactory = new DBIFactory();
+        final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
+        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
+        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
 
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();
@@ -85,6 +95,9 @@ public final class SenseLastSeenWorkerCommand extends WorkerEnvironmentCommand<S
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
 
         final AmazonDynamoDB wifiInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.WIFI_INFO);
+        final AmazonDynamoDB senseLastSeenDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+        final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
+
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
 
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
@@ -96,11 +109,16 @@ public final class SenseLastSeenWorkerCommand extends WorkerEnvironmentCommand<S
 
 
         final WifiInfoDAO wifiInfoDAO = new WifiInfoDynamoDB(wifiInfoDynamoDBClient, tableNames.get(DynamoDBTableName.WIFI_INFO));
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(senseLastSeenDynamoDBClient, tableNames.get(DynamoDBTableName.SENSE_PREFIX), tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN));
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(alarmInfoDynamoDBClient , tableNames.get(DynamoDBTableName.ALARM_INFO));
 
 
         final IRecordProcessorFactory factory = new SenseLastSeenProcessorFactory(
                 configuration.getMaxRecords(),
-                wifiInfoDAO
+                wifiInfoDAO,
+                sensorsViewsDynamoDB,
+                deviceDAO,
+                mergedUserInfoDynamoDB
         );
 
         final Worker worker = new Worker(factory, kinesisConfig);

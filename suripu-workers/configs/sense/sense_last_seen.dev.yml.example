@@ -27,8 +27,50 @@ dynamodb:
   tables:
     features: features
     wifi_info: wifi_info
+    alarm_info: alarm_info
+    sense_last_seen: sense_last_seen
 
   endpoints:
     features: http://localhost:7777
     wifi_info: http://localhost:7777
+    alarm_info: http://localhost:7777
+    sense_last_seen: http://localhost:7777
+
+common_db:
+  # the name of your JDBC driver
+  driverClass: org.postgresql.Driver
+
+  # the username
+  user: your postgresql username
+
+  # the password
+  password: your postgresql password
+
+  # the JDBC URL
+  url: jdbc:postgresql://localhost:5432/[your postgresql database name]
+
+  # any properties specific to your JDBC driver:
+  properties:
+    charSet: UTF-8
+
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+
+  # the SQL query to run when validating a connection's liveness
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+
+  # the minimum number of connections to keep open
+  minSize: 8
+
+  # the maximum number of connections to keep open
+  maxSize: 32
+
+  # whether or not idle connections should be validated
+  checkConnectionWhileIdle: false
+
+  # how long a connection must be held before it can be validated
+  checkConnectionHealthWhenIdleFor: 10s
+
+  # the maximum lifetime of an idle connection
+  closeConnectionIfIdleFor: 1 minute
 
