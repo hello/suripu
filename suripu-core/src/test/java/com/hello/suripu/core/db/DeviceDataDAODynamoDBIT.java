@@ -11,7 +11,6 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -31,7 +30,7 @@ import static org.hamcrest.core.Is.is;
  */
 public class DeviceDataDAODynamoDBIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(InsightsDAODynamoDBIT.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private BasicAWSCredentials awsCredentials;
     private AmazonDynamoDBClient amazonDynamoDBClient;

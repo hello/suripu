@@ -37,7 +37,7 @@ import java.util.Map;
 /**
  * Created by jakepiccolo on 10/9/15.
  */
-public class DeviceDataDAODynamoDB {
+public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private final AmazonDynamoDB dynamoDBClient;
