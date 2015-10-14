@@ -41,8 +41,12 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         return flipper.deviceFeatureActive(FeatureFlipper.SENSE_LAST_SEEN_VIEW_DYNAMODB, senseId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasPillLastSeenDynamoDBEnabled(final String senseId) {
-        return flipper.deviceFeatureActive(FeatureFlipper.PILL_LAST_SEEN_DYNAMODB,senseId, Collections.EMPTY_LIST);
+    protected Boolean hasPillHeartBeatDynamoDBEnabled(final String senseId) {
+        return flipper.deviceFeatureActive(FeatureFlipper.PILL_HEARTBEAT_DYNAMODB,senseId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasPillHeartBeatDynamoDBReadEnabled(final String senseId) {
+        return flipper.deviceFeatureActive(FeatureFlipper.PILL_HEARTBEAT_DYNAMODB_READ,senseId, Collections.EMPTY_LIST);
     }
 
     protected Boolean hasKinesisTimezonesEnabled(final String senseId) {

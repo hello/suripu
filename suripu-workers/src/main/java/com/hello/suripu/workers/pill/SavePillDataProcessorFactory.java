@@ -6,8 +6,8 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
-import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 
 public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
 
@@ -17,7 +17,7 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
     private final KeyStore pillKeyStore;
     private final PillHeartBeatDAO pillHeartBeatDAO;
     private final DeviceDAO deviceDAO;
-    private final PillViewsDynamoDB pillViewsDynamoDB;
+    private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
 
     public SavePillDataProcessorFactory(
             final TrackerMotionDAO trackerMotionDAO,
@@ -26,18 +26,18 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
             final PillHeartBeatDAO pillHeartBeatDAO,
             final KeyStore pillKeyStore,
             final DeviceDAO deviceDAO,
-            final PillViewsDynamoDB pillViewsDynamoDB) {
+            final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
         this.mergedUserInfoDynamoDB= mergedUserInfoDynamoDB;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
-        this.pillViewsDynamoDB = pillViewsDynamoDB;
+        this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new SavePillDataProcessor(trackerMotionDAO, batchSize, pillHeartBeatDAO, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, pillViewsDynamoDB);
+        return new SavePillDataProcessor(trackerMotionDAO, batchSize, pillHeartBeatDAO, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, pillHeartBeatDAODynamoDB);
     }
 }

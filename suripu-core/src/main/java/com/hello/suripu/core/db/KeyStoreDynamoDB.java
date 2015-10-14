@@ -199,7 +199,7 @@ public class KeyStoreDynamoDB implements KeyStore {
             }
             return results;
         } catch (AmazonServiceException ase){
-            LOGGER.error("Failed getting keys.");
+            LOGGER.error("Failed getting keys. {}", ase.getMessage());
 
         }
         return Collections.EMPTY_MAP;

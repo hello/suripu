@@ -19,10 +19,10 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
-import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
@@ -118,8 +118,8 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
 
         final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_KEY_STORE);
         final KeyStore pillKeyStore = new KeyStoreDynamoDB(pillKeyStoreDynamoDB,tableNames.get(DynamoDBTableName.PILL_KEY_STORE), new byte[16], 120);
-        final AmazonDynamoDB pillDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_LAST_SEEN);
-        final PillViewsDynamoDB pillViewsDynamoDB = new PillViewsDynamoDB(pillDynamoDB, "", tableNames.get(DynamoDBTableName.PILL_LAST_SEEN));
+        final AmazonDynamoDB pillDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_HEARTBEAT);
+        final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB = PillHeartBeatDAODynamoDB.create(pillDynamoDB, tableNames.get(DynamoDBTableName.PILL_HEARTBEAT));
 
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(
                 trackerMotionDAO,
@@ -128,7 +128,7 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
                 heartBeatDAO,
                 pillKeyStore,
                 deviceDAO,
-                pillViewsDynamoDB
+                pillHeartBeatDAODynamoDB
         );
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
