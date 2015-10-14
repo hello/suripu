@@ -118,6 +118,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         trackWifiInfo(wifiInfoPerBatch);
         trackDeviceData(deviceDataPerBatch);
         wifiInfoPerBatch.clear();
+        deviceDataPerBatch.clear();
 
 
         messagesProcessed.mark(records.size());
