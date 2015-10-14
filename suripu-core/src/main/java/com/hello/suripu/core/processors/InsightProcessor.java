@@ -11,6 +11,7 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -36,6 +37,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +49,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by kingshy on 10/24/14.
  */
 public class InsightProcessor {
-
-    private RolloutClient featureFlipper;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightProcessor.class);
 
@@ -95,7 +95,6 @@ public class InsightProcessor {
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
-        this.featureFlipper = featureFlipper;
         final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountCreated);
         if (accountAge < 1) {
             return; // not slept one night yet
@@ -113,8 +112,7 @@ public class InsightProcessor {
             return;
         }
 
-        this.generateGeneralInsights(accountId, deviceId);
-
+        this.generateGeneralInsights(accountId, deviceId, featureFlipper);
     }
 
     /**
@@ -158,10 +156,10 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId) {
+    private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId, final RolloutClient featureFlipper) {
         final Set<InsightCard.Category> recentCategories  = this.getRecentInsightsCategories(accountId);
         final DateTime currentTime = DateTime.now();
-        return generateGeneralInsights(accountId, deviceId, recentCategories, currentTime);
+        return generateGeneralInsights(accountId, deviceId, recentCategories, currentTime, featureFlipper);
     }
 
     /**
@@ -169,43 +167,36 @@ public class InsightProcessor {
      * @param accountId
      */
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+    public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(accountId, recentCategories, currentTime);
 
         if (toGenerateWeeklyCategory.isPresent()) {
-            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory, accountId);
+            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateWeeklyCategory.get(), accountId);
             final Optional<InsightCard.Category> generatedWeeklyCategory = this.generateInsightsByCategory(accountId, deviceId, toGenerateWeeklyCategory.get());
             if (generatedWeeklyCategory.isPresent()) {
-                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedWeeklyCategory, accountId);
+                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedWeeklyCategory.get(), accountId);
                 return generatedWeeklyCategory;
             }
             //else try to generate an old Random Insight
         }
 
-        //logic for generating current Insight
-        //TODO: add admin endpoint to replace this function
-        //TODO: uncomment below once Bed_Light_Duration Insight gets merged, will also need to change listGeneratedInsightCardCategories()
-        /*
         if (recentCategories.size() > NUM_INSIGHTS_ALLOWED_PER_WEEK) {
             return Optional.absent();
         }
-        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
-            if (!recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
-                LOGGER.debug("generating insight bed light duration for accountId {}", accountId);
-                final Optional<InsightCard.Category> generatedBedLightDurationCategory = generateInsightsByCategory(accountId, deviceId, InsightCard.Category.BED_LIGHT_DURATION);
+
+        //logic for generating current high-priority Insight
+        final Optional<InsightCard.Category> toGenerateHighPriorityCategory = selectHighPriorityInsightToGenerate(accountId, recentCategories, currentTime, featureFlipper);
+        if (toGenerateHighPriorityCategory.isPresent()) {
+            LOGGER.debug("Trying to generate {} category insight for accountId {}", toGenerateHighPriorityCategory.get(), accountId);
+            final Optional<InsightCard.Category> generatedHighPriorityCategory = this.generateInsightsByCategory(accountId, deviceId, toGenerateHighPriorityCategory.get());
+            if (generatedHighPriorityCategory.isPresent()) {
+                LOGGER.debug("Successfully generated {} category insight for accountId {}", generatedHighPriorityCategory.get(), accountId);
+                return generatedHighPriorityCategory;
             }
         }
-        if (generatedBedLightDurationCategory.isPresent()) {
-            return generatedBedLightDurationCategory;
-        }
-        */
 
-        //If not enough Insight generated recently e.g. does not fulfill conditions of current Insight - generate a random old one
-        if (recentCategories.size() > NUM_INSIGHTS_ALLOWED_PER_WEEK) {
-            return Optional.absent();
-        }
-
+        //logic for generating old random insight
         final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime);
         if (!toGenerateRandomCategory.isPresent()) {
             return Optional.absent();
@@ -223,7 +214,7 @@ public class InsightProcessor {
 
 
     @VisibleForTesting
-    public static Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
 
         //Generate some Insights weekly
         final Integer dayOfWeek = currentTime.getDayOfWeek();
@@ -240,7 +231,44 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public static Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+    public Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+
+        //Generate high priority Insights based on day of month
+        final Integer dayOfMonth = currentTime.getDayOfMonth();
+        LOGGER.debug("The day of the month is {}", dayOfMonth);
+
+        switch (dayOfMonth) {
+            case 1:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_HUMIDITY, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.HUMIDITY)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.HUMIDITY);
+            case 14:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
+            case 21:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_INTENSITY_RATIO, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+            default:
+                return Optional.absent();
+        }
+    }
+
+    @VisibleForTesting
+    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
 
         /* randomly select a card that hasn't been generated recently - TODO when we have all categories
         final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
@@ -261,23 +289,16 @@ public class InsightProcessor {
                     return Optional.of(InsightCard.Category.LIGHT);
                 }
                 break;
-            case 10:
+            case 14:
                 if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
                     return Optional.of(InsightCard.Category.TEMPERATURE);
                 }
                 break;
-            case 19:
+            case 21:
                 if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
                     return Optional.of(InsightCard.Category.TEMPERATURE);
                 }
                 break;
-            /* TODO: uncomment me once bed_light_duration is sufficiently tested to make it generate randomly
-            case 25:
-                if (!recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
-                    return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
-                }
-                break;
-                */
             default:
                 return Optional.absent();
         }

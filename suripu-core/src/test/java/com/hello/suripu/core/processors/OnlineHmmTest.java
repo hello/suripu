@@ -160,9 +160,9 @@ public class OnlineHmmTest {
             final double percent =  ((double)(t - tstart) / (double)(tstop - tstart));
 
             if (percent < 0.33) {
-                light.add(new Sample(t,50.0f,tzOffset));
+                light.add(new Sample(t,20.0f,tzOffset));
                 waves.add(new Sample(t,0.0f,tzOffset));
-                soundCount.add(new Sample(t,1.0f,tzOffset));
+                soundCount.add(new Sample(t,0.0f,tzOffset));
             }
             else if (percent >= 0.33 && percent < 0.66) {
                 light.add(new Sample(t,0.05f,tzOffset));
@@ -170,7 +170,46 @@ public class OnlineHmmTest {
                 soundCount.add(new Sample(t,0.0f,tzOffset));
             }
             else {
-                light.add(new Sample(t,50.0f,tzOffset));
+                light.add(new Sample(t,20.0f,tzOffset));
+                waves.add(new Sample(t,0.0f,tzOffset));
+                soundCount.add(new Sample(t,0.0f,tzOffset));
+            }
+        }
+
+        allSensorSampleList.add(Sensor.LIGHT,light);
+        allSensorSampleList.add(Sensor.SOUND_NUM_DISTURBANCES,soundCount);
+        allSensorSampleList.add(Sensor.WAVE_COUNT,waves);
+
+        return allSensorSampleList;
+    }
+
+    static AllSensorSampleList getWeirdDayOfSenseData(final DateTime startTime, final DateTime endTime, int tzOffset) {
+        final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
+
+        final List<Sample> light = Lists.newArrayList();
+        final List<Sample> soundCount = Lists.newArrayList();
+        final List<Sample> waves = Lists.newArrayList();
+
+        final long tstart = startTime.withZone(DateTimeZone.UTC).getMillis();
+        final long tstop = endTime.withZone(DateTimeZone.UTC).getMillis();
+
+
+
+        for (long t = tstart; t < tstop; t += 60000L) {
+            final double percent =  ((double)(t - tstart) / (double)(tstop - tstart));
+
+            if (percent < 0.33) {
+                light.add(new Sample(t,0.0f,tzOffset));
+                waves.add(new Sample(t,0.0f,tzOffset));
+                soundCount.add(new Sample(t,1.0f,tzOffset));
+            }
+            else if (percent >= 0.33 && percent < 0.66) {
+                light.add(new Sample(t,100.0f,tzOffset));
+                waves.add(new Sample(t,1.0f,tzOffset));
+                soundCount.add(new Sample(t,100.0f,tzOffset));
+            }
+            else {
+                light.add(new Sample(t,0.0f,tzOffset));
                 waves.add(new Sample(t,0.0f,tzOffset));
                 soundCount.add(new Sample(t,1.0f,tzOffset));
             }
@@ -246,18 +285,22 @@ public class OnlineHmmTest {
 
         ////--------------------
         //step 2) the second day.... with FEEDBACK!
+        //but make sure it's going to adapt to the noisy day
         modelsDAO.setZeroCounts();
         date = date.plusDays(1);
         startTime = startTime.plusDays(1);
         endTime = endTime.plusDays(1);
-        senseData = getTypicalDayOfSense(startTime,endTime,0);
+        senseData = getWeirdDayOfSenseData(startTime, endTime, 0);
         pillData = getTypicalDayOfPill(startTime,endTime,0);
         final List<TimelineFeedback> timelineFeedbacks = Lists.newArrayList();
-        final TimelineFeedback feedbackForNight2 = new TimelineFeedback(date,"00:00","23:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()));
+        final TimelineFeedback feedbackForNight2 = new TimelineFeedback(date,"00:00","01:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()));
+        final TimelineFeedback feedbackForNight2Wake = new TimelineFeedback(date,"00:00","6:30", Event.Type.WAKE_UP,Optional.of(0L),Optional.of(endTime.getMillis()));
+
         final TimelineFeedback feedbackForNight2bed = new TimelineFeedback(date,"00:00","23:00", Event.Type.IN_BED,Optional.of(0L),Optional.of(endTime.getMillis()));
 
         timelineFeedbacks.add(feedbackForNight2);
         timelineFeedbacks.add(feedbackForNight2bed);
+        timelineFeedbacks.add(feedbackForNight2Wake);
         final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),0);
 
         //////////////////////////////////////
@@ -325,6 +368,25 @@ public class OnlineHmmTest {
         TestCase.assertTrue(modelsDAO.putModelCounts == 0);
 
 
+        ////--------------------
+        //step 4) on the fourth day of christmas, my unit-test gave to me:
+        //   A day where SLEEP-0 will be selected, but we want SLEEP-2 to be produced in the scratchpad
+        //   with our bug that we found, SLEEP-0 would produce a scratchpad of SLEEP-1 (just stupidly incrementing the selected model, not the entire model set)
+        modelsDAO.setZeroCounts();
+        date = date.plusDays(1);
+        startTime = startTime.plusDays(1);
+        endTime = endTime.plusDays(1);
+        senseData = getTypicalDayOfSense(startTime, endTime, 0);
+        pillData = getTypicalDayOfPill(startTime,endTime,0);
+        final TimelineFeedback feedbackForNight4 = new TimelineFeedback(date,"00:00","23:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()));
+
+        final OneDaysSensorData oneDaysSensorData4 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Lists.newArrayList(feedbackForNight4)),0);
+
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData4,true,false);
+
+        final String scratchpadId = modelsDAO.priorByDate.lastEntry().getValue().scratchPad.paramsByOutputId.get("SLEEP").id;
+
+        TestCase.assertEquals("SLEEP-2",scratchpadId);
     }
 
 

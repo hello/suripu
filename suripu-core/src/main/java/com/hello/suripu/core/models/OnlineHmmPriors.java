@@ -52,6 +52,17 @@ public class  OnlineHmmPriors {
         return new OnlineHmmPriors(modelsByOutputId);
     }
 
+    public List<String> getModelIds() {
+        final List<String> modelIds = Lists.newArrayList();
+
+        for (final Map<String,OnlineHmmModelParams> maps : modelsByOutputId.values()) {
+            for (final OnlineHmmModelParams value : maps.values()) {
+                modelIds.add(value.id);
+            }
+        }
+
+        return modelIds;
+    }
 
     private static String protobufEnumToString(OnlineHmmProtos.OutputId outputId) {
         String outputIdString = "unknown";
@@ -287,10 +298,8 @@ public class  OnlineHmmPriors {
         final AlphabetHmmUserModel.Builder builder = AlphabetHmmUserModel.newBuilder();
 
         for (final String key : modelsByOutputId.keySet()) {
-            final Map<String,OnlineHmmModelParams> paramsMap = modelsByOutputId.get(key);
-
-            for (final Map.Entry<String,OnlineHmmModelParams> params : paramsMap.entrySet()) {
-                builder.addModels(protobufFromParams(params.getValue()));
+            for (final OnlineHmmModelParams value : modelsByOutputId.get(key).values()) {
+                builder.addModels(protobufFromParams(value));
             }
         }
 
