@@ -1,5 +1,6 @@
 package com.hello.suripu.core.db;
 
+import com.google.common.base.Optional;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.mappers.GroupedTimelineLogsSummaryMapper;
 import com.hello.suripu.core.models.GroupedTimelineLogSummary;
@@ -166,5 +167,81 @@ public class TimelineAnalyticsDAOTest {
         }
         assertThat(noErrorSummary.count, is(2));
         assertThat(eventsOutOfOrderSummary.count, is(1));
+    }
+
+    private Optional<GroupedTimelineLogSummary> findSummary(final List<GroupedTimelineLogSummary> summaries,
+                                                            final LoggingProtos.TimelineLog.AlgType algType,
+                                                            final LoggingProtos.TimelineLog.ErrorType errorType,
+                                                            final String date) {
+        for (final GroupedTimelineLogSummary summary : summaries) {
+            if (summary.algorithm == algType &&
+                    summary.error == errorType &&
+                    summary.date == date) {
+                return Optional.of(summary);
+            }
+        }
+        return Optional.absent();
+    }
+
+    @Test
+    public void testGetGroupedSummariesForDateRange() throws Exception {
+        final List<LoggingProtos.TimelineLog> logs = new ArrayList<>();
+        final long account1 = 1;
+        final long account2 = 2;
+        final long timestamp1 = 1;
+        final long timestamp2 = 2;
+        final String date1 = "2015-09-30";
+        final String date2 = "2015-10-01";
+        // date1
+        final LoggingProtos.TimelineLog.Builder template = LoggingProtos.TimelineLog.newBuilder();
+        template.setAccountId(account1)
+                .setTimestampWhenLogGenerated(timestamp1)
+                .setNightOf(date1)
+                .setError(LoggingProtos.TimelineLog.ErrorType.NO_ERROR)
+                .setAlgorithm(LoggingProtos.TimelineLog.AlgType.HMM);
+        logs.add(template.build());
+        logs.add(template
+                .clone()
+                .setError(LoggingProtos.TimelineLog.ErrorType.EVENTS_OUT_OF_ORDER)
+                .build());
+        // date2
+        logs.add(template
+                .clone()
+                .setNightOf(date2)
+                .setTimestampWhenLogGenerated(timestamp2)
+                .setError(LoggingProtos.TimelineLog.ErrorType.NO_DATA)
+                .build());
+        logs.add(template
+                .clone()
+                .setNightOf(date2)
+                .setAccountId(account2)
+                .setError(LoggingProtos.TimelineLog.ErrorType.EVENTS_OUT_OF_ORDER)
+                .build());
+        logs.add(template
+                .clone()
+                .setAccountId(account2)
+                .setNightOf(date2)
+                .setError(LoggingProtos.TimelineLog.ErrorType.NO_DATA)
+                .build());
+        logs.add(template
+                .clone()
+                .setAccountId(account2)
+                .setNightOf(date2)
+                .setError(LoggingProtos.TimelineLog.ErrorType.NOT_ENOUGH_DATA)
+                .build());
+        dao.insertBatchWithIndividualRetry(logs);
+
+        final List<GroupedTimelineLogSummary> groupedSummaries = dao.getGroupedSummariesForDateRange(date1, date2);
+        assertThat(groupedSummaries.size(), is(5));
+        assertThat(findSummary(groupedSummaries, LoggingProtos.TimelineLog.AlgType.HMM, LoggingProtos.TimelineLog.ErrorType.NO_ERROR, date1).get().count,
+                    is(1));
+        assertThat(findSummary(groupedSummaries, LoggingProtos.TimelineLog.AlgType.HMM, LoggingProtos.TimelineLog.ErrorType.EVENTS_OUT_OF_ORDER, date1).get().count,
+                is(1));
+        assertThat(findSummary(groupedSummaries, LoggingProtos.TimelineLog.AlgType.HMM, LoggingProtos.TimelineLog.ErrorType.NO_DATA, date2).get().count,
+                is(2));
+        assertThat(findSummary(groupedSummaries, LoggingProtos.TimelineLog.AlgType.HMM, LoggingProtos.TimelineLog.ErrorType.EVENTS_OUT_OF_ORDER, date2).get().count,
+                is(1));
+        assertThat(findSummary(groupedSummaries, LoggingProtos.TimelineLog.AlgType.HMM, LoggingProtos.TimelineLog.ErrorType.NOT_ENOUGH_DATA, date2).get().count,
+                is(1));
     }
 }

@@ -17,7 +17,8 @@ public class GroupedTimelineLogsSummaryMapper implements ResultSetMapper<Grouped
         return new GroupedTimelineLogSummary(
                 resultSet.getInt("algorithm"),
                 resultSet.getInt("error"),
-                resultSet.getInt("count")
+                resultSet.getInt("count"),
+                resultSet.getString("date_of_night")
         );
     }
 

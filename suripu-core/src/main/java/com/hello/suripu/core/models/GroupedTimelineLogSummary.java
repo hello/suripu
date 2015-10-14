@@ -17,17 +17,22 @@ public class GroupedTimelineLogSummary {
     @JsonProperty("count")
     public final int count;
 
+    @JsonProperty("date")
+    public final String date;
+
     public GroupedTimelineLogSummary(final LoggingProtos.TimelineLog.AlgType algorithm,
                                      final LoggingProtos.TimelineLog.ErrorType error,
-                                     final int count) {
+                                     final int count,
+                                     final String date) {
         this.algorithm = algorithm;
         this.error = error;
         this.count = count;
+        this.date = date;
     }
 
-    public GroupedTimelineLogSummary(final int algorithm, final int error, final int count) {
+    public GroupedTimelineLogSummary(final int algorithm, final int error, final int count, final String date) {
         this(LoggingProtos.TimelineLog.AlgType.values()[algorithm],
              LoggingProtos.TimelineLog.ErrorType.values()[error],
-             count);
+             count, date);
     }
 }
