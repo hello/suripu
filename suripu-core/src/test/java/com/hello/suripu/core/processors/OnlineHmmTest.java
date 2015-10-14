@@ -250,7 +250,7 @@ public class OnlineHmmTest {
 
     }
 
-    @Test
+
     public void testNormalSequenceOfEvents() {
         final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
         final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
@@ -390,7 +390,6 @@ public class OnlineHmmTest {
     }
 
 
-    @Test
     public void testDelayedFeedback() {
         final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
         final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();

@@ -100,7 +100,8 @@ public class FeatureExtractionModelData {
         final double [][] A = getMatrix(model.getStateTransitionMatrixList(),numStates);
 
         final double [] initProbs = new double[numStates];
-        Arrays.fill(initProbs,1.0);
+        initProbs[0] = 1.0;
+        //Arrays.fill(initProbs,1.0);
 
         final HmmPdfInterface [] models = getObsModels(model.getObservationModelList(),numStates);
 

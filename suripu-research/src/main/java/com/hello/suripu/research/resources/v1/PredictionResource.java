@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
@@ -83,7 +84,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 
 /**
@@ -593,12 +596,26 @@ public class PredictionResource extends BaseResource {
 
             @Override
             public boolean updateModelPriorsAndZeroOutScratchpad(Long accountId, DateTime date, OnlineHmmPriors priors) {
+
+                for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : priors.modelsByOutputId.entrySet()) {
+                    final Set<String> modelIdSet = entry.getValue().keySet();
+
+                    final TreeSet<String> sortedSet = Sets.newTreeSet(modelIdSet);
+
+                    final Map<String,OnlineHmmModelParams> newModelSet = Maps.newHashMap();
+                    newModelSet.put(sortedSet.last(),entry.getValue().get(sortedSet.last()));
+                    priors.modelsByOutputId.put(entry.getKey(),newModelSet);
+                }
+
                 final OnlineHmmData newOnlineHmmData = new OnlineHmmData( priors,OnlineHmmScratchPad.createEmpty());
+
+
 
                 int numModels = 0;
                 for (final Map.Entry<String, Map<String,OnlineHmmModelParams>> entry : priors.modelsByOutputId.entrySet()) {
                     numModels += entry.getValue().size();
                 }
+
 
                 priorByDate.put(date,newOnlineHmmData);
                 LOGGER.info("PUT {} models: {} on date {}",numModels,priors.modelsByOutputId.keySet(),DateTimeUtil.dateToYmdString(date));

@@ -965,7 +965,7 @@ public class DataScienceResource extends BaseResource {
             final Optional<DateTime> oldTime = FeedbackUtils.convertFeedbackToDateTimeByOldTime(timelineFeedback, tzOffset);
             final Optional<DateTime> newTime = FeedbackUtils.convertFeedbackToDateTimeByNewTime(timelineFeedback, tzOffset);
 
-            ;
+
 
             if (!oldTime.isPresent() || !newTime.isPresent()) {
                 continue;

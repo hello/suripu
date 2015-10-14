@@ -450,13 +450,13 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         this.logDenominator = LogMath.elnAddVector(this.logDenominator, logDenominator);
 
 
-        /*
+/*
         if (priorWeightAsNumberOfSamples > 0) {
             final double scaleFactor = priorWeightAsNumberOfSamples / (priorWeightAsNumberOfSamples + 1);
 
             scalePriors(scaleFactor);
         }
-        */
+*/
 
         return true;
 
