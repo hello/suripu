@@ -32,6 +32,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillHeartBeatDAODynamoDB.class);
+    private final Integer DYNAMO_BATCH_WRITE_LIMIT = 25;
 
     public static final String PILL_ID_ATTRIBUTE_NAME = "pill_id";
 
@@ -63,11 +64,9 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
 
     private Map<String, AttributeValue> toDynamoDBItem(final PillHeartBeat heartBeat) {
-        final Map<String, AttributeValue> key = Maps.newHashMap();
-        key.put(PILL_ID_ATTRIBUTE_NAME, new AttributeValue().withS(heartBeat.pillId));
-        key.put(UTC_DATETIME_ATTRIBUTE_NAME, new AttributeValue().withS(heartBeat.createdAtUTC.toString(DATETIME_FORMAT)));
-
         final Map<String, AttributeValue> item = Maps.newHashMap();
+        item.put(PILL_ID_ATTRIBUTE_NAME, new AttributeValue().withS(heartBeat.pillId));
+        item.put(UTC_DATETIME_ATTRIBUTE_NAME, new AttributeValue().withS(heartBeat.createdAtUTC.toString(DATETIME_FORMAT)));
         item.put(BATTERY_LEVEL_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.batteryLevel)));
         item.put(UPTIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.uptimeInSeconds)));
         item.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.firmwareVersion)));
@@ -75,12 +74,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
     }
 
     private WriteRequest transform(final PillHeartBeat heartBeat) {
-        final Map<String, AttributeValue> item = Maps.newHashMap();
-        item.put(PILL_ID_ATTRIBUTE_NAME, new AttributeValue().withS(heartBeat.pillId));
-        item.put(UTC_DATETIME_ATTRIBUTE_NAME, new AttributeValue().withS(heartBeat.createdAtUTC.toString(DATETIME_FORMAT)));
-        item.put(BATTERY_LEVEL_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.batteryLevel)));
-        item.put(UPTIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.uptimeInSeconds)));
-        item.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.firmwareVersion)));
+        final Map<String, AttributeValue> item = toDynamoDBItem(heartBeat);
         return new WriteRequest(new PutRequest().withItem(item));
     }
 
@@ -117,7 +111,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
     private void saveHeartBeat(final List<WriteRequest> lastSeenWriteRequests) {
         final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
         int i = 0;
-        for (final List<WriteRequest> partition : Lists.partition(lastSeenWriteRequests, 25)) {
+        for (final List<WriteRequest> partition : Lists.partition(lastSeenWriteRequests, DYNAMO_BATCH_WRITE_LIMIT)) {
             i++;
             final Map<String, List<WriteRequest>> map = Maps.newHashMap();
             map.put(tableName, partition);

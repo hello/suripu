@@ -1,5 +1,6 @@
 package com.hello.suripu.workers.pill;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -104,7 +105,9 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
-        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
+
+        final ClientConfiguration clientConfiguration = new ClientConfiguration().withMaxErrorRetry(9); // 3x the default value
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, clientConfiguration, configuration.dynamoDBConfiguration());
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";

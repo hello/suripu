@@ -47,6 +47,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB; // will replace with interface as soon as we have validated this works
 
+    private final static long DEFAULT_DYNAMODB_BACKOFF_MILLIS = 1000L;
+    private final static int DEFAULT_DYNAMODB_MAX_TRIES = 5;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
@@ -110,7 +112,13 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         try {
             // Fetch data from Dynamo and DB
-            pillKeys.putAll(pillKeyStore.getBatch(pillIds));
+            final Map<String, Optional<byte[]>> keys = pillKeyStore.getBatch(pillIds);
+            if(keys.isEmpty()) {
+                LOGGER.error("Failed to retrieve decryption keys. Can't proceed. Bailing");
+                System.exit(1);
+            }
+
+            pillKeys.putAll(keys);
 
             for (final String pillId : pillIds) {
                 final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(pillId);
