@@ -103,7 +103,6 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
 
         final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
-        final AmazonDynamoDB sensorViewsDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
 
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
@@ -115,12 +114,6 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(alarmInfoDynamoDBClient , tableNames.get(DynamoDBTableName.ALARM_INFO));
 
-        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
-                sensorViewsDynamoDBClient,
-                tableNames.get(DynamoDBTableName.SENSE_PREFIX),
-                tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
-        );
-
         final JedisPool jedisPool = new JedisPool(
                 configuration.getRedisConfiguration().getHost(),
                 configuration.getRedisConfiguration().getPort()
@@ -129,7 +122,6 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
         final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(
                 deviceDAO,
                 mergedUserInfoDynamoDB,
-                sensorsViewsDynamoDB,
                 deviceDataDAO,
                 configuration.getMaxRecords()
         );

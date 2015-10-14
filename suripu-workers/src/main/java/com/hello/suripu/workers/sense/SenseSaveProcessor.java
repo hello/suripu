@@ -1,6 +1,5 @@
 package com.hello.suripu.workers.sense;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
@@ -17,19 +16,15 @@ import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
-import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
 import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -37,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +48,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final DeviceDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
-    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final Integer maxRecords;
 
     private final Meter messagesProcessed;
@@ -69,11 +62,10 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final Integer maxRecords) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
-        this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
         this.maxRecords = maxRecords;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
@@ -145,7 +137,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 accounts.add(deviceAccountPair.accountId);
             }
 
-            final Map<Long, DateTimeZone> timezonesByUser = getTimezonesByUser(deviceName, batchPeriodicDataWorker, accounts);
+            final Map<Long, DateTimeZone> timezonesByUser = SenseSaveUtils.getTimezonesByUser(deviceName, batchPeriodicDataWorker, accounts, fetchTimezones, mergedInfoDynamoDB);
 
             if(timezonesByUser.isEmpty()) {
                 LOGGER.warn("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
@@ -268,10 +260,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
-        if(!lastSeenDeviceData.isEmpty()) {
-            sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
-        }
-
         final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f) ;
         LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
@@ -294,67 +282,5 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             }
         }
 
-    }
-
-
-    /**
-     *
-     * @param deviceName
-     * @param batchPeriodicDataWorker
-     * @return
-     */
-    public Map<Long, DateTimeZone> getTimezonesByUser(final String deviceName, final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker, final List<Long> accountsList) {
-        final TimerContext context = fetchTimezones.time();
-        try {
-
-
-            final Map<Long, DateTimeZone> map = Maps.newHashMap();
-            for (final DataInputProtos.AccountMetadata accountMetadata : batchPeriodicDataWorker.getTimezonesList()) {
-                map.put(accountMetadata.getAccountId(), DateTimeZone.forID(accountMetadata.getTimezone()));
-            }
-
-            for (final Long accountId : accountsList) {
-                if (!map.containsKey(accountId)) {
-                    LOGGER.warn("Found account_id {} in account_device_map but not in alarm_info for device_id {}", accountId, deviceName);
-                }
-            }
-
-            // Kinesis, DynamoDB and Postgres have a consistent view of accounts
-            // move on
-            if (!map.isEmpty() && map.size() == accountsList.size() && hasKinesisTimezonesEnabled(deviceName)) {
-                return map;
-            }
-
-
-            // At this point we need to go to dynamoDB
-            LOGGER.warn("Querying dynamoDB. One or several timezones not found in Kinesis message for device_id = {}.", deviceName);
-
-            int retries = 2;
-            for (int i = 0; i < retries; i++) {
-                try {
-                    final List<UserInfo> userInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);
-                    for (UserInfo userInfo : userInfoList) {
-                        if (userInfo.timeZone.isPresent()) {
-                            map.put(userInfo.accountId, userInfo.timeZone.get());
-                        }
-                    }
-                    break;
-                } catch (AmazonClientException exception) {
-                    LOGGER.error("Failed getting info from DynamoDB for device = {}", deviceName);
-                }
-
-                try {
-                    LOGGER.warn("Sleeping for 1 sec");
-                    Thread.sleep(1000);
-                } catch (InterruptedException e1) {
-                    LOGGER.warn("Thread sleep interrupted");
-                }
-                retries++;
-            }
-
-            return map;
-        } finally {
-            context.stop();
-        }
     }
 }
