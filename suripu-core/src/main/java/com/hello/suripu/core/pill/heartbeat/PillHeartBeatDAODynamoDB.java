@@ -84,7 +84,10 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
     private Optional<PillHeartBeat> fromDynamoDBItem(final Map<String, AttributeValue> item) {
 
-        // TODO: check if all attributes are available
+        if(item == null || item.isEmpty()) {
+            return Optional.absent();
+        }
+
         final String pillId = item.get(PILL_ID_ATTRIBUTE_NAME).getS();
         final DateTime utcDateTime = new DateTime(DateTime.parse(item.get(UTC_DATETIME_ATTRIBUTE_NAME).getS(), DateTimeFormat.forPattern(DATETIME_FORMAT)), DateTimeZone.UTC);
         final Integer batteryLevel = Integer.parseInt(item.get(BATTERY_LEVEL_ATTRIBUTE_NAME).getN());
