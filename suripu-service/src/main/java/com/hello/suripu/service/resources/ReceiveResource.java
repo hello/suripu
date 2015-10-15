@@ -626,8 +626,8 @@ public class ReceiveResource extends BaseResource {
         final int currentFirmwareVersion = batchData.getFirmwareVersion();
         final int uptimeInSeconds = (batchData.hasUptimeInSecond()) ? batchData.getUptimeInSecond() : -1;
         final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
-        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0);
-        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0);
+        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0).withSecondOfMinute(0);
+        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0).withSecondOfMinute(0);
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean bypassOTAChecks = (featureFlipper.deviceFeatureActive(FeatureFlipper.BYPASS_OTA_CHECKS, deviceID, deviceGroups));
@@ -669,7 +669,7 @@ public class ReceiveResource extends BaseResource {
             if (pillCount > 1 || uptimeInSeconds > (CLOCK_SYNC_SPECIAL_OTA_UPTIME_MINS * DateTimeConstants.SECONDS_PER_MINUTE)) {
                 if (!deviceGroups.isEmpty()) {
                     final String updateGroup = deviceGroups.get(0);
-                    LOGGER.warn("Clock Sync OTA Override for DeviceId {}", deviceID);
+                    LOGGER.warn("Clock Sync OTA Override for DeviceId {} with Group {}", deviceID, updateGroup);
                     return firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
                 }
             }
