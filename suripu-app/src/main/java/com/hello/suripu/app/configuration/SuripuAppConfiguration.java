@@ -395,4 +395,10 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("pill_heartbeat")
     private DynamoDBConfiguration pillHeartBeatConfiguration;
     public DynamoDBConfiguration getPillHeartBeatConfiguration() {return this.pillHeartBeatConfiguration;}
+
+    @Valid
+    @NotNull
+    @JsonProperty("device_data")
+    private DynamoDBConfiguration deviceDataConfiguration;
+    public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
 }
