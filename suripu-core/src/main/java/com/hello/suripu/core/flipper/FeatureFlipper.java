@@ -51,7 +51,8 @@ public class FeatureFlipper {
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String ONLINE_HMM_ALGORITHM = "online_hmm_algorithm";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
-    public final static String PILL_LAST_SEEN_DYNAMODB = "pill_last_seen_dynamodb";
+    public final static String PILL_HEARTBEAT_DYNAMODB = "pill_heartbeat_dynamodb";
+    public final static String PILL_HEARTBEAT_DYNAMODB_READ = "pill_heartbeat_dynamodb_read";
     public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
     public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
     public final static String INSIGHTS_BED_LIGHT_DURATION = "insights_bed_light_duration";

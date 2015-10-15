@@ -116,10 +116,10 @@ dynamodb:
     alarm_info: prod_alarm_info
     features: features
     pill_key_store : pill_key_store
-    pill_last_seen : prod_pill_last_seen
+    pill_heartbeat : prod_pill_heartbeat
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
     pill_key_store : http://dynamodb.us-east-1.amazonaws.com
-    pill_last_seen : http://dynamodb.us-east-1.amazonaws.com
+    pill_heartbeat : http://dynamodb.us-east-1.amazonaws.com
 
