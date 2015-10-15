@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 
-public abstract class DeviceDataDAO {
+public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
 
