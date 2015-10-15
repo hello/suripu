@@ -274,3 +274,8 @@ app_stats:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: app_stats
+
+pill_heartbeat:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: pill_heartbeat
