@@ -83,7 +83,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
         final List<DeviceStatus> heartBeats = Lists.newArrayList();
-        final List<PillHeartBeat> pillHeartBeats = Lists.newArrayList(); // for dynamoDB writes
+        final Set<PillHeartBeat> pillHeartBeats = Sets.newHashSet(); // for dynamoDB writes
 
         final List<SenseCommandProtos.pill_data> pillData = Lists.newArrayList();
         final Map<String, Optional<byte[]>> pillKeys = Maps.newHashMap();

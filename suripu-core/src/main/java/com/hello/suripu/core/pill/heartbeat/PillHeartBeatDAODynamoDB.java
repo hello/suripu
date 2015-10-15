@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
@@ -36,7 +37,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
     public static final String PILL_ID_ATTRIBUTE_NAME = "pill_id";
 
-    protected static final String UTC_DATETIME_ATTRIBUTE_NAME = "utc_dt";
+    public static final String UTC_DATETIME_ATTRIBUTE_NAME = "utc_dt";
     protected static final String BATTERY_LEVEL_ATTRIBUTE_NAME= "battery_level";
     protected static final String UPTIME_ATTRIBUTE_NAME= "uptime";
     protected static final String FIRMWARE_VERSION_ATTRIBUTE_NAME = "fw_version";
@@ -95,12 +96,13 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
     }
 
     @Override
-    public void put(final List<PillHeartBeat> pillHeartBeats) {
-        final Map<String, WriteRequest> uniqueWriteRequests = Maps.newHashMap();
+    public void put(final Set<PillHeartBeat> pillHeartBeats) {
+        final List<WriteRequest> writeRequests = Lists.newArrayList();
+
         for(final PillHeartBeat heartBeat : pillHeartBeats) {
-            uniqueWriteRequests.put(heartBeat.pillId, transform(heartBeat));
+            writeRequests.add(transform(heartBeat));
         }
-        saveHeartBeat(Lists.newArrayList(uniqueWriteRequests.values()));
+        saveHeartBeat(writeRequests);
     }
 
 
