@@ -20,6 +20,7 @@ import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.DeviceData;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -63,6 +64,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private static final int MAX_PUT_ITEMS = 25;
+    private static final int MAX_BATCH_WRITE_ATTEMPTS = 5;
+    private static final int MAX_QUERY_ATTEMPTS = 5;
 
     private static final String RANGE_KEY_NAME = "account_id:timestamp";
 
@@ -95,12 +98,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient) {
         // attributes
-        ArrayList<AttributeDefinition> attributes = new ArrayList<>();
+        ArrayList<AttributeDefinition> attributes = Lists.newArrayList();
         attributes.add(new AttributeDefinition().withAttributeName(AttributeNames.DEVICE_ID).withAttributeType("N"));
         attributes.add(new AttributeDefinition().withAttributeName(RANGE_KEY_NAME).withAttributeType("S"));
 
         // keys
-        ArrayList<KeySchemaElement> keySchema = new ArrayList<>();
+        ArrayList<KeySchemaElement> keySchema = Lists.newArrayList();
         keySchema.add(new KeySchemaElement().withAttributeName(AttributeNames.DEVICE_ID).withKeyType(KeyType.HASH));
         keySchema.add(new KeySchemaElement().withAttributeName(RANGE_KEY_NAME).withKeyType(KeyType.RANGE));
 
@@ -127,7 +130,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private HashMap<String, AttributeValue> deviceDataToAttributeMap(final DeviceData data) {
-        final HashMap<String, AttributeValue> item = new HashMap<>();
+        final HashMap<String, AttributeValue> item = Maps.newHashMap();
         item.put(AttributeNames.DEVICE_ID, new AttributeValue().withN(String.valueOf(data.deviceId)));
         item.put(RANGE_KEY_NAME, getRangeKey(data.accountId, data.dateTimeUTC));
         item.put(AttributeNames.TIMESTAMP, dateTimeToAttributeValue(data.dateTimeUTC));
@@ -172,23 +175,26 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     public void batchInsert(final List<DeviceData> deviceDataList) {
-        final List<WriteRequest> writeRequestList = new LinkedList<>();
+        final List<WriteRequest> writeRequestList = Lists.newLinkedList();
         for (final DeviceData data : deviceDataList) {
             final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(data);
             writeRequestList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
         }
 
-        Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+        Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(1);
         requestItems.put(this.tableName, writeRequestList);
 
+        int numAttempts = 0;
+
         do {
+            numAttempts++;
             final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
             final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             // check for unprocessed items
             requestItems = result.getUnprocessedItems();
             LOGGER.debug("Unprocessed put request count {}", requestItems.size());
 
-        } while (requestItems.size() > 0);
+        } while ((requestItems.size() > 0) && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
     }
 
     /**
@@ -243,15 +249,17 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                         getRangeKey(accountId, start),
                         getRangeKey(accountId, end));
 
-        final Map<String, Condition> queryConditions = new HashMap<>();
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
         queryConditions.put(AttributeNames.DEVICE_ID, selectByDeviceId);
         queryConditions.put(RANGE_KEY_NAME, selectByTimestamp);
 
-        final List<DeviceData> results = new ArrayList<>();
+        final List<DeviceData> results = Lists.newArrayList();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
+        int numAttempts = 0;
 
         do {
+            numAttempts++;
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
@@ -273,7 +281,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
 
-        } while (lastEvaluatedKey != null);
+        } while ((lastEvaluatedKey != null) && (numAttempts < MAX_QUERY_ATTEMPTS));
 
         return ImmutableList.copyOf(results);
     }
