@@ -7,6 +7,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
+import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -15,12 +17,17 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
+import com.amazonaws.services.dynamodbv2.model.QueryRequest;
+import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hello.suripu.core.models.DeviceStatus;
+import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +79,18 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         item.put(UPTIME_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.uptimeInSeconds)));
         item.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(heartBeat.firmwareVersion)));
         return item;
+    }
+
+
+    private Optional<PillHeartBeat> fromDynamoDBItem(final Map<String, AttributeValue> item) {
+
+        // TODO: check if all attributes are available
+        final String pillId = item.get(PILL_ID_ATTRIBUTE_NAME).getS();
+        final DateTime utcDateTime = new DateTime(DateTime.parse(item.get(UTC_DATETIME_ATTRIBUTE_NAME).getS(), DateTimeFormat.forPattern(DATETIME_FORMAT)), DateTimeZone.UTC);
+        final Integer batteryLevel = Integer.parseInt(item.get(BATTERY_LEVEL_ATTRIBUTE_NAME).getN());
+        final Integer uptimeInSeconds = Integer.parseInt(item.get(UPTIME_ATTRIBUTE_NAME).getN());
+        final Integer  firmwareVersion = Integer.parseInt(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN());
+        return Optional.of(PillHeartBeat.create(pillId, batteryLevel, firmwareVersion, uptimeInSeconds, utcDateTime));
     }
 
     private WriteRequest transform(final PillHeartBeat heartBeat) {
@@ -137,12 +156,48 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
 
     @Override
-    public List<DeviceStatus> get(final String pillId) {
-        return Collections.EMPTY_LIST;
+    public Optional<PillHeartBeat> get(final String pillId) {
+
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+        final Condition selectByPillId  = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withS(pillId));
+        queryConditions.put(PILL_ID_ATTRIBUTE_NAME, selectByPillId);
+
+        final Set<String> targetAttributes = Sets.newHashSet(
+                PILL_ID_ATTRIBUTE_NAME,
+                UTC_DATETIME_ATTRIBUTE_NAME,
+                BATTERY_LEVEL_ATTRIBUTE_NAME,
+                UPTIME_ATTRIBUTE_NAME,
+                FIRMWARE_VERSION_ATTRIBUTE_NAME
+        );
+
+        final QueryRequest queryRequest = new QueryRequest(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributes)
+                .withLimit(1)
+                .withScanIndexForward(false);
+
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+        if(items == null || items.isEmpty()){
+            return Optional.absent();
+        }
+
+
+
+        for (final Map<String, AttributeValue> item : items) {
+            final Optional<PillHeartBeat> pillHeartBeatOptional = fromDynamoDBItem(item);
+            if(pillHeartBeatOptional.isPresent()){
+                return pillHeartBeatOptional;
+            }
+        }
+
+        return Optional.absent();
     }
 
     @Override
-    public List<DeviceStatus> get(final String pillId, final DateTime end) {
+    public List<PillHeartBeat> get(final String pillId, final DateTime end) {
         return Collections.EMPTY_LIST;
     }
 
