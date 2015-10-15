@@ -174,7 +174,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         dynamoDBClient.putItem(tableName, item);
     }
 
-    public void batchInsert(final List<DeviceData> deviceDataList) {
+    /**
+     *
+     * @param deviceDataList
+     * @return The number of successfully inserted elements.
+     */
+    public int batchInsert(final List<DeviceData> deviceDataList) {
         final List<WriteRequest> writeRequestList = Lists.newLinkedList();
         for (final DeviceData data : deviceDataList) {
             final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(data);
@@ -194,7 +199,14 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             requestItems = result.getUnprocessedItems();
             LOGGER.debug("Unprocessed put request count {}", requestItems.size());
 
-        } while ((requestItems.size() > 0) && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
+        } while ((!requestItems.isEmpty()) && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
+
+        if (!requestItems.isEmpty()) {
+            LOGGER.warn("Exceeded {} attempts to batch write to Dynamo. {} items left over.",
+                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.size());
+        }
+
+        return deviceDataList.size() - requestItems.size();
     }
 
     /**
@@ -209,8 +221,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         // Insert each chunk
         for (final List<DeviceData> deviceDataListToWrite: deviceDataLists) {
             try {
-                batchInsert(deviceDataListToWrite);
-                successfulInsertions += deviceDataListToWrite.size();
+                successfulInsertions += batchInsert(deviceDataListToWrite);
             } catch (AmazonClientException e) {
                 LOGGER.error("Got exception while attempting to batchInsert to DynamoDB: {}", e);
 
@@ -282,6 +293,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             lastEvaluatedKey = queryResult.getLastEvaluatedKey();
 
         } while ((lastEvaluatedKey != null) && (numAttempts < MAX_QUERY_ATTEMPTS));
+
+        // TODO should actually probably throw an error or return a flag here if your query could not complete
+        if (lastEvaluatedKey != null) {
+            LOGGER.warn("Exceeded {} attempts while querying. Stopping with last evaluated key: {}",
+                    MAX_QUERY_ATTEMPTS, lastEvaluatedKey);
+        }
 
         return ImmutableList.copyOf(results);
     }
