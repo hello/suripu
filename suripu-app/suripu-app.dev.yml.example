@@ -279,3 +279,8 @@ pill_heartbeat:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: pill_heartbeat
+
+device_data:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: device_data
