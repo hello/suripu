@@ -49,7 +49,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
         }
     }
 
-    private void stubGetClientDetailsByTokenThatReuturnsNoAccessToken(final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore){
+    private void stubGetClientDetailsByTokenThatReturnsNoAccessToken(final OAuthTokenStore<AccessToken, ClientDetails, ClientCredentials> tokenStore){
         when(stubGetClientDetailsByToken(tokenStore)).thenReturn(Optional.<AccessToken>absent());
     }
 
@@ -140,8 +140,8 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     public void setUp(){
         super.setUp();
 
-        BaseReourceTestHelper.kinesisLoggerFactoryStubGet(this.kinesisLoggerFactory, QueueName.LOGS, this.dataLogger);
-        BaseReourceTestHelper.kinesisLoggerFactoryStubGet(this.kinesisLoggerFactory, QueueName.REGISTRATIONS, this.dataLogger);
+        BaseResourceTestHelper.kinesisLoggerFactoryStubGet(this.kinesisLoggerFactory, QueueName.LOGS, this.dataLogger);
+        BaseResourceTestHelper.kinesisLoggerFactoryStubGet(this.kinesisLoggerFactory, QueueName.REGISTRATIONS, this.dataLogger);
 
         final RegisterResource registerResource = new RegisterResource(deviceDAO,
                 oAuthTokenStore,
@@ -153,7 +153,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
         registerResource.request = httpServletRequest;
         this.registerResource = spy(registerResource);  // the registerResource is a real object, we need to spy it.
 
-        BaseReourceTestHelper.stubGetHeader(this.registerResource.request, "X-Forwarded-For", "127.0.0.1");
+        BaseResourceTestHelper.stubGetHeader(this.registerResource.request, "X-Forwarded-For", "127.0.0.1");
     }
 
     @Test(expected = WebApplicationException.class)
@@ -182,7 +182,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     @Test
     public void testPairingCannotFindToken(){
         // simulate scenario that no account can be found with the token provided
-        stubGetClientDetailsByTokenThatReuturnsNoAccessToken(this.oAuthTokenStore);
+        stubGetClientDetailsByTokenThatReturnsNoAccessToken(this.oAuthTokenStore);
 
         final SenseCommandProtos.MorpheusCommand.Builder builder = this.registerResource.pair(SENSE_ID,
                 generateValidProtobufWithSignature(KEY),
@@ -196,7 +196,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     @Test(expected = WebApplicationException.class)
     public void testPairingInvalidSignature(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
-        BaseReourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
+        BaseResourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
 
         this.registerResource.pair(SENSE_ID,
                 generateValidProtobufWithInvalidSignature(KEY),
@@ -209,7 +209,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     @Test(expected = WebApplicationException.class)
     public void testPairingNoKey(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
-        BaseReourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.<byte[]>absent());
+        BaseResourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.<byte[]>absent());
 
         this.registerResource.pair(SENSE_ID,
                 generateValidProtobufWithInvalidSignature(KEY),
@@ -225,7 +225,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     @Test
     public void testPairSense(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
-        BaseReourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
+        BaseResourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
         stubGetSensePairingState(this.registerResource, RegisterResource.PairState.NOT_PAIRED);
 
         final SenseCommandProtos.MorpheusCommand command = this.registerResource.pair(SENSE_ID,
@@ -242,9 +242,9 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     @Test
     public void testRegisterSense(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
-        BaseReourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
+        BaseResourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
         stubGetSensePairingState(this.registerResource, RegisterResource.PairState.NOT_PAIRED);
-        BaseReourceTestHelper.stubGetHeader(this.httpServletRequest, HelloHttpHeader.SENSE_ID, SENSE_ID);
+        BaseResourceTestHelper.stubGetHeader(this.httpServletRequest, HelloHttpHeader.SENSE_ID, SENSE_ID);
 
         final byte[] data = this.registerResource.registerMorpheus(generateValidProtobufWithSignature(KEY));
         verify(this.deviceDAO, times(1)).registerSense(1L, SENSE_ID);
@@ -268,7 +268,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     @Test
     public void testPairAlreadyPairedSense(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
-        BaseReourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
+        BaseResourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
         stubGetSensePairingState(this.registerResource, RegisterResource.PairState.PAIRED_WITH_CURRENT_ACCOUNT);
 
         final SenseCommandProtos.MorpheusCommand command = this.registerResource.pair(SENSE_ID,
@@ -285,7 +285,7 @@ public class RegisterResourceIntegrationTest extends ResourceTest {
     @Test
     public void testPairAlreadyPairedSenseToDifferentAccount(){
         stubGetClientDetails(this.oAuthTokenStore, Optional.of(getAccessToken()));
-        BaseReourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
+        BaseResourceTestHelper.stubKeyFromKeyStore(this.keyStore, SENSE_ID, Optional.of(KEY));
         stubGetSensePairingState(this.registerResource, RegisterResource.PairState.PAIRING_VIOLATION);
 
         final SenseCommandProtos.MorpheusCommand command = this.registerResource.pair(SENSE_ID,
