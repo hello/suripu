@@ -2,6 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.binders.BindDeviceData;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
@@ -38,9 +39,13 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 
-public abstract class DeviceDataDAO {
+public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
+
+    // Amount of records to attempt to insert at once.
+    // Higher numbers reduce database queries but increase likelihood of failure due to uniqueness constraint failure.
+    private static final int MAX_BATCH_INSERT_SIZE = 30;
 
     private static final String AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET = "SELECT " +  // for queries using DeviceDataBucketMapper
             "MAX(account_id) AS account_id," +
@@ -240,40 +245,43 @@ public abstract class DeviceDataDAO {
                                                        @Bind("max_utc_ts_limit") final DateTime maxTsLimit,
                                                        @Bind("min_utc_ts_limit") final DateTime minTsLimit);
 
-    public int batchInsertWithFailureFallback(final List<DeviceData> data){
+    public int batchInsertWithFailureFallback(final List<DeviceData> allDeviceData){
+        final List<List<DeviceData>> batches = Lists.partition(allDeviceData, MAX_BATCH_INSERT_SIZE);
+
         int inserted = 0;
-        try {
-            this.batchInsert(data.iterator());
-            return data.size();
-        } catch (UnableToExecuteStatementException exception) {
-            LOGGER.error("Failed to insert batch data for sense: {}", exception.getMessage());
-            LOGGER.error("Failed to insert batch data for sense internal id= {}", data.get(0).deviceId);
-        }
+        for (final List<DeviceData> batchedData: batches) {
 
-        for(final DeviceData datum:data){
             try {
-                this.insert(datum);
-                inserted++;
+                this.batchInsert(batchedData.iterator());
+                inserted += batchedData.size();
+                continue;
             } catch (UnableToExecuteStatementException exception) {
-                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                if(matcher.find())
-                {
-                    LOGGER.warn("Duplicate device sensor value for device {}, account {}, timestamp {}",
-                            datum.deviceId,
-                            datum.accountId,
-                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)));
-                }else{
-                    LOGGER.error("Cannot insert data for device {}, account {}, timestamp {}, error {}",
-                            datum.deviceId,
-                            datum.accountId,
-                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)),
-                            exception.getMessage());
-                }
+                LOGGER.error("Failed to insert batch data: {}", exception.getMessage());
+            }
 
+            for(final DeviceData datum:batchedData){
+                try {
+                    this.insert(datum);
+                    inserted++;
+                } catch (UnableToExecuteStatementException exception) {
+                    final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                    if(matcher.find())
+                    {
+                        LOGGER.warn("Duplicate device sensor value for device {}, account {}, timestamp {}",
+                                datum.deviceId,
+                                datum.accountId,
+                                datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)));
+                    }else{
+                        LOGGER.error("Cannot insert data for device {}, account {}, timestamp {}, error {}",
+                                datum.deviceId,
+                                datum.accountId,
+                                datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)),
+                                exception.getMessage());
+                    }
+
+                }
             }
         }
-
-
 
         return inserted;
     }

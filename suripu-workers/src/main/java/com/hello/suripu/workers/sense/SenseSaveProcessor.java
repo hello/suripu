@@ -16,9 +16,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataIngestDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
@@ -51,13 +53,14 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 24 * 3600;
     private final DeviceDAO deviceDAO;
-    private final DeviceDataDAO deviceDataDAO;
+    private final DeviceDataIngestDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final Integer maxRecords;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
+    private final Meter batchSaveFailures;
     private final Meter clockOutOfSync;
     private final Timer fetchTimezones;
     private final Meter capacity;
@@ -67,7 +70,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
@@ -76,6 +79,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
+        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
         this.fetchTimezones = Metrics.defaultRegistry().newTimer(SenseSaveProcessor.class, "fetch-timezones");
         this.capacity = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
@@ -103,7 +107,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     @Timed
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
+        final LinkedList<DeviceData> deviceDataList = new LinkedList<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
 
@@ -121,11 +125,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             final String deviceName = batchPeriodicDataWorker.getData().getDeviceId();
 
-            if(!deviceDataGroupedByDeviceId.containsKey(deviceName)){
-                deviceDataGroupedByDeviceId.put(deviceName, new LinkedList<DeviceData>());
-            }
-
-            final LinkedList<DeviceData> dataForDevice = deviceDataGroupedByDeviceId.get(deviceName);
             final List<DeviceAccountPair> deviceAccountPairs = Lists.newArrayList();
 
             if(!flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST) || batchPeriodicDataWorker.getUptimeInSecond() < MIN_UPTIME_IN_SECONDS_FOR_CACHING) {
@@ -224,35 +223,28 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         lastSeenDeviceData.put(deviceName, deviceData);
                     }
 
-                    dataForDevice.add(deviceData);
+                    deviceDataList.add(deviceData);
                 }
             }
         }
 
 
-        for(final String deviceId: deviceDataGroupedByDeviceId.keySet()){
-            final LinkedList<DeviceData> data = deviceDataGroupedByDeviceId.get(deviceId);
-            if(data.size() == 0){
-                continue;
+        try {
+            int inserted = deviceDataDAO.batchInsertWithFailureFallback(deviceDataList);
+
+            if(inserted == deviceDataList.size()) {
+                LOGGER.trace("Batch saved {} data to DB", inserted);
+            }else{
+                LOGGER.warn("Batch save failed, save {} data using itemize insert.", inserted);
             }
 
-            try {
-                int inserted = deviceDataDAO.batchInsertWithFailureFallback(data);
-
-                if(inserted == data.size()) {
-                    LOGGER.trace("Batch saved {} data to DB for device {}", data.size(), deviceId);
-                }else{
-                    LOGGER.warn("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
-                }
-
-                batchSaved.mark(inserted);
-            } catch (Exception exception) {
-                LOGGER.error("Error saving data for device {} from {} to {}, {} data discarded",
-                        deviceId,
-                        data.getFirst().dateTimeUTC,
-                        data.getLast().dateTimeUTC,  // I love linkedlist
-                        data.size());
-            }
+            batchSaved.mark(inserted);
+            batchSaveFailures.mark(deviceDataList.size() - inserted);
+        } catch (Exception exception) {
+            LOGGER.error("Error saving data from {} to {}, {} data discarded",
+                    deviceDataList.getFirst().dateTimeUTC,
+                    deviceDataList.getLast().dateTimeUTC,  // I love linkedlist
+                    deviceDataList.size());
         }
 
         messagesProcessed.mark(records.size());
