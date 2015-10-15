@@ -29,6 +29,7 @@ import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
@@ -75,6 +76,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createCalibrationTable(configuration, awsCredentialsProvider);
         createWifiInfoTable(configuration, awsCredentialsProvider);
         createAppStatsTable(configuration, awsCredentialsProvider);
+        createPillHeartBeatTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -499,6 +501,22 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = AppStatsDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createPillHeartBeatTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getPillHeartBeatConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = PillHeartBeatDAODynamoDB.createTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }

@@ -339,3 +339,8 @@ app_stats:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_app_stats
+
+pill_heartbeat:
+  endpoint: http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_pill_heartbeat
