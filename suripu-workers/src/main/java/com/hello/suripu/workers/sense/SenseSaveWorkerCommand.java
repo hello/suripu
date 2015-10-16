@@ -43,14 +43,16 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveWorkerCommand.class);
 
     private boolean useDynamoDeviceData = false;
+    private boolean updateLastSeen = true;
 
     public SenseSaveWorkerCommand(String name, String description) {
         super(name, description);
     }
 
-    public SenseSaveWorkerCommand(String name, String description, final boolean useDynamoDeviceData) {
+    public SenseSaveWorkerCommand(String name, String description, final boolean useDynamoDeviceData, final boolean updateLastSeen) {
         this(name, description);
         this.useDynamoDeviceData = useDynamoDeviceData;
+        this.updateLastSeen = updateLastSeen;
     }
 
     @Override
@@ -147,7 +149,8 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
                 mergedUserInfoDynamoDB,
                 sensorsViewsDynamoDB,
                 deviceDataIngestDAO,
-                configuration.getMaxRecords()
+                configuration.getMaxRecords(),
+                updateLastSeen
         );
 
         final Worker worker = new Worker(factory, kinesisConfig);

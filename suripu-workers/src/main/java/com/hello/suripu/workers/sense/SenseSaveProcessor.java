@@ -57,6 +57,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final Integer maxRecords;
+    private final boolean updateLastSeen;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
@@ -70,12 +71,13 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords) {
+    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords, final boolean updateLastSeen) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
         this.maxRecords = maxRecords;
+        this.updateLastSeen = updateLastSeen;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
@@ -269,7 +271,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
-        if(!lastSeenDeviceData.isEmpty()) {
+        if(!lastSeenDeviceData.isEmpty() && this.updateLastSeen) {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
