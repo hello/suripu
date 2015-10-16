@@ -93,8 +93,9 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
+        final String appName = useDynamoDeviceData ? configuration.getAppName() + "DDB" : configuration.getAppName();
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(
-                configuration.getAppName(),
+                appName,
                 queueName,
                 awsCredentialsProvider,
                 workerId);
