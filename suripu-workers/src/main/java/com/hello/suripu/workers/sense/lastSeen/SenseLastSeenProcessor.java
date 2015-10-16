@@ -5,13 +5,17 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.WifiInfoDAO;
-import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.LastSeenSenseData;
 import com.hello.suripu.core.models.WifiInfo;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
@@ -23,8 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -40,23 +42,26 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
     private final Integer maxRecords;
     private final WifiInfoDAO wifiInfoDAO;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
 
     private final Meter messagesProcessed;
     private final Meter capacity;
 
     private Map<String, WifiInfo> wifiInfoPerBatch = Maps.newHashMap();
     private Map<String, String> wifiInfoHistory = Maps.newHashMap();
+    private Map<String, LastSeenSenseData> lastSeenSenseDataMap = Maps.newHashMap();
 
 
     private String shardId = "";
+    private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseLastSeenProcessor(final Integer maxRecords, final WifiInfoDAO wifiInfoDAO) {
+    public SenseLastSeenProcessor(final Integer maxRecords, final WifiInfoDAO wifiInfoDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
         this.maxRecords = maxRecords;
         this.wifiInfoDAO = wifiInfoDAO;
+        this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseLastSeenProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.capacity = Metrics.defaultRegistry().newMeter(SenseLastSeenProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
-
     }
 
     @Override
@@ -67,11 +72,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     @Timed
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
-
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
-
-        final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
 
         for(final Record record : records) {
             DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker;
@@ -86,12 +87,17 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             //LOGGER.info("Protobuf message {}", TextFormat.shortDebugString(batchPeriodicDataWorker));
             final DataInputProtos.batched_periodic_data batchPeriodicData = batchPeriodicDataWorker.getData();
             collectWifiInfo(batchPeriodicData);
+            collectLastSeenSenseData(batchPeriodicDataWorker);
             activeSenses.put(batchPeriodicData.getDeviceId(), batchPeriodicDataWorker.getReceivedAt());
 
         }
 
         trackWifiInfo(wifiInfoPerBatch);
         wifiInfoPerBatch.clear();
+
+        sensorsViewsDynamoDB.saveLastSeenFromPeriodicData(lastSeenSenseDataMap);
+        LOGGER.trace("Saved last seen for {} senses", lastSeenSenseDataMap.size());
+        lastSeenSenseDataMap.clear();
 
 
         messagesProcessed.mark(records.size());
@@ -111,6 +117,8 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);
     }
+
+
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
@@ -149,6 +157,26 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             wifiInfoHistory.put(senseId, connectedSSID);
         }
     }
+
+    private void collectLastSeenSenseData(final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker) {
+        final String senseExternalId = batchPeriodicDataWorker.getData().getDeviceId();
+        final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
+        final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
+
+
+        for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
+            final Long timestampMillis = periodicData.getUnixTime() * 1000L;
+            final DateTime rawDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
+            final DateTime periodicDataSampleDateTime = attemptToRecoverSenseReportedTimeStamp(senseExternalId)
+                    ? DateTimeUtil.possiblySanitizeSampleTime(createdAtRounded, rawDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS)
+                    : rawDateTime;
+            final Integer firmwareVersion = (batchPeriodicDataWorker.getData().hasFirmwareVersion())
+                    ? batchPeriodicDataWorker.getData().getFirmwareVersion()
+                    : periodicData.getFirmwareVersion();
+            lastSeenSenseDataMap.put(senseExternalId, new LastSeenSenseData(senseExternalId, periodicData, periodicDataSampleDateTime, firmwareVersion));
+        }
+    }
+
 
     public void trackWifiInfo(final Map<String, WifiInfo> wifiInfoPerBatch) {
         final List<WifiInfo> wifiInfoList = Lists.newArrayList(wifiInfoPerBatch.values());
