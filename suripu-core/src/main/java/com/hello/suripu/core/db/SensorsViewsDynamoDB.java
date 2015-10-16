@@ -30,9 +30,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.FirmwareInfo;
+import com.hello.suripu.core.models.LastSeenSenseData;
 import com.hello.suripu.core.models.Sample;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -82,7 +84,7 @@ public class SensorsViewsDynamoDB {
         this.lastSeenTableName = lastSeenTableName;
     }
 
-
+    @Deprecated
     public WriteRequest transform(final String deviceName, final DeviceData deviceData) {
         final Map<String, AttributeValue> items = Maps.newHashMap();
         items.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceName));
@@ -96,6 +98,27 @@ public class SensorsViewsDynamoDB {
         items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.firmwareVersion)));
         items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(deviceData.dateTimeUTC.toString(DATETIME_FORMAT)));
         items.put(TZ_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.offsetMillis)));
+
+        final PutRequest putRequest = new PutRequest(items);
+        return new WriteRequest(putRequest);
+    }
+
+
+    public WriteRequest transform(final LastSeenSenseData lastSeenSenseData) {
+        final DataInputProtos.periodic_data periodicData = lastSeenSenseData.periodicData;
+
+        final Map<String, AttributeValue> items = Maps.newHashMap();
+        items.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(lastSeenSenseData.senseExternalId));
+
+        items.put(TEMP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodicData.getTemperature())));
+        items.put(HUMIDITY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodicData.getHumidity())));
+        items.put(LIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodicData.getLight())));
+        items.put(SOUND_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodicData.hasAudioPeakDisturbanceEnergyDb() ? periodicData.getAudioPeakDisturbanceEnergyDb() : 0)));
+        items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(periodicData.getDust())));
+
+        items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(lastSeenSenseData.firmwareVersion)));
+        items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(lastSeenSenseData.updatedAtUTC.toString(DATETIME_FORMAT)));
+        items.put(TZ_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(0)));
 
         final PutRequest putRequest = new PutRequest(items);
         return new WriteRequest(putRequest);
@@ -128,6 +151,7 @@ public class SensorsViewsDynamoDB {
                     remaining.putAll(table, unprocessed.get(table));
                 }
             }
+
         } catch (final AmazonServiceException exception) {
             LOGGER.error("Failed when trying to save {} items: {}", writeRequests.values().size(), exception.getMessage());
             return writeRequests;
@@ -167,7 +191,7 @@ public class SensorsViewsDynamoDB {
         }
     }
 
-
+    @Deprecated
     public void saveLastSeenDeviceData(final Map<String, DeviceData> lastSeenDeviceData) {
         final List<WriteRequest> writeRequests = Lists.newArrayList();
         for(final String deviceName: lastSeenDeviceData.keySet()) {
@@ -175,6 +199,16 @@ public class SensorsViewsDynamoDB {
         }
         saveLastSeen(writeRequests);
     }
+
+
+    public void saveLastSeenFromPeriodicData(final Map<String, LastSeenSenseData> lastSeenSenseDataMap) {
+        final List<WriteRequest> writeRequests = Lists.newArrayList();
+        for(final LastSeenSenseData lastSeenSenseData: lastSeenSenseDataMap.values()) {
+            writeRequests.add(transform(lastSeenSenseData));
+        }
+        saveLastSeen(writeRequests);
+    }
+
 
     public List<Sample> last(final String senseId, final DateTime dateTime, final Set<String> attributesToGet) {
 
