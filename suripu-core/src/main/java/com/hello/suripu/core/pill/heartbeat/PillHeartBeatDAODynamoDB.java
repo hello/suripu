@@ -87,13 +87,18 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         if(item == null || item.isEmpty()) {
             return Optional.absent();
         }
+        try {
+            final String pillId = item.get(PILL_ID_ATTRIBUTE_NAME).getS();
+            final DateTime utcDateTime = new DateTime(DateTime.parse(item.get(UTC_DATETIME_ATTRIBUTE_NAME).getS(), DateTimeFormat.forPattern(DATETIME_FORMAT)), DateTimeZone.UTC);
+            final Integer batteryLevel = Integer.parseInt(item.get(BATTERY_LEVEL_ATTRIBUTE_NAME).getN());
+            final Integer uptimeInSeconds = Integer.parseInt(item.get(UPTIME_ATTRIBUTE_NAME).getN());
+            final Integer firmwareVersion = Integer.parseInt(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN());
+            return Optional.of(PillHeartBeat.create(pillId, batteryLevel, firmwareVersion, uptimeInSeconds, utcDateTime));
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
 
-        final String pillId = item.get(PILL_ID_ATTRIBUTE_NAME).getS();
-        final DateTime utcDateTime = new DateTime(DateTime.parse(item.get(UTC_DATETIME_ATTRIBUTE_NAME).getS(), DateTimeFormat.forPattern(DATETIME_FORMAT)), DateTimeZone.UTC);
-        final Integer batteryLevel = Integer.parseInt(item.get(BATTERY_LEVEL_ATTRIBUTE_NAME).getN());
-        final Integer uptimeInSeconds = Integer.parseInt(item.get(UPTIME_ATTRIBUTE_NAME).getN());
-        final Integer  firmwareVersion = Integer.parseInt(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN());
-        return Optional.of(PillHeartBeat.create(pillId, batteryLevel, firmwareVersion, uptimeInSeconds, utcDateTime));
+        return Optional.absent();
     }
 
     private WriteRequest transform(final PillHeartBeat heartBeat) {
