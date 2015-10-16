@@ -78,6 +78,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createWifiInfoTable(configuration, awsCredentialsProvider);
         createAppStatsTable(configuration, awsCredentialsProvider);
         createPillHeartBeatTable(configuration, awsCredentialsProvider);
+        createDeviceDataTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){

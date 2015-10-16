@@ -15,6 +15,8 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
+import com.hello.suripu.core.db.DeviceDataIngestDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
@@ -40,8 +42,15 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveWorkerCommand.class);
 
+    private boolean useDynamoDeviceData = false;
+
     public SenseSaveWorkerCommand(String name, String description) {
         super(name, description);
+    }
+
+    public SenseSaveWorkerCommand(String name, String description, final boolean useDynamoDeviceData) {
+        this(name, description);
+        this.useDynamoDeviceData = useDynamoDeviceData;
     }
 
     @Override
@@ -49,13 +58,10 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
         final DBIFactory dbiFactory = new DBIFactory();
         final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
-        final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorsDB(), "postgresql");
 
-        sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
         commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
         final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
-        final DeviceDataDAO deviceDataDAO = sensorsDBI.onDemand(DeviceDataDAO.class);
 
 
         if(configuration.getMetricsEnabled()) {
@@ -121,6 +127,16 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
                 tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
         );
 
+        DeviceDataIngestDAO deviceDataIngestDAO;
+        if (useDynamoDeviceData) {
+            final AmazonDynamoDB deviceDataDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.DEVICE_DATA);
+            deviceDataIngestDAO = new DeviceDataDAODynamoDB(deviceDataDynamoDB, tableNames.get(DynamoDBTableName.DEVICE_DATA));
+        } else {
+            final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorsDB(), "postgresql");
+            sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
+            deviceDataIngestDAO = sensorsDBI.onDemand(DeviceDataDAO.class);
+        }
+
         final JedisPool jedisPool = new JedisPool(
                 configuration.getRedisConfiguration().getHost(),
                 configuration.getRedisConfiguration().getPort()
@@ -130,7 +146,7 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
                 deviceDAO,
                 mergedUserInfoDynamoDB,
                 sensorsViewsDynamoDB,
-                deviceDataDAO,
+                deviceDataIngestDAO,
                 configuration.getMaxRecords()
         );
 
