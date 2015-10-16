@@ -1,7 +1,118 @@
 package com.hello.suripu.core.processors.insights;
 
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.Message.ParticulatesAnomalyMsgEN;
+import com.hello.suripu.core.models.Insights.Message.ParticulatesLevelMsgEN;
+import com.hello.suripu.core.models.Insights.Message.Text;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import java.util.List;
+
 public class Particulates {
-    public static final float PARTICULATE_DENSITY_MAX_IDEAL = 80.0f; // µg/m³
-    public static final float PARTICULATE_DENSITY_MAX_WARNING = 250.0f; // µg/m³
+    //https://hello.hackpad.com/Study-of-fine-Particulates-and-contribution-BhCh9eV2qE5
+    //https://hello.hackpad.com/Dust-sensor-data-mapping-employing-offset-calibration-n9EJHA22Q20
+
+    //computed from weighted avg of EPA recommended levels for PM2.5 and PM10
+    public static final Float PARTICULATE_DENSITY_MAX_IDEAL = 80.0f; // µg/m³
+    public static final Float PARTICULATE_DENSITY_MAX_WARNING = 250.0f; // µg/m³
+
+    public static final Float PARTICULATE_SIG_DIFF = 10.0f;
+
+    private static final Integer NUM_DAYS = 7;
+
+    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataDAO deviceDataDAO) {
+
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        if (!timeZoneOffsetOptional.isPresent()) {
+            return Optional.absent(); //cannot compute insight without timezone info
+        }
+        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
+
+        final List<Float> dustList = getAvgAirQualityList(accountId, deviceId, NUM_DAYS, timeZoneOffset, deviceDataDAO);
+        if (dustList.isEmpty()) {
+            return Optional.absent();
+        }
+
+        final Float currentDust = dustList.get(dustList.size() - 1);
+        final Float historyDust = getHistoryDust(dustList, currentDust);
+
+        final Float dustDiff = currentDust - historyDust;
+
+        final Text text;
+        if (Math.abs(dustDiff) < PARTICULATE_SIG_DIFF) {
+            text = getConstantText(currentDust);
+        } else {
+            text = getAnomalyText(currentDust, historyDust, dustDiff);
+        }
+
+        return Optional.of(new InsightCard(accountId, text.title, text.message,
+                InsightCard.Category.AIR_QUALITY, InsightCard.TimePeriod.MONTHLY,
+                DateTime.now(DateTimeZone.UTC)));
+    }
+
+    private static List<Float> getAvgAirQualityList(final Long accountId, final Long deviceId, final Integer num_days, final Integer timeZoneOffset, final DeviceDataDAO deviceDataDAO) {
+
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay(); //start of day time?
+        final DateTime queryStartTime = queryEndTime.minusDays(num_days);
+
+        final DateTime queryEndTimeLocal = queryEndTime.plusMillis(timeZoneOffset);
+        final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
+
+        //Grab all night-time data for past week
+        return deviceDataDAO.getAirQualityList(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal);
+    }
+
+    @VisibleForTesting
+    public static Float getHistoryDust(final List<Float> dustList, final Float currentDust) {
+        if (dustList.size() <= 1) {
+            return currentDust;
+        }
+
+        final DescriptiveStatistics stats = new DescriptiveStatistics();
+        for (final Float dustReading : dustList.subList(0, dustList.size() - 1)) {
+            stats.addValue(dustReading);
+        }
+
+        return (float) stats.getMean();
+    }
+
+    @VisibleForTesting
+    public static Text getConstantText(final Float currentDust) {
+
+        final Text text;
+        if (currentDust < PARTICULATE_DENSITY_MAX_IDEAL) {
+            text = ParticulatesLevelMsgEN.getAirIdeal();
+        } else if (currentDust < PARTICULATE_DENSITY_MAX_WARNING) {
+            text = ParticulatesLevelMsgEN.getAirHigh();
+        } else {
+            text = ParticulatesLevelMsgEN.getAirWarningHigh();
+        }
+
+        return text;
+    }
+
+    @VisibleForTesting
+    public static Text getAnomalyText(final Float currentDust, final Float historyDust, final Float dustDiff) {
+        //Cases of dustDiff \in [-PARTICULATE_SIG_DIFF, +PARTICULATE_SIG_DIFF] should never be passed into this function
+
+        final Text text;
+        if (dustDiff <= -PARTICULATE_SIG_DIFF) {
+            final Integer percent =  (int) (-100.0f * dustDiff /  historyDust); //percent is positive
+            text = ParticulatesAnomalyMsgEN.getAirImprovement(currentDust.intValue(), historyDust.intValue(), percent);
+        } else if (dustDiff <= 2 * PARTICULATE_SIG_DIFF) {
+            final Integer percent = (int) (100.0f * dustDiff / historyDust);
+            text = ParticulatesAnomalyMsgEN.getAirWorse(currentDust.intValue(), historyDust.intValue(), percent);
+        } else {
+            final Integer percent = (int) (100.0f * dustDiff / historyDust);
+            text = ParticulatesAnomalyMsgEN.getAirVeryWorse(currentDust.intValue(), historyDust.intValue(), percent);
+        }
+        return text;
+    }
 }
