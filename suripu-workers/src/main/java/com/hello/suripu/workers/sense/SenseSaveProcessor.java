@@ -80,8 +80,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.updateLastSeen = updateLastSeen;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
-        this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
-        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "batch", "batch-saved", TimeUnit.SECONDS);
+        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
         this.fetchTimezones = Metrics.defaultRegistry().newTimer(SenseSaveProcessor.class, "fetch-timezones");
         this.capacity = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
