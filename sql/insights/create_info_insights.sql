@@ -282,7 +282,7 @@ UPDATE info_insight_cards SET text=
 
  Particulates can come from indoor sources of pollutants like smoke, cooking fumes, and even some household cleaners. You should always take care to minimize your exposure to these types of pollutants. If necessary, clear your room by opening a window.
 
- Particulate pollution can also come from outdoor sources both natural and artificial. You can check \url{airnow.gov} if there is an air quality advisory for your area. If so, you should follow EPA recommendations, and avoid spending too much time outdoors.'
+ Particulate pollution can also come from outdoor sources both natural and artificial. You can check <airnow.gov> if there is an air quality advisory for your area. If so, you should follow EPA recommendations, and avoid spending too much time outdoors.'
 
 WHERE category='air_quality';
 
