@@ -24,6 +24,7 @@ import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
@@ -334,6 +335,10 @@ public class InsightProcessor {
                 break;
             case BED_LIGHT_INTENSITY_RATIO:
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
+                break;
+            case AIR_QUALITY:
+                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataDAO);
+                break;
         }
 
         if (insightCardOptional.isPresent()) {
