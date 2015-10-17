@@ -18,6 +18,7 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
@@ -30,6 +31,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
@@ -176,6 +178,15 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.CALIBRATION));
         final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
+
+        //TEMPORARY -- DO NOT MERGE TO MASTER WITH THIS IN HERE
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAO() {
+            @Override
+            public OnlineHmmPriors getDefaultModel() {
+                return OnlineHmmPriors.createEmpty();
+            }
+        };
+
         final TimelineProcessor timelineProcessor =
                 TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO,
@@ -187,7 +198,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 senseColorDAO,
                 onlineHmmModelsDAO,
                 featureExtractionModelsDAO,
-                calibrationDAO);
+                calibrationDAO,
+                        defaultModelEnsembleDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
