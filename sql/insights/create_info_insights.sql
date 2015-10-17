@@ -274,3 +274,16 @@ Too little light early in the day confuses your internal clock, which can feel l
 
 If you use a lot of artificial light at night, make sure you balance it out by exposing yourself to more light during the morning and during the day. Exposure to light can enhance your sleep as long as it is synced with the natural patterns of your internal clock.'
 );
+
+--jyfan 10/16/2015 Updating air quality text
+
+UPDATE info_insight_cards SET text=
+'Clean air is an important part of a healthy environment. A high concentration of airborne particulates — microscopic fragments of matter that can penetrate deep into your lungs — can irritate your throat and airways, exacerbate asthma symptoms, and disrupt your sleep.
+
+ Particulates can come from indoor sources of pollutants like smoke, cooking fumes, and even some household cleaners. You should always take care to minimize your exposure to these types of pollutants. If necessary, clear your room by opening a window.
+
+ Particulate pollution can also come from outdoor sources both natural and artificial. You can check \url{airnow.gov} if there is an air quality advisory for your area. If so, you should follow EPA recommendations, and avoid spending too much time outdoors.'
+
+WHERE category='air_quality';
+
+UPDATE info_insight_cards SET title='Particulate Matter and Your Health' WHERE category='air_quality';
