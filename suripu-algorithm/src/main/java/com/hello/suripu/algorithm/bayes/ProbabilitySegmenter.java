@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.BetaPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import org.slf4j.Logger;
@@ -73,7 +75,7 @@ public class ProbabilitySegmenter {
         final HmmPdfInterface [] obsModels = {preObsModel,duringObsModel,postObsModel};
         final double [] pi = {1.0,0.0,0.0};
 
-        final HiddenMarkovModel segmentingHiddenMarkovModel = new HiddenMarkovModel(3,A,pi,obsModels,6);
+        final HiddenMarkovModelInterface segmentingHiddenMarkovModel = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.ORIGINAL,3, A, pi, obsModels, 6);
 
         final Integer [] possibleEndStates = {2};
 
@@ -83,7 +85,7 @@ public class ProbabilitySegmenter {
             vec[t] = probs.get(t);
         }
 
-        HmmDecodedResult res = segmentingHiddenMarkovModel.decode(meas, possibleEndStates,1e-100);
+        HmmDecodedResult res = segmentingHiddenMarkovModel.decode(meas, possibleEndStates,HiddenMarkovModel.MIN_LIKELIHOOD);
         LOGGER.debug("probs = {}",probs);
         LOGGER.debug("segment = {}",res.bestPath);
 

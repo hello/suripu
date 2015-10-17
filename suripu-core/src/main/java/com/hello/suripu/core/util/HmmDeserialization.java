@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableSet;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
@@ -23,6 +25,7 @@ import java.util.TreeSet;
  * Created by benjo on 3/16/15.
  */
 public class HmmDeserialization {
+    final private static HiddenMarkovModelFactory.HmmType HMM_TYPE = HiddenMarkovModelFactory.HmmType.ORIGINAL;
 
     static public ImmutableList<NamedSleepHmmModel> createModelsFromProtobuf(final SleepHmmProtos.SleepHmmModelSet allModels) {
 
@@ -237,7 +240,7 @@ public class HmmDeserialization {
 
 
         //return the HMM + everything else
-        final HiddenMarkovModel hmm =  new HiddenMarkovModel(numStates, stateTransitionMatrix, initialStateProbabilities, obsModel,numFreeParams);
+        final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HMM_TYPE,numStates, stateTransitionMatrix, initialStateProbabilities, obsModel, numFreeParams);
 
         return Optional.of(new NamedSleepHmmModel(hmm,modelName, ImmutableSet.copyOf(sleepStates),ImmutableSet.copyOf(onBedStates),ImmutableSet.copyOf(allowableEndingStates), ImmutableList.copyOf(sleepDepthsByState),
                 audioDisturbanceThresoldDB,pillMagnitudeDisturbanceThreshold,naturalLightFilterStartHour,naturalLightFilterStopHour,numMinutesInMeasPeriod,isUsingIntervalSearch,lightPreMultiplier,lightFloorLux));

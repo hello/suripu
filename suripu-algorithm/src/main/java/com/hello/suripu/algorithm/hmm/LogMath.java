@@ -2,6 +2,8 @@ package com.hello.suripu.algorithm.hmm;
 
 import com.hello.suripu.algorithm.core.AlgorithmException;
 
+import java.util.Arrays;
+
 /**
  * Created by benjo on 8/17/15.
  */
@@ -54,6 +56,15 @@ public class LogMath {
         }
     }
 
+    public static double elnentropy(final double logx) {
+
+        if (logx == LOGZERO) {
+            return 0.0;
+        }
+        else {
+            return -eexp(logx) * logx;
+        }
+    }
     public static double elnproduct(final double logx, final double logy) {
         if (logx == LOGZERO || logy == LOGZERO) {
             return LOGZERO;
@@ -169,6 +180,18 @@ public class LogMath {
 
         return logz;
     }
+
+
+    public static double [][]  getLogZeroedMatrix(final int m, final int n) {
+        final double [][] x = new double[m][n];
+
+        for (int j = 0; j < m; j++) {
+            Arrays.fill(x[j], LOGZERO);
+        }
+
+        return x;
+    }
+
 
 
 }

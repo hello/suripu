@@ -6,6 +6,7 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning.*;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
@@ -21,6 +22,7 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.DeserializedFeatureExtractionWithParams;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,12 +60,14 @@ public class OnlineHmm {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmm.class);
     private final Logger LOGGER;
 
+    final DefaultModelEnsembleDAO defaultModelEnsembleDAO;
     final FeatureExtractionModelsDAO featureExtractionModelsDAO;
     final OnlineHmmModelsDAO userModelDAO;
     final Optional<UUID> uuid;
 
 
-    public OnlineHmm(final FeatureExtractionModelsDAO featureExtractionModelsDAO,final OnlineHmmModelsDAO userModelDAO,final Optional<UUID> uuid) {
+    public OnlineHmm(DefaultModelEnsembleDAO defaultModelEnsembleDAO, final FeatureExtractionModelsDAO featureExtractionModelsDAO, final OnlineHmmModelsDAO userModelDAO, final Optional<UUID> uuid) {
+        this.defaultModelEnsembleDAO = defaultModelEnsembleDAO;
         this.featureExtractionModelsDAO = featureExtractionModelsDAO;
         this.userModelDAO = userModelDAO;
         this.uuid = uuid;
@@ -155,40 +159,67 @@ public class OnlineHmm {
         }
 
 
+        //update the voting info
+        updatedModels.votingInfo.putAll(existingModels.votingInfo);
+
+        for (final Map.Entry<String,Map<String,ModelVotingInfo>> entry : newModel.votingInfo.entrySet()) {
+
+            //insert
+            if (!updatedModels.votingInfo.containsKey(entry.getKey())) {
+                updatedModels.votingInfo.put(entry.getKey(),Maps.<String,ModelVotingInfo>newHashMap());
+            }
+
+            //overwrite already-existing
+            updatedModels.votingInfo.get(entry.getKey()).putAll(entry.getValue());
+
+        }
 
         return updatedModels;
 
 
     }
 
-    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening) {
+    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening, final OnlineHmmPriors seedModels, boolean forceLearning) {
         final OnlineHmmData emptyResult = OnlineHmmData.createEmpty();
+
+        String modelIdSuffix = "custom";
+
+        //we do this do differentiate models that were learned in the field, or models that were
+        //done during batch-learning, where forceLearning will be "true"
+        if (forceLearning) {
+            modelIdSuffix = "forced";
+        }
 
         /* GET THE USER-SPECIFIC MODEL PARAMETERS FOR THE ONE HMM TO RULE THEM ALL */
         final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId,evening);
 
-        //sort out the differences between the default model and the user models
-        OnlineHmmPriors modelPriors = userModelData.modelPriors;
-
-        final Optional<OnlineHmmPriors> defaultPriorOptional = OnlineHmmPriors.createDefaultPrior();
-
-        if (!defaultPriorOptional.isPresent() && userModelData.modelPriors.isEmpty()) {
-            LOGGER.error("could not get valid default prior.  This is astoundingly bad.");
-            return emptyResult;
-        }
-
-        final OnlineHmmPriors defaultPrior = defaultPriorOptional.get();
+        final OnlineHmmPriors modelPriors = userModelData.modelPriors;
 
         /*  CREATE DEFAULT MODELS IF NECESSARY */
         if (userModelData.modelPriors.isEmpty()) {
             LOGGER.info("creating default model data for account {}",accountId);
 
-            //straight out assign
-            modelPriors = defaultPrior;
+            if (seedModels.isEmpty()) {
+                LOGGER.error("CANNOT INITIALIZE MODELS FOR USER {}.  THIS IS REALLY BAD.", accountId);
+                return OnlineHmmData.createEmpty();
+            }
+
+            for (final String key : seedModels.modelsByOutputId.keySet()) {
+                //get the first one
+                final Map.Entry<String,OnlineHmmModelParams> firstEntry = seedModels.modelsByOutputId.get(key).entrySet().iterator().next();
+
+                //populate a new params map
+                final Map<String,OnlineHmmModelParams> paramsMap = Maps.newHashMap();
+
+                //create model ID
+                final String newModelId = String.format("%s-%s-%s",key,String.valueOf(accountId),modelIdSuffix);
+
+                paramsMap.put(newModelId, firstEntry.getValue().clone(newModelId));
+                modelPriors.modelsByOutputId.put(key,paramsMap);
+            }
 
             //update dynamo
             userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,evening,modelPriors);
-
         }
 
 
@@ -321,46 +352,67 @@ public class OnlineHmm {
     }
 
 
-    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime evening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc,
+    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime evening, final DateTime startTimeLocalUtc, final DateTime endOfDayTimeLocalUtc,final DateTime currentTimeLocalUtc,
                            OneDaysSensorData oneDaysSensorData, boolean feedbackHasChanged,boolean forceLearning) {
 
         /*  GET THE FEATURE EXTRACTION LAYER -- this will be as bunch of HMMs that will classify binned sensor data into discrete classes
         *                                    -- it's the time-series equivalent of finding which cluster a data point belongs to
         */
 
-        SleepEvents<Optional<Event>> predictions = SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
+        SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
 
         final int timezoneOffset = oneDaysSensorData.timezoneOffsetMillis;
         final long startTimeUtc = startTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
-        final long endTimeUtc = endTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
-        final long endTimeToUpdateFeedback = endTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;
+        final long endOfDayTimeUtc = endOfDayTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
+
+        final long endTimeToUpdateFeedback = endOfDayTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;
         final ImmutableList<TimelineFeedback> feedbackList = oneDaysSensorData.feedbackList;
 
+        final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModelEnsemble();
+        final OnlineHmmPriors seedModel = defaultModelEnsembleDAO.getSeedModel();
+
+        //IF THE CURRENT TIME IS BEFORE THE END OF DAY, USE CURRENT TIME AS END TIME.
+        DateTime stopTimeLocalUtc = endOfDayTimeLocalUtc;
+
+        if (currentTimeLocalUtc.getMillis() < stopTimeLocalUtc.getMillis()) {
+            stopTimeLocalUtc = currentTimeLocalUtc;
+        }
+
+        //convert to UTC
+        final long endTimeUtc = stopTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
+
+
+        if (defaultEnsemble.isEmpty()) {
+            LOGGER.error("No default ensemble found. THIS IS REQUIRED!");
+            return sleepEvents;
+        }
+
+        //GET THE FEATURE EXTRACTION LAYER FROM DYNAMO DB
         final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, startTimeLocalUtc, uuid);
 
         if (!serializedData.isValid()) {
-            LOGGER.error("failed to get feature extraction layer!");
-            return predictions;
+            LOGGER.error("failed to get feature extraction layer!  THIS IS REQUIRED!");
+            return sleepEvents;
         }
 
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
 
-
-        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening);
+        //GET THE VOTING WEIGHTS AND CUSTOM MODEL FOR THE USER
+        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening,seedModel,forceLearning);
 
         if (userModelData.modelPriors.isEmpty()) {
             LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
-            return predictions;
+            return sleepEvents;
         }
 
         OnlineHmmPriors modelPriors = userModelData.modelPriors;
 
         if (modelPriors == null) {
             LOGGER.error("somehow never got model priors for account {}",accountId);
-            return predictions;
+            return sleepEvents;
         }
 
-        /*  CHECK TO SEE IF THE SCRATCH PAD SHOULD BE ADDED TO THE CURRENT MODEL */
+        /*  CHECK TO SEE IF THE SCRATCHPAD CREATED IN THE PAST SHOULD BE ADDED TO THE CURRENT MODEL */
         if (!userModelData.scratchPad.isEmpty()) {
             final OnlineHmmScratchPad scratchPad = userModelData.scratchPad;
 
@@ -394,7 +446,7 @@ public class OnlineHmm {
 
         if (!binnedDataOptional.isPresent()) {
             LOGGER.error("failed to get binned sensor data");
-            return predictions;
+            return sleepEvents;
         }
 
 
@@ -403,14 +455,18 @@ public class OnlineHmm {
         /*  RUN THE FEATURE EXTRACTION LAYER */
         final Map<String,ImmutableList<Integer>> pathsByModelId = featureExtractionModels.sensorDataReduction.getPathsFromSensorData(binnedData.data);
 
+        for (final Map.Entry<String,ImmutableList<Integer>> entry : pathsByModelId.entrySet()) {
+            LOGGER.info("path {} = {}",entry.getKey(),entry.getValue());
+        }
+
         /*  EVALUATE AND FIND THE BEST MODELS */
         final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(uuid);
 
-        final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId = evaluator.evaluate(modelPriors,pathsByModelId);
+        final EvaluationResult evaluationResult = evaluator.evaluate(defaultEnsemble,modelPriors,pathsByModelId);
 
 
         /* GET PREDICTIONS  */
-        predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset,LOGGER);
+        sleepEvents = getSleepEventsFromPredictions(evaluationResult.predictions,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset,LOGGER);
 
 
         //get filtered feedback
@@ -430,14 +486,10 @@ public class OnlineHmm {
             final LabelMaker labelMaker = new LabelMaker(uuid);
             final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvents(timezoneOffset, binnedData.t0, endTimeUtc, binnedData.numMinutesInWindow, feedbackList);
 
-            //2) reestimate on top of the models that were actually used by the user
-            final Map<String,String> usedModelsByOutputId = Maps.newHashMap();
+            //2) reestimate the user's model, and update the voting weights with the feedback
+            final OnlineHmmModelLearner learner = new OnlineHmmModelLearner(uuid);
 
-            for (final Map.Entry<String,MultiEvalHmmDecodedResult> entry : bestDecodedResultsByOutputId.entrySet()) {
-                usedModelsByOutputId.put(entry.getKey(),entry.getValue().originatingModel);
-            }
-
-            final OnlineHmmScratchPad scratchPad = evaluator.reestimate(usedModelsByOutputId, modelPriors, pathsByModelId, labelsByOutputId, startTimeUtc);
+            final OnlineHmmScratchPad scratchPad = learner.reestimate(evaluationResult, modelPriors, pathsByModelId, labelsByOutputId, startTimeUtc);
 
             if (scratchPad.isEmpty()) {
                 LOGGER.error("scratchpad is empty!!!");
@@ -469,8 +521,19 @@ public class OnlineHmm {
             }
         }
 
+        LOGGER.info("ONLINE HMM PREDICTIONS");
 
-        return predictions;
+        for (final Optional<Event> event : sleepEvents.toList()) {
+            if (!event.isPresent()) {
+                continue;
+            }
+
+            LOGGER.info("{} = {}", event.get().getType(),
+                    new DateTime(event.get().getStartTimestamp()).withZone(DateTimeZone.forOffsetMillis(timezoneOffset)));
+
+        }
+
+        return sleepEvents;
 
     }
 

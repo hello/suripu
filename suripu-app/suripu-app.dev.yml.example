@@ -284,3 +284,11 @@ device_data:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: sense_data
+
+timeline_model_ensembles:
+  bucket: hello-timeline-models
+  key: normal3ensemble.base64
+
+timeline_seed_model:
+  bucket: hello-timeline-models
+  key: normal3.base64
