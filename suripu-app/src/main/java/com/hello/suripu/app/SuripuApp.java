@@ -50,6 +50,8 @@ import com.hello.suripu.core.db.AppStatsDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAOFromFile;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
@@ -280,6 +282,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
         final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
+        /* Default model ensemble for all users  */
+        //TEMPORARY  -- DO NOT MERGE TO MASTER WITH DefaultModelEnsembleDAOFromFile
+        //It will eventually be from S3
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAOFromFile("/Users/benjo/dev/Kasetsu/server_debug");
+
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
@@ -386,7 +393,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 senseColorDAO,
                 onlineHmmModelsDAO,
                 featureExtractionDAO,
-                calibrationDAO);
+                calibrationDAO,
+                defaultModelEnsembleDAO);
                 
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO,timelineLogger, timelineProcessor));

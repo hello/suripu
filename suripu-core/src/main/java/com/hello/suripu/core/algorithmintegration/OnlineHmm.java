@@ -6,6 +6,7 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning.*;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
@@ -58,12 +59,14 @@ public class OnlineHmm {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmm.class);
     private final Logger LOGGER;
 
+    final DefaultModelEnsembleDAO defaultModelEnsembleDAO;
     final FeatureExtractionModelsDAO featureExtractionModelsDAO;
     final OnlineHmmModelsDAO userModelDAO;
     final Optional<UUID> uuid;
 
 
-    public OnlineHmm(final FeatureExtractionModelsDAO featureExtractionModelsDAO,final OnlineHmmModelsDAO userModelDAO,final Optional<UUID> uuid) {
+    public OnlineHmm(DefaultModelEnsembleDAO defaultModelEnsembleDAO, final FeatureExtractionModelsDAO featureExtractionModelsDAO, final OnlineHmmModelsDAO userModelDAO, final Optional<UUID> uuid) {
+        this.defaultModelEnsembleDAO = defaultModelEnsembleDAO;
         this.featureExtractionModelsDAO = featureExtractionModelsDAO;
         this.userModelDAO = userModelDAO;
         this.uuid = uuid;

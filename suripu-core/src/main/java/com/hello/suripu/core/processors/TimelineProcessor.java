@@ -11,6 +11,7 @@ import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
@@ -95,8 +96,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final FeatureExtractionModelsDAO featureExtractionModelsDAO;
     private final Optional<UUID> uuidOptional;
     private final CalibrationDAO calibrationDAO;
+    private final DefaultModelEnsembleDAO defaultModelEnsembleDAO;
 
-    final private static int SLOT_DURATION_MINUTES = 1;
+        final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
     public final static int MIN_PARTNER_FILTERED_MOTION_COUNT = 5;
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
@@ -121,19 +123,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final SenseColorDAO senseColorDAO,
                                                             final OnlineHmmModelsDAO priorsDAO,
                                                             final FeatureExtractionModelsDAO featureExtractionModelsDAO,
-                                                            final CalibrationDAO calibrationDAO) {
+                                                            final CalibrationDAO calibrationDAO,
+                                                            final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(trackerMotionDAO,
                 deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO, featureExtractionModelsDAO,
-                Optional.<UUID>absent(), calibrationDAO);
+                Optional.<UUID>absent(), calibrationDAO,defaultModelEnsembleDAO);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO);
     }
 
     //private SessionLogDebug(final String)
@@ -150,7 +153,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                               final OnlineHmmModelsDAO priorsDAO,
                               final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                               final Optional<UUID> uuid,
-                              final CalibrationDAO calibrationDAO) {
+                              final CalibrationDAO calibrationDAO,
+                              final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -163,6 +167,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.priorsDAO = priorsDAO;
         this.featureExtractionModelsDAO = featureExtractionModelsDAO;
         this.calibrationDAO = calibrationDAO;
+        this.defaultModelEnsembleDAO = defaultModelEnsembleDAO;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -247,7 +252,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             if (this.hasOnlineHmmEnabled(accountId)) {
                 //get model from DB
-                final OnlineHmm onlineHmm = new OnlineHmm(featureExtractionModelsDAO,priorsDAO,uuidOptional);
+                final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO,featureExtractionModelsDAO,priorsDAO,uuidOptional);
 
 
                     //get priors from DB

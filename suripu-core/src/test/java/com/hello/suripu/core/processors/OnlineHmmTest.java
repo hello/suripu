@@ -256,7 +256,7 @@ public class OnlineHmmTest {
         final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
 
 
-        final OnlineHmm onlineHmm = new OnlineHmm(localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
+        final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
 
         modelsDAO.setZeroCounts();
 
@@ -396,7 +396,7 @@ public class OnlineHmmTest {
         final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
 
 
-        final OnlineHmm onlineHmm = new OnlineHmm(localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
+        final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
 
         DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
         DateTime startTime = date.withHourOfDay(18);
