@@ -339,10 +339,17 @@ public class OnlineHmm {
         final long endTimeToUpdateFeedback = endTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;
         final ImmutableList<TimelineFeedback> feedbackList = oneDaysSensorData.feedbackList;
 
+        final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModel();
+
+        if (defaultEnsemble.isEmpty()) {
+            LOGGER.error("No default ensemble found. THIS IS REQUIRED!");
+            return predictions;
+        }
+
         final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, startTimeLocalUtc, uuid);
 
         if (!serializedData.isValid()) {
-            LOGGER.error("failed to get feature extraction layer!");
+            LOGGER.error("failed to get feature extraction layer!  THIS IS REQUIRED!");
             return predictions;
         }
 
@@ -403,13 +410,16 @@ public class OnlineHmm {
 
         final BinnedData binnedData = binnedDataOptional.get();
 
+
+
+
         /*  RUN THE FEATURE EXTRACTION LAYER */
         final Map<String,ImmutableList<Integer>> pathsByModelId = featureExtractionModels.sensorDataReduction.getPathsFromSensorData(binnedData.data);
 
         /*  EVALUATE AND FIND THE BEST MODELS */
         final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(uuid);
 
-        final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId = evaluator.evaluate(modelPriors,pathsByModelId);
+        final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId = evaluator.evaluate(defaultEnsemble,modelPriors,pathsByModelId);
 
 
         /* GET PREDICTIONS  */

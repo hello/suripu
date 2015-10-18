@@ -52,6 +52,18 @@ public class  OnlineHmmPriors {
         return new OnlineHmmPriors(modelsByOutputId);
     }
 
+
+    public void mergeFrom(final OnlineHmmPriors otherPrior) {
+        for (final Map.Entry<String,Map<String,OnlineHmmModelParams>> entry : otherPrior.modelsByOutputId.entrySet()) {
+
+            if (!modelsByOutputId.containsKey(entry.getKey())) {
+                modelsByOutputId.put(entry.getKey(),Maps.<String,OnlineHmmModelParams>newHashMap());
+            }
+
+            modelsByOutputId.get(entry.getKey()).putAll(entry.getValue());
+        }
+    }
+
     public List<String> getModelIds() {
         final List<String> modelIds = Lists.newArrayList();
 
