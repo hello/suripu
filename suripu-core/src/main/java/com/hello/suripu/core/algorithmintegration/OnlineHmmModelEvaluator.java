@@ -146,12 +146,18 @@ public class OnlineHmmModelEvaluator {
     }
 
     /* EVALUATES ALL THE MODELS AND PICKS THE BEST  */
-    public Map<String,MultiEvalHmmDecodedResult> evaluate(final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features) {
+    public Map<String,MultiEvalHmmDecodedResult> evaluate(final OnlineHmmPriors defaultEnsemble, final OnlineHmmPriors userPrior, final Map<String, ImmutableList<Integer>> features) {
+
+        //merge models, since we are going to evaluate all of them
+        final OnlineHmmPriors allModels = OnlineHmmPriors.createEmpty();
+        allModels.mergeFrom(defaultEnsemble);
+        allModels.mergeFrom(userPrior);
+
 
         final Map<String,MultiEvalHmmDecodedResult> bestModels = Maps.newHashMap();
 
         //create result for each output Id
-        for (final String outputId : priors.modelsByOutputId.keySet()) {
+        for (final String outputId : allModels.modelsByOutputId.keySet()) {
 
 
             //NOW GO THROUGH EACH MODEL IN THE LIST AND EVALUATE THEM
@@ -160,7 +166,7 @@ public class OnlineHmmModelEvaluator {
             String bestModel = null;
 
             //get the list of models to evaluate
-            final Map<String,OnlineHmmModelParams> paramsMap = priors.modelsByOutputId.get(outputId);
+            final Map<String,OnlineHmmModelParams> paramsMap = allModels.modelsByOutputId.get(outputId);
 
             final List<Double> scores = Lists.newArrayList();
             final List<String> ids = Lists.newArrayList();

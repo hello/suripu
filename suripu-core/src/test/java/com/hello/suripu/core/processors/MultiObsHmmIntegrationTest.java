@@ -1,21 +1,16 @@
 package com.hello.suripu.core.processors;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.LabelMaker;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
-import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
@@ -27,13 +22,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -171,7 +161,7 @@ public class MultiObsHmmIntegrationTest {
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
 
             final Map<String,ImmutableList<Integer>> features = featureData.get(0);
-            final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features);
+            final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(defaultEnsemble, model.get(),features);
 
             TestCase.assertTrue(results.size() == 2);
             TestCase.assertTrue(results.containsKey("SLEEP"));
@@ -265,7 +255,7 @@ public class MultiObsHmmIntegrationTest {
             int count = 0;
             for (final Map<String,ImmutableList<Integer>> features : featureData) {
 
-                final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features);
+                final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(defaultEnsemble, model.get(),features);
 
                 final List<Transition> transitions = results.get(outputId).transitions;
 
@@ -397,7 +387,7 @@ public class MultiObsHmmIntegrationTest {
             }
 
             for (int count = 0;  count < featureData.size(); count++) {
-                final Map<String, MultiEvalHmmDecodedResult> results = evaluator.evaluate(model, featureData.get(count));
+                final Map<String, MultiEvalHmmDecodedResult> results = evaluator.evaluate(defaultEnsemble, model, featureData.get(count));
 
                 //System.out.print(String.format("COST: %f\n",results.get(outputId).pathcost));
                 List<Transition> transitions = results.get(outputId).transitions;
