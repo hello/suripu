@@ -10,6 +10,7 @@ import com.hello.suripu.algorithm.hmm.*;
 import com.hello.suripu.api.datascience.OnlineHmmProtos;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.*;
 import com.hello.suripu.api.datascience.OnlineHmmProtos.Transition;
+import com.hello.suripu.core.algorithmintegration.ModelVotingInfo;
 import com.hello.suripu.core.algorithmintegration.MotionTransitionRestriction;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.TransitionRestriction;
@@ -24,8 +25,8 @@ import java.util.Map;
 public class  OnlineHmmPriors {
 
     public final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId;
-    public final Map<String,Map<String,Double>> votingInfo;
-    private OnlineHmmPriors(final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId, final Map<String,Map<String,Double>> votingInfo) {
+    public final Map<String,Map<String,ModelVotingInfo>> votingInfo;
+    private OnlineHmmPriors(final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId, final Map<String,Map<String,ModelVotingInfo>> votingInfo) {
         this.modelsByOutputId = modelsByOutputId;
         this.votingInfo = votingInfo;
     }
@@ -48,12 +49,12 @@ public class  OnlineHmmPriors {
             modelsByOutputId.put(entry.getKey(),myMap);
         }
 
-        final Map<String, Map<String,Double>> votingInfo = Maps.newHashMap();
+        final Map<String, Map<String,ModelVotingInfo>> votingInfo = Maps.newHashMap();
 
-        for (final Map.Entry<String,Map<String,Double>> entry : this.votingInfo.entrySet()) {
-            final Map<String,Double> myMap = Maps.newHashMap();
+        for (final Map.Entry<String,Map<String,ModelVotingInfo>> entry : this.votingInfo.entrySet()) {
+            final Map<String,ModelVotingInfo> myMap = Maps.newHashMap();
 
-            for (final Map.Entry<String,Double> params : entry.getValue().entrySet()) {
+            for (final Map.Entry<String,ModelVotingInfo> params : entry.getValue().entrySet()) {
                 myMap.put(params.getKey(), params.getValue());
             }
 
@@ -74,6 +75,14 @@ public class  OnlineHmmPriors {
             }
 
             modelsByOutputId.get(entry.getKey()).putAll(entry.getValue());
+        }
+
+        for (final Map.Entry<String,Map<String,ModelVotingInfo>> entry : otherPrior.votingInfo.entrySet()) {
+            if (!votingInfo.containsKey(entry.getKey())) {
+                votingInfo.put(entry.getKey(),Maps.<String,ModelVotingInfo>newHashMap());
+            }
+
+            votingInfo.get(entry.getKey()).putAll(entry.getValue());
         }
     }
 
@@ -140,7 +149,7 @@ public class  OnlineHmmPriors {
 
     public static OnlineHmmPriors createEmpty() {
         final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
-        final Map<String, Map<String,Double>> votingInfo = Maps.newHashMap();
+        final Map<String, Map<String,ModelVotingInfo>> votingInfo = Maps.newHashMap();
 
         return new OnlineHmmPriors(modelsByOutputId,votingInfo);
     }
@@ -244,14 +253,14 @@ public class  OnlineHmmPriors {
 
             }
 
-            final Map<String,Map<String,Double>> modelProbabilities = Maps.newHashMap();
+            final Map<String,Map<String,ModelVotingInfo>> modelProbabilities = Maps.newHashMap();
 
             for (final VotingInfo info : protobuf.getVoteInfoList()) {
                 if (!modelProbabilities.containsKey(info.getOutputId())) {
-                    modelProbabilities.put(info.getOutputId(),Maps.<String,Double>newHashMap());
+                    modelProbabilities.put(info.getOutputId(),Maps.<String,ModelVotingInfo>newHashMap());
                 }
 
-                modelProbabilities.get(info.getOutputId()).put(info.getModelId(),info.getProbabilityOfModel());
+                modelProbabilities.get(info.getOutputId()).put(info.getModelId(),new ModelVotingInfo(info));
             }
 
 
@@ -339,13 +348,13 @@ public class  OnlineHmmPriors {
             }
         }
 
-        for (final Map.Entry<String,Map<String,Double>> entry : votingInfo.entrySet()) {
-            for (final Map.Entry<String,Double> entryForModel : entry.getValue().entrySet()) {
+        for (final Map.Entry<String,Map<String,ModelVotingInfo>> entry : votingInfo.entrySet()) {
+            for (final Map.Entry<String,ModelVotingInfo> entryForModel : entry.getValue().entrySet()) {
                 builder.addVoteInfo(
                         VotingInfo.newBuilder().
                                 setModelId(entryForModel.getKey()).
                                 setOutputId(entry.getKey()).
-                                setProbabilityOfModel(entryForModel.getValue()).build());
+                                setProbabilityOfModel(entryForModel.getValue().prob).build());
             }
         }
 

@@ -18,7 +18,6 @@ import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -36,6 +35,8 @@ public class OnlineHmmModelEvaluator {
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
     final static double PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES = 1.0;
+    final static double MIN_NUM_PERIODS_ON_BED = 36;
+    final static double DEFAULT_VOTE_WEIGHT = 0.2;
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmmModelEvaluator.class);
     private final Logger LOGGER;
@@ -156,22 +157,16 @@ public class OnlineHmmModelEvaluator {
 
         final Map<String,MultiEvalHmmDecodedResult> bestModels = Maps.newHashMap();
 
-        //create result for each output Id
-        for (final String outputId : allModels.modelsByOutputId.keySet()) {
+        //EVALUATE EACH MODEL, VOTING ONCE PER OUTPUT ID
+        for (final Map.Entry<String,Map<String,OnlineHmmModelParams>> entryByOutput : allModels.modelsByOutputId.entrySet()) {
 
-
-            //NOW GO THROUGH EACH MODEL IN THE LIST AND EVALUATE THEM
+            //list of results
             final List<MultiEvalHmmDecodedResult> resultsForThisId = Lists.newArrayList();
 
-            //get the list of models to evaluate
-            final Map<String,OnlineHmmModelParams> paramsMap = allModels.modelsByOutputId.get(outputId);
+            //evaluate for each model, saving results in list
+            for (final Map.Entry<String,OnlineHmmModelParams> entryByModelForThisOutput : entryByOutput.getValue().entrySet()) {
 
-            final List<Double> scores = Lists.newArrayList();
-            final List<String> ids = Lists.newArrayList();
-            //evaluate
-            for (final Map.Entry<String,OnlineHmmModelParams> paramsEntry : paramsMap.entrySet()) {
-                final OnlineHmmModelParams params = paramsEntry.getValue();
-
+                final OnlineHmmModelParams params = entryByModelForThisOutput.getValue();
 
                 try {
                     //get the transition restrictions, which is on a per-model basis
@@ -204,13 +199,14 @@ public class OnlineHmmModelEvaluator {
             //TRIM silly model results
             final List<MultiEvalHmmDecodedResult> goodResults = Lists.newArrayList();
             for (final MultiEvalHmmDecodedResult result : resultsForThisId) {
-                if (result.stateDurations[LabelMaker.LABEL_DURING_SLEEP] < 36) {
+                if (result.stateDurations[LabelMaker.LABEL_DURING_SLEEP] < MIN_NUM_PERIODS_ON_BED) {
                     continue;
                 }
                 goodResults.add(result);
             }
 
             if (goodResults.isEmpty()) {
+                LOGGER.warn("skipping output {} because no viable predictions were found",entryByOutput.getKey());
                 continue; // skip it!
             }
 
@@ -218,40 +214,64 @@ public class OnlineHmmModelEvaluator {
             //is it better?
             final int T = goodResults.get(0).path.length;
             final int N = goodResults.get(0).numStates;
-            int [][] votes = new int[N][T];
+            final double [][] votes = new double[N][T];
+            final Map<String,ModelVotingInfo> votingInfoByOutputId = allModels.votingInfo.get(entryByOutput.getKey());
+
             for (final MultiEvalHmmDecodedResult result : goodResults) {
-                for (int t = 0; t < result.path.length; t++) {
-                    votes[result.path[t]][t]++;
-                }
+                voteByModel(votes,votingInfoByOutputId,result);
             }
 
-            int [] votepath = new int[T];
+            final int [] votepath = getVotedPath(votes);
 
-            for (int t = 0; t < T; t++) {
-                int max = 0;
-                int maxidx = 0;
-                for (int i = 0; i < N; i++) {
-                    if (max < votes[i][t]) {
-                        max = votes[i][t];
-                        maxidx = i;
-                    }
-                }
+            final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(votepath,0.0,String.format("%s-%s",entryByOutput.getKey(),"voted"));
 
-                votepath[t] = maxidx;
-
-            }
-
-            final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(votepath,goodResults.get(0).pathcost,goodResults.get(0).originatingModel);
-
-            LOGGER.info("transitions for {} are {}",outputId, theResult.transitions);
+            LOGGER.info("transitions for {} are {}",entryByOutput.getKey(), theResult.transitions);
 
             //store by outputId
-            bestModels.put(outputId,theResult);
+            bestModels.put(entryByOutput.getKey(),theResult);
         }
 
         return bestModels;
     }
 
 
+    private static void voteByModel(final double [][] votes,final Map<String,ModelVotingInfo> voteInfoByModelId,final MultiEvalHmmDecodedResult result) {
+        double voteWeight = DEFAULT_VOTE_WEIGHT;
+
+        if (voteInfoByModelId != null) {
+            final ModelVotingInfo votingInfo = voteInfoByModelId.get(result.originatingModel);
+
+            if (votingInfo != null) {
+                voteWeight = votingInfo.prob;
+            }
+        }
+
+        for (int t = 0; t < result.path.length; t++) {
+            votes[result.path[t]][t] += voteWeight;
+        }
+    }
+
+    private static int [] getVotedPath(final double [][] votes) {
+        final int N = votes.length;
+        final int T = votes[0].length;
+
+        int [] votepath = new int[T];
+
+        for (int t = 0; t < T; t++) {
+            double max = 0;
+            int maxidx = 0;
+            for (int i = 0; i < N; i++) {
+                if (max < votes[i][t]) {
+                    max = votes[i][t];
+                    maxidx = i;
+                }
+            }
+
+            votepath[t] = maxidx;
+
+        }
+
+        return votepath;
+    }
 
 }
