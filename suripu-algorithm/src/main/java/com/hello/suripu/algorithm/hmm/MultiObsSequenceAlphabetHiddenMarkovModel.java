@@ -1,12 +1,17 @@
 package com.hello.suripu.algorithm.hmm;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -20,6 +25,7 @@ import java.util.SortedSet;
 
 
 public class MultiObsSequenceAlphabetHiddenMarkovModel {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultiObsSequenceAlphabetHiddenMarkovModel.class);
     Map<String,double [][]> logAlphabetNumerator;
     double [][] logANumerator;
     double [] logDenominator;
@@ -297,15 +303,36 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
                     scores[i] = LogMath.elnproduct(scores[i], phi[i][t - 1]);
                 }
 
-                final SortedSet<CostWithIndex> costsWithIndex = Sets.newTreeSet();
+                final List<CostWithIndex> costsWithIndex = Lists.newArrayList();
 
                 for (i = 0; i < numStates; i++) {
                     costsWithIndex.add(new CostWithIndex(i, scores[i]));
                 }
 
-                Iterator<CostWithIndex> costIterator = costsWithIndex.iterator();
-                int maxIdx = costIterator.next().idx;
-                double maxVal = scores[maxIdx];
+                Collections.sort(costsWithIndex);
+
+
+                //check to see if any of the other possible "from" states (i.e. i != j)
+                //are below min. duration.  If so, we must force a transition from that state
+
+                int maxIdx = costsWithIndex.get(0).idx;
+                double maxVal = costsWithIndex.get(0).cost;
+
+                for (i = 0; i < numStates; i++) {
+                    //not possible, quit
+                    final int idx = costsWithIndex.get(i).idx;
+                    final double cost = costsWithIndex.get(i).cost;
+
+                    if (cost == Double.NEGATIVE_INFINITY) {
+                        break;
+                    }
+
+                    if (zeta[idx] < minStateDurations[idx] && idx != j) {
+                        maxIdx = idx;
+                        maxVal = cost;
+                        break;
+                    }
+                }
 
                 //best path is to stay?  increment zeta.
                 if (maxIdx == j) {
@@ -317,17 +344,9 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
                 //if zeta of the state I'm coming FROM is above min durations,
                 //I'll let the transition happen.  Otherwise, pick the next best state.
-                boolean worked = true;
-                while (zeta[maxIdx] < minStateDurations[maxIdx] && costIterator.hasNext()) {
-                    maxIdx = costIterator.next().idx;
-                    maxVal = scores[maxIdx];
 
-                    worked = zeta[maxIdx] >= minStateDurations[maxIdx];
-                }
-
-                if (!worked) {
-                    //failboat
-                    return new Result(new int[0],Double.NEGATIVE_INFINITY);
+                if (maxVal == Double.NEGATIVE_INFINITY) {
+                    maxIdx = j;
                 }
 
                 phi[j][t] = maxVal;
@@ -374,11 +393,13 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return new Result(path,maxScore);
     }
 
-    static private void printMat(double [][] mat) {
+    static private void printMat(final String name,double [][] mat) {
+        System.out.print(name);
+        System.out.print(" = [[");
         for (int j = 0; j < mat.length; j++) {
 
             if (j != 0) {
-                System.out.print("\n");
+                System.out.print(",\n[");
             }
 
             for (int i = 0; i < mat[j].length; i++) {
@@ -388,10 +409,38 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
                 System.out.print(String.format("%.2f",mat[j][i]));
             }
+            System.out.print("]");
 
         }
+        System.out.print("]\n");
     }
 
+    static private void printMat(final String name,int [][] mat) {
+        System.out.print(name);
+        System.out.print(" = [[");
+
+
+        for (int j = 0; j < mat.length; j++) {
+
+            if (j != 0) {
+                System.out.print(",\n[");
+            }
+
+            for (int i = 0; i < mat[j].length; i++) {
+                if (i != 0) {
+                    System.out.print(",");
+                }
+
+                System.out.print(String.format("%d", mat[j][i]));
+            }
+
+            System.out.print("]");
+
+        }
+
+        System.out.print("]\n");
+
+    }
     public boolean reestimate(final MultiObsSequence meas, final double priorWeightAsNumberOfSamples) {
         int iterationNumber;
         int iSequence;

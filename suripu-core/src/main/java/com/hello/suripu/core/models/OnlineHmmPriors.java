@@ -24,9 +24,10 @@ import java.util.Map;
 public class  OnlineHmmPriors {
 
     public final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId;
-
-    private OnlineHmmPriors(Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId) {
+    public final Map<String,Map<String,Double>> votingInfo;
+    private OnlineHmmPriors(final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId, final Map<String,Map<String,Double>> votingInfo) {
         this.modelsByOutputId = modelsByOutputId;
+        this.votingInfo = votingInfo;
     }
 
     public boolean isEmpty() {
@@ -47,9 +48,21 @@ public class  OnlineHmmPriors {
             modelsByOutputId.put(entry.getKey(),myMap);
         }
 
+        final Map<String, Map<String,Double>> votingInfo = Maps.newHashMap();
+
+        for (final Map.Entry<String,Map<String,Double>> entry : this.votingInfo.entrySet()) {
+            final Map<String,Double> myMap = Maps.newHashMap();
+
+            for (final Map.Entry<String,Double> params : entry.getValue().entrySet()) {
+                myMap.put(params.getKey(), params.getValue());
+            }
+
+            votingInfo.put(entry.getKey(),myMap);
+        }
 
 
-        return new OnlineHmmPriors(modelsByOutputId);
+
+        return new OnlineHmmPriors(modelsByOutputId,votingInfo);
     }
 
 
@@ -127,8 +140,9 @@ public class  OnlineHmmPriors {
 
     public static OnlineHmmPriors createEmpty() {
         final Map<String, Map<String,OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
+        final Map<String, Map<String,Double>> votingInfo = Maps.newHashMap();
 
-        return new OnlineHmmPriors(modelsByOutputId);
+        return new OnlineHmmPriors(modelsByOutputId,votingInfo);
     }
 
     public static Optional<OnlineHmmModelParams> protobufToParams(final AlphabetHmmPrior protobuf) {
@@ -230,8 +244,18 @@ public class  OnlineHmmPriors {
 
             }
 
+            final Map<String,Map<String,Double>> modelProbabilities = Maps.newHashMap();
 
-            return Optional.of(new OnlineHmmPriors(modelsByOutputId));
+            for (final VotingInfo info : protobuf.getVoteInfoList()) {
+                if (!modelProbabilities.containsKey(info.getOutputId())) {
+                    modelProbabilities.put(info.getOutputId(),Maps.<String,Double>newHashMap());
+                }
+
+                modelProbabilities.get(info.getOutputId()).put(info.getModelId(),info.getProbabilityOfModel());
+            }
+
+
+            return Optional.of(new OnlineHmmPriors(modelsByOutputId,modelProbabilities));
 
 
         } catch (InvalidProtocolBufferException e) {
@@ -312,6 +336,16 @@ public class  OnlineHmmPriors {
         for (final String key : modelsByOutputId.keySet()) {
             for (final OnlineHmmModelParams value : modelsByOutputId.get(key).values()) {
                 builder.addModels(protobufFromParams(value));
+            }
+        }
+
+        for (final Map.Entry<String,Map<String,Double>> entry : votingInfo.entrySet()) {
+            for (final Map.Entry<String,Double> entryForModel : entry.getValue().entrySet()) {
+                builder.addVoteInfo(
+                        VotingInfo.newBuilder().
+                                setModelId(entryForModel.getKey()).
+                                setOutputId(entry.getKey()).
+                                setProbabilityOfModel(entryForModel.getValue()).build());
             }
         }
 

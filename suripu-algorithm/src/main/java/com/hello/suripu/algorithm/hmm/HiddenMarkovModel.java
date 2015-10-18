@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class HiddenMarkovModel {
     static private final double MIN_NORMALIZING = 1e-6;
-    final int numStates;
+    public final int numStates;
     final int numFreeParams;
     double [][] A;
     double [] initialState;

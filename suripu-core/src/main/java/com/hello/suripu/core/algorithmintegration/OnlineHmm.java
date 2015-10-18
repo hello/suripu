@@ -22,6 +22,7 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.DeserializedFeatureExtractionWithParams;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -410,11 +411,12 @@ public class OnlineHmm {
 
         final BinnedData binnedData = binnedDataOptional.get();
 
-
-
-
         /*  RUN THE FEATURE EXTRACTION LAYER */
         final Map<String,ImmutableList<Integer>> pathsByModelId = featureExtractionModels.sensorDataReduction.getPathsFromSensorData(binnedData.data);
+
+        for (final Map.Entry<String,ImmutableList<Integer>> entry : pathsByModelId.entrySet()) {
+            LOGGER.info("path {} = {}",entry.getKey(),entry.getValue());
+        }
 
         /*  EVALUATE AND FIND THE BEST MODELS */
         final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(uuid);
@@ -482,6 +484,17 @@ public class OnlineHmm {
             }
         }
 
+        LOGGER.info("ONLINE HMM PREDICTIONS");
+
+        for (final Optional<Event> event : predictions.toList()) {
+            if (!event.isPresent()) {
+                continue;
+            }
+
+            LOGGER.info("{} = {}", event.get().getType(),
+                    new DateTime(event.get().getStartTimestamp()).withZone(DateTimeZone.forOffsetMillis(timezoneOffset)));
+
+        }
 
         return predictions;
 

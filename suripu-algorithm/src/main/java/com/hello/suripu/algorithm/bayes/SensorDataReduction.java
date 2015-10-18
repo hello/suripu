@@ -34,15 +34,16 @@ public class SensorDataReduction {
         final Map<String,ImmutableList<Integer>> pathsByModelId = Maps.newHashMap();
 
         //FORCE END-STATE of "0", in the future we will probably allow the model to specify the allowable end-states
-        final Integer [] possibleEndStates = new Integer[1];
-        possibleEndStates[0] = 0;
 
+        for (final Map.Entry<String,HiddenMarkovModel> entry : hmmByModelName.entrySet()) {
         //DECODE ALL SENSOR DATA INTO DISCRETE "CLASSIFICATIONS"
-        for (final String modelName : hmmByModelName.keySet()) {
 
-            final HmmDecodedResult hmmDecodedResult = hmmByModelName.get(modelName).decode(sensorData,possibleEndStates);
+            final Integer [] possibleEndStates = new Integer[1];
+            possibleEndStates[0] = entry.getValue().numStates - 1;
 
-            pathsByModelId.put(modelName,hmmDecodedResult.bestPath);
+            final HmmDecodedResult hmmDecodedResult = entry.getValue().decode(sensorData, possibleEndStates);
+
+            pathsByModelId.put(entry.getKey(),hmmDecodedResult.bestPath);
         }
 
         return pathsByModelId;
