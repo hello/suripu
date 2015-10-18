@@ -161,9 +161,7 @@ public class OnlineHmmModelEvaluator {
 
 
             //NOW GO THROUGH EACH MODEL IN THE LIST AND EVALUATE THEM
-            double bestScore = Double.NEGATIVE_INFINITY;
-            MultiObsSequenceAlphabetHiddenMarkovModel.Result bestResult = null;
-            String bestModel = null;
+            final List<MultiEvalHmmDecodedResult> resultsForThisId = Lists.newArrayList();
 
             //get the list of models to evaluate
             final Map<String,OnlineHmmModelParams> paramsMap = allModels.modelsByOutputId.get(outputId);
@@ -188,50 +186,62 @@ public class OnlineHmmModelEvaluator {
 
                     final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
 
-                    MultiObsSequenceAlphabetHiddenMarkovModel.Result result = hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);
-                    MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(result.path,result.pathScore,bestModel);
+                    final MultiObsSequenceAlphabetHiddenMarkovModel.Result decodeResult = hmm.decodeWithConstraints(meas, params.endStates, params.minStateDurations);
 
-                    if (theResult.transitions.size() < hmm.getNumStates() - 1) {
-                        LOGGER.info("lifting transition restrictions for model {} because it produced only {} of {} transitions",params.id,theResult.transitions.size(),hmm.getNumStates() - 1);
-                        final MultiObsSequence measNoRestrictions = MultiObsSequence.createModelPathsToMultiObsSequence(features, Optional.<Map<Integer, Integer>>absent());
+                    final MultiEvalHmmDecodedResult result = new MultiEvalHmmDecodedResult(decodeResult.path,decodeResult.pathScore,params.id);
 
-                        result = hmm.decodeWithConstraints(measNoRestrictions, params.endStates, params.minStateDurations);
-                        theResult = new MultiEvalHmmDecodedResult(result.path,result.pathScore,bestModel);
+                    LOGGER.info("{} cost: {}  transitions: {}",result.originatingModel,result.pathcost,result.transitions);
 
-                        if (theResult.transitions.size() < hmm.getNumStates() - 1) {
-                            LOGGER.warn("still not enough transitions for model {} -- skipping this model",params.id);
-                            continue;
-                        }
-                    }
+                    resultsForThisId.add(result);
 
-                    scores.add(result.pathScore);
-                    ids.add(params.id);
-
-
-                    //is it better?
-                    if (result.pathScore > bestScore) {
-                        bestScore = result.pathScore;
-                        bestResult = result;
-                        bestModel = params.id;
-                    }
                 }
                 catch (Exception e) {
                     LOGGER.error("failed to evaluate model {}",params.id);
                     LOGGER.error(e.getMessage());
                 }
+            }
+
+            //TRIM silly model results
+            final List<MultiEvalHmmDecodedResult> goodResults = Lists.newArrayList();
+            for (final MultiEvalHmmDecodedResult result : resultsForThisId) {
+                if (result.stateDurations[LabelMaker.LABEL_DURING_SLEEP] < 36) {
+                    continue;
+                }
+                goodResults.add(result);
+            }
+
+            if (goodResults.isEmpty()) {
+                continue; // skip it!
+            }
+
+
+            //is it better?
+            final int T = goodResults.get(0).path.length;
+            final int N = goodResults.get(0).numStates;
+            int [][] votes = new int[N][T];
+            for (final MultiEvalHmmDecodedResult result : goodResults) {
+                for (int t = 0; t < result.path.length; t++) {
+                    votes[result.path[t]][t]++;
+                }
+            }
+
+            int [] votepath = new int[T];
+
+            for (int t = 0; t < T; t++) {
+                int max = 0;
+                int maxidx = 0;
+                for (int i = 0; i < N; i++) {
+                    if (max < votes[i][t]) {
+                        max = votes[i][t];
+                        maxidx = i;
+                    }
+                }
+
+                votepath[t] = maxidx;
 
             }
 
-            LOGGER.info("models = {}",ids);
-            LOGGER.info("scores = {}",scores);
-            LOGGER.info("picked model {}",bestModel);
-
-            if (bestResult == null) {
-                LOGGER.info("no success in finding a viable model for output {}",outputId);
-                continue; //no output
-            }
-
-            final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(bestResult.path,bestResult.pathScore,bestModel);
+            final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(votepath,goodResults.get(0).pathcost,goodResults.get(0).originatingModel);
 
             LOGGER.info("transitions for {} are {}",outputId, theResult.transitions);
 

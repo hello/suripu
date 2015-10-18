@@ -54,6 +54,15 @@ public class LogMath {
         }
     }
 
+    public static double elnentropy(final double logx) {
+
+        if (logx == LOGZERO) {
+            return 0.0;
+        }
+        else {
+            return -eexp(logx) * logx;
+        }
+    }
     public static double elnproduct(final double logx, final double logy) {
         if (logx == LOGZERO || logy == LOGZERO) {
             return LOGZERO;
