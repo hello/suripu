@@ -4803,6 +4803,31 @@ public final class OnlineHmmProtos {
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPriorOrBuilder getModelDeltasOrBuilder(
         int index);
+
+    // repeated .hello.VotingInfo vote_info = 3;
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> 
+        getVoteInfoList();
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo getVoteInfo(int index);
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    int getVoteInfoCount();
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> 
+        getVoteInfoOrBuilderList();
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder getVoteInfoOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code hello.AlphabetHmmScratchPad}
@@ -4868,6 +4893,14 @@ public final class OnlineHmmProtos {
               modelDeltas_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.AlphabetHmmPrior.PARSER, extensionRegistry));
               break;
             }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                voteInfo_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              voteInfo_.add(input.readMessage(com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4878,6 +4911,9 @@ public final class OnlineHmmProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           modelDeltas_ = java.util.Collections.unmodifiableList(modelDeltas_);
+        }
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          voteInfo_ = java.util.Collections.unmodifiableList(voteInfo_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -4963,9 +4999,46 @@ public final class OnlineHmmProtos {
       return modelDeltas_.get(index);
     }
 
+    // repeated .hello.VotingInfo vote_info = 3;
+    public static final int VOTE_INFO_FIELD_NUMBER = 3;
+    private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> voteInfo_;
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> getVoteInfoList() {
+      return voteInfo_;
+    }
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> 
+        getVoteInfoOrBuilderList() {
+      return voteInfo_;
+    }
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    public int getVoteInfoCount() {
+      return voteInfo_.size();
+    }
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo getVoteInfo(int index) {
+      return voteInfo_.get(index);
+    }
+    /**
+     * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+     */
+    public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder getVoteInfoOrBuilder(
+        int index) {
+      return voteInfo_.get(index);
+    }
+
     private void initFields() {
       lastDateUpdatedUtc_ = 0L;
       modelDeltas_ = java.util.Collections.emptyList();
+      voteInfo_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4991,6 +5064,9 @@ public final class OnlineHmmProtos {
       for (int i = 0; i < modelDeltas_.size(); i++) {
         output.writeMessage(2, modelDeltas_.get(i));
       }
+      for (int i = 0; i < voteInfo_.size(); i++) {
+        output.writeMessage(3, voteInfo_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -5007,6 +5083,10 @@ public final class OnlineHmmProtos {
       for (int i = 0; i < modelDeltas_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, modelDeltas_.get(i));
+      }
+      for (int i = 0; i < voteInfo_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, voteInfo_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5117,6 +5197,7 @@ public final class OnlineHmmProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getModelDeltasFieldBuilder();
+          getVoteInfoFieldBuilder();
         }
       }
       private static Builder create() {
@@ -5132,6 +5213,12 @@ public final class OnlineHmmProtos {
           bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           modelDeltasBuilder_.clear();
+        }
+        if (voteInfoBuilder_ == null) {
+          voteInfo_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          voteInfoBuilder_.clear();
         }
         return this;
       }
@@ -5173,6 +5260,15 @@ public final class OnlineHmmProtos {
           result.modelDeltas_ = modelDeltas_;
         } else {
           result.modelDeltas_ = modelDeltasBuilder_.build();
+        }
+        if (voteInfoBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            voteInfo_ = java.util.Collections.unmodifiableList(voteInfo_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.voteInfo_ = voteInfo_;
+        } else {
+          result.voteInfo_ = voteInfoBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -5216,6 +5312,32 @@ public final class OnlineHmmProtos {
                    getModelDeltasFieldBuilder() : null;
             } else {
               modelDeltasBuilder_.addAllMessages(other.modelDeltas_);
+            }
+          }
+        }
+        if (voteInfoBuilder_ == null) {
+          if (!other.voteInfo_.isEmpty()) {
+            if (voteInfo_.isEmpty()) {
+              voteInfo_ = other.voteInfo_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureVoteInfoIsMutable();
+              voteInfo_.addAll(other.voteInfo_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.voteInfo_.isEmpty()) {
+            if (voteInfoBuilder_.isEmpty()) {
+              voteInfoBuilder_.dispose();
+              voteInfoBuilder_ = null;
+              voteInfo_ = other.voteInfo_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              voteInfoBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getVoteInfoFieldBuilder() : null;
+            } else {
+              voteInfoBuilder_.addAllMessages(other.voteInfo_);
             }
           }
         }
@@ -5523,6 +5645,246 @@ public final class OnlineHmmProtos {
           modelDeltas_ = null;
         }
         return modelDeltasBuilder_;
+      }
+
+      // repeated .hello.VotingInfo vote_info = 3;
+      private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> voteInfo_ =
+        java.util.Collections.emptyList();
+      private void ensureVoteInfoIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          voteInfo_ = new java.util.ArrayList<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo>(voteInfo_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> voteInfoBuilder_;
+
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> getVoteInfoList() {
+        if (voteInfoBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(voteInfo_);
+        } else {
+          return voteInfoBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public int getVoteInfoCount() {
+        if (voteInfoBuilder_ == null) {
+          return voteInfo_.size();
+        } else {
+          return voteInfoBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo getVoteInfo(int index) {
+        if (voteInfoBuilder_ == null) {
+          return voteInfo_.get(index);
+        } else {
+          return voteInfoBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder setVoteInfo(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo value) {
+        if (voteInfoBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureVoteInfoIsMutable();
+          voteInfo_.set(index, value);
+          onChanged();
+        } else {
+          voteInfoBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder setVoteInfo(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder builderForValue) {
+        if (voteInfoBuilder_ == null) {
+          ensureVoteInfoIsMutable();
+          voteInfo_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          voteInfoBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder addVoteInfo(com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo value) {
+        if (voteInfoBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureVoteInfoIsMutable();
+          voteInfo_.add(value);
+          onChanged();
+        } else {
+          voteInfoBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder addVoteInfo(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo value) {
+        if (voteInfoBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureVoteInfoIsMutable();
+          voteInfo_.add(index, value);
+          onChanged();
+        } else {
+          voteInfoBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder addVoteInfo(
+          com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder builderForValue) {
+        if (voteInfoBuilder_ == null) {
+          ensureVoteInfoIsMutable();
+          voteInfo_.add(builderForValue.build());
+          onChanged();
+        } else {
+          voteInfoBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder addVoteInfo(
+          int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder builderForValue) {
+        if (voteInfoBuilder_ == null) {
+          ensureVoteInfoIsMutable();
+          voteInfo_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          voteInfoBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder addAllVoteInfo(
+          java.lang.Iterable<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> values) {
+        if (voteInfoBuilder_ == null) {
+          ensureVoteInfoIsMutable();
+          super.addAll(values, voteInfo_);
+          onChanged();
+        } else {
+          voteInfoBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder clearVoteInfo() {
+        if (voteInfoBuilder_ == null) {
+          voteInfo_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          voteInfoBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public Builder removeVoteInfo(int index) {
+        if (voteInfoBuilder_ == null) {
+          ensureVoteInfoIsMutable();
+          voteInfo_.remove(index);
+          onChanged();
+        } else {
+          voteInfoBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder getVoteInfoBuilder(
+          int index) {
+        return getVoteInfoFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder getVoteInfoOrBuilder(
+          int index) {
+        if (voteInfoBuilder_ == null) {
+          return voteInfo_.get(index);  } else {
+          return voteInfoBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> 
+           getVoteInfoOrBuilderList() {
+        if (voteInfoBuilder_ != null) {
+          return voteInfoBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(voteInfo_);
+        }
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder addVoteInfoBuilder() {
+        return getVoteInfoFieldBuilder().addBuilder(
+            com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder addVoteInfoBuilder(
+          int index) {
+        return getVoteInfoFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .hello.VotingInfo vote_info = 3;</code>
+       */
+      public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder> 
+           getVoteInfoBuilderList() {
+        return getVoteInfoFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> 
+          getVoteInfoFieldBuilder() {
+        if (voteInfoBuilder_ == null) {
+          voteInfoBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder>(
+                  voteInfo_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          voteInfo_ = null;
+        }
+        return voteInfoBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:hello.AlphabetHmmScratchPad)
@@ -6275,24 +6637,44 @@ public final class OnlineHmmProtos {
     // repeated .hello.VotingInfo vote_info = 2;
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> 
         getVoteInfoList();
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo getVoteInfo(int index);
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     int getVoteInfoCount();
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> 
         getVoteInfoOrBuilderList();
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder getVoteInfoOrBuilder(
         int index);
@@ -6450,12 +6832,20 @@ public final class OnlineHmmProtos {
     private java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> voteInfo_;
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> getVoteInfoList() {
       return voteInfo_;
     }
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> 
         getVoteInfoOrBuilderList() {
@@ -6463,18 +6853,30 @@ public final class OnlineHmmProtos {
     }
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     public int getVoteInfoCount() {
       return voteInfo_.size();
     }
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo getVoteInfo(int index) {
       return voteInfo_.get(index);
     }
     /**
      * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+     *
+     * <pre>
+     *purposely decoupled from the models
+     * </pre>
      */
     public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder getVoteInfoOrBuilder(
         int index) {
@@ -7056,6 +7458,10 @@ public final class OnlineHmmProtos {
 
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> getVoteInfoList() {
         if (voteInfoBuilder_ == null) {
@@ -7066,6 +7472,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public int getVoteInfoCount() {
         if (voteInfoBuilder_ == null) {
@@ -7076,6 +7486,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo getVoteInfo(int index) {
         if (voteInfoBuilder_ == null) {
@@ -7086,6 +7500,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder setVoteInfo(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo value) {
@@ -7103,6 +7521,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder setVoteInfo(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder builderForValue) {
@@ -7117,6 +7539,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder addVoteInfo(com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo value) {
         if (voteInfoBuilder_ == null) {
@@ -7133,6 +7559,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder addVoteInfo(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo value) {
@@ -7150,6 +7580,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder addVoteInfo(
           com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder builderForValue) {
@@ -7164,6 +7598,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder addVoteInfo(
           int index, com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder builderForValue) {
@@ -7178,6 +7616,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder addAllVoteInfo(
           java.lang.Iterable<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo> values) {
@@ -7192,6 +7634,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder clearVoteInfo() {
         if (voteInfoBuilder_ == null) {
@@ -7205,6 +7651,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public Builder removeVoteInfo(int index) {
         if (voteInfoBuilder_ == null) {
@@ -7218,6 +7668,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder getVoteInfoBuilder(
           int index) {
@@ -7225,6 +7679,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder getVoteInfoOrBuilder(
           int index) {
@@ -7235,6 +7693,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public java.util.List<? extends com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfoOrBuilder> 
            getVoteInfoOrBuilderList() {
@@ -7246,6 +7708,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder addVoteInfoBuilder() {
         return getVoteInfoFieldBuilder().addBuilder(
@@ -7253,6 +7719,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder addVoteInfoBuilder(
           int index) {
@@ -7261,6 +7731,10 @@ public final class OnlineHmmProtos {
       }
       /**
        * <code>repeated .hello.VotingInfo vote_info = 2;</code>
+       *
+       * <pre>
+       *purposely decoupled from the models
+       * </pre>
        */
       public java.util.List<com.hello.suripu.api.datascience.OnlineHmmProtos.VotingInfo.Builder> 
            getVoteInfoBuilderList() {
@@ -7353,17 +7827,17 @@ public final class OnlineHmmProtos {
       "g_denominator\030\010 \003(\001\022\n\n\002pi\030\t \003(\001\022\022\n\nend_s" +
       "tates\030\n \003(\005\022\037\n\027minimum_state_durations\030\013" +
       " \003(\005\022?\n\030motion_model_restriction\030\014 \001(\0132\035" +
-      ".hello.MotionModelRestriction\"e\n\025Alphabe" +
-      "tHmmScratchPad\022\035\n\025last_date_updated_utc\030" +
-      "\001 \001(\003\022-\n\014model_deltas\030\002 \003(\0132\027.hello.Alph",
-      "abetHmmPrior\"O\n\nVotingInfo\022\020\n\010model_id\030\001" +
-      " \001(\t\022\021\n\toutput_id\030\002 \001(\t\022\034\n\024probability_o" +
-      "f_model\030\003 \001(\001\"e\n\024AlphabetHmmUserModel\022\'\n" +
-      "\006models\030\001 \003(\0132\027.hello.AlphabetHmmPrior\022$" +
-      "\n\tvote_info\030\002 \003(\0132\021.hello.VotingInfo*\036\n\010" +
-      "OutputId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hell" +
-      "o.suripu.api.datascienceB\017OnlineHmmProto" +
-      "s"
+      ".hello.MotionModelRestriction\"\213\001\n\025Alphab" +
+      "etHmmScratchPad\022\035\n\025last_date_updated_utc" +
+      "\030\001 \001(\003\022-\n\014model_deltas\030\002 \003(\0132\027.hello.Alp",
+      "habetHmmPrior\022$\n\tvote_info\030\003 \003(\0132\021.hello" +
+      ".VotingInfo\"O\n\nVotingInfo\022\020\n\010model_id\030\001 " +
+      "\001(\t\022\021\n\toutput_id\030\002 \001(\t\022\034\n\024probability_of" +
+      "_model\030\003 \001(\001\"e\n\024AlphabetHmmUserModel\022\'\n\006" +
+      "models\030\001 \003(\0132\027.hello.AlphabetHmmPrior\022$\n" +
+      "\tvote_info\030\002 \003(\0132\021.hello.VotingInfo*\036\n\010O" +
+      "utputId\022\t\n\005SLEEP\020\000\022\007\n\003BED\020\001B3\n com.hello" +
+      ".suripu.api.datascienceB\017OnlineHmmProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7399,7 +7873,7 @@ public final class OnlineHmmProtos {
           internal_static_hello_AlphabetHmmScratchPad_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_hello_AlphabetHmmScratchPad_descriptor,
-              new java.lang.String[] { "LastDateUpdatedUtc", "ModelDeltas", });
+              new java.lang.String[] { "LastDateUpdatedUtc", "ModelDeltas", "VoteInfo", });
           internal_static_hello_VotingInfo_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_hello_VotingInfo_fieldAccessorTable = new
