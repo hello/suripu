@@ -177,7 +177,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         // Create a map with hash+range as the key to deduplicate and avoid DynamoDB exceptions
         final Map<String, WriteRequest> writeRequestMap = Maps.newHashMap();
         for (final DeviceData data: deviceDataList) {
-            final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(data);
+            final Map<String, AttributeValue> item = deviceDataToAttributeMap(data);
             final String hashAndRangeKey = item.get(AttributeNames.DEVICE_ID).getN() + item.get(RANGE_KEY_NAME).getS();
             final WriteRequest request = new WriteRequest().withPutRequest(new PutRequest().withItem(item));
             writeRequestMap.put(hashAndRangeKey, request);
