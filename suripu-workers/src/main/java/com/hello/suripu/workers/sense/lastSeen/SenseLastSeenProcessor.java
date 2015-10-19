@@ -5,6 +5,7 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -13,8 +14,8 @@ import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.WifiInfo;
-import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
+import com.hello.suripu.workers.sense.SenseProcessorUtils;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
@@ -34,7 +35,6 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLastSeenProcessor.class);
 
-    public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private final static Integer WIFI_INFO_BATCH_MAX_SIZE = 25;
 
     private final Integer maxRecords;
@@ -85,8 +85,10 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             collectWifiInfo(batchPeriodicData);
 
             final String senseExternalId = batchPeriodicData.getDeviceId();
-            final DeviceData lastSeenSenseData = getSenseData(batchPeriodicDataWorker);
-            lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseData);
+            final Optional<DeviceData> lastSeenSenseDataOptional = getSenseData(batchPeriodicDataWorker);
+            if (lastSeenSenseDataOptional.isPresent()){
+                lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
+            }
 
             activeSenses.put(batchPeriodicData.getDeviceId(), batchPeriodicDataWorker.getReceivedAt());
 
@@ -156,33 +158,33 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         }
     }
 
-    private DeviceData getSenseData(final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker) {
+    private Optional<DeviceData> getSenseData(final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker) {
         final String senseExternalId = batchPeriodicDataWorker.getData().getDeviceId();
         final DataInputProtos.periodic_data periodicData = batchPeriodicDataWorker.getData().getDataList().get(batchPeriodicDataWorker.getData().getDataList().size() - 1);
+
         final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
         final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
 
-
-        final Long timestampMillis = periodicData.getUnixTime() * 1000L;
-        final DateTime rawDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
-        final DateTime periodicDataSampleDateTime = attemptToRecoverSenseReportedTimeStamp(senseExternalId)
-                ? DateTimeUtil.possiblySanitizeSampleTime(createdAtRounded, rawDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS)
-                : rawDateTime;
-        final Integer firmwareVersion = (batchPeriodicDataWorker.getData().hasFirmwareVersion())
-                ? batchPeriodicDataWorker.getData().getFirmwareVersion()
-                : periodicData.getFirmwareVersion();
-        return new DeviceData.Builder()
+        final DateTime sampleDateTime = SenseProcessorUtils.getSampleTime(
+                createdAtRounded, periodicData, attemptToRecoverSenseReportedTimeStamp(senseExternalId)
+        );
+        final Integer firmwareVersion = SenseProcessorUtils.getFirmwareVersion(batchPeriodicDataWorker, periodicData);
+        if (SenseProcessorUtils.isClockOutOfSync(sampleDateTime, createdAtRounded)) {
+            LOGGER.error("Clock out of sync Created time = {}, sample time = {}, now = {}", createdAtRounded, sampleDateTime, DateTime.now());
+            return Optional.absent();
+        }
+        return Optional.of(new DeviceData.Builder()
                 .withAmbientTemperature(periodicData.getTemperature())
                 .withAmbientHumidity(periodicData.getHumidity())
                 .withAmbientLight(periodicData.getLight())
                 .withAmbientAirQualityRaw(periodicData.getDust())
                 .withAudioPeakDisturbancesDB(periodicData.hasAudioPeakDisturbanceEnergyDb() ? periodicData.getAudioPeakDisturbanceEnergyDb() : 0)
                 .withFirmwareVersion(firmwareVersion)
-                .withDateTimeUTC(periodicDataSampleDateTime)
+                .withDateTimeUTC(sampleDateTime)
                 .withAccountId(0L)   // Account ID is not needed for last seen data
                 .withDeviceId(0L)    // Sense internal ID is not needed for last seen data
                 .withOffsetMillis(0) // Timezone offset is not needed for last seen data
-                .build();
+                .build());
     }
 
 
