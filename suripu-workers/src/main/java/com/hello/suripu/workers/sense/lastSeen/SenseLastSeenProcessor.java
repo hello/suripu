@@ -45,7 +45,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     private final Meter capacity;
 
     private Map<String, WifiInfo> wifiInfoPerBatch = Maps.newHashMap();
-    private Map<String, String> wifiInfoHistory = Maps.newHashMap();
+    private Map<String, WifiInfo> wifiInfoHistory = Maps.newHashMap();
 
 
     private String shardId = "";
@@ -138,15 +138,21 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             if (!connectedSSID.equals(scannedSSID)) {
                 continue;
             }
-            if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).equals(connectedSSID)) {
-                LOGGER.trace("Skip writing because wifi ssid remains unchanged for {} : {}", senseId, connectedSSID);
-                continue;
+            if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).ssid.equals(connectedSSID)) {
+                if (hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
+                    if (Math.abs(wifiInfoHistory.get(senseId).rssi - wifiAccessPoint.getRssi()) <= 5) {
+                        LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
+                        continue;
+                    }
+                }
+                else {
+                    LOGGER.trace("Skip writing because of {}'s unchanged network {}", senseId, connectedSSID);
+                    continue;
+                }
             }
-            wifiInfoPerBatch.put(
-                    senseId,
-                    WifiInfo.create(senseId, connectedSSID, wifiAccessPoint.getRssi(), new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC))
-            );
-            wifiInfoHistory.put(senseId, connectedSSID);
+            final WifiInfo wifiInfo = WifiInfo.create(senseId, connectedSSID, wifiAccessPoint.getRssi(), new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC));
+            wifiInfoPerBatch.put(senseId, wifiInfo);
+            wifiInfoHistory.put(senseId, wifiInfo);
         }
     }
 
