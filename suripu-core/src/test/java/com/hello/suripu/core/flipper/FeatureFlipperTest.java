@@ -23,10 +23,10 @@ public class FeatureFlipperTest {
         final List<String> devices = Lists.newArrayList("fake-sense1","fake-sense2");
         final List<String> featureGroups = Lists.newArrayList("group1","group2");
         final List<String> allGroups = Lists.newArrayList("all");
-        final Feature feature = new Feature("test_feature", devices, featureGroups, 10);
-        final Feature allGroupsfeature = new Feature("test_feature", devices, allGroups, 10);
-        final String goodDevice = "a51cd929-15e9-483d-a504-e3b28dde4fd5";
-        final String badDevice = "b5b776cd-843d-4b10-8db5-e4c75d217beb";
+        final Feature feature = new Feature("test_feature", devices, featureGroups, 10.0f);
+        final Feature allGroupsFeature = new Feature("test_feature", devices, allGroups, 10.0f);
+        final String goodDevice = "8d22f09f-e28c-4883-9a44-0b36c0b51fcd";
+        final String badDevice = "49e807dd-f848-4970-80df-dcb6cfbd54a7";
         final List<String> matchDeviceGroups = Lists.newArrayList("group1");
         final List<String> noMatchDeviceGroups = Lists.newArrayList("another-group");
         final List<String> noDeviceGroups = Lists.newArrayList();
@@ -37,8 +37,8 @@ public class FeatureFlipperTest {
         assertThat(DynamoDBAdapter.featureActive(feature, badDevice, noMatchDeviceGroups), is(false));
         assertThat(DynamoDBAdapter.featureActive(feature, goodDevice, noDeviceGroups), is(true));
         assertThat(DynamoDBAdapter.featureActive(feature, badDevice, noDeviceGroups), is(false));
-        assertThat(DynamoDBAdapter.featureActive(allGroupsfeature, goodDevice, noDeviceGroups), is(true));
-        assertThat(DynamoDBAdapter.featureActive(allGroupsfeature, badDevice, noDeviceGroups), is(true));
+        assertThat(DynamoDBAdapter.featureActive(allGroupsFeature, goodDevice, noDeviceGroups), is(true));
+        assertThat(DynamoDBAdapter.featureActive(allGroupsFeature, badDevice, noDeviceGroups), is(true));
     }
 
     @Test
@@ -46,27 +46,28 @@ public class FeatureFlipperTest {
         final List<String> accountIds = Lists.newArrayList();
         while ( accountIds.size() < FeatureUtils.MAX_ROLLOUT_VALUE) {
             final String uuid = UUID.randomUUID().toString();
-            final Integer hash = Math.abs(uuid.hashCode()) % FeatureUtils.MAX_ROLLOUT_VALUE;
-            if (hash.equals(accountIds.size())) {
+            final Float hash = (Math.abs(uuid.hashCode()) % (FeatureUtils.MAX_ROLLOUT_VALUE * 100.00f) / 100.0f);
+            if ((accountIds.size() + 1) > hash && hash > accountIds.size()) {
                 accountIds.add(uuid);
             }
         }
-        final Integer percentage = 40;
+        final Float percentage = 40.0f;
         final List<String> correctIds = new ArrayList<>();
         for (final String deviceId : accountIds) {
-            if (FeatureUtils.entityIdHashInPercentRange(deviceId, 0, percentage)) {
+            if (FeatureUtils.entityIdHashInPercentRange(deviceId, 0.0f, percentage)) {
                 correctIds.add(deviceId);
             }
         }
-        assertThat(correctIds.size(), is(percentage));
+        assertThat(correctIds.size(), is(percentage.intValue()));
 
         correctIds.clear();
         for (final String deviceId : accountIds) {
-            if (FeatureUtils.entityIdHashInPercentRange(deviceId, 30, percentage)) {
+            if (FeatureUtils.entityIdHashInPercentRange(deviceId, 30.0f, percentage)) {
                 correctIds.add(deviceId);
             }
         }
-        assertThat(correctIds.size(), is(percentage - 30));
+        final Integer subSet = percentage.intValue() - 30;
+        assertThat(correctIds.size(), is(subSet));
     }
 }
 

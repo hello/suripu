@@ -19,14 +19,14 @@ public class UpgradeNodeRequest {
     @NotNull
     public final Integer toFWVersion;
 
-    public final Integer rolloutPercent;
+    public final Float rolloutPercent;
 
     @JsonCreator
     public UpgradeNodeRequest(
             @JsonProperty("group_name") final String groupName,
             @JsonProperty("from_fw_version") final Integer fromFWVersion,
             @JsonProperty("to_fw_version") final Integer toFWVersion,
-            @JsonProperty("rollout_percent") final Integer rolloutPercent) {
+            @JsonProperty("rollout_percent") final Float rolloutPercent) {
 
         this.groupName = groupName;
         this.fromFWVersion = fromFWVersion;
