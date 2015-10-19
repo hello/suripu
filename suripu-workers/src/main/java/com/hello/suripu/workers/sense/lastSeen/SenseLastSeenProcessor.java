@@ -152,7 +152,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
                     continue;
                 }
 
-                // If the corresponding feature is turned on, skip writing only if rssi has changed significantly
+                // If the corresponding feature is turned on, skip writing unless rssi has changed significantly
                 if (!hasSignificantRssiChange(wifiInfoHistory, senseId, wifiAccessPoint.getRssi())) {
                     LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
                     continue;
