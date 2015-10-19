@@ -180,14 +180,17 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
      * @return The number of successfully inserted elements.
      */
     public int batchInsert(final List<DeviceData> deviceDataList) {
-        final List<WriteRequest> writeRequestList = Lists.newLinkedList();
-        for (final DeviceData data : deviceDataList) {
+        // Create a map with hash+range as the key to deduplicate and avoid DynamoDB exceptions
+        final Map<String, WriteRequest> writeRequestMap = Maps.newHashMap();
+        for (final DeviceData data: deviceDataList) {
             final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(data);
-            writeRequestList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
+            final String hashAndRangeKey = item.get(AttributeNames.DEVICE_ID).getN() + item.get(RANGE_KEY_NAME).getS();
+            final WriteRequest request = new WriteRequest().withPutRequest(new PutRequest().withItem(item));
+            writeRequestMap.put(hashAndRangeKey, request);
         }
 
         Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(1);
-        requestItems.put(this.tableName, writeRequestList);
+        requestItems.put(this.tableName, Lists.newArrayList(writeRequestMap.values()));
 
         int numAttempts = 0;
 
@@ -206,7 +209,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                     MAX_BATCH_WRITE_ATTEMPTS, requestItems.size());
         }
 
-        return deviceDataList.size() - requestItems.size();
+        return writeRequestMap.size() - requestItems.size();
     }
 
     /**

@@ -116,12 +116,12 @@ public class DeviceDataDAODynamoDBIT {
                 .add(builder.build())
                 .build();
         final int insertions = deviceDataDAODynamoDB.batchInsertWithFailureFallback(deviceDataList);
-        assertThat(insertions, is(2));
+        assertThat(insertions, is(1));
         assertThat(getTableCount(), is(1));
     }
 
-    @Test(expected = AmazonServiceException.class)
-    public void testBatchInsertFailsDueToDuplicateKeys() {
+    @Test()
+    public void testBatchInsertWithDuplicateKeys() {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
                 .withDeviceId(new Long(0))
@@ -131,7 +131,8 @@ public class DeviceDataDAODynamoDBIT {
                 .add(builder.build())
                 .add(builder.build())
                 .build();
-        deviceDataDAODynamoDB.batchInsert(deviceDataList);
+        final int inserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
+        assertThat(inserted, is(1));
     }
 
     @Test
