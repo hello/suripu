@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -35,6 +36,14 @@ import java.util.UUID;
  * Created by benjo on 9/15/15.
  */
 public class OnlineHmmTest {
+
+    final static class LocalDefaultModelEnsembleDAO implements com.hello.suripu.core.db.DefaultModelEnsembleDAO {
+
+        @Override
+        public OnlineHmmPriors getDefaultModel() {
+            return OnlineHmmPriors.createEmpty();
+        }
+    }
 
     final static class LocalFeatureExtractionDAO implements FeatureExtractionModelsDAO {
         FeatureExtractionModelData deserialization = null;
@@ -254,7 +263,7 @@ public class OnlineHmmTest {
     public void testNormalSequenceOfEvents() {
         final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
         final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
-
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
 
         final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
 
@@ -394,6 +403,7 @@ public class OnlineHmmTest {
     public void testDelayedFeedback() {
         final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
         final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
 
 
         final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());

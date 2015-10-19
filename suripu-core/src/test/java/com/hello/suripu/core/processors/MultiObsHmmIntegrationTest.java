@@ -7,10 +7,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.EvaluationResult;
 import com.hello.suripu.core.algorithmintegration.LabelMaker;
+import com.hello.suripu.core.algorithmintegration.ModelVotingInfo;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
+import com.hello.suripu.core.algorithmintegration.OnlineHmmModelLearner;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
@@ -161,7 +164,8 @@ public class MultiObsHmmIntegrationTest {
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
 
             final Map<String,ImmutableList<Integer>> features = featureData.get(0);
-            final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(defaultEnsemble, model.get(),features);
+            final EvaluationResult evaluationResult = evaluator.evaluate(OnlineHmmPriors.createEmpty(), model.get(),features);
+            final Map<String,MultiEvalHmmDecodedResult> results = evaluationResult.predictions;
 
             TestCase.assertTrue(results.size() == 2);
             TestCase.assertTrue(results.containsKey("SLEEP"));
@@ -255,7 +259,8 @@ public class MultiObsHmmIntegrationTest {
             int count = 0;
             for (final Map<String,ImmutableList<Integer>> features : featureData) {
 
-                final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(defaultEnsemble, model.get(),features);
+                final EvaluationResult evaluationResult = evaluator.evaluate(OnlineHmmPriors.createEmpty(), model.get(),features);
+                final Map<String,MultiEvalHmmDecodedResult> results = evaluationResult.predictions;
 
                 final List<Transition> transitions = results.get(outputId).transitions;
 
@@ -364,6 +369,7 @@ public class MultiObsHmmIntegrationTest {
             TestCase.assertTrue(labels.size() == featureData.size());
 
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
+            final OnlineHmmModelLearner learner = new OnlineHmmModelLearner(Optional.<UUID>absent());
 
             final String outputId = "SLEEP";
             String modelId = "default";
@@ -372,7 +378,8 @@ public class MultiObsHmmIntegrationTest {
             modelIds.put(outputId, modelId);
 
             for (int count = 0;  count < featureData.size(); count++) {
-                final OnlineHmmScratchPad scratchPad = evaluator.reestimate(modelIds, model, featureData.get(count), labels.get(count), 0);
+                final EvaluationResult evaluationResult = evaluator.evaluate(OnlineHmmPriors.createEmpty(), model, featureData.get(count));
+                final OnlineHmmScratchPad scratchPad = learner.reestimate(evaluationResult, model, featureData.get(count), labels.get(count), 0);
 
                 if (!scratchPad.paramsByOutputId.containsKey(outputId)) {
                     continue;
@@ -387,8 +394,8 @@ public class MultiObsHmmIntegrationTest {
             }
 
             for (int count = 0;  count < featureData.size(); count++) {
-                final Map<String, MultiEvalHmmDecodedResult> results = evaluator.evaluate(defaultEnsemble, model, featureData.get(count));
-
+                final EvaluationResult evaluationResult = evaluator.evaluate(OnlineHmmPriors.createEmpty(), model, featureData.get(count));
+                final Map<String, MultiEvalHmmDecodedResult> results = evaluationResult.predictions;
                 //System.out.print(String.format("COST: %f\n",results.get(outputId).pathcost));
                 List<Transition> transitions = results.get(outputId).transitions;
 
@@ -460,7 +467,7 @@ public class MultiObsHmmIntegrationTest {
                 model.modelsByOutputId.get("SLEEP").put(newId,params2.clone(newId));
             }
 
-            final OnlineHmmScratchPad scratchPad = new OnlineHmmScratchPad(modelUpdates,0);
+            final OnlineHmmScratchPad scratchPad = new OnlineHmmScratchPad(modelUpdates,Maps.<String,Map<String,ModelVotingInfo>>newHashMap(),0);
 
             OnlineHmmPriors updateModel = OnlineHmm.updateModelPriorsWithScratchpad(model, scratchPad, 1, false, STATIC_LOGGER);
 
