@@ -2,7 +2,10 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
@@ -32,18 +35,37 @@ public class DeviceDataDAODynamoDBIT {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private BasicAWSCredentials awsCredentials;
-    private AmazonDynamoDBClient amazonDynamoDBClient;
+    private SimulatedThrottlingDynamoDBClient amazonDynamoDBClient;
     private DeviceDataDAODynamoDB deviceDataDAODynamoDB;
 
     private static final String TABLE_NAME = "integration_test_device_data";
 
+    private class SimulatedThrottlingDynamoDBClient extends AmazonDynamoDBClient {
+        public SimulatedThrottlingDynamoDBClient(final BasicAWSCredentials awsCredentials, final ClientConfiguration clientConfiguration) {
+            super(awsCredentials, clientConfiguration);
+        }
+
+        public int numTries = 0;
+        public boolean throttle = false;
+
+        @Override
+        public BatchWriteItemResult batchWriteItem(BatchWriteItemRequest batchWriteItemRequest) {
+            // Force caller to try this a couple of times.
+            numTries++;
+            if (throttle && (numTries < 3)) {
+                LOGGER.info("Simulating throttling...");
+                return new BatchWriteItemResult().withUnprocessedItems(batchWriteItemRequest.getRequestItems());
+            }
+            return super.batchWriteItem(batchWriteItemRequest);
+        }
+    }
 
     @Before
     public void setUp() throws Exception {
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
         final ClientConfiguration clientConfiguration = new ClientConfiguration();
         clientConfiguration.setMaxErrorRetry(0);
-        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration);
+        this.amazonDynamoDBClient = new SimulatedThrottlingDynamoDBClient(this.awsCredentials, clientConfiguration);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
 
         tearDown();
@@ -119,7 +141,7 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(getTableCount(), is(1));
     }
 
-    @Test()
+    @Test
     public void testBatchInsertWithDuplicateKeys() {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
@@ -130,6 +152,22 @@ public class DeviceDataDAODynamoDBIT {
                 .add(builder.build())
                 .add(builder.build())
                 .build();
+        final int inserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
+        assertThat(inserted, is(1));
+        assertThat(getTableCount(), is(1));
+    }
+
+    @Test
+    public void testBatchInsertWithSimulatedThrottling() {
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withAccountId(new Long(0))
+                .withDeviceId(new Long(0))
+                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0))
+                .withOffsetMillis(0);
+        final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
+                .add(builder.build())
+                .build();
+        this.amazonDynamoDBClient.throttle = true;
         final int inserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
         assertThat(inserted, is(1));
         assertThat(getTableCount(), is(1));

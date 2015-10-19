@@ -42,7 +42,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private final AmazonDynamoDB dynamoDBClient;
-    // TODO should have ThreadPoolExecutor to parallelize batchInsert?
     private final String tableName;
 
     public static final class AttributeNames {
@@ -195,7 +194,17 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             // check for unprocessed items
             requestItems = result.getUnprocessedItems();
-        } while ((!requestItems.isEmpty()) && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
+            if (!requestItems.isEmpty()) {
+                // Being throttled! Back off, buddy.
+                try {
+                    long sleepMillis = (long) Math.pow(2, numAttempts) * 50;
+                    LOGGER.debug("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
+                    Thread.sleep(sleepMillis);
+                } catch (InterruptedException e) {
+                    LOGGER.error("Interrupted while attempting exponential backoff.");
+                }
+            }
+        } while (!requestItems.isEmpty() && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
 
         if (!requestItems.isEmpty()) {
             LOGGER.warn("Exceeded {} attempts to batch write to Dynamo. {} items left over.",
