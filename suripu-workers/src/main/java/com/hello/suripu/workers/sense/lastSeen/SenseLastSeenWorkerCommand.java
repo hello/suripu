@@ -14,6 +14,7 @@ import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
@@ -85,6 +86,8 @@ public final class SenseLastSeenWorkerCommand extends WorkerEnvironmentCommand<S
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
 
         final AmazonDynamoDB wifiInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.WIFI_INFO);
+        final AmazonDynamoDB senseLastSeenDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
 
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
@@ -96,11 +99,13 @@ public final class SenseLastSeenWorkerCommand extends WorkerEnvironmentCommand<S
 
 
         final WifiInfoDAO wifiInfoDAO = new WifiInfoDynamoDB(wifiInfoDynamoDBClient, tableNames.get(DynamoDBTableName.WIFI_INFO));
+        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(senseLastSeenDynamoDBClient, tableNames.get(DynamoDBTableName.SENSE_PREFIX), tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN));
 
 
         final IRecordProcessorFactory factory = new SenseLastSeenProcessorFactory(
                 configuration.getMaxRecords(),
-                wifiInfoDAO
+                wifiInfoDAO,
+                sensorsViewsDynamoDB
         );
 
         final Worker worker = new Worker(factory, kinesisConfig);
