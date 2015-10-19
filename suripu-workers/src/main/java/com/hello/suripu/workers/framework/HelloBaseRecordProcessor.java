@@ -62,7 +62,7 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
     }
 
     protected Boolean attemptToRecoverSenseReportedTimeStamp(final String senseId) {
-        return flipper.deviceFeatureActive(FeatureFlipper.ATTEMPT_TO_CORRECT_SENSE_REPORTED_TIMESTAMP, senseId, Collections.EMPTY_LIST);
+        return Boolean.TRUE;
     }
 
 }
