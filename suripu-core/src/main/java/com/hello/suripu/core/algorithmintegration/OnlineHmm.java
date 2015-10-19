@@ -159,6 +159,20 @@ public class OnlineHmm {
         }
 
 
+        //update the voting info
+        updatedModels.votingInfo.putAll(existingModels.votingInfo);
+
+        for (final Map.Entry<String,Map<String,ModelVotingInfo>> entry : newModel.votingInfo.entrySet()) {
+
+            //insert
+            if (!updatedModels.votingInfo.containsKey(entry.getKey())) {
+                updatedModels.votingInfo.put(entry.getKey(),Maps.<String,ModelVotingInfo>newHashMap());
+            }
+
+            //overwrite already-existing
+            updatedModels.votingInfo.get(entry.getKey()).putAll(entry.getValue());
+
+        }
 
         return updatedModels;
 
@@ -332,7 +346,7 @@ public class OnlineHmm {
         *                                    -- it's the time-series equivalent of finding which cluster a data point belongs to
         */
 
-        SleepEvents<Optional<Event>> predictions = SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
+        SleepEvents<Optional<Event>> sleepEvents = SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
 
         final int timezoneOffset = oneDaysSensorData.timezoneOffsetMillis;
         final long startTimeUtc = startTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
@@ -344,14 +358,14 @@ public class OnlineHmm {
 
         if (defaultEnsemble.isEmpty()) {
             LOGGER.error("No default ensemble found. THIS IS REQUIRED!");
-            return predictions;
+            return sleepEvents;
         }
 
         final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, startTimeLocalUtc, uuid);
 
         if (!serializedData.isValid()) {
             LOGGER.error("failed to get feature extraction layer!  THIS IS REQUIRED!");
-            return predictions;
+            return sleepEvents;
         }
 
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
@@ -361,14 +375,14 @@ public class OnlineHmm {
 
         if (userModelData.modelPriors.isEmpty()) {
             LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
-            return predictions;
+            return sleepEvents;
         }
 
         OnlineHmmPriors modelPriors = userModelData.modelPriors;
 
         if (modelPriors == null) {
             LOGGER.error("somehow never got model priors for account {}",accountId);
-            return predictions;
+            return sleepEvents;
         }
 
         /*  CHECK TO SEE IF THE SCRATCH PAD SHOULD BE ADDED TO THE CURRENT MODEL */
@@ -405,7 +419,7 @@ public class OnlineHmm {
 
         if (!binnedDataOptional.isPresent()) {
             LOGGER.error("failed to get binned sensor data");
-            return predictions;
+            return sleepEvents;
         }
 
 
@@ -421,11 +435,11 @@ public class OnlineHmm {
         /*  EVALUATE AND FIND THE BEST MODELS */
         final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(uuid);
 
-        final Map<String,MultiEvalHmmDecodedResult> bestDecodedResultsByOutputId = evaluator.evaluate(defaultEnsemble,modelPriors,pathsByModelId);
+        final EvaluationResult evaluationResult = evaluator.evaluate(defaultEnsemble,modelPriors,pathsByModelId);
 
 
         /* GET PREDICTIONS  */
-        predictions = getSleepEventsFromPredictions(bestDecodedResultsByOutputId,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset,LOGGER);
+        sleepEvents = getSleepEventsFromPredictions(evaluationResult.predictions,binnedData.t0,binnedData.numMinutesInWindow,timezoneOffset,LOGGER);
 
 
         //get filtered feedback
@@ -445,14 +459,10 @@ public class OnlineHmm {
             final LabelMaker labelMaker = new LabelMaker(uuid);
             final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvents(timezoneOffset, binnedData.t0, endTimeUtc, binnedData.numMinutesInWindow, feedbackList);
 
-            //2) reestimate on top of the models that were actually used by the user
-            final Map<String,String> usedModelsByOutputId = Maps.newHashMap();
+            //2) reestimate the user's model, and update the voting weights with the feedback
+            final OnlineHmmModelLearner learner = new OnlineHmmModelLearner(uuid);
 
-            for (final Map.Entry<String,MultiEvalHmmDecodedResult> entry : bestDecodedResultsByOutputId.entrySet()) {
-                usedModelsByOutputId.put(entry.getKey(),entry.getValue().originatingModel);
-            }
-
-            final OnlineHmmScratchPad scratchPad = evaluator.reestimate(usedModelsByOutputId, modelPriors, pathsByModelId, labelsByOutputId, startTimeUtc);
+            final OnlineHmmScratchPad scratchPad = learner.reestimate(evaluationResult, modelPriors, pathsByModelId, labelsByOutputId, startTimeUtc);
 
             if (scratchPad.isEmpty()) {
                 LOGGER.error("scratchpad is empty!!!");
@@ -486,7 +496,7 @@ public class OnlineHmm {
 
         LOGGER.info("ONLINE HMM PREDICTIONS");
 
-        for (final Optional<Event> event : predictions.toList()) {
+        for (final Optional<Event> event : sleepEvents.toList()) {
             if (!event.isPresent()) {
                 continue;
             }
@@ -496,7 +506,7 @@ public class OnlineHmm {
 
         }
 
-        return predictions;
+        return sleepEvents;
 
     }
 

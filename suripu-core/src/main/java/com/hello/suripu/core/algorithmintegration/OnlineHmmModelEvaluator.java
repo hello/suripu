@@ -34,9 +34,7 @@ public class OnlineHmmModelEvaluator {
     //  new update is 1.0 / (PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES + 1.0) in terms of weight.
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
-    final static double PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES = 1.0;
     final static double MIN_NUM_PERIODS_ON_BED = 36;
-    final static double DEFAULT_VOTE_WEIGHT = 0.2;
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmmModelEvaluator.class);
     private final Logger LOGGER;
@@ -49,105 +47,8 @@ public class OnlineHmmModelEvaluator {
     }
 
 
-    static private String createNewModelId(final String latestModelId) {
-        final String [] tokens = latestModelId.split("-");
-
-
-        if (tokens.length == 1) {
-            return String.format("%s-%d",tokens[0],1);
-        }
-
-        if (tokens.length == 2) {
-            int number = Integer.valueOf(tokens[1]);
-            number++;
-            return String.format("%s-%d",tokens[0],number);
-        }
-
-        return "error";
-
-    }
-    /* input:
-     * -which models were used for which output
-     * -the models
-     * -raw data / features
-     * -forbidden transitions by time
-     * -labels by output id and time
-     *
-     * output:
-     * a model delta for each output ID if labels are present
-     *
-     *
-     * usedModelsByOutputId - maps output ID to the selected model ID for that output
-     * priors - all the models
-     * features - the measurements
-     * labelsByOutputId - the labels stored by output ID
-     * currentTime - current server time in UTC
-     * */
-    public OnlineHmmScratchPad reestimate(final Map<String,String> usedModelsByOutputId, final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features, final Map<String,Map<Integer,Integer>> labelsByOutputId,long currentTime) {
-
-        final Map<String,OnlineHmmModelParams> paramsByOutputId = Maps.newHashMap();
-
-        for (final Map.Entry<String,String> entry : usedModelsByOutputId.entrySet()) {
-            final String outputId = entry.getKey();
-            final String modelId = entry.getValue();
-
-
-            final Map<String,OnlineHmmModelParams> paramsById = priors.modelsByOutputId.get(outputId);
-
-            if (paramsById == null) {
-                throw new AlgorithmException(String.format("output id %s does not exist",outputId));
-            }
-
-            final OnlineHmmModelParams params = paramsById.get(modelId);
-
-            if (params == null) {
-                throw new AlgorithmException(String.format("model id %s in output id %s does not exist",modelId,outputId));
-            }
-
-
-            //get the labels, but skip this loop if the labels are not present
-            final Map<Integer,Integer> labels = labelsByOutputId.get(outputId)  ;
-
-            if (labels == null) {
-                continue;
-            }
-
-            if (labels.isEmpty()) {
-                continue;
-            }
-
-            //get the transition restrictions
-            final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
-
-            for (TransitionRestriction restriction : params.transitionRestrictions) {
-                forbiddenTransitions.putAll(restriction.getRestrictions(features));
-            }
-
-            //get the measurement sequence
-            final MultiObsSequence meas = MultiObsSequence.createModelPathsToMultiObsSequence(features, forbiddenTransitions, Optional.of(labels));
-
-            //finally  go fucking reestimate
-            final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
-
-            hmm.reestimate(meas,PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES);
-
-            //insert sort
-            final TreeSet<String> oldModelIds = Sets.newTreeSet(priors.modelsByOutputId.get(outputId).keySet());
-
-            //create new model ID
-            final String newModelId = createNewModelId(oldModelIds.last());
-
-            final OnlineHmmModelParams newParams = new OnlineHmmModelParams(hmm.getLogAlphabetNumerator(),hmm.getLogANumerator(),hmm.getLogDenominator(),hmm.getPi(),params.endStates,params.minStateDurations,params.timeCreatedUtc,currentTime,newModelId,outputId,params.transitionRestrictions);
-
-            paramsByOutputId.put(outputId,newParams);
-        }
-
-        return new OnlineHmmScratchPad(paramsByOutputId,currentTime);
-
-    }
-
     /* EVALUATES ALL THE MODELS AND PICKS THE BEST  */
-    public Map<String,MultiEvalHmmDecodedResult> evaluate(final OnlineHmmPriors defaultEnsemble, final OnlineHmmPriors userPrior, final Map<String, ImmutableList<Integer>> features) {
+    public EvaluationResult evaluate(final OnlineHmmPriors defaultEnsemble, final OnlineHmmPriors userPrior, final Map<String, ImmutableList<Integer>> features) {
 
         //merge models, since we are going to evaluate all of them
         final OnlineHmmPriors allModels = OnlineHmmPriors.createEmpty();
@@ -155,7 +56,10 @@ public class OnlineHmmModelEvaluator {
         allModels.mergeFrom(userPrior);
 
 
-        final Map<String,MultiEvalHmmDecodedResult> bestModels = Maps.newHashMap();
+        //results for predictions
+        final Map<String,MultiEvalHmmDecodedResult> predictions = Maps.newHashMap();
+
+        final Multimap<String,MultiEvalHmmDecodedResult> modelEvaluations = ArrayListMultimap.create();
 
         //EVALUATE EACH MODEL, VOTING ONCE PER OUTPUT ID
         for (final Map.Entry<String,Map<String,OnlineHmmModelParams>> entryByOutput : allModels.modelsByOutputId.entrySet()) {
@@ -228,15 +132,17 @@ public class OnlineHmmModelEvaluator {
             LOGGER.info("transitions for {} are {}",entryByOutput.getKey(), theResult.transitions);
 
             //store by outputId
-            bestModels.put(entryByOutput.getKey(),theResult);
+            predictions.put(entryByOutput.getKey(), theResult);
+
+            modelEvaluations.putAll(entryByOutput.getKey(),resultsForThisId);
         }
 
-        return bestModels;
+        return new EvaluationResult(modelEvaluations,predictions);
     }
 
 
     private static void voteByModel(final double [][] votes,final Map<String,ModelVotingInfo> voteInfoByModelId,final MultiEvalHmmDecodedResult result) {
-        double voteWeight = DEFAULT_VOTE_WEIGHT;
+        double voteWeight = OnlineHmmModelLearner.DEFAULT_MODEL_PRIOR_PROBABILITY;
 
         if (voteInfoByModelId != null) {
             final ModelVotingInfo votingInfo = voteInfoByModelId.get(result.originatingModel);
