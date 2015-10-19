@@ -137,19 +137,29 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         final String senseId = batchedPeriodicData.getDeviceId();
         for (final DataInputProtos.batched_periodic_data.wifi_access_point wifiAccessPoint : batchedPeriodicData.getScanList()) {
             final String scannedSSID = wifiAccessPoint.getSsid();
+
+            // Scans return all seen networks, we want to only grab info of the connected one
             if (!connectedSSID.equals(scannedSSID)) {
                 continue;
             }
+
+            // If we have persisted wifi info for a sense since the worker started, then consider skipping if ...
             if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).ssid.equals(connectedSSID)) {
+
+                // If the corresponding feature is not turned on, skip writing as we assume rssi won't change
                 if (!hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
                     LOGGER.trace("Skip writing because of {}'s unchanged network {}", senseId, connectedSSID);
                     continue;
                 }
+
+                // If the corresponding feature is turned on, skip writing only if rssi has changed significantly
                 if (!hasSignificantRssiChange(wifiInfoHistory, senseId, wifiAccessPoint.getRssi())) {
                     LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
                     continue;
                 }
             }
+
+            // Otherwise, persist new wifi info and memorize it in history for next iteration reference
             final WifiInfo wifiInfo = WifiInfo.create(senseId, connectedSSID, wifiAccessPoint.getRssi(), new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC));
             wifiInfoPerBatch.put(senseId, wifiInfo);
             wifiInfoHistory.put(senseId, wifiInfo);
