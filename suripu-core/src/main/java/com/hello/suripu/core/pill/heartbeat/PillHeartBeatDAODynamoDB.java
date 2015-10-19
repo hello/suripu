@@ -22,9 +22,9 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -49,6 +49,14 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
     protected static final String UPTIME_ATTRIBUTE_NAME= "uptime";
     protected static final String FIRMWARE_VERSION_ATTRIBUTE_NAME = "fw_version";
     private static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";  // Due to Joda Time's behavior, it is not a good idea to store timezone as offset in the string
+
+    private static final Set<String> TARGET_ATTRIBUTES = ImmutableSet.of(
+            PILL_ID_ATTRIBUTE_NAME,
+            UTC_DATETIME_ATTRIBUTE_NAME,
+            BATTERY_LEVEL_ATTRIBUTE_NAME,
+            UPTIME_ATTRIBUTE_NAME,
+            FIRMWARE_VERSION_ATTRIBUTE_NAME
+    );
 
     private final String tableName;
     private final AmazonDynamoDB dynamoDBClient;
@@ -87,6 +95,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         if(item == null || item.isEmpty()) {
             return Optional.absent();
         }
+
         try {
             final String pillId = item.get(PILL_ID_ATTRIBUTE_NAME).getS();
             final DateTime utcDateTime = new DateTime(DateTime.parse(item.get(UTC_DATETIME_ATTRIBUTE_NAME).getS(), DateTimeFormat.forPattern(DATETIME_FORMAT)), DateTimeZone.UTC);
@@ -106,6 +115,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         return new WriteRequest(new PutRequest().withItem(item));
     }
 
+
     @Override
     public void put(final PillHeartBeat heartBeat) {
         final Map<String, AttributeValue> item = toDynamoDBItem(heartBeat);
@@ -121,6 +131,7 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
             LOGGER.error("Unknown error. Failed updating heartbeat info for pill {}, Reason: {}", heartBeat.pillId, e.getMessage());
         }
     }
+
 
     @Override
     public void put(final Set<PillHeartBeat> pillHeartBeats) {
@@ -166,48 +177,86 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
     @Override
     public Optional<PillHeartBeat> get(final String pillId) {
 
+        final Map<String, Condition> queryConditions = defaultQueryConditions(pillId);
+
+        final QueryRequest queryRequest = new QueryRequest(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(TARGET_ATTRIBUTES)
+                .withLimit(1)
+                .withScanIndexForward(false);
+
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+        final List<PillHeartBeat> pillHeartBeats = heartBeats(queryResult);
+
+        if(pillHeartBeats.isEmpty()){
+            return Optional.absent();
+        }
+
+        return Optional.of(pillHeartBeats.get(0));
+    }
+
+
+    @Override
+    public List<PillHeartBeat> get(final String pillId, final DateTime latest) {
+        final Map<String, Condition> queryConditions = defaultQueryConditions(pillId);
+
+        final Condition rangeQuery = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN)
+                .withAttributeValueList(
+                        new AttributeValue().withS(latest.minusDays(7).toString(DATETIME_FORMAT)),
+                        new AttributeValue().withS(latest.toString(DATETIME_FORMAT))
+                );
+        queryConditions.put(UTC_DATETIME_ATTRIBUTE_NAME, rangeQuery);
+
+        final QueryRequest queryRequest = new QueryRequest(this.tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(TARGET_ATTRIBUTES)
+                .withLimit(500)
+                .withScanIndexForward(false);
+
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+        return heartBeats(queryResult);
+    }
+
+    /**
+     * Convert query result to list of heartbeats
+      * @param queryResult
+     * @return
+     */
+    private List<PillHeartBeat> heartBeats(final QueryResult queryResult) {
+
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+        if(items == null || items.isEmpty()){
+            return Collections.EMPTY_LIST;
+        }
+
+        final List<PillHeartBeat> heartBeats = Lists.newArrayListWithCapacity(items.size());
+
+        for (final Map<String, AttributeValue> item : items) {
+            final Optional<PillHeartBeat> pillHeartBeatOptional = fromDynamoDBItem(item);
+            if(pillHeartBeatOptional.isPresent()){
+                heartBeats.add(pillHeartBeatOptional.get());
+            }
+        }
+
+        return heartBeats;
+    }
+
+
+    /**
+     * Returns query condition for given pill
+     * @param pillId
+     * @return
+     */
+    private Map<String, Condition> defaultQueryConditions(final String pillId) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
         final Condition selectByPillId  = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withS(pillId));
         queryConditions.put(PILL_ID_ATTRIBUTE_NAME, selectByPillId);
-
-        final Set<String> targetAttributes = Sets.newHashSet(
-                PILL_ID_ATTRIBUTE_NAME,
-                UTC_DATETIME_ATTRIBUTE_NAME,
-                BATTERY_LEVEL_ATTRIBUTE_NAME,
-                UPTIME_ATTRIBUTE_NAME,
-                FIRMWARE_VERSION_ATTRIBUTE_NAME
-        );
-
-        final QueryRequest queryRequest = new QueryRequest(this.tableName)
-                .withKeyConditions(queryConditions)
-                .withAttributesToGet(targetAttributes)
-                .withLimit(1)
-                .withScanIndexForward(false);
-
-        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-        final List<Map<String, AttributeValue>> items = queryResult.getItems();
-        if(items == null || items.isEmpty()){
-            return Optional.absent();
-        }
-
-
-
-        for (final Map<String, AttributeValue> item : items) {
-            final Optional<PillHeartBeat> pillHeartBeatOptional = fromDynamoDBItem(item);
-            if(pillHeartBeatOptional.isPresent()){
-                return pillHeartBeatOptional;
-            }
-        }
-
-        return Optional.absent();
+        return queryConditions;
     }
 
-    @Override
-    public List<PillHeartBeat> get(final String pillId, final DateTime end) {
-        return Collections.EMPTY_LIST;
-    }
 
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
         // TODO make this work for creating the daily/monthly shards

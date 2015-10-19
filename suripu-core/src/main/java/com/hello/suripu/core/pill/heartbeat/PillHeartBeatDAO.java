@@ -10,7 +10,21 @@ public interface PillHeartBeatDAO {
 
     void put(final PillHeartBeat pillHeartBeat);
     void put(Set<PillHeartBeat> pillHeartBeats);
+
+    /**
+     * Get most recent heartbeat if it exists
+     * @param pillId
+     * @return Optional of heartbeat
+     */
     Optional<PillHeartBeat> get(final String pillId);
-    List<PillHeartBeat> get(final String pillId, final DateTime end);
+
+    /**
+     * Returns a list of heartbeat prior to the start datetime provided
+     * It is not up to the caller to define how many records are returned.
+     * @param pillId
+     * @param start
+     * @return
+     */
+    List<PillHeartBeat> get(final String pillId, final DateTime latest);
 
 }
