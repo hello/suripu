@@ -8,5 +8,5 @@ import java.util.List;
  * Created by jakepiccolo on 10/14/15.
  */
 public interface DeviceDataIngestDAO {
-    int batchInsertWithFailureFallback(final List<DeviceData> allDeviceData);
+    int batchInsertAll(final List<DeviceData> allDeviceData);
 }

@@ -84,7 +84,6 @@ public class DynamoDBAdapter implements RolloutAdapter{
      * Checks if a user/device has the named feature enabled
      * @param feature
      * @param entityId
-     * @param hashId
      * @param groups
      * @return boolean indicating whether feature is active
      */
@@ -112,12 +111,12 @@ public class DynamoDBAdapter implements RolloutAdapter{
             }
         }
 
-        if(feature.percentage == 0) {
-            LOGGER.trace("Percentage is 0, turning off for everyone");
+        if(feature.percentage == 0.0f) {
+            LOGGER.trace("Percentage is 0.0, turning off for everyone");
             return false;
         }
 
-        if (FeatureUtils.entityIdHashInPercentRange(entityId, 0, feature.percentage)) {
+        if (FeatureUtils.entityIdHashInPercentRange(entityId, 0.0f, feature.percentage)) {
             LOGGER.trace("Included in percentage.");
             return true;
         }

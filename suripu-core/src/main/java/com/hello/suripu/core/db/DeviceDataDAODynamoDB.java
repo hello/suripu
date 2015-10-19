@@ -42,7 +42,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private final AmazonDynamoDB dynamoDBClient;
-    // TODO should have ThreadPoolExecutor to parallelize batchInsert?
     private final String tableName;
 
     public static final class AttributeNames {
@@ -168,26 +167,24 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .build();
     }
 
-
-    public void insert(final DeviceData deviceData) {
-        final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(deviceData);
-        dynamoDBClient.putItem(tableName, item);
-    }
-
     /**
-     *
+     * Batch insert list of DeviceData objects.
+     * Subject to DynamoDB's maximum BatchWriteItem size.
      * @param deviceDataList
      * @return The number of successfully inserted elements.
      */
     public int batchInsert(final List<DeviceData> deviceDataList) {
-        final List<WriteRequest> writeRequestList = Lists.newLinkedList();
-        for (final DeviceData data : deviceDataList) {
-            final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(data);
-            writeRequestList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
+        // Create a map with hash+range as the key to deduplicate and avoid DynamoDB exceptions
+        final Map<String, WriteRequest> writeRequestMap = Maps.newHashMap();
+        for (final DeviceData data: deviceDataList) {
+            final Map<String, AttributeValue> item = deviceDataToAttributeMap(data);
+            final String hashAndRangeKey = item.get(AttributeNames.DEVICE_ID).getN() + item.get(RANGE_KEY_NAME).getS();
+            final WriteRequest request = new WriteRequest().withPutRequest(new PutRequest().withItem(item));
+            writeRequestMap.put(hashAndRangeKey, request);
         }
 
         Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(1);
-        requestItems.put(this.tableName, writeRequestList);
+        requestItems.put(this.tableName, Lists.newArrayList(writeRequestMap.values()));
 
         int numAttempts = 0;
 
@@ -197,24 +194,33 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             // check for unprocessed items
             requestItems = result.getUnprocessedItems();
-            LOGGER.debug("Unprocessed put request count {}", requestItems.size());
-
-        } while ((!requestItems.isEmpty()) && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
+            if (!requestItems.isEmpty()) {
+                // Being throttled! Back off, buddy.
+                try {
+                    long sleepMillis = (long) Math.pow(2, numAttempts) * 50;
+                    LOGGER.debug("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
+                    Thread.sleep(sleepMillis);
+                } catch (InterruptedException e) {
+                    LOGGER.error("Interrupted while attempting exponential backoff.");
+                }
+            }
+        } while (!requestItems.isEmpty() && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
 
         if (!requestItems.isEmpty()) {
             LOGGER.warn("Exceeded {} attempts to batch write to Dynamo. {} items left over.",
-                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.size());
+                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.get(tableName).size());
+            return writeRequestMap.size() - requestItems.get(tableName).size();
         }
 
-        return deviceDataList.size() - requestItems.size();
+        return writeRequestMap.size();
     }
 
     /**
-     * Returns the number of items that were successfully inserted
+     * Partitions and inserts list of DeviceData objects.
      * @param deviceDataList
-     * @return
+     * @return The number of items that were successfully inserted
      */
-    public int batchInsertWithFailureFallback(final List<DeviceData> deviceDataList) {
+    public int batchInsertAll(final List<DeviceData> deviceDataList) {
         final List<List<DeviceData>> deviceDataLists = Lists.partition(deviceDataList, MAX_PUT_ITEMS);
         int successfulInsertions = 0;
 
@@ -224,15 +230,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 successfulInsertions += batchInsert(deviceDataListToWrite);
             } catch (AmazonClientException e) {
                 LOGGER.error("Got exception while attempting to batchInsert to DynamoDB: {}", e);
-
-                for (final DeviceData deviceData : deviceDataListToWrite) {
-                    try {
-                        insert(deviceData);
-                        successfulInsertions++;
-                    } catch (AmazonClientException ex) {
-                        LOGGER.error("Got exception while attempting to insert to DynamoDB: {}", ex);
-                    }
-                }
             }
 
         }

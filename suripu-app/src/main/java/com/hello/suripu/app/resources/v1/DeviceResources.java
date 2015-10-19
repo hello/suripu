@@ -19,6 +19,8 @@ import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.PillColorUtil;
 import com.librato.rollout.RolloutClient;
@@ -55,6 +57,7 @@ public class DeviceResources extends BaseResource {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final PillHeartBeatDAO pillHeartBeatDAO;
+    private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
 
     @Inject
     RolloutClient feature;
@@ -64,13 +67,15 @@ public class DeviceResources extends BaseResource {
                            final TrackerMotionDAO trackerMotionDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                            final PillHeartBeatDAO pillHeartBeatDAO,
-                           final SensorsViewsDynamoDB sensorsViewsDynamoDB) {
+                           final SensorsViewsDynamoDB sensorsViewsDynamoDB,
+                           final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
+        this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
     }
 
     @GET
@@ -233,24 +238,7 @@ public class DeviceResources extends BaseResource {
             }
         }
 
-        for (final DeviceAccountPair pill : pills) {
-            Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pill.internalDeviceId);
-            if (!pillStatusOptional.isPresent()) {
-                // no heartbeat yet, pull from tracker-motion
-                LOGGER.warn("No heartbeat yet for pill id = {} (external id = {}) for account_id = {}", pill.internalDeviceId, pill.externalDeviceId, pill.accountId);
-                pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId, accountId);
-            }
-
-            if(!pillStatusOptional.isPresent()) {
-                LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null, pillColor));
-            } else {
-                final DeviceStatus deviceStatus = pillStatusOptional.get();
-                final Device.State state = (deviceStatus.batteryLevel <= PILL_BATTERY_ALERT_THRESHOLD) ? Device.State.LOW_BATTERY : Device.State.NORMAL;
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, state, deviceStatus.firmwareVersion, deviceStatus.lastSeen, pillColor));
-            }
-        }
-
+        devices.addAll(pillStatuses(pills, pillColor, accountId));
         return devices;
     }
 
@@ -274,5 +262,53 @@ public class DeviceResources extends BaseResource {
     @VisibleForTesting
     public List<Device> getDevices(final Long accountId) {
         return getDevicesByAccountId(accountId);
+    }
+
+
+    /**
+     * Fetches pill status from datastores and converts it to Device object
+     * @param pills
+     * @param pillColor
+     * @param accountId
+     * @return  List of devices
+     */
+    private List<Device> pillStatuses(final List<DeviceAccountPair> pills, final Device.Color pillColor, final Long accountId) {
+        final List<Device> devices = Lists.newArrayList();
+
+        for (final DeviceAccountPair pill : pills) {
+
+            // Enable DynamoDB reads
+            if(hasPillHeartBeatDynamoDBReadEnabled(pill.externalDeviceId)) {
+                final Optional<PillHeartBeat> pillHeartBeatOptional = pillHeartBeatDAODynamoDB.get(pill.externalDeviceId);
+                if(pillHeartBeatOptional.isPresent()) {
+                    final PillHeartBeat pillHeartBeat = pillHeartBeatOptional.get();
+                    final Device.State state = pillState(pillHeartBeat.batteryLevel);
+                    devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, state, String.valueOf(pillHeartBeat.firmwareVersion), pillHeartBeat.createdAtUTC, pillColor));
+                    continue;
+                }
+            }
+
+            Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pill.internalDeviceId);
+            if (!pillStatusOptional.isPresent()) {
+                // no heartbeat yet, pull from tracker-motion
+                LOGGER.warn("No heartbeat yet for pill id = {} (external id = {}) for account_id = {}", pill.internalDeviceId, pill.externalDeviceId, pill.accountId);
+                pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId, accountId);
+            }
+
+            if(!pillStatusOptional.isPresent()) {
+                LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null, pillColor));
+            } else {
+                final DeviceStatus deviceStatus = pillStatusOptional.get();
+                final Device.State state = pillState(deviceStatus.batteryLevel);
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, state, deviceStatus.firmwareVersion, deviceStatus.lastSeen, pillColor));
+            }
+        }
+
+        return devices;
+    }
+
+    private Device.State pillState(int batteryLevel) {
+        return (batteryLevel <= PILL_BATTERY_ALERT_THRESHOLD) ? Device.State.LOW_BATTERY : Device.State.NORMAL;
     }
 }
