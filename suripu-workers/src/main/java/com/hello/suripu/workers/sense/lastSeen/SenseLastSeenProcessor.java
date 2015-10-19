@@ -5,6 +5,7 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -141,7 +142,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             }
             if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).ssid.equals(connectedSSID)) {
                 if (hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
-                    if (Math.abs(wifiInfoHistory.get(senseId).rssi - wifiAccessPoint.getRssi()) <= SIGNIFICANT_RSSI_CHANGE) {
+                    if (!hasSignificantRssiChange(wifiInfoHistory, senseId, wifiAccessPoint.getRssi())) {
                         LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
                         continue;
                     }
@@ -165,5 +166,13 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         }
         wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
         LOGGER.debug("Tracked wifi info for {} senses {}", wifiInfoPerBatch.size(), wifiInfoPerBatch);
+    }
+
+    @VisibleForTesting
+    public static Boolean hasSignificantRssiChange(final Map<String, WifiInfo> wifiInfoHistory, final String senseId, final Integer rssi) {
+        if (!wifiInfoHistory.containsKey(senseId)){
+            return true;
+        }
+        return Math.abs(wifiInfoHistory.get(senseId).rssi - rssi) >= SIGNIFICANT_RSSI_CHANGE;
     }
 }
