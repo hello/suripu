@@ -245,7 +245,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
                                                        @Bind("max_utc_ts_limit") final DateTime maxTsLimit,
                                                        @Bind("min_utc_ts_limit") final DateTime minTsLimit);
 
-    public int batchInsertWithFailureFallback(final List<DeviceData> allDeviceData){
+    public int batchInsertAll(final List<DeviceData> allDeviceData){
         final List<List<DeviceData>> batches = Lists.partition(allDeviceData, MAX_BATCH_INSERT_SIZE);
 
         int inserted = 0;
