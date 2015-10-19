@@ -15,12 +15,10 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataIngestDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
-import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
@@ -38,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -230,7 +227,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
 
         try {
-            int inserted = deviceDataDAO.batchInsertWithFailureFallback(deviceDataList);
+            int inserted = deviceDataDAO.batchInsertAll(deviceDataList);
 
             if(inserted == deviceDataList.size()) {
                 LOGGER.trace("Batch saved {} data to DB", inserted);

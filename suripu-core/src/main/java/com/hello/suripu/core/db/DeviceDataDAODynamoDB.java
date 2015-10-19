@@ -168,14 +168,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .build();
     }
 
-
-    public void insert(final DeviceData deviceData) {
-        final HashMap<String, AttributeValue> item = deviceDataToAttributeMap(deviceData);
-        dynamoDBClient.putItem(tableName, item);
-    }
-
     /**
-     *
+     * Batch insert list of DeviceData objects.
+     * Subject to DynamoDB's maximum BatchWriteItem size.
      * @param deviceDataList
      * @return The number of successfully inserted elements.
      */
@@ -212,11 +207,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     /**
-     * Returns the number of items that were successfully inserted
+     * Partitions and inserts list of DeviceData objects.
      * @param deviceDataList
-     * @return
+     * @return The number of items that were successfully inserted
      */
-    public int batchInsertWithFailureFallback(final List<DeviceData> deviceDataList) {
+    public int batchInsertAll(final List<DeviceData> deviceDataList) {
         final List<List<DeviceData>> deviceDataLists = Lists.partition(deviceDataList, MAX_PUT_ITEMS);
         int successfulInsertions = 0;
 
@@ -226,15 +221,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 successfulInsertions += batchInsert(deviceDataListToWrite);
             } catch (AmazonClientException e) {
                 LOGGER.error("Got exception while attempting to batchInsert to DynamoDB: {}", e);
-
-                for (final DeviceData deviceData : deviceDataListToWrite) {
-                    try {
-                        insert(deviceData);
-                        successfulInsertions++;
-                    } catch (AmazonClientException ex) {
-                        LOGGER.error("Got exception while attempting to insert to DynamoDB: {}", ex);
-                    }
-                }
             }
 
         }
