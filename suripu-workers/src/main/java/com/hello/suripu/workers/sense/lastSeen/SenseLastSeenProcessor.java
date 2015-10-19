@@ -141,14 +141,12 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
                 continue;
             }
             if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).ssid.equals(connectedSSID)) {
-                if (hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
-                    if (!hasSignificantRssiChange(wifiInfoHistory, senseId, wifiAccessPoint.getRssi())) {
-                        LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
-                        continue;
-                    }
-                }
-                else {
+                if (!hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
                     LOGGER.trace("Skip writing because of {}'s unchanged network {}", senseId, connectedSSID);
+                    continue;
+                }
+                if (!hasSignificantRssiChange(wifiInfoHistory, senseId, wifiAccessPoint.getRssi())) {
+                    LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
                     continue;
                 }
             }
