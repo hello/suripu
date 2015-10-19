@@ -88,7 +88,7 @@ public class PillHeartBeatDAODynamoDBIT {
     public void testQueryTooOld() {
         final String pillId = "ABC";
         final DateTime now = DateTime.now().withTimeAtStartOfDay();
-        final DateTime then = now.minusDays(7);
+        final DateTime then = now.minusDays(7).minusMinutes(1);
 
         pillHeartBeatDAODynamoDB.put(PillHeartBeat.create(pillId, 0, 0, 0, then));
 
@@ -110,7 +110,7 @@ public class PillHeartBeatDAODynamoDBIT {
     @Test
     public void testQueryAlmostTooOld() {
         final String pillId = "ABC";
-        final DateTime now = DateTime.now().withTimeAtStartOfDay(); // Older than 7 days!
+        final DateTime now = DateTime.now().withTimeAtStartOfDay();
         final DateTime then = now.minusDays(7).plusMinutes(1);
         pillHeartBeatDAODynamoDB.put(PillHeartBeat.create(pillId, 0, 0, 0, then));
 
@@ -121,7 +121,7 @@ public class PillHeartBeatDAODynamoDBIT {
     @Test
     public void testQueryOneTooOld() {
         final String pillId = "ABC";
-        final DateTime now = DateTime.now().withTimeAtStartOfDay(); // Older than 7 days!
+        final DateTime now = DateTime.now().withTimeAtStartOfDay();
         final PillHeartBeat heartBeat1 = PillHeartBeat.create(pillId, 0, 0, 0, now.minusHours(1));
         final PillHeartBeat heartBeat2 = PillHeartBeat.create(pillId, 0, 0, 0, now.minusDays(7).minusHours(1));
         Set<PillHeartBeat> pillHeartBeatSet = ImmutableSet.of(heartBeat1, heartBeat2);
@@ -134,7 +134,7 @@ public class PillHeartBeatDAODynamoDBIT {
     @Test
     public void testQuery() {
         final String pillId = "ABC";
-        final DateTime now = DateTime.now().withTimeAtStartOfDay(); // Older than 7 days!
+        final DateTime now = DateTime.now().withTimeAtStartOfDay();
         final PillHeartBeat heartBeat1 = PillHeartBeat.create(pillId, 0, 0, 0, now.minusHours(1));
         final PillHeartBeat heartBeat2 = PillHeartBeat.create(pillId, 0, 0, 0, now.minusHours(2));
         Set<PillHeartBeat> pillHeartBeatSet = ImmutableSet.of(heartBeat1, heartBeat2);
@@ -147,12 +147,28 @@ public class PillHeartBeatDAODynamoDBIT {
     @Test
     public void testInsertDuplicates() {
         final String pillId = "ABC";
-        final DateTime now = DateTime.now().withTimeAtStartOfDay(); // Older than 7 days!
+        final DateTime now = DateTime.now().withTimeAtStartOfDay();
         final PillHeartBeat heartBeat = PillHeartBeat.create(pillId, 0, 0, 0, now.minusHours(1));
         Set<PillHeartBeat> pillHeartBeatSet = ImmutableSet.of(heartBeat, heartBeat);
         pillHeartBeatDAODynamoDB.put(pillHeartBeatSet);
 
         final List<PillHeartBeat> pillHeartBeats = pillHeartBeatDAODynamoDB.get(pillId, now);
         assertThat(pillHeartBeats.size(), is(1));
+    }
+
+    @Test
+    public void testInsertOutOfRange() {
+        final String pillId = "ABC";
+        final DateTime now = DateTime.now().withTimeAtStartOfDay();
+        final PillHeartBeat heartBeat1 = PillHeartBeat.create(pillId, 0, 0, 0, now.minusHours(1));
+
+        // simulates having most recent item in DB outside the query range
+        final PillHeartBeat heartBeat2 = PillHeartBeat.create(pillId, 100, 0, 0, now.plusHours(1));
+        Set<PillHeartBeat> pillHeartBeatSet = ImmutableSet.of(heartBeat1, heartBeat2);
+        pillHeartBeatDAODynamoDB.put(pillHeartBeatSet);
+
+        final List<PillHeartBeat> pillHeartBeats = pillHeartBeatDAODynamoDB.get(pillId, now);
+        assertThat(pillHeartBeats.size(), is(1));
+        assertThat(pillHeartBeats.get(0).batteryLevel, is(heartBeat1.batteryLevel));
     }
 }

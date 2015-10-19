@@ -25,6 +25,6 @@ public interface PillHeartBeatDAO {
      * @param start
      * @return
      */
-    List<PillHeartBeat> get(final String pillId, final DateTime start);
+    List<PillHeartBeat> get(final String pillId, final DateTime latest);
 
 }

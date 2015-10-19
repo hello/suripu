@@ -197,12 +197,15 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
 
     @Override
-    public List<PillHeartBeat> get(final String pillId, final DateTime start) {
+    public List<PillHeartBeat> get(final String pillId, final DateTime latest) {
         final Map<String, Condition> queryConditions = defaultQueryConditions(pillId);
 
         final Condition rangeQuery = new Condition()
-                .withComparisonOperator(ComparisonOperator.GT)
-                .withAttributeValueList(new AttributeValue().withS(start.minusDays(7).toString(DATETIME_FORMAT)));
+                .withComparisonOperator(ComparisonOperator.BETWEEN)
+                .withAttributeValueList(
+                        new AttributeValue().withS(latest.minusDays(7).toString(DATETIME_FORMAT)),
+                        new AttributeValue().withS(latest.toString(DATETIME_FORMAT))
+                );
         queryConditions.put(UTC_DATETIME_ATTRIBUTE_NAME, rangeQuery);
 
         final QueryRequest queryRequest = new QueryRequest(this.tableName)
