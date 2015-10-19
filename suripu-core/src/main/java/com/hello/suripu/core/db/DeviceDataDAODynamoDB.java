@@ -200,16 +200,15 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             // check for unprocessed items
             requestItems = result.getUnprocessedItems();
-            LOGGER.debug("Unprocessed put request count {}", requestItems.size());
-
         } while ((!requestItems.isEmpty()) && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
 
         if (!requestItems.isEmpty()) {
             LOGGER.warn("Exceeded {} attempts to batch write to Dynamo. {} items left over.",
-                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.size());
+                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.get(tableName).size());
+            return writeRequestMap.size() - requestItems.get(tableName).size();
         }
 
-        return writeRequestMap.size() - requestItems.size();
+        return writeRequestMap.size();
     }
 
     /**
