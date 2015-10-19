@@ -37,6 +37,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 24 * 3600;
     private final static Integer WIFI_INFO_BATCH_MAX_SIZE = 25;
+    private final static Integer SIGNIFICANT_RSSI_CHANGE = 5;
 
     private final Integer maxRecords;
     private final WifiInfoDAO wifiInfoDAO;
@@ -140,7 +141,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             }
             if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).ssid.equals(connectedSSID)) {
                 if (hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
-                    if (Math.abs(wifiInfoHistory.get(senseId).rssi - wifiAccessPoint.getRssi()) <= 5) {
+                    if (Math.abs(wifiInfoHistory.get(senseId).rssi - wifiAccessPoint.getRssi()) <= SIGNIFICANT_RSSI_CHANGE) {
                         LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
                         continue;
                     }
