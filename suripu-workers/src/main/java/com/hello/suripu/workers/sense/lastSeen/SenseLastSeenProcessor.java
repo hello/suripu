@@ -173,8 +173,12 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     }
 
     private Optional<DeviceData> getSenseData(final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker) {
-        final String senseExternalId = batchPeriodicDataWorker.getData().getDeviceId();
+        if (batchPeriodicDataWorker.getData().getDataList().isEmpty()) {
+            return Optional.absent();
+        }
         final DataInputProtos.periodic_data periodicData = batchPeriodicDataWorker.getData().getDataList().get(batchPeriodicDataWorker.getData().getDataList().size() - 1);
+        
+        final String senseExternalId = batchPeriodicDataWorker.getData().getDeviceId();
 
         final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
         final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
