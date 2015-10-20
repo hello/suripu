@@ -17,7 +17,7 @@ public class ParticulatesInsightsTest {
     private final Float NORMAL_PARTICULATE_LEVEL = 50.0f;
 
     @Test
-    public void test_getHistoryDust_1() {
+    public void testGetHistoryDust_1() {
 
         final Float currentDust = 33.0f;
         final List<Float> dustList = Lists.newArrayList(currentDust);
@@ -29,7 +29,7 @@ public class ParticulatesInsightsTest {
     }
 
     @Test
-    public void test_getHistoryDust_2() {
+    public void testGetHistoryDust_2() {
 
         final Float currentDust = 33.0f;
         final List<Float> dustList = Lists.newArrayList(0.0f, 10.0f, 20.0f, currentDust);
@@ -41,7 +41,7 @@ public class ParticulatesInsightsTest {
     }
 
     @Test
-    public void test_getAnomalyTest_1() {
+    public void testGetAnomalyTest_1() {
 
         final Float dustDiff = -1 * Particulates.PARTICULATE_SIG_DIFF;
         final Float historyDust = NORMAL_PARTICULATE_LEVEL;
@@ -59,7 +59,7 @@ public class ParticulatesInsightsTest {
     }
 
     @Test
-    public void test_getAnomalyTest_2() {
+    public void testGetAnomalyTest_2() {
 
         final Float dustDiff = 2 * Particulates.PARTICULATE_SIG_DIFF;
         final Float historyDust = NORMAL_PARTICULATE_LEVEL;
@@ -77,7 +77,7 @@ public class ParticulatesInsightsTest {
     }
 
     @Test
-    public void test_getAnomalyTest_3() {
+    public void testGetAnomalyTest_3() {
 
         final Float dustDiff = 5 * Particulates.PARTICULATE_SIG_DIFF;
         final Float historyDust = NORMAL_PARTICULATE_LEVEL;
@@ -95,7 +95,7 @@ public class ParticulatesInsightsTest {
     }
 
     @Test
-    public void test_getConstantTest() {
+    public void testGetConstantTest() {
 
         final Float currentDust = Particulates.PARTICULATE_DENSITY_MAX_IDEAL - 10.0f;
 
@@ -110,7 +110,7 @@ public class ParticulatesInsightsTest {
     }
 
     @Test
-    public void test_getHistoryTest() {
+    public void testGetHistoryTest() {
 
         final Float currentDust = (Particulates.PARTICULATE_DENSITY_MAX_IDEAL + Particulates.PARTICULATE_DENSITY_MAX_WARNING) / 2.0f;
 
@@ -125,7 +125,7 @@ public class ParticulatesInsightsTest {
     }
 
     @Test
-    public void test_getAvgAirQuality() {
+    public void testGetAvgAirQuality() {
 
         final Float currentDust = Particulates.PARTICULATE_DENSITY_MAX_WARNING + 10.0f;
 
