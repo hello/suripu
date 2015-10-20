@@ -454,7 +454,7 @@ public class OnlineHmm {
 
 
         /* PROCESS FEEDBACK, but only if it's ready  */
-        if (isFeedbackReady) {
+        if (true) {
             //1) turn feedback into labels
             final LabelMaker labelMaker = new LabelMaker(uuid);
             final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvents(timezoneOffset, binnedData.t0, endTimeUtc, binnedData.numMinutesInWindow, feedbackList);
