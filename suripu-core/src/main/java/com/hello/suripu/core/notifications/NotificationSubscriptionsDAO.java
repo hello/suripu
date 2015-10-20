@@ -10,27 +10,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
 @RegisterMapper(MobilePushRegistrationMapper.class)
-public interface NotificationSubscriptionsDAO {
-
-    @SingleValueResult
-    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE account_id = :account_id AND device_token = :device_token")
-    public Optional<MobilePushRegistration> getSubscription(@Bind("account_id") final Long accountId, @Bind("device_token") final String deviceToken);
-
-
-    @SingleValueResult
-    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE device_token = :device_token")
-    public Optional<MobilePushRegistration> getSubscription(@Bind("device_token") final String deviceToken);
-
-
-    @SingleValueResult
-    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE oauth_token = :oauth_token")
-    public Optional<MobilePushRegistration> getSubscriptionByOauthToken(@Bind("oauth_token") final String oauthToken);
-
-    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE account_id = :account_id")
-    public ImmutableList<MobilePushRegistration> getSubscriptions(@Bind("account_id") final Long accountId);
-
-//    @SqlQuery("SELECT * FROM notifications_subscriptions WHERE device_token = :device_token")
-//    public ImmutableList<MobilePushRegistration> getSubscriptionsByDeviceToken(@Bind("device_token") final String deviceToken);
+public interface NotificationSubscriptionsDAO extends NotificationSubscriptionsReadDAO {
 
     @SqlUpdate("INSERT INTO notifications_subscriptions (account_id, os, version, app_version, device_token, oauth_token, endpoint, created_at_utc) VALUES(:account_id, :os, :version, :app_version, :device_token, :oauth_token, :endpoint, now())")
     public void subscribe(final Long accountId, @BindMobilePushRegistration final MobilePushRegistration mobilePushRegistration);
