@@ -9,11 +9,14 @@ import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
@@ -75,12 +78,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public static final String VERSION = "0.0.2";
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private final TrackerMotionDAO trackerMotionDAO;
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
-    private final FeedbackDAO feedbackDAO;
+    private final FeedbackReadDAO feedbackDAO;
     private final SleepHmmDAO sleepHmmDAO;
-    private final AccountDAO accountDAO;
+    private final AccountReadDAO accountDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
@@ -108,12 +111,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
     static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                                                            final DeviceDAO deviceDAO,
+                                                            final DeviceReadDAO deviceDAO,
                                                             final DeviceDataDAO deviceDataDAO,
                                                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
-                                                            final FeedbackDAO feedbackDAO,
+                                                            final FeedbackReadDAO feedbackDAO,
                                                             final SleepHmmDAO sleepHmmDAO,
-                                                            final AccountDAO accountDAO,
+                                                            final AccountReadDAO accountDAO,
                                                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                                             final SenseColorDAO senseColorDAO,
                                                             final OnlineHmmModelsDAO priorsDAO,
@@ -136,12 +139,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     //private SessionLogDebug(final String)
 
     private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                            final DeviceDAO deviceDAO,
+                            final DeviceReadDAO deviceDAO,
                             final DeviceDataDAO deviceDataDAO,
                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
-                            final FeedbackDAO feedbackDAO,
+                            final FeedbackReadDAO feedbackDAO,
                             final SleepHmmDAO sleepHmmDAO,
-                            final AccountDAO accountDAO,
+                            final AccountReadDAO accountDAO,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
                               final OnlineHmmModelsDAO priorsDAO,

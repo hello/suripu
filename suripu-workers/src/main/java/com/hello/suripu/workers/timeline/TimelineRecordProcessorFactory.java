@@ -3,6 +3,7 @@ package com.hello.suripu.workers.timeline;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.processors.TimelineProcessor;
@@ -16,10 +17,10 @@ public class TimelineRecordProcessorFactory implements IRecordProcessorFactory {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final TimelineWorkerConfiguration configuration;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
 
     public TimelineRecordProcessorFactory(final TimelineProcessor timelineProcessor,
-                                          final DeviceDAO deviceDAO,
+                                          final DeviceReadDAO deviceDAO,
                                           final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                           final TimelineDAODynamoDB timelineDAODynamoDB,
                                           final TimelineWorkerConfiguration configuration) {

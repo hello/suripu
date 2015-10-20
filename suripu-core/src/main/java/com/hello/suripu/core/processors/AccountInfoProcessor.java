@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
@@ -20,20 +21,20 @@ import java.util.Map;
 public class AccountInfoProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountInfoProcessor.class);
 
-    private final QuestionResponseDAO questionResponseDAO;
+    private final QuestionResponseReadDAO questionResponseDAO;
     private final ImmutableMap<AccountInfo.Type, Question> infoQuestionMap;
 
 
     public static class Builder {
-        private QuestionResponseDAO questionResponseDAO;
+        private QuestionResponseReadDAO questionResponseDAO;
         private Map<AccountInfo.Type, Question> infoQuestionMap = new HashMap<>();
 
-        public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
+        public Builder withQuestionResponseDAO(final QuestionResponseReadDAO questionResponseDAO) {
             this.questionResponseDAO = questionResponseDAO;
             return this;
         }
 
-        public Builder withMapping(final QuestionResponseDAO questionResponseDAO) {
+        public Builder withMapping(final QuestionResponseReadDAO questionResponseDAO) {
             final List<Question> baseQuestions = questionResponseDAO.getBaseQuestions();
             for (final Question question : baseQuestions) {
                 if (question.accountInfo == AccountInfo.Type.SLEEP_TEMPERATURE) {
@@ -57,7 +58,7 @@ public class AccountInfoProcessor {
         }
     }
 
-    public AccountInfoProcessor(final QuestionResponseDAO questionResponseDAO, final Map<AccountInfo.Type, Question> infoQuestionMap) {
+    public AccountInfoProcessor(final QuestionResponseReadDAO questionResponseDAO, final Map<AccountInfo.Type, Question> infoQuestionMap) {
         this.questionResponseDAO = questionResponseDAO;
         this.infoQuestionMap = ImmutableMap.copyOf(infoQuestionMap);
     }

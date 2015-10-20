@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -58,7 +59,7 @@ public class InsightProcessor {
     private static final int NUM_INSIGHTS_ALLOWED_PER_WEEK = 2;
 
     private final DeviceDataDAO deviceDataDAO;
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
@@ -70,7 +71,7 @@ public class InsightProcessor {
     private final AccountInfoProcessor accountInfoProcessor;
 
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
-                            @NotNull final DeviceDAO deviceDAO,
+                            @NotNull final DeviceReadDAO deviceDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final TrackerMotionDAO trackerMotionDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
@@ -391,7 +392,7 @@ public class InsightProcessor {
      */
     public static class Builder {
         private @Nullable DeviceDataDAO deviceDataDAO;
-        private @Nullable DeviceDAO deviceDAO;
+        private @Nullable DeviceReadDAO deviceDAO;
         private @Nullable TrendsInsightsDAO trendsInsightsDAO;
         private @Nullable TrackerMotionDAO trackerMotionDAO;
         private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
@@ -402,7 +403,7 @@ public class InsightProcessor {
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
 
-        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO) {
+        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceReadDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
             this.deviceDataDAO = deviceDataDAO;
             return this;

@@ -9,7 +9,9 @@ import com.google.common.base.Optional;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.processors.InsightProcessor;
@@ -30,12 +32,12 @@ public class InsightsGenerator extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(InsightsGenerator.class);
 
     private final InsightProcessor insightProcessor;
-    private final AccountDAO accountDAO;
-    private final DeviceDAO deviceDAO;
+    private final AccountReadDAO accountDAO;
+    private final DeviceReadDAO deviceDAO;
     private final Map<Long, DateTime> accountCreatedMap;
 
-    public InsightsGenerator(final AccountDAO accountDAO,
-                             final DeviceDAO deviceDAO,
+    public InsightsGenerator(final AccountReadDAO accountDAO,
+                             final DeviceReadDAO deviceDAO,
                              final InsightProcessor insightProcessor) {
         this.accountDAO = accountDAO;
         this.deviceDAO = deviceDAO;

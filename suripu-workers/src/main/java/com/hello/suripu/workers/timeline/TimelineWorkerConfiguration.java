@@ -47,15 +47,6 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("insights_db")
-    private DatabaseConfiguration insightsDB = new DatabaseConfiguration();
-
-    public DatabaseConfiguration getInsightsDB() {
-        return insightsDB;
-    }
-
-    @Valid
-    @NotNull
     @JsonProperty("aggregate_window_size_min")
     private Integer aggregateWindowSizeInMinute;
 
