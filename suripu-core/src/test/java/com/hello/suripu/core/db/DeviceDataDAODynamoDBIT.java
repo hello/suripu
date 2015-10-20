@@ -13,6 +13,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.DeviceData;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -218,58 +219,57 @@ public class DeviceDataDAODynamoDBIT {
         final Long deviceId = new Long(1);
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
-        final List<DeviceData> deviceDataList = new ImmutableList.Builder()
-                .add(new DeviceData.Builder()
-                        .withAccountId(accountId)
-                        .withDeviceId(deviceId)
-                        .withOffsetMillis(offsetMillis)
-                        .withDateTimeUTC(firstTime)
-                        .withAmbientTemperature(70)
-                        .build())
-                .add(new DeviceData.Builder()
-                        .withAccountId(accountId)
-                        .withDeviceId(deviceId)
-                        .withOffsetMillis(offsetMillis)
-                        .withDateTimeUTC(firstTime.plusMinutes(1))
-                        .withAmbientTemperature(77)
-                        .build())
-                .add(new DeviceData.Builder()
-                        .withAccountId(accountId)
-                        .withDeviceId(deviceId)
-                        .withOffsetMillis(offsetMillis)
-                        .withDateTimeUTC(firstTime.plusMinutes(2))
-                        .withAmbientTemperature(69)
-                        .build())
-                .add(new DeviceData.Builder()
-                        .withAccountId(accountId)
-                        .withDeviceId(deviceId)
-                        .withOffsetMillis(offsetMillis)
-                        .withDateTimeUTC(firstTime.plusMinutes(3))
-                        .withAmbientTemperature(90)
-                        .build())
-                .add(new DeviceData.Builder()
-                        .withAccountId(accountId)
-                        .withDeviceId(deviceId)
-                        .withOffsetMillis(offsetMillis)
-                        .withDateTimeUTC(firstTime.plusMinutes(4))
-                        .withAmbientTemperature(70)
-                        .build())
-                .add(new DeviceData.Builder()
-                        .withAccountId(accountId)
-                        .withDeviceId(deviceId)
-                        .withOffsetMillis(offsetMillis)
-                        .withDateTimeUTC(firstTime.plusMinutes(5))
-                        .withAmbientTemperature(20)
-                        .build())
-                // Skip minute 6
-                .add(new DeviceData.Builder()
-                        .withAccountId(accountId)
-                        .withDeviceId(deviceId)
-                        .withOffsetMillis(offsetMillis)
-                        .withDateTimeUTC(firstTime.plusMinutes(7))
-                        .withAmbientTemperature(100)
-                        .build())
-                .build();
+        final List<DeviceData> deviceDataList = Lists.newArrayList();
+        deviceDataList.add(new DeviceData.Builder()
+                .withAccountId(accountId)
+                .withDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(firstTime)
+                .withAmbientTemperature(70)
+                .build());
+        deviceDataList.add(new DeviceData.Builder()
+                .withAccountId(accountId)
+                .withDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(firstTime.plusMinutes(1))
+                .withAmbientTemperature(77)
+                .build());
+        deviceDataList.add(new DeviceData.Builder()
+                .withAccountId(accountId)
+                .withDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(firstTime.plusMinutes(2))
+                .withAmbientTemperature(69)
+                .build());
+        deviceDataList.add(new DeviceData.Builder()
+                .withAccountId(accountId)
+                .withDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(firstTime.plusMinutes(3))
+                .withAmbientTemperature(90)
+                .build());
+        deviceDataList.add(new DeviceData.Builder()
+                .withAccountId(accountId)
+                .withDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(firstTime.plusMinutes(4))
+                .withAmbientTemperature(70)
+                .build());
+        deviceDataList.add(new DeviceData.Builder()
+                .withAccountId(accountId)
+                .withDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(firstTime.plusMinutes(5))
+                .withAmbientTemperature(20)
+                .build());
+        // Skip minute 6
+        deviceDataList.add(new DeviceData.Builder()
+                .withAccountId(accountId)
+                .withDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(firstTime.plusMinutes(7))
+                .withAmbientTemperature(100)
+                .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
 
         final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
