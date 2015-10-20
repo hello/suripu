@@ -95,7 +95,6 @@ public class SensorsViewsDynamoDB {
 
         items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.firmwareVersion)));
         items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(deviceData.dateTimeUTC.toString(DATETIME_FORMAT)));
-        items.put(TZ_OFFSET_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.offsetMillis)));
 
         final PutRequest putRequest = new PutRequest(items);
         return new WriteRequest(putRequest);
