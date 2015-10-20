@@ -29,6 +29,11 @@ public class DynamoDBItemAggregator {
         return Double.valueOf(attributeValue.getN());
     }
 
+    /**
+     * Sum elements for key.
+     * @param key
+     * @return
+     */
     public double sum(final String key) {
         double total = 0;
         for (final Map<String, AttributeValue> item: items) {
@@ -37,15 +42,36 @@ public class DynamoDBItemAggregator {
         return total;
     }
 
+    /**
+     * Get the mean of elements for key, or defaultValue if items are empty.
+     * @param key
+     * @return
+     */
     public double mean(final String key) {
+        if (items.isEmpty()) {
+            return defaultValue;
+        }
         return sum(key) / items.size();
     }
 
+    /**
+     * Get the mean for key, rounded to the nearest long.
+     * @param key
+     * @return
+     */
     public long roundedMean(final String key) {
         return Math.round(mean(key));
     }
 
+    /**
+     * Get the maximum value for key, or defaultValue if items are empty.
+     * @param key
+     * @return
+     */
     public double max(final String key) {
+        if (items.isEmpty()) {
+            return defaultValue;
+        }
         double currMax = Double.NEGATIVE_INFINITY;
         for (final Map<String, AttributeValue> item: items) {
             currMax = Math.max(currMax, toDouble(item.get(key)));
@@ -53,7 +79,15 @@ public class DynamoDBItemAggregator {
         return currMax;
     }
 
+    /**
+     * Get the minimum value for key, or defaultValue if items are empty.
+     * @param key
+     * @return
+     */
     public double min(final String key) {
+        if (items.isEmpty()) {
+            return defaultValue;
+        }
         double currMin = Double.POSITIVE_INFINITY;
         for (final Map<String, AttributeValue> item: items) {
             currMin = Math.min(currMin, toDouble(item.get(key)));

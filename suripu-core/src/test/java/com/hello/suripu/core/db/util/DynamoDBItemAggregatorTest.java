@@ -86,4 +86,14 @@ public class DynamoDBItemAggregatorTest {
         final double zMean = aggregator.mean("z");
         assertThat(zMean, is(0.0));
     }
+
+    @Test
+    public void testEmptyItems() {
+        final List<Map<String, AttributeValue>> items = Lists.newArrayList();
+        DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
+        assertThat(aggregator.sum("x"), is(0.0));
+        assertThat(aggregator.mean("x"), is(0.0));
+        assertThat(aggregator.min("x"), is(0.0));
+        assertThat(aggregator.max("x"), is(0.0));
+    }
 }

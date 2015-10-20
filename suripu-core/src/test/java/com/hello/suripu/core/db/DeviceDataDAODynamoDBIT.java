@@ -174,7 +174,7 @@ public class DeviceDataDAODynamoDBIT {
     }
 
     @Test
-    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration() {
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration1Minute() {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         final Long accountId = new Long(1);
         final Long deviceId = new Long(1);
@@ -208,8 +208,77 @@ public class DeviceDataDAODynamoDBIT {
                 is(1));
         // Account ID unrecognized should be 0 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId + 1000, firstTime, firstTime, 1).size(),
+                        deviceId, accountId + 1000, firstTime, firstTime.plusMinutes(1), 1).size(),
                 is(0));
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5Minutes() {
+        final Long accountId = new Long(1);
+        final Long deviceId = new Long(1);
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+        final List<DeviceData> deviceDataList = new ImmutableList.Builder()
+                .add(new DeviceData.Builder()
+                        .withAccountId(accountId)
+                        .withDeviceId(deviceId)
+                        .withOffsetMillis(offsetMillis)
+                        .withDateTimeUTC(firstTime)
+                        .withAmbientTemperature(70)
+                        .build())
+                .add(new DeviceData.Builder()
+                        .withAccountId(accountId)
+                        .withDeviceId(deviceId)
+                        .withOffsetMillis(offsetMillis)
+                        .withDateTimeUTC(firstTime.plusMinutes(1))
+                        .withAmbientTemperature(77)
+                        .build())
+                .add(new DeviceData.Builder()
+                        .withAccountId(accountId)
+                        .withDeviceId(deviceId)
+                        .withOffsetMillis(offsetMillis)
+                        .withDateTimeUTC(firstTime.plusMinutes(2))
+                        .withAmbientTemperature(69)
+                        .build())
+                .add(new DeviceData.Builder()
+                        .withAccountId(accountId)
+                        .withDeviceId(deviceId)
+                        .withOffsetMillis(offsetMillis)
+                        .withDateTimeUTC(firstTime.plusMinutes(3))
+                        .withAmbientTemperature(90)
+                        .build())
+                .add(new DeviceData.Builder()
+                        .withAccountId(accountId)
+                        .withDeviceId(deviceId)
+                        .withOffsetMillis(offsetMillis)
+                        .withDateTimeUTC(firstTime.plusMinutes(4))
+                        .withAmbientTemperature(70)
+                        .build())
+                .add(new DeviceData.Builder()
+                        .withAccountId(accountId)
+                        .withDeviceId(deviceId)
+                        .withOffsetMillis(offsetMillis)
+                        .withDateTimeUTC(firstTime.plusMinutes(5))
+                        .withAmbientTemperature(20)
+                        .build())
+                // Skip minute 6
+                .add(new DeviceData.Builder()
+                        .withAccountId(accountId)
+                        .withDeviceId(deviceId)
+                        .withOffsetMillis(offsetMillis)
+                        .withDateTimeUTC(firstTime.plusMinutes(7))
+                        .withAmbientTemperature(100)
+                        .build())
+                .build();
+        deviceDataDAODynamoDB.batchInsert(deviceDataList);
+
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                deviceId, accountId, firstTime, firstTime.plusMinutes(10), 5);
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0).ambientTemperature, is(69));
+        assertThat(results.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
+        assertThat(results.get(1).ambientTemperature, is(20));
+        assertThat(results.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
     }
 
 }

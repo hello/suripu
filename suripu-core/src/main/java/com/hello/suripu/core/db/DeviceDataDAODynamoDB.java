@@ -168,6 +168,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .build();
     }
 
+    private void backoff(int numberOfAttempts) {
+        try {
+            long sleepMillis = (long) Math.pow(2, numberOfAttempts) * 50;
+            LOGGER.debug("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
+            Thread.sleep(sleepMillis);
+        } catch (InterruptedException e) {
+            LOGGER.error("Interrupted while attempting exponential backoff.");
+        }
+    }
+
     /**
      * Batch insert list of DeviceData objects.
      * Subject to DynamoDB's maximum BatchWriteItem size.
@@ -190,21 +200,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         int numAttempts = 0;
 
         do {
+            if (numAttempts > 0) {
+                // Being throttled! Back off, buddy.
+                backoff(numAttempts);
+            }
+
             numAttempts++;
             final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
             final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             // check for unprocessed items
             requestItems = result.getUnprocessedItems();
-            if (!requestItems.isEmpty()) {
-                // Being throttled! Back off, buddy.
-                try {
-                    long sleepMillis = (long) Math.pow(2, numAttempts) * 50;
-                    LOGGER.debug("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
-                    Thread.sleep(sleepMillis);
-                } catch (InterruptedException e) {
-                    LOGGER.error("Interrupted while attempting exponential backoff.");
-                }
-            }
         } while (!requestItems.isEmpty() && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
 
         if (!requestItems.isEmpty()) {
@@ -246,9 +251,13 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return DateTime.parse(item.get(AttributeNames.TIMESTAMP).getS(), DATE_TIME_FORMATTER);
     }
 
-    private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items) {
+    private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final DeviceData template) {
         final DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
         return new DeviceData.Builder()
+                .withAccountId(template.accountId)
+                .withDeviceId(template.deviceId)
+                .withDateTimeUTC(template.dateTimeUTC)
+                .withOffsetMillis(template.offsetMillis)
                 .withAmbientTemperature((int) aggregator.min(AttributeNames.AMBIENT_TEMP))
                 .withAmbientLight((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT))
                 .withAmbientLightVariance((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT_VARIANCE))
@@ -258,13 +267,13 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .withAmbientDustVariance((int) aggregator.roundedMean(AttributeNames.AMBIENT_DUST_VARIANCE))
                 .withAmbientDustMin((int) aggregator.roundedMean(AttributeNames.AMBIENT_DUST_MIN))
                 .withAmbientDustMax((int) aggregator.max(AttributeNames.AMBIENT_DUST_MAX))
-                .withOffsetMillis((int) aggregator.min(AttributeNames.OFFSET_MILLIS))
                 .build();
     }
 
     private List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
         final List<DeviceData> resultList = Lists.newLinkedList();
         LinkedList<Map<String, AttributeValue>> currentWorkingList = Lists.newLinkedList();
+        final DeviceData.Builder templateBuilder = new DeviceData.Builder();
         for (final Map<String, AttributeValue> item: items) {
             final DateTime itemDateTime = timestampFromDDBItem(item);
             if (currentWorkingList.isEmpty()) {
@@ -280,14 +289,21 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 currentWorkingList.add(item);
             } else {
                 // Outside the window, aggregate working set to single value.
-                resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList));
+                resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
 
-                // Create new working set
+                // Create new working sets
                 currentWorkingList = Lists.newLinkedList();
                 currentWorkingList.add(item);
             }
+            templateBuilder
+                    .withDateTimeUTC(getFloorOfDateTime(itemDateTime, slotDuration))
+                    .withAccountId(Long.valueOf(item.get(AttributeNames.ACCOUNT_ID).getN()))
+                    .withOffsetMillis(Integer.valueOf(item.get(AttributeNames.OFFSET_MILLIS).getN()))
+                    .withDeviceId(Long.valueOf(item.get(AttributeNames.DEVICE_ID).getN()));
         }
-        resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList));
+        if (!currentWorkingList.isEmpty()) {
+            resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
+        }
         return resultList;
     }
 
@@ -296,7 +312,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final Long accountId,
             final DateTime start,
             final DateTime end,
-            // TODO this field is currently ignored, no aggregation ATM
             final Integer slotDuration,
             final Collection<String> targetAttributes)
     {
@@ -315,12 +330,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         queryConditions.put(AttributeNames.DEVICE_ID, selectByDeviceId);
         queryConditions.put(RANGE_KEY_NAME, selectByTimestamp);
 
-        final List<DeviceData> results = Lists.newArrayList();
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int numAttempts = 0;
 
         do {
+            if (numAttempts > 0) {
+                backoff(numAttempts);
+            }
+
             numAttempts++;
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
@@ -337,7 +356,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                         LOGGER.warn("Missing field in item {}", item);
                         continue;
                     }
-                    results.add(this.attributeMapToDeviceData(item));
+                    results.add(item);
                 }
             }
 
@@ -351,7 +370,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                     MAX_QUERY_ATTEMPTS, lastEvaluatedKey);
         }
 
-        return ImmutableList.copyOf(results);
+        return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(results, slotDuration));
     }
 
 
