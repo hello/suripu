@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.Feature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class FeatureStore {
     public Map<String, Feature> getData() {
         LOGGER.trace("Calling getData");
 
-        final Map<String, Condition> conditions = new HashMap<>();
+        final Map<String, Condition> conditions = Maps.newHashMap();
         conditions.put(NAMESPACE_ATTRIBUTE_NAME, new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(new AttributeValue().withS(namespace)));
@@ -54,7 +55,7 @@ public class FeatureStore {
                 .withComparisonOperator(ComparisonOperator.GT)
                 .withAttributeValueList(new AttributeValue().withS(" ")));
 
-        final int queryLimit = 100; //TODO: scan table instead?
+        final int queryLimit = 200; //TODO: scan table instead?
 
         final QueryRequest query = new QueryRequest(this.tableName)
                 .withKeyConditions(conditions)
