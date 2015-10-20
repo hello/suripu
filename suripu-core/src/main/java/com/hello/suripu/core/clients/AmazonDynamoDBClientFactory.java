@@ -61,6 +61,15 @@ public class AmazonDynamoDBClientFactory {
             throw new IllegalArgumentException("Check configuration. Invalid tableName: " + tableName.toString());
         }
 
+        // This is an exception to the way clients are created
+        // We want an individual and independent threadpool for our feature flipper
+        // Important: it isn't cached, so any call to this method will return a new client
+        if(DynamoDBTableName.FEATURES.equals(tableName)) {
+            final AmazonDynamoDB client = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
+            client.setEndpoint(dynamoDBConfiguration.endpoints().get(DynamoDBTableName.FEATURES));
+            return client;
+        }
+
         final String endpoint = dynamoDBConfiguration.endpoints().get(tableName);
         if(clients.containsKey(endpoint)) {
             return clients.get(endpoint);
