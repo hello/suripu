@@ -1,14 +1,24 @@
 package com.hello.suripu.core.pill.heartbeat;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import org.joda.time.DateTime;
 
 public class PillHeartBeat {
 
+    @JsonProperty("pill_id")
     public final String pillId;
+
+    @JsonProperty("battery_level")
     public final int batteryLevel;
+
+    @JsonProperty("firmware_version")
     public final int firmwareVersion;
+
+    @JsonProperty("uptime")
     public final int uptimeInSeconds;
+
+    @JsonProperty("created_at")
     public final DateTime createdAtUTC;
 
     private PillHeartBeat(final String pillId, final int batteryLevel, final int firmwareVersion, final int uptimeInSeconds, final DateTime createdAtUTC) {
