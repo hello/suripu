@@ -6,21 +6,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.MultiObsSequence;
 import com.hello.suripu.algorithm.hmm.MultiObsSequenceAlphabetHiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
+import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
-import com.hello.suripu.core.models.OnlineHmmScratchPad;
+import com.hello.suripu.core.util.OnlineHmmMeasurementParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.UUID;
 
 /**
@@ -35,6 +34,8 @@ public class OnlineHmmModelEvaluator {
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
     final static double MIN_NUM_PERIODS_ON_BED = 36;
+    final static double MIN_VOTE_PERCENT_TO_BE_IN_SLEEP = 0.666666; //just like the senate, you need a super-majority to do anything useful
+
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmmModelEvaluator.class);
     private final Logger LOGGER;
@@ -115,7 +116,6 @@ public class OnlineHmmModelEvaluator {
             }
 
 
-            //is it better?
             final int T = goodResults.get(0).path.length;
             final int N = goodResults.get(0).numStates;
             final double [][] votes = new double[N][T];
@@ -125,7 +125,9 @@ public class OnlineHmmModelEvaluator {
                 voteByModel(votes,votingInfoByOutputId,result);
             }
 
-            final int [] votepath = getVotedPath(votes);
+            normalizeVotes(votes);
+
+            final int [] votepath = getVotedPathWithConstraints(votes,entryByOutput.getKey().equals(OnlineHmmData.OUTPUT_MODEL_SLEEP));
 
             final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(votepath,0.0,String.format("%s-%s",entryByOutput.getKey(),"voted"));
 
@@ -157,7 +159,54 @@ public class OnlineHmmModelEvaluator {
         }
     }
 
-    private static int [] getVotedPath(final double [][] votes) {
+    private static void normalizeVotes(final double [][] votes) {
+        final int N = votes.length;
+
+        if (N == 0) {
+            return;
+        }
+
+        final int T = votes[0].length;
+
+        for (int t = 0; t < T; t++) {
+            double sum = 0.0;
+            for (int i = 0; i < N; i++) {
+                sum += votes[i][t];
+            }
+
+            if (sum > 0.0) {
+                for (int i = 0; i < N; i++) {
+                    votes[i][t] /= sum;
+                }
+            }
+        }
+    }
+
+    private static class ScoreWithIndex implements Comparable<ScoreWithIndex> {
+        public ScoreWithIndex(double score, int index) {
+            this.score = score;
+            this.index = index;
+        }
+
+        private final double score;
+        private final int index;
+
+        //sort descending
+        @Override
+        public int compareTo(final ScoreWithIndex o) {
+            if (this.score < o.score) {
+                return 1;
+            }
+
+            if (this.score > o.score) {
+                return -1;
+            }
+
+            return 0;
+        }
+    }
+
+    private static int [] getVotedPathWithConstraints(final double[][] votes, boolean isSleep) {
         final int N = votes.length;
         final int T = votes[0].length;
 
@@ -165,15 +214,24 @@ public class OnlineHmmModelEvaluator {
 
         for (int t = 0; t < T; t++) {
             double max = 0;
-            int maxidx = 0;
+
+            final List<ScoreWithIndex> scoreList = Lists.newArrayList();
             for (int i = 0; i < N; i++) {
-                if (max < votes[i][t]) {
-                    max = votes[i][t];
-                    maxidx = i;
+                scoreList.add(new ScoreWithIndex(votes[i][t],i));
+            }
+
+            Collections.sort(scoreList);
+
+            int maxIdx = scoreList.get(0).index;
+
+            if (scoreList.get(0).index == LabelMaker.LABEL_DURING_SLEEP && isSleep) {
+                if (scoreList.get(0).score < MIN_VOTE_PERCENT_TO_BE_IN_SLEEP) {
+                    maxIdx = scoreList.get(1).index;
                 }
             }
 
-            votepath[t] = maxidx;
+
+            votepath[t] = maxIdx;
 
         }
 
