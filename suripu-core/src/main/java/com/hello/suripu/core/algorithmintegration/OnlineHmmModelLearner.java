@@ -41,25 +41,6 @@ public class OnlineHmmModelLearner {
 
     }
 
-
-    static private String createNewModelId(final String latestModelId) {
-        final String [] tokens = latestModelId.split("-");
-
-
-        if (tokens.length == 1) {
-            return String.format("%s-%d",tokens[0],1);
-        }
-
-        if (tokens.length == 2) {
-            int number = Integer.valueOf(tokens[1]);
-            number++;
-            return String.format("%s-%d",tokens[0],number);
-        }
-
-        return "error";
-
-    }
-
     static double [][] getConfusionCountMatrix(final int[] path, final Map<Integer, Integer> labels, final int numStates) {
         final double [][] mtx = new double[numStates][numStates];
 
@@ -134,31 +115,51 @@ public class OnlineHmmModelLearner {
             //get all the model predictions for this label
             final Collection<MultiEvalHmmDecodedResult> allModelsPredictions = evaluationResult.modelEvaluations.get(outputId);
 
-            final Map<String,Double> modelLikelihoods = Maps.newHashMap();
+            //create voting info if not present
+            for (final MultiEvalHmmDecodedResult result : allModelsPredictions) {
+
+                //create voting info if not present
+                if (!votingInfo.containsKey(result.originatingModel)) {
+                    votingInfoForThisOutput.put(result.originatingModel, new ModelVotingInfo(DEFAULT_MODEL_PRIOR_PROBABILITY));
+                }
+            }
+
+            //normalize probabilities
+            double probSum = 0.0;
+            for (final ModelVotingInfo info : votingInfoForThisOutput.values()) {
+                probSum += info.prob;
+            }
+
+            for (final String key : votingInfoForThisOutput.keySet()) {
+                final double normalizedProb = votingInfoForThisOutput.get(key).prob / probSum;
+                votingInfoForThisOutput.put(key,new ModelVotingInfo(normalizedProb));
+            }
+
+
+
+            final Map<String,Double> jointLikelihoods = Maps.newHashMap();
 
             //evaluate model likelihoods
             for (final MultiEvalHmmDecodedResult result : allModelsPredictions) {
-                modelLikelihoods.put(result.originatingModel, getModelLikelihood(result.path, labels, result.numStates));
+
+                final ModelVotingInfo thisModelVoteInfo = votingInfoForThisOutput.get(result.originatingModel);
+
+                jointLikelihoods.put(result.originatingModel, getModelLikelihood(result.path, labels, result.numStates) * thisModelVoteInfo.prob);
             }
 
             //get sum of all model likelihoods (denominator)
             double likelihoodSum = 0.0;
-            for (final Double likelihood : modelLikelihoods.values()) {
+            for (final Double likelihood : jointLikelihoods.values()) {
                 likelihoodSum += likelihood;
             }
 
             for (final MultiEvalHmmDecodedResult result : allModelsPredictions) {
 
-                //create voting info if not present
-                if (!votingInfo.containsKey(result.originatingModel)) {
-                    votingInfoForThisOutput.put(result.originatingModel,new ModelVotingInfo(DEFAULT_MODEL_PRIOR_PROBABILITY));
-                }
-
                 //prior
                 final ModelVotingInfo thisModelVoteInfo = votingInfoForThisOutput.get(result.originatingModel);
 
                 //bayes update
-                final double newProb = thisModelVoteInfo.prob * modelLikelihoods.get(result.originatingModel) / likelihoodSum;
+                final double newProb = jointLikelihoods.get(result.originatingModel) / likelihoodSum;
 
                 //store
                 votingInfoForThisOutput.put(result.originatingModel,new ModelVotingInfo(newProb));
@@ -218,15 +219,11 @@ public class OnlineHmmModelLearner {
 
             //GO FOR IT!!!!!!!!!
 
-            //get the transition restrictions
-            final Multimap<Integer, Transition> forbiddenTransitions = ArrayListMultimap.create();
-
-            for (TransitionRestriction restriction : params.transitionRestrictions) {
-                forbiddenTransitions.putAll(restriction.getRestrictions(features));
-            }
+            //get empty transition restrictions -- restrictions should not be present for learning
+            final Multimap<Integer, Transition> noTransitions = ArrayListMultimap.create();
 
             //get the measurement sequence
-            final MultiObsSequence meas = MultiObsSequence.createModelPathsToMultiObsSequence(features, forbiddenTransitions, Optional.of(labels));
+            final MultiObsSequence meas = MultiObsSequence.createModelPathsToMultiObsSequence(features, noTransitions, Optional.of(labels));
 
             //finally go and learn on the data and labels for the user's model
             final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
@@ -236,8 +233,8 @@ public class OnlineHmmModelLearner {
             //insert sort
             final TreeSet<String> oldModelIds = Sets.newTreeSet(priors.modelsByOutputId.get(outputId).keySet());
 
-            //create new model ID
-            final String newModelId = createNewModelId(oldModelIds.last());
+            //meet the new model ID -- same as the old model ID
+            final String newModelId = params.id;
 
             final OnlineHmmModelParams newParams = new OnlineHmmModelParams(hmm.getLogAlphabetNumerator(),hmm.getLogANumerator(),hmm.getLogDenominator(),hmm.getPi(),params.endStates,params.minStateDurations,params.timeCreatedUtc,currentTime,newModelId,outputId,params.transitionRestrictions);
 

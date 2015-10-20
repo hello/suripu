@@ -179,8 +179,16 @@ public class OnlineHmm {
 
     }
 
-    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening) {
+    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening, final OnlineHmmPriors defaultEnsemble, boolean forceLearning) {
         final OnlineHmmData emptyResult = OnlineHmmData.createEmpty();
+
+        String modelIdSuffix = "custom";
+
+        //we do this do differentiate models that were learned in the field, or models that were
+        //done during batch-learning, where forceLearning will be "true"
+        if (forceLearning) {
+            modelIdSuffix = "forced";
+        }
 
         /* GET THE USER-SPECIFIC MODEL PARAMETERS FOR THE ONE HMM TO RULE THEM ALL */
         final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId,evening);
@@ -188,14 +196,20 @@ public class OnlineHmm {
         //sort out the differences between the default model and the user models
         OnlineHmmPriors modelPriors = userModelData.modelPriors;
 
-        final Optional<OnlineHmmPriors> defaultPriorOptional = OnlineHmmPriors.createDefaultPrior();
+        //populate default with some model from the defaults
+        final OnlineHmmPriors defaultPrior = OnlineHmmPriors.createEmpty();
 
-        if (!defaultPriorOptional.isPresent() && userModelData.modelPriors.isEmpty()) {
-            LOGGER.error("could not get valid default prior.  This is astoundingly bad.");
-            return emptyResult;
+        for (final String key : defaultEnsemble.modelsByOutputId.keySet()) {
+            final Map.Entry<String,OnlineHmmModelParams> firstEntry = defaultEnsemble.modelsByOutputId.get(key).entrySet().iterator().next();
+
+            final Map<String,OnlineHmmModelParams> paramsMap = Maps.newHashMap();
+
+            //create model ID
+            final String newModelId = String.format("%s-%s-%s",key,String.valueOf(accountId),modelIdSuffix);
+
+            paramsMap.put(newModelId, firstEntry.getValue().clone(newModelId));
+            defaultPrior.modelsByOutputId.put(key,paramsMap);
         }
-
-        final OnlineHmmPriors defaultPrior = defaultPriorOptional.get();
 
         /*  CREATE DEFAULT MODELS IF NECESSARY */
         if (userModelData.modelPriors.isEmpty()) {
@@ -371,7 +385,7 @@ public class OnlineHmm {
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
 
 
-        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening);
+        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening,defaultEnsemble,forceLearning);
 
         if (userModelData.modelPriors.isEmpty()) {
             LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
@@ -454,7 +468,7 @@ public class OnlineHmm {
 
 
         /* PROCESS FEEDBACK, but only if it's ready  */
-        if (true) {
+        if (isFeedbackReady) {
             //1) turn feedback into labels
             final LabelMaker labelMaker = new LabelMaker(uuid);
             final Map<String,Map<Integer,Integer>> labelsByOutputId = labelMaker.getLabelsFromEvents(timezoneOffset, binnedData.t0, endTimeUtc, binnedData.numMinutesInWindow, feedbackList);
