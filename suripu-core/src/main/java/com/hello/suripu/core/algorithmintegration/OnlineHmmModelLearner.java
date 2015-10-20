@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.MultiObsSequence;
 import com.hello.suripu.algorithm.hmm.MultiObsSequenceAlphabetHiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.Transition;
@@ -249,8 +250,15 @@ public class OnlineHmmModelLearner {
 
     public OnlineHmmScratchPad reestimate(final EvaluationResult evalResult,final OnlineHmmPriors priors,final Map<String,ImmutableList<Integer>> features, final Map<String,Map<Integer,Integer>> labelsByOutputId,long currentTime) {
 
+        Map<String, OnlineHmmModelParams> learnedModelParams = Maps.newHashMap();
+
         //REESTIMATE FOR -MY- MODEL
-        final Map<String,OnlineHmmModelParams> learnedModelParams = reestimateForMyModel(priors,features,labelsByOutputId,currentTime);
+        try {
+            learnedModelParams = reestimateForMyModel(priors, features, labelsByOutputId, currentTime);
+        }
+        catch (AlgorithmException e) {
+            LOGGER.error(e.getMessage());
+        }
 
         //NOW UPDATE THE WEIGHTING
         final Map<String,Map<String,ModelVotingInfo>> updatedVotingInfo = updateModelWeights(evalResult,priors,labelsByOutputId);

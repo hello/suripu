@@ -285,7 +285,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         /* Default model ensemble for all users  */
         //TEMPORARY  -- DO NOT MERGE TO MASTER WITH DefaultModelEnsembleDAOFromFile
         //It will eventually be from S3
-        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAOFromFile("/Users/benjo/dev/Kasetsu/server_debug");
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAOFromFile("/Users/benjo/dev/Kasetsu/server_debug/big.model");
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
