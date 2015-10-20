@@ -47,8 +47,10 @@ dynamodb:
   tables:
     features: features
     wifi_info: prod_wifi_info
+    sense_last_seen: prod_sense_last_seen
 
   endpoints:
     features: http://dynamodb.us-east-1.amazonaws.com
     wifi_info: http://dynamodb.us-east-1.amazonaws.com
+    sense_last_seen: http://dynamodb.us-east-1.amazonaws.com
 
