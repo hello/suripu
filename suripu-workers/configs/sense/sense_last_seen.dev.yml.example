@@ -27,8 +27,10 @@ dynamodb:
   tables:
     features: features
     wifi_info: wifi_info
+    sense_last_seen: sense_last_seen
 
   endpoints:
     features: http://localhost:7777
     wifi_info: http://localhost:7777
+    sense_last_seen: http://localhost:7777
 
