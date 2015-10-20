@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.DeviceData;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -235,6 +236,59 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         }
 
         return successfulInsertions;
+    }
+
+    private DateTime getFloorOfDateTime(final DateTime dateTime, final Integer toMinutes) {
+        return new DateTime(dateTime).withMinuteOfHour(dateTime.getMinuteOfHour() - (dateTime.getMinuteOfHour() % toMinutes));
+    }
+
+    private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
+        return DateTime.parse(item.get(AttributeNames.TIMESTAMP).getS(), DATE_TIME_FORMATTER);
+    }
+
+    private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items) {
+        final DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
+        return new DeviceData.Builder()
+                .withAmbientTemperature((int) aggregator.min(AttributeNames.AMBIENT_TEMP))
+                .withAmbientLight((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT))
+                .withAmbientLightVariance((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT_VARIANCE))
+                .withAmbientLightPeakiness((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT_PEAKINESS))
+                .withAmbientHumidity((int) aggregator.roundedMean(AttributeNames.AMBIENT_HUMIDITY))
+                .withAmbientAirQualityRaw((int) aggregator.roundedMean(AttributeNames.AMBIENT_AIR_QUALITY_RAW))
+                .withAmbientDustVariance((int) aggregator.roundedMean(AttributeNames.AMBIENT_DUST_VARIANCE))
+                .withAmbientDustMin((int) aggregator.roundedMean(AttributeNames.AMBIENT_DUST_MIN))
+                .withAmbientDustMax((int) aggregator.max(AttributeNames.AMBIENT_DUST_MAX))
+                .withOffsetMillis((int) aggregator.min(AttributeNames.OFFSET_MILLIS))
+                .build();
+    }
+
+    private List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
+        final List<DeviceData> resultList = Lists.newLinkedList();
+        LinkedList<Map<String, AttributeValue>> currentWorkingList = Lists.newLinkedList();
+        for (final Map<String, AttributeValue> item: items) {
+            final DateTime itemDateTime = timestampFromDDBItem(item);
+            if (currentWorkingList.isEmpty()) {
+                // First iteration
+                currentWorkingList.add(item);
+            } else if (timestampFromDDBItem(currentWorkingList.getLast()).isAfter(itemDateTime)) {
+                // Unsorted list
+                throw new IllegalArgumentException("Input DeviceDatas must be sorted.");
+            } else if (getFloorOfDateTime(timestampFromDDBItem(currentWorkingList.getLast()), slotDuration)
+                    .plusMinutes(slotDuration)
+                    .isAfter(itemDateTime)) {
+                // Within the window of our current working set.
+                currentWorkingList.add(item);
+            } else {
+                // Outside the window, aggregate working set to single value.
+                resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList));
+
+                // Create new working set
+                currentWorkingList = Lists.newLinkedList();
+                currentWorkingList.add(item);
+            }
+        }
+        resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList));
+        return resultList;
     }
 
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
