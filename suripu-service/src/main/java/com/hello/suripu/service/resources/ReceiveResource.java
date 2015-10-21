@@ -671,6 +671,11 @@ public class ReceiveResource extends BaseResource {
                     final String updateGroup = deviceGroups.get(0);
                     LOGGER.warn("Clock Sync OTA Override for DeviceId {} with Group {}", deviceID, updateGroup);
                     return firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
+                } else {
+                    if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
+                        LOGGER.warn("Clock Sync OTA Override for DeviceId {} with no group", deviceID);
+                        return firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, false);
+                    }
                 }
             }
             return Collections.emptyList();
