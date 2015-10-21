@@ -79,6 +79,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createWifiInfoTable(configuration, awsCredentialsProvider);
         createAppStatsTable(configuration, awsCredentialsProvider);
         createPillHeartBeatTable(configuration, awsCredentialsProvider);
+        createDeviceDataTable(configuration, awsCredentialsProvider);
         createLastSeenTable(configuration, awsCredentialsProvider);
     }
 

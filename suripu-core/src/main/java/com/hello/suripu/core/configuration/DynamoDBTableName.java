@@ -34,7 +34,8 @@ public enum DynamoDBTableName {
     CALIBRATION("calibration"),
     INSIGHTS("insights"),
     WIFI_INFO("wifi_info"),
-    PREFERENCES("preferences");
+    PREFERENCES("preferences"),
+    DEVICE_DATA("device_data");
 
     private String value;
 
