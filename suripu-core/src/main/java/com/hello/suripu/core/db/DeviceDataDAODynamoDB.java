@@ -13,6 +13,7 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
@@ -307,6 +308,54 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return resultList;
     }
 
+    private List<Map<String, AttributeValue>> query(final Map<String, Condition> queryConditions, final Collection<String> targetAttributes) {
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+
+        Map<String, AttributeValue> lastEvaluatedKey = null;
+        int numAttempts = 0;
+        boolean keepTrying = true;
+
+        do {
+            numAttempts++;
+            final QueryRequest queryRequest = new QueryRequest()
+                    .withTableName(this.tableName)
+                    .withKeyConditions(queryConditions)
+                    .withAttributesToGet(targetAttributes)
+                    .withExclusiveStartKey(lastEvaluatedKey);
+
+            final QueryResult queryResult;
+            try {
+                queryResult = this.dynamoDBClient.query(queryRequest);
+            } catch (ProvisionedThroughputExceededException e) {
+                backoff(numAttempts);
+                continue;
+            }
+            final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+            if (queryResult.getItems() != null) {
+                for (final Map<String, AttributeValue> item : items) {
+                    if (!item.keySet().containsAll(targetAttributes)) {
+                        LOGGER.warn("Missing field in item {}", item);
+                        continue;
+                    }
+                    results.add(item);
+                }
+            }
+
+            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
+            keepTrying = (lastEvaluatedKey != null);
+
+        } while (keepTrying && (numAttempts < MAX_QUERY_ATTEMPTS));
+
+        // TODO should actually probably throw an error or return a flag here if your query could not complete
+        if (lastEvaluatedKey != null) {
+            LOGGER.warn("Exceeded {} attempts while querying. Stopping with last evaluated key: {}",
+                    MAX_QUERY_ATTEMPTS, lastEvaluatedKey);
+        }
+
+        return results;
+    }
+
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             final Long deviceId,
             final Long accountId,
@@ -330,45 +379,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         queryConditions.put(AttributeNames.DEVICE_ID, selectByDeviceId);
         queryConditions.put(RANGE_KEY_NAME, selectByTimestamp);
 
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-
-        Map<String, AttributeValue> lastEvaluatedKey = null;
-        int numAttempts = 0;
-
-        do {
-            if (numAttempts > 0) {
-                backoff(numAttempts);
-            }
-
-            numAttempts++;
-            final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(this.tableName)
-                    .withKeyConditions(queryConditions)
-                    .withAttributesToGet(targetAttributes)
-                    .withExclusiveStartKey(lastEvaluatedKey);
-
-            final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
-            final List<Map<String, AttributeValue>> items = queryResult.getItems();
-
-            if (queryResult.getItems() != null) {
-                for (final Map<String, AttributeValue> item : items) {
-                    if (!item.keySet().containsAll(targetAttributes)) {
-                        LOGGER.warn("Missing field in item {}", item);
-                        continue;
-                    }
-                    results.add(item);
-                }
-            }
-
-            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-
-        } while ((lastEvaluatedKey != null) && (numAttempts < MAX_QUERY_ATTEMPTS));
-
-        // TODO should actually probably throw an error or return a flag here if your query could not complete
-        if (lastEvaluatedKey != null) {
-            LOGGER.warn("Exceeded {} attempts while querying. Stopping with last evaluated key: {}",
-                    MAX_QUERY_ATTEMPTS, lastEvaluatedKey);
-        }
+        final List<Map<String, AttributeValue>> results = query(queryConditions, targetAttributes);
 
         return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(results, slotDuration));
     }

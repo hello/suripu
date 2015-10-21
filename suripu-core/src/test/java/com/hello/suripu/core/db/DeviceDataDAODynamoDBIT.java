@@ -1,13 +1,18 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Request;
+import com.amazonaws.Response;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.handlers.RequestHandler2;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
+import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
@@ -174,52 +179,8 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(getTableCount(), is(1));
     }
 
-    @Test
-    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration1Minute() {
+    private void addDataForQuerying(final Long accountId, final Long deviceId, final Integer offsetMillis, final DateTime firstTime) {
         final List<DeviceData> deviceDataList = new ArrayList<>();
-        final Long accountId = new Long(1);
-        final Long deviceId = new Long(1);
-        final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
-        deviceDataList.add(new DeviceData.Builder()
-                .withAccountId(accountId)
-                .withDeviceId(deviceId)
-                .withDateTimeUTC(firstTime)
-                .withOffsetMillis(offsetMillis)
-                .build());
-        deviceDataList.add(new DeviceData.Builder()
-                .withAccountId(accountId)
-                .withDeviceId(deviceId)
-                .withDateTimeUTC(firstTime.plusMinutes(1))
-                .withOffsetMillis(offsetMillis)
-                .build());
-        deviceDataDAODynamoDB.batchInsert(deviceDataList);
-
-        // From start to start+1, 2 results
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId, firstTime, firstTime.plusMinutes(1), 1).size(),
-                is(2));
-        // From start to start+2, Also 2 results because only 2 in table
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId, firstTime, firstTime.plusMinutes(2), 1).size(),
-                is(2));
-        // from start to start should be 1 result
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId, firstTime, firstTime, 1).size(),
-                is(1));
-        // Account ID unrecognized should be 0 results
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId + 1000, firstTime, firstTime.plusMinutes(1), 1).size(),
-                is(0));
-    }
-
-    @Test
-    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5And60Minutes() {
-        final Long accountId = new Long(1);
-        final Long deviceId = new Long(1);
-        final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
-        final List<DeviceData> deviceDataList = Lists.newArrayList();
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withDeviceId(deviceId)
@@ -271,6 +232,40 @@ public class DeviceDataDAODynamoDBIT {
                 .withAmbientTemperature(100)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration1Minute() {
+        final Long accountId = new Long(1);
+        final Long deviceId = new Long(1);
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        // From start to start+1, 2 results
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        deviceId, accountId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                is(2));
+        // from start to start should be 1 result
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        deviceId, accountId, firstTime, firstTime, 1).size(),
+                is(1));
+        // Account ID unrecognized should be 0 results
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        deviceId, accountId + 1000, firstTime, firstTime.plusMinutes(1), 1).size(),
+                is(0));
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5And60Minutes() {
+        final Long accountId = new Long(1);
+        final Long deviceId = new Long(1);
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
 
         // 5-minute results starting at firstTime
         final List<DeviceData> fiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
@@ -297,6 +292,44 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(hourlyResults.size(), is(1));
         assertThat(hourlyResults.get(0).ambientTemperature, is(20));
         assertThat(hourlyResults.get(0).dateTimeUTC, is(firstTime));
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationThroughputExceeded() {
+        amazonDynamoDBClient.addRequestHandler(new RequestHandler2() {
+            int numTries = 0;
+
+            @Override
+            public void beforeRequest(Request<?> request) {
+                if (request.getOriginalRequest() instanceof QueryRequest &&  numTries < 2) {
+                    numTries++;
+                    LOGGER.info("Injecting ProvisionedThroughputExceededException");
+                    throw new ProvisionedThroughputExceededException("Injected Error");
+                }
+                LOGGER.info("nailed it");
+            }
+
+            @Override
+            public void afterResponse(Request<?> request, Response<?> response) {
+
+            }
+
+            @Override
+            public void afterError(Request<?> request, Response<?> response, Exception e) {
+
+            }
+        });
+
+        final Long accountId = new Long(1);
+        final Long deviceId = new Long(1);
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        deviceId, accountId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                is(2));
     }
 
 }
