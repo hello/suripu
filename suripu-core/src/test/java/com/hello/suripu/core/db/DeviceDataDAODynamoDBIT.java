@@ -214,7 +214,7 @@ public class DeviceDataDAODynamoDBIT {
     }
 
     @Test
-    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5Minutes() {
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5And60Minutes() {
         final Long accountId = new Long(1);
         final Long deviceId = new Long(1);
         final Integer offsetMillis = 0;
@@ -272,13 +272,31 @@ public class DeviceDataDAODynamoDBIT {
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+        // 5-minute results starting at firstTime
+        final List<DeviceData> fiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 deviceId, accountId, firstTime, firstTime.plusMinutes(10), 5);
-        assertThat(results.size(), is(2));
-        assertThat(results.get(0).ambientTemperature, is(69));
-        assertThat(results.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
-        assertThat(results.get(1).ambientTemperature, is(20));
-        assertThat(results.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
+        assertThat(fiveMinuteresults.size(), is(2));
+        assertThat(fiveMinuteresults.get(0).ambientTemperature, is(69));
+        assertThat(fiveMinuteresults.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
+        assertThat(fiveMinuteresults.get(1).ambientTemperature, is(20));
+        assertThat(fiveMinuteresults.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
+
+        // 5-minute results starting at a weird time (firstTime+3)
+        final List<DeviceData> offsetFiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                deviceId, accountId, firstTime.plusMinutes(3), firstTime.plusMinutes(10), 5);
+        assertThat(offsetFiveMinuteresults.size(), is(2));
+        assertThat(offsetFiveMinuteresults.get(0).ambientTemperature, is(70));
+        assertThat(offsetFiveMinuteresults.get(0).dateTimeUTC, is(firstTime));
+        assertThat(offsetFiveMinuteresults.get(1).ambientTemperature, is(20));
+        assertThat(offsetFiveMinuteresults.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
+
+
+        // Aggregate by hour (60 minutes)
+        final List<DeviceData> hourlyResults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                deviceId, accountId, firstTime, firstTime.plusMinutes(90), 60);
+        assertThat(hourlyResults.size(), is(1));
+        assertThat(hourlyResults.get(0).ambientTemperature, is(20));
+        assertThat(hourlyResults.get(0).dateTimeUTC, is(firstTime));
     }
 
 }
