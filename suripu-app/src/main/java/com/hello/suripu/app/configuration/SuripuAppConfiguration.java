@@ -7,6 +7,7 @@ import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
+import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -401,4 +402,10 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("device_data")
     private DynamoDBConfiguration deviceDataConfiguration;
     public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_model_ensembles")
+    private S3BucketConfiguration timelineModelEnsemblesConfiguration;
+    public S3BucketConfiguration getTimelineModelEnsemblesConfiguration() { return timelineModelEnsemblesConfiguration; }
 }
