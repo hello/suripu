@@ -287,3 +287,30 @@ UPDATE info_insight_cards SET text=
 WHERE category='air_quality';
 
 UPDATE info_insight_cards SET title='Particulate Matter and Your Health' WHERE category='air_quality';
+
+--jyfan 10/20/2015 Some temp grammar fixes
+UPDATE info_insight_cards SET text=
+'Maintaining good sleep habits is crucial to getting regular, high quality sleep. The **most important habit** is to keep a consistent sleep and wake time for every day of the week, including weekends. Other great habits to cultivate include:
+
+**Avoid napping** during the day as it may interfere with your ability to fall asleep.
+
+**Avoid caffeine** about 3 hours before bedtime. Caffeine stimulates your nervous system, making you more alert and preventing you from falling asleep. Note that certain energy or soft drinks also contain caffeine.
+
+**Stay away from stimulants** such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, studies show the quality of your sleep becomes worse.
+
+**Regular exercise** has been shown to promote good sleep. However, avoid vigorous exercise too close to bedtime, as it may have a stimulating effect.
+
+Get sufficient **exposure to natural light** during the day, which helps you maintain a healthy sleep-wake cycle. Go for a 15-minute walk after lunch, or take a coffee break in the afternoon.
+
+**Avoid bright lights** close to bedtime to allow the production of melatonin, a sleep-inducing hormone. The “blue light” from many modern smartphones or tablets has been shown to **interfere with** your body’s melatonin levels. Try not to use such devices in bed.
+
+**Develop a bedtime routine**. Wind down about an hour before bedtime. Give yourself some time to relax with a book, soothing music, or even a warm bath.
+
+**Associate your bedroom with sleep**. Avoid activities such as watching TV, working, or using the computer in your bedroom.'
+WHERE category='sleep_hygiene';
+
+UPDATE info_insight_cards SET text=
+'Light influences your internal clock through specialized "light sensitive" cells in your retina, which send messages to your brain to regulate your **circadian rhythm**. These are physical, mental and behavioral changes that follow a roughly 24-hour cycle, responding primarily to light and dark in your environment.
+
+The increase and decrease of light cues trigger different chemical reactions in your body, prompting changes to your physiology and behavior. As evening approaches and the light in your environment recedes, your body starts to produce more melatonin and body temperature falls, making you less alert and more likely to fall asleep. When sunlight returns in the morning, a decrease in melatonin levels and rise in body temperature, along with other chemical shifts such as an increase in the activating hormone cortisol, then help you feel alert and ready for the day.'
+WHERE category='light';
