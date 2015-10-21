@@ -59,7 +59,7 @@ public class English {
             "For the best sleep, the air in your bedroom should be as clean as possible. Ideally, it should be below **80µg/m³**.";
 
     public final static String LIGHT_ADVICE_MESSAGE =
-            "For ideal sleep, your bedroom should be as dark as possible, which is below **2lx**.";
+            "For ideal sleep, your bedroom should be as dark as possible, which is below **2lux**.";
 
     public final static String SOUND_ADVICE_MESSAGE =
             "For ideal sleep, your bedroom should be as quiet as possible, which is usually below **40dB**.";

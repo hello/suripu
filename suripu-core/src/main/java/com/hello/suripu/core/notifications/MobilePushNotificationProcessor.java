@@ -18,9 +18,9 @@ public class MobilePushNotificationProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(MobilePushNotificationProcessor.class);
 
     private final AmazonSNS sns;
-    private final NotificationSubscriptionsDAO dao;
+    private final NotificationSubscriptionsReadDAO dao;
 
-    public MobilePushNotificationProcessor(final AmazonSNS sns, final NotificationSubscriptionsDAO dao) {
+    public MobilePushNotificationProcessor(final AmazonSNS sns, final NotificationSubscriptionsReadDAO dao) {
         this.sns = sns;
         this.dao = dao;
     }

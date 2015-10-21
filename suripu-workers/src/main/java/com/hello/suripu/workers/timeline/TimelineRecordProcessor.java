@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
@@ -47,7 +48,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final TimelineWorkerConfiguration configuration;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final TimelineDAODynamoDB timelineDAODynamoDB;
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
 
 
     private final Meter messagesProcessed;
@@ -60,7 +61,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
     private final Meter errorCount;
 
     public TimelineRecordProcessor(final TimelineProcessor timelineProcessor,
-                                   final DeviceDAO deviceDAO,
+                                   final DeviceReadDAO deviceDAO,
                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                    final TimelineDAODynamoDB timelineDAODynamoDB,
                                    final TimelineWorkerConfiguration configuration){
@@ -106,7 +107,7 @@ public class TimelineRecordProcessor extends HelloBaseRecordProcessor {
         return accountIdUserInfoMap;
     }
 
-    private Map<String, List<DeviceAccountPair>> getPillIdAccountsMap(final Set<String> pillIds, final DeviceDAO deviceDAO){
+    private Map<String, List<DeviceAccountPair>> getPillIdAccountsMap(final Set<String> pillIds, final DeviceReadDAO deviceDAO){
         final Map<String, List<DeviceAccountPair>> map = new HashMap<>();
         for(final String pillId:pillIds){
             try {

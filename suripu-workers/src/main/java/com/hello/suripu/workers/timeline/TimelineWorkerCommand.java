@@ -18,6 +18,8 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.AccountReadDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
@@ -26,6 +28,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
@@ -91,9 +94,9 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         commonDB.registerContainerFactory(new ImmutableListContainerFactory());
         commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
-        final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
-        final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
-        final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
+        final AccountReadDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
+        final DeviceReadDAO deviceDAO = commonDB.onDemand(DeviceReadDAO.class);
+        final FeedbackReadDAO feedbackDAO = commonDB.onDemand(FeedbackReadDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);

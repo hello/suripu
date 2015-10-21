@@ -3,11 +3,14 @@ package com.hello.suripu.workers.insights;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
@@ -22,14 +25,14 @@ import com.hello.suripu.core.processors.insights.WakeStdDevData;
  * Created by kingshy on 1/6/15.
  */
 public class InsightsGeneratorFactory implements IRecordProcessorFactory {
-    private final AccountDAO accountDAO;
+    private final AccountReadDAO accountDAO;
     private final DeviceDataDAO deviceDataDAO;
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final TrendsInsightsDAO trendsInsightsDAO;
-    private final QuestionResponseDAO questionResponseDAO;
+    private final QuestionResponseReadDAO questionResponseDAO;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
@@ -42,7 +45,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                                     final InsightsDAODynamoDB insightsDAODynamoDB,
                                     final TrendsInsightsDAO trendsInsightsDAO,
-                                    final QuestionResponseDAO questionResponseDAO,
+                                    final QuestionResponseReadDAO questionResponseDAO,
                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                     final LightData lightData,
                                     final WakeStdDevData wakeStdDevData,

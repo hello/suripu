@@ -65,4 +65,7 @@ public abstract class HelloBaseRecordProcessor implements IRecordProcessor {
         return flipper.deviceFeatureActive(FeatureFlipper.ATTEMPT_TO_CORRECT_SENSE_REPORTED_TIMESTAMP, senseId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasPersistSignificantWifiRssiChangeEnabled(final String senseId) {
+        return flipper.deviceFeatureActive(FeatureFlipper.PERSIST_SIGNIFICANT_WIFI_RSSI_CHANGE, senseId, Collections.EMPTY_LIST);
+    }
 }

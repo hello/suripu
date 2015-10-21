@@ -12,7 +12,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 @RegisterMapper(TimelineFeedbackMapper.class)
-public abstract class FeedbackDAO {
+public abstract class FeedbackDAO extends FeedbackReadDAO {
 
     @SqlUpdate("INSERT INTO sleep_feedback (account_id, day, hour, correct) VALUES(:account_id, :day, :hour, :correct)")
     abstract void insert(@Bind("account_id") final Long accountId, @Bind("day") final String day, @Bind("hour") String hour, @Bind("correct") final Boolean correct);
@@ -60,12 +60,5 @@ public abstract class FeedbackDAO {
 
 
     }
-
-    @SqlQuery("SELECT * FROM timeline_feedback WHERE account_id = :account_id AND date_of_night = :date_of_night order by created")
-    public abstract ImmutableList<TimelineFeedback> getForNight(@Bind("account_id") final Long accountId, @Bind("date_of_night") final DateTime dateOfNight);
-
-    @SqlQuery("SELECT * FROM timeline_feedback WHERE date_of_night >= :tstartUTC and date_of_night < :tstopUTC")
-    public abstract ImmutableList<TimelineFeedback> getForTimeRange(@Bind("start_time") final Long tstartUTC, @Bind("stop_time") final Long tstopUTC);
-
 
 }

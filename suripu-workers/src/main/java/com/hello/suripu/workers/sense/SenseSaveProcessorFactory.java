@@ -2,14 +2,13 @@ package com.hello.suripu.workers.sense;
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
-import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataIngestDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 
 public class SenseSaveProcessorFactory implements IRecordProcessorFactory {
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final DeviceDataIngestDAO deviceDataDAO;
@@ -17,7 +16,7 @@ public class SenseSaveProcessorFactory implements IRecordProcessorFactory {
     private final boolean updateLastSeen;
 
     public SenseSaveProcessorFactory(
-            final DeviceDAO deviceDAO,
+            final DeviceReadDAO deviceDAO,
             final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
             final SensorsViewsDynamoDB sensorsViewsDynamoDB,
             final DeviceDataIngestDAO deviceDataDAO,

@@ -13,10 +13,10 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDataIngestDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
@@ -63,7 +63,7 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
         commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
+        final DeviceReadDAO deviceDAO = commonDBI.onDemand(DeviceReadDAO.class);
 
 
         if(configuration.getMetricsEnabled()) {

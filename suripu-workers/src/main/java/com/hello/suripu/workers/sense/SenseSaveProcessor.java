@@ -14,15 +14,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataIngestDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
-import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
@@ -49,7 +48,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 24 * 3600;
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
     private final DeviceDataIngestDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
@@ -68,7 +67,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords, final boolean updateLastSeen) {
+    public SenseSaveProcessor(final DeviceReadDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords, final boolean updateLastSeen) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
@@ -158,31 +157,19 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
 
-                // To validate that the firmware is sending a correct unix timestamp
-                // we need to compare it to something immutable, coming from a different clock (server)
-                // We can't compare to now because now changes, and if we want to reprocess old data it will be immediately discarded
                 final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
                 final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
-                final Long timestampMillis = periodicData.getUnixTime() * 1000L;
-                final DateTime rawDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
 
-                // This is intended to check for very specific clock bugs from Sense
-                final DateTime periodicDataSampleDateTime = attemptToRecoverSenseReportedTimeStamp(deviceName)
-                        ? DateTimeUtil.possiblySanitizeSampleTime(createdAtRounded, rawDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS)
-                        : rawDateTime;
+                final DateTime periodicDataSampleDateTime = SenseProcessorUtils.getSampleTime(createdAtRounded, periodicData, attemptToRecoverSenseReportedTimeStamp(deviceName));
 
-
-                if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtRounded.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+                if(SenseProcessorUtils.isClockOutOfSync(periodicDataSampleDateTime, createdAtRounded)) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
                     LOGGER.error("Created time = {}, sample time = {}, now = {}", createdAtRounded, periodicDataSampleDateTime, DateTime.now());
                     clockOutOfSync.mark();
                     continue;
                 }
 
-                // Grab FW version from Batch or periodic data for EVT units
-                final Integer firmwareVersion = (batchPeriodicDataWorker.getData().hasFirmwareVersion())
-                        ? batchPeriodicDataWorker.getData().getFirmwareVersion()
-                        : periodicData.getFirmwareVersion();
+                final Integer firmwareVersion = SenseProcessorUtils.getFirmwareVersion(batchPeriodicDataWorker, periodicData);
 
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     if(!timezonesByUser.containsKey(pair.accountId)) {

@@ -11,7 +11,7 @@ common_db:
   driverClass: org.postgresql.Driver
   user: common
   password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  url: jdbc:postgresql://common-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
 
   # any properties specific to your JDBC driver:
   properties:
