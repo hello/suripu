@@ -172,7 +172,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private void backoff(int numberOfAttempts) {
         try {
             long sleepMillis = (long) Math.pow(2, numberOfAttempts) * 50;
-            LOGGER.debug("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
+            LOGGER.warn("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
             Thread.sleep(sleepMillis);
         } catch (InterruptedException e) {
             LOGGER.error("Interrupted while attempting exponential backoff.");
