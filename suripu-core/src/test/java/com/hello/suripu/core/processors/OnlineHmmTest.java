@@ -41,7 +41,12 @@ public class OnlineHmmTest {
 
         @Override
         public OnlineHmmPriors getDefaultModelEnsemble() {
-            return OnlineHmmPriors.createEmpty();
+            return OnlineHmmPriors.createEmpty();//TODO LOAD FROM FILE
+        }
+
+        @Override
+        public OnlineHmmPriors getSeedModel() {
+            return OnlineHmmPriors.createEmpty(); //TODO LOAD FROM FILE
         }
     }
 

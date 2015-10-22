@@ -179,7 +179,7 @@ public class OnlineHmm {
 
     }
 
-    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening, final OnlineHmmPriors defaultEnsemble, boolean forceLearning) {
+    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening, final OnlineHmmPriors seedModels, boolean forceLearning) {
         final OnlineHmmData emptyResult = OnlineHmmData.createEmpty();
 
         String modelIdSuffix = "custom";
@@ -193,34 +193,33 @@ public class OnlineHmm {
         /* GET THE USER-SPECIFIC MODEL PARAMETERS FOR THE ONE HMM TO RULE THEM ALL */
         final OnlineHmmData userModelData = userModelDAO.getModelDataByAccountId(accountId,evening);
 
-        //sort out the differences between the default model and the user models
-        OnlineHmmPriors modelPriors = userModelData.modelPriors;
-
-        //populate default with some model from the defaults
-        final OnlineHmmPriors defaultPrior = OnlineHmmPriors.createEmpty();
-
-        for (final String key : defaultEnsemble.modelsByOutputId.keySet()) {
-            final Map.Entry<String,OnlineHmmModelParams> firstEntry = defaultEnsemble.modelsByOutputId.get(key).entrySet().iterator().next();
-
-            final Map<String,OnlineHmmModelParams> paramsMap = Maps.newHashMap();
-
-            //create model ID
-            final String newModelId = String.format("%s-%s-%s",key,String.valueOf(accountId),modelIdSuffix);
-
-            paramsMap.put(newModelId, firstEntry.getValue().clone(newModelId));
-            defaultPrior.modelsByOutputId.put(key,paramsMap);
-        }
+        final OnlineHmmPriors modelPriors = userModelData.modelPriors;
 
         /*  CREATE DEFAULT MODELS IF NECESSARY */
         if (userModelData.modelPriors.isEmpty()) {
             LOGGER.info("creating default model data for account {}",accountId);
 
-            //straight out assign
-            modelPriors = defaultPrior;
+            if (seedModels.isEmpty()) {
+                LOGGER.error("CANNOT INITIALIZE MODELS FOR USER {}.  THIS IS REALLY BAD.", accountId);
+                return OnlineHmmData.createEmpty();
+            }
+
+            for (final String key : seedModels.modelsByOutputId.keySet()) {
+                //get the first one
+                final Map.Entry<String,OnlineHmmModelParams> firstEntry = seedModels.modelsByOutputId.get(key).entrySet().iterator().next();
+
+                //populate a new params map
+                final Map<String,OnlineHmmModelParams> paramsMap = Maps.newHashMap();
+
+                //create model ID
+                final String newModelId = String.format("%s-%s-%s",key,String.valueOf(accountId),modelIdSuffix);
+
+                paramsMap.put(newModelId, firstEntry.getValue().clone(newModelId));
+                modelPriors.modelsByOutputId.put(key,paramsMap);
+            }
 
             //update dynamo
             userModelDAO.updateModelPriorsAndZeroOutScratchpad(accountId,evening,modelPriors);
-
         }
 
 
@@ -369,6 +368,8 @@ public class OnlineHmm {
         final ImmutableList<TimelineFeedback> feedbackList = oneDaysSensorData.feedbackList;
 
         final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModelEnsemble();
+        final OnlineHmmPriors seedModel = defaultModelEnsembleDAO.getSeedModel();
+
 
         if (defaultEnsemble.isEmpty()) {
             LOGGER.error("No default ensemble found. THIS IS REQUIRED!");
@@ -385,7 +386,7 @@ public class OnlineHmm {
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
 
 
-        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening,defaultEnsemble,forceLearning);
+        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening,seedModel,forceLearning);
 
         if (userModelData.modelPriors.isEmpty()) {
             LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
