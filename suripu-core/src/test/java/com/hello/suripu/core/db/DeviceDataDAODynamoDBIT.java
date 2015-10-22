@@ -12,7 +12,10 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -210,6 +213,13 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                         deviceId, accountId + 1000, firstTime, firstTime, 1).size(),
                 is(0));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGenerateTimeSeriesByUTCTimeInvalidSensor() {
+        final Optional<Device.Color> colorOptional = Optional.absent();
+        final Optional<Calibration> calibrationOptional = Optional.absent();
+        deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(new Long(1), new Long(1), new Long(1), new Long(1), 1, "not_a_sensor", 0, colorOptional, calibrationOptional);
     }
 
 }
