@@ -209,7 +209,8 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             return;
         }
         wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
-        LOGGER.debug("Tracked wifi info for {} senses: {}", wifiInfoPerBatch.size(), wifiInfoPerBatch.keySet());
+        LOGGER.info("Tracked wifi info for {} senses", wifiInfoPerBatch.size());
+        LOGGER.trace("Tracked wifi info for senses {}", wifiInfoPerBatch.keySet());
     }
 
     @VisibleForTesting
