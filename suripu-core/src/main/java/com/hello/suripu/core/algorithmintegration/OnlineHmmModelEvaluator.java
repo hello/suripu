@@ -34,8 +34,8 @@ public class OnlineHmmModelEvaluator {
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
     final static double MIN_NUM_PERIODS_ON_BED = 36;
-    final static double MIN_VOTE_PERCENT_TO_BE_IN_SLEEP = 0.333; //just like the senate, you need a super-majority to do anything useful
-    final static double MIN_VOTE_PERCENT_TO_BE_IN_BED = 0.20; //merest hint
+    final static double MIN_VOTE_PERCENT_TO_BE_IN_SLEEP = 0.50; //just like the senate, you need 50% to pass a vote
+    final static double MIN_VOTE_PERCENT_TO_BE_IN_BED = 0.333; //just need majority
 
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmmModelEvaluator.class);
