@@ -183,7 +183,11 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
         final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAO() {
             @Override
-            public OnlineHmmPriors getDefaultModel() {
+            public OnlineHmmPriors getDefaultModelEnsemble() {
+                return OnlineHmmPriors.createEmpty();
+            }
+
+            public OnlineHmmPriors getSeedModel() {
                 return OnlineHmmPriors.createEmpty();
             }
         };

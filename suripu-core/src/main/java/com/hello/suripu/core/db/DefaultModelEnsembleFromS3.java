@@ -2,35 +2,27 @@ package com.hello.suripu.core.db;
 import org.apache.commons.codec.binary.Base64;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.util.IOUtils;
 import com.google.common.base.Optional;
 import com.google.common.io.CharStreams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
-import com.hello.suripu.core.util.KeyStoreUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringWriter;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.Security;
+
 
 /**
  * Created by benjo on 10/20/15.
  */
 public class DefaultModelEnsembleFromS3 implements DefaultModelEnsembleDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DefaultModelEnsembleFromS3.class);
-    private final OnlineHmmPriors priors;
+    private final OnlineHmmPriors ensemblePriors;
+    private final OnlineHmmPriors seedPrior;
 
-    public static DefaultModelEnsembleDAO create(final AmazonS3 s3,final String bucket, final String key) {
+    private static OnlineHmmPriors getPriorsFromS3Object(final AmazonS3 s3,final String bucket, final String key) {
         OnlineHmmPriors onlineHmmPriors = OnlineHmmPriors.createEmpty();
 
         final S3Object s3Object = s3.getObject(bucket, key);
@@ -46,6 +38,7 @@ public class DefaultModelEnsembleFromS3 implements DefaultModelEnsembleDAO {
 
             if (priorsOptional.isPresent()) {
                 onlineHmmPriors = priorsOptional.get();
+                LOGGER.error("successfully pulled default models from {}/{}",bucket,key);
             }
             else {
                 LOGGER.error("failed to find default models for the ensemble");
@@ -55,16 +48,29 @@ public class DefaultModelEnsembleFromS3 implements DefaultModelEnsembleDAO {
             LOGGER.error(e.getMessage());
         }
 
-        return new DefaultModelEnsembleFromS3(onlineHmmPriors);
+        return onlineHmmPriors;
     }
 
-    private DefaultModelEnsembleFromS3(final OnlineHmmPriors priors) {
-        this.priors = priors;
+    public static DefaultModelEnsembleDAO create(final AmazonS3 s3,final String ensembleBucket, final String ensembleKey, final String seedBucket, final String seedKey) {
+        final OnlineHmmPriors ensemblePriors = getPriorsFromS3Object(s3,ensembleBucket,ensembleKey);
+        final OnlineHmmPriors seedPriors = getPriorsFromS3Object(s3,seedBucket,seedKey);
+        return new DefaultModelEnsembleFromS3(ensemblePriors,seedPriors);
+    }
+
+    private DefaultModelEnsembleFromS3(final OnlineHmmPriors ensemblePriors,final OnlineHmmPriors seedPriors) {
+        this.ensemblePriors = ensemblePriors;
+        this.seedPrior = seedPriors;
     }
 
 
     @Override
-    public OnlineHmmPriors getDefaultModel() {
-        return priors;
+    public OnlineHmmPriors getDefaultModelEnsemble() {
+        return ensemblePriors;
     }
+
+    @Override
+    public OnlineHmmPriors getSeedModel() {
+        return seedPrior;
+    }
+
 }

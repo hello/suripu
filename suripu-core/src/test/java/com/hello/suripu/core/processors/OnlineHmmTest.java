@@ -40,7 +40,7 @@ public class OnlineHmmTest {
     final static class LocalDefaultModelEnsembleDAO implements com.hello.suripu.core.db.DefaultModelEnsembleDAO {
 
         @Override
-        public OnlineHmmPriors getDefaultModel() {
+        public OnlineHmmPriors getDefaultModelEnsemble() {
             return OnlineHmmPriors.createEmpty();
         }
     }

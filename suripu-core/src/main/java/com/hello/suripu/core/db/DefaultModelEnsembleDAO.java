@@ -7,5 +7,6 @@ import com.hello.suripu.core.models.OnlineHmmPriors;
  * Created by benjo on 10/17/15.
  */
 public interface DefaultModelEnsembleDAO {
-    public OnlineHmmPriors getDefaultModel();
+    public OnlineHmmPriors getDefaultModelEnsemble();
+    public OnlineHmmPriors getSeedModel();
 }

@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
-import com.google.common.io.Resources;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,19 +9,26 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 /**
- * Created by benjo on 10/17/15.
+ *  Intended behavior is to read from the file system each time
+ *  so that if you change the model file the changes will be reflected
+ *  during the debugging.
  */
 public class DefaultModelEnsembleDAOFromFile implements DefaultModelEnsembleDAO {
-    private final static Logger LOGGER = LoggerFactory.getLogger(DefaultModelEnsembleDAO.class);
-    private Optional<OnlineHmmPriors> priorsOptional;
-    private final String filepath;
 
-    public DefaultModelEnsembleDAOFromFile(final String filepathToModel) {
-        priorsOptional = Optional.absent();
-        filepath = filepathToModel;
+    private final static Logger LOGGER = LoggerFactory.getLogger(DefaultModelEnsembleDAO.class);
+
+    private OnlineHmmPriors ensemblePriors;
+    private OnlineHmmPriors seedPriors;
+
+    private final String filepathToEnsemble;
+    private final String filepathToSeedModel;
+
+    public DefaultModelEnsembleDAOFromFile(final String filePathToEnsemble,final String filepathToSeedModel) {
+        ensemblePriors = OnlineHmmPriors.createEmpty();
+        this.filepathToEnsemble = filePathToEnsemble;
+        this.filepathToSeedModel = filepathToSeedModel;
     }
 
     private  byte[] loadFile(String filepath) throws IOException {
@@ -50,23 +56,30 @@ public class DefaultModelEnsembleDAOFromFile implements DefaultModelEnsembleDAO 
         return bytes;
     }
 
-    @Override
-    public OnlineHmmPriors getDefaultModel() {
+    private OnlineHmmPriors readModel(final String filepath) {
+        try {
+            LOGGER.info("attempting to load model file: {}", filepath);
+            final Optional<OnlineHmmPriors> priors = OnlineHmmPriors.createFromProtoBuf(loadFile(filepath));
 
-        if (!priorsOptional.isPresent()) {
-            LOGGER.info("attempting to load model file: {}",filepath);
-
-            try {
-                priorsOptional = OnlineHmmPriors.createFromProtoBuf(loadFile(filepath));
-            } catch (IOException e) {
-                LOGGER.error("{}",e);
+            if (priors.isPresent()) {
+                return priors.get();
             }
         }
-
-        if (!priorsOptional.isPresent()) {
-            return OnlineHmmPriors.createEmpty();
+        catch (IOException e) {
+            LOGGER.error(e.getMessage());
         }
 
-        return priorsOptional.get();
+        return OnlineHmmPriors.createEmpty();
     }
+
+    @Override
+    public OnlineHmmPriors getDefaultModelEnsemble() {
+        return readModel(filepathToEnsemble);
+    }
+
+    @Override
+    public OnlineHmmPriors getSeedModel() {
+        return readModel(filepathToSeedModel);
+    }
+
 }
