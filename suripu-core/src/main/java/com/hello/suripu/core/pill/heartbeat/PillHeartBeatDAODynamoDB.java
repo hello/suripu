@@ -31,6 +31,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,50 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         }
     }
 
+    public List<PillHeartBeat> putBatch(final Set<PillHeartBeat> pillHeartBeats) {
+        final List<PillHeartBeat> unprocessedHeartbeats = Lists.newArrayList();
+        final List<WriteRequest> writeRequests = Lists.newArrayList();
+
+        for(final PillHeartBeat heartBeat : pillHeartBeats) {
+            writeRequests.add(transform(heartBeat));
+        }
+
+        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
+        int i = 0;
+        for (final List<WriteRequest> partition : Lists.partition(writeRequests, DYNAMO_BATCH_WRITE_LIMIT)) {
+            i++;
+            final Map<String, List<WriteRequest>> map = Maps.newHashMap();
+            map.put(tableName, partition);
+            batchWriteItemRequest.withRequestItems(map);
+            try {
+                final BatchWriteItemResult result = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+                final Map<String, List<WriteRequest>> unprocessed = result.getUnprocessedItems();
+                if (unprocessed == null || unprocessed.isEmpty()) {
+                    continue;
+                }
+
+                final Collection<List<WriteRequest>> unprocessedRequests = unprocessed.values();
+                for (final List<WriteRequest> requestList : unprocessedRequests) {
+                    for (final WriteRequest request : requestList) {
+                        final Optional<PillHeartBeat> optionalHeartbeat = fromDynamoDBItem(request.getPutRequest().getItem());
+                        if (optionalHeartbeat.isPresent()) {
+                            unprocessedHeartbeats.add(optionalHeartbeat.get());
+                        }
+                    }
+                }
+
+//                final float ratio = unprocessed.size() / (float) partition.size() * 100.0f;
+//                LOGGER.info("Table {} : {}%  ({} attempted, {} unprocessed)", tableName, Math.round(ratio), partition.size(), unprocessed.size());
+
+            }catch (AmazonClientException e) {
+                LOGGER.error("Error persisting last seen device data: {}", e.getMessage());
+                unprocessedHeartbeats.addAll(pillHeartBeats);
+            }
+        }
+
+//        LOGGER.error("Iterations: {}", i);
+        return unprocessedHeartbeats;
+    }
 
     @Override
     public void put(final Set<PillHeartBeat> pillHeartBeats) {
