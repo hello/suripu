@@ -368,7 +368,7 @@ public class OnlineHmm {
         final long endTimeToUpdateFeedback = endTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;
         final ImmutableList<TimelineFeedback> feedbackList = oneDaysSensorData.feedbackList;
 
-        final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModel();
+        final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModelEnsemble();
 
         if (defaultEnsemble.isEmpty()) {
             LOGGER.error("No default ensemble found. THIS IS REQUIRED!");

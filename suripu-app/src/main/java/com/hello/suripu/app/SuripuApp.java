@@ -281,7 +281,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         /* Default model ensemble for all users  */
         final S3BucketConfiguration timelineModelEnsemblesConfig = configuration.getTimelineModelEnsemblesConfiguration();
-        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3,timelineModelEnsemblesConfig.getBucket(),timelineModelEnsemblesConfig.getKey());
+        final S3BucketConfiguration seedModelConfig = configuration.getTimelineSeedModelConfiguration();
+
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3,timelineModelEnsemblesConfig.getBucket(),timelineModelEnsemblesConfig.getKey(),seedModelConfig.getBucket(),seedModelConfig.getKey());
 
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");

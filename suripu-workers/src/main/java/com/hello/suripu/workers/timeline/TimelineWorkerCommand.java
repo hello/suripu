@@ -182,7 +182,11 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         //TEMPORARY -- DO NOT MERGE TO MASTER WITH THIS IN HERE
         final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAO() {
             @Override
-            public OnlineHmmPriors getDefaultModel() {
+            public OnlineHmmPriors getDefaultModelEnsemble() {
+                return OnlineHmmPriors.createEmpty();
+            }
+
+            public OnlineHmmPriors getSeedModel() {
                 return OnlineHmmPriors.createEmpty();
             }
         };
