@@ -362,7 +362,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGenerateTimeSeriesByUTCTime() {
         final Long accountId = new Long(1);
-        final Long deviceId = new Long(1);
+        final Long deviceId = new Long(2);
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
