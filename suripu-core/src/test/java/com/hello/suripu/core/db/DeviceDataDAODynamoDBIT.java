@@ -192,6 +192,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime)
                 .withAmbientTemperature(70)
                 .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -208,6 +209,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(2))
                 .withAmbientTemperature(69)
                 .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -216,6 +218,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(3))
                 .withAmbientTemperature(90)
                 .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -224,6 +227,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(4))
                 .withAmbientTemperature(70)
                 .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -232,6 +236,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(5))
                 .withAmbientTemperature(20)
                 .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         // Skip minute 6
         deviceDataList.add(new DeviceData.Builder()
@@ -241,6 +246,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(7))
                 .withAmbientTemperature(100)
                 .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
     }
@@ -343,6 +349,16 @@ public class DeviceDataDAODynamoDBIT {
                 is(2));
     }
 
+    private int countSamplesWithFillValue(final List<Sample> samples, final int fillValue) {
+        int count = 0;
+        for (final Sample sample : samples) {
+            if (fillValue == sample.value) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     @Test
     public void testGenerateTimeSeriesByUTCTime() {
         final Long accountId = new Long(1);
@@ -355,10 +371,23 @@ public class DeviceDataDAODynamoDBIT {
         final Optional<Device.Color> colorOptional = Optional.absent();
         final Optional<Calibration> calibrationOptional = Optional.absent();
 
-        final List<Sample> samples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+        final List<Sample> lightSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
                 deviceId, 1, "light", -1, colorOptional, calibrationOptional);
-        assertThat(samples.size(), is(11));
+        assertThat(lightSamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(lightSamples, -1), is(4));
+
+        final List<Sample> tempSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, "temperature", -1, colorOptional, calibrationOptional);
+        assertThat(tempSamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(tempSamples, -1), is(4));
+
+        final List<Sample> humiditySamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, "humidity", -1, colorOptional, calibrationOptional);
+        assertThat(humiditySamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(humiditySamples, -1), is(4));
     }
 
     @Test(expected = IllegalArgumentException.class)
