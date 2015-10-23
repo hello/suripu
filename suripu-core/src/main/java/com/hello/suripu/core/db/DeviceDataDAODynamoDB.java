@@ -18,13 +18,22 @@ import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.util.Bucketing;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.Sample;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -32,10 +41,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by jakepiccolo on 10/9/15.
@@ -71,7 +82,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private static final String RANGE_KEY_NAME = "account_id:timestamp";
 
     // Store everything to the minute level
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:00Z");
+    private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
 
     private static final ImmutableMap<String, String> ATTRIBUTE_TYPES = new ImmutableMap.Builder<String, String>()
             .put(AttributeNames.DEVICE_ID, "N")
@@ -123,11 +135,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private AttributeValue dateTimeToAttributeValue(final DateTime dateTime) {
-        return new AttributeValue(dateTime.toString(DATE_TIME_FORMATTER));
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER));
     }
 
     private AttributeValue getRangeKey(final Long accountId, final DateTime dateTime) {
-        return new AttributeValue(String.valueOf(accountId) + ":" + dateTime.toString(DATE_TIME_FORMATTER));
+        return new AttributeValue(String.valueOf(accountId) + ":" + dateTime.toString(DATE_TIME_WRITE_FORMATTER));
     }
 
     private HashMap<String, AttributeValue> deviceDataToAttributeMap(final DeviceData data) {
@@ -149,24 +161,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         item.put(AttributeNames.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(data.dateTimeUTC.plusMillis(data.offsetMillis)));
         item.put(AttributeNames.OFFSET_MILLIS, new AttributeValue().withN(String.valueOf(data.offsetMillis)));
         return item;
-    }
-
-    private DeviceData attributeMapToDeviceData(final Map<String, AttributeValue> item) {
-        return new DeviceData.Builder()
-                .withDeviceId(Long.valueOf(item.get(AttributeNames.DEVICE_ID).getN()))
-                .withDateTimeUTC(DateTime.parse(item.get(AttributeNames.TIMESTAMP).getS(), DATE_TIME_FORMATTER))
-                .withAccountId(Long.valueOf(item.get(AttributeNames.ACCOUNT_ID).getN()))
-                .withAmbientTemperature(Integer.valueOf(item.get(AttributeNames.AMBIENT_TEMP).getN()))
-                .withAmbientLight(Integer.valueOf(item.get(AttributeNames.AMBIENT_LIGHT).getN()))
-                .withAmbientLightVariance(Integer.valueOf(item.get(AttributeNames.AMBIENT_LIGHT_VARIANCE).getN()))
-                .withAmbientLightPeakiness(Integer.valueOf(item.get(AttributeNames.AMBIENT_LIGHT_PEAKINESS).getN()))
-                .withAmbientHumidity(Integer.valueOf(item.get(AttributeNames.AMBIENT_HUMIDITY).getN()))
-                .withAmbientAirQualityRaw(Integer.valueOf(item.get(AttributeNames.AMBIENT_AIR_QUALITY_RAW).getN()))
-                .withAmbientDustVariance(Integer.valueOf(item.get(AttributeNames.AMBIENT_DUST_VARIANCE).getN()))
-                .withAmbientDustMin(Integer.valueOf(item.get(AttributeNames.AMBIENT_DUST_MIN).getN()))
-                .withAmbientDustMax(Integer.valueOf(item.get(AttributeNames.AMBIENT_DUST_MAX).getN()))
-                .withOffsetMillis(Integer.valueOf(item.get(AttributeNames.OFFSET_MILLIS).getN()))
-                .build();
     }
 
     private void backoff(int numberOfAttempts) {
@@ -245,11 +239,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private DateTime getFloorOfDateTime(final DateTime dateTime, final Integer toMinutes) {
-        return new DateTime(dateTime).withMinuteOfHour(dateTime.getMinuteOfHour() - (dateTime.getMinuteOfHour() % toMinutes));
+        return new DateTime(dateTime, DateTimeZone.UTC).withMinuteOfHour(dateTime.getMinuteOfHour() - (dateTime.getMinuteOfHour() % toMinutes));
     }
 
     private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
-        return DateTime.parse(item.get(AttributeNames.TIMESTAMP).getS(), DATE_TIME_FORMATTER);
+        return new DateTime(DateTime.parse(item.get(AttributeNames.TIMESTAMP).getS() + ":00Z", DATE_TIME_READ_FORMATTER).getMillis(), DateTimeZone.UTC);
     }
 
     private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final DeviceData template) {
@@ -260,7 +254,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .withDateTimeUTC(template.dateTimeUTC)
                 .withOffsetMillis(template.offsetMillis)
                 .withAmbientTemperature((int) aggregator.min(AttributeNames.AMBIENT_TEMP))
-                .withAmbientLight((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT))
+                .calibrateAmbientLight((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT))
                 .withAmbientLightVariance((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT_VARIANCE))
                 .withAmbientLightPeakiness((int) aggregator.roundedMean(AttributeNames.AMBIENT_LIGHT_PEAKINESS))
                 .withAmbientHumidity((int) aggregator.roundedMean(AttributeNames.AMBIENT_HUMIDITY))
@@ -393,5 +387,93 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final Integer slotDuration)
     {
         return getBetweenByAbsoluteTimeAggregateBySlotDuration(deviceId, accountId, start, end, slotDuration, ATTRIBUTE_TYPES.keySet());
+    }
+
+    private final static ImmutableSet<String> BASE_ATTRIBUTES = new ImmutableSet.Builder<String>()
+            .add(AttributeNames.DEVICE_ID)
+            .add(AttributeNames.ACCOUNT_ID)
+            .add(AttributeNames.OFFSET_MILLIS)
+            .add(AttributeNames.LOCAL_UTC_TIMESTAMP)
+            .add(AttributeNames.TIMESTAMP)
+            .build();
+
+    private final static Map<String, Set<String>> SENSOR_NAME_TO_ATTR_NAMES = new ImmutableMap.Builder<String, Set<String>>()
+            .put("humidity", ImmutableSet.of(AttributeNames.AMBIENT_TEMP, AttributeNames.AMBIENT_HUMIDITY))
+            .put("temperature", ImmutableSet.of(AttributeNames.AMBIENT_TEMP))
+            // TODO store firmware version, audioPeakBackgroundDB, audioPeakDisturbancesDB
+//            .put("particulates", ImmutableSet.of(AttributeNames.AMBIENT_AIR_QUALITY_RAW, AttributeNames.FIRMWARE_VERSION))
+            .put("light", ImmutableSet.of(AttributeNames.AMBIENT_LIGHT))
+//            .put("sound", ImmutableSet.of(AttributeNames.AUDIO_PEAK_BACKGROUND_DB, AttributeNames.AUDIO_PEAK_DISTURBANCES_DB))
+            .build();
+
+    private static Set<String> sensorNameToAttributeNames(final String sensorName) {
+        final Set<String> sensorAttributes = SENSOR_NAME_TO_ATTR_NAMES.get(sensorName);
+        if (sensorAttributes == null) {
+            throw new IllegalArgumentException("Unknown sensor name: '" + sensorName + "'");
+        }
+        return new ImmutableSet.Builder<String>().addAll(BASE_ATTRIBUTES).addAll(sensorAttributes).build();
+    }
+
+    @Timed
+    public List<Sample> generateTimeSeriesByUTCTime(
+            final Long queryStartTimestampInUTC,
+            final Long queryEndTimestampInUTC,
+            final Long accountId,
+            final Long deviceId,
+            final int slotDurationInMinutes,
+            final String sensor,
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color,
+            final Optional<Calibration> calibrationOptional) throws IllegalArgumentException {
+
+        final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
+        final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
+
+        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
+        LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
+        LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
+
+        LOGGER.debug("Calling getBetweenByAbsoluteTimeAggregateBySlotDuration with arguments: ({}, {}, {}, {}, {}, {})", accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes, sensorNameToAttributeNames(sensor));
+        final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, deviceId, queryStartTime, queryEndTime, slotDurationInMinutes, sensorNameToAttributeNames(sensor));
+        LOGGER.debug("Retrieved {} rows from database", rows.size());
+
+        if(rows.size() == 0) {
+            return new ArrayList<>();
+        }
+
+        // create buckets with keys in UTC-Time
+        final int currentOffsetMillis = rows.get(0).offsetMillis;
+        final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
+        final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
+        // if 4:36 -> bucket = 4:35
+
+        final DateTime nowRounded = now.minusMinutes(remainder);
+        LOGGER.trace("Current Offset Milis = {}", currentOffsetMillis);
+        LOGGER.trace("Remainder = {}", remainder);
+        LOGGER.trace("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
+
+
+        final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
+        final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
+
+        final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
+
+        LOGGER.trace("Map size = {}", map.size());
+
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor, color, calibrationOptional);
+
+        if(!optionalPopulatedMap.isPresent()) {
+            LOGGER.debug("Map not populated, returning empty list of samples.");
+            return Collections.EMPTY_LIST;
+        }
+
+        // Override map with values from DB
+        final Map<Long, Sample> merged = Bucketing.mergeResults(map, optionalPopulatedMap.get());
+
+        LOGGER.trace("New map size = {}", merged.size());
+
+        final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
+        return sortedList;
+
     }
 }

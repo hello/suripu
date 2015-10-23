@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
@@ -49,15 +50,19 @@ public class RoomConditionsResource extends BaseResource {
 
     private final AccountDAO accountDAO;
     private final DeviceDataDAO deviceDataDAO;
+    private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
     private final SenseColorDAO senseColorDAO;
     private final CalibrationDAO calibrationDAO;
 
 
-    public RoomConditionsResource(final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO, final CalibrationDAO calibrationDAO) {
+    public RoomConditionsResource(
+            final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
+            final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO, final CalibrationDAO calibrationDAO) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
+        this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.allowedRangeInSeconds = allowedRangeInSeconds;
         this.senseColorDAO = senseColorDAO;
@@ -502,9 +507,23 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+        List<Sample> timeSeries;
+        if (hasDeviceDataDynamoDBEnabled(accountId)) {
+            try {
+                timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                        accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                        sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Caught exception while attempting to get time series from DynamoDB: {}.\n");
+                timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                        accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                        sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
+            }
+        } else {
+             timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                     accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
                     sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
+        }
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }

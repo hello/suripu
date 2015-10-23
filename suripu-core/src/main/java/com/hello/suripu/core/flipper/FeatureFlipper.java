@@ -75,4 +75,5 @@ public class FeatureFlipper {
     public final static String ATTEMPT_TO_CORRECT_PILL_REPORTED_TIMESTAMP = "attempt_to_correct_pill_reported_timestamp";
 
     public final static String PERSIST_SIGNIFICANT_WIFI_RSSI_CHANGE = "persist_significant_wifi_rssi_change";
+    public final static String DYNAMODB_DEVICE_DATA = "dynamodb_device_data";
 }

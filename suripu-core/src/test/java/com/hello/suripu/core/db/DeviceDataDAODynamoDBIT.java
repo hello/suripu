@@ -17,10 +17,14 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.Sample;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,7 +112,7 @@ public class DeviceDataDAODynamoDBIT {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         final List<Long> accountIds = new ImmutableList.Builder<Long>().add(new Long(1)).add(new Long(2)).build();
         final Long deviceId = new Long(100);
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
         final int numMinutes = 50;
         for (final Long accountId: accountIds) {
             for (int i = 0; i < numMinutes; i++) {
@@ -136,7 +140,7 @@ public class DeviceDataDAODynamoDBIT {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
                 .withDeviceId(new Long(0))
-                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0))
+                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0, DateTimeZone.UTC))
                 .withOffsetMillis(0);
         final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
                 .add(builder.build())
@@ -152,7 +156,7 @@ public class DeviceDataDAODynamoDBIT {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
                 .withDeviceId(new Long(0))
-                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0))
+                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0, DateTimeZone.UTC))
                 .withOffsetMillis(0);
         final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
                 .add(builder.build())
@@ -168,7 +172,7 @@ public class DeviceDataDAODynamoDBIT {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
                 .withDeviceId(new Long(0))
-                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0))
+                .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0, DateTimeZone.UTC))
                 .withOffsetMillis(0);
         final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
                 .add(builder.build())
@@ -187,6 +191,8 @@ public class DeviceDataDAODynamoDBIT {
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime)
                 .withAmbientTemperature(70)
+                .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -194,6 +200,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(1))
                 .withAmbientTemperature(77)
+                .withAmbientLight(36996)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -201,6 +208,8 @@ public class DeviceDataDAODynamoDBIT {
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(2))
                 .withAmbientTemperature(69)
+                .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -208,6 +217,8 @@ public class DeviceDataDAODynamoDBIT {
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(3))
                 .withAmbientTemperature(90)
+                .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -215,6 +226,8 @@ public class DeviceDataDAODynamoDBIT {
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(4))
                 .withAmbientTemperature(70)
+                .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -222,6 +235,8 @@ public class DeviceDataDAODynamoDBIT {
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(5))
                 .withAmbientTemperature(20)
+                .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         // Skip minute 6
         deviceDataList.add(new DeviceData.Builder()
@@ -230,6 +245,8 @@ public class DeviceDataDAODynamoDBIT {
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(7))
                 .withAmbientTemperature(100)
+                .withAmbientLight(36996)
+                .withAmbientHumidity(100)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
     }
@@ -239,7 +256,7 @@ public class DeviceDataDAODynamoDBIT {
         final Long accountId = new Long(1);
         final Long deviceId = new Long(1);
         final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
@@ -262,7 +279,7 @@ public class DeviceDataDAODynamoDBIT {
         final Long accountId = new Long(1);
         final Long deviceId = new Long(1);
         final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
@@ -323,13 +340,61 @@ public class DeviceDataDAODynamoDBIT {
         final Long accountId = new Long(1);
         final Long deviceId = new Long(1);
         final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0);
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                         deviceId, accountId, firstTime, firstTime.plusMinutes(1), 1).size(),
                 is(2));
+    }
+
+    private int countSamplesWithFillValue(final List<Sample> samples, final int fillValue) {
+        int count = 0;
+        for (final Sample sample : samples) {
+            if (fillValue == sample.value) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Test
+    public void testGenerateTimeSeriesByUTCTime() {
+        final Long accountId = new Long(1);
+        final Long deviceId = new Long(1);
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        final Optional<Device.Color> colorOptional = Optional.absent();
+        final Optional<Calibration> calibrationOptional = Optional.absent();
+
+        final List<Sample> lightSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, "light", -1, colorOptional, calibrationOptional);
+        assertThat(lightSamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(lightSamples, -1), is(4));
+
+        final List<Sample> tempSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, "temperature", -1, colorOptional, calibrationOptional);
+        assertThat(tempSamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(tempSamples, -1), is(4));
+
+        final List<Sample> humiditySamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, "humidity", -1, colorOptional, calibrationOptional);
+        assertThat(humiditySamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(humiditySamples, -1), is(4));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGenerateTimeSeriesByUTCTimeInvalidSensor() {
+        final Optional<Device.Color> colorOptional = Optional.absent();
+        final Optional<Calibration> calibrationOptional = Optional.absent();
+        deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(new Long(1), new Long(1), new Long(1), new Long(1), 1, "not_a_sensor", 0, colorOptional, calibrationOptional);
     }
 
 }

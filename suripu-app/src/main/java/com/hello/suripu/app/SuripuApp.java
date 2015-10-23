@@ -4,6 +4,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -51,6 +52,7 @@ import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
@@ -252,6 +254,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB appStatsDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAppStatsConfiguration().getEndpoint());
         final AppStatsDAO appStatsDAO = new AppStatsDAODynamoDB(appStatsDynamoDBClient, configuration.getAppStatsConfiguration().getTableName());
 
+        final AmazonDynamoDB deviceDataDAODynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(deviceDataDAODynamoDBClient, configuration.getDeviceDataConfiguration().getTableName());
+
         final NotificationSubscriptionDAOWrapper notificationSubscriptionDAOWrapper = NotificationSubscriptionDAOWrapper.create(
                 notificationSubscriptionsDAO,
                 snsClient,
@@ -363,7 +368,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
+        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDataDAODynamoDB, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB));
 
         final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure", "hello-pvt.pem");
