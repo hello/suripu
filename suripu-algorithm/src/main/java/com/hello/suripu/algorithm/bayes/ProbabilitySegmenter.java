@@ -83,7 +83,7 @@ public class ProbabilitySegmenter {
             vec[t] = probs.get(t);
         }
 
-        HmmDecodedResult res = segmentingHiddenMarkovModel.decode(meas, possibleEndStates,1e-100);
+        HmmDecodedResult res = segmentingHiddenMarkovModel.decode(meas, possibleEndStates);
         LOGGER.debug("probs = {}",probs);
         LOGGER.debug("segment = {}",res.bestPath);
 
