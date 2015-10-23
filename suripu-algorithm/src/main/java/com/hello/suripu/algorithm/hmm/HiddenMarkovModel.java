@@ -1,9 +1,14 @@
 package com.hello.suripu.algorithm.hmm;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by benjo on 2/21/15.
@@ -93,7 +98,30 @@ public class HiddenMarkovModel {
         return cost;
     }
 
+    static private class CostWithIndex implements Comparable<CostWithIndex>{
+        final public int idx;
 
+        public CostWithIndex(int idx, double cost) {
+            this.idx = idx;
+            this.cost = cost;
+        }
+
+        final public double cost;
+
+
+        @Override
+        public int compareTo(CostWithIndex o) {
+            if (this.cost < o.cost) {
+                return 1;
+            }
+
+            if (this.cost > o.cost) {
+                return -1;
+            }
+
+            return 0;
+        }
+    }
 
 
     private double getBIC(double pathCost,int numObs) {
@@ -103,135 +131,174 @@ public class HiddenMarkovModel {
     private double getAIC(double pathCost) {
         return 2.0*pathCost + 2.0*this.numFreeParams;
     }
-    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates) {
-        return decode(observations,possibleEndStates,HmmPdfInterface.MIN_LIKELIHOOD);
+
+
+
+    private static double [][] clone2d(final double [][] x) {
+        double [][] A = new double[x.length][0];
+        for (int j = 0; j < x.length; j++) {
+            A[j] = x[j].clone();
+        }
+
+        return A;
     }
 
-    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates, final double minLikelihood) {
-        /*
-
-        returns optimal path given observations and state transition matrix "A"
-
-        Find the best state sequence (path) using viterbi algorithm - a method of dynamic programming,
-        very similar to the forward-backward algorithm, with the added step of maximization and eventual
-        backtracing.
-
-                delta[t][i] = max(P[q1..qt=i,O1...Ot|model] - the path ending in Si and until time t,
-        that generates the highest probability.
-
-                phi[t][i] = argmin(delta[t-1][i]*aij) - the index of the maximizing state in time (t-1),
-                i.e: the previous state.
-        */
-
-
-        // similar to the forward-backward algorithm, we need to make sure that we're using fresh data for the given observations.
+    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates) {
 
         final int numObs = observations[0].length;
-        final double [][] logBMap = this.getLogBMap(observations);
+        final int [] minStateDurations = new int[numStates];
+        Arrays.fill(minStateDurations, 1);
 
-        final double [][] phi = new double[this.numStates][numObs];
-        final int [][] viterbiIndices = new int[this.numStates][numObs];
+        int j,i,t;
 
+        final double [] scores = new double[numStates];
 
-        // init
-        for (int i = 0; i < this.numStates; i++) {
-            phi[i][0] = -Math.log(this.initialState[i]+ minLikelihood) - logBMap[i][0];
-        }
+        final double [][] phi = LogMath.getLogZeroedMatrix(numStates, numObs);
+        final int [][] vindices = new int[numStates][numObs];
 
-        //find minimum cost
-        {
-            double themin = Double.POSITIVE_INFINITY;
-            int minidx = 0;
-            for (int i = 0; i < this.numStates; i++) {
-                if (phi[i][0] < themin) {
-                    themin = phi[i][0];
-                    minidx = i;
-                }
-            }
+        double [][] logA = clone2d(this.A); //copy
 
-
-
-            //assign minimum cost index to first Viterbi state
-            for (int i = 0; i < this.numStates; i++) {
-                viterbiIndices[i][0] = minidx;
+        //nominal A matrix
+        for (j = 0; j < numStates; j++) {
+            for (i = 0; i < numStates; i++) {
+                logA[j][i] = LogMath.eln(logA[j][i]);
             }
         }
 
 
-        //do viterbi
-        final double [] cost = new double[this.numStates];
+        final double [][] logbmap = getLogBMap(observations);
 
-        for (int t = 1; t < numObs; t++) {
-            for (int j = 0; j < this.numStates; j++) {
-                //#"j" mean THIS (the jth) hidden state
-                final double obscost = -logBMap[j][t];
-                for (int i = 0; i < this.numStates; i++) {
-                   cost[i] = -Math.log(this.A[i][j] + minLikelihood) + obscost;
+        final int [] zeta = new int[numStates]; //this is the count for how long you've been in the same state
+        //see the paper "Long-term Activities Segmentation using Viterbi Algorithm with a k-minimum-consecutive-states Constraint"
+        //by Enrique Garcia-Ceja, Ramon Brena, 2014
+
+        for (i = 0; i < numStates; i++) {
+            zeta[i] = 1;
+        }
+
+        //init
+        for (i = 0; i < numStates; i++) {
+            phi[i][0] = LogMath.elnproduct(logbmap[i][0], LogMath.eln(initialState[i]));
+        }
+
+        for (t = 1; t < numObs; t++) {
+
+            final double [][] logAThisIndex = clone2d(logA);
+
+            for (j = 0; j < numStates; j++) {
+
+                final double obscost = logbmap[j][t];
+
+                for (i = 0; i < numStates; i++) {
+                    scores[i] = LogMath.elnproduct(logAThisIndex[i][j], obscost);
                 }
 
-                for (int i = 0; i < this.numStates; i++) {
-                    cost[i] += phi[i][t-1];
+                for (i = 0; i < numStates; i++) {
+                    scores[i] = LogMath.elnproduct(scores[i], phi[i][t - 1]);
                 }
 
-                final int minidx = findMinIndexOfDoubleArray(cost);
-                final double minval = cost[minidx];
+                final List<CostWithIndex> costsWithIndex = Lists.newArrayList();
 
-                phi[j][t] = minval;
+                for (i = 0; i < numStates; i++) {
+                    costsWithIndex.add(new CostWithIndex(i, scores[i]));
+                }
 
-                viterbiIndices[j][t] = minidx;
+                Collections.sort(costsWithIndex);
+
+
+                //check to see if any of the other possible "from" states (i.e. i != j)
+                //are below min. duration.  If so, we must force a transition from that state
+
+                int maxIdx = costsWithIndex.get(0).idx;
+                double maxVal = costsWithIndex.get(0).cost;
+
+                for (i = 0; i < numStates; i++) {
+                    //not possible, quit
+                    final int idx = costsWithIndex.get(i).idx;
+                    final double cost = costsWithIndex.get(i).cost;
+
+                    if (cost == Double.NEGATIVE_INFINITY) {
+                        break;
+                    }
+
+                    if (zeta[idx] < minStateDurations[idx] && idx != j) {
+                        maxIdx = idx;
+                        maxVal = cost;
+                        break;
+                    }
+                }
+
+                //best path is to stay?  increment zeta.
+                if (maxIdx == j) {
+                    zeta[j] += 1;
+                }
+                else {
+                    zeta[j] = 1;
+                }
+
+                //if zeta of the state I'm coming FROM is above min durations,
+                //I'll let the transition happen.  Otherwise, pick the next best state.
+
+                if (maxVal == Double.NEGATIVE_INFINITY) {
+                    maxIdx = j;
+                }
+
+                phi[j][t] = maxVal;
+                vindices[j][t] = maxIdx;
 
             }
         }
+
 
         final int [] path = new int[numObs];
 
 
         //go through each path, and find the least cost one.
         //we do this because we are really not sure about which end-state is the best
-        final double [] costs = new double[possibleEndStates.length];
+        final double [] pathCosts = new double[possibleEndStates.length];
 
-        for (int i = 0; i < possibleEndStates.length; i++) {
+        for (i = 0; i < possibleEndStates.length; i++) {
             path[numObs - 1] = possibleEndStates[i];
 
             //#backtrack to get optimal path
-            for (int t = numObs - 2; t >= 0; t--) {
-                path[t] = viterbiIndices[path[t + 1]][t];
+            for (t = numObs - 2; t >= 0; t--) {
+                path[t] = vindices[path[t + 1]][t];
             }
 
-            costs[i] = getPathCost(path,phi);
+            pathCosts[i] = phi[possibleEndStates[i]][phi[0].length - 1];
         }
 
-        double minCost = costs[0];
+        double maxScore = pathCosts[0];
         int minIdx = 0;
-        for (int i = 1; i < possibleEndStates.length; i++) {
-            if (costs[i] < minCost) {
+        for (i = 1; i < possibleEndStates.length; i++) {
+            if (pathCosts[i] > maxScore) {
                 minIdx = i;
-                minCost = costs[i];
+                maxScore = scores[i];
             }
         }
 
         //recompute minimum path again
         path[numObs - 1] = possibleEndStates[minIdx];
         //#backtrack to get optimal path
-        for (int t = numObs - 2; t >= 0; t--) {
-            path[t] = viterbiIndices[path[t + 1]][t];
+        for (t = numObs - 2; t >= 0; t--) {
+            path[t] = vindices[path[t + 1]][t];
         }
 
-        //convert from primitive to collection
-        final ArrayList<Integer> bestPath = new ArrayList<>();
+        final double pathCost = -maxScore;
+        final double bic = this.getBIC(pathCost,numObs);
+        final double aic = this.getAIC(pathCost);
 
-        for (int i = 0; i < numObs; i++) {
-            bestPath.add(path[i]);
+
+        final List<Integer> pathObjs = Lists.newArrayList();
+
+        for (t = 0; t < path.length; t++) {
+            pathObjs.add(path[t]);
         }
 
-
-        final double bic = this.getBIC(minCost,numObs);
-        final double aic = this.getAIC(minCost);
-
-
-        return new HmmDecodedResult(ImmutableList.copyOf(bestPath),bic,aic,minCost);
-
+        return new HmmDecodedResult(ImmutableList.copyOf(pathObjs),bic,aic,pathCost);
     }
+
+
 
 
     //actually this is useless until we do training

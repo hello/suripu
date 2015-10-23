@@ -87,15 +87,6 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return x;
     }
 
-    private static double [][]  getLogZeroedMatrix(final int m, final int n) {
-        final double [][] x = new double[m][n];
-
-        for (int j = 0; j < m; j++) {
-            Arrays.fill(x[j], LogMath.LOGZERO);
-        }
-
-        return x;
-    }
 
 
 
@@ -263,7 +254,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         final double [] scores = new double[numStates];
 
-        final double [][] phi = getLogZeroedMatrix(numStates, numObs);
+        final double [][] phi = LogMath.getLogZeroedMatrix(numStates, numObs);
         final int [][] vindices = new int[numStates][numObs];
 
         double [][] logA = clone2d(getAMatrix()); //copy
@@ -575,8 +566,8 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
      */
 
         int t,j,i;
-        double [][] logalpha = getLogZeroedMatrix(numStates,numObs);
-        double [][] logbeta = getLogZeroedMatrix(numStates,numObs);
+        double [][] logalpha = LogMath.getLogZeroedMatrix(numStates, numObs);
+        double [][] logbeta = LogMath.getLogZeroedMatrix(numStates,numObs);
         double temp;
         double [][] logA = clone2d(A); //copy
 
@@ -680,7 +671,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
     static double [][] getLogANumerator(final double [][] originalA, final AlphaBetaResult alphabeta,final double [][]logbmap,final Multimap<Integer,Transition> forbiddenTransitions,final int numObs, final int numStates) {
 
         int i,j,t;
-        final double [][] logANumerator = getLogZeroedMatrix(numStates, numStates);
+        final double [][] logANumerator = LogMath.getLogZeroedMatrix(numStates, numStates);
 
         final double [][]logalpha = alphabeta.logalpha;
         final double [][]logbeta = alphabeta.logbeta;
@@ -734,7 +725,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         int iState,iAlphabet,t;
 
-        double [][] logAlphabetNumerator = getLogZeroedMatrix(numStates, alphabetSize);
+        double [][] logAlphabetNumerator = LogMath.getLogZeroedMatrix(numStates, alphabetSize);
 
         final double [][] logalpha = alphabeta.logalpha;
         final double [][] logbeta = alphabeta.logbeta;
