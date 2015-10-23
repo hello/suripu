@@ -418,6 +418,7 @@ public class ReceiveResource extends BaseResource {
             addCommandsToResponse(deviceName, firmwareVersion, responseBuilder);
         }
 
+
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
@@ -733,6 +734,7 @@ public class ReceiveResource extends BaseResource {
         final List<ResponseCommand> respCommandsToFetch = new ArrayList<>();
         respCommandsToFetch.add(ResponseCommand.RESET_TO_FACTORY_FW);
         respCommandsToFetch.add(ResponseCommand.RESET_MCU);
+        respCommandsToFetch.add(ResponseCommand.SET_LOG_LEVEL);
 
         Map<ResponseCommand,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
 
@@ -747,6 +749,9 @@ public class ReceiveResource extends BaseResource {
                             break;
                         case RESET_MCU:
                             responseBuilder.setResetMcu(Boolean.parseBoolean(cmdValue));
+                            break;
+                        case SET_LOG_LEVEL:
+                            responseBuilder.setUploadLogLevel(Integer.parseInt(cmdValue));
                             break;
                     }
                 }
