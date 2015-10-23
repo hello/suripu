@@ -5,7 +5,6 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.handlers.RequestHandler2;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
@@ -190,53 +189,54 @@ public class DeviceDataDAODynamoDBIT {
                 .withDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime)
-                .withAmbientTemperature(70)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2499)
+                .withAmbientLight(10)
+                .withAmbientHumidity(4662)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(1))
-                .withAmbientTemperature(77)
-                .withAmbientLight(36996)
+                .withAmbientTemperature(2498)
+                .withAmbientLight(10)
+                .withAmbientHumidity(4666)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(2))
-                .withAmbientTemperature(69)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2500)
+                .withAmbientLight(8)
+                .withAmbientHumidity(4665)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(3))
-                .withAmbientTemperature(90)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2500)
+                .withAmbientLight(12)
+                .withAmbientHumidity(4662)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(4))
-                .withAmbientTemperature(70)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2501)
+                .withAmbientLight(9)
+                .withAmbientHumidity(4667)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(5))
-                .withAmbientTemperature(20)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2502)
+                .withAmbientLight(10)
+                .withAmbientHumidity(4669)
                 .build());
         // Skip minute 6
         deviceDataList.add(new DeviceData.Builder()
@@ -244,9 +244,9 @@ public class DeviceDataDAODynamoDBIT {
                 .withDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(7))
-                .withAmbientTemperature(100)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2503)
+                .withAmbientLight(15)
+                .withAmbientHumidity(4658)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
     }
@@ -288,18 +288,18 @@ public class DeviceDataDAODynamoDBIT {
         final List<DeviceData> fiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 deviceId, accountId, firstTime, firstTime.plusMinutes(10), 5);
         assertThat(fiveMinuteresults.size(), is(2));
-        assertThat(fiveMinuteresults.get(0).ambientTemperature, is(69));
+        assertThat(fiveMinuteresults.get(0).ambientTemperature, is(2498));
         assertThat(fiveMinuteresults.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
-        assertThat(fiveMinuteresults.get(1).ambientTemperature, is(20));
+        assertThat(fiveMinuteresults.get(1).ambientTemperature, is(2502));
         assertThat(fiveMinuteresults.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
 
         // 5-minute results starting at a weird time (firstTime+3)
         final List<DeviceData> offsetFiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 deviceId, accountId, firstTime.plusMinutes(3), firstTime.plusMinutes(10), 5);
         assertThat(offsetFiveMinuteresults.size(), is(2));
-        assertThat(offsetFiveMinuteresults.get(0).ambientTemperature, is(70));
+        assertThat(offsetFiveMinuteresults.get(0).ambientTemperature, is(2500));
         assertThat(offsetFiveMinuteresults.get(0).dateTimeUTC, is(firstTime));
-        assertThat(offsetFiveMinuteresults.get(1).ambientTemperature, is(20));
+        assertThat(offsetFiveMinuteresults.get(1).ambientTemperature, is(2502));
         assertThat(offsetFiveMinuteresults.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
 
 
@@ -307,7 +307,7 @@ public class DeviceDataDAODynamoDBIT {
         final List<DeviceData> hourlyResults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 deviceId, accountId, firstTime, firstTime.plusMinutes(90), 60);
         assertThat(hourlyResults.size(), is(1));
-        assertThat(hourlyResults.get(0).ambientTemperature, is(20));
+        assertThat(hourlyResults.get(0).ambientTemperature, is(2498));
         assertThat(hourlyResults.get(0).dateTimeUTC, is(firstTime));
     }
 
