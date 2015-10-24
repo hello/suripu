@@ -14,10 +14,8 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
@@ -41,28 +39,22 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final int batchSize;
-    private final PillHeartBeatDAO pillHeartBeatDAO;
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB; // will replace with interface as soon as we have validated this works
-
-    private final static long DEFAULT_DYNAMODB_BACKOFF_MILLIS = 1000L;
-    private final static int DEFAULT_DYNAMODB_MAX_TRIES = 5;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
 
     public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO,
                                  final int batchSize,
-                                 final PillHeartBeatDAO pillHeartBeatDAO,
                                  final KeyStore pillKeyStore,
                                  final DeviceDAO deviceDAO,
                                  final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                  final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
-        this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
@@ -82,7 +74,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
-        final List<DeviceStatus> heartBeats = Lists.newArrayList();
         final Set<PillHeartBeat> pillHeartBeats = Sets.newHashSet(); // for dynamoDB writes
 
         final List<SenseCommandProtos.pill_data> pillData = Lists.newArrayList();
@@ -138,7 +129,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
             for (final SenseCommandProtos.pill_data data : pillData) {
                 final Optional<byte[]> decryptionKey = pillKeys.get(data.getDeviceId());
-                //TODO: Get the actual decryption key.
+
                 if (decryptionKey == null || !decryptionKey.isPresent()) {
                     LOGGER.error("Missing decryption key for pill: {}", data.getDeviceId());
                     continue;
@@ -193,17 +184,9 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     // dual writes to dynamo
                     if(hasPillHeartBeatDynamoDBEnabled(pillId)) {
                         final PillHeartBeat pillHeartBeat = PillHeartBeat.create(pillId, batteryLevel, firmwareVersion, upTimeInSeconds, lastUpdated);
+                        LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pillId, lastUpdated);
                         pillHeartBeats.add(pillHeartBeat);
                     }
-
-                    final Optional<DeviceAccountPair> optionalPair = pairs.get(pillId);
-                    if (!optionalPair.isPresent()) {
-                        LOGGER.error("Missing pairing in account tracker map for pill: {}", data.getDeviceId());
-                        continue;
-                    }
-                    final DeviceAccountPair pair = optionalPair.get();
-                    LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
-                    heartBeats.add(new DeviceStatus(0L, pair.internalDeviceId, String.valueOf(firmwareVersion), batteryLevel, lastUpdated, upTimeInSeconds));
                 }
             }
         } catch (Exception e) {
@@ -218,12 +201,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
         }
 
-        if (!heartBeats.isEmpty()) {
-            LOGGER.info("About to batch insert: {} heartbeats", heartBeats.size());
-            this.pillHeartBeatDAO.batchInsert(heartBeats);
-            LOGGER.info("Finished batch insert: {} heartbeats", heartBeats.size());
-        }
-
         // Dual writes to DynamoDB
         if (!pillHeartBeats.isEmpty()) {
             final Set<PillHeartBeat> unproccessed = this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
@@ -231,7 +208,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             LOGGER.info("Finished dynamo batch insert: {} heartbeats, {} {}% unprocessed", pillHeartBeats.size(), unproccessed.size(), perc);
         }
 
-        if(!trackerData.isEmpty() || !heartBeats.isEmpty()) {
+        if(!trackerData.isEmpty() || !pillHeartBeats.isEmpty()) {
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.info("Successful checkpoint.");
@@ -249,7 +226,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
         if(shutdownReason == ShutdownReason.TERMINATE) {
-            LOGGER.warn("Got Termintate. Attempting to checkpoint.");
+            LOGGER.warn("Got Terminate. Attempting to checkpoint.");
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.warn("Checkpoint successful.");

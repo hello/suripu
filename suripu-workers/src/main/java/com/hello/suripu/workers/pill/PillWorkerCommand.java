@@ -128,7 +128,6 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
                 trackerMotionDAO,
                 configuration.getBatchSize(),
                 mergedUserInfoDynamoDB,
-                heartBeatDAO,
                 pillKeyStore,
                 deviceDAO,
                 pillHeartBeatDAODynamoDB
