@@ -9,7 +9,7 @@ import java.util.Set;
 public interface PillHeartBeatDAO {
 
     void put(final PillHeartBeat pillHeartBeat);
-    void put(Set<PillHeartBeat> pillHeartBeats);
+    Set<PillHeartBeat> put(Set<PillHeartBeat> pillHeartBeats);
 
     /**
      * Get most recent heartbeat if it exists

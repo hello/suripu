@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -37,24 +36,28 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MigratePillHeartbeatCommand.class);
 
-
     private final static int DYNAMO_DB_BATCH_PUT_SIZE = 25;
 
+    // TODO!!! NOTE !!! Remember to change these accordingly, or put in configs
+    private String dataDir = "/tmp/data/"; // dir to store the 2 files below
+    private String pillMapFilename = dataDir + "pill_map_2015_10_20_1650.csv"; // maps internal pill-id to external pill-id
 
-    private String dataDir;
-    private String pillMapFilename;
-    private String pillDataFilename;
+    // raw csv data file with no headers
+    // id,pill_id,firmware_version,battery_level,last_updated,uptime,fw_version
+    private String pillDataFilename = dataDir + "test_data";
 
-    private Float sleepMillis;
-    private Integer threadSize;
-    private Float dynamoWriteThroughput;
-    private Integer rawBatchSize;
+    private Float sleepMillis = 500.0f; // minimum millisecs to backoff when writes get throttled
+    private Integer threadSize = 4; // no. of threads for writing to Dynamo
+    private Float dynamoWriteThroughput = 2.0f; // dynamoDB write throughput
+    private Integer rawBatchSize = 100; // number of rows to read from csv before sending to Dynamo
+    // end of TODO!!!
+
 
     public MigratePillHeartbeatCommand() {
         super("migrate_pill_heartbeat", "Migrate pill_status from RDS to DynamoDB");
     }
 
-    private class DynamoDBInsert implements Callable<List<PillHeartBeat>> {
+    private class DynamoDBInsert implements Callable<Set<PillHeartBeat>> {
         private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
 
         private final Set<PillHeartBeat> heartBeats;
@@ -65,26 +68,15 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
         }
 
         @Override
-        public List<PillHeartBeat> call() {
-            final List<PillHeartBeat> unprocessed = this.pillHeartBeatDAODynamoDB.putBatch(this.heartBeats);
+        public Set<PillHeartBeat> call() {
+            final Set<PillHeartBeat> unprocessed = this.pillHeartBeatDAODynamoDB.put(this.heartBeats);
             return unprocessed;
         }
     }
 
-
     @Override
     protected void run(final Bootstrap<SuripuAppConfiguration> bootstrap, final Namespace namespace, final SuripuAppConfiguration configuration) throws Exception {
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-
-        this.threadSize = configuration.getNumThreads();
-        this.dynamoWriteThroughput = configuration.getDynamoWriteThroughput();
-        this.rawBatchSize = configuration.getRawBatchSize();
-        this.sleepMillis = configuration.getSleepMillis();
-
-        this.dataDir = configuration.getDataDir();
-        this.pillDataFilename = this.dataDir + configuration.getDataFile();
-        this.pillMapFilename = this.dataDir + "pill_map_2015_10_20_1650.csv";
-
         Thread.sleep(5000L);
         migrateData(configuration, awsCredentialsProvider);
     }
@@ -114,7 +106,7 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
             int savedItems = 0;
             int batchCount = 0;
             final Map<String, PillHeartBeat> uniqueHeartBeats= Maps.newHashMap();
-            final Set<Future<List<PillHeartBeat>>> results = Sets.newHashSet();
+            final Set<Future<Set<PillHeartBeat>>> results = Sets.newHashSet();
 
             String line;
 
@@ -151,12 +143,12 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
                                 final Set<PillHeartBeat> toSaveSet = ImmutableSet.copyOf(Iterables.limit(toSaveHeartbeats, DYNAMO_DB_BATCH_PUT_SIZE));
                                 toSaveHeartbeats.removeAll(toSaveSet);
                                 toSaveSize += toSaveSet.size();
-                                final Future<List<PillHeartBeat>> res = service.submit(new DynamoDBInsert(pillHeartBeatDAODynamoDB, toSaveSet));
+                                final Future<Set<PillHeartBeat>> res = service.submit(new DynamoDBInsert(pillHeartBeatDAODynamoDB, toSaveSet));
                                 results.add(res);
                             }
 
                             int totUnprocessed = 0;
-                            for (Future<List<PillHeartBeat>> unprocessedHeartbeats: results) {
+                            for (Future<Set<PillHeartBeat>> unprocessedHeartbeats: results) {
                                 final int unprocessedSize = unprocessedHeartbeats.get().size();
                                 if (unprocessedSize > 0) {
                                     totUnprocessed += unprocessedSize;

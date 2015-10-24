@@ -25,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -133,59 +134,21 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
         }
     }
 
-    public List<PillHeartBeat> putBatch(final Set<PillHeartBeat> pillHeartBeats) {
-        final List<PillHeartBeat> unprocessedHeartbeats = Lists.newArrayList();
-        final List<WriteRequest> writeRequests = Lists.newArrayList();
-
-        for(final PillHeartBeat heartBeat : pillHeartBeats) {
-            writeRequests.add(transform(heartBeat));
-        }
-
-        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
-        int i = 0;
-        for (final List<WriteRequest> partition : Lists.partition(writeRequests, DYNAMO_BATCH_WRITE_LIMIT)) {
-            i++;
-            final Map<String, List<WriteRequest>> map = Maps.newHashMap();
-            map.put(tableName, partition);
-            batchWriteItemRequest.withRequestItems(map);
-            try {
-                final BatchWriteItemResult result = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-                final Map<String, List<WriteRequest>> unprocessed = result.getUnprocessedItems();
-                if (unprocessed == null || unprocessed.isEmpty()) {
-                    continue;
-                }
-
-                final Collection<List<WriteRequest>> unprocessedRequests = unprocessed.values();
-                for (final List<WriteRequest> requestList : unprocessedRequests) {
-                    for (final WriteRequest request : requestList) {
-                        final Optional<PillHeartBeat> optionalHeartbeat = fromDynamoDBItem(request.getPutRequest().getItem());
-                        if (optionalHeartbeat.isPresent()) {
-                            unprocessedHeartbeats.add(optionalHeartbeat.get());
-                        }
-                    }
-                }
-
-//                final float ratio = unprocessed.size() / (float) partition.size() * 100.0f;
-//                LOGGER.info("Table {} : {}%  ({} attempted, {} unprocessed)", tableName, Math.round(ratio), partition.size(), unprocessed.size());
-
-            }catch (AmazonClientException e) {
-                LOGGER.error("Error persisting last seen device data: {}", e.getMessage());
-                unprocessedHeartbeats.addAll(pillHeartBeats);
-            }
-        }
-
-//        LOGGER.error("Iterations: {}", i);
-        return unprocessedHeartbeats;
-    }
 
     @Override
-    public void put(final Set<PillHeartBeat> pillHeartBeats) {
+    public Set<PillHeartBeat> put(final Set<PillHeartBeat> pillHeartBeats) {
         final List<WriteRequest> writeRequests = Lists.newArrayList();
+        final Set<String> uniqueHashRangeKeys = Sets.newHashSet();
 
         for(final PillHeartBeat heartBeat : pillHeartBeats) {
-            writeRequests.add(transform(heartBeat));
+            final String pillHashRangeKey = heartBeat.pillId + heartBeat.createdAtUTC.toString();
+            if (!uniqueHashRangeKeys.contains(pillHashRangeKey)) {
+                // battery level may differ, only batch heartbeats with unique hash+range key
+                writeRequests.add(transform(heartBeat));
+                uniqueHashRangeKeys.add(pillHashRangeKey);
+            }
         }
-        saveHeartBeat(writeRequests);
+        return saveHeartBeats(writeRequests); // returned unprocessed heartbeats
     }
 
 
@@ -193,7 +156,10 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
      * Saves batch of heartbeat data to dynamoDB
      * @param lastSeenWriteRequests
      */
-    private void saveHeartBeat(final List<WriteRequest> lastSeenWriteRequests) {
+    private Set<PillHeartBeat> saveHeartBeats(final List<WriteRequest> lastSeenWriteRequests) {
+        final Set<PillHeartBeat> unprocessedHeartbeats = Sets.newHashSet();
+
+        Collection<List<WriteRequest>> unprocessedRequests = Lists.newArrayList();
         final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
         int i = 0;
         for (final List<WriteRequest> partition : Lists.partition(lastSeenWriteRequests, DYNAMO_BATCH_WRITE_LIMIT)) {
@@ -210,12 +176,26 @@ public class PillHeartBeatDAODynamoDB implements PillHeartBeatDAO {
 
                 final float ratio = unprocessed.size() / (float) partition.size() * 100.0f;
                 LOGGER.info("Table {} : {}%  ({} attempted, {} unprocessed)", tableName, Math.round(ratio), partition.size(), unprocessed.size());
+                unprocessedRequests.addAll(unprocessed.values());
+
             }catch (AmazonClientException e) {
                 LOGGER.error("Error persisting last seen device data: {}", e.getMessage());
+                unprocessedRequests.add(lastSeenWriteRequests);
             }
         }
 
         LOGGER.error("Iterations: {}", i);
+
+        // returned unprocessed items for another round.
+        for (final List<WriteRequest> requestList : unprocessedRequests) {
+            for (final WriteRequest request : requestList) {
+                final Optional<PillHeartBeat> optionalHeartbeat = fromDynamoDBItem(request.getPutRequest().getItem());
+                if (optionalHeartbeat.isPresent()) {
+                    unprocessedHeartbeats.add(optionalHeartbeat.get());
+                }
+            }
+        }
+        return unprocessedHeartbeats;
     }
 
 

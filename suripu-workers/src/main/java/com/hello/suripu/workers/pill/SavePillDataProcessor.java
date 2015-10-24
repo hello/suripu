@@ -226,8 +226,9 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         // Dual writes to DynamoDB
         if (!pillHeartBeats.isEmpty()) {
-            this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
-            LOGGER.info("Finished dynamo batch insert: {} heartbeats", pillHeartBeats.size());
+            final Set<PillHeartBeat> unproccessed = this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
+            final float perc = ((float) unproccessed.size() / (float) pillHeartBeats.size()) * 100.0f;
+            LOGGER.info("Finished dynamo batch insert: {} heartbeats, {} {}% unprocessed", pillHeartBeats.size(), unproccessed.size(), perc);
         }
 
         if(!trackerData.isEmpty() || !heartBeats.isEmpty()) {

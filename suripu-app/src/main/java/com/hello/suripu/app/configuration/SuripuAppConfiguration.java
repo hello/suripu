@@ -401,41 +401,4 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("device_data")
     private DynamoDBConfiguration deviceDataConfiguration;
     public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
-
-    @Valid
-    @NotNull
-    @JsonProperty("raw_batch_size")
-    private Integer rawBatchSize;
-    public Integer getRawBatchSize() { return this.rawBatchSize; }
-
-    @Valid
-    @NotNull
-    @JsonProperty("num_threads")
-    private Integer numThreads;
-    public Integer getNumThreads() { return this.numThreads; }
-
-    @Valid
-    @NotNull
-    @JsonProperty("dynamo_write_throughput")
-    private Float dynamoWriteThroughput;
-    public Float getDynamoWriteThroughput() { return this.dynamoWriteThroughput; }
-
-    @Valid
-    @NotNull
-    @JsonProperty("sleep_millis")
-    private Float sleepMillis;
-    public Float getSleepMillis() { return this.sleepMillis; }
-
-    @Valid
-    @NotNull
-    @JsonProperty("data_dir")
-    private String dataDir;
-    public String getDataDir() { return this.dataDir; }
-
-    @Valid
-    @NotNull
-    @JsonProperty("data_file")
-    private String dataFile;
-    public String getDataFile() { return this.dataFile; }
-
 }
