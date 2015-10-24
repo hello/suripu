@@ -204,7 +204,7 @@ public class PillHeartBeatDAODynamoDBIT {
             heartBeats.add(PillHeartBeat.create(pillId, 100 - i, 0, 0, now.plusMinutes(i)));
         }
         this.amazonDynamoDBClient.throttle = true;
-        final List<PillHeartBeat> unprocessed = pillHeartBeatDAODynamoDB.put(heartBeats);
+        final Set<PillHeartBeat> unprocessed = pillHeartBeatDAODynamoDB.put(heartBeats);
         assertThat(unprocessed.isEmpty(), is(false));
     }
 }
