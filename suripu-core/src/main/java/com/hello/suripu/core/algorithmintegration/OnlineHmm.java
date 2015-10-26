@@ -352,7 +352,7 @@ public class OnlineHmm {
     }
 
 
-    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime evening, final DateTime startTimeLocalUtc, final DateTime endTimeLocalUtc,
+    public SleepEvents<Optional<Event>> predictAndUpdateWithLabels(final long accountId,final DateTime evening, final DateTime startTimeLocalUtc, final DateTime endOfDayTimeLocalUtc,final DateTime currentTimeLocalUtc,
                            OneDaysSensorData oneDaysSensorData, boolean feedbackHasChanged,boolean forceLearning) {
 
         /*  GET THE FEATURE EXTRACTION LAYER -- this will be as bunch of HMMs that will classify binned sensor data into discrete classes
@@ -363,12 +363,23 @@ public class OnlineHmm {
 
         final int timezoneOffset = oneDaysSensorData.timezoneOffsetMillis;
         final long startTimeUtc = startTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
-        final long endTimeUtc = endTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
-        final long endTimeToUpdateFeedback = endTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;
+        final long endOfDayTimeUtc = endOfDayTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
+
+        final long endTimeToUpdateFeedback = endOfDayTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;
         final ImmutableList<TimelineFeedback> feedbackList = oneDaysSensorData.feedbackList;
 
         final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModelEnsemble();
         final OnlineHmmPriors seedModel = defaultModelEnsembleDAO.getSeedModel();
+
+        //IF THE CURRENT TIME IS BEFORE THE END OF DAY, USE CURRENT TIME AS END TIME.
+        DateTime stopTimeLocalUtc = endOfDayTimeLocalUtc;
+
+        if (currentTimeLocalUtc.getMillis() < stopTimeLocalUtc.getMillis()) {
+            stopTimeLocalUtc = currentTimeLocalUtc;
+        }
+
+        //convert to UTC
+        final long endTimeUtc = stopTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
 
 
         if (defaultEnsemble.isEmpty()) {
@@ -376,6 +387,7 @@ public class OnlineHmm {
             return sleepEvents;
         }
 
+        //GET THE FEATURE EXTRACTION LAYER FROM DYNAMO DB
         final FeatureExtractionModelData serializedData = featureExtractionModelsDAO.getLatestModelForDate(accountId, startTimeLocalUtc, uuid);
 
         if (!serializedData.isValid()) {
@@ -385,7 +397,7 @@ public class OnlineHmm {
 
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
 
-
+        //GET THE VOTING WEIGHTS AND CUSTOM MODEL FOR THE USER
         final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening,seedModel,forceLearning);
 
         if (userModelData.modelPriors.isEmpty()) {
@@ -400,7 +412,7 @@ public class OnlineHmm {
             return sleepEvents;
         }
 
-        /*  CHECK TO SEE IF THE SCRATCH PAD SHOULD BE ADDED TO THE CURRENT MODEL */
+        /*  CHECK TO SEE IF THE SCRATCHPAD CREATED IN THE PAST SHOULD BE ADDED TO THE CURRENT MODEL */
         if (!userModelData.scratchPad.isEmpty()) {
             final OnlineHmmScratchPad scratchPad = userModelData.scratchPad;
 

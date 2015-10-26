@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
@@ -290,6 +291,38 @@ public class OnlineHmmTest {
     }
 
     @Test
+    public void testShortenedDay() {
+        final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
+        final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
+
+        final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO, modelsDAO, Optional.<UUID>absent());
+
+        modelsDAO.setZeroCounts();
+
+        DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
+        DateTime startTime = date.withHourOfDay(18);
+        DateTime endTime = startTime.plusHours(16);
+
+
+        AllSensorSampleList senseData = getTypicalDayOfSense(startTime, endTime, 0);
+        ImmutableList<TrackerMotion> pillData = getTypicalDayOfPill(startTime, endTime, 0);
+
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, ImmutableList.copyOf(Collections.EMPTY_LIST), ImmutableList.copyOf(Collections.EMPTY_LIST), 0);
+
+
+        final DateTime currentTime = endTime.minusHours(7);
+        final SleepEvents<Optional<Event>> sleepEvents = onlineHmm.predictAndUpdateWithLabels(0, date, startTime, endTime, currentTime, oneDaysSensorData, false, false);
+
+        //make sure out-of-bed is before current time... remember timezone offset is zero
+        TestCase.assertTrue(sleepEvents.outOfBed.get().getStartTimestamp() <= currentTime.getMillis());
+
+
+    }
+
+
+
+    @Test
     public void testNormalSequenceOfEvents() {
         final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
         final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
@@ -301,7 +334,7 @@ public class OnlineHmmTest {
 
         DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
         DateTime startTime = date.withHourOfDay(18);
-        DateTime endTime = startTime.plusHours(18);
+        DateTime endTime = startTime.plusHours(16);
 
 
         AllSensorSampleList senseData = getTypicalDayOfSense(startTime,endTime,0);
@@ -311,12 +344,12 @@ public class OnlineHmmTest {
 
         ////--------------------
         //step 1) make sure we save off default model on first day
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData,false,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
         TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
         //make sure evaluating again doesn't screw things up
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData,false,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
         TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
@@ -346,7 +379,7 @@ public class OnlineHmmTest {
         // since there is feedback for this day,
         // I expect the scratchpad of the previous day
         // to be updated
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData2,true,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData2,true,false);
 
         //make sure that no new entries were created, and that there is a scratchpad with two entries
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
@@ -357,7 +390,7 @@ public class OnlineHmmTest {
 
         //run again, this time with no update, and make sure that no new entries are created
         modelsDAO.setZeroCounts();
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData2,false,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData2,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
         TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.paramsByOutputId.size() == 2);
         TestCase.assertTrue(modelsDAO.putScratchpadCounts == 0);
@@ -375,7 +408,7 @@ public class OnlineHmmTest {
         pillData = getTypicalDayOfPill(startTime,endTime,0);
         final OneDaysSensorData oneDaysSensorData3 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),0);
 
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData3,false,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData3,false,false);
 
         //make sure the model was only put once
         TestCase.assertTrue(modelsDAO.putModelCounts == 1);
@@ -403,7 +436,7 @@ public class OnlineHmmTest {
 
         //redo get, make sure we don't update the models again
         modelsDAO.setZeroCounts();
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData3,false,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData3,false,false);
         TestCase.assertTrue(modelsDAO.putModelCounts == 0);
 
 
@@ -421,7 +454,7 @@ public class OnlineHmmTest {
 
         final OneDaysSensorData oneDaysSensorData4 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Lists.newArrayList(feedbackForNight4)),0);
 
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData4,true,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData4,true,false);
 
         final String scratchpadId = modelsDAO.priorByDate.lastEntry().getValue().scratchPad.paramsByOutputId.get("SLEEP").id;
 
@@ -440,7 +473,7 @@ public class OnlineHmmTest {
 
         DateTime date = DateTimeUtil.ymdStringToDateTime("2015-09-01");
         DateTime startTime = date.withHourOfDay(18);
-        DateTime endTime = startTime.plusHours(18);
+        DateTime endTime = startTime.plusHours(16);
 
 
         AllSensorSampleList senseData = getTypicalDayOfSense(startTime,endTime,0);
@@ -450,7 +483,7 @@ public class OnlineHmmTest {
 
         ////--------------------
         //step 1) make sure we save off default model on first day
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData,false,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,false,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
         TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
@@ -468,7 +501,7 @@ public class OnlineHmmTest {
         timelineFeedbacks.add(feedbackForNight2);
         final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),0);
 
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,oneDaysSensorData2,true,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData2,true,false);
 
         //make sure that no new entries were created, and that there is a scratchpad
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
