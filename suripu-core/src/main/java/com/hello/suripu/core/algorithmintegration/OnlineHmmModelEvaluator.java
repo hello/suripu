@@ -14,6 +14,7 @@ import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.util.OnlineHmmMeasurementParameters;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +70,8 @@ public class OnlineHmmModelEvaluator {
             //list of results
             final List<MultiEvalHmmDecodedResult> resultsForThisId = Lists.newArrayList();
 
+            final DateTime startTime = DateTime.now();
+
             //evaluate for each model, saving results in list
             for (final Map.Entry<String,OnlineHmmModelParams> entryByModelForThisOutput : entryByOutput.getValue().entrySet()) {
 
@@ -91,8 +94,6 @@ public class OnlineHmmModelEvaluator {
 
                     final MultiEvalHmmDecodedResult result = new MultiEvalHmmDecodedResult(decodeResult.path,decodeResult.pathScore,params.id);
 
-                    LOGGER.info("{} cost: {}  transitions: {}",result.originatingModel,result.pathcost,result.transitions);
-
                     resultsForThisId.add(result);
 
                 }
@@ -101,6 +102,11 @@ public class OnlineHmmModelEvaluator {
                     LOGGER.error(e.getMessage());
                 }
             }
+
+            final DateTime endTime = DateTime.now();
+            final long elapsedMillis = endTime.minus(startTime.getMillis()).getMillis();
+            LOGGER.info("done evaluating {}. {}ms elapsed.",entryByOutput.getKey(),elapsedMillis);
+
 
             //TRIM silly model results
             final List<MultiEvalHmmDecodedResult> goodResults = Lists.newArrayList();
@@ -119,7 +125,7 @@ public class OnlineHmmModelEvaluator {
 
             final int T = goodResults.get(0).path.length;
             final int N = goodResults.get(0).numStates;
-            final double [][] votes = new double[N][T];
+            final float [][] votes = new float[N][T];
             final Map<String,ModelVotingInfo> votingInfoByOutputId = allModels.votingInfo.get(entryByOutput.getKey());
 
             for (final MultiEvalHmmDecodedResult result : goodResults) {
@@ -127,6 +133,11 @@ public class OnlineHmmModelEvaluator {
             }
 
             normalizeVotes(votes);
+
+            LOGGER.info("votes for {}",entryByOutput.getKey());
+            for (int istate = 0; istate < N; istate++) {
+                LOGGER.info("{}",votes[istate]);
+            }
 
             final int [] votepath = getVotedPathWithConstraints(votes,entryByOutput.getKey().equals(OnlineHmmData.OUTPUT_MODEL_SLEEP));
 
@@ -144,7 +155,7 @@ public class OnlineHmmModelEvaluator {
     }
 
 
-    private static void voteByModel(final double [][] votes,final Map<String,ModelVotingInfo> voteInfoByModelId,final MultiEvalHmmDecodedResult result) {
+    private static void voteByModel(final float [][] votes,final Map<String,ModelVotingInfo> voteInfoByModelId,final MultiEvalHmmDecodedResult result) {
         double voteWeight = OnlineHmmModelLearner.DEFAULT_MODEL_PRIOR_PROBABILITY;
 
         if (voteInfoByModelId != null) {
@@ -160,7 +171,7 @@ public class OnlineHmmModelEvaluator {
         }
     }
 
-    private static void normalizeVotes(final double [][] votes) {
+    private static void normalizeVotes(final float [][] votes) {
         final int N = votes.length;
 
         if (N == 0) {
@@ -207,7 +218,7 @@ public class OnlineHmmModelEvaluator {
         }
     }
 
-    private static int [] getVotedPathWithConstraints(final double[][] votes, boolean isSleep) {
+    private static int [] getVotedPathWithConstraints(final float[][] votes, boolean isSleep) {
         final int N = votes.length;
         final int T = votes[0].length;
 

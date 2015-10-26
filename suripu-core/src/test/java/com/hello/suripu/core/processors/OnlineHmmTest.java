@@ -41,12 +41,37 @@ public class OnlineHmmTest {
 
         @Override
         public OnlineHmmPriors getDefaultModelEnsemble() {
-            return OnlineHmmPriors.createEmpty();//TODO LOAD FROM FILE
+
+            //get model
+            try {
+                final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3ensemble.model",false);
+                final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
+
+                TestCase.assertTrue(model.isPresent());
+                return model.get();
+
+            } catch (IOException exception) {
+                TestCase.assertTrue(false);
+            }
+
+            return OnlineHmmPriors.createEmpty();
         }
 
         @Override
         public OnlineHmmPriors getSeedModel() {
-            return OnlineHmmPriors.createEmpty(); //TODO LOAD FROM FILE
+            //get model
+            try {
+                final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3.model",false);
+                final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
+
+                TestCase.assertTrue(model.isPresent());
+                return model.get();
+
+            } catch (IOException exception) {
+                TestCase.assertTrue(false);
+            }
+
+            return OnlineHmmPriors.createEmpty();
         }
     }
 
@@ -56,7 +81,7 @@ public class OnlineHmmTest {
         public LocalFeatureExtractionDAO() {
             try {
                 deserialization = new FeatureExtractionModelData(Optional.<UUID>absent());
-                deserialization.deserialize(HmmUtils.loadFile("fixtures/algorithm/featureextractionlayer.bin"));
+                deserialization.deserialize(HmmUtils.loadFile("fixtures/algorithm/featureextractionlayer.bin",true));
             }
             catch (IOException exception) {
                 TestCase.assertTrue(false);
@@ -82,7 +107,7 @@ public class OnlineHmmTest {
             if (!startEmpty) {
                 //get model
                 try {
-                    final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/allfoureventsmodel.bin");
+                    final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3.model",false);
                     final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
 
                     TestCase.assertTrue(model.isPresent());
@@ -400,7 +425,7 @@ public class OnlineHmmTest {
 
         final String scratchpadId = modelsDAO.priorByDate.lastEntry().getValue().scratchPad.paramsByOutputId.get("SLEEP").id;
 
-        TestCase.assertEquals("SLEEP-2",scratchpadId);
+        TestCase.assertEquals("SLEEP-0-custom",scratchpadId);
     }
 
 
