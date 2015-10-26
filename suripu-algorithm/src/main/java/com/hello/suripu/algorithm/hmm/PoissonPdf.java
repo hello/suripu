@@ -3,11 +3,16 @@ package com.hello.suripu.algorithm.hmm;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by benjo on 2/21/15.
  */
 public class PoissonPdf implements  HmmPdfInterface {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PoissonPdf.class);
+
     int _measnum;
     PoissonDistribution _poisson;
 
@@ -25,10 +30,6 @@ public class PoissonPdf implements  HmmPdfInterface {
         for (int i = 0; i < col.length; i++) {
             //god I hope this is its likelihood function
             double pmfEval = _poisson.probability((int)col[i]);
-
-            if (pmfEval < MIN_LIKELIHOOD) {
-                pmfEval = MIN_LIKELIHOOD;
-            }
 
             result[i] = Math.log(pmfEval);
         }

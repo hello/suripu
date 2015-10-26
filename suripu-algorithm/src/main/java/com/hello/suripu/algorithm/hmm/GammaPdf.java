@@ -42,10 +42,6 @@ public class GammaPdf implements HmmPdfInterface {
 
             double pdfEval = gammaDistribution.density(inputValue);
 
-            if (pdfEval < MIN_LIKELIHOOD) {
-                pdfEval = MIN_LIKELIHOOD;
-            }
-
             result[i] = Math.log(pdfEval);
 
         }
