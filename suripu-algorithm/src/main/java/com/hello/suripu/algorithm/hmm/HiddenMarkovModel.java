@@ -42,10 +42,6 @@ public class HiddenMarkovModel {
         this.obsModels = obsModels;
         this.numFreeParams = numFreeParams; //whatever, not important here since this is only used for test now
 
-        for (int i = 0; i < numStates; i++) {
-            LOGGER.info("{}",A[i]);
-        }
-        LOGGER.info("--------");
     }
 
     public HiddenMarkovModel(final int numStates,final List<Double> stm,final List<Double> initialProbs,final HmmPdfInterface [] obsModels,final int numFreeParams) {
