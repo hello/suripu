@@ -360,12 +360,7 @@ public class  OnlineHmmPriors {
 
         return builder.build().toByteArray();
     }
-
-
-    private static String defaultModel = "";
-    public static Optional<OnlineHmmPriors> createDefaultPrior() {
-        return createFromProtoBuf(Base64.decodeBase64(defaultModel));
-    }
+    
 }
 
 
