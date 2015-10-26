@@ -246,6 +246,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
             List<Event> extraEvents = Collections.EMPTY_LIST;
 
+            final DateTime currentTimeInLocalUtc = currentTime.plus(sensorData.timezoneOffsetMillis);
 
             if (this.hasOnlineHmmEnabled(accountId)) {
                 //get model from DB
@@ -258,6 +259,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                         date,
                         targetDate,
                         endDate,
+                        currentTimeInLocalUtc,
                         sensorData,
                         newFeedback.isPresent(),
                         false);
