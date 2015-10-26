@@ -66,6 +66,14 @@ restart suripuworkers-sense
 
 sleep 1
 
+echo "Moving sense save ddb configs to /etc/"
+cp /home/build/build/sense_save_ddb.staging.yml /etc/
+
+echo "restarting"
+restart suripuworkers-sense-ddb
+
+sleep 1
+
 echo "Moving index log worker configs to /etc/"
 cp /home/build/build/index_logs_worker.staging.yml /etc/
 

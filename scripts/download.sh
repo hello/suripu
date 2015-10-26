@@ -14,6 +14,7 @@ s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pil
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pill.staging.yml . --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/alarm_worker.staging.yml . --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save.staging.yml . --force
+s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save_ddb.staging.yml . --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/index_logs_worker.staging.yml . --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_logs.staging.yml . --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/insights_generator.staging.yml . --force

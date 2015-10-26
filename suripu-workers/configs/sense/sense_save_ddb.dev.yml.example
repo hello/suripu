@@ -1,4 +1,4 @@
-metrics_enabled: true
+metrics_enabled: false
 debug: false
 graphite:
   host: carbon.hostedgraphite.com
@@ -10,12 +10,17 @@ graphite:
 
 
 common_db:
+  # the name of your JDBC driver
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
-  properties:
-    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+
+  # the username
+  user: your postgresql username
+
+  # the password
+  password: your postgresql password
+
+  # the JDBC URL
+  url: jdbc:postgresql://localhost:5432/[your postgresql database name]
 
   # any properties specific to your JDBC driver:
   properties:
@@ -28,10 +33,10 @@ common_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 2
+  minSize: 8
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 32
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -43,12 +48,17 @@ common_db:
   closeConnectionIfIdleFor: 1 minute
 
 sensors_db:
+  # the name of your JDBC driver
   driverClass: org.postgresql.Driver
-  user: sensors
-  password: hello-sensors
-  url: jdbc:postgresql://sensors-2.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
-  properties:
-    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+
+  # the username
+  user: your postgresql username
+
+  # the password
+  password: your postgresql password
+
+  # the JDBC URL
+  url: jdbc:postgresql://localhost:5432/[your postgresql database name]
 
   # any properties specific to your JDBC driver:
   properties:
@@ -61,10 +71,10 @@ sensors_db:
   validationQuery: "/* MyService Health Check */ SELECT 1"
 
   # the minimum number of connections to keep open
-  minSize: 2
+  minSize: 8
 
   # the maximum number of connections to keep open
-  maxSize: 8
+  maxSize: 32
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false
@@ -80,9 +90,9 @@ kinesis:
   streams :
     sense_sensors_data : sense_sensors_data
 
-app_name: SenseSaveConsumerProd
+app_name: SenseSaveConsumerDevDDB
 
-max_records: 300
+max_records: 100
 
 # Logging settings.
 logging:
@@ -97,13 +107,13 @@ logging:
     com.hello.suripu.workers: DEBUG
   # Settings for logging to a file.
   file:
-    enabled: true
+    enabled: false
     threshold: DEBUG
-    currentLogFilename: /var/log/suripu-workers/suripu-workers-sense.log
+    currentLogFilename: /var/log/suripu-workers/suripu-workers-sense-ddb.log
     # When the log file rotates, the archived log will be renamed to this and gzipped. The
     # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
     # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
-    archivedLogFilenamePattern: /var/log/suripu-workers/suripu-workers-sense-%d{yyyy-MM-dd}.log.gz
+    archivedLogFilenamePattern: /var/log/suripu-workers/suripu-workers-sense-ddb-%d{yyyy-MM-dd}.log.gz
     # The number of archived files to keep.
     archivedFileCount: 7
     # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
@@ -112,20 +122,20 @@ logging:
 dynamodb:
   region: us-east-1
   tables:
-    alarm_info: prod_alarm_info
+    alarm_info: alarm_info
     features: features
-    sense_prefix : prod_sense #not used at the moment but we need it here
-    sense_last_seen : prod_sense_last_seen
-    calibration: prod_calibration
-    device_data: prod_device_data
+    sense_prefix : sense
+    sense_last_seen : sense_last_seen
+    calibration: calibration
+    device_data: device_data
   endpoints:
-    alarm_info: http://dynamodb.us-east-1.amazonaws.com
-    features : http://dynamodb.us-east-1.amazonaws.com
-    sense_prefix: http://dynamodb.us-east-1.amazonaws.com
-    sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
-    calibration : http://dynamodb.us-east-1.amazonaws.com
-    device_data: http://dynamodb.us-east-1.amazonaws.com
+    alarm_info: http://localhost:7777
+    features : http://localhost:7777
+    sense_prefix : http://localhost:7777
+    sense_last_seen : http://localhost:7777
+    calibration: http://localhost:7777
+    device_data: http://localhost:7777
 
 redis:
-  host: stats.xoe7je.0001.use1.cache.amazonaws.com
+  host: localhost
   port: 6379

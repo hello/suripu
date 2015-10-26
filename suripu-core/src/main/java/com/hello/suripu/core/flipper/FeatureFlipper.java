@@ -21,6 +21,7 @@ public class FeatureFlipper {
     public final static String DEBUG_MODE_PILL_PAIRING = "debug-mode-pill-pairing";
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String DUST_SMOOTH = "dust_smooth";
+    public final static String DYNAMODB_DEVICE_DATA = "dynamodb_device_data";
 
     public final static String ENABLE_OTA_UPDATES = "enable_ota_updates";
     public final static String ENVIRONMENT_IN_TIMELINE_SCORE = "environment_in_timeline_score";
@@ -87,6 +88,4 @@ public class FeatureFlipper {
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_KINESIS_TIMEZONES = "worker_kinesis_timezones";
-
-
 }

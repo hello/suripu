@@ -133,4 +133,8 @@ public class BaseResource {
     protected Boolean hasPillHeartBeatDynamoDBReadEnabled(final String externalPillId) {
         return featureFlipper.deviceFeatureActive(FeatureFlipper.PILL_HEARTBEAT_DYNAMODB_READ, externalPillId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasDeviceDataDynamoDBEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA, accountId, Collections.EMPTY_LIST);
+    }
 }

@@ -53,6 +53,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final Integer maxRecords;
+    private final boolean updateLastSeen;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
@@ -66,19 +67,20 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceReadDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords) {
+    public SenseSaveProcessor(final DeviceReadDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords, final boolean updateLastSeen) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
         this.maxRecords = maxRecords;
+        this.updateLastSeen = updateLastSeen;
 
-        this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
-        this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
-        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
-        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
-        this.fetchTimezones = Metrics.defaultRegistry().newTimer(SenseSaveProcessor.class, "fetch-timezones");
-        this.capacity = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "messages", "messages-processed", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "batch", "batch-saved", TimeUnit.SECONDS);
+        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
+        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "clock", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.fetchTimezones = Metrics.defaultRegistry().newTimer(deviceDataDAO.getClass(), "fetch-timezones");
+        this.capacity = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "capacity", "capacity", TimeUnit.SECONDS);
 
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
@@ -253,7 +255,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
-        if(!lastSeenDeviceData.isEmpty()) {
+        if(!lastSeenDeviceData.isEmpty() && this.updateLastSeen) {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 

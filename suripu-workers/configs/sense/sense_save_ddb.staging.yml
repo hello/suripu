@@ -1,4 +1,4 @@
-metrics_enabled: true
+metrics_enabled: false
 debug: false
 graphite:
   host: carbon.hostedgraphite.com
@@ -11,9 +11,9 @@ graphite:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -44,9 +44,9 @@ common_db:
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: sensors
-  password: hello-sensors
-  url: jdbc:postgresql://sensors-2.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -78,11 +78,11 @@ sensors_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    sense_sensors_data : sense_sensors_data
+    sense_sensors_data : dev_sense_sensors_data
 
-app_name: SenseSaveConsumerProd
+app_name: SenseSaveConsumerDDB
 
-max_records: 300
+max_records: 100
 
 # Logging settings.
 logging:
@@ -99,11 +99,11 @@ logging:
   file:
     enabled: true
     threshold: DEBUG
-    currentLogFilename: /var/log/suripu-workers/suripu-workers-sense.log
+    currentLogFilename: /var/log/suripu-workers/suripu-workers-sense-ddb.log
     # When the log file rotates, the archived log will be renamed to this and gzipped. The
     # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
     # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
-    archivedLogFilenamePattern: /var/log/suripu-workers/suripu-workers-sense-%d{yyyy-MM-dd}.log.gz
+    archivedLogFilenamePattern: /var/log/suripu-workers/suripu-workers-sense-ddb-%d{yyyy-MM-dd}.log.gz
     # The number of archived files to keep.
     archivedFileCount: 7
     # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
@@ -112,12 +112,12 @@ logging:
 dynamodb:
   region: us-east-1
   tables:
-    alarm_info: prod_alarm_info
+    alarm_info: alarm_info
     features: features
-    sense_prefix : prod_sense #not used at the moment but we need it here
-    sense_last_seen : prod_sense_last_seen
-    calibration: prod_calibration
-    device_data: prod_device_data
+    sense_prefix: sense
+    sense_last_seen : sense_last_seen
+    calibration : calibration
+    device_data: device_data
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
@@ -127,5 +127,5 @@ dynamodb:
     device_data: http://dynamodb.us-east-1.amazonaws.com
 
 redis:
-  host: stats.xoe7je.0001.use1.cache.amazonaws.com
+  host: localhost
   port: 6379
