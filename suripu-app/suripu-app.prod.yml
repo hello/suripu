@@ -352,8 +352,8 @@ device_data:
 
 timeline_model_ensembles:
   bucket: hello-timeline-models
-  key: independent.base64
+  key: normal3ensemble.base64
 
 timeline_seed_model:
   bucket: hello-timeline-models
-  key: normal.base64
+  key: normal3.base64
