@@ -46,7 +46,7 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
     // id,pill_id,firmware_version,battery_level,last_updated,uptime,fw_version
     private String pillDataFilename = dataDir + "test_data";
 
-    private Float sleepMillis = 500.0f; // minimum millisecs to backoff when writes get throttled
+    private Float sleepMilliSeconds = 500.0f; // minimum millisecs to backoff when writes get throttled
     private Integer threadSize = 4; // no. of threads for writing to Dynamo
     private Float dynamoWriteThroughput = 2.0f; // dynamoDB write throughput
     private Integer rawBatchSize = 100; // number of rows to read from csv before sending to Dynamo
@@ -69,8 +69,8 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
 
         @Override
         public Set<PillHeartBeat> call() {
-            final Set<PillHeartBeat> unprocessed = this.pillHeartBeatDAODynamoDB.put(this.heartBeats);
-            return unprocessed;
+            final Set<PillHeartBeat> unprocessedHeartbeats = this.pillHeartBeatDAODynamoDB.put(this.heartBeats);
+            return unprocessedHeartbeats;
         }
     }
 
@@ -96,7 +96,7 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
         client.setEndpoint(config.getEndpoint());
         final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB = PillHeartBeatDAODynamoDB.create(client, tableName);
 
-        ExecutorService service = Executors.newFixedThreadPool(this.threadSize);
+        final ExecutorService service = Executors.newFixedThreadPool(this.threadSize);
 
         final File csvFile = new File(this.pillDataFilename);
         try {
@@ -125,7 +125,8 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
                             DateTimeUtil.datetimeStringToDateTime(columns[4].substring(0, 18)) // utc_dt
                     );
 
-                    uniqueHeartBeats.put(this.getPillHash(heartBeat), heartBeat); // overwrite with latest
+                    // create mega-batch of data with unique Hash-Range key, overwrite with latest
+                    uniqueHeartBeats.put(this.getPillHash(heartBeat), heartBeat);
 
                     // read N distinct rows, then send to Dynamo with multiple threads
                     int loopCount = 0;
@@ -138,15 +139,19 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
                             final Set<PillHeartBeat> toSaveHeartbeats = Sets.newHashSet(uniqueHeartBeats.values());
                             uniqueHeartBeats.clear();
 
+                            // create batches of data to save to DynamoDB
                             final int numIterations = toSaveHeartbeats.size() / DYNAMO_DB_BATCH_PUT_SIZE + 1;
                             for (int i = 0; i < numIterations; i++) {
                                 final Set<PillHeartBeat> toSaveSet = ImmutableSet.copyOf(Iterables.limit(toSaveHeartbeats, DYNAMO_DB_BATCH_PUT_SIZE));
                                 toSaveHeartbeats.removeAll(toSaveSet);
                                 toSaveSize += toSaveSet.size();
-                                final Future<Set<PillHeartBeat>> res = service.submit(new DynamoDBInsert(pillHeartBeatDAODynamoDB, toSaveSet));
-                                results.add(res);
+
+                                // blast DynamoDB with multi-threaded writes
+                                final Future<Set<PillHeartBeat>> result = service.submit(new DynamoDBInsert(pillHeartBeatDAODynamoDB, toSaveSet));
+                                results.add(result);
                             }
 
+                            // get un-saved data, and re-add to batch
                             int totUnprocessed = 0;
                             for (Future<Set<PillHeartBeat>> unprocessedHeartbeats: results) {
                                 final int unprocessedSize = unprocessedHeartbeats.get().size();
@@ -162,11 +167,13 @@ public class MigratePillHeartbeatCommand extends ConfiguredCommand<SuripuAppConf
                             results.clear();
 
                             if (uniqueHeartBeats.size() < DYNAMO_DB_BATCH_PUT_SIZE) {
+                                // un-saved size less than max Dynamo batch size, process unsaved in the next mega-batch
                                 LOGGER.debug("Done with batch {}, loop count = {}", batchCount, loopCount);
                                 savedItems += toSaveSize;
                                 break;
                             } else {
-                                final long sleepMilliseconds = (int) ((float) totUnprocessed / this.dynamoWriteThroughput * this.sleepMillis);
+                                // We got some un-saved data, sleep a  little to let DynamoDB breathe
+                                final long sleepMilliseconds = (int) ((float) totUnprocessed / this.dynamoWriteThroughput * this.sleepMilliSeconds);
                                 LOGGER.debug("Batch {} - Iteration {}: unprocessed count {}, count items {}, sleep {}, unique size {}",
                                         batchCount, loopCount, totUnprocessed, countItems, sleepMilliseconds, uniqueHeartBeats.size());
                                 Thread.sleep(sleepMilliseconds);
