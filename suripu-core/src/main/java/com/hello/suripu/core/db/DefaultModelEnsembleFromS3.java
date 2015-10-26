@@ -38,7 +38,7 @@ public class DefaultModelEnsembleFromS3 implements DefaultModelEnsembleDAO {
 
             if (priorsOptional.isPresent()) {
                 onlineHmmPriors = priorsOptional.get();
-                LOGGER.error("successfully pulled default models from {}/{}",bucket,key);
+                LOGGER.info("successfully pulled default models from {}/{}",bucket,key);
             }
             else {
                 LOGGER.error("failed to find default models for the ensemble");
