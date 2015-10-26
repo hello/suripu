@@ -15,7 +15,6 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
     private final TrackerMotionDAO trackerMotionDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final KeyStore pillKeyStore;
-    private final PillHeartBeatDAO pillHeartBeatDAO;
     private final DeviceDAO deviceDAO;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
 
@@ -23,14 +22,12 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
             final TrackerMotionDAO trackerMotionDAO,
             final int batchSize,
             final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-            final PillHeartBeatDAO pillHeartBeatDAO,
             final KeyStore pillKeyStore,
             final DeviceDAO deviceDAO,
             final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
         this.mergedUserInfoDynamoDB= mergedUserInfoDynamoDB;
-        this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
@@ -38,6 +35,6 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new SavePillDataProcessor(trackerMotionDAO, batchSize, pillHeartBeatDAO, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, pillHeartBeatDAODynamoDB);
+        return new SavePillDataProcessor(trackerMotionDAO, batchSize, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, pillHeartBeatDAODynamoDB);
     }
 }

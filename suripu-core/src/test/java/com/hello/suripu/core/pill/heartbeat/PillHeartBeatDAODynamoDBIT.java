@@ -3,12 +3,15 @@ package com.hello.suripu.core.pill.heartbeat;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -29,18 +32,37 @@ public class PillHeartBeatDAODynamoDBIT {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private BasicAWSCredentials awsCredentials;
-    private AmazonDynamoDBClient amazonDynamoDBClient;
+    private SimulatedThrottlingDynamoDBClient amazonDynamoDBClient;
     private PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
 
     private static final String TABLE_NAME = "integration_test_pill_heartbeat";
 
+    private class SimulatedThrottlingDynamoDBClient extends AmazonDynamoDBClient {
+        public SimulatedThrottlingDynamoDBClient(final BasicAWSCredentials awsCredentials, final ClientConfiguration clientConfiguration) {
+            super(awsCredentials, clientConfiguration);
+        }
+
+        public int numTries = 0;
+        public boolean throttle = false;
+
+        @Override
+        public BatchWriteItemResult batchWriteItem(BatchWriteItemRequest batchWriteItemRequest) {
+            // Force caller to try this a couple of times.
+            numTries++;
+            if (throttle && (numTries < 3)) {
+                LOGGER.info("Simulating throttling...");
+                return new BatchWriteItemResult().withUnprocessedItems(batchWriteItemRequest.getRequestItems());
+            }
+            return super.batchWriteItem(batchWriteItemRequest);
+        }
+    }
 
     @Before
     public void setUp() throws Exception {
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
         final ClientConfiguration clientConfiguration = new ClientConfiguration();
         clientConfiguration.setMaxErrorRetry(0);
-        this.amazonDynamoDBClient = new AmazonDynamoDBClient(this.awsCredentials, clientConfiguration);
+        this.amazonDynamoDBClient = new SimulatedThrottlingDynamoDBClient(this.awsCredentials, clientConfiguration);
         this.amazonDynamoDBClient.setEndpoint("http://localhost:7777");
 
         tearDown();
@@ -128,7 +150,7 @@ public class PillHeartBeatDAODynamoDBIT {
         pillHeartBeatDAODynamoDB.put(pillHeartBeatSet);
 
         final List<PillHeartBeat> pillHeartBeats = pillHeartBeatDAODynamoDB.get(pillId, now);
-        assertThat(pillHeartBeats.size(), is(1));
+        assertThat(pillHeartBeats.isEmpty(), is(false));
     }
 
     @Test
@@ -148,8 +170,9 @@ public class PillHeartBeatDAODynamoDBIT {
     public void testInsertDuplicates() {
         final String pillId = "ABC";
         final DateTime now = DateTime.now().withTimeAtStartOfDay();
-        final PillHeartBeat heartBeat = PillHeartBeat.create(pillId, 0, 0, 0, now.minusHours(1));
-        Set<PillHeartBeat> pillHeartBeatSet = ImmutableSet.of(heartBeat, heartBeat);
+        final PillHeartBeat heartBeat1 = PillHeartBeat.create(pillId, 0, 0, 0, now.minusHours(1));
+        final PillHeartBeat heartBeat2 = PillHeartBeat.create(pillId, 10, 0, 0, now.minusHours(1));
+        Set<PillHeartBeat> pillHeartBeatSet = ImmutableSet.of(heartBeat1, heartBeat2);
         pillHeartBeatDAODynamoDB.put(pillHeartBeatSet);
 
         final List<PillHeartBeat> pillHeartBeats = pillHeartBeatDAODynamoDB.get(pillId, now);
@@ -170,5 +193,18 @@ public class PillHeartBeatDAODynamoDBIT {
         final List<PillHeartBeat> pillHeartBeats = pillHeartBeatDAODynamoDB.get(pillId, now);
         assertThat(pillHeartBeats.size(), is(1));
         assertThat(pillHeartBeats.get(0).batteryLevel, is(heartBeat1.batteryLevel));
+    }
+
+    @Test
+    public void testThrottledWrites() {
+        final String pillId = "ABC123";
+        final DateTime now = DateTime.now().withTimeAtStartOfDay();
+        final Set<PillHeartBeat> heartBeats = Sets.newHashSet();
+        for (int i = 0; i < 100; i++ ) {
+            heartBeats.add(PillHeartBeat.create(pillId, 100 - i, 0, 0, now.plusMinutes(i)));
+        }
+        this.amazonDynamoDBClient.throttle = true;
+        final Set<PillHeartBeat> unprocessed = pillHeartBeatDAODynamoDB.put(heartBeats);
+        assertThat(unprocessed.isEmpty(), is(false));
     }
 }
