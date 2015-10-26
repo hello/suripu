@@ -240,8 +240,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
-        // TODO refactor
-        return new DateTime(DateTime.parse(Attribute.RANGE_KEY.get(item).getS().substring(0, DATE_TIME_STRING_TEMPLATE.length()) + ":00Z", DATE_TIME_READ_FORMATTER).getMillis(), DateTimeZone.UTC);
+        final String dateString = Attribute.RANGE_KEY.get(item).getS().substring(0, DATE_TIME_STRING_TEMPLATE.length());
+        return DateTime.parse(dateString + ":00Z", DATE_TIME_READ_FORMATTER);
     }
 
     private String externalDeviceIdFromDDBItem(final Map<String, AttributeValue> item) {

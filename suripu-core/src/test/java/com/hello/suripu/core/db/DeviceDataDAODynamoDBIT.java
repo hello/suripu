@@ -275,6 +275,26 @@ public class DeviceDataDAODynamoDBIT {
     }
 
     @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationMultipleSenseIds() {
+        final Long accountId = new Long(1);
+        final String deviceId1 = "2";
+        final String deviceId2 = "3";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId1, offsetMillis, firstTime);
+        addDataForQuerying(accountId, deviceId2, offsetMillis, firstTime);
+
+        assertThat(getTableCount(), is(14));
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId, deviceId1, firstTime, firstTime.plusMinutes(10), 1).size(),
+                is(7));
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId, deviceId2, firstTime, firstTime.plusMinutes(10), 1).size(),
+                is(7));
+    }
+
+    @Test
     public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5And60Minutes() {
         final Long accountId = new Long(1);
         final String deviceId = "2";
