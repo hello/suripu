@@ -37,9 +37,6 @@ public class ChiSquarePdf implements HmmPdfInterface {
 
             double pdfEval = this.chiSquaredDistribution.density(inputValue * scale) ;
 
-            if (pdfEval < MIN_LIKELIHOOD) {
-                pdfEval = MIN_LIKELIHOOD;
-            }
 
             result[i] = Math.log(pdfEval);
 

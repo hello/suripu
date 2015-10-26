@@ -35,9 +35,6 @@ public class BetaPdf implements HmmPdfInterface {
 
             double val = this.betaDistribution.density(m);
 
-            if (val < MIN_LIKELIHOOD) {
-                val = MIN_LIKELIHOOD;
-            }
 
             y[i] =  Math.log(val);
         }
