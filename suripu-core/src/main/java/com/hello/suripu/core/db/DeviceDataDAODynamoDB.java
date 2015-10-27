@@ -67,7 +67,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         AMBIENT_AIR_QUALITY_RAW ("aqr", "N"),
         AUDIO_PEAK_BACKGROUND_DB ("apbg", "N"),
         AUDIO_PEAK_DISTURBANCES_DB ("apd", "N"),
-        AUDIO_NUM_DISTURBANCES ("7", "and"),
+        AUDIO_NUM_DISTURBANCES ("and", "N"),
         OFFSET_MILLIS ("om", "N"),
         LOCAL_UTC_TIMESTAMP ("lutcts", "S"),
         WAVE_COUNT ("wc", "N"),
