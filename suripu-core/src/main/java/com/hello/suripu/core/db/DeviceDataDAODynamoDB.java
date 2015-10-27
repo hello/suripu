@@ -51,6 +51,21 @@ import java.util.Set;
 
 /**
  * Created by jakepiccolo on 10/9/15.
+ *
+ * Schema:
+ *  account_id(HK)  |  timestamp|external_device_id(RK)  |  ambient_temp  |  (rest of the values...)
+ *
+ * The hash key is the account_id, so it is required for getting device data and all data is attached to an account.
+ *
+ * The range key is the UTC timestamp, concatenated with the (external) device id. This is so that we can always query by time.
+ * Why add on the external device ID? To ensure uniqueness of hash key + range key if you are paired to multiple Senses.
+ * The device ID is added to the end of the range key so that using it in a range query is optional, i.e. it is possible to get
+ * data for all devices for a given account and time range. Getting data for a specific device requires additional in-memory filtering.
+ * Example range key: "2015-10-22 10:00|ABCDEF"
+ *
+ * We shard tables monthly based on the UTC timestamp, in order to better utilize our throughput on recent time series data.
+ * See http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GuidelinesForTables.html#GuidelinesForTables.TimeSeriesDataAccessPatterns
+ * and http://stackoverflow.com/a/30200359
  */
 public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
@@ -60,7 +75,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
     public enum Attribute {
         ACCOUNT_ID ("aid", "N"),
-        RANGE_KEY ("ts|dev", "S"),
+        RANGE_KEY ("ts|dev", "S"),  // <utc_timestamp>|<external_device_id>
         AMBIENT_TEMP ("tmp", "N"),
         AMBIENT_LIGHT ("lite", "N"),
         AMBIENT_LIGHT_VARIANCE ("litevar", "N"),
