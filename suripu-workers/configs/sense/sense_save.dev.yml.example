@@ -127,7 +127,7 @@ dynamodb:
     sense_prefix : sense
     sense_last_seen : sense_last_seen
     calibration: calibration
-    device_data: device_data
+    device_data: device_data_by_account
   endpoints:
     alarm_info: http://localhost:7777
     features : http://localhost:7777

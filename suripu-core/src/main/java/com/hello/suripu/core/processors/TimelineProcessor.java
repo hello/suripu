@@ -486,6 +486,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
             );
         } else {
+            // TODO the feature flipper has been at 100 for a while, remove this?
             // query dates are in local_utc_ts
             LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
 

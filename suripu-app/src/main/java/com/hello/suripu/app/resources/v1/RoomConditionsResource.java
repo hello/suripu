@@ -511,7 +511,7 @@ public class RoomConditionsResource extends BaseResource {
         if (hasDeviceDataDynamoDBEnabled(accountId)) {
             try {
                 timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                        accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                        accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
                         sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
             } catch (IllegalArgumentException e) {
                 LOGGER.warn("Caught exception while attempting to get time series from DynamoDB: {}.\n");
