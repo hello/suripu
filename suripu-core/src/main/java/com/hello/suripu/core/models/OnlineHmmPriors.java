@@ -360,7 +360,7 @@ public class  OnlineHmmPriors {
 
         return builder.build().toByteArray();
     }
-    
+
 }
 
 

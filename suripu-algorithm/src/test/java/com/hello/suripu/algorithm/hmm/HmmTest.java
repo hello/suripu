@@ -167,7 +167,7 @@ public class HmmTest {
         HiddenMarkovModel hmm = createPoissonOnlyModel(A, pi, model);
 
         final Integer [] possibleEndStates = {0};
-        HmmDecodedResult result =  hmm.decode(this.mydata, possibleEndStates);
+        HmmDecodedResult result =  hmm.decode(this.mydata, possibleEndStates,HiddenMarkovModel.ORIGINAL_MIN_TRANSITION_LIKELIHOOD);
 
 
         for (int t = 0; t < result.bestPath.size(); t++) {

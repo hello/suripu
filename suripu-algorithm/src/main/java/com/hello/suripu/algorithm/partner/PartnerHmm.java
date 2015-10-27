@@ -284,7 +284,7 @@ public class PartnerHmm {
         final Integer [] endStates = new Integer[1];
         endStates[0] = NUM_STATES - 1;
 
-        final HmmDecodedResult result = hmm.decode(x, endStates);
+        final HmmDecodedResult result = hmm.decode(x, endStates,HiddenMarkovModel.ORIGINAL_MIN_TRANSITION_LIKELIHOOD);
 
         LOGGER.debug("meas = {}",x[0]);
        // LOGGER.debug("fracs = {}",fracs);

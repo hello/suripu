@@ -21,6 +21,7 @@ import java.util.Map;
  */
 public class HiddenMarkovModel {
     static private final double MIN_NORMALIZING = 1e-6;
+    static public final double ORIGINAL_MIN_TRANSITION_LIKELIHOOD = 1e-15;
     public final int numStates;
     final int numFreeParams;
     double [][] A;
@@ -41,7 +42,6 @@ public class HiddenMarkovModel {
         this.initialState = initialStateProbs;
         this.obsModels = obsModels;
         this.numFreeParams = numFreeParams; //whatever, not important here since this is only used for test now
-
     }
 
     public HiddenMarkovModel(final int numStates,final List<Double> stm,final List<Double> initialProbs,final HmmPdfInterface [] obsModels,final int numFreeParams) {
@@ -147,13 +147,10 @@ public class HiddenMarkovModel {
         return A;
     }
 
-    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates) {
+
+    public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates, final double minTransitionLikelihood) {
 
         final int numObs = observations[0].length;
-        final int [] minStateDurations = new int[numStates];
-        Arrays.fill(minStateDurations, 1);
-
-        int j,i,t;
 
         final double [] scores = new double[numStates];
 
@@ -163,9 +160,9 @@ public class HiddenMarkovModel {
         double [][] logA = clone2d(this.A); //copy
 
         //nominal A matrix
-        for (j = 0; j < numStates; j++) {
-            for (i = 0; i < numStates; i++) {
-                logA[j][i] = LogMath.eln(logA[j][i]);
+        for (int j = 0; j < numStates; j++) {
+            for (int i = 0; i < numStates; i++) {
+                logA[j][i] = LogMath.eln(logA[j][i] + minTransitionLikelihood);
             }
         }
 
@@ -177,38 +174,47 @@ public class HiddenMarkovModel {
             LOGGER.info("{}",logbmap[j]);
         }
 */
-        final int [] zeta = new int[numStates]; //this is the count for how long you've been in the same state
-        //see the paper "Long-term Activities Segmentation using Viterbi Algorithm with a k-minimum-consecutive-states Constraint"
-        //by Enrique Garcia-Ceja, Ramon Brena, 2014 WHICH IS WRONG.  I.e. not guaranteed optimal given constraints.  This implementation si bettter.
-
-        for (i = 0; i < numStates; i++) {
-            zeta[i] = 1;
-        }
 
         //init
-        for (i = 0; i < numStates; i++) {
-            phi[i][0] = LogMath.elnproduct(logbmap[i][0], LogMath.eln(initialState[i]));
+        {
+            double maxInit = LogMath.LOGZERO;
+            int maxIdx = 0;
+            for (int i = 0; i < numStates; i++) {
+                phi[i][0] = LogMath.elnproduct(logbmap[i][0], LogMath.eln(initialState[i]));
+
+                if (phi[i][0] > maxInit) {
+                    maxInit = phi[i][0];
+                    maxIdx = i;
+                }
+            }
+
+            for (int i = 0; i < numStates; i++) {
+                vindices[i][0] = maxIdx;
+            }
+
+
         }
 
-        for (t = 1; t < numObs; t++) {
+
+        for (int t = 1; t < numObs; t++) {
 
             final double [][] logAThisIndex = clone2d(logA);
 
-            for (j = 0; j < numStates; j++) {
+            for (int j = 0; j < numStates; j++) {
 
                 final double obscost = logbmap[j][t];
 
-                for (i = 0; i < numStates; i++) {
+                for (int i = 0; i < numStates; i++) {
                     scores[i] = LogMath.elnproduct(logAThisIndex[i][j], obscost);
                 }
 
-                for (i = 0; i < numStates; i++) {
+                for (int i = 0; i < numStates; i++) {
                     scores[i] = LogMath.elnproduct(scores[i], phi[i][t - 1]);
                 }
 
                 final List<CostWithIndex> costsWithIndex = Lists.newArrayList();
 
-                for (i = 0; i < numStates; i++) {
+                for (int i = 0; i < numStates; i++) {
                     costsWithIndex.add(new CostWithIndex(i, scores[i]));
                 }
 
@@ -218,39 +224,10 @@ public class HiddenMarkovModel {
                 //check to see if any of the other possible "from" states (i.e. i != j)
                 //are below min. duration.  If so, we must force a transition from that state
 
-                int maxIdx = costsWithIndex.get(0).idx;
-                double maxVal = costsWithIndex.get(0).cost;
+                final int maxIdx = costsWithIndex.get(0).idx;
+                final double maxVal = costsWithIndex.get(0).cost;
 
-                for (i = 0; i < numStates; i++) {
-                    //not possible, quit
-                    final int idx = costsWithIndex.get(i).idx;
-                    final double cost = costsWithIndex.get(i).cost;
 
-                    if (cost == Double.NEGATIVE_INFINITY) {
-                        break;
-                    }
-
-                    if (zeta[idx] < minStateDurations[idx] && idx != j) {
-                        maxIdx = idx;
-                        maxVal = cost;
-                        break;
-                    }
-                }
-
-                //best path is to stay?  increment zeta.
-                if (maxIdx == j) {
-                    zeta[j] += 1;
-                }
-                else {
-                    zeta[j] = 1;
-                }
-
-                //if zeta of the state I'm coming FROM is above min durations,
-                //I'll let the transition happen.  Otherwise, pick the next best state.
-
-                if (maxVal == Double.NEGATIVE_INFINITY) {
-                    maxIdx = j;
-                }
 
                 phi[j][t] = maxVal;
                 vindices[j][t] = maxIdx;
@@ -266,11 +243,11 @@ public class HiddenMarkovModel {
         //we do this because we are really not sure about which end-state is the best
         final double [] pathCosts = new double[possibleEndStates.length];
 
-        for (i = 0; i < possibleEndStates.length; i++) {
+        for (int i = 0; i < possibleEndStates.length; i++) {
             path[numObs - 1] = possibleEndStates[i];
 
             //#backtrack to get optimal path
-            for (t = numObs - 2; t >= 0; t--) {
+            for (int t = numObs - 2; t >= 0; t--) {
                 path[t] = vindices[path[t + 1]][t];
             }
 
@@ -279,7 +256,8 @@ public class HiddenMarkovModel {
 
         double maxScore = pathCosts[0];
         int minIdx = 0;
-        for (i = 1; i < possibleEndStates.length; i++) {
+
+        for (int i = 1; i < possibleEndStates.length; i++) {
             if (pathCosts[i] > maxScore) {
                 minIdx = i;
                 maxScore = scores[i];
@@ -289,8 +267,13 @@ public class HiddenMarkovModel {
         //recompute minimum path again
         path[numObs - 1] = possibleEndStates[minIdx];
         //#backtrack to get optimal path
-        for (t = numObs - 2; t >= 0; t--) {
+        for (int t = numObs - 2; t >= 0; t--) {
             path[t] = vindices[path[t + 1]][t];
+
+            if (t == 0) {
+                int foo = 3;
+                foo++;
+            }
         }
 
         final double pathCost = -maxScore;
@@ -300,7 +283,7 @@ public class HiddenMarkovModel {
 
         final List<Integer> pathObjs = Lists.newArrayList();
 
-        for (t = 0; t < path.length; t++) {
+        for (int t = 0; t < path.length; t++) {
             pathObjs.add(path[t]);
         }
 

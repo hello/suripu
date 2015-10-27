@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
+import com.hello.suripu.algorithm.hmm.LogMath;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ import java.util.Map;
  */
 public class SensorDataReduction {
     public final Map<String,HiddenMarkovModel> hmmByModelName;
-
+    public final double MIN_LIKELIHOOD_FOR_TRANSITIONS = 1e-320;
     public SensorDataReduction(Map<String, HiddenMarkovModel> hmmByModelName) {
         this.hmmByModelName = hmmByModelName;
     }
@@ -39,9 +40,11 @@ public class SensorDataReduction {
         //DECODE ALL SENSOR DATA INTO DISCRETE "CLASSIFICATIONS"
 
             final Integer [] possibleEndStates = new Integer[1];
+
+            //TODO have model specify end states
             possibleEndStates[0] = entry.getValue().numStates - 1;
 
-            final HmmDecodedResult hmmDecodedResult = entry.getValue().decode(sensorData, possibleEndStates);
+            final HmmDecodedResult hmmDecodedResult = entry.getValue().decode(sensorData, possibleEndStates, MIN_LIKELIHOOD_FOR_TRANSITIONS);
 
             pathsByModelId.put(entry.getKey(),hmmDecodedResult.bestPath);
         }
