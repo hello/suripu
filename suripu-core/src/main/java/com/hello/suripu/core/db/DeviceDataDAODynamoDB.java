@@ -63,6 +63,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         RANGE_KEY ("ts|dev", "S"),
         AMBIENT_TEMP ("tmp", "N"),
         AMBIENT_LIGHT ("lite", "N"),
+        AMBIENT_LIGHT_VARIANCE ("litevar", "N"),
         AMBIENT_HUMIDITY ("hum", "N"),
         AMBIENT_AIR_QUALITY_RAW ("aqr", "N"),
         AUDIO_PEAK_BACKGROUND_DB ("apbg", "N"),
@@ -148,6 +149,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         item.put(Attribute.RANGE_KEY.name, getRangeKey(data.dateTimeUTC, data.externalDeviceId));
         item.put(Attribute.AMBIENT_TEMP.name, new AttributeValue().withN(String.valueOf(data.ambientTemperature)));
         item.put(Attribute.AMBIENT_LIGHT.name, new AttributeValue().withN(String.valueOf(data.ambientLight)));
+        item.put(Attribute.AMBIENT_LIGHT_VARIANCE.name, new AttributeValue().withN(String.valueOf(data.ambientLightVariance)));
         item.put(Attribute.AMBIENT_HUMIDITY.name, new AttributeValue().withN(String.valueOf(data.ambientHumidity)));
         item.put(Attribute.AMBIENT_AIR_QUALITY_RAW.name, new AttributeValue().withN(String.valueOf(data.ambientAirQualityRaw)));
         item.put(Attribute.AUDIO_PEAK_BACKGROUND_DB.name, new AttributeValue().withN(String.valueOf(data.audioPeakBackgroundDB)));
@@ -257,6 +259,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .withOffsetMillis(template.offsetMillis)
                 .withAmbientTemperature((int) aggregator.min(Attribute.AMBIENT_TEMP.name))
                 .calibrateAmbientLight((int) aggregator.roundedMean(Attribute.AMBIENT_LIGHT.name))
+                .withAmbientLightVariance((int) aggregator.roundedMean(Attribute.AMBIENT_LIGHT_VARIANCE.name))
                 .withAmbientHumidity((int) aggregator.roundedMean(Attribute.AMBIENT_HUMIDITY.name))
                 .withWaveCount((int) aggregator.sum(Attribute.WAVE_COUNT.name))
                 .withHoldCount((int) aggregator.sum(Attribute.HOLD_COUNT.name))
