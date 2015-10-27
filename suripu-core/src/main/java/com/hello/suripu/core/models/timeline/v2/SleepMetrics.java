@@ -11,6 +11,14 @@ import java.util.List;
 
 public class SleepMetrics {
 
+    public static final String TOTAL_SLEEP_NAME = "total_sleep";
+    public static final String SOUND_SLEEP_NAME = "sound_sleep";
+    public static final String TIME_TO_SLEEP_NAME = "time_to_sleep";
+    public static final String TIMES_AWAKE_NAME = "times_awake";
+    public static final String FELL_ASLEEP_NAME = "fell_asleep";
+    public static final String WOKE_UP_NAME = "woke_up";
+    public static final Integer MINIMUM_TOTAL_SLEEP_DURATION_MINUTES = 120;
+
     @JsonProperty("name")
     public final String name;
 
@@ -50,18 +58,18 @@ public class SleepMetrics {
         if (maybeStatistics.isPresent() && !maybeStatistics.get().isFromNull()) {
             SleepStats statistics = maybeStatistics.get();
 
-            metrics.add(create("total_sleep", Optional.of(statistics.sleepDurationInMinutes.longValue()),
+            metrics.add(create(TOTAL_SLEEP_NAME, Optional.of(statistics.sleepDurationInMinutes.longValue()),
                     Unit.MINUTES, CurrentRoomState.State.Condition.IDEAL));
-            metrics.add(create("sound_sleep", Optional.of(statistics.soundSleepDurationInMinutes.longValue()),
+            metrics.add(create(SOUND_SLEEP_NAME, Optional.of(statistics.soundSleepDurationInMinutes.longValue()),
                     Unit.MINUTES, CurrentRoomState.State.Condition.IDEAL));
-            metrics.add(create("time_to_sleep", Optional.of(statistics.sleepOnsetTimeMinutes.longValue()),
+            metrics.add(create(TIME_TO_SLEEP_NAME, Optional.of(statistics.sleepOnsetTimeMinutes.longValue()),
                     Unit.MINUTES, CurrentRoomState.State.Condition.IDEAL));
-            metrics.add(create("times_awake", Optional.of(statistics.numberOfMotionEvents.longValue()),
+            metrics.add(create(TIMES_AWAKE_NAME, Optional.of(statistics.numberOfMotionEvents.longValue()),
                     Unit.QUANTITY, CurrentRoomState.State.Condition.IDEAL));
 
-            metrics.add(create("fell_asleep", Optional.of(statistics.sleepTime),
+            metrics.add(create(FELL_ASLEEP_NAME, Optional.of(statistics.sleepTime),
                     Unit.TIMESTAMP, CurrentRoomState.State.Condition.IDEAL));
-            metrics.add(create("woke_up", Optional.of(statistics.wakeTime),
+            metrics.add(create(WOKE_UP_NAME, Optional.of(statistics.wakeTime),
                     Unit.TIMESTAMP, CurrentRoomState.State.Condition.IDEAL));
         }
 
