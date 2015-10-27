@@ -48,7 +48,9 @@ public class DeviceDataDAODynamoDBIT {
     private SimulatedThrottlingDynamoDBClient amazonDynamoDBClient;
     private DeviceDataDAODynamoDB deviceDataDAODynamoDB;
 
-    private static final String TABLE_NAME = "integration_test_device_data";
+    private static final String TABLE_PREFIX = "integration_test_device_data";
+    private static final String OCTOBER_TABLE_NAME = TABLE_PREFIX + "_2015_10";
+    private static final String NOVEMBER_TABLE_NAME = TABLE_PREFIX + "_2015_11";
 
     private class SimulatedThrottlingDynamoDBClient extends AmazonDynamoDBClient {
         public SimulatedThrottlingDynamoDBClient(final BasicAWSCredentials awsCredentials, final ClientConfiguration clientConfiguration) {
@@ -80,29 +82,36 @@ public class DeviceDataDAODynamoDBIT {
 
         tearDown();
 
+        this.deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(amazonDynamoDBClient, TABLE_PREFIX);
+
         try {
-            LOGGER.debug("-------- Creating Table {} ---------", TABLE_NAME);
-            final CreateTableResult result = DeviceDataDAODynamoDB.createTable(TABLE_NAME, amazonDynamoDBClient);
-            LOGGER.debug("Created dynamoDB table {}", result.getTableDescription());
+            LOGGER.debug("-------- Creating Table {} ---------", OCTOBER_TABLE_NAME);
+            final CreateTableResult octResult = deviceDataDAODynamoDB.createTable(new DateTime(2015, 10, 1, 0, 0, DateTimeZone.UTC));
+            LOGGER.debug("Created dynamoDB table {}", octResult.getTableDescription());
+            LOGGER.debug("-------- Creating Table {} ---------", NOVEMBER_TABLE_NAME);
+            final CreateTableResult novResult = deviceDataDAODynamoDB.createTable(new DateTime(2015, 11, 1, 0, 0, DateTimeZone.UTC));
+            LOGGER.debug("Created dynamoDB table {}", novResult.getTableDescription());
         } catch (ResourceInUseException rie){
             LOGGER.warn("Problem creating table");
         }
-        this.deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(amazonDynamoDBClient, TABLE_NAME);
     }
 
     @After
     public void tearDown() throws Exception {
-        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
-                .withTableName(TABLE_NAME);
-        try {
-            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
-        }catch (ResourceNotFoundException ex){
-            LOGGER.warn("Can not delete non existing table");
+        final List<String> tableNames = ImmutableList.of(OCTOBER_TABLE_NAME, NOVEMBER_TABLE_NAME);
+        for (final String name: tableNames) {
+            final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
+                    .withTableName(name);
+            try {
+                this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+            }catch (ResourceNotFoundException ex){
+                LOGGER.warn("Can not delete non existing table {}", name);
+            }
         }
     }
 
-    private int getTableCount() {
-        final ScanRequest scanRequest = new ScanRequest().withTableName(TABLE_NAME);
+    private int getTableCount(final String tableName) {
+        final ScanRequest scanRequest = new ScanRequest().withTableName(tableName);
         final ScanResult scanResult = amazonDynamoDBClient.scan(scanRequest);
         return scanResult.getCount();
     }
@@ -127,12 +136,12 @@ public class DeviceDataDAODynamoDBIT {
 
         final int initialItemsInserted = deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
         assertThat(initialItemsInserted, is(deviceDataList.size()));
-        assertThat(getTableCount(), is(deviceDataList.size()));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(deviceDataList.size()));
 
         // Now insert the exact same thing again. Should work fine in DynamoDB.
         final int duplicateItemsInserted = deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
         assertThat(duplicateItemsInserted, is(deviceDataList.size()));
-        assertThat(getTableCount(), is(deviceDataList.size()));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(deviceDataList.size()));
     }
 
     @Test
@@ -148,7 +157,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build();
         final int insertions = deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
         assertThat(insertions, is(1));
-        assertThat(getTableCount(), is(1));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(1));
     }
 
     @Test
@@ -164,7 +173,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build();
         final int inserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
         assertThat(inserted, is(1));
-        assertThat(getTableCount(), is(1));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(1));
     }
 
     @Test
@@ -180,7 +189,7 @@ public class DeviceDataDAODynamoDBIT {
         this.amazonDynamoDBClient.throttle = true;
         final int inserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
         assertThat(inserted, is(1));
-        assertThat(getTableCount(), is(1));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(1));
     }
 
     private void addDataForQuerying(final Long accountId, final Long deviceId, final Integer offsetMillis, final DateTime firstTime) {

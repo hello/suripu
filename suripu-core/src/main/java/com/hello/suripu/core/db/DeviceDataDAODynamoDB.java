@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.transform.MapEntry;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,6 +31,7 @@ import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -55,7 +57,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private final AmazonDynamoDB dynamoDBClient;
-    private final String tableName;
+    private final String tablePrefix;
 
     public static final class AttributeNames {
         public static final String DEVICE_ID                = "device_id";
@@ -104,12 +106,19 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             .build();
 
 
-    public DeviceDataDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
+    public DeviceDataDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tablePrefix) {
         this.dynamoDBClient = dynamoDBClient;
-        this.tableName = tableName;
+        this.tablePrefix = tablePrefix;
     }
 
-    public static CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient) {
+    public String getTableName(final DateTime dateTime) {
+        final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy_MM");
+        return tablePrefix + "_" + dateTime.toString(formatter);
+    }
+
+    public CreateTableResult createTable(final DateTime dateTime) {
+        final String tableName = getTableName(dateTime);
+
         // attributes
         ArrayList<AttributeDefinition> attributes = Lists.newArrayList();
         attributes.add(new AttributeDefinition().withAttributeName(AttributeNames.DEVICE_ID).withAttributeType("N"));
@@ -181,16 +190,27 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
      */
     public int batchInsert(final List<DeviceData> deviceDataList) {
         // Create a map with hash+range as the key to deduplicate and avoid DynamoDB exceptions
-        final Map<String, WriteRequest> writeRequestMap = Maps.newHashMap();
+        final Map<String, Map<String, WriteRequest>> writeRequestMap = Maps.newHashMap();
         for (final DeviceData data: deviceDataList) {
+            final String tableName = getTableName(data.dateTimeUTC);
             final Map<String, AttributeValue> item = deviceDataToAttributeMap(data);
             final String hashAndRangeKey = item.get(AttributeNames.DEVICE_ID).getN() + item.get(RANGE_KEY_NAME).getS();
             final WriteRequest request = new WriteRequest().withPutRequest(new PutRequest().withItem(item));
-            writeRequestMap.put(hashAndRangeKey, request);
+            if (writeRequestMap.containsKey(tableName)) {
+                writeRequestMap.get(tableName).put(hashAndRangeKey, request);
+            } else {
+                final Map<String, WriteRequest> newMap = Maps.newHashMap();
+                newMap.put(hashAndRangeKey, request);
+                writeRequestMap.put(tableName, newMap);
+            }
         }
 
-        Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(1);
-        requestItems.put(this.tableName, Lists.newArrayList(writeRequestMap.values()));
+        int totalItemsToInsert = 0;
+        Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(writeRequestMap.size());
+        for (final Map.Entry<String, Map<String, WriteRequest>> entry : writeRequestMap.entrySet()) {
+            requestItems.put(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
+            totalItemsToInsert += entry.getValue().values().size();
+        }
 
         int numAttempts = 0;
 
@@ -209,11 +229,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
         if (!requestItems.isEmpty()) {
             LOGGER.warn("Exceeded {} attempts to batch write to Dynamo. {} items left over.",
-                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.get(tableName).size());
-            return writeRequestMap.size() - requestItems.get(tableName).size();
+                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.get(tablePrefix).size());
+            return totalItemsToInsert - requestItems.get(tablePrefix).size();
         }
 
-        return writeRequestMap.size();
+        return totalItemsToInsert;
     }
 
     /**
@@ -302,7 +322,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return resultList;
     }
 
-    private List<Map<String, AttributeValue>> query(final Map<String, Condition> queryConditions, final Collection<String> targetAttributes) {
+    private List<Map<String, AttributeValue>> query(final String tableName,
+                                                    final Map<String, Condition> queryConditions,
+                                                    final Collection<String> targetAttributes)
+    {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
@@ -312,7 +335,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         do {
             numAttempts++;
             final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(this.tableName)
+                    .withTableName(tableName)
                     .withKeyConditions(queryConditions)
                     .withAttributesToGet(targetAttributes)
                     .withExclusiveStartKey(lastEvaluatedKey);
@@ -373,7 +396,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         queryConditions.put(AttributeNames.DEVICE_ID, selectByDeviceId);
         queryConditions.put(RANGE_KEY_NAME, selectByTimestamp);
 
-        final List<Map<String, AttributeValue>> results = query(queryConditions, targetAttributes);
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        for (final DateTime dateTime: DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end)) {
+            final String tableName = getTableName(dateTime);
+            results.addAll(query(tableName, queryConditions, targetAttributes));
+        }
 
         return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(results, slotDuration));
     }

@@ -40,6 +40,7 @@ import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.joda.time.DateTime;
 
 public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfiguration> {
 
@@ -531,14 +532,20 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         final DynamoDBConfiguration config = configuration.getDeviceDataConfiguration();
         final String tableName = config.getTableName();
         client.setEndpoint(config.getEndpoint());
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(client, tableName);
 
-        try {
-            client.describeTable(tableName);
-            System.out.println(String.format("%s already exists.", tableName));
-        } catch (AmazonServiceException exception) {
-            final CreateTableResult result = DeviceDataDAODynamoDB.createTable(tableName, client);
-            final TableDescription description = result.getTableDescription();
-            System.out.println(description.getTableStatus());
+        final DateTime now = DateTime.now();
+
+        // Create 6 months worth of tables
+        for (int i = 0; i < 6; i++) {
+            final DateTime currDateTime = now.plusMonths(i);
+            try {
+                client.describeTable(deviceDataDAODynamoDB.getTableName(currDateTime));
+                System.out.println(String.format("%s already exists.", deviceDataDAODynamoDB.getTableName(currDateTime)));
+            } catch (AmazonServiceException exception) {
+                final CreateTableResult result = deviceDataDAODynamoDB.createTable(currDateTime);
+                System.out.println(result.getTableDescription().getTableStatus());
+            }
         }
     }
 
