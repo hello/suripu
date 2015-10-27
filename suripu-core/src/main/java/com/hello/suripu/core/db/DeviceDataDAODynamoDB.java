@@ -59,19 +59,19 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final String tableName;
 
     public enum Attribute {
-        ACCOUNT_ID ("hk", "N"),
-        RANGE_KEY ("rk", "S"),
-        AMBIENT_TEMP ("1", "N"),
-        AMBIENT_LIGHT ("2", "N"),
-        AMBIENT_HUMIDITY ("3", "N"),
-        AMBIENT_AIR_QUALITY_RAW ("4", "N"),
-        AUDIO_PEAK_BACKGROUND_DB ("5", "N"),
-        AUDIO_PEAK_DISTURBANCES_DB ("6", "N"),
-        AUDIO_NUM_DISTURBANCES ("7", "N"),
-        OFFSET_MILLIS ("8", "N"),
-        LOCAL_UTC_TIMESTAMP ("9", "S"),
-        WAVE_COUNT ("10", "N"),
-        HOLD_COUNT ("11", "N");
+        ACCOUNT_ID ("aid", "N"),
+        RANGE_KEY ("ts|dev", "S"),
+        AMBIENT_TEMP ("tmp", "N"),
+        AMBIENT_LIGHT ("lite", "N"),
+        AMBIENT_HUMIDITY ("hum", "N"),
+        AMBIENT_AIR_QUALITY_RAW ("aqr", "N"),
+        AUDIO_PEAK_BACKGROUND_DB ("apbg", "N"),
+        AUDIO_PEAK_DISTURBANCES_DB ("apd", "N"),
+        AUDIO_NUM_DISTURBANCES ("7", "and"),
+        OFFSET_MILLIS ("om", "N"),
+        LOCAL_UTC_TIMESTAMP ("lutcts", "S"),
+        WAVE_COUNT ("wc", "N"),
+        HOLD_COUNT ("hc", "N");
 
         public final String name;
         public final String type;
