@@ -2,6 +2,8 @@ package com.hello.suripu.core.flipper;
 
 public class FeatureFlipper {
 
+    // PLEASE, KEEP CONSTANTS IN ALPHABETICAL ORDER!
+
     public final static String ALARM_IN_TIMELINE = "alarm_in_timeline";
     public final static String ALARM_WORKER_DROP_IF_TOO_OLD = "alarm_worker_drop_if_too_old";
     public final static String ALL_SENSOR_QUERY_USE_UTC_TS = "all_sensor_query_user_utc_ts";
