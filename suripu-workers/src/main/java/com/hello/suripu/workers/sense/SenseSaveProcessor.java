@@ -185,6 +185,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
+                            .withExternalDeviceId(pair.externalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
                             .withAmbientAirQualityRaw(periodicData.getDust())
                             .withAmbientDustVariance(periodicData.getDustVariability())
