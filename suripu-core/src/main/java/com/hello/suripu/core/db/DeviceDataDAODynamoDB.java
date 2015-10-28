@@ -195,12 +195,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     /**
-     * Batch insert list of DeviceData objects.
-     * Subject to DynamoDB's maximum BatchWriteItem size.
+     * Convert a list of DeviceData to write request items, which can be used for batchInsert.
      * @param deviceDataList
-     * @return The number of successfully inserted elements.
+     * @return Map of {tableName => writeRequests}
      */
-    public int batchInsert(final List<DeviceData> deviceDataList) {
+    public Map<String, List<WriteRequest>> toWriteRequestItems(final List<DeviceData> deviceDataList) {
         // Create a map with hash+range as the key to deduplicate and avoid DynamoDB exceptions
         final Map<String, Map<String, WriteRequest>> writeRequestMap = Maps.newHashMap();
         for (final DeviceData data: deviceDataList) {
@@ -217,14 +216,26 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             }
         }
 
-        int totalItemsToInsert = 0;
         Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(writeRequestMap.size());
         for (final Map.Entry<String, Map<String, WriteRequest>> entry : writeRequestMap.entrySet()) {
             requestItems.put(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
-            totalItemsToInsert += entry.getValue().values().size();
         }
 
+        return requestItems;
+    }
+
+    /**
+     * Batch insert write requests.
+     * Subject to DynamoDB's maximum BatchWriteItem size.
+     * Utilizes exponential backoff in case of throttling.
+     *
+     * @param requestItems - map of {tableName => writeRequests}
+     * @return the remaining unprocessed items. The return value of this method can be used to call this method again
+     * to process remaining items.
+     */
+    public Map<String, List<WriteRequest>> batchInsert(final Map<String, List<WriteRequest>> requestItems) {
         int numAttempts = 0;
+        Map<String, List<WriteRequest>> remainingItems = requestItems;
 
         do {
             if (numAttempts > 0) {
@@ -233,16 +244,41 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             }
 
             numAttempts++;
-            final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
+            final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(remainingItems);
             final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
             // check for unprocessed items
-            requestItems = result.getUnprocessedItems();
-        } while (!requestItems.isEmpty() && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
+            remainingItems = result.getUnprocessedItems();
+        } while (!remainingItems.isEmpty() && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
 
-        if (!requestItems.isEmpty()) {
+        return remainingItems;
+    }
+
+    private int countWriteRequestItems(final Map<String, List<WriteRequest>> requestItems) {
+        int total = 0;
+        for (final List<WriteRequest> writeRequests : requestItems.values()) {
+            total += writeRequests.size();
+        }
+        return total;
+    }
+
+    /**
+     * Batch insert list of DeviceData objects.
+     * Subject to DynamoDB's maximum BatchWriteItem size.
+     * @param deviceDataList
+     * @return The number of successfully inserted elements.
+     */
+    public int batchInsert(final List<DeviceData> deviceDataList) {
+
+        final Map<String, List<WriteRequest>> requestItems = toWriteRequestItems(deviceDataList);
+        final Map<String, List<WriteRequest>> remainingItems = batchInsert(requestItems);
+
+        final int totalItemsToInsert = countWriteRequestItems(requestItems);
+
+        if (!remainingItems.isEmpty()) {
+            final int remainingItemsCount = countWriteRequestItems(remainingItems);
             LOGGER.warn("Exceeded {} attempts to batch write to Dynamo. {} items left over.",
-                    MAX_BATCH_WRITE_ATTEMPTS, requestItems.get(tablePrefix).size());
-            return totalItemsToInsert - requestItems.get(tablePrefix).size();
+                    MAX_BATCH_WRITE_ATTEMPTS, remainingItemsCount);
+            return totalItemsToInsert - remainingItemsCount;
         }
 
         return totalItemsToInsert;
