@@ -25,11 +25,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.util.Bucketing;
+import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
@@ -476,6 +479,15 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
 
+    /**
+     * Same as the method that accepts targetAttributes, but defaults to getting all attributes.
+     * @param accountId
+     * @param externalDeviceId
+     * @param start
+     * @param end
+     * @param slotDuration
+     * @return
+     */
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             final Long accountId,
             final String externalDeviceId,
@@ -570,5 +582,84 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         final List<Sample> sortedList = Bucketing.sortResults(merged, currentOffsetMillis);
         return sortedList;
 
+    }
+
+    @Timed
+    public AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(
+            final Long queryStartTimestampInUTC,
+            final Long queryEndTimestampInUTC,
+            final Long accountId,
+            final String externalDeviceId,
+            final int slotDurationInMinutes,
+            final Integer missingDataDefaultValue,
+            final Optional<Device.Color> color,
+            final Optional<Calibration> calibrationOptional) {
+
+        // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
+        final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
+        final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
+
+        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
+        LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
+        LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
+
+        final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, queryStartTime, queryEndTime, slotDurationInMinutes);
+        LOGGER.trace("Retrieved {} rows from database", rows.size());
+
+        final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
+
+        if(rows.size() == 0) {
+            return sensorDataResults;
+        }
+
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional);
+
+        if(allSensorSampleMap.isEmpty()) {
+            return sensorDataResults;
+        }
+
+        // create buckets with keys in UTC-Time
+        final int currentOffsetMillis = rows.get(0).offsetMillis;
+        final DateTime now = queryEndTime.withSecondOfMinute(0).withMillisOfSecond(0);
+        final int remainder = now.getMinuteOfHour() % slotDurationInMinutes;
+        // if 4:36 -> bucket = 4:35
+
+        final DateTime nowRounded = now.minusMinutes(remainder);
+        LOGGER.trace("Current Offset Milis = {}", currentOffsetMillis);
+        LOGGER.trace("Remainder = {}", remainder);
+        LOGGER.trace("Now (rounded) = {} ({})", nowRounded, nowRounded.getMillis());
+
+
+        final long absoluteIntervalMS = queryEndTimestampInUTC - queryStartTimestampInUTC;
+        final int numberOfBuckets= (int) ((absoluteIntervalMS / DateTimeConstants.MILLIS_PER_MINUTE) / slotDurationInMinutes + 1);
+
+
+        final AllSensorSampleMap mergedMaps = new AllSensorSampleMap();
+
+        for (final Sensor sensor : Sensor.values()) {
+            LOGGER.trace("Processing sensor {}", sensor.toString());
+
+            final Map<Long, Sample> sensorMap = allSensorSampleMap.get(sensor);
+
+            if (sensorMap.isEmpty()) {
+                continue;
+            }
+
+            final Map<Long, Sample> map = Bucketing.generateEmptyMap(numberOfBuckets, nowRounded, slotDurationInMinutes, missingDataDefaultValue);
+            LOGGER.trace("Map size = {}", map.size());
+
+            // Override map with values from DB
+            mergedMaps.setSampleMap(sensor, Bucketing.mergeResults(map, sensorMap));
+
+            if (!mergedMaps.get(sensor).isEmpty()) {
+                LOGGER.trace("New map size = {}", mergedMaps.get(sensor).size());
+                final List<Sample> sortedList = Bucketing.sortResults(mergedMaps.get(sensor), currentOffsetMillis);
+
+                sensorDataResults.add(sensor, sortedList);
+
+            }
+        }
+
+        return sensorDataResults;
     }
 }

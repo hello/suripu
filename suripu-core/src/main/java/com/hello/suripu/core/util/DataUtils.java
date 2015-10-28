@@ -24,10 +24,9 @@ public class DataUtils{
      * Dust count calibration & conversion
      * @param rawDustCount raw dust count
      * @param calibrationOptional calibration info if any, absent otherwise
-     * @param firmwareVersion firmware version
      * @return dust density in microgram per cubic meter
      */
-    public static float convertRawDustCountsToDensity(final int rawDustCount, final Optional<Calibration> calibrationOptional, final int firmwareVersion) {
+    public static float convertRawDustCountsToDensity(final int rawDustCount, final Optional<Calibration> calibrationOptional) {
 
         if (calibrationOptional.isPresent()) {
             final int calibratedRawDustCount = calibrateRawDustCount(rawDustCount, calibrationOptional.get());

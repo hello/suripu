@@ -18,10 +18,12 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -440,7 +442,7 @@ public class DeviceDataDAODynamoDBIT {
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
         final Optional<Device.Color> colorOptional = Optional.absent();
-        final Optional<Calibration> calibrationOptional = Optional.absent();
+        final Optional<Calibration> calibrationOptional = Optional.of(Calibration.createDefault(deviceId));
 
         final List<Sample> lightSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
@@ -459,6 +461,18 @@ public class DeviceDataDAODynamoDBIT {
                 deviceId, 1, "humidity", -1, colorOptional, calibrationOptional);
         assertThat(humiditySamples.size(), is(11));
         assertThat(countSamplesWithFillValue(humiditySamples, -1), is(4));
+
+        final List<Sample> soundSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, "sound", -1, colorOptional, calibrationOptional);
+        assertThat(soundSamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(soundSamples, -1), is(4));
+
+        final List<Sample> particulateSamples = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, "particulates", -1, colorOptional, calibrationOptional);
+        assertThat(particulateSamples.size(), is(11));
+        assertThat(countSamplesWithFillValue(particulateSamples, -1), is(4));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -466,6 +480,26 @@ public class DeviceDataDAODynamoDBIT {
         final Optional<Device.Color> colorOptional = Optional.absent();
         final Optional<Calibration> calibrationOptional = Optional.absent();
         deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(new Long(1), new Long(1), new Long(1), "2", 1, "not_a_sensor", 0, colorOptional, calibrationOptional);
+    }
+
+    @Test
+    public void testGenerateTimeSeriesByUTCTimeAllSensors() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        final Optional<Device.Color> colorOptional = Optional.absent();
+        final Optional<Calibration> calibrationOptional = Optional.absent();
+
+        final AllSensorSampleList sampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
+                firstTime.getMillis(), firstTime.plusMinutes(10).getMillis(), accountId,
+                deviceId, 1, -1, colorOptional, calibrationOptional);
+        assertThat(sampleList.get(Sensor.LIGHT).size(), is(11));
+        assertThat(sampleList.get(Sensor.TEMPERATURE).size(), is(11));
+        assertThat(sampleList.get(Sensor.HUMIDITY).size(), is(11));
     }
 
 }
