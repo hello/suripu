@@ -1,10 +1,13 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.collect.Lists;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.Minutes;
 import org.joda.time.format.DateTimeFormat;
+
+import java.util.List;
 
 /**
  * Created by pangwu on 5/30/14.
@@ -72,4 +75,13 @@ public class DateTimeUtil {
         return sampleTime;
     }
 
+    public static List<DateTime> dateTimesForStartOfMonthBetweenDates(final DateTime start, final DateTime end) {
+        final List<DateTime> results = Lists.newArrayList();
+        DateTime currDateTime = start.withDayOfMonth(1).withTimeAtStartOfDay();
+        while (!currDateTime.isAfter(end)) {
+            results.add(currDateTime);
+            currDateTime = currDateTime.plusMonths(1);
+        }
+        return results;
+    }
 }
