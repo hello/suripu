@@ -28,13 +28,13 @@ public class SenseUploadConfiguration extends Configuration {
     @Valid
     @Max(10)
     @Min(1)
-    @JsonProperty("long_interval")
+    @JsonProperty("increased_non_peak_interval")
     private Integer increasedNonPeakInterval = INCREASED_INTERVAL_NON_PEAK;
 
     @Valid
     @Max(10)
     @Min(1)
-    @JsonProperty("short_interval")
+    @JsonProperty("increased_peak_interval")
     private Integer increasedPeakInterval = INCREASED_INTERVAL_PEAK;
 
     @Valid
