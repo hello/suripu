@@ -573,4 +573,9 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
     public Integer getAverageDustForLast10Days(final Long accountId, final Long deviceId) {
         return this.getAverageDustForLastNDays(accountId, deviceId, DateTime.now(DateTimeZone.UTC).minusDays(10));
     }
+
+    @Override
+    public Class name() {
+        return DeviceDataDAO.class;
+    }
 }

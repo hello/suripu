@@ -9,4 +9,6 @@ import java.util.List;
  */
 public interface DeviceDataIngestDAO {
     int batchInsertAll(final List<DeviceData> allDeviceData);
+
+    Class name();
 }
