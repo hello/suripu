@@ -353,4 +353,4 @@ pill_heartbeat:
 device_data:
   endpoint: http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
-  table_name: device_data_by_account
+  table_name: sense_data
