@@ -4,6 +4,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -91,5 +93,45 @@ public class DateTimeUtilTest {
         final DateTime ref = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
         final DateTime sampleTime = ref.minusHours(1);
         assertThat(DateTimeUtil.possiblySanitizeSampleTime(ref, sampleTime, 2), equalTo(sampleTime));
+    }
+
+    @Test
+    public void testDateTimesForStartOfMonthBetweenDatesSameMonth() {
+        final DateTime start = new DateTime(2015, 10, 13, 1, 1);
+        final DateTime end = new DateTime(2015, 10, 14, 1, 1);
+        final List<DateTime> results = DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end);
+        assertThat(results.size(), is(1));
+        assertThat(results.get(0), is(new DateTime(2015, 10, 1, 0, 0)));
+    }
+
+    @Test
+    public void testDateTimesForStartOfMonthBetweenDatesTwoMonths() {
+        final DateTime start = new DateTime(2015, 10, 13, 1, 1);
+        final DateTime end = new DateTime(2015, 11, 10, 1, 1);
+        final List<DateTime> results = DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end);
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0), is(new DateTime(2015, 10, 1, 0, 0)));
+        assertThat(results.get(1), is(new DateTime(2015, 11, 1, 0, 0)));
+    }
+
+    @Test
+    public void testDateTimesForStartOfMonthBetweenDatesEndDateAtStartOfMonth() {
+        final DateTime start = new DateTime(2015, 10, 13, 1, 1);
+        final DateTime end = new DateTime(2015, 11, 1, 0, 0);
+        final List<DateTime> results = DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end);
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0), is(new DateTime(2015, 10, 1, 0, 0)));
+        assertThat(results.get(1), is(new DateTime(2015, 11, 1, 0, 0)));
+    }
+
+    @Test
+    public void testDateTimesForStartOfMonthBetweenDatesThreeMonths() {
+        final DateTime start = new DateTime(2015, 10, 13, 1, 1);
+        final DateTime end = new DateTime(2015, 12, 1, 0, 0);
+        final List<DateTime> results = DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end);
+        assertThat(results.size(), is(3));
+        assertThat(results.get(0), is(new DateTime(2015, 10, 1, 0, 0)));
+        assertThat(results.get(1), is(new DateTime(2015, 11, 1, 0, 0)));
+        assertThat(results.get(2), is(new DateTime(2015, 12, 1, 0, 0)));
     }
 }

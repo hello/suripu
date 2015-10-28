@@ -5,7 +5,6 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.handlers.RequestHandler2;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
@@ -48,7 +47,9 @@ public class DeviceDataDAODynamoDBIT {
     private SimulatedThrottlingDynamoDBClient amazonDynamoDBClient;
     private DeviceDataDAODynamoDB deviceDataDAODynamoDB;
 
-    private static final String TABLE_NAME = "integration_test_device_data";
+    private static final String TABLE_PREFIX = "integration_test_device_data";
+    private static final String OCTOBER_TABLE_NAME = TABLE_PREFIX + "_2015_10";
+    private static final String NOVEMBER_TABLE_NAME = TABLE_PREFIX + "_2015_11";
 
     private class SimulatedThrottlingDynamoDBClient extends AmazonDynamoDBClient {
         public SimulatedThrottlingDynamoDBClient(final BasicAWSCredentials awsCredentials, final ClientConfiguration clientConfiguration) {
@@ -80,29 +81,38 @@ public class DeviceDataDAODynamoDBIT {
 
         tearDown();
 
+        this.deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(amazonDynamoDBClient, TABLE_PREFIX);
+
         try {
-            LOGGER.debug("-------- Creating Table {} ---------", TABLE_NAME);
-            final CreateTableResult result = DeviceDataDAODynamoDB.createTable(TABLE_NAME, amazonDynamoDBClient);
-            LOGGER.debug("Created dynamoDB table {}", result.getTableDescription());
+            LOGGER.debug("-------- Creating Table {} ---------", OCTOBER_TABLE_NAME);
+            final String octTableName = deviceDataDAODynamoDB.getTableName(new DateTime(2015, 10, 1, 0, 0, DateTimeZone.UTC));
+            final CreateTableResult octResult = deviceDataDAODynamoDB.createTable(octTableName);
+            LOGGER.debug("Created dynamoDB table {}", octResult.getTableDescription());
+            LOGGER.debug("-------- Creating Table {} ---------", NOVEMBER_TABLE_NAME);
+            final String novTableName = deviceDataDAODynamoDB.getTableName(new DateTime(2015, 11, 1, 0, 0, DateTimeZone.UTC));
+            final CreateTableResult novResult = deviceDataDAODynamoDB.createTable(novTableName);
+            LOGGER.debug("Created dynamoDB table {}", novResult.getTableDescription());
         } catch (ResourceInUseException rie){
             LOGGER.warn("Problem creating table");
         }
-        this.deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(amazonDynamoDBClient, TABLE_NAME);
     }
 
     @After
     public void tearDown() throws Exception {
-        final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
-                .withTableName(TABLE_NAME);
-        try {
-            this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
-        }catch (ResourceNotFoundException ex){
-            LOGGER.warn("Can not delete non existing table");
+        final List<String> tableNames = ImmutableList.of(OCTOBER_TABLE_NAME, NOVEMBER_TABLE_NAME);
+        for (final String name: tableNames) {
+            final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
+                    .withTableName(name);
+            try {
+                this.amazonDynamoDBClient.deleteTable(deleteTableRequest);
+            }catch (ResourceNotFoundException ex){
+                LOGGER.warn("Can not delete non existing table {}", name);
+            }
         }
     }
 
-    private int getTableCount() {
-        final ScanRequest scanRequest = new ScanRequest().withTableName(TABLE_NAME);
+    private int getTableCount(final String tableName) {
+        final ScanRequest scanRequest = new ScanRequest().withTableName(tableName);
         final ScanResult scanResult = amazonDynamoDBClient.scan(scanRequest);
         return scanResult.getCount();
     }
@@ -127,12 +137,12 @@ public class DeviceDataDAODynamoDBIT {
 
         final int initialItemsInserted = deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
         assertThat(initialItemsInserted, is(deviceDataList.size()));
-        assertThat(getTableCount(), is(deviceDataList.size()));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(deviceDataList.size()));
 
         // Now insert the exact same thing again. Should work fine in DynamoDB.
         final int duplicateItemsInserted = deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
         assertThat(duplicateItemsInserted, is(deviceDataList.size()));
-        assertThat(getTableCount(), is(deviceDataList.size()));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(deviceDataList.size()));
     }
 
     @Test
@@ -148,7 +158,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build();
         final int insertions = deviceDataDAODynamoDB.batchInsertAll(deviceDataList);
         assertThat(insertions, is(1));
-        assertThat(getTableCount(), is(1));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(1));
     }
 
     @Test
@@ -164,7 +174,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build();
         final int inserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
         assertThat(inserted, is(1));
-        assertThat(getTableCount(), is(1));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(1));
     }
 
     @Test
@@ -180,63 +190,79 @@ public class DeviceDataDAODynamoDBIT {
         this.amazonDynamoDBClient.throttle = true;
         final int inserted = deviceDataDAODynamoDB.batchInsert(deviceDataList);
         assertThat(inserted, is(1));
-        assertThat(getTableCount(), is(1));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(1));
     }
 
-    private void addDataForQuerying(final Long accountId, final String deviceId, final Integer offsetMillis, final DateTime firstTime) {
+    @Test
+    public void testBatchInsertMultipleMonths() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+        final int insertedThisMonth = addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        final DateTime nextMonth = firstTime.plusMonths(1);
+        final int insertedNextMonth = addDataForQuerying(accountId, deviceId, offsetMillis, nextMonth);
+
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(insertedThisMonth));
+        assertThat(getTableCount(NOVEMBER_TABLE_NAME), is(insertedNextMonth));
+    }
+
+    private int addDataForQuerying(final Long accountId, final String deviceId, final Integer offsetMillis, final DateTime firstTime) {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime)
-                .withAmbientTemperature(70)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2499)
+                .withAmbientLight(10)
+                .withAmbientHumidity(4662)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(1))
-                .withAmbientTemperature(77)
-                .withAmbientLight(36996)
+                .withAmbientTemperature(2498)
+                .withAmbientLight(10)
+                .withAmbientHumidity(4666)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(2))
-                .withAmbientTemperature(69)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2500)
+                .withAmbientLight(8)
+                .withAmbientHumidity(4665)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(3))
-                .withAmbientTemperature(90)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2500)
+                .withAmbientLight(12)
+                .withAmbientHumidity(4662)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(4))
-                .withAmbientTemperature(70)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2501)
+                .withAmbientLight(9)
+                .withAmbientHumidity(4667)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
                 .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(5))
-                .withAmbientTemperature(20)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2502)
+                .withAmbientLight(10)
+                .withAmbientHumidity(4669)
                 .build());
         // Skip minute 6
         deviceDataList.add(new DeviceData.Builder()
@@ -244,11 +270,12 @@ public class DeviceDataDAODynamoDBIT {
                 .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(7))
-                .withAmbientTemperature(100)
-                .withAmbientLight(36996)
-                .withAmbientHumidity(100)
+                .withAmbientTemperature(2503)
+                .withAmbientLight(15)
+                .withAmbientHumidity(4658)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
+        return deviceDataList.size();
     }
 
     @Test
@@ -257,6 +284,30 @@ public class DeviceDataDAODynamoDBIT {
         final String deviceId = "2";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        // From start to start+1, 2 results
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                is(2));
+        // from start to start should be 1 result
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId, deviceId, firstTime, firstTime, 1).size(),
+                is(1));
+        // Account ID unrecognized should be 0 results
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId + 1000, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                is(0));
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationAcrossMonths() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        // Very end of the month
+        final DateTime firstTime = new DateTime(2015, 10, 31, 23, 58, DateTimeZone.UTC);
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
@@ -285,7 +336,7 @@ public class DeviceDataDAODynamoDBIT {
         addDataForQuerying(accountId, deviceId1, offsetMillis, firstTime);
         addDataForQuerying(accountId, deviceId2, offsetMillis, firstTime);
 
-        assertThat(getTableCount(), is(14));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(14));
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                         accountId, deviceId1, firstTime, firstTime.plusMinutes(10), 1).size(),
                 is(7));
@@ -308,18 +359,18 @@ public class DeviceDataDAODynamoDBIT {
         final List<DeviceData> fiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 accountId, deviceId, firstTime, firstTime.plusMinutes(10), 5);
         assertThat(fiveMinuteresults.size(), is(2));
-        assertThat(fiveMinuteresults.get(0).ambientTemperature, is(69));
+        assertThat(fiveMinuteresults.get(0).ambientTemperature, is(2498));
         assertThat(fiveMinuteresults.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
-        assertThat(fiveMinuteresults.get(1).ambientTemperature, is(20));
+        assertThat(fiveMinuteresults.get(1).ambientTemperature, is(2502));
         assertThat(fiveMinuteresults.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
 
         // 5-minute results starting at a weird time (firstTime+3)
         final List<DeviceData> offsetFiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 accountId, deviceId, firstTime.plusMinutes(3), firstTime.plusMinutes(10), 5);
         assertThat(offsetFiveMinuteresults.size(), is(2));
-        assertThat(offsetFiveMinuteresults.get(0).ambientTemperature, is(70));
+        assertThat(offsetFiveMinuteresults.get(0).ambientTemperature, is(2500));
         assertThat(offsetFiveMinuteresults.get(0).dateTimeUTC, is(firstTime));
-        assertThat(offsetFiveMinuteresults.get(1).ambientTemperature, is(20));
+        assertThat(offsetFiveMinuteresults.get(1).ambientTemperature, is(2502));
         assertThat(offsetFiveMinuteresults.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
 
 
@@ -327,7 +378,7 @@ public class DeviceDataDAODynamoDBIT {
         final List<DeviceData> hourlyResults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 accountId, deviceId, firstTime, firstTime.plusMinutes(90), 60);
         assertThat(hourlyResults.size(), is(1));
-        assertThat(hourlyResults.get(0).ambientTemperature, is(20));
+        assertThat(hourlyResults.get(0).ambientTemperature, is(2498));
         assertThat(hourlyResults.get(0).dateTimeUTC, is(firstTime));
     }
 

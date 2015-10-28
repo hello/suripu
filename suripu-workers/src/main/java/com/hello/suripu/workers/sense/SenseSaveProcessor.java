@@ -75,12 +75,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.maxRecords = maxRecords;
         this.updateLastSeen = updateLastSeen;
 
-        this.messagesProcessed = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "messages", "messages-processed", TimeUnit.SECONDS);
-        this.batchSaved = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "batch", "batch-saved", TimeUnit.SECONDS);
-        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
-        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "clock", "clock-out-of-sync", TimeUnit.SECONDS);
-        this.fetchTimezones = Metrics.defaultRegistry().newTimer(deviceDataDAO.getClass(), "fetch-timezones");
-        this.capacity = Metrics.defaultRegistry().newMeter(deviceDataDAO.getClass(), "capacity", "capacity", TimeUnit.SECONDS);
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "messages", "messages-processed", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "batch", "batch-saved", TimeUnit.SECONDS);
+        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
+        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "clock", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.fetchTimezones = Metrics.defaultRegistry().newTimer(deviceDataDAO.name(), "fetch-timezones");
+        this.capacity = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "capacity", "capacity", TimeUnit.SECONDS);
 
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
