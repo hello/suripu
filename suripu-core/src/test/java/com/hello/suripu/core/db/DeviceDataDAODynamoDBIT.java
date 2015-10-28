@@ -5,7 +5,6 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.handlers.RequestHandler2;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
@@ -192,7 +191,22 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(getTableCount(OCTOBER_TABLE_NAME), is(1));
     }
 
-    private void addDataForQuerying(final Long accountId, final String deviceId, final Integer offsetMillis, final DateTime firstTime) {
+    @Test
+    public void testBatchInsertMultipleMonths() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+        final int insertedThisMonth = addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        final DateTime nextMonth = firstTime.plusMonths(1);
+        final int insertedNextMonth = addDataForQuerying(accountId, deviceId, offsetMillis, nextMonth);
+
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(insertedThisMonth));
+        assertThat(getTableCount(NOVEMBER_TABLE_NAME), is(insertedNextMonth));
+    }
+
+    private int addDataForQuerying(final Long accountId, final String deviceId, final Integer offsetMillis, final DateTime firstTime) {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -258,6 +272,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withAmbientHumidity(100)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
+        return deviceDataList.size();
     }
 
     @Test
