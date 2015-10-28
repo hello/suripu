@@ -46,7 +46,6 @@ public class FeatureFlipper {
     public final static String COMPENSATE_LIGHT_WITH_SENSE_COLOR = "compensate_light_with_sense_color";
     public final static String HMM_PARTNER_FILTER = "hmm_partner_filter";
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
-    public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";
     public final static String NEW_ROOM_CONDITION = "new_room_condition";
     public final static String TIMELINE_V2_AVAILABLE = "timeline_v2_available";
     public final static String ONLINE_HMM_ALGORITHM = "online_hmm_algorithm";
@@ -63,6 +62,9 @@ public class FeatureFlipper {
     public final static String TIMELINE_EVENT_ORDER_ENFORCEMENT = "timeline_event_order_enforcement";
     public final static String TIMELINE_IN_SLEEP_INSIGHTS = "timeline_in_sleep_insights";
     public final static String TIMELINE_EVENT_SLEEP_SCORE_ENFORCEMENT = "timeline_event_sleep_score_enforcement";
+
+    public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval"; // deprecated
+    public final static String INCREASE_UPLOAD_INTERVAL = "increase_upload_interval";
 
     public final static String WORKER_PG_CACHE = "worker_pg_cache";
     public final static String WORKER_CLEAR_ALL_CACHE = "worker_clear_all_cache";

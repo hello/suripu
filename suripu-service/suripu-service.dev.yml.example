@@ -147,6 +147,7 @@ sense_upload_configuration:
   week_days_only: false
   long_interval: 7
   short_interval: 5
+  default_interval: 1
   
 ota_configuration:
   start_update_window_hour: 11
