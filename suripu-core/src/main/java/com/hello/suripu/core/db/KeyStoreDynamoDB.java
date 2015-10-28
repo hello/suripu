@@ -34,7 +34,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -205,6 +204,48 @@ public class KeyStoreDynamoDB implements KeyStore {
         return Collections.EMPTY_MAP;
     }
 
+    @Override
+    public Map<String, DeviceKeyStoreRecord> getKeyStoreRecordBatch(final Set<String> deviceIds) {
+
+        final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
+        final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
+
+        for (final String deviceId : deviceIds) {
+            final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
+            attributeValueMap.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
+            itemKeys.add(attributeValueMap);
+        }
+
+        final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(DEVICE_ID_ATTRIBUTE_NAME, AES_KEY_ATTRIBUTE_NAME, METADATA, CREATED_AT_ATTRIBUTE_NAME);
+        final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
+        requestItems.put(keyStoreTableName, key);
+
+        batchGetItemRequest.withRequestItems(requestItems);
+
+        try {
+            final BatchGetItemResult batchGetItemResult = dynamoDBClient.batchGetItem(batchGetItemRequest);
+            final Map<String, DeviceKeyStoreRecord> results = Maps.newHashMap();
+
+            for (final String item : batchGetItemResult.getResponses().keySet()) {
+                final List<Map<String, AttributeValue>> responses = batchGetItemResult.getResponses().get(item);
+                for (final Map<String, AttributeValue> response : responses) {
+                    final String deviceId = response.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
+
+                    final String aesKey = response.containsKey(AES_KEY_ATTRIBUTE_NAME) ? response.get(AES_KEY_ATTRIBUTE_NAME).getS() : "";
+                    final String metadata = response.containsKey(METADATA) ? response.get(METADATA).getS() : "";
+                    final String createdAt = response.containsKey(CREATED_AT_ATTRIBUTE_NAME) ? response.get(CREATED_AT_ATTRIBUTE_NAME).getS() : "";
+
+                    results.put(deviceId, DeviceKeyStoreRecord.create(aesKey, metadata, createdAt));
+                }
+            }
+            return results;
+        } catch (AmazonServiceException ase){
+            LOGGER.error("Failed getting keys. {}", ase.getMessage());
+
+        }
+        return Collections.EMPTY_MAP;
+    }
+
     private Optional<byte[]> fromItem(final Map<String, AttributeValue> item, final String deviceId, final Boolean strict) {
         if(item == null || !item.containsKey(AES_KEY_ATTRIBUTE_NAME)) {
             LOGGER.warn("Did not find AES key for device_id = {}.", deviceId);
@@ -283,20 +324,11 @@ public class KeyStoreDynamoDB implements KeyStore {
         }
 
         final String aesKey = getItemResult.getItem().get(AES_KEY_ATTRIBUTE_NAME).getS();
-        String createdAt = "";
-        if(getItemResult.getItem().containsKey(CREATED_AT_ATTRIBUTE_NAME)) {
-            createdAt = getItemResult.getItem().get(CREATED_AT_ATTRIBUTE_NAME).getS();
-        }
+        final String metadata = getItemResult.getItem().containsKey(METADATA) ? getItemResult.getItem().get(METADATA).getS() : "n/a";
+        final String createdAt = getItemResult.getItem().containsKey(CREATED_AT_ATTRIBUTE_NAME) ? getItemResult.getItem().get(CREATED_AT_ATTRIBUTE_NAME).getS() : "";
 
-        if (!getItemResult.getItem().containsKey(METADATA)) {
-            return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), "n/a", createdAt));
-        }
-        return Optional.of(new DeviceKeyStoreRecord(censorKey(aesKey), getItemResult.getItem().get(METADATA).getS(), createdAt));
+        return Optional.of(DeviceKeyStoreRecord.create(aesKey, metadata, createdAt));
     }
 
-    private String censorKey(final String key) {
-        char[] censoredParts = new char[key.length() - 8];
-        Arrays.fill(censoredParts, 'x');
-        return new StringBuilder(key).replace(4, key.length() - 4, new String(censoredParts)).toString();
-    }
+
 }
