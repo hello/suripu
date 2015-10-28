@@ -305,6 +305,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return successfulInsertions;
     }
 
+    @Override
+    public Class name() {
+        return  DeviceDataDAODynamoDB.class;
+    }
+
     private DateTime getFloorOfDateTime(final DateTime dateTime, final Integer toMinutes) {
         return new DateTime(dateTime, DateTimeZone.UTC).withMinuteOfHour(dateTime.getMinuteOfHour() - (dateTime.getMinuteOfHour() % toMinutes));
     }
