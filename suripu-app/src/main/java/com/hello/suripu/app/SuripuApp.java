@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.app.cli.CreateDynamoDBTables;
+import com.hello.suripu.app.cli.MigrateDeviceDataCommand;
 import com.hello.suripu.app.cli.MigratePillHeartbeatCommand;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
@@ -149,6 +150,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new RecreatePillColorCommand());
         bootstrap.addCommand(new ScanInvalidNightsCommand());
         bootstrap.addCommand(new MigratePillHeartbeatCommand());
+        bootstrap.addCommand(new MigrateDeviceDataCommand());
     }
 
     @Override
