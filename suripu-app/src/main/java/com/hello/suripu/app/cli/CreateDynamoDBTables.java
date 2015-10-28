@@ -531,11 +531,11 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
     private void createDeviceDataTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
         final DynamoDBConfiguration config = configuration.getDeviceDataConfiguration();
-        final String tableName = config.getTableName();
+        final String tablePrefix = config.getTableName();
         client.setEndpoint(config.getEndpoint());
-        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(client, tableName);
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(client, tablePrefix);
 
-        final DateTime now = DateTime.now().withZone(DateTimeZone.UTC);
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
 
         // Create 6 months worth of tables
         for (int i = 0; i < 6; i++) {
@@ -544,7 +544,8 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
                 client.describeTable(deviceDataDAODynamoDB.getTableName(currDateTime));
                 System.out.println(String.format("%s already exists.", deviceDataDAODynamoDB.getTableName(currDateTime)));
             } catch (AmazonServiceException exception) {
-                final CreateTableResult result = deviceDataDAODynamoDB.createTable(currDateTime);
+                final String tableName = deviceDataDAODynamoDB.getTableName(currDateTime);
+                final CreateTableResult result = deviceDataDAODynamoDB.createTable(tableName);
                 System.out.println(result.getTableDescription().getTableStatus());
             }
         }

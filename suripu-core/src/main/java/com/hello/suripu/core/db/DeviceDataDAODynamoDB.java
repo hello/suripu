@@ -127,8 +127,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return tablePrefix + "_" + dateTime.toString(formatter);
     }
 
-    public CreateTableResult createTable(final DateTime dateTime) {
-        final String tableName = getTableName(dateTime);
+    public CreateTableResult createTable(final String tableName) {
         final Attribute hashKeyAttribute = Attribute.ACCOUNT_ID;
         final Attribute rangeKeyAttribute = Attribute.RANGE_KEY;
 
@@ -216,7 +215,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             }
         }
 
-        Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(writeRequestMap.size());
+        final Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(writeRequestMap.size());
         for (final Map.Entry<String, Map<String, WriteRequest>> entry : writeRequestMap.entrySet()) {
             requestItems.put(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
         }

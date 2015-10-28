@@ -85,10 +85,12 @@ public class DeviceDataDAODynamoDBIT {
 
         try {
             LOGGER.debug("-------- Creating Table {} ---------", OCTOBER_TABLE_NAME);
-            final CreateTableResult octResult = deviceDataDAODynamoDB.createTable(new DateTime(2015, 10, 1, 0, 0, DateTimeZone.UTC));
+            final String octTableName = deviceDataDAODynamoDB.getTableName(new DateTime(2015, 10, 1, 0, 0, DateTimeZone.UTC));
+            final CreateTableResult octResult = deviceDataDAODynamoDB.createTable(octTableName);
             LOGGER.debug("Created dynamoDB table {}", octResult.getTableDescription());
             LOGGER.debug("-------- Creating Table {} ---------", NOVEMBER_TABLE_NAME);
-            final CreateTableResult novResult = deviceDataDAODynamoDB.createTable(new DateTime(2015, 11, 1, 0, 0, DateTimeZone.UTC));
+            final String novTableName = deviceDataDAODynamoDB.getTableName(new DateTime(2015, 11, 1, 0, 0, DateTimeZone.UTC));
+            final CreateTableResult novResult = deviceDataDAODynamoDB.createTable(novTableName);
             LOGGER.debug("Created dynamoDB table {}", novResult.getTableDescription());
         } catch (ResourceInUseException rie){
             LOGGER.warn("Problem creating table");
