@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.LogMath;
 
@@ -15,9 +16,9 @@ import java.util.Map;
  * Created by benjo on 6/22/15.
  */
 public class SensorDataReduction {
-    public final Map<String,HiddenMarkovModel> hmmByModelName;
+    public final Map<String,HiddenMarkovModelInterface> hmmByModelName;
     public final double MIN_LIKELIHOOD_FOR_TRANSITIONS = 1e-320;
-    public SensorDataReduction(Map<String, HiddenMarkovModel> hmmByModelName) {
+    public SensorDataReduction(Map<String, HiddenMarkovModelInterface> hmmByModelName) {
         this.hmmByModelName = hmmByModelName;
     }
 
@@ -36,13 +37,13 @@ public class SensorDataReduction {
 
         //FORCE END-STATE of "0", in the future we will probably allow the model to specify the allowable end-states
 
-        for (final Map.Entry<String,HiddenMarkovModel> entry : hmmByModelName.entrySet()) {
+        for (final Map.Entry<String,HiddenMarkovModelInterface> entry : hmmByModelName.entrySet()) {
         //DECODE ALL SENSOR DATA INTO DISCRETE "CLASSIFICATIONS"
 
             final Integer [] possibleEndStates = new Integer[1];
 
             //TODO have model specify end states
-            possibleEndStates[0] = entry.getValue().numStates - 1;
+            possibleEndStates[0] = entry.getValue().getNumberOfStates() - 1;
 
             final HmmDecodedResult hmmDecodedResult = entry.getValue().decode(sensorData, possibleEndStates, MIN_LIKELIHOOD_FOR_TRANSITIONS);
 

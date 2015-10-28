@@ -10,6 +10,8 @@ import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.GaussianPdf;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
@@ -29,6 +31,7 @@ import java.util.UUID;
  */
 public class FeatureExtractionModelData {
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(FeatureExtractionModelData.class);
+    private static final HiddenMarkovModelFactory.HmmType HMM_TYPE = HiddenMarkovModelFactory.HmmType.LOGMATH;
     private final Logger LOGGER;
     /*
     *  Goal is to create a bunch of HMMs, which decode some sensor data.
@@ -76,7 +79,7 @@ public class FeatureExtractionModelData {
             final SleepHmmBayesNetProtos.MeasurementParams params = proto.getMeasurementParameters();
 
         /*  FIRST MAKE THE HMMS */
-            final Map<String,HiddenMarkovModel> hmmMapById = Maps.newHashMap();
+            final Map<String,HiddenMarkovModelInterface> hmmMapById = Maps.newHashMap();
 
             for (SleepHmmBayesNetProtos.HiddenMarkovModel model : proto.getIndependentHmmsList()) {
                 hmmMapById.put(model.getId(),getHmm(model));
@@ -95,7 +98,7 @@ public class FeatureExtractionModelData {
 
 
     /* create HMM from protobuf   */
-    private  HiddenMarkovModel getHmm(final SleepHmmBayesNetProtos.HiddenMarkovModel model) {
+    private  HiddenMarkovModelInterface getHmm(final SleepHmmBayesNetProtos.HiddenMarkovModel model) {
         final int numStates = model.getNumStates();
         final double [][] A = getMatrix(model.getStateTransitionMatrixList(),numStates);
 
@@ -109,9 +112,8 @@ public class FeatureExtractionModelData {
             numFreeParams += m.getNumFreeParams();
         }
 
-        HiddenMarkovModel hmm = new HiddenMarkovModel(numStates,A,initProbs,models,numFreeParams);
 
-        return hmm;
+        return HiddenMarkovModelFactory.create(HMM_TYPE,numStates,A,initProbs,models,numFreeParams);
     }
 
     /* create HMM obs models from protobuf data  */

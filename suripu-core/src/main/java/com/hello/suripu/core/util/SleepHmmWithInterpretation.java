@@ -183,7 +183,7 @@ CREATE CREATE CREATE
                 continue;
             }
 
-            final HmmDecodedResult result = model.hmm.decode(data,allowableEndings,HiddenMarkovModel.ORIGINAL_MIN_TRANSITION_LIKELIHOOD);
+            final HmmDecodedResult result = model.hmm.decode(data,allowableEndings,HiddenMarkovModel.MIN_LIKELIHOOD);
 
             ImmutableList<SegmentPairWithGaps> sleep = filterSleepSegmentPairsByHeuristic(
                     mindTheGapsAndJoinPairs(getSetBoundaries(result.bestPath, model.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / model.numMinutesInMeasPeriod));
@@ -245,7 +245,7 @@ CREATE CREATE CREATE
             final Integer [] allowableEndings = model.allowableEndingStates.toArray(new Integer[model.allowableEndingStates.size()]);
 
             //decode via viterbi
-            final HmmDecodedResult result = model.hmm.decode(binnedData.data, allowableEndings,HiddenMarkovModel.ORIGINAL_MIN_TRANSITION_LIKELIHOOD);
+            final HmmDecodedResult result = model.hmm.decode(binnedData.data, allowableEndings,HiddenMarkovModel.MIN_LIKELIHOOD);
 
             LOGGER.debug("path={}", SleepHmmSensorDataBinning.getPathAsString(result.bestPath));
             LOGGER.debug("model \"{}\" BIC={}",model.modelName,result.bic);
