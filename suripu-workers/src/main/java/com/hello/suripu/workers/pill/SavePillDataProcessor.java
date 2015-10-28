@@ -130,7 +130,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             for (final SenseCommandProtos.pill_data data : pillData) {
                 final Optional<byte[]> decryptionKey = pillKeys.get(data.getDeviceId());
 
-                if (decryptionKey == null || !decryptionKey.isPresent()) {
+                // The key should not be null
+                if (!decryptionKey.isPresent()) {
                     LOGGER.error("Missing decryption key for pill: {}", data.getDeviceId());
                     continue;
                 }
