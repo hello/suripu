@@ -1,24 +1,36 @@
 package com.hello.suripu.app.cli;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.opencsv.CSVReader;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
 import net.sourceforge.argparse4j.inf.Subparser;
-import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfiguration> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MigrateDeviceDataCommand.class);
+
     public enum Columns {
         ID(0),
         ACCOUNT_ID(1),
@@ -87,16 +99,33 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                        SuripuAppConfiguration suripuAppConfiguration) throws Exception {
         final File mappingFile = new File(namespace.getString("mapping"));
         final Map<String, String> idMapping = readIdMapping(mappingFile);
+        LOGGER.debug("Loaded {} id mapping entries", idMapping.size());
+
+        final AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
+        final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(provider);
+        final DynamoDBConfiguration deviceDataConfiguration = suripuAppConfiguration.getDeviceDataConfiguration();
+        dynamoDBClient.withEndpoint(deviceDataConfiguration.getEndpoint());
+        LOGGER.debug("DynamoDB client set up for {}/'{}'",
+                deviceDataConfiguration.getTableName(),
+                deviceDataConfiguration.getEndpoint());
 
         final File csvFile = new File(namespace.getString("csv"));
         try (final InputStream rawInput = new FileInputStream(csvFile);
              final GZIPInputStream decodedInput = new GZIPInputStream(rawInput);
              final CSVReader reader = new CSVReader(new InputStreamReader(decodedInput), ',')) {
+            LOGGER.debug("Beginning migration");
+
+            final DeviceDataDAODynamoDB deviceDataDAO = new DeviceDataDAODynamoDB(dynamoDBClient,
+                    deviceDataConfiguration.getTableName());
+
+            final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+            final List<DeviceData> accumulator = Lists.newArrayListWithCapacity(25);
+            int entriesWritten = 0;
             for (final String[] entry : reader) {
                 final String accountId = getDeviceDataString(entry, Columns.ACCOUNT_ID);
                 final String externalSenseId = idMapping.get(accountId);
                 if (externalSenseId == null) {
-                    System.err.println("No mapping for account id " + accountId + "! Skipping row.");
+                    LOGGER.error("No mapping for account id {}! Skipping row.", accountId);
                     continue;
                 }
 
@@ -112,11 +141,30 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                         .withAudioPeakDisturbancesDB(getDeviceDataInteger(entry, Columns.AUDIO_PEAK_DISTURBANCES_DB))
                         .withAudioNumDisturbances(getDeviceDataInteger(entry, Columns.AUDIO_NUM_DISTURBANCES))
                         .withOffsetMillis(getDeviceDataInteger(entry, Columns.OFFSET_MILLIS))
-                        .withDateTimeUTC(new DateTime(getDeviceDataLong(entry, Columns.LOCAL_UTC_TS)))
+                        .withDateTimeUTC(dateTimeFormatter.parseDateTime(getDeviceDataString(entry, Columns.LOCAL_UTC_TS)))
                         .withWaveCount(getDeviceDataInteger(entry, Columns.WAVE_COUNT))
                         .withHoldCount(getDeviceDataInteger(entry, Columns.HOLD_COUNT))
                         .build();
+
+                accumulator.add(deviceData);
+
+                if (accumulator.size() == 25) {
+                    LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
+                    final int numberWritten = deviceDataDAO.batchInsert(accumulator);
+                    LOGGER.debug("Wrote {} entries to DynamoDB; {} written so far",
+                            numberWritten, entriesWritten);
+                    entriesWritten += numberWritten;
+                    accumulator.clear();
+                }
             }
+
+            if (accumulator.size() <= 25) {
+                LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
+                final int numberWritten = deviceDataDAO.batchInsert(accumulator);
+                LOGGER.debug("Wrote {} entries to DynamoDB", numberWritten);
+            }
+
+            LOGGER.debug("Migration completed");
         }
     }
 
