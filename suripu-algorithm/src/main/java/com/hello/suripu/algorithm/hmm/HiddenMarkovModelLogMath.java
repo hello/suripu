@@ -20,13 +20,12 @@ import java.util.Map;
  *
  */
 public class HiddenMarkovModelLogMath implements HiddenMarkovModelInterface {
-    static private final double MIN_NORMALIZING = 1e-6;
     public final int numStates;
     final int numFreeParams;
     double [][] A;
     double [] initialState;
     HmmPdfInterface [] obsModels;
-    private static final Logger LOGGER = LoggerFactory.getLogger(HiddenMarkovModel.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HiddenMarkovModelLogMath.class);
 
     //not currently used... but maybe soon
     private class AlphaResult {

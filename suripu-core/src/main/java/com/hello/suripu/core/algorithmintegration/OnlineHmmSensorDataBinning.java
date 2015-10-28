@@ -36,6 +36,8 @@ public class OnlineHmmSensorDataBinning {
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
     final static protected double LIGHT_INCREASE_THRESHOLD = 1.0;
     final static protected double LIGHT_DECREASE_THRESHOLD = -1.0;
+    final static protected int HOUR_OF_DAY_WAVES_COUNT_START = 4; //04:00 local time
+    final static protected int HOUR_OF_DAY_WAVES_COUNT_END = 12; //12:00 local time
 
 
     static public class BinnedData {
@@ -201,8 +203,12 @@ public class OnlineHmmSensorDataBinning {
             final Sample sample = it3.next();
             double value = sample.value;
 
+            final DateTime sampleTime = new DateTime(sample.dateTime).withZone(DateTimeZone.forOffsetMillis(sample.offsetMillis));
+            final int hour = sampleTime.toLocalDateTime().getHourOfDay();
+            final boolean isMorning =  hour >= HOUR_OF_DAY_WAVES_COUNT_START && hour <= HOUR_OF_DAY_WAVES_COUNT_END;
+
             //either wave happened or it didn't.. value can be 1.0 or 0.0
-            if (value > 0.0 && params.useWavesForDisturbances) {
+            if (value > 0.0 && params.useWavesForDisturbances && isMorning) {
                 maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.WAVE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
