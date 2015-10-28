@@ -41,6 +41,7 @@ import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfiguration> {
 
@@ -534,7 +535,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         client.setEndpoint(config.getEndpoint());
         final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(client, tableName);
 
-        final DateTime now = DateTime.now();
+        final DateTime now = DateTime.now().withZone(DateTimeZone.UTC);
 
         // Create 6 months worth of tables
         for (int i = 0; i < 6; i++) {
