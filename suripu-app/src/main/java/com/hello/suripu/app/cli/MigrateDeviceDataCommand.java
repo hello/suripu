@@ -26,10 +26,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
 public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MigrateDeviceDataCommand.class);
+
+    private static final int NUM_BEFORE_FLUSH = 200;
+    private static final int ITEMS_PER_BATCH = 25;
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(NUM_BEFORE_FLUSH / ITEMS_PER_BATCH);
 
     public enum Columns {
         ID(0),
@@ -93,6 +103,31 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                 .help("csv files");
     }
 
+    private int writeData(final DeviceDataDAODynamoDB deviceDataDAO,
+                             final List<DeviceData> items) throws ExecutionException, InterruptedException {
+
+        final List<List<DeviceData>> batches = Lists.partition(items, ITEMS_PER_BATCH);
+        final List<Future<Integer>> futures = Lists.newArrayListWithCapacity(batches.size());
+        for (final List<DeviceData> batch : batches) {
+            final Future<Integer> future = executor.submit(new Callable<Integer>() {
+                @Override
+                public Integer call() throws Exception {
+                    LOGGER.debug("Submitting batch of {}", batch.size());
+                    final int remaining = deviceDataDAO.batchInsert(batch);
+                    LOGGER.debug("Batch submitted, {} remaining", remaining);
+                    return remaining;
+                }
+            });
+            futures.add(future);
+        }
+
+        int remainingItems = 0;
+        for (final Future<Integer> future : futures) {
+            remainingItems += future.get();
+        }
+        return remainingItems;
+    }
+
     @Override
     protected void run(Bootstrap<SuripuAppConfiguration> bootstrap,
                        Namespace namespace,
@@ -148,20 +183,22 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
                 accumulator.add(deviceData);
 
-                if (accumulator.size() == 25) {
+                if (accumulator.size() == NUM_BEFORE_FLUSH) {
                     LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
-                    final int numberWritten = deviceDataDAO.batchInsert(accumulator);
+                    final int numberWritten = writeData(deviceDataDAO, accumulator);
+                    entriesWritten += numberWritten;
                     LOGGER.debug("Wrote {} entries to DynamoDB; {} written so far",
                             numberWritten, entriesWritten);
-                    entriesWritten += numberWritten;
                     accumulator.clear();
                 }
             }
 
-            if (accumulator.size() <= 25) {
+            if (!accumulator.isEmpty()) {
                 LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
-                final int numberWritten = deviceDataDAO.batchInsert(accumulator);
-                LOGGER.debug("Wrote {} entries to DynamoDB", numberWritten);
+                final int numberWritten = writeData(deviceDataDAO, accumulator);
+                entriesWritten += numberWritten;
+                LOGGER.debug("Wrote {} entries to DynamoDB; {} written",
+                        numberWritten, entriesWritten);
             }
 
             LOGGER.debug("Migration completed");
