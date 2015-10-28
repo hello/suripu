@@ -194,6 +194,7 @@ public class KeyStoreDynamoDB implements KeyStore {
      *
      * @param deviceIds set of external sense/pill IDs
      * @return a map of id to device keystore record which contains censored keys which can be safely exposed
+     * this map doesn't include devices which we don't have entry on keystore table
      */
     @Override
     public Map<String, DeviceKeyStoreRecord> getKeyStoreRecordBatch(final Set<String> deviceIds) {
