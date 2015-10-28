@@ -6,6 +6,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.HumidityMsgEN;
 import com.hello.suripu.core.processors.insights.Humidity;
+import com.hello.suripu.core.util.DataUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
@@ -30,15 +31,16 @@ public class HumidityInsightsTest {
     public void test_getMedianHumidity() {
         
         final int humidity = 50;
+        final int temp = 70;
 
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, humidity + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, humidity - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
 
 
         final Integer result = Humidity.getMedianHumidity(data);
-        final Integer expectedResult = humidity;
+        final Integer expectedResult = (int) DataUtils.calibrateHumidity(0, humidity);
 
         assertThat(result, is(expectedResult));
 
@@ -49,14 +51,15 @@ public class HumidityInsightsTest {
         //Test that casting median humidity to Integer works with even number of data points too
 
         final int humidity = 50;
+        final int temp = 70;
 
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, humidity + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
 
 
         final Integer result = Humidity.getMedianHumidity(data);
-        final Integer expectedResult = humidity;
+        final Integer expectedResult = (int) DataUtils.calibrateHumidity(70, humidity);
 
         assertThat(result, is(expectedResult));
     }

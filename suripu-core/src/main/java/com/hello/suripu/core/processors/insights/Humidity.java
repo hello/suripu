@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.HumidityMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.util.DataUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -81,7 +82,7 @@ public class Humidity {
 
         final DescriptiveStatistics humStats = new DescriptiveStatistics();
         for (final DeviceData deviceData : data) {
-            humStats.addValue(deviceData.ambientHumidity);
+            humStats.addValue(DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity));
         }
 
         final Integer medianHumidity = (int) humStats.getPercentile(50);
