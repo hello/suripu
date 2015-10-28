@@ -111,14 +111,14 @@ public class DeviceDataDAODynamoDBIT {
     public void testBatchInsertAll() {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         final List<Long> accountIds = new ImmutableList.Builder<Long>().add(new Long(1)).add(new Long(2)).build();
-        final Long deviceId = new Long(100);
+        final String deviceId = "100";
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
         final int numMinutes = 50;
         for (final Long accountId: accountIds) {
             for (int i = 0; i < numMinutes; i++) {
                 deviceDataList.add(new DeviceData.Builder()
                         .withAccountId(accountId)
-                        .withDeviceId(deviceId)
+                        .withExternalDeviceId(deviceId)
                         .withDateTimeUTC(firstTime.plusMinutes(i))
                         .withOffsetMillis(0)
                         .build());
@@ -139,7 +139,7 @@ public class DeviceDataDAODynamoDBIT {
     public void testBatchInsertAllDuplicateKeys() {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
-                .withDeviceId(new Long(0))
+                .withExternalDeviceId("1")
                 .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0, DateTimeZone.UTC))
                 .withOffsetMillis(0);
         final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
@@ -155,7 +155,7 @@ public class DeviceDataDAODynamoDBIT {
     public void testBatchInsertWithDuplicateKeys() {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
-                .withDeviceId(new Long(0))
+                .withExternalDeviceId("1")
                 .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0, DateTimeZone.UTC))
                 .withOffsetMillis(0);
         final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
@@ -171,7 +171,7 @@ public class DeviceDataDAODynamoDBIT {
     public void testBatchInsertWithSimulatedThrottling() {
         final DeviceData.Builder builder = new DeviceData.Builder()
                 .withAccountId(new Long(0))
-                .withDeviceId(new Long(0))
+                .withExternalDeviceId("1")
                 .withDateTimeUTC(new DateTime(2015, 10, 1, 8, 0, DateTimeZone.UTC))
                 .withOffsetMillis(0);
         final List<DeviceData> deviceDataList = new ImmutableList.Builder<DeviceData>()
@@ -183,11 +183,11 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(getTableCount(), is(1));
     }
 
-    private void addDataForQuerying(final Long accountId, final Long deviceId, final Integer offsetMillis, final DateTime firstTime) {
+    private void addDataForQuerying(final Long accountId, final String deviceId, final Integer offsetMillis, final DateTime firstTime) {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
-                .withDeviceId(deviceId)
+                .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime)
                 .withAmbientTemperature(70)
@@ -196,7 +196,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
-                .withDeviceId(deviceId)
+                .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(1))
                 .withAmbientTemperature(77)
@@ -204,7 +204,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
-                .withDeviceId(deviceId)
+                .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(2))
                 .withAmbientTemperature(69)
@@ -213,7 +213,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
-                .withDeviceId(deviceId)
+                .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(3))
                 .withAmbientTemperature(90)
@@ -222,7 +222,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
-                .withDeviceId(deviceId)
+                .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(4))
                 .withAmbientTemperature(70)
@@ -231,7 +231,7 @@ public class DeviceDataDAODynamoDBIT {
                 .build());
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
-                .withDeviceId(deviceId)
+                .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(5))
                 .withAmbientTemperature(20)
@@ -241,7 +241,7 @@ public class DeviceDataDAODynamoDBIT {
         // Skip minute 6
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
-                .withDeviceId(deviceId)
+                .withExternalDeviceId(deviceId)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(firstTime.plusMinutes(7))
                 .withAmbientTemperature(100)
@@ -254,7 +254,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration1Minute() {
         final Long accountId = new Long(1);
-        final Long deviceId = new Long(1);
+        final String deviceId = "2";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
@@ -262,22 +262,42 @@ public class DeviceDataDAODynamoDBIT {
 
         // From start to start+1, 2 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
                 is(2));
         // from start to start should be 1 result
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId, firstTime, firstTime, 1).size(),
+                        accountId, deviceId, firstTime, firstTime, 1).size(),
                 is(1));
         // Account ID unrecognized should be 0 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId + 1000, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId + 1000, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
                 is(0));
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationMultipleSenseIds() {
+        final Long accountId = new Long(1);
+        final String deviceId1 = "2";
+        final String deviceId2 = "3";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId1, offsetMillis, firstTime);
+        addDataForQuerying(accountId, deviceId2, offsetMillis, firstTime);
+
+        assertThat(getTableCount(), is(14));
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId, deviceId1, firstTime, firstTime.plusMinutes(10), 1).size(),
+                is(7));
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId, deviceId2, firstTime, firstTime.plusMinutes(10), 1).size(),
+                is(7));
     }
 
     @Test
     public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5And60Minutes() {
         final Long accountId = new Long(1);
-        final Long deviceId = new Long(1);
+        final String deviceId = "2";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
@@ -286,7 +306,7 @@ public class DeviceDataDAODynamoDBIT {
 
         // 5-minute results starting at firstTime
         final List<DeviceData> fiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                deviceId, accountId, firstTime, firstTime.plusMinutes(10), 5);
+                accountId, deviceId, firstTime, firstTime.plusMinutes(10), 5);
         assertThat(fiveMinuteresults.size(), is(2));
         assertThat(fiveMinuteresults.get(0).ambientTemperature, is(69));
         assertThat(fiveMinuteresults.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
@@ -295,7 +315,7 @@ public class DeviceDataDAODynamoDBIT {
 
         // 5-minute results starting at a weird time (firstTime+3)
         final List<DeviceData> offsetFiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                deviceId, accountId, firstTime.plusMinutes(3), firstTime.plusMinutes(10), 5);
+                accountId, deviceId, firstTime.plusMinutes(3), firstTime.plusMinutes(10), 5);
         assertThat(offsetFiveMinuteresults.size(), is(2));
         assertThat(offsetFiveMinuteresults.get(0).ambientTemperature, is(70));
         assertThat(offsetFiveMinuteresults.get(0).dateTimeUTC, is(firstTime));
@@ -305,7 +325,7 @@ public class DeviceDataDAODynamoDBIT {
 
         // Aggregate by hour (60 minutes)
         final List<DeviceData> hourlyResults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                deviceId, accountId, firstTime, firstTime.plusMinutes(90), 60);
+                accountId, deviceId, firstTime, firstTime.plusMinutes(90), 60);
         assertThat(hourlyResults.size(), is(1));
         assertThat(hourlyResults.get(0).ambientTemperature, is(20));
         assertThat(hourlyResults.get(0).dateTimeUTC, is(firstTime));
@@ -338,14 +358,14 @@ public class DeviceDataDAODynamoDBIT {
         });
 
         final Long accountId = new Long(1);
-        final Long deviceId = new Long(1);
+        final String deviceId = "2";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        deviceId, accountId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
                 is(2));
     }
 
@@ -362,7 +382,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGenerateTimeSeriesByUTCTime() {
         final Long accountId = new Long(1);
-        final Long deviceId = new Long(2);
+        final String deviceId = "2";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
@@ -394,7 +414,7 @@ public class DeviceDataDAODynamoDBIT {
     public void testGenerateTimeSeriesByUTCTimeInvalidSensor() {
         final Optional<Device.Color> colorOptional = Optional.absent();
         final Optional<Calibration> calibrationOptional = Optional.absent();
-        deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(new Long(1), new Long(1), new Long(1), new Long(1), 1, "not_a_sensor", 0, colorOptional, calibrationOptional);
+        deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(new Long(1), new Long(1), new Long(1), "2", 1, "not_a_sensor", 0, colorOptional, calibrationOptional);
     }
 
 }

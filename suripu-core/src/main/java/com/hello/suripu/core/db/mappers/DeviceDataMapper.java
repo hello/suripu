@@ -27,6 +27,7 @@ public class DeviceDataMapper implements ResultSetMapper<DeviceData>{
         final DeviceData deviceData = new DeviceData(
                 r.getLong("account_id"),
                 r.getLong("device_id"),
+                "",
                 r.getInt("ambient_temp"),
                 r.getInt("ambient_humidity"),
                 r.getInt("ambient_air_quality"),
