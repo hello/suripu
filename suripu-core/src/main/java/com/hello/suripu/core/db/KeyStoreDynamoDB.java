@@ -167,43 +167,34 @@ public class KeyStoreDynamoDB implements KeyStore {
         }
     }
 
+    /**
+     *
+     * @param deviceIds set of external sense/pill IDs
+     * @return a map of id to decoded key in bytes or absent if the id isn't found
+     * this method should only be called by internal workers and never be exposed to any APIs
+     */
     @Override
     public Map<String, Optional<byte[]>> getBatch(final Set<String> deviceIds) {
+        final Map<String, DeviceKeyStoreRecord> deviceKeyStoreRecordMap = getKeyStoreRecordBatch(deviceIds);
 
-        final BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
-        final List<Map<String, AttributeValue>> itemKeys = Lists.newArrayList();
-
+        final Map<String, Optional<byte[]>> keyMap = Maps.newHashMap();
         for (final String deviceId : deviceIds) {
-            final Map<String, AttributeValue> attributeValueMap = Maps.newHashMap();
-            attributeValueMap.put(DEVICE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceId));
-            itemKeys.add(attributeValueMap);
+            keyMap.put(deviceId, Optional.<byte[]>absent());
         }
 
-        final KeysAndAttributes key = new KeysAndAttributes().withKeys(itemKeys).withAttributesToGet(DEVICE_ID_ATTRIBUTE_NAME, AES_KEY_ATTRIBUTE_NAME);
-        final Map<String, KeysAndAttributes> requestItems = Maps.newHashMap();
-        requestItems.put(keyStoreTableName, key);
-
-        batchGetItemRequest.withRequestItems(requestItems);
-
-        try {
-            final BatchGetItemResult batchGetItemResult = dynamoDBClient.batchGetItem(batchGetItemRequest);
-            final Map<String, Optional<byte[]>> results = Maps.newHashMap();
-
-            for (final String item : batchGetItemResult.getResponses().keySet()) {
-                final List<Map<String, AttributeValue>> responses = batchGetItemResult.getResponses().get(item);
-                for (final Map<String, AttributeValue> response : responses) {
-                    final String deviceId = response.get(DEVICE_ID_ATTRIBUTE_NAME).getS();
-                    results.put(deviceId, fromItem(response, deviceId, false));
-                }
-            }
-            return results;
-        } catch (AmazonServiceException ase){
-            LOGGER.error("Failed getting keys. {}", ase.getMessage());
-
+        for (final DeviceKeyStoreRecord deviceKeyStoreRecord : deviceKeyStoreRecordMap.values()) {
+            final Optional<byte[]> decodedKey = decodeKey(deviceKeyStoreRecord.uncensoredKey());
+            keyMap.put(deviceKeyStoreRecord.deviceId, decodedKey);
         }
-        return Collections.EMPTY_MAP;
+        return keyMap;
     }
 
+
+    /**
+     *
+     * @param deviceIds set of external sense/pill IDs
+     * @return a map of id to device keystore record which contains censored keys which can be safely exposed
+     */
     @Override
     public Map<String, DeviceKeyStoreRecord> getKeyStoreRecordBatch(final Set<String> deviceIds) {
 
@@ -235,7 +226,7 @@ public class KeyStoreDynamoDB implements KeyStore {
                     final String metadata = response.containsKey(METADATA) ? response.get(METADATA).getS() : "";
                     final String createdAt = response.containsKey(CREATED_AT_ATTRIBUTE_NAME) ? response.get(CREATED_AT_ATTRIBUTE_NAME).getS() : "";
 
-                    results.put(deviceId, DeviceKeyStoreRecord.create(aesKey, metadata, createdAt));
+                    results.put(deviceId, DeviceKeyStoreRecord.create(deviceId, aesKey, metadata, createdAt));
                 }
             }
             return results;
@@ -257,13 +248,7 @@ public class KeyStoreDynamoDB implements KeyStore {
         }
 
         final String hexEncodedKey = item.get(AES_KEY_ATTRIBUTE_NAME).getS();
-        try {
-            return Optional.of(Hex.decodeHex(hexEncodedKey.toCharArray()));
-        } catch (DecoderException e) {
-            LOGGER.error("Failed to decode key from store");
-        }
-
-        return Optional.absent();
+        return decodeKey(hexEncodedKey);
     }
 
     private Optional<byte[]> getRemotely(final String deviceId, final Boolean strict) {
@@ -327,8 +312,16 @@ public class KeyStoreDynamoDB implements KeyStore {
         final String metadata = getItemResult.getItem().containsKey(METADATA) ? getItemResult.getItem().get(METADATA).getS() : "n/a";
         final String createdAt = getItemResult.getItem().containsKey(CREATED_AT_ATTRIBUTE_NAME) ? getItemResult.getItem().get(CREATED_AT_ATTRIBUTE_NAME).getS() : "";
 
-        return Optional.of(DeviceKeyStoreRecord.create(aesKey, metadata, createdAt));
+        return Optional.of(DeviceKeyStoreRecord.create(deviceId, aesKey, metadata, createdAt));
     }
 
 
+    private Optional<byte[]> decodeKey(final String encodedKey) {
+        try {
+            return Optional.of(Hex.decodeHex(encodedKey.toCharArray()));
+        } catch (DecoderException e) {
+            LOGGER.error("Failed to decode key {}", encodedKey);
+        }
+        return Optional.absent();
+    }
 }
