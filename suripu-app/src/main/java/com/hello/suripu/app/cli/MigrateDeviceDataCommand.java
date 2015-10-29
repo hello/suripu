@@ -176,7 +176,7 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                         .withAudioPeakDisturbancesDB(getDeviceDataInteger(entry, Columns.AUDIO_PEAK_DISTURBANCES_DB))
                         .withAudioNumDisturbances(getDeviceDataInteger(entry, Columns.AUDIO_NUM_DISTURBANCES))
                         .withOffsetMillis(getDeviceDataInteger(entry, Columns.OFFSET_MILLIS))
-                        .withDateTimeUTC(dateTimeFormatter.parseDateTime(getDeviceDataString(entry, Columns.LOCAL_UTC_TS)))
+                        .withDateTimeUTC(dateTimeFormatter.parseDateTime(getDeviceDataString(entry, Columns.TS)))
                         .withWaveCount(getDeviceDataInteger(entry, Columns.WAVE_COUNT))
                         .withHoldCount(getDeviceDataInteger(entry, Columns.HOLD_COUNT))
                         .build();
