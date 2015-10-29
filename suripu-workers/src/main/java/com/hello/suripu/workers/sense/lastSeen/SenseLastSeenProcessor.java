@@ -41,7 +41,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     private final static Integer WIFI_INFO_BATCH_MAX_SIZE = 25;
     private final static Integer SIGNIFICANT_RSSI_CHANGE = 5;
     private final static Integer BLOOM_FILTER_PERIOD_MINUTES = 2;   // re-create bloom filter every 2 minutes because it's impossible to remove an element from it
-    private final static Integer BLOOM_FILTER_CAPACITY = 40000; // roughly equal to number of senses we have
+    private final static Integer BLOOM_FILTER_CAPACITY = 40000; // this constant should be much greater than number of senses we have
     private final static double BLOOM_FILTER_ERROR_RATE = 0.05;
 
     private final Integer maxRecords;
@@ -87,6 +87,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
         if(DateTime.now(DateTimeZone.UTC).isAfter(this.lastBloomFilterCreated.plusMinutes(BLOOM_FILTER_PERIOD_MINUTES))) {
             createNewBloomFilter();
+            LOGGER.trace("New bloom filter created at {}", this.lastBloomFilterCreated);
         }
 
         for(final Record record : records) {
