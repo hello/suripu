@@ -35,6 +35,7 @@ public class OnlineHmmSensorDataBinning {
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
     final static protected double LIGHT_INCREASE_THRESHOLD = 1.0;
+    final static protected double LIGHT_INCREASE_MAXIMUM_LIGHT = 3.0;
     final static protected double LIGHT_DECREASE_THRESHOLD = -1.0;
     final static protected int HOUR_OF_DAY_WAVES_COUNT_START = 4; //04:00 local time
     final static protected int HOUR_OF_DAY_WAVES_COUNT_END = 12; //12:00 local time
@@ -155,7 +156,7 @@ public class OnlineHmmSensorDataBinning {
             final double v2 = Math.log(value * params.lightPreMultiplier + 1.0) / Math.log(2.0);
             final double v1 = Math.log(prevvalue * params.lightPreMultiplier + 1.0) / Math.log(2.0);
 
-            if (v2 - v1 > LIGHT_INCREASE_THRESHOLD) {
+            if (v2 - v1 > LIGHT_INCREASE_THRESHOLD && v1 < LIGHT_INCREASE_MAXIMUM_LIGHT) {
                 maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.LIGHT_INCREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
 
