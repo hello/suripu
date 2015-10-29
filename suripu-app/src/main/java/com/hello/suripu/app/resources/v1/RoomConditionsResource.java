@@ -143,6 +143,7 @@ public class RoomConditionsResource extends BaseResource {
     }
 
 
+    // TODO this should be deprecated
     @Timed
     @GET
     @Path("/all_sensors/week")
@@ -187,8 +188,15 @@ public class RoomConditionsResource extends BaseResource {
         }
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
-        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+
+        List<Sample> timeSeries;
+        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
+            timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
+                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        } else {
+            timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
+                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        }
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }
