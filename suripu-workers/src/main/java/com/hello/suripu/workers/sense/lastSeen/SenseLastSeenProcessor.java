@@ -167,7 +167,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             final String scannedSSID = wifiAccessPoint.getSsid();
 
             // Scans return all seen networks, we want to only grab info of the connected one
-            if (!connectedSSID.equals(scannedSSID)) {
+            if (!connectedSSID.equals(scannedSSID) || connectedSSID.isEmpty()) {
                 continue;
             }
 
