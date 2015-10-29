@@ -105,7 +105,7 @@ public class AmazonDynamoDBClientFactory {
 
         final AmazonDynamoDBAsync client = new AmazonDynamoDBAsyncClient(awsCredentialsProvider, clientConfiguration);
         client.setEndpoint(endpoint);
-        clients.put(endpoint, client);
+        asyncClients.put(endpoint, client);
         return client;
     }
 
