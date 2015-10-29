@@ -13,6 +13,7 @@ import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackDAO;
@@ -80,6 +81,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final DeviceReadDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
+    private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackReadDAO feedbackDAO;
     private final SleepHmmDAO sleepHmmDAO;
@@ -113,6 +115,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                                                             final DeviceReadDAO deviceDAO,
                                                             final DeviceDataDAO deviceDataDAO,
+                                                            final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                                                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                                                             final FeedbackReadDAO feedbackDAO,
                                                             final SleepHmmDAO sleepHmmDAO,
@@ -125,7 +128,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(trackerMotionDAO,
-                deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,
+                deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO, featureExtractionModelsDAO,
                 Optional.<UUID>absent(), calibrationDAO);
@@ -133,19 +136,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO);
     }
 
     //private SessionLogDebug(final String)
 
     private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                            final DeviceReadDAO deviceDAO,
-                            final DeviceDataDAO deviceDataDAO,
-                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
-                            final FeedbackReadDAO feedbackDAO,
-                            final SleepHmmDAO sleepHmmDAO,
-                            final AccountReadDAO accountDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                              final DeviceReadDAO deviceDAO,
+                              final DeviceDataDAO deviceDataDAO,
+                              final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
+                              final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+                              final FeedbackReadDAO feedbackDAO,
+                              final SleepHmmDAO sleepHmmDAO,
+                              final AccountReadDAO accountDAO,
+                              final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
                               final OnlineHmmModelsDAO priorsDAO,
                               final FeatureExtractionModelsDAO featureExtractionModelsDAO,
@@ -154,6 +158,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
+        this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
         this.sleepHmmDAO = sleepHmmDAO;
@@ -480,15 +485,24 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             // query dates in utc_ts (table has an index for this)
             LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
 
-            allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
-                    endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
-            );
+            if (hasDeviceDataDynamoDBEnabled(accountId)) {
+                allSensorSampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
+                        targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                        endDate.minusMillis(tzOffsetMillis).getMillis(),
+                        accountId, externalDeviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
+                );
+                LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
+            } else {
+                allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                        targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                        endDate.minusMillis(tzOffsetMillis).getMillis(),
+                        accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
+                );
+            }
         } else {
             // TODO the feature flipper has been at 100 for a while, remove this?
             // query dates are in local_utc_ts
-            LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
+            LOGGER.debug("Query all sensors with local_utc_ts for account_id = {} and day = {}", accountId, targetDate);
 
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(),
