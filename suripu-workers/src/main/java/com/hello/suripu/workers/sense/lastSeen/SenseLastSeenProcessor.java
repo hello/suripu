@@ -110,7 +110,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
             if (lastSeenSenseDataOptional.isPresent()){
                 // Do not persist data for sense we've seen recently and has no interaction
-                if (lastSeenSenseDataOptional.get().waveCount == 0) {
+                if (lastSeenSenseDataOptional.get().waveCount == 0 || lastSeenSenseDataOptional.get().holdCount == 0) {
                     if(bloomFilter.mightContain(senseExternalId)) {
                         LOGGER.debug("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_PERIOD_MINUTES);
                         continue;
