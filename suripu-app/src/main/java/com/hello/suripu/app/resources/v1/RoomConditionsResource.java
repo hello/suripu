@@ -237,9 +237,16 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        AllSensorSampleList sensorData;
+        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
+            sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
+                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        } else {
+            sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        }
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
