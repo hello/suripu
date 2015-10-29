@@ -70,12 +70,12 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
     @Override
     public void initialize(String s) {
-        shardId = s;
+        this.shardId = s;
         createNewBloomFilter();
     }
 
     private void createNewBloomFilter() {
-        bloomFilter = BloomFilter.create(Funnels.stringFunnel(), BLOOM_FILTER_CAPACITY, BLOOM_FILTER_ERROR_RATE);
+        this.bloomFilter = BloomFilter.create(Funnels.stringFunnel(), BLOOM_FILTER_CAPACITY, BLOOM_FILTER_ERROR_RATE);
         this.lastBloomFilterCreated = DateTime.now(DateTimeZone.UTC);
     }
 
