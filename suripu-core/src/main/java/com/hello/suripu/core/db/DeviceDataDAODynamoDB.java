@@ -525,7 +525,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return new DateTime(timestampUTC, DateTimeZone.UTC);
     }
 
-    @Timed
     public List<Sample> generateTimeSeriesByUTCTime(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
@@ -548,7 +547,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         final List<DeviceData> rows = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, queryStartTime, queryEndTime, slotDurationInMinutes, sensorNameToAttributeNames(sensor));
         LOGGER.debug("Retrieved {} rows from database", rows.size());
 
-        if(rows.size() == 0) {
+        if(rows.isEmpty()) {
             return new ArrayList<>();
         }
 
@@ -588,7 +587,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
     }
 
-    @Timed
     public AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,
@@ -612,7 +610,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
         final AllSensorSampleList sensorDataResults = new AllSensorSampleList();
 
-        if(rows.size() == 0) {
+        if(rows.isEmpty()) {
             return sensorDataResults;
         }
 
