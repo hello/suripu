@@ -551,7 +551,7 @@ public class RoomConditionsResource extends BaseResource {
         } else {
              timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                      accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                    sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
+                     sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
         }
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
