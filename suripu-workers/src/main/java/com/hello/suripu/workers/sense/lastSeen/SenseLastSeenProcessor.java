@@ -76,7 +76,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
     private void createNewBloomFilter() {
         bloomFilter = BloomFilter.create(Funnels.stringFunnel(), BLOOM_FILTER_CAPACITY, BLOOM_FILTER_ERROR_RATE);
-        this.lastBloomFilterCreated = DateTime.now();
+        this.lastBloomFilterCreated = DateTime.now(DateTimeZone.UTC);
     }
 
     @Timed
@@ -108,17 +108,19 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             final String senseExternalId = batchPeriodicData.getDeviceId();
             final Optional<DeviceData> lastSeenSenseDataOptional = getSenseData(batchPeriodicDataWorker);
 
-            if (lastSeenSenseDataOptional.isPresent()){
-                // Do not persist data for sense we've seen recently and has no interaction
-                if (lastSeenSenseDataOptional.get().waveCount == 0 || lastSeenSenseDataOptional.get().holdCount == 0) {
-                    if(bloomFilter.mightContain(senseExternalId)) {
-                        LOGGER.debug("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_PERIOD_MINUTES);
-                        continue;
-                    }
-                }
-                bloomFilter.put(senseExternalId);
-                lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
+            if (!lastSeenSenseDataOptional.isPresent()){
+                continue;
             }
+
+            // Do not persist data for sense there is no interaction and we have seen recently
+            if (!hasInteraction(lastSeenSenseDataOptional.get()) && bloomFilter.mightContain(senseExternalId)) {
+                LOGGER.debug("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_PERIOD_MINUTES);
+                continue;
+            }
+
+            // If all is well, update bloom filter and persist data
+            bloomFilter.put(senseExternalId);
+            lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
 
             activeSenses.put(batchPeriodicData.getDeviceId(), batchPeriodicDataWorker.getReceivedAt());
 
@@ -238,5 +240,9 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             return true;
         }
         return Math.abs(wifiInfoHistory.get(senseId).rssi - rssi) >= SIGNIFICANT_RSSI_CHANGE;
+    }
+
+    private Boolean hasInteraction(final DeviceData senseData) {
+        return (senseData.waveCount > 0) || (senseData.holdCount > 0);
     }
 }
