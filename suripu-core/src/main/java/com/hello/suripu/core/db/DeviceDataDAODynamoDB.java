@@ -521,6 +521,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return new ImmutableSet.Builder<Attribute>().addAll(BASE_ATTRIBUTES).addAll(sensorAttributes).build();
     }
 
+    private DateTime timestampToDateTimeUTC(final long timestampUTC) {
+        return new DateTime(timestampUTC, DateTimeZone.UTC);
+    }
+
     @Timed
     public List<Sample> generateTimeSeriesByUTCTime(
             final Long queryStartTimestampInUTC,
@@ -533,10 +537,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final Optional<Device.Color> color,
             final Optional<Calibration> calibrationOptional) throws IllegalArgumentException {
 
-        final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
-        final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
+        final DateTime queryEndTime = timestampToDateTimeUTC(queryEndTimestampInUTC);
+        final DateTime queryStartTime = timestampToDateTimeUTC(queryStartTimestampInUTC);
 
-        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
+        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, queryEndTime);
         LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
         LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
@@ -596,10 +600,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final Optional<Calibration> calibrationOptional) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
-        final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
-        final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
+        final DateTime queryEndTime = timestampToDateTimeUTC(queryEndTimestampInUTC);
+        final DateTime queryStartTime = timestampToDateTimeUTC(queryStartTimestampInUTC);
 
-        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, new DateTime(queryEndTimestampInUTC));
+        LOGGER.trace("Client utcTimeStamp : {} ({})", queryEndTimestampInUTC, queryEndTime);
         LOGGER.trace("QueryEndTime: {} ({})", queryEndTime, queryEndTime.getMillis());
         LOGGER.trace("QueryStartTime: {} ({})", queryStartTime, queryStartTime.getMillis());
 
