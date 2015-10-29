@@ -3,6 +3,7 @@ package com.hello.suripu.workers.sense.lastSeen;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsync;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
@@ -85,8 +86,8 @@ public final class SenseLastSeenWorkerCommand extends WorkerEnvironmentCommand<S
 
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
 
-        final AmazonDynamoDB wifiInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.WIFI_INFO);
-        final AmazonDynamoDB senseLastSeenDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+        final AmazonDynamoDBAsync wifiInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTableAsync(DynamoDBTableName.WIFI_INFO);
+        final AmazonDynamoDBAsync senseLastSeenDynamoDBClient = amazonDynamoDBClientFactory.getForTableAsync(DynamoDBTableName.SENSE_LAST_SEEN);
 
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
 
