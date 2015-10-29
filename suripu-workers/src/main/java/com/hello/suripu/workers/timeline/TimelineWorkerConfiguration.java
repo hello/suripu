@@ -154,4 +154,10 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     public Integer getMergeUserInfoDynamoDBReadCapacityPerSecondUpperBound(){
         return this.mergeUserInfoDynamoDBReadCapacityPerSecondUpperBound;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("device_data")
+    private DynamoDBConfiguration deviceDataConfiguration;
+    public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
 }

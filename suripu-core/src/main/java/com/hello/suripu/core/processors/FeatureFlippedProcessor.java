@@ -105,4 +105,8 @@ public class FeatureFlippedProcessor {
     protected Boolean isSensorsDBUnavailable(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SENSORS_DB_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasDeviceDataDynamoDBEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA, accountId, Collections.EMPTY_LIST);
+    }
 }
