@@ -26,7 +26,7 @@ public class ReceiveResourceTest {
 
         final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
         final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration, false);
-        assertThat(uploadCycle, is(1));
+        assertThat(uploadCycle, is(SenseUploadConfiguration.DEFAULT_UPLOAD_INTERVAL));
 
     }
 
@@ -53,7 +53,7 @@ public class ReceiveResourceTest {
 
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
             final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration, false);
-            assertThat(uploadCycle <= senseUploadConfiguration.getLongInterval(), is(true));
+            assertThat(uploadCycle <= 4, is(true));
         }
     }
 
@@ -67,7 +67,7 @@ public class ReceiveResourceTest {
 
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
             final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(), senseUploadConfiguration, false);
-            assertThat(uploadCycle <= senseUploadConfiguration.getLongInterval(), is(true));
+            assertThat(uploadCycle <= senseUploadConfiguration.getDefaultUploadInterval(), is(true));
         }
     }
 
@@ -96,7 +96,7 @@ public class ReceiveResourceTest {
             final DateTime current = new DateTime(random.nextLong());
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
             final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, current, senseUploadConfiguration, false);
-            assertThat(uploadCycle <= senseUploadConfiguration.getLongInterval(), is(true));
+            assertThat(uploadCycle <= senseUploadConfiguration.getDefaultUploadInterval(), is(true));
         }
     }
 
@@ -122,11 +122,12 @@ public class ReceiveResourceTest {
         final long actualRingTime = DateTime.now(DateTimeZone.UTC).withDayOfWeek(3).withHourOfDay(12).withSecondOfMinute(0).withMillisOfSecond(0).getMillis();
 
         final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
-        final int reducedUploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(DateTimeZone.UTC).withDayOfWeek(3).withHourOfDay(13).withMinuteOfHour(0), senseUploadConfiguration, true);
+        final int increasedUploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(DateTimeZone.UTC).withDayOfWeek(3).withHourOfDay(13).withMinuteOfHour(0), senseUploadConfiguration, true);
         final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, DateTime.now(DateTimeZone.UTC).withDayOfWeek(3).withHourOfDay(13).withMinuteOfHour(0), senseUploadConfiguration, false);
 
-        assertThat(SenseUploadConfiguration.REDUCED_LONG_INTERVAL.equals(reducedUploadCycle), is(true));
-        assertThat(reducedUploadCycle < uploadCycle, is(true));
+        final Integer increasedInterval = SenseUploadConfiguration.INCREASED_INTERVAL_NON_PEAK;
+        assertThat(increasedInterval.equals(increasedInterval), is(true));
+        assertThat(increasedInterval > uploadCycle, is(true));
     }
 
     @Test

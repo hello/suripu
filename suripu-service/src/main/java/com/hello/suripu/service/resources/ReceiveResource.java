@@ -396,8 +396,8 @@ public class ReceiveResource extends BaseResource {
                 audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
             }
 
-            final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
-            final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
+            final Boolean isIncreasedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.INCREASE_UPLOAD_INTERVAL, deviceName, groups);
+            final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isIncreasedInterval);
             responseBuilder.setBatchSize(uploadCycle);
 
             if (shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())) {
@@ -448,11 +448,12 @@ public class ReceiveResource extends BaseResource {
     }
 
 
-    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration, final Boolean isReducedInterval) {
+    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration, final Boolean isIncreasedInterval){
+
         int uploadInterval = 1;
         final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
         // Alter upload cycles based on date-time
-        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration, isReducedInterval);
+        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration, isIncreasedInterval);
 
         // Boost upload cycle based on expected alarm deadline.
         final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);

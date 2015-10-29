@@ -38,6 +38,7 @@ public class FeatureFlipper {
     public final static String HMM_PARTNER_FILTER = "hmm_partner_filter";
 
     public final static String IN_OUT_BED_EVENTS = "in_out_bed_events";
+    public final static String INCREASE_UPLOAD_INTERVAL = "increase_upload_interval";
     public final static String INSIGHTS_BED_LIGHT_DURATION = "insights_bed_light_duration";
     public final static String INSIGHTS_BED_LIGHT_INTENSITY_RATIO = "insights_bed_light_intensity_ratio";
     public final static String INSIGHTS_HUMIDITY = "insights_humidity";

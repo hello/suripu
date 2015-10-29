@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.util.AlarmUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -267,6 +269,109 @@ public class AlarmUtilsTest {
         assertThat(actualRingTime.isEmpty(), is(true));
         assertThat(actualRingTime.processed(), is(false));
     }
+
+    @Test
+    public void testGetNextRingTimeBasedClockChanges(){
+
+        // Use case:
+        // Someone sets an alarm the day before DST changes
+        // User experienced the alarm ringing an hour earlier than expected.
+        // Possible cause, the alarm timestamp is in UTC and not taking into account FUTURE dst change
+        // Possible solutions:
+        // + check if we are on a DST boundary (today is not and next scheduled alarm is)
+        // + check if we are on a opposite DST boundary (today is DST and next scheduled alarm is not)
+        // + compute the UTC timestamp based on the local time / timezone of the user
+        // + ???
+
+        final List<Alarm> alarmList = Lists.newArrayList();
+        final Alarm.Builder builder = new Alarm.Builder();
+
+        final DateTimeZone amsterdam = DateTimeZone.forID("Europe/Amsterdam");
+
+        final DateTime alarmTime = new DateTime(2015,10,25, 6,20,0, amsterdam).withMillisOfSecond(0);
+
+
+        builder.withDayOfWeek(Sets.newHashSet(DateTimeConstants.SUNDAY, DateTimeConstants.MONDAY, DateTimeConstants.SATURDAY))
+                .withHour(alarmTime.getHourOfDay())
+                .withMinute(alarmTime.getMinuteOfHour())
+                .withIsRepeated(true)
+                .withIsEnabled(true)
+                .withIsEditable(true)
+                .withIsSmart(false)
+                .withAlarmSound(new AlarmSound(1, "god save the queen"));
+
+        alarmList.add(builder.build());
+
+        final DateTime saturdayNight = new DateTime(2015,10,24,23,0,0, amsterdam);
+
+        final RingTime actualRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(alarmList, saturdayNight.getMillis(), amsterdam);
+        assertThat(actualRingTime.isEmpty(), is(false));
+        assertThat(actualRingTime.processed(), is(false));
+        assertThat(actualRingTime.actualRingTimeUTC, is(alarmTime.getMillis()));
+
+
+        // Daylight Saving Time (United States) 2016 begins at 2:00 AM on
+        // Sunday, March 13
+        // and ends at 2:00 AM on
+        // Sunday, November 6
+
+
+        // Where in the world
+        final DateTimeZone pacific = DateTimeZone.forID("America/Los_Angeles");
+
+
+        // DST OFF 2015 -
+        // when alarm is created
+        final DateTime wednesdayMorning = new DateTime(2015,10,28,10,53,0, pacific);
+
+        // when alarm is supposed to ring
+        final DateTime alarmTimeForNextSundayWithDSTChanges = new DateTime(2015,11,1,7,0,0, pacific);
+        final Alarm alarmForNextSundayWithDSTChange  = builder
+                .withDayOfWeek(Sets.newHashSet(DateTimeConstants.SUNDAY))
+                .withHour(alarmTimeForNextSundayWithDSTChanges.getHourOfDay())
+                .withMinute(alarmTimeForNextSundayWithDSTChanges.getMinuteOfHour())
+                .withIsRepeated(true)
+                .build();
+
+        final RingTime computedRingTime = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(Lists.newArrayList(alarmForNextSundayWithDSTChange), wednesdayMorning.getMillis(), pacific);
+        assertThat(!computedRingTime.isEmpty(), is(true));
+        assertThat(computedRingTime.processed(), is(false));
+        assertThat(computedRingTime.actualRingTimeUTC, is(alarmTimeForNextSundayWithDSTChanges.getMillis()));
+
+
+        // DST ON 2016
+        final DateTime fridayMorningBeforeDSTOn = new DateTime(2016,3,11,12,0,0, pacific);
+        final DateTime firstAlarmTimeAfterDSTOn = new DateTime(2016,3,13,5,5,0, pacific);
+        final Alarm firstAlarmAfterDSTOn = builder
+                .withDayOfWeek(Sets.newHashSet(DateTimeConstants.SUNDAY))
+                .withHour(firstAlarmTimeAfterDSTOn.getHourOfDay())
+                .withMinute(firstAlarmTimeAfterDSTOn.getMinuteOfHour())
+                .withIsRepeated(true)
+                .build();
+
+        final RingTime ringTimeDstOn = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(Lists.newArrayList(firstAlarmAfterDSTOn), fridayMorningBeforeDSTOn.getMillis(), pacific);
+        assertThat(!ringTimeDstOn.isEmpty(), is(true));
+        assertThat(ringTimeDstOn.processed(), is(false));
+        assertThat(ringTimeDstOn.actualRingTimeUTC, is(firstAlarmTimeAfterDSTOn.getMillis()));
+
+
+
+        // DST OFF 2016
+        final DateTime fridayMorningBeforeDSTOff = new DateTime(2016,11,4,14,0,0, pacific);
+        final DateTime firstAlarmTimeAfterDSTOff = new DateTime(2016,11,6,2,5,0, pacific);
+        final Alarm firstAlarmAfterDSTOff = builder
+                .withDayOfWeek(Sets.newHashSet(DateTimeConstants.SUNDAY))
+                .withHour(firstAlarmTimeAfterDSTOff.getHourOfDay())
+                .withMinute(firstAlarmTimeAfterDSTOff.getMinuteOfHour())
+                .withIsRepeated(true)
+                .build();
+
+        final RingTime ringTimeDstOff = Alarm.Utils.generateNextRingTimeFromAlarmTemplatesForUser(Lists.newArrayList(firstAlarmAfterDSTOff), fridayMorningBeforeDSTOff.getMillis(), pacific);
+        assertThat(!ringTimeDstOff.isEmpty(), is(true));
+        assertThat(ringTimeDstOff.processed(), is(false));
+        assertThat(ringTimeDstOff.actualRingTimeUTC, is(firstAlarmTimeAfterDSTOff.getMillis()));
+    }
+
 
 
     @Test
