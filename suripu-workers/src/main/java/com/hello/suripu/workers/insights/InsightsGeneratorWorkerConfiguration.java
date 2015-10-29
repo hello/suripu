@@ -1,6 +1,7 @@
 package com.hello.suripu.workers.insights;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -45,6 +46,29 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
         return maxRecords;
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty("dynamo_db")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+    public NewDynamoDBConfiguration dynamoDBConfiguration(){
+        return dynamoDBConfiguration;
+    }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_score_version")
+    private String sleepScoreVersion;
+    public String getSleepScoreVersion() { return sleepScoreVersion; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("sleep_stats_version")
+    private String sleepStatsVersion;
+    public String getSleepStatsVersion() {
+        return this.sleepStatsVersion;
+    }
+
+    /*
     @Valid
     @NotNull
     @JsonProperty("insights_dynamo_db")
@@ -97,5 +121,5 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
         return this.featuresDynamoDBConfiguration;
     }
-
+*/
 }

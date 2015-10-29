@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
@@ -88,6 +89,7 @@ public class InsightProcessorTest {
         final AccountPreferencesDAO preferencesDAO = Mockito.mock(AccountPreferencesDAO.class);
         final LightData lightData = Mockito.mock(LightData.class);
         final WakeStdDevData wakeStdDevData = Mockito.mock(WakeStdDevData.class);
+        final CalibrationDAO calibrationDAO = Mockito.mock(CalibrationDAO.class);
         final AccountInfoProcessor accountInfoProcessor = Mockito.mock(AccountInfoProcessor.class);
 
         //Prepping for taking care of @NotNull check for light
@@ -144,7 +146,8 @@ public class InsightProcessorTest {
                 preferencesDAO,
                 accountInfoProcessor,
                 lightData,
-                wakeStdDevData);
+                wakeStdDevData,
+                calibrationDAO);
 
         //only to get rid of null pointer exception
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);

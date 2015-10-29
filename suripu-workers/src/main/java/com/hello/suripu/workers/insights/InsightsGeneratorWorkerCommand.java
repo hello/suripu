@@ -3,7 +3,6 @@ package com.hello.suripu.workers.insights;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
@@ -12,15 +11,17 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
-import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -141,30 +142,39 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
         kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
 
         // setup dynamoDB clients
-        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
-        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
+        final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
+        final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
+
+        final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
-        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, "features", featureNamespace);
+        final FeatureStore featureStore = new FeatureStore(featureDynamoDB, tableNames.get(DynamoDBTableName.FEATURES), featureNamespace);
 
-        final AmazonDynamoDB insightsDynamoDB = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
-        final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(insightsDynamoDB, configuration.getInsightsDynamoDB().getTableName());
+        final AmazonDynamoDB insightsDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.INSIGHTS);
+        final InsightsDAODynamoDB insightsDAODynamoDB = new InsightsDAODynamoDB(insightsDynamoDB,
+                tableNames.get(DynamoDBTableName.INSIGHTS));
 
-        final AmazonDynamoDB accountPreferencesDynamoDBClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getInsightsDynamoDB().getEndpoint());
-        final AccountPreferencesDAO accountPreferencesDynamoDB = AccountPreferencesDynamoDB.create(accountPreferencesDynamoDBClient, configuration.getPreferencesDynamoDB().getTableName());
+        final AmazonDynamoDB accountPreferencesDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PREFERENCES);
+        final AccountPreferencesDAO accountPreferencesDynamoDB = AccountPreferencesDynamoDB.create(accountPreferencesDynamoDBClient,
+                tableNames.get(DynamoDBTableName.PREFERENCES));
 
-        final AmazonDynamoDBClient dynamoDBScoreClient = new AmazonDynamoDBClient(awsCredentialsProvider);
-        dynamoDBScoreClient.setEndpoint(configuration.getSleepScoreDynamoDB().getEndpoint());
+        final AmazonDynamoDB dynamoDBScoreClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SLEEP_SCORE);
         final AggregateSleepScoreDAODynamoDB aggregateSleepScoreDAODynamoDB = new AggregateSleepScoreDAODynamoDB(
                 dynamoDBScoreClient,
-                configuration.getSleepScoreDynamoDB().getTableName(),
+                tableNames.get(DynamoDBTableName.SLEEP_SCORE),
                 configuration.getSleepScoreVersion()
         );
 
-        final AmazonDynamoDB dynamoDBStatsClient = amazonDynamoDBClientFactory.getForEndpoint(configuration.getSleepStatsDynamoConfiguration().getEndpoint());
+        final AmazonDynamoDB dynamoDBStatsClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SLEEP_STATS);
         final SleepStatsDAODynamoDB sleepStatsDAODynamoDB = new SleepStatsDAODynamoDB(dynamoDBStatsClient,
-                configuration.getSleepStatsDynamoConfiguration().getTableName(),
+                tableNames.get(DynamoDBTableName.SLEEP_STATS),
                 configuration.getSleepStatsVersion());
 
+
+        final AmazonDynamoDB calibrationDynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.CALIBRATION, CalibrationDynamoDB.class);
+        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(
+                calibrationDynamoDBClient,
+                tableNames.get(DynamoDBTableName.CALIBRATION)
+        );
 
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
@@ -185,7 +195,8 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 sleepStatsDAODynamoDB,
                 lightData,
                 wakeStdDevData,
-                accountPreferencesDynamoDB);
+                accountPreferencesDynamoDB,
+                calibrationDAO);
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }
