@@ -158,6 +158,12 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
+    @JsonProperty("device_data")
+    private DynamoDBConfiguration deviceDataConfiguration;
+    public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
+
+    @Valid
+    @NotNull
     @JsonProperty("timeline_model_ensembles")
     private S3BucketConfiguration timelineModelEnsemblesConfiguration;
     public S3BucketConfiguration getTimelineModelEnsemblesConfiguration() { return timelineModelEnsemblesConfiguration; }
@@ -167,4 +173,5 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     @JsonProperty("timeline_seed_model")
     private S3BucketConfiguration timelineSeedModelConfiguration;
     public S3BucketConfiguration getTimelineSeedModelConfiguration() { return timelineSeedModelConfiguration; }
+
 }
