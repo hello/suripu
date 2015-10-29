@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +81,6 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     @Timed
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        final Map<String, Long> activeSenses = new HashMap<>(records.size());
         final Map<String, DeviceData> lastSeenSenseDataMap = Maps.newHashMap();
 
         if(DateTime.now(DateTimeZone.UTC).isAfter(this.lastBloomFilterCreated.plusMinutes(BLOOM_FILTER_PERIOD_MINUTES))) {
@@ -115,16 +113,13 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
             // Do not persist data for sense there is no interaction and we have seen recently
             if (!hasInteraction(lastSeenSenseDataOptional.get()) && bloomFilter.mightContain(senseExternalId)) {
-                LOGGER.debug("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_PERIOD_MINUTES);
+                LOGGER.trace("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_PERIOD_MINUTES);
                 continue;
             }
 
             // If all is well, update bloom filter and persist data
             bloomFilter.put(senseExternalId);
             lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
-
-            activeSenses.put(batchPeriodicData.getDeviceId(), batchPeriodicDataWorker.getReceivedAt());
-
         }
 
         trackWifiInfo(wifiInfoPerBatch);
@@ -136,8 +131,8 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         messagesProcessed.mark(records.size());
 
 
-        final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f);
-        LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
+        final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f);
+        LOGGER.info("{} - seen device: {}", shardId, records.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);
     }
@@ -230,8 +225,9 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         if (wifiInfoList.isEmpty()) {
             return;
         }
-        wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
-        LOGGER.info("Tracked wifi info for {} senses", wifiInfoPerBatch.size());
+        final List<WifiInfo> persistedWifiInfoList = wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size()));
+        wifiInfoDAO.putBatch(persistedWifiInfoList);
+        LOGGER.info("Tracked wifi info for {} senses", persistedWifiInfoList.size());
         LOGGER.trace("Tracked wifi info for senses {}", wifiInfoPerBatch.keySet());
     }
 
