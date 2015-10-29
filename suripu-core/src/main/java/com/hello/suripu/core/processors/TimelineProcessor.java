@@ -502,7 +502,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         } else {
             // TODO the feature flipper has been at 100 for a while, remove this?
             // query dates are in local_utc_ts
-            LOGGER.debug("Query all sensors with local_utc_ts for account {}", accountId);
+            LOGGER.debug("Query all sensors with local_utc_ts for account_id = {} and day = {}", accountId, targetDate);
 
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByLocalTimeAllSensors(
                     targetDate.getMillis(),
