@@ -292,9 +292,16 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        AllSensorSampleList sensorData;
+        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
+            sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
+                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        } else {
+            sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+        }
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -480,9 +487,16 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final List<Sample> timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor,
-                missingDataDefaultValue(accountId), color, calibrationOptional);
+        List<Sample> timeSeries;
+        if (hasDeviceDataDynamoDBEnabled(accountId)) {
+            timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                    accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, sensor,
+                    missingDataDefaultValue(accountId), color, calibrationOptional);
+        } else {
+            timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
+                    accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor,
+                    missingDataDefaultValue(accountId), color, calibrationOptional);
+        }
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
 
@@ -536,7 +550,7 @@ public class RoomConditionsResource extends BaseResource {
             }
         } else {
              timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                    accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
+                     accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
                     sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
         }
 
@@ -575,8 +589,14 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
+        AllSensorSampleList sensorData;
+        if (hasDeviceDataDynamoDBEnabled(accountId)) {
+            sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
+                    accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
+        } else {
+            sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
+                    accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
+        }
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
