@@ -27,7 +27,7 @@ public class SenseLogLevelUtil {
     WARNING(SenseLogLevelUtil.WARNING_LOG_LEVEL),
     ERROR(SenseLogLevelUtil.ERROR_LOG_LEVEL);
 
-    private Integer value;
+    public Integer value;
 
     private LogLevel(Integer value) {
       this.value = value;
@@ -46,7 +46,7 @@ public class SenseLogLevelUtil {
     final LogLevel[] logLevels = LogLevel.values();
 
     for (final LogLevel logLevel : logLevels) {
-      if (logLevel.value.toString().equals(val)) {
+      if (logLevel.toString().equals(val)) {
         return logLevel;
       }
     }
