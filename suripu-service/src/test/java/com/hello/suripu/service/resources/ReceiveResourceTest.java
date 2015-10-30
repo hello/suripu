@@ -96,7 +96,7 @@ public class ReceiveResourceTest {
             final DateTime current = new DateTime(random.nextLong());
             final RingTime nextRingTime = new RingTime(actualRingTime, actualRingTime, new long[0], false);
             final int uploadCycle = ReceiveResource.computeNextUploadInterval(nextRingTime, current, senseUploadConfiguration, false);
-            assertThat(uploadCycle <= senseUploadConfiguration.getDefaultUploadInterval(), is(true));
+            assertThat(uploadCycle <= 5, is(true));
         }
     }
 

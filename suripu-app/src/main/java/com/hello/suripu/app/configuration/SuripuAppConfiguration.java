@@ -401,4 +401,14 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("device_data")
     private DynamoDBConfiguration deviceDataConfiguration;
     public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
+
+    @Valid
+    @JsonProperty("next_flush_sleep")
+    private Long nextFlushSleepMillis = 50L;
+    public Long getNextFlushSleepMillis() { return nextFlushSleepMillis; }
+
+    @Valid
+    @JsonProperty("stop_month")
+    private int stopMonth = 2; // set default to feb
+    public int getStopMonth() { return this.stopMonth; }
 }

@@ -312,14 +312,20 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
      * @return
      */
     public List<DeviceData> batchInsertReturnsRemaining(final List<DeviceData> deviceDataList) {
+
+        // convert to write request item, batch
         final Map<String, List<WriteRequest>> requestItems = toWriteRequestItems(deviceDataList);
-        final Map<String, List<WriteRequest>> remainingItems = batchInsert(requestItems);
+        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
+
+        final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+
+        final Map<String, List<WriteRequest>> remainingItems = result.getUnprocessedItems();
 
         final List<DeviceData> remainingData = Lists.newArrayList();
         for (final List<WriteRequest> requests : remainingItems.values()) {
             for (final WriteRequest request: requests) {
                 final Map<String, AttributeValue> item = request.getPutRequest().getItem();
-                if (item != null || !item.isEmpty()) {
+                if (item != null && !item.isEmpty()) {
                     remainingData.add(dynamoItemToDeviceData(item));
                 }
             }
@@ -329,28 +335,24 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private DeviceData dynamoItemToDeviceData(final Map<String, AttributeValue> item) {
-        final String rangeKey = item.get(Attribute.RANGE_KEY).getS();
-        final String[] splitKey = rangeKey.split("|");
+        final String externalDeviceId = externalDeviceIdFromDDBItem(item);
+        final DateTime dateTimeUTC = timestampFromDDBItem(item);
 
-        final String externalDeviceId = splitKey[1];
-        final String dateTimeUTCString = splitKey[0];
+        final int temp = Integer.parseInt(item.get(Attribute.AMBIENT_TEMP.name).getN());
+        final int humid = Integer.parseInt(item.get(Attribute.AMBIENT_HUMIDITY.name).getN());
+        final int dust = Integer.parseInt(item.get(Attribute.AMBIENT_AIR_QUALITY_RAW.name).getN());
+        final int light = Integer.parseInt(item.get(Attribute.AMBIENT_LIGHT.name).getN());
+        final int lightvar = Integer.parseInt(item.get(Attribute.AMBIENT_LIGHT_VARIANCE.name).getN());
 
-        final int temp = Integer.parseInt(item.get(Attribute.AMBIENT_TEMP).getN());
-        final int humid = Integer.parseInt(item.get(Attribute.AMBIENT_HUMIDITY).getN());
-        final int dust = Integer.parseInt(item.get(Attribute.AMBIENT_AIR_QUALITY_RAW).getN());
-        final int light = Integer.parseInt(item.get(Attribute.AMBIENT_LIGHT).getN());
-        final int lightvar = Integer.parseInt(item.get(Attribute.AMBIENT_LIGHT_VARIANCE).getN());
-
-        final DateTime dateTimeUTC = new DateTime(DateTime.parse(dateTimeUTCString, DateTimeFormat.forPattern(DateTimeUtil.DYNAMO_DB_DATETIME_FORMAT)), DateTimeZone.UTC);
-        final Integer offsetMillis = Integer.parseInt(item.get(Attribute.OFFSET_MILLIS).getN());
-        final Integer waveCount = Integer.parseInt(item.get(Attribute.WAVE_COUNT).getN());
-        final Integer holdCount = Integer.parseInt(item.get(Attribute.HOLD_COUNT).getN());
-        final Integer audioNum = Integer.parseInt(item.get(Attribute.AUDIO_NUM_DISTURBANCES).getN());
-        final Integer audioPeak = Integer.parseInt(item.get(Attribute.AUDIO_PEAK_DISTURBANCES_DB).getN());
-        final Integer audioBG = Integer.parseInt(item.get(Attribute.AUDIO_PEAK_BACKGROUND_DB).getN());
+        final Integer offsetMillis = Integer.parseInt(item.get(Attribute.OFFSET_MILLIS.name).getN());
+        final Integer waveCount = Integer.parseInt(item.get(Attribute.WAVE_COUNT.name).getN());
+        final Integer holdCount = Integer.parseInt(item.get(Attribute.HOLD_COUNT.name).getN());
+        final Integer audioNum = Integer.parseInt(item.get(Attribute.AUDIO_NUM_DISTURBANCES.name).getN());
+        final Integer audioPeak = Integer.parseInt(item.get(Attribute.AUDIO_PEAK_DISTURBANCES_DB.name).getN());
+        final Integer audioBG = Integer.parseInt(item.get(Attribute.AUDIO_PEAK_BACKGROUND_DB.name).getN());
 
         return new DeviceData.Builder()
-                .withAccountId(Long.parseLong(item.get(Attribute.ACCOUNT_ID).getN()))
+                .withAccountId(Long.parseLong(item.get(Attribute.ACCOUNT_ID.name).getN()))
                 .withExternalDeviceId(externalDeviceId)
                 .withAmbientTemperature(temp)
                 .withAmbientLight(light)

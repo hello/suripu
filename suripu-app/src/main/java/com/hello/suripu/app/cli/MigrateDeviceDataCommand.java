@@ -5,6 +5,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
@@ -26,6 +27,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -36,8 +38,10 @@ import java.util.zip.GZIPInputStream;
 public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MigrateDeviceDataCommand.class);
 
-    private static final int NUM_BEFORE_FLUSH = 200;
+    private static final int NUM_BEFORE_FLUSH = 100;
     private static final int ITEMS_PER_BATCH = 25;
+    private static final float WRITE_THROUGHPUT = 1000.0f;
+    private int backOffCounts = 0;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(NUM_BEFORE_FLUSH / ITEMS_PER_BATCH);
 
@@ -115,7 +119,7 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                 public List<DeviceData> call() throws Exception {
                     LOGGER.debug("Submitting batch of {}", batch.size());
                     final List<DeviceData> remaining = deviceDataDAO.batchInsertReturnsRemaining(batch);
-                    LOGGER.debug("Batch submitted, {} remaining", remaining);
+                    LOGGER.debug("Batch submitted, {} remaining", remaining.size());
                     return remaining;
                 }
             });
@@ -124,9 +128,22 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
         final List<DeviceData> remainingData = Lists.newArrayList();
         for (final Future<List<DeviceData>> future : futures) {
-            remainingData.addAll(future.get());
+            if (!future.get().isEmpty()) {
+                remainingData.addAll(future.get());
+            }
         }
         return remainingData;
+    }
+
+
+    private void backOff(int remaining) throws InterruptedException {
+        long howLong = (long) (((float) remaining / NUM_BEFORE_FLUSH) * 500.0f);
+        final float percRemaining = remaining / ((float) ITEMS_PER_BATCH);
+        if (percRemaining > 0.5f) {
+            howLong += (long) ((percRemaining) / 0.2f) * 500L;
+        }
+        LOGGER.debug("Backing off for {} milliseconds", howLong);
+        Thread.sleep(howLong);
     }
 
     @Override
@@ -137,6 +154,9 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
         final Map<String, String> idMapping = readIdMapping(mappingFile);
         LOGGER.debug("Loaded {} id mapping entries", idMapping.size());
 
+        final long nextFlushSleepMillis = suripuAppConfiguration.getNextFlushSleepMillis();
+        final int stopMonth = suripuAppConfiguration.getStopMonth();
+
         final AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(provider);
         final DynamoDBConfiguration deviceDataConfiguration = suripuAppConfiguration.getDeviceDataConfiguration();
@@ -144,6 +164,11 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
         LOGGER.debug("DynamoDB client set up for {}/'{}'",
                 deviceDataConfiguration.getTableName(),
                 deviceDataConfiguration.getEndpoint());
+
+        int entriesWritten = 0;
+        int linesRead = 0;
+
+        final Set<String> missingAccountMapping = Sets.newHashSet();
 
         final File csvFile = new File(namespace.getString("csv"));
         try (final InputStream rawInput = new FileInputStream(csvFile);
@@ -156,12 +181,18 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
             final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
             final List<DeviceData> accumulator = Lists.newArrayListWithCapacity(25);
-            int entriesWritten = 0;
             for (final String[] entry : reader) {
+                linesRead++;
                 final String accountId = getDeviceDataString(entry, Columns.ACCOUNT_ID);
+
+                if (missingAccountMapping.contains(accountId)) {
+                    continue;
+                }
+
                 final String externalSenseId = idMapping.get(accountId);
                 if (externalSenseId == null) {
                     LOGGER.error("No mapping for account id {}! Skipping row.", accountId);
+                    missingAccountMapping.add(accountId);
                     continue;
                 }
 
@@ -190,26 +221,47 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
                     final int numberWritten =  (accumulator.size() - remainingItems.size());
                     entriesWritten += numberWritten;
-                    LOGGER.debug("Wrote {} entries to DynamoDB; {} written so far",
-                            numberWritten, entriesWritten);
+                    LOGGER.debug("Wrote {} entries to DynamoDB; {} written so far, read {} lines",
+                            numberWritten, entriesWritten, linesRead);
 
                     accumulator.clear();
-                    if (numberWritten > 0) {
+                    Thread.sleep(nextFlushSleepMillis); // let it breathe a little
+
+                    if (!remainingItems.isEmpty()) {
+                        LOGGER.debug("{} remaining", remainingItems.size());
                         accumulator.addAll(remainingItems);
+
+                        // files are in local_utc, we may spillover, set to -1 to not check
+                        if (stopMonth > 0 && accumulator.get(0).dateTimeUTC.getMonthOfYear() > stopMonth) {
+                            LOGGER.debug("We're in month {}!", stopMonth + 1);
+                            accumulator.clear();
+                            break;
+                        }
+
+                        backOff(remainingItems.size());
+                        this.backOffCounts++;
                     }
                 }
             }
 
+            LOGGER.debug("Finished processing files, inserting remaining {}", accumulator.size());
+
             int loop = 0;
-            do {
+            while (!accumulator.isEmpty()) {
                 loop++;
-                LOGGER.debug("retry loop {}, size {}", loop, accumulator.size());
+                LOGGER.debug("remainder loop {}, size {}", loop, accumulator.size());
+                final int originalSize = accumulator.size();
                 final List<DeviceData> remainingItems = writeData(deviceDataDAO, accumulator);
                 accumulator.clear();
                 if (!remainingItems.isEmpty()) {
                     accumulator.addAll(remainingItems);
+
+                    backOff(remainingItems.size());
+                    this.backOffCounts++;
+                    entriesWritten += originalSize - remainingItems.size();
                 }
-            } while (accumulator.size() > ITEMS_PER_BATCH);
+            }
+
 
 //            if (!accumulator.isEmpty()) {
 //                LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
@@ -219,8 +271,16 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 //                        numberWritten, entriesWritten);
 //            }
 
-            LOGGER.debug("Migration completed");
+            LOGGER.debug("Migration completed, wrote {} from {} lines", entriesWritten, linesRead);
         }
+        LOGGER.debug("Missing {} account to device mapping", missingAccountMapping.size());
+        for (final String accountId : missingAccountMapping) {
+            LOGGER.debug("No mapping for {}", accountId);
+        }
+
+        LOGGER.debug("Import done");
+
+        this.executor.shutdown();
     }
 
     private static String getDeviceDataString(final String[] entry, final Columns column) {
