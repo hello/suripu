@@ -125,7 +125,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         trackWifiInfo(wifiInfoPerBatch);
         wifiInfoPerBatch.clear();
 
-        sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenSenseDataMap);
+        sensorsViewsDynamoDB.saveLastSeenDeviceDataAsync(lastSeenSenseDataMap);
         LOGGER.info("Saved last seen for {} senses", lastSeenSenseDataMap.size());
 
         messagesProcessed.mark(records.size());
