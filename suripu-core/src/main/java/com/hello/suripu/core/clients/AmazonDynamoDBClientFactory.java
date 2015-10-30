@@ -3,7 +3,6 @@ package com.hello.suripu.core.clients;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsync;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
@@ -19,9 +18,8 @@ public class AmazonDynamoDBClientFactory {
     private final Map<String, AmazonDynamoDB> clients = Maps.newHashMap();
     private final Map<String, AmazonDynamoDB> instrumentedClients = Maps.newHashMap(); // key is className
     private final NewDynamoDBConfiguration dynamoDBConfiguration;
-    private final Map<String, AmazonDynamoDBAsync> asyncClients = Maps.newHashMap();
 
-    public final static ClientConfiguration DEFAULT_CLIENT_CONFIGURATION = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
+    private final static ClientConfiguration DEFAULT_CLIENT_CONFIGURATION = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
 
     @Deprecated
     public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider) {
@@ -98,5 +96,9 @@ public class AmazonDynamoDBClientFactory {
         client.setEndpoint(endpoint);
         instrumentedClients.put(klass.getName(), client);
         return client;
+    }
+
+    public static ClientConfiguration getDefaultClientConfiguration() {
+        return DEFAULT_CLIENT_CONFIGURATION;
     }
 }

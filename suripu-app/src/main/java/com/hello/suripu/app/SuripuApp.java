@@ -353,7 +353,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
 
         // WARNING: Do not use async methods for anything but SensorsViewsDynamoDB for now
-        final AmazonDynamoDBAsync senseLastSeenDynamoDBClient = new AmazonDynamoDBAsyncClient(awsCredentialsProvider, AmazonDynamoDBClientFactory.DEFAULT_CLIENT_CONFIGURATION);
+        final AmazonDynamoDBAsync senseLastSeenDynamoDBClient = new AmazonDynamoDBAsyncClient(awsCredentialsProvider, AmazonDynamoDBClientFactory.getDefaultClientConfiguration());
         senseLastSeenDynamoDBClient.setEndpoint(configuration.getSenseLastSeenConfiguration().getEndpoint());
 
         final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
