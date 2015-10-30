@@ -4,7 +4,6 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsync;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
@@ -22,7 +21,7 @@ public class AmazonDynamoDBClientFactory {
     private final NewDynamoDBConfiguration dynamoDBConfiguration;
     private final Map<String, AmazonDynamoDBAsync> asyncClients = Maps.newHashMap();
 
-    private final static ClientConfiguration DEFAULT_CLIENT_CONFIGURATION = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
+    public final static ClientConfiguration DEFAULT_CLIENT_CONFIGURATION = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
 
     @Deprecated
     public static AmazonDynamoDBClientFactory create(final AWSCredentialsProvider awsCredentialsProvider) {
@@ -84,30 +83,6 @@ public class AmazonDynamoDBClientFactory {
         return client;
     }
 
-    public synchronized AmazonDynamoDBAsync getForTableAsync(final DynamoDBTableName tableName) {
-        if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
-            throw new IllegalArgumentException("Check configuration. Invalid tableName: " + tableName.toString());
-        }
-
-        // This is an exception to the way clients are created
-        // We want an individual and independent threadpool for our feature flipper
-        // Important: it isn't cached, so any call to this method will return a new client
-        if(DynamoDBTableName.FEATURES.equals(tableName)) {
-            final AmazonDynamoDBAsync asyncClient = new AmazonDynamoDBAsyncClient(awsCredentialsProvider, clientConfiguration);
-            asyncClient.setEndpoint(dynamoDBConfiguration.endpoints().get(DynamoDBTableName.FEATURES));
-            return asyncClient;
-        }
-
-        final String endpoint = dynamoDBConfiguration.endpoints().get(tableName);
-        if(asyncClients.containsKey(endpoint)) {
-            return asyncClients.get(endpoint);
-        }
-
-        final AmazonDynamoDBAsync client = new AmazonDynamoDBAsyncClient(awsCredentialsProvider, clientConfiguration);
-        client.setEndpoint(endpoint);
-        asyncClients.put(endpoint, client);
-        return client;
-    }
 
     public synchronized AmazonDynamoDB getInstrumented(final DynamoDBTableName tableName, final Class<?> klass) {
         if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
