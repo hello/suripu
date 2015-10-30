@@ -350,7 +350,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
     private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
         final String dateString = Attribute.RANGE_KEY.get(item).getS().substring(0, DATE_TIME_STRING_TEMPLATE.length());
-        return DateTime.parse(dateString + ":00Z", DATE_TIME_READ_FORMATTER);
+        return DateTime.parse(dateString + ":00Z", DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
     }
 
     private String externalDeviceIdFromDDBItem(final Map<String, AttributeValue> item) {
@@ -763,9 +763,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
         return Optional.absent();
     }
-
-    // TODO definitely test this with multiple sense IDs
-
+    
     /**
      * Get the most recent DeviceData for the given accountId and externalDeviceId.
      *
