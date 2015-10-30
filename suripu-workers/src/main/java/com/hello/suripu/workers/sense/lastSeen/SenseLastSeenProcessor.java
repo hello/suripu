@@ -9,6 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
@@ -87,7 +89,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             createNewBloomFilter();
             LOGGER.trace("New bloom filter created at {}", this.lastBloomFilterCreated);
         }
-
+        final Set<String> seenSenses = Sets.newHashSet();
         for(final Record record : records) {
             DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker;
             try {
@@ -106,6 +108,8 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
             final String senseExternalId = batchPeriodicData.getDeviceId();
             final Optional<DeviceData> lastSeenSenseDataOptional = getSenseData(batchPeriodicDataWorker);
+
+            seenSenses.add(senseExternalId);
 
             if (!lastSeenSenseDataOptional.isPresent()){
                 continue;
@@ -132,7 +136,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
 
         final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f);
-        LOGGER.info("{} - seen device: {}", shardId, records.size());
+        LOGGER.info("{} - seen device: {}", shardId, seenSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);
     }
