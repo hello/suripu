@@ -100,7 +100,7 @@ public class RoomConditionsResource extends BaseResource {
             mostRecentLookBackMinutes = 120;
         }
 
-        Optional<DeviceData> data;
+        final Optional<DeviceData> data;
         final DateTime maxDT = DateTime.now(DateTimeZone.UTC).plusMinutes(2);
         final DateTime minDT = DateTime.now(DateTimeZone.UTC).minusMinutes(mostRecentLookBackMinutes);
         if (hasDeviceDataDynamoDBEnabled(token.accountId)) {
@@ -194,7 +194,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        List<Sample> timeSeries;
+        final List<Sample> timeSeries;
         if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
             timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                     accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
@@ -242,7 +242,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        AllSensorSampleList sensorData;
+        final AllSensorSampleList sensorData;
         if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
             sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                     accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
@@ -297,7 +297,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        AllSensorSampleList sensorData;
+        final AllSensorSampleList sensorData;
         if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
             sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
                     accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
@@ -388,7 +388,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
-        List<Sample> timeSeries;
+        final List<Sample> timeSeries;
         if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
             timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                     accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
@@ -440,7 +440,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
-        List<Sample> timeSeries;
+        final List<Sample> timeSeries;
         if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
             timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
                     accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
@@ -508,7 +508,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        List<Sample> timeSeries;
+        final List<Sample> timeSeries;
         if (hasDeviceDataDynamoDBEnabled(accountId)) {
             timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
                     accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, sensor,
@@ -610,7 +610,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        AllSensorSampleList sensorData;
+        final AllSensorSampleList sensorData;
         if (hasDeviceDataDynamoDBEnabled(accountId)) {
             sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
                     accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
