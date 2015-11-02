@@ -330,7 +330,7 @@ public class OnlineHmm {
 
         SleepEvents<Optional<Event>> predictions = SleepEvents.create(Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent(),Optional.<Event>absent());
 
-        final int timezoneOffset = oneDaysSensorData.timezoneOffsetMillis;
+        final int timezoneOffset = oneDaysSensorData.sensorDataTimeSpanInfo.getOffsetAtTime(oneDaysSensorData.sensorDataTimeSpanInfo.startTimeUTC);
         final long startTimeUtc = startTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
         final long endTimeUtc = endTimeLocalUtc.minusMillis(timezoneOffset).getMillis();
         final long endTimeToUpdateFeedback = endTimeUtc + MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD;

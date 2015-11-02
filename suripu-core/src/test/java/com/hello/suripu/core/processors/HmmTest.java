@@ -3,6 +3,8 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.SensorDataTimeSpanInfo;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
@@ -113,8 +115,9 @@ public class HmmTest {
 
         sensorSampleList.add(Sensor.LIGHT,light);
 
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> res = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc1);
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc2);
+        final OneDaysSensorData sensorData = new OneDaysSensorData(sensorSampleList,ImmutableList.copyOf(motionList),ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST));
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res = hmm.get().getSleepEventsUsingHMM(sensorData,tc1);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorData,tc2);
 
         TestCase.assertTrue(res.isPresent());
         TestCase.assertTrue(res2.isPresent());
@@ -168,9 +171,9 @@ public class HmmTest {
         beds .add(new SleepHmmWithInterpretation.SegmentPair(35,45));
         beds .add(new SleepHmmWithInterpretation.SegmentPair(48,50));
 
-        final SleepHmmWithInterpretation.TimeIndexInfo timeIndexInfo = new SleepHmmWithInterpretation.TimeIndexInfo(15,0,0);
+        final SensorDataTimeSpanInfo timeSpanInfo = new SensorDataTimeSpanInfo(0,0);
 
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> resultOptional = SleepHmmWithInterpretation.processEventsIntoResult(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(beds), ImmutableList.copyOf(Collections.EMPTY_LIST), timeIndexInfo);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> resultOptional = SleepHmmWithInterpretation.processEventsIntoResult(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(beds), ImmutableList.copyOf(Collections.EMPTY_LIST), timeSpanInfo,15);
 
         TestCase.assertEquals(resultOptional.isPresent(), true);
 

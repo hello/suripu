@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.SensorDataTimeSpanInfo;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
@@ -109,17 +111,6 @@ public class SleepHmmWithInterpretation {
         public final int i2;
     }
 
-    public static class TimeIndexInfo {
-        final int numMinutesInMeasPeriod;
-        final long t0;
-        final int timezoneOffset;
-
-        public TimeIndexInfo(int numMinutesInMeasPeriod, long t0, int timezoneOffset) {
-            this.numMinutesInMeasPeriod = numMinutesInMeasPeriod;
-            this.t0 = t0;
-            this.timezoneOffset = timezoneOffset;
-        }
-    }
 
     public static class SegmentPairWithGaps {
         public SegmentPairWithGaps(SegmentPair bounds, List<SegmentPair> gaps) {
@@ -198,38 +189,31 @@ CREATE CREATE CREATE
 
 /* MAIN METHOD TO BE USED FOR DATA PROCESSING IS HERE */
     /* Use this method to get all the sleep / bed events from ALL the sensor data and ALL the pill data */
-    public Optional<SleepHmmResult> getSleepEventsUsingHMM(final AllSensorSampleList sensors,
-                                                           final List<TrackerMotion> pillData,
-                                                           final long sleepPeriodStartTimeLocal,
-                                                           final long sleepPeriodEndTimeLocal,
-                                                           final long currentTimeInMillisUTC) {
+    public Optional<SleepHmmResult> getSleepEventsUsingHMM(final OneDaysSensorData oneDaysSensorData, final long currentTimeInMillisUTC) {
 
 
 
-        if (pillData.isEmpty()) {
+        if (oneDaysSensorData.trackerMotions.isEmpty()) {
             return Optional.absent();
         }
 
         double lowestModelScore = Float.MAX_VALUE;
         HmmDecodedResult bestResult = null;
         NamedSleepHmmModel bestModel = null;
-        final int timezoneOffset = pillData.get(0).offsetMillis;;
+
+        final SensorDataTimeSpanInfo timeSpanInfo = oneDaysSensorData.sensorDataTimeSpanInfo;
+        final long endTimeMillisUTC = currentTimeInMillisUTC < timeSpanInfo.endTimeUTC ? currentTimeInMillisUTC : timeSpanInfo.endTimeUTC; //find earlier of end of period or current time
 
 
-        final long startTimeMillisInUTC = sleepPeriodStartTimeLocal - timezoneOffset; //convert to UTC
-        final long endOfThePeriodUTC = sleepPeriodEndTimeLocal - timezoneOffset; //convert to UTC
-        final long endTimeMillisUTC = currentTimeInMillisUTC < endOfThePeriodUTC ? currentTimeInMillisUTC : endOfThePeriodUTC; //find earlier of end of period or current time
+        final List<TrackerMotion> cleanedUpPillData = TrackerMotionUtils.removeDuplicatesAndInvalidValues(oneDaysSensorData.trackerMotions);
 
 
-        final List<TrackerMotion> cleanedUpPillData = TrackerMotionUtils.removeDuplicatesAndInvalidValues(pillData);
-
-
-        LOGGER.debug("removed {} duplicate or invalid pill data points",pillData.size() - cleanedUpPillData.size());
+        LOGGER.debug("removed {} duplicate or invalid pill data points",oneDaysSensorData.trackerMotions.size() - cleanedUpPillData.size());
 
         /* go through each model, evaluate, find the best  */
         for (final NamedSleepHmmModel model : models) {
             LOGGER.debug("Trying out model \"{}\"",model.modelName);
-            final Optional<SleepHmmSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmSensorDataBinning.getBinnedSensorData(sensors, cleanedUpPillData, model, startTimeMillisInUTC, endTimeMillisUTC, timezoneOffset);
+            final Optional<SleepHmmSensorDataBinning.BinnedData> binnedDataOptional = SleepHmmSensorDataBinning.getBinnedSensorData(oneDaysSensorData.allSensorSampleList, cleanedUpPillData, model, timeSpanInfo.startTimeUTC, endTimeMillisUTC);
 
 
             if (!binnedDataOptional.isPresent()) {
@@ -292,9 +276,9 @@ CREATE CREATE CREATE
             //get whatever is earlier
 
 
-            final int numMinutes = (int) ((endTimeMillisUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE);
+            final int numMinutes = (int) ((endTimeMillisUTC - timeSpanInfo.startTimeUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE);
 
-            double [] pillDataArray = getPillDataArray(cleanedUpPillData,startTimeMillisInUTC,numMinutes);
+            double [] pillDataArray = getPillDataArray(cleanedUpPillData,timeSpanInfo.startTimeUTC,numMinutes);
 
             final PillFeats pillFeats = getSmoothedPillEnergy(pillDataArray,10);
 
@@ -310,10 +294,7 @@ CREATE CREATE CREATE
         }
 
 
-        final TimeIndexInfo timeIndexInfo = new TimeIndexInfo(numMinutesInMeasPeriod,startTimeMillisInUTC,timezoneOffset);
-
-
-        return  processEventsIntoResult(sleepSplitOnGaps,onBedIgnoringGaps,bestResult.bestPath,timeIndexInfo);
+        return  processEventsIntoResult(sleepSplitOnGaps,onBedIgnoringGaps,bestResult.bestPath,timeSpanInfo,numMinutesInMeasPeriod);
 
 
     }
@@ -358,18 +339,14 @@ CREATE CREATE CREATE
     }
 
 
-    static protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final int timezoneOffset,final String description,final int numMinutesInWindow) {
-        Long eventTime =  SleepHmmSensorDataBinning.getTimeFromBin(index, numMinutesInWindow, t0);
+    static protected  Event getEventFromIndex(Event.Type eventType, final int index, final long t0, final SensorDataTimeSpanInfo timeSpanInfo,final String description,final int numMinutesInWindow) {
+        final Long eventTime =  SleepHmmSensorDataBinning.getTimeFromBin(index, numMinutesInWindow, t0);
 
-        //  final long startTimestamp, final long endTimestamp, final int offsetMillis,
-        //  final Optional<String> messageOptional,
-        //  final Optional<SleepSegment.SoundInfo> soundInfoOptional,
-        //  final Optional<Integer> sleepDepth){
 
-       return Event.createFromType(eventType,
+        return Event.createFromType(eventType,
                 eventTime,
                 eventTime + NUMBER_OF_MILLIS_IN_A_MINUTE,
-                timezoneOffset,
+                timeSpanInfo.getOffsetAtTime(eventTime),
                 Optional.of(description),
                 Optional.<SleepSegment.SoundInfo>absent(),
                 Optional.<Integer>absent());
@@ -704,13 +681,14 @@ CREATE CREATE CREATE
         return  ImmutableList.copyOf(candidates);
     }
 
-    static public Optional<SleepHmmResult> processEventsIntoResult(final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds,final ImmutableList<Integer> path,final TimeIndexInfo info) {
+    static public Optional<SleepHmmResult> processEventsIntoResult(final ImmutableList<SegmentPair> sleeps, final ImmutableList<SegmentPair> beds,final ImmutableList<Integer> path,final SensorDataTimeSpanInfo timeSpanInfo, final int numMinutesInMeasPeriod) {
 
         LinkedList<Event> events = new LinkedList<>();
         int minutesSpentInBed = 0;
         int minutesSpentSleeping = 0;
         int numTimesWokenUpDuringSleep = 0;
         int numSeparateSleepSegments = 0;
+        final long t0UTC = timeSpanInfo.startTimeUTC;
 
         if (beds.isEmpty() || sleeps.isEmpty() ) {
             return Optional.absent();
@@ -733,10 +711,10 @@ CREATE CREATE CREATE
 
 
 
-            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, info.t0, info.timezoneOffset, sleepMessage,info.numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, info.t0, info.timezoneOffset, wakeupMessage,info.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.SLEEP, seg.i1, t0UTC, timeSpanInfo, sleepMessage,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.WAKE_UP, seg.i2, t0UTC, timeSpanInfo, wakeupMessage,numMinutesInMeasPeriod));
 
-            minutesSpentSleeping += (seg.i2 - seg.i1) * info.numMinutesInMeasPeriod;
+            minutesSpentSleeping += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
 
             numTimesWokenUpDuringSleep += 1;
             numSeparateSleepSegments += 1;
@@ -744,12 +722,12 @@ CREATE CREATE CREATE
         }
 
         for (final SegmentPair seg : beds) {
-            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, info.t0, info.timezoneOffset, English.IN_BED_MESSAGE,info.numMinutesInMeasPeriod));
-            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, info.t0, info.timezoneOffset, English.OUT_OF_BED_MESSAGE,info.numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.IN_BED, seg.i1, t0UTC, timeSpanInfo, English.IN_BED_MESSAGE,numMinutesInMeasPeriod));
+            events.add(getEventFromIndex(Event.Type.OUT_OF_BED, seg.i2, t0UTC, timeSpanInfo, English.OUT_OF_BED_MESSAGE,numMinutesInMeasPeriod));
 
             //ignore gaps
 
-            minutesSpentInBed += (seg.i2 - seg.i1) * info.numMinutesInMeasPeriod;
+            minutesSpentInBed += (seg.i2 - seg.i1) * numMinutesInMeasPeriod;
         }
 
 
