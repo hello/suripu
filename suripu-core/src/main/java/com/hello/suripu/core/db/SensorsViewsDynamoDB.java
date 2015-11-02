@@ -427,10 +427,21 @@ public class SensorsViewsDynamoDB {
 
     private void handleBatchWriteResult(final BatchWriteItemRequest batchWriteItemRequest, final BatchWriteItemResult batchWriteItemResult) {
         final Map<String, List<WriteRequest>> unprocessedItems = batchWriteItemResult.getUnprocessedItems();
-        final Integer batchRequestSize = batchWriteItemRequest.getRequestItems().size();
+
+        int batchRequestSize = 0;
+        for(List<WriteRequest> list : batchWriteItemRequest.getRequestItems().values()) {
+            batchRequestSize += list.size();
+        }
+
+        int unprocessedItemsCount = 0;
+        for(List<WriteRequest> list : unprocessedItems.values()) {
+            unprocessedItemsCount += list.size();
+        }
+
+        final float ratio = unprocessedItemsCount / (float) batchRequestSize * 100.0f;
         if (!(unprocessedItems == null || unprocessedItems.isEmpty())) {
-            final float ratio = unprocessedItems.size() / (float) batchRequestSize * 100.0f;
-            LOGGER.info("Table {} : {}%  ({} batches attempted, {} batches unprocessed)", lastSeenTableName, Math.round(ratio), batchRequestSize, unprocessedItems.size());
+
+            LOGGER.info("Table {} : {}%  ({} items attempted, {} items unprocessed)", lastSeenTableName, Math.round(ratio), batchRequestSize, unprocessedItemsCount);
         }
     }
 

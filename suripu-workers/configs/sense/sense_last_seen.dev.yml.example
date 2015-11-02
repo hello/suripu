@@ -1,5 +1,5 @@
 metrics_enabled: false
-debug: false
+debug: true
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
@@ -11,9 +11,9 @@ graphite:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    sense_sensors_data : sense_sensors_data
+    sense_sensors_data : dev_sense_sensors_data
 
-app_name: SenseLastSeen
+app_name: SenseLastSeenDev
 
 max_records: 100
 
