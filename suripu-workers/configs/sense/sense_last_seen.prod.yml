@@ -14,7 +14,7 @@ kinesis:
     sense_sensors_data : sense_sensors_data
 
 app_name: SenseLastSeenProd
-max_records: 100
+max_records: 200
 trim_horizon: false
 
 logging:
@@ -26,7 +26,7 @@ logging:
   loggers:
 
     # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu.workers: DEBUG
+    com.hello.suripu.workers: INFO
   # Settings for logging to a file.
   file:
     enabled: true

@@ -81,6 +81,7 @@ public class AmazonDynamoDBClientFactory {
         return client;
     }
 
+
     public synchronized AmazonDynamoDB getInstrumented(final DynamoDBTableName tableName, final Class<?> klass) {
         if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
             throw new IllegalArgumentException("Check configuration. Invalid tableName: " + tableName.toString());
@@ -95,5 +96,9 @@ public class AmazonDynamoDBClientFactory {
         client.setEndpoint(endpoint);
         instrumentedClients.put(klass.getName(), client);
         return client;
+    }
+
+    public static ClientConfiguration getDefaultClientConfiguration() {
+        return DEFAULT_CLIENT_CONFIGURATION;
     }
 }

@@ -9,6 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -28,9 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
@@ -41,7 +42,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     private final static Integer WIFI_INFO_BATCH_MAX_SIZE = 25;
     private final static Integer SIGNIFICANT_RSSI_CHANGE = 5;
     private final static Integer BLOOM_FILTER_PERIOD_MINUTES = 2;   // re-create bloom filter every 2 minutes because it's impossible to remove an element from it
-    private final static Integer BLOOM_FILTER_CAPACITY = 40000; // roughly equal to number of senses we have
+    private final static Integer BLOOM_FILTER_CAPACITY = 40000; // this constant should be much greater than number of senses we have
     private final static double BLOOM_FILTER_ERROR_RATE = 0.05;
 
     private final Integer maxRecords;
@@ -82,13 +83,13 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     @Timed
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        final Map<String, Long> activeSenses = new HashMap<>(records.size());
         final Map<String, DeviceData> lastSeenSenseDataMap = Maps.newHashMap();
 
         if(DateTime.now(DateTimeZone.UTC).isAfter(this.lastBloomFilterCreated.plusMinutes(BLOOM_FILTER_PERIOD_MINUTES))) {
             createNewBloomFilter();
+            LOGGER.trace("New bloom filter created at {}", this.lastBloomFilterCreated);
         }
-
+        final Set<String> seenSenses = Sets.newHashSet();
         for(final Record record : records) {
             DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker;
             try {
@@ -108,35 +109,34 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             final String senseExternalId = batchPeriodicData.getDeviceId();
             final Optional<DeviceData> lastSeenSenseDataOptional = getSenseData(batchPeriodicDataWorker);
 
+            seenSenses.add(senseExternalId);
+
             if (!lastSeenSenseDataOptional.isPresent()){
                 continue;
             }
 
             // Do not persist data for sense there is no interaction and we have seen recently
             if (!hasInteraction(lastSeenSenseDataOptional.get()) && bloomFilter.mightContain(senseExternalId)) {
-                LOGGER.debug("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_PERIOD_MINUTES);
+                LOGGER.trace("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_PERIOD_MINUTES);
                 continue;
             }
 
             // If all is well, update bloom filter and persist data
             bloomFilter.put(senseExternalId);
             lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
-
-            activeSenses.put(batchPeriodicData.getDeviceId(), batchPeriodicDataWorker.getReceivedAt());
-
         }
 
         trackWifiInfo(wifiInfoPerBatch);
         wifiInfoPerBatch.clear();
 
-        sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenSenseDataMap);
+        sensorsViewsDynamoDB.saveLastSeenDeviceDataAsync(lastSeenSenseDataMap);
         LOGGER.info("Saved last seen for {} senses", lastSeenSenseDataMap.size());
 
         messagesProcessed.mark(records.size());
 
 
-        final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f);
-        LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
+        final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f);
+        LOGGER.info("{} - seen device: {}", shardId, seenSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);
     }
@@ -166,7 +166,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             final String scannedSSID = wifiAccessPoint.getSsid();
 
             // Scans return all seen networks, we want to only grab info of the connected one
-            if (!connectedSSID.equals(scannedSSID)) {
+            if (!connectedSSID.equals(scannedSSID) || connectedSSID.isEmpty()) {
                 continue;
             }
 
@@ -229,8 +229,9 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         if (wifiInfoList.isEmpty()) {
             return;
         }
-        wifiInfoDAO.putBatch(wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size())));
-        LOGGER.info("Tracked wifi info for {} senses", wifiInfoPerBatch.size());
+        final List<WifiInfo> persistedWifiInfoList = wifiInfoList.subList(0, Math.min(WIFI_INFO_BATCH_MAX_SIZE, wifiInfoList.size()));
+        wifiInfoDAO.putBatch(persistedWifiInfoList);
+        LOGGER.info("Tracked wifi info for {} senses", persistedWifiInfoList.size());
         LOGGER.trace("Tracked wifi info for senses {}", wifiInfoPerBatch.keySet());
     }
 

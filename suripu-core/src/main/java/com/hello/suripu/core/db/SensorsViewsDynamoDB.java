@@ -2,7 +2,9 @@ package com.hello.suripu.core.db;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsync;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
@@ -27,6 +29,7 @@ import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -46,13 +49,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 public class SensorsViewsDynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SensorsViewsDynamoDB.class);
-    private final AmazonDynamoDB dynamoDBClient;
+    private final AmazonDynamoDBAsync dynamoDBClient;
     private final String tableNamePrefix;
     private final String lastSeenTableName;
+
 
     public static final String SENSE_ID_ATTRIBUTE_NAME = "sense_id";
     public static final Integer MAX_LAST_SEEN_DEVICES = 100;
@@ -76,28 +81,31 @@ public class SensorsViewsDynamoDB {
         return String.format("%s_%s", tableNamePrefix, dateTime.toString(DYNAMO_DB_TABLE_FORMAT));
     }
 
-    public SensorsViewsDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableNamePrefix, final String lastSeenTableName){
+    public SensorsViewsDynamoDB(final AmazonDynamoDBAsync dynamoDBClient, final String tableNamePrefix, final String lastSeenTableName){
         this.dynamoDBClient = dynamoDBClient;
         this.tableNamePrefix = tableNamePrefix;
         this.lastSeenTableName = lastSeenTableName;
     }
 
+    public List<WriteRequest> transform(final Map<String, DeviceData> deviceDataMap) {
+        final List<WriteRequest> writeRequests = Lists.newArrayList();
+        for (final String deviceName : deviceDataMap.keySet()) {
+            final DeviceData deviceData = deviceDataMap.get(deviceName);
 
-    public WriteRequest transform(final String deviceName, final DeviceData deviceData) {
-        final Map<String, AttributeValue> items = Maps.newHashMap();
-        items.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceName));
+            final Map<String, AttributeValue> items = Maps.newHashMap();
+            items.put(SENSE_ID_ATTRIBUTE_NAME, new AttributeValue().withS(deviceName));
+            items.put(TEMP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientTemperature)));
+            items.put(HUMIDITY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientHumidity)));
+            items.put(LIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientLight)));
+            items.put(SOUND_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.audioPeakDisturbancesDB)));
+            items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientAirQualityRaw)));
+            items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.firmwareVersion)));
+            items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(deviceData.dateTimeUTC.toString(DATETIME_FORMAT)));
 
-        items.put(TEMP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientTemperature)));
-        items.put(HUMIDITY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientHumidity)));
-        items.put(LIGHT_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientLight)));
-        items.put(SOUND_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.audioPeakDisturbancesDB)));
-        items.put(DUST_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.ambientAirQualityRaw)));
-
-        items.put(FIRMWARE_VERSION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(deviceData.firmwareVersion)));
-        items.put(UPDATED_AT_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(deviceData.dateTimeUTC.toString(DATETIME_FORMAT)));
-
-        final PutRequest putRequest = new PutRequest(items);
-        return new WriteRequest(putRequest);
+            final PutRequest putRequest = new PutRequest(items);
+            writeRequests.add(new WriteRequest(putRequest));
+        }
+        return writeRequests;
     }
 
 
@@ -143,36 +151,40 @@ public class SensorsViewsDynamoDB {
     }
 
 
+    public void saveLastSeenDeviceData(final Map<String, DeviceData> lastSeenDeviceDataMap) {
+        final List<WriteRequest> lastSeenWriteRequests = transform(lastSeenDeviceDataMap);
+        final List<BatchWriteItemRequest> batchWriteItemRequests = makeBatchWriteItemRequests(lastSeenWriteRequests);
 
-    private void saveLastSeen(final List<WriteRequest> lastSeenWriteRequests) {
-        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest();
-        for (final List<WriteRequest> partition : Lists.partition(lastSeenWriteRequests, DYNAMO_BATCH_WRITE_LIMIT)) {
-
-            final Map<String, List<WriteRequest>> map = Maps.newHashMap();
-            map.put(lastSeenTableName, partition);
-            batchWriteItemRequest.withRequestItems(map);
+        for (final BatchWriteItemRequest batchWriteItemRequest : batchWriteItemRequests) {
             try {
-                final BatchWriteItemResult result = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-                final Map<String, List<WriteRequest>> unprocessed = result.getUnprocessedItems();
-                if (unprocessed == null || unprocessed.isEmpty()) {
-                    continue;
-                }
-
-                final float ratio = unprocessed.size() / (float) partition.size() * 100.0f;
-                LOGGER.info("Table {} : {}%  ({} attempted, {} unprocessed)", lastSeenTableName, Math.round(ratio), partition.size(), unprocessed.size());
+                final BatchWriteItemResult batchWriteItemResult = dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+                handleBatchWriteResult(batchWriteItemRequest, batchWriteItemResult);
             }catch (AmazonClientException e) {
                 LOGGER.error("Error persisting last seen device data: {}", e.getMessage());
             }
         }
     }
 
+    public void saveLastSeenDeviceDataAsync(final Map<String, DeviceData> lastSeenDeviceDataMap) {
+        final List<WriteRequest> lastSeenWriteRequests = transform(lastSeenDeviceDataMap);
+        final List<BatchWriteItemRequest> batchWriteItemRequests = makeBatchWriteItemRequests(lastSeenWriteRequests);
 
-    public void saveLastSeenDeviceData(final Map<String, DeviceData> lastSeenDeviceData) {
-        final List<WriteRequest> writeRequests = Lists.newArrayList();
-        for(final String deviceName: lastSeenDeviceData.keySet()) {
-            writeRequests.add(transform(deviceName, lastSeenDeviceData.get(deviceName)));
+        for (final BatchWriteItemRequest batchWriteItemRequest : batchWriteItemRequests) {
+            try {
+                final Future<BatchWriteItemResult> result = dynamoDBClient.batchWriteItemAsync(batchWriteItemRequest, new AsyncHandler<BatchWriteItemRequest, BatchWriteItemResult>() {
+                    @Override
+                    public void onError(final Exception exception) {
+                        LOGGER.error("Failed to batch write async : {}", exception.getMessage());
+                    }
+                    @Override
+                    public void onSuccess(final BatchWriteItemRequest batchWriteItemRequest , final BatchWriteItemResult batchWriteItemResult) {
+                        handleBatchWriteResult(batchWriteItemRequest, batchWriteItemResult);
+                    }
+                });
+            } catch (AmazonClientException e) {
+                LOGGER.error("Error persisting last seen device data: {}", e.getMessage());
+            }
         }
-        saveLastSeen(writeRequests);
     }
 
     public List<Sample> last(final String senseId, final DateTime dateTime, final Set<String> attributesToGet) {
@@ -411,5 +423,22 @@ public class SensorsViewsDynamoDB {
 
         final CreateTableResult result = dynamoDBClient.createTable(request);
         return result;
+    }
+
+    private void handleBatchWriteResult(final BatchWriteItemRequest batchWriteItemRequest, final BatchWriteItemResult batchWriteItemResult) {
+        final Map<String, List<WriteRequest>> unprocessedItems = batchWriteItemResult.getUnprocessedItems();
+        final Integer batchRequestSize = batchWriteItemRequest.getRequestItems().size();
+        if (!(unprocessedItems == null || unprocessedItems.isEmpty())) {
+            final float ratio = unprocessedItems.size() / (float) batchRequestSize * 100.0f;
+            LOGGER.info("Table {} : {}%  ({} batches attempted, {} batches unprocessed)", lastSeenTableName, Math.round(ratio), batchRequestSize, unprocessedItems.size());
+        }
+    }
+
+    private List<BatchWriteItemRequest> makeBatchWriteItemRequests(List<WriteRequest> writeRequests) {
+        final List<BatchWriteItemRequest> batchWriteItemRequests = Lists.newArrayList();
+        for (final List<WriteRequest> partitionedWriteRequests : Lists.partition(writeRequests, DYNAMO_BATCH_WRITE_LIMIT)) {
+            batchWriteItemRequests.add(new BatchWriteItemRequest(ImmutableMap.of(lastSeenTableName, partitionedWriteRequests)));
+        }
+        return batchWriteItemRequests;
     }
 }
