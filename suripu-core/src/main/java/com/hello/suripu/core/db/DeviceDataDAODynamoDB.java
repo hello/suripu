@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
@@ -34,7 +35,6 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -111,6 +110,23 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         }
     }
 
+    private final static ImmutableSet<Attribute> BASE_ATTRIBUTES = new ImmutableSet.Builder<Attribute>()
+            .add(Attribute.ACCOUNT_ID)
+            .add(Attribute.OFFSET_MILLIS)
+            .add(Attribute.LOCAL_UTC_TIMESTAMP)
+            .add(Attribute.RANGE_KEY)
+            .build();
+
+    private final static Map<String, Set<Attribute>> SENSOR_NAME_TO_ATTRIBUTES = new ImmutableMap.Builder<String, Set<Attribute>>()
+            .put("humidity", ImmutableSet.of(Attribute.AMBIENT_TEMP, Attribute.AMBIENT_HUMIDITY))
+            .put("temperature", ImmutableSet.of(Attribute.AMBIENT_TEMP))
+            .put("particulates", ImmutableSet.of(Attribute.AMBIENT_AIR_QUALITY_RAW))
+            .put("light", ImmutableSet.of(Attribute.AMBIENT_LIGHT))
+            .put("sound", ImmutableSet.of(Attribute.AUDIO_PEAK_BACKGROUND_DB, Attribute.AUDIO_PEAK_DISTURBANCES_DB))
+            .build();
+
+    private final static ImmutableSet<Attribute> ALL_ATTRIBUTES = ImmutableSet.copyOf(Attribute.values());
+
     private static final int MAX_PUT_ITEMS = 25;
     private static final int MAX_BATCH_WRITE_ATTEMPTS = 5;
     private static final int MAX_QUERY_ATTEMPTS = 5;
@@ -128,6 +144,21 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     public String getTableName(final DateTime dateTime) {
         final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy_MM");
         return tablePrefix + "_" + dateTime.toString(formatter);
+    }
+
+    /**
+     * Return table names from start to end, in chronological order.
+     * @param start
+     * @param end
+     * @return
+     */
+    public List<String> getTableNames(final DateTime start, final DateTime end) {
+        final LinkedList<String> names = Lists.newLinkedList();
+        for (final DateTime dateTime: DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end)) {
+            final String tableName = getTableName(dateTime);
+            names.add(tableName);
+        }
+        return names;
     }
 
     public CreateTableResult createTable(final String tableName) {
@@ -319,7 +350,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
     private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
         final String dateString = Attribute.RANGE_KEY.get(item).getS().substring(0, DATE_TIME_STRING_TEMPLATE.length());
-        return DateTime.parse(dateString + ":00Z", DATE_TIME_READ_FORMATTER);
+        return DateTime.parse(dateString + ":00Z", DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
     }
 
     private String externalDeviceIdFromDDBItem(final Map<String, AttributeValue> item) {
@@ -434,6 +465,38 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return results;
     }
 
+    private Map<String, Condition> getQueryConditions(final Long accountId) {
+        final Condition selectByAccountId  = new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+        queryConditions.put(Attribute.ACCOUNT_ID.name, selectByAccountId);
+        return queryConditions;
+    }
+
+    private Map<String, Condition> getQueryConditions(final Long accountId,
+                                                      final String externalDeviceId,
+                                                      final DateTime start,
+                                                      final DateTime end) {
+        final Condition selectByTimestamp = new Condition()
+                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
+                .withAttributeValueList(
+                        getRangeKey(start, externalDeviceId),
+                        getRangeKey(end, externalDeviceId));
+
+        final Map<String, Condition> queryConditions = getQueryConditions(accountId);
+        queryConditions.put(Attribute.RANGE_KEY.name, selectByTimestamp);
+        return queryConditions;
+    }
+
+    private Set<String> attributeNames(Collection<Attribute> attributes) {
+        final Set<String> attributeNames = Sets.newHashSet();
+        for (final Attribute attribute : attributes) {
+            attributeNames.add(attribute.name);
+        }
+        return attributeNames;
+    }
+
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             final Long accountId,
             final String externalDeviceId,
@@ -443,28 +506,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final Collection<Attribute> targetAttributes)
     {
 
-        final Condition selectByAccountId  = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
+        final Map<String, Condition> queryConditions = getQueryConditions(accountId, externalDeviceId, start, end);
 
-        final Condition selectByTimestamp = new Condition()
-                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
-                .withAttributeValueList(
-                        getRangeKey(start, externalDeviceId),
-                        getRangeKey(end, externalDeviceId));
-
-        final Map<String, Condition> queryConditions = Maps.newHashMap();
-        queryConditions.put(Attribute.ACCOUNT_ID.name, selectByAccountId);
-        queryConditions.put(Attribute.RANGE_KEY.name, selectByTimestamp);
-
-        final List<String> targetAttributeNames = Lists.newArrayList();
-        for (final Attribute attribute : targetAttributes) {
-            targetAttributeNames.add(attribute.name);
-        }
+        final Set<String> targetAttributeNames = attributeNames(targetAttributes);
 
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        for (final DateTime dateTime: DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end)) {
-            final String tableName = getTableName(dateTime);
+        for (final String tableName: getTableNames(start, end)) {
             results.addAll(query(tableName, queryConditions, targetAttributeNames));
         }
 
@@ -495,23 +542,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final DateTime end,
             final Integer slotDuration)
     {
-        return getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, start, end, slotDuration, Arrays.asList(Attribute.values()));
+        return getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, start, end, slotDuration, ALL_ATTRIBUTES);
     }
-
-    private final static ImmutableSet<Attribute> BASE_ATTRIBUTES = new ImmutableSet.Builder<Attribute>()
-            .add(Attribute.ACCOUNT_ID)
-            .add(Attribute.OFFSET_MILLIS)
-            .add(Attribute.LOCAL_UTC_TIMESTAMP)
-            .add(Attribute.RANGE_KEY)
-            .build();
-
-    private final static Map<String, Set<Attribute>> SENSOR_NAME_TO_ATTRIBUTES = new ImmutableMap.Builder<String, Set<Attribute>>()
-            .put("humidity", ImmutableSet.of(Attribute.AMBIENT_TEMP, Attribute.AMBIENT_HUMIDITY))
-            .put("temperature", ImmutableSet.of(Attribute.AMBIENT_TEMP))
-            .put("particulates", ImmutableSet.of(Attribute.AMBIENT_AIR_QUALITY_RAW))
-            .put("light", ImmutableSet.of(Attribute.AMBIENT_LIGHT))
-            .put("sound", ImmutableSet.of(Attribute.AUDIO_PEAK_BACKGROUND_DB, Attribute.AUDIO_PEAK_DISTURBANCES_DB))
-            .build();
 
     private static Set<Attribute> sensorNameToAttributeNames(final String sensorName) {
         final Set<Attribute> sensorAttributes = SENSOR_NAME_TO_ATTRIBUTES.get(sensorName);
@@ -663,5 +695,103 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         }
 
         return sensorDataResults;
+    }
+
+    private Optional<QueryResult> queryWithBackoff(final QueryRequest queryRequest, final int numAttempts) {
+        try {
+            final QueryResult queryResult = dynamoDBClient.query(queryRequest);
+            return Optional.of(queryResult);
+        } catch (ProvisionedThroughputExceededException e) {
+            backoff(numAttempts);
+        }
+        return Optional.absent();
+    }
+
+    final DeviceData attributeMapToDeviceData(final Map<String, AttributeValue> item) {
+        return new DeviceData.Builder()
+                .withDateTimeUTC(timestampFromDDBItem(item))
+                .withAccountId(Long.valueOf(Attribute.ACCOUNT_ID.get(item).getN()))
+                .withExternalDeviceId(externalDeviceIdFromDDBItem(item))
+                .withOffsetMillis(Integer.valueOf(Attribute.OFFSET_MILLIS.get(item).getN()))
+                .withAmbientTemperature(Integer.valueOf(Attribute.AMBIENT_TEMP.get(item).getN()))
+                .withAmbientLight(Integer.valueOf(Attribute.AMBIENT_LIGHT.get(item).getN()))
+                .withAmbientLightVariance(Integer.valueOf(Attribute.AMBIENT_LIGHT_VARIANCE.get(item).getN()))
+                .withAmbientHumidity(Integer.valueOf(Attribute.AMBIENT_HUMIDITY.get(item).getN()))
+                .withWaveCount(Integer.valueOf(Attribute.WAVE_COUNT.get(item).getN()))
+                .withHoldCount(Integer.valueOf(Attribute.HOLD_COUNT.get(item).getN()))
+                .withAudioNumDisturbances(Integer.valueOf(Attribute.AUDIO_NUM_DISTURBANCES.get(item).getN()))
+                .withAudioPeakBackgroundDB(Integer.valueOf(Attribute.AUDIO_PEAK_BACKGROUND_DB.get(item).getN()))
+                .withAudioPeakDisturbancesDB(Integer.valueOf(Attribute.AUDIO_PEAK_DISTURBANCES_DB.get(item).getN()))
+                .withAmbientAirQualityRaw(Integer.valueOf(Attribute.AMBIENT_AIR_QUALITY_RAW.get(item).getN()))
+                .build();
+    }
+
+    /**
+     * Get the most recent DeviceData for the accountId, in the same shard as now.
+     * @param accountId
+     * @param now
+     * @return Optional of the latest DeviceData, or Optional.absent() if data not present or query fails.
+     */
+    public Optional<DeviceData> getMostRecent(final Long accountId, final DateTime now) {
+        final Map<String, Condition> queryConditions = getQueryConditions(accountId);
+
+        final Set<String> targetAttributeNames = attributeNames(ALL_ATTRIBUTES);
+
+        final String tableName = getTableName(now);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(targetAttributeNames)
+                .withScanIndexForward(false)
+                .withLimit(1);
+
+        int numAttempts = 0;
+        Optional<QueryResult> queryResultOptional = Optional.absent();
+        while ((numAttempts < MAX_QUERY_ATTEMPTS) && !queryResultOptional.isPresent()) {
+            numAttempts++;
+            queryResultOptional = queryWithBackoff(queryRequest, numAttempts);
+        }
+
+        if (queryResultOptional.isPresent()) {
+            final List<Map<String, AttributeValue>> items = queryResultOptional.get().getItems();
+            if (!items.isEmpty()) {
+                final DeviceData deviceData = attributeMapToDeviceData(items.get(0));
+                return Optional.of(deviceData);
+            }
+        }
+
+        return Optional.absent();
+    }
+    
+    /**
+     * Get the most recent DeviceData for the given accountId and externalDeviceId.
+     *
+     * The query will only search from minTsLimit to maxTsLimit, so these are used to bound the search.
+     * @param accountId
+     * @param externalDeviceId
+     * @param maxTsLimit
+     * @param minTsLimit
+     * @return
+     */
+    public Optional<DeviceData> getMostRecent(final Long accountId,
+                                              final String externalDeviceId,
+                                              final DateTime maxTsLimit,
+                                              final DateTime minTsLimit)
+    {
+        final Optional<DeviceData> mostRecentDeviceDataByAccountId = getMostRecent(accountId, maxTsLimit);
+        if (mostRecentDeviceDataByAccountId.isPresent() && mostRecentDeviceDataByAccountId.get().externalDeviceId == externalDeviceId) {
+            return mostRecentDeviceDataByAccountId;
+        }
+
+        // Failed to get only the absolute latest value, so do a range query from minTsLimit to maxTsLimit
+        // This isn't the most efficient way to do it, but it does make the code simpler.
+        final List<DeviceData> deviceDataList = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, minTsLimit, maxTsLimit, 1);
+        if (!deviceDataList.isEmpty()) {
+            // They're sorted in chronological order, so get the last one
+            return Optional.of(deviceDataList.get(deviceDataList.size() - 1));
+        }
+
+        return Optional.absent();
     }
 }
