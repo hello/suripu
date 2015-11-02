@@ -125,6 +125,7 @@ public class AccountResource {
     @Timed
     @Path("/password")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public void password(
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final PasswordUpdate passwordUpdate) {
