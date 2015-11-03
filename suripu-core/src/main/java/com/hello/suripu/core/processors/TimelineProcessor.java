@@ -485,7 +485,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             // query dates in utc_ts (table has an index for this)
             LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
 
-            if (hasDeviceDataDynamoDBEnabled(accountId)) {
+            if (hasDeviceDataDynamoDBTimelineEnabled(accountId)) {
                 allSensorSampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                         targetDate.minusMillis(tzOffsetMillis).getMillis(),
                         endDate.minusMillis(tzOffsetMillis).getMillis(),
