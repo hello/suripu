@@ -37,6 +37,11 @@ public class SensorDataTimezoneMap {
     }
 
     public List<Event> remapEventOffsets(final List<Event> events) {
+
+        if (offsetByTimeUTC.isEmpty()) {
+            return events;
+        }
+
         final List<Event> newEvents = Lists.newArrayList();
 
         for (final Event event : events) {
@@ -47,6 +52,11 @@ public class SensorDataTimezoneMap {
     }
 
     public List<SleepSegment> remapSleepSegmentOffsets(final List<SleepSegment> segments) {
+
+        if (offsetByTimeUTC.isEmpty()) {
+            return segments;
+        }
+
         final List<SleepSegment> newSegments = Lists.newArrayList();
 
         for (final SleepSegment segment : segments) {
@@ -60,14 +70,17 @@ public class SensorDataTimezoneMap {
     }
 
     /* Get offset that is nearest in time to the timestamp */
-    public int get(final long timestampUTC) {
+    public Integer get(final long timestampUTC) {
 
-        Map.Entry<Long,Integer> higherEntry = offsetByTimeUTC.ceilingEntry(timestampUTC);
-        Map.Entry<Long,Integer> lowerEntry = offsetByTimeUTC.floorEntry(timestampUTC);
-
-        if (higherEntry == null && lowerEntry == null) {
-            return 0;
+        if (offsetByTimeUTC.isEmpty()) {
+            return null;
         }
+
+        //get entry >=
+        Map.Entry<Long,Integer> higherEntry = offsetByTimeUTC.ceilingEntry(timestampUTC);
+
+        //get entry <=
+        Map.Entry<Long,Integer> lowerEntry = offsetByTimeUTC.floorEntry(timestampUTC);
 
         if (higherEntry == null) {
             higherEntry = lowerEntry;
@@ -77,6 +90,8 @@ public class SensorDataTimezoneMap {
             lowerEntry = higherEntry;
         }
 
+
+        //find nearest
         final long diffHigher = Math.abs(higherEntry.getKey() - timestampUTC);
         final long diffLower = Math.abs(lowerEntry.getKey() - timestampUTC);
 
