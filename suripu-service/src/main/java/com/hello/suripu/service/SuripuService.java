@@ -221,7 +221,7 @@ public class SuripuService extends Service<SuripuConfiguration> {
         ObjectGraphRoot.getInstance().init(module);
 
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.CALIBRATION);
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, tableNames.get(DynamoDBTableName.CALIBRATION));
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.createWithCacheConfig(calibrationDynamoDBClient, tableNames.get(DynamoDBTableName.CALIBRATION), 2);
 
         final ReceiveResource receiveResource = new ReceiveResource(
                 senseKeyStore,
