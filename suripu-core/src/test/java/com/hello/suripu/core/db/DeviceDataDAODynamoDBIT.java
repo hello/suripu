@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
@@ -579,6 +580,70 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(
                 deviceDataDAODynamoDB.getMostRecent(accountId, deviceId2, firstTime.plusMonths(1).plusMinutes(10), firstTime.plusMonths(1)).isPresent(),
                 is(false));
+    }
+
+    @Test
+    public void testGetLightByBetweenHourDateByTS() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
+        final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
+        final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
+        final DateTime maxLocalTime = new DateTime(2015, 10, 1, 15, 0, DateTimeZone.forOffsetMillis(offsetMillis));
+        final int minAmbientLight = 100;
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        // NO: Enough ambient light, date time too early
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(0))
+                .withAmbientLight(minAmbientLight + 2).build());
+        // YES: Enough ambient light, good time
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(1))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(2))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(4))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(8))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // NO, ambient light too low
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(3))
+                .withAmbientLight(minAmbientLight).build());
+        // NO, wrong hour
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusHours(2))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // NO, bad ID
+        data.add(builder
+                .withExternalDeviceId("badId")
+                .withDateTimeUTC(firstUTCTime.plusMinutes(7))
+                .withAmbientLight(minAmbientLight + 3).build());
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, deviceId, minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(10), minLocalTime, maxLocalTime, 10, 10);
+        LOGGER.debug("results: {}", results);
+        for (final DeviceData result : results) {
+            LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
+        }
+        assertThat(results.size(), is(4));
+        assertThat(results.get(0).dateTimeUTC, is(firstUTCTime.plusMinutes(1)));
+        assertThat(results.get(1).dateTimeUTC, is(firstUTCTime.plusMinutes(2)));
+        assertThat(results.get(2).dateTimeUTC, is(firstUTCTime.plusMinutes(4)));
+        assertThat(results.get(3).dateTimeUTC, is(firstUTCTime.plusMinutes(8)));
     }
 
 }

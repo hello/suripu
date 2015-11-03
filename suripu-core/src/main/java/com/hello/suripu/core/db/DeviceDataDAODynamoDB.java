@@ -6,8 +6,6 @@ import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -18,13 +16,13 @@ import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
@@ -107,6 +105,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
          */
         AttributeValue get(final Map<String, AttributeValue> item) {
             return item.get(this.name);
+        }
+
+        String expressionAttributeName() {
+            return "#" + this.toString();
         }
     }
 
@@ -414,9 +416,31 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return resultList;
     }
 
+    private String getBinaryKeyConditionExpression(final Attribute attribute, final String operator, final String valueToken) {
+        return Joiner.on(" ").join(attribute.expressionAttributeName(), operator, valueToken);
+    }
+
+    private String getBetweenKeyConditionExpression(final Attribute attribute, final String lowerToken, final String upperToken) {
+        return Joiner.on(" ").join(attribute.expressionAttributeName(), "BETWEEN", lowerToken, "AND", upperToken);
+    }
+
+    private Map<String, String> getExpressionAttributeNames(final Collection<Attribute> attributes) {
+        final Map<String, String> names = Maps.newHashMapWithExpectedSize(attributes.size());
+        for (final Attribute attribute: attributes) {
+            names.put(attribute.expressionAttributeName(), attribute.name);
+        }
+        return names;
+    }
+
+    private String getProjectionExpression(final Collection<Attribute> attributes) {
+        return Joiner.on(", ").join(getExpressionAttributeNames(attributes).keySet());
+    }
+
     private List<Map<String, AttributeValue>> query(final String tableName,
-                                                    final Map<String, Condition> queryConditions,
-                                                    final Collection<String> targetAttributes)
+                                                    final String keyConditionExpression,
+                                                    final Collection<Attribute> targetAttributes,
+                                                    final Optional<String> filterExpression,
+                                                    final Map<String, AttributeValue> filterAttributeValues)
     {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
 
@@ -424,13 +448,22 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         int numAttempts = 0;
         boolean keepTrying = true;
 
+        final Map<String, String> expressionAttributeNames = getExpressionAttributeNames(targetAttributes);
+        final String projectionExpression = getProjectionExpression(targetAttributes);
+
         do {
             numAttempts++;
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(tableName)
-                    .withKeyConditions(queryConditions)
-                    .withAttributesToGet(targetAttributes)
+                    .withProjectionExpression(projectionExpression)
+                    .withExpressionAttributeNames(expressionAttributeNames)
+                    .withKeyConditionExpression(keyConditionExpression)
+                    .withExpressionAttributeValues(filterAttributeValues)
                     .withExclusiveStartKey(lastEvaluatedKey);
+
+            if (filterExpression.isPresent()) {
+                queryRequest.setFilterExpression(filterExpression.get());
+            }
 
             final QueryResult queryResult;
             try {
@@ -443,10 +476,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
             if (queryResult.getItems() != null) {
                 for (final Map<String, AttributeValue> item : items) {
-                    if (!item.keySet().containsAll(targetAttributes)) {
-                        LOGGER.warn("Missing field in item {}", item);
-                        continue;
-                    }
                     results.add(item);
                 }
             }
@@ -465,36 +494,14 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return results;
     }
 
-    private Map<String, Condition> getQueryConditions(final Long accountId) {
-        final Condition selectByAccountId  = new Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(new AttributeValue().withN(String.valueOf(accountId)));
-        final Map<String, Condition> queryConditions = Maps.newHashMap();
-        queryConditions.put(Attribute.ACCOUNT_ID.name, selectByAccountId);
-        return queryConditions;
+    private String getKeyConditionExpression(final String hashKeyString) {
+        return getBinaryKeyConditionExpression(Attribute.ACCOUNT_ID, "=", hashKeyString);
     }
 
-    private Map<String, Condition> getQueryConditions(final Long accountId,
-                                                      final String externalDeviceId,
-                                                      final DateTime start,
-                                                      final DateTime end) {
-        final Condition selectByTimestamp = new Condition()
-                .withComparisonOperator(ComparisonOperator.BETWEEN.toString())
-                .withAttributeValueList(
-                        getRangeKey(start, externalDeviceId),
-                        getRangeKey(end, externalDeviceId));
-
-        final Map<String, Condition> queryConditions = getQueryConditions(accountId);
-        queryConditions.put(Attribute.RANGE_KEY.name, selectByTimestamp);
-        return queryConditions;
-    }
-
-    private Set<String> attributeNames(Collection<Attribute> attributes) {
-        final Set<String> attributeNames = Sets.newHashSet();
-        for (final Attribute attribute : attributes) {
-            attributeNames.add(attribute.name);
-        }
-        return attributeNames;
+    private String getKeyConditionExpression(final String hashKeyString, final String rangeStartString, final String rangeEndString) {
+        return Joiner.on(" AND ").join(
+                getKeyConditionExpression(hashKeyString),
+                getBetweenKeyConditionExpression(Attribute.RANGE_KEY, rangeStartString, rangeEndString));
     }
 
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
@@ -506,13 +513,21 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final Collection<Attribute> targetAttributes)
     {
 
-        final Map<String, Condition> queryConditions = getQueryConditions(accountId, externalDeviceId, start, end);
+        final String hashKey = ":hash_key";
+        final String rangeStart = ":range_start";
+        final String rangeEnd = ":range_end";
 
-        final Set<String> targetAttributeNames = attributeNames(targetAttributes);
+        final String keyConditionExpression = getKeyConditionExpression(hashKey, rangeStart, rangeEnd);
 
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        final Map<String, AttributeValue> filterAttributeValues = new ImmutableMap.Builder<String, AttributeValue>()
+                .put(hashKey, new AttributeValue().withN(String.valueOf(accountId)))
+                .put(rangeStart, getRangeKey(start, externalDeviceId))
+                .put(rangeEnd, getRangeKey(end, externalDeviceId))
+                .build();
+
         for (final String tableName: getTableNames(start, end)) {
-            results.addAll(query(tableName, queryConditions, targetAttributeNames));
+            results.addAll(query(tableName, keyConditionExpression, targetAttributes, Optional.<String>absent(), filterAttributeValues));
         }
 
         final List<Map<String, AttributeValue>> filteredResults = Lists.newLinkedList();
@@ -540,8 +555,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final String externalDeviceId,
             final DateTime start,
             final DateTime end,
-            final Integer slotDuration)
-    {
+            final Integer slotDuration) {
         return getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, start, end, slotDuration, ALL_ATTRIBUTES);
     }
 
@@ -733,16 +747,18 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
      * @return Optional of the latest DeviceData, or Optional.absent() if data not present or query fails.
      */
     public Optional<DeviceData> getMostRecent(final Long accountId, final DateTime now) {
-        final Map<String, Condition> queryConditions = getQueryConditions(accountId);
-
-        final Set<String> targetAttributeNames = attributeNames(ALL_ATTRIBUTES);
-
+        final String hashKey = ":hash_key";
+        final String keyConditionExpression = getKeyConditionExpression(hashKey);
+        final Map<String, AttributeValue> filterAttributeValues = ImmutableMap.of(hashKey, new AttributeValue().withN(String.valueOf(accountId)));
+        final Collection<Attribute> attributes = ALL_ATTRIBUTES;
         final String tableName = getTableName(now);
 
         final QueryRequest queryRequest = new QueryRequest()
                 .withTableName(tableName)
-                .withKeyConditions(queryConditions)
-                .withAttributesToGet(targetAttributeNames)
+                .withKeyConditionExpression(keyConditionExpression)
+                .withProjectionExpression(getProjectionExpression(attributes))
+                .withExpressionAttributeNames(getExpressionAttributeNames(attributes))
+                .withExpressionAttributeValues(filterAttributeValues)
                 .withScanIndexForward(false)
                 .withLimit(1);
 
@@ -793,5 +809,53 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         }
 
         return Optional.absent();
+    }
+
+    public ImmutableList<DeviceData> getLightByBetweenHourDateByTS(final Long accountId,
+                                                                   final String externalDeviceId,
+                                                                   final int minLightLevel,
+                                                                   final DateTime startTime,
+                                                                   final DateTime endTime,
+                                                                   final DateTime startLocalTime,
+                                                                   final DateTime endLocalTime,
+                                                                   final int startHour,
+                                                                   final int endHour)
+    {
+
+        final String hashKeyString = ":hash_key";
+        final String rangeStartString = ":range_start";
+        final String rangeEndString = ":range_end";
+        final String startLocalTimeString = ":start_local_time";
+        final String endLocalTimeString = ":end_local_time";
+        final String minLightString = ":min_light";
+
+        final String keyConditionExpression = getKeyConditionExpression(hashKeyString, rangeStartString, rangeEndString);
+
+        final String filterExpression = Joiner.on(" AND ").join(
+                getBetweenKeyConditionExpression(Attribute.LOCAL_UTC_TIMESTAMP, startLocalTimeString, endLocalTimeString),
+                getBinaryKeyConditionExpression(Attribute.AMBIENT_LIGHT, ">", minLightString));
+
+        final Map<String, AttributeValue> expressionAttributeValues = new ImmutableMap.Builder<String, AttributeValue>()
+                .put(hashKeyString, new AttributeValue().withN(String.valueOf(accountId)))
+                .put(rangeStartString, getRangeKey(startTime, externalDeviceId))
+                .put(rangeEndString, getRangeKey(endTime, externalDeviceId))
+                .put(startLocalTimeString, dateTimeToAttributeValue(startLocalTime))
+                .put(endLocalTimeString, dateTimeToAttributeValue(endLocalTime))
+                .put(minLightString, new AttributeValue().withN(String.valueOf(minLightLevel)))
+                .build();
+
+        final List<DeviceData> results = Lists.newArrayList();
+        for (final String tableName: getTableNames(startTime, endTime)) {
+            for (final Map<String, AttributeValue> result : query(tableName, keyConditionExpression, ALL_ATTRIBUTES, Optional.of(filterExpression), expressionAttributeValues)) {
+                final DeviceData data = attributeMapToDeviceData(result);
+                final int hourOfDay = data.localTime().getHourOfDay();
+                if (data.externalDeviceId.equals(externalDeviceId) &&
+                        (hourOfDay >= startHour || hourOfDay < endHour)) {
+                    results.add(data);
+                }
+            }
+        }
+
+        return ImmutableList.copyOf(results);
     }
 }
