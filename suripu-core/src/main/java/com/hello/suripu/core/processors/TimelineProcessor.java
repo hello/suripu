@@ -358,7 +358,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = Collections.EMPTY_LIST;
             }
 
-          
+
             final PopulatedTimelines populateTimelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
 
 

@@ -61,8 +61,9 @@ public class SensorDataTimezoneMap {
 
     /* Get offset that is nearest in time to the timestamp */
     public int get(final long timestampUTC) {
-        Map.Entry<Long,Integer> higherEntry = offsetByTimeUTC.higherEntry(timestampUTC);
-        Map.Entry<Long,Integer> lowerEntry = offsetByTimeUTC.lowerEntry(timestampUTC);
+
+        Map.Entry<Long,Integer> higherEntry = offsetByTimeUTC.ceilingEntry(timestampUTC);
+        Map.Entry<Long,Integer> lowerEntry = offsetByTimeUTC.floorEntry(timestampUTC);
 
         if (higherEntry == null && lowerEntry == null) {
             return 0;
