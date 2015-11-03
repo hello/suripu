@@ -111,6 +111,10 @@ public class SleepSegment implements Comparable {
 
     }
 
+    public SleepSegment createCopyWithNewOffset(final int offsetMillis) {
+        return new SleepSegment(id,sensors,getSleepDepth(),getSound(),getTimestamp(),getDurationInSeconds(),offsetMillis,getType(),getMessage());
+    }
+
     public SleepSegment(final Long id,
                         final Event event,
                         final List<SensorReading> sensors) {
