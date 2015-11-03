@@ -3,6 +3,8 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
+import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
+import com.hello.suripu.core.algorithmintegration.SensorDataTimeSpanInfo;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Event;
@@ -17,6 +19,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertThat;
@@ -72,30 +75,14 @@ public class HmmTest {
 
     };
 
-    @Test
-    public void TestHmm() {
-        final int offset = -3600*1000;
-        final SleepHmmDAO myDAO = new MyHmmDAO(protoData);
+    private static OneDaysSensorData getSensorData(final int offset, final int sampleNumChangeTimezone,final int delta) {
 
-        final Optional<SleepHmmWithInterpretation>  hmm = myDAO.getLatestModelForDate(0,0);
-
-        assertTrue(hmm.isPresent());
 
         final AllSensorSampleList sensorSampleList = new AllSensorSampleList();
         final List<TrackerMotion> motionList = new ArrayList<TrackerMotion>();
 
         for (int i = 0; i < 24; i++) {
-            /*
-            @JsonProperty("id") final long id,
-            @JsonProperty("account_id") final long accountId,
-            @JsonProperty("tracker_id") final Long trackerId,
-            @JsonProperty("timestamp") final long timestamp,
-            @JsonProperty("value") final int value,
-            @JsonProperty("timezone_offset") final int timeZoneOffset,
-            final Long motionRange,
-            final Long kickOffCounts,
-            final Long onDurationInSeconds
-            */
+
             final long t = t0 + i*3600/3*1000;
             final TrackerMotion m = new TrackerMotion(0,0,0L,t,500,offset,0L,1L,1L);
 
@@ -104,17 +91,36 @@ public class HmmTest {
         }
 
         List<Sample> light = new ArrayList<Sample>();
+        int offsetLocal = offset;
 
         for (int i = 1; i < 7*3600; i++) {
+            if (i == sampleNumChangeTimezone) {
+                offsetLocal += delta;
+            }
+
             final Long t = t0 + i*60*1000;
-            final Sample s = new Sample(t,0.1f,offset);
+            final Sample s = new Sample(t,0.1f,offsetLocal);
             light.add(s);
         }
 
         sensorSampleList.add(Sensor.LIGHT,light);
 
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> res = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc1);
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorSampleList,motionList,t0 + offset,tf + offset,tc2);
+        return new OneDaysSensorData(sensorSampleList,ImmutableList.copyOf(motionList),ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST));
+    }
+
+    @Test
+    public void TestHmm() {
+        final int offset = -3600*1000;
+
+        final SleepHmmDAO myDAO = new MyHmmDAO(protoData);
+
+        final Optional<SleepHmmWithInterpretation>  hmm = myDAO.getLatestModelForDate(0,0);
+
+        assertTrue(hmm.isPresent());
+
+        final OneDaysSensorData sensorData = getSensorData(offset,0,0);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res = hmm.get().getSleepEventsUsingHMM(sensorData,tc1);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorData,tc2);
 
         TestCase.assertTrue(res.isPresent());
         TestCase.assertTrue(res2.isPresent());
@@ -138,6 +144,75 @@ public class HmmTest {
         TestCase.assertTrue(res.get().path.size() == expectedLength1);
         TestCase.assertTrue(res2.get().path.size() == expectedLength2);
 
+    }
+
+    @Test
+    public void testTimezones() {
+        final int offset = 60000 * 60;
+        final int delta = 60000 * 60;
+
+        final SleepHmmDAO myDAO = new MyHmmDAO(protoData);
+
+        final Optional<SleepHmmWithInterpretation>  hmm = myDAO.getLatestModelForDate(0,0);
+
+        assertTrue(hmm.isPresent());
+
+        final OneDaysSensorData sensorData = getSensorData(offset,0,0);
+
+        final OneDaysSensorData sensorDataJumpForwards = getSensorData(offset,120,delta);
+        final OneDaysSensorData sensorDataJumpBackwards = getSensorData(offset,120,-delta);
+
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res1 = hmm.get().getSleepEventsUsingHMM(sensorData,tc1);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res2 = hmm.get().getSleepEventsUsingHMM(sensorDataJumpForwards,tc2);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> res3 = hmm.get().getSleepEventsUsingHMM(sensorDataJumpBackwards,tc2);
+
+        TestCase.assertTrue(res1.isPresent());
+        TestCase.assertTrue(res2.isPresent());
+        TestCase.assertTrue(res3.isPresent());
+
+        SleepHmmWithInterpretation.SleepHmmResult r1 = res1.get();
+        SleepHmmWithInterpretation.SleepHmmResult r2 = res2.get();
+        SleepHmmWithInterpretation.SleepHmmResult r3 = res3.get();
+
+        Event out1 = null;
+        Event out2 = null;
+        Event out3 = null;
+
+
+        for (Iterator<Event> it = r1.sleepEvents.iterator(); it.hasNext(); ) {
+            final Event event = it.next();
+
+            if (event.getType().equals(Event.Type.OUT_OF_BED)) {
+                out1 = event;
+            }
+        }
+
+        for (Iterator<Event> it = r2.sleepEvents.iterator(); it.hasNext(); ) {
+            final Event event = it.next();
+
+            if (event.getType().equals(Event.Type.OUT_OF_BED)) {
+                out2 = event;
+            }
+        }
+
+        for (Iterator<Event> it = r3.sleepEvents.iterator(); it.hasNext(); ) {
+            final Event event = it.next();
+
+            if (event.getType().equals(Event.Type.OUT_OF_BED)) {
+                out3 = event;
+            }
+        }
+
+        TestCase.assertTrue(out1 != null);
+        TestCase.assertTrue(out2 != null);
+        TestCase.assertTrue(out3 != null);
+
+        TestCase.assertTrue(out3.getTimezoneOffset() == offset - delta);
+        TestCase.assertTrue(out2.getTimezoneOffset() == offset + delta);
+        TestCase.assertTrue(out1.getTimezoneOffset() == offset);
+
+        int foo = 3;
+        foo++;
 
 
     }
@@ -168,9 +243,9 @@ public class HmmTest {
         beds .add(new SleepHmmWithInterpretation.SegmentPair(35,45));
         beds .add(new SleepHmmWithInterpretation.SegmentPair(48,50));
 
-        final SleepHmmWithInterpretation.TimeIndexInfo timeIndexInfo = new SleepHmmWithInterpretation.TimeIndexInfo(15,0,0);
+        final SensorDataTimeSpanInfo timeSpanInfo = new SensorDataTimeSpanInfo(0,0);
 
-        Optional<SleepHmmWithInterpretation.SleepHmmResult> resultOptional = SleepHmmWithInterpretation.processEventsIntoResult(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(beds), ImmutableList.copyOf(Collections.EMPTY_LIST), timeIndexInfo);
+        Optional<SleepHmmWithInterpretation.SleepHmmResult> resultOptional = SleepHmmWithInterpretation.processEventsIntoResult(ImmutableList.copyOf(sleeps), ImmutableList.copyOf(beds), ImmutableList.copyOf(Collections.EMPTY_LIST), timeSpanInfo,15);
 
         TestCase.assertEquals(resultOptional.isPresent(), true);
 

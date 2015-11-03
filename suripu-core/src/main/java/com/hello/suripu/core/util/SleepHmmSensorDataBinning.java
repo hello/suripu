@@ -68,7 +68,7 @@ public class SleepHmmSensorDataBinning {
     *
     * */
     static public Optional<BinnedData> getBinnedSensorData(AllSensorSampleList sensors, List<TrackerMotion> pillData, final NamedSleepHmmModel model,
-                                                           final long startTimeMillisInUTC, final long endTimeMillisInUTC,final int timezoneOffset) {
+                                                           final long startTimeMillisInUTC, final long endTimeMillisInUTC) {
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
         final List<Sample> sound = sensors.get(Sensor.SOUND_PEAK_DISTURBANCE);
@@ -88,7 +88,7 @@ public class SleepHmmSensorDataBinning {
             return Optional.absent();
         }
 
-        final int dataLength = (int) (endTimeMillisInUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow;
+        final int dataLength = (int) (endTimeMillisInUTC - startTimeMillisInUTC) / NUMBER_OF_MILLIS_IN_A_MINUTE / numMinutesInWindow + 1;
 
         final double[][] data = new double[HmmDataConstants.NUM_DATA_DIMENSIONS][dataLength];
 
@@ -198,13 +198,6 @@ public class SleepHmmSensorDataBinning {
             }
         }
 
-
-
-
-        final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
-        final DateTime dateTimeEnd = new DateTime(startTimeMillisInUTC + numMinutesInWindow * NUMBER_OF_MILLIS_IN_A_MINUTE * dataLength).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
-
-        LOGGER.debug("t0UTC={},tf={}",dateTimeBegin.toLocalTime().toString(),dateTimeEnd.toLocalTime().toString());
         LOGGER.debug("light={}",getDoubleVectorAsString(data[HmmDataConstants.LIGHT_INDEX]));
         LOGGER.debug("motion={}",getDoubleVectorAsString(data[HmmDataConstants.MOT_COUNT_INDEX]));
         LOGGER.debug("waves={}", getDoubleVectorAsString(data[HmmDataConstants.DISTURBANCE_INDEX]));

@@ -285,9 +285,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             else {
 
                 // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
-                final Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
-                        sensorData.trackerMotions,
-                        sensorData.allSensorSampleList);
+                final Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,sensorData);
 
                 if (results.isPresent()) {
                     LOGGER.debug("HMM Suceeded.");
@@ -525,8 +523,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return Optional.of(new OneDaysSensorData(allSensorSampleList,
                 ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(originalPartnerMotions),
                 ImmutableList.copyOf(feedbackList),
-                ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(originalPartnerMotions),
-                tzOffsetMillis));
+                ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(originalPartnerMotions)));
 
     }
 
@@ -916,7 +913,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
     }
 
-    private Optional<HmmAlgorithmResults> fromHmm(final long accountId, final DateTime currentTime, final DateTime targetDate, final DateTime endDate, final ImmutableList<TrackerMotion> trackerMotions, final AllSensorSampleList allSensorSampleList) {
+    private Optional<HmmAlgorithmResults> fromHmm(final long accountId, final DateTime currentTime, final DateTime targetDate, final DateTime endDate, final OneDaysSensorData oneDaysSensorData) {
 
         /*  GET THE GODDAMNED HMM */
         final Optional<SleepHmmWithInterpretation> hmmOptional = sleepHmmDAO.getLatestModelForDate(accountId, targetDate.getMillis());
@@ -927,8 +924,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         /*  EVALUATE THE HMM */
-        final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(
-                allSensorSampleList, trackerMotions,targetDate.getMillis(),endDate.getMillis(),currentTime.getMillis());
+        final Optional<SleepHmmWithInterpretation.SleepHmmResult> optionalHmmPredictions = hmmOptional.get().getSleepEventsUsingHMM(oneDaysSensorData,currentTime.getMillis());
 
         if (!optionalHmmPredictions.isPresent()) {
             LOGGER.error("Failed to get predictions from HMM for account_id {} on date {}", accountId, targetDate);
