@@ -314,3 +314,8 @@ UPDATE info_insight_cards SET text=
 
 The increase and decrease of light cues trigger different chemical reactions in your body, prompting changes to your physiology and behavior. As evening approaches and the light in your environment recedes, your body starts to produce more melatonin and body temperature falls, making you less alert and more likely to fall asleep. When sunlight returns in the morning, a decrease in melatonin levels and rise in body temperature, along with other chemical shifts such as an increase in the activating hormone cortisol, then help you feel alert and ready for the day.'
 WHERE category='light';
+
+--jyfan 11/3/2015 grammar affect/effect correction
+UPDATE info_insight_cards SET text=
+'The temperature of your sleeping environment and how comfortable you feel in it affects the quality of sleep because our brain has an ideal **set point** for body temperature that it is trying to achieve, almost like an internal thermostat. If it’s too cold, or too hot, the body struggles to achieve this set point, hence interrupting sleep. The usual recommendation is to keep the bedroom cool, quiet, & dark, between 65°F (18°C) and 72°F (22°C). However, the perfect room temperature level is different for everyone and should be whatever is most comfortable for the sleeper.'
+WHERE category='temperature';
