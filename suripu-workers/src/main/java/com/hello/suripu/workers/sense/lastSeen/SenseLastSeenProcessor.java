@@ -127,7 +127,8 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             }
 
             // If all is well, update bloom filter and persist data
-            bloomFilterMap.get((Math.abs(senseExternalId.hashCode()) + lastSeenSenseDataOptional.get().dateTimeUTC.getMinuteOfHour()) % NUMBER_OF_BLOOM_FILTERS).put(senseExternalId);
+            final int bloomFilterId = (Math.abs(senseExternalId.hashCode()) + lastSeenSenseDataOptional.get().dateTimeUTC.getMinuteOfHour()) % NUMBER_OF_BLOOM_FILTERS;
+            bloomFilterMap.get(bloomFilterId).put(senseExternalId);
             lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
         }
 
