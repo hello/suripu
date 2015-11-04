@@ -10,8 +10,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
@@ -42,7 +40,8 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     private final static Integer WIFI_INFO_BATCH_MAX_SIZE = 25;
     private final static Integer SIGNIFICANT_RSSI_CHANGE = 5;
     private final static Integer NUMBER_OF_BLOOM_FILTERS = 2;
-    private final static Integer BLOOM_FILTER_LIFE_SPAN_MINUTES = 2;   // re-create bloom filter every 2 minutes because it's impossible to remove an element from it
+    private final static Integer BLOOM_FILTER_LIFE_SPAN_SECONDS = 120;   // re-create bloom filter every 2 minutes because it's impossible to remove an element from it
+    private final static Integer BLOOM_FILTER_OFFSET_SECONDS = 60;
     private final static Integer BLOOM_FILTER_CAPACITY = 40000; // this constant should be much greater than number of senses we have
     private final static double BLOOM_FILTER_ERROR_RATE = 0.05;
 
@@ -56,8 +55,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     private Map<String, WifiInfo> wifiInfoPerBatch = Maps.newHashMap();
     private Map<String, WifiInfo> wifiInfoHistory = Maps.newHashMap();
 
-    private final Map<Integer, BloomFilter<CharSequence>> bloomFilterMap = Maps.newHashMap();
-    private final Map<Integer, DateTime> bloomFilterCreatedMap = Maps.newHashMap();
+    private MultiBloomFilter multiBloomFilter = new MultiBloomFilter(NUMBER_OF_BLOOM_FILTERS, BLOOM_FILTER_LIFE_SPAN_SECONDS, BLOOM_FILTER_OFFSET_SECONDS, BLOOM_FILTER_CAPACITY, BLOOM_FILTER_ERROR_RATE);
 
     private String shardId = "";
 
@@ -73,15 +71,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     @Override
     public void initialize(String s) {
         this.shardId = s;
-        for (int j=0; j< NUMBER_OF_BLOOM_FILTERS; j++) {
-            createNewBloomFilter(j, j);
-        }
-    }
-
-    private void createNewBloomFilter(final int bloomFilterId, final int offSetMinutes) {
-        bloomFilterMap.put(bloomFilterId, BloomFilter.create(Funnels.stringFunnel(), BLOOM_FILTER_CAPACITY, BLOOM_FILTER_ERROR_RATE));
-        bloomFilterCreatedMap.put(bloomFilterId, DateTime.now(DateTimeZone.UTC).plusMinutes(offSetMinutes));
-        LOGGER.trace("Bloom filter {} reseted at {}", bloomFilterId, this.bloomFilterCreatedMap.get(bloomFilterId));
+        this.multiBloomFilter.initializeAllBloomFilters();
     }
 
     @Timed
@@ -89,11 +79,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
         final Map<String, DeviceData> lastSeenSenseDataMap = Maps.newHashMap();
 
-        for (int j=0; j< NUMBER_OF_BLOOM_FILTERS; j++) {
-            if(DateTime.now(DateTimeZone.UTC).isAfter(this.bloomFilterCreatedMap.get(j).plusMinutes(BLOOM_FILTER_LIFE_SPAN_MINUTES))) {
-                createNewBloomFilter(j, 0);
-            }
-        }
+        this.multiBloomFilter.resetAllBloomExpiredFilters();
 
         final Set<String> seenSenses = Sets.newHashSet();
         for(final Record record : records) {
@@ -121,14 +107,15 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             }
 
             // Do not persist data for sense if there is no interaction and we have seen it recently
-            if (!hasInteraction(lastSeenSenseDataOptional.get()) && mightHaveBeenSeen(senseExternalId, lastSeenSenseDataOptional.get().dateTimeUTC)) {
-                LOGGER.trace("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_LIFE_SPAN_MINUTES);
+            if (!hasInteraction(lastSeenSenseDataOptional.get()) && this.multiBloomFilter.mightHaveSeen(senseExternalId, lastSeenSenseDataOptional.get().dateTimeUTC.getMinuteOfHour())) {
+                LOGGER.info("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_LIFE_SPAN_SECONDS);
                 continue;
             }
+            LOGGER.info("Persisting for sense {}", senseExternalId);
 
             // If all is well, update bloom filter and persist data
-            final int bloomFilterId = (Math.abs(senseExternalId.hashCode()) + lastSeenSenseDataOptional.get().dateTimeUTC.getMinuteOfHour()) % NUMBER_OF_BLOOM_FILTERS;
-            bloomFilterMap.get(bloomFilterId).put(senseExternalId);
+
+            this.multiBloomFilter.addElement(senseExternalId, lastSeenSenseDataOptional.get().dateTimeUTC.getMinuteOfHour());
             lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
         }
 
@@ -147,10 +134,6 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
         capacity.mark(batchCapacity);
     }
 
-    private boolean mightHaveBeenSeen(final String senseExternalId, final DateTime lastSeenDateTime) {
-        final int bloomFilterId = (Math.abs(senseExternalId.hashCode()) + lastSeenDateTime.getMinuteOfHour()) % NUMBER_OF_BLOOM_FILTERS;
-        return bloomFilterMap.get(bloomFilterId).mightContain(senseExternalId);
-    }
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer iRecordProcessorCheckpointer, ShutdownReason shutdownReason) {
