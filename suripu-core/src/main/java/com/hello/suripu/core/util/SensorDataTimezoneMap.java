@@ -70,10 +70,10 @@ public class SensorDataTimezoneMap {
     }
 
     /* Get offset that is nearest in time to the timestamp */
-    public Integer get(final long timestampUTC) {
+    public int get(final long timestampUTC) {
 
         if (offsetByTimeUTC.isEmpty()) {
-            return null;
+            return 0;
         }
 
         //get entry >=
