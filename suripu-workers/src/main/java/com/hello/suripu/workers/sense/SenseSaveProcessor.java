@@ -41,7 +41,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-
+// WARNING ALL CHANGES HAVE TO REPLICATED TO SenseSaveDDBProcessor
+// TODO Burn this worker to the ground once everything has switched to DynamoDB
 public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);

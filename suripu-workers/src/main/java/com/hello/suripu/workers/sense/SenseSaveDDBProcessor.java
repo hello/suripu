@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by jakepiccolo on 11/4/15.
  */
+// WARNING ALL CHANGES HAVE TO REPLICATED TO SenseSaveProcessor
 public class SenseSaveDDBProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);
