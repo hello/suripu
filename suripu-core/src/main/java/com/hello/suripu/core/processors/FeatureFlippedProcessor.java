@@ -109,4 +109,8 @@ public class FeatureFlippedProcessor {
     protected Boolean hasDeviceDataDynamoDBEnabled(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasSleepSegmentOffsetRemapping(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SEGMENT_OFFSET_REMAPPING, accountId, Collections.EMPTY_LIST);
+    }
 }

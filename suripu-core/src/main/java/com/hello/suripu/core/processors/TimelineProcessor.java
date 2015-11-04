@@ -753,11 +753,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     sleepStats.sleepTime, accountId);
         }
 
-        final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
+        List<SleepSegment> reversedSegments = Lists.reverse(reversed);
 
-        final List<SleepSegment> remappedOffsetSleepSegments = sensorDataTimezoneMap.remapSleepSegmentOffsets(reversedSegments);
+        if (hasSleepSegmentOffsetRemapping(accountId)) {
+            reversedSegments = sensorDataTimezoneMap.remapSleepSegmentOffsets(reversedSegments);
+        }
 
-        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), remappedOffsetSleepSegments, insights, sleepStats);
+        final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
         return new PopulatedTimelines(Lists.newArrayList(timeline),isValidSleepScore);
     }
