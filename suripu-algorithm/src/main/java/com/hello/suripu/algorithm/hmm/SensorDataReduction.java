@@ -1,4 +1,4 @@
-package com.hello.suripu.algorithm.bayes;
+package com.hello.suripu.algorithm.hmm;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

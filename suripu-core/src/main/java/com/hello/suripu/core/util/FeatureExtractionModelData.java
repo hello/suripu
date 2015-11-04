@@ -4,12 +4,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.algorithm.bayes.SensorDataReduction;
+import com.hello.suripu.algorithm.hmm.SensorDataReduction;
 import com.hello.suripu.algorithm.hmm.ChiSquarePdf;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
 import com.hello.suripu.algorithm.hmm.GammaPdf;
 import com.hello.suripu.algorithm.hmm.GaussianPdf;
-import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
@@ -17,11 +16,9 @@ import com.hello.suripu.algorithm.hmm.PdfComposite;
 import com.hello.suripu.algorithm.hmm.PoissonPdf;
 import com.hello.suripu.api.datascience.SleepHmmBayesNetProtos;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -64,7 +61,7 @@ public class FeatureExtractionModelData {
 
         try {
             final SleepHmmBayesNetProtos.HmmBayesNet proto = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(serializedProtobufData);
-            
+
         /*  FIRST MAKE THE HMMS */
             final Map<String,HiddenMarkovModelInterface> hmmMapById = Maps.newHashMap();
 
