@@ -14,7 +14,7 @@ public interface CalibrationDAO {
      * @param senseId String
      * @return Calibration
      */
-    Calibration get(String senseId);
+    Optional<Calibration> get(String senseId);
     Optional<Calibration> getStrict(String senseId);
 
     /**

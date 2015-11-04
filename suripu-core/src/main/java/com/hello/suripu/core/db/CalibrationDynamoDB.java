@@ -72,7 +72,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     final CacheLoader loader = new CacheLoader<String, Optional<Calibration>>() {
         public Optional<Calibration> load(final String senseId) {
             LOGGER.debug("{} not in cache, fetching from DB", senseId);
-            return getStrictRemotely(senseId);
+            return getRemotely(senseId);
         }
     };
 
@@ -99,22 +99,18 @@ public class CalibrationDynamoDB implements CalibrationDAO {
      * @return Calibration, possibly empty state
      */
     @Override
-    public Calibration get(final String senseId) {
-        final Map<String, AttributeValue> item = queryDynamoDB(senseId);
-        final Optional<Calibration> calibrationOptional = fromItem(item, senseId, false);
-        if(!calibrationOptional.isPresent()) {
-            throw new IllegalArgumentException(String.format("Missing required calibration for Sense: %s", senseId));
-        }
-        return calibrationOptional.get();
+    public Optional<Calibration> get(final String senseId) {
+        return cache.getUnchecked(senseId);
     }
 
     @Override
     public Optional<Calibration> getStrict(final String senseId) {
-        return cache.getUnchecked(senseId);
+        final Map<String, AttributeValue> item = queryDynamoDB(senseId);
+        return fromItem(item, senseId, true);
     }
 
 
-    private Optional<Calibration> getStrictRemotely(final String senseId) {
+    private Optional<Calibration> getRemotely(final String senseId) {
         final Map<String, AttributeValue> item = queryDynamoDB(senseId);
         return fromItem(item, senseId, true);
     }
