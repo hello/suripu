@@ -23,32 +23,32 @@ public class DefaultModelEnsembleFromS3 implements DefaultModelEnsembleDAO {
     private final OnlineHmmPriors seedPrior;
 
     private static OnlineHmmPriors getPriorsFromS3Object(final AmazonS3 s3,final String bucket, final String key) {
-        OnlineHmmPriors onlineHmmPriors = OnlineHmmPriors.createEmpty();
 
+        //default
         final S3Object s3Object = s3.getObject(bucket, key);
 
-        final Reader inputStream = new InputStreamReader(s3Object.getObjectContent());
-
-        try {
+        try (final Reader inputStream = new InputStreamReader(s3Object.getObjectContent())) {
             final String base64data = CharStreams.toString(inputStream);
             byte [] bindata = Base64.decodeBase64(base64data);
             final int len = bindata.length;
 
             final Optional<OnlineHmmPriors> priorsOptional = OnlineHmmPriors.createFromProtoBuf(bindata);
 
-            if (priorsOptional.isPresent()) {
-                onlineHmmPriors = priorsOptional.get();
-                LOGGER.info("successfully pulled default models from {}/{}",bucket,key);
-            }
-            else {
+            if (!priorsOptional.isPresent()) {
                 LOGGER.error("failed to find default models for the ensemble");
+                return OnlineHmmPriors.createEmpty();
             }
+
+            LOGGER.info("successfully pulled default models from {}/{}",bucket,key);
+
+            return priorsOptional.get();
 
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
 
-        return onlineHmmPriors;
+
+        return OnlineHmmPriors.createEmpty();
     }
 
     public static DefaultModelEnsembleDAO create(final AmazonS3 s3,final String ensembleBucket, final String ensembleKey, final String seedBucket, final String seedKey) {

@@ -64,10 +64,7 @@ public class FeatureExtractionModelData {
 
         try {
             final SleepHmmBayesNetProtos.HmmBayesNet proto = SleepHmmBayesNetProtos.HmmBayesNet.parseFrom(serializedProtobufData);
-
-
-            final SleepHmmBayesNetProtos.MeasurementParams params = proto.getMeasurementParameters();
-
+            
         /*  FIRST MAKE THE HMMS */
             final Map<String,HiddenMarkovModelInterface> hmmMapById = Maps.newHashMap();
 

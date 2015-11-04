@@ -31,42 +31,44 @@ public class DefaultModelEnsembleDAOFromFile implements DefaultModelEnsembleDAO 
         this.filepathToSeedModel = filepathToSeedModel;
     }
 
-    private  byte[] loadFile(String filepath) throws IOException {
+    private  byte[] loadFile(String filepath)  {
+        byte[] bytes = new byte[0];
+
         final File file = new File(filepath);
-        final InputStream is = new FileInputStream(file);
 
-        long length = file.length();
-        if (length > Integer.MAX_VALUE) {
-            LOGGER.error("file is too large");
+        try (final InputStream is = new FileInputStream(file)) {
+            long length = file.length();
+            if (length > Integer.MAX_VALUE) {
+                throw new IOException("file is tool arge");
+            }
+            bytes = new byte[(int) length];
+
+            int offset = 0;
+            int numRead = 0;
+            while (offset < bytes.length
+                    && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
+                offset += numRead;
+            }
+
+            if (offset < bytes.length) {
+                throw new IOException("Could not completely read file " + file.getName());
+            }
+
         }
-        byte[] bytes = new byte[(int)length];
-
-        int offset = 0;
-        int numRead = 0;
-        while (offset < bytes.length
-                && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
-            offset += numRead;
+        catch (IOException e) {
+            LOGGER.error(e.getMessage());
         }
 
-        if (offset < bytes.length) {
-            throw new IOException("Could not completely read file "+file.getName());
-        }
-
-        is.close();
         return bytes;
     }
 
     private OnlineHmmPriors readModel(final String filepath) {
-        try {
-            LOGGER.info("attempting to load model file: {}", filepath);
-            final Optional<OnlineHmmPriors> priors = OnlineHmmPriors.createFromProtoBuf(loadFile(filepath));
 
-            if (priors.isPresent()) {
-                return priors.get();
-            }
-        }
-        catch (IOException e) {
-            LOGGER.error(e.getMessage());
+        LOGGER.info("attempting to load model file: {}", filepath);
+        final Optional<OnlineHmmPriors> priors = OnlineHmmPriors.createFromProtoBuf(loadFile(filepath));
+
+        if (priors.isPresent()) {
+            return priors.get();
         }
 
         return OnlineHmmPriors.createEmpty();
