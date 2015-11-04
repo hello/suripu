@@ -106,7 +106,11 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SENSORS_DB_UNAVAILABLE, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasDeviceDataDynamoDBEnabled(final long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA, accountId, Collections.EMPTY_LIST);
+    protected Boolean hasDeviceDataDynamoDBTimelineEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_TIMELINE, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasSleepSegmentOffsetRemapping(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SEGMENT_OFFSET_REMAPPING, accountId, Collections.EMPTY_LIST);
     }
 }
