@@ -11,6 +11,8 @@ import java.util.Set;
 public interface CalibrationDAO {
     /**
      * Retrieves calibration for given senseId
+     * Results are eventually consistent.
+     * Do not use for read to update patterns
      * @param senseId String
      * @return Optional<Calibration>
      */
