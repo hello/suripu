@@ -1,6 +1,7 @@
 package com.hello.suripu.workers.insights;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.workers.framework.WorkerConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
@@ -47,17 +48,11 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("insights_dynamo_db")
-    private DynamoDBConfiguration insightsDynamoDB;
-    public DynamoDBConfiguration getInsightsDynamoDB() {
-        return insightsDynamoDB;
+    @JsonProperty("dynamo_db")
+    private NewDynamoDBConfiguration dynamoDBConfiguration;
+    public NewDynamoDBConfiguration dynamoDBConfiguration(){
+        return dynamoDBConfiguration;
     }
-
-    @Valid
-    @NotNull
-    @JsonProperty("sleep_score_db")
-    private DynamoDBConfiguration sleepScoreDynamoDB;
-    public DynamoDBConfiguration getSleepScoreDynamoDB() { return sleepScoreDynamoDB; }
 
     @Valid
     @NotNull
@@ -67,35 +62,9 @@ public class InsightsGeneratorWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("preferences_db")
-    private DynamoDBConfiguration preferencesDynamoDB;
-
-    public DynamoDBConfiguration getPreferencesDynamoDB() {
-        return preferencesDynamoDB;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("sleep_stats_db")
-    private DynamoDBConfiguration sleepStatsDynamoDBConfiguration;
-    public DynamoDBConfiguration getSleepStatsDynamoConfiguration(){
-        return this.sleepStatsDynamoDBConfiguration;
-    }
-
-    @Valid
-    @NotNull
     @JsonProperty("sleep_stats_version")
     private String sleepStatsVersion;
     public String getSleepStatsVersion() {
         return this.sleepStatsVersion;
     }
-
-    @Valid
-    @NotNull
-    @JsonProperty("features_db")
-    private DynamoDBConfiguration featuresDynamoDBConfiguration;
-    public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
-        return this.featuresDynamoDBConfiguration;
-    }
-
 }

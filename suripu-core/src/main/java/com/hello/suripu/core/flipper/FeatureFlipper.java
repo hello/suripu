@@ -24,6 +24,7 @@ public class FeatureFlipper {
     public final static String DELAY_CURRENT_ROOM_STATE_THRESHOLD = "delay_current_room_state_threshold";
     public final static String DUST_SMOOTH = "dust_smooth";
     public final static String DYNAMODB_DEVICE_DATA = "dynamodb_device_data";
+    public final static String DYNAMODB_DEVICE_DATA_TIMELINE = "dynamodb_device_data_timeline";
 
     public final static String ENABLE_OTA_UPDATES = "enable_ota_updates";
     public final static String ENVIRONMENT_IN_TIMELINE_SCORE = "environment_in_timeline_score";
@@ -72,6 +73,7 @@ public class FeatureFlipper {
     public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB_READ = "sense_last_seen_view_dynamodb_read";
     public final static String SENSORS_DB_UNAVAILABLE = "sensors_db_unavailable";
     public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
+    public final static String SLEEP_SEGMENT_OFFSET_REMAPPING = "sleep_segment_offset_remapping";
     public final static String SMART_ALARM = "smart_alarm";
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";

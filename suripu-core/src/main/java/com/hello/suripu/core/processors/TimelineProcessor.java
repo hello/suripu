@@ -53,6 +53,7 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
 import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
+import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimelineError;
@@ -210,7 +211,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             log.addMessage(TimelineError.NO_DATA);
             return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, true);
         }
-
 
 
         final OneDaysSensorData sensorData = sensorDataOptional.get();
@@ -398,6 +398,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 extraEvents = Collections.EMPTY_LIST;
             }
 
+
             final PopulatedTimelines populateTimelines = populateTimeline(accountId,date,targetDate,endDate,sleepEventsFromAlgorithmOptional.get(),ImmutableList.copyOf(extraEvents), sensorData);
 
 
@@ -527,7 +528,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             // query dates in utc_ts (table has an index for this)
             LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
 
-            if (hasDeviceDataDynamoDBEnabled(accountId)) {
+            if (hasDeviceDataDynamoDBTimelineEnabled(accountId)) {
                 allSensorSampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                         targetDate.minusMillis(tzOffsetMillis).getMillis(),
                         endDate.minusMillis(tzOffsetMillis).getMillis(),
@@ -594,6 +595,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final AllSensorSampleList allSensorSampleList = sensorData.allSensorSampleList;
         final ImmutableList<TrackerMotion> partnerMotions = sensorData.partnerMotions;
         final ImmutableList<TimelineFeedback> feedbackList = sensorData.feedbackList;
+
+        final SensorDataTimezoneMap sensorDataTimezoneMap = SensorDataTimezoneMap.create(sensorData.allSensorSampleList.get(Sensor.LIGHT));
+
 
         if (!allSensorSampleList.isEmpty()) {
 
@@ -790,7 +794,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             insights = timelineUtils.generatePreSleepInsights(allSensorSampleList,
                     sleepStats.sleepTime, accountId);
         }
-        final List<SleepSegment>  reversedSegments = Lists.reverse(reversed);
+
+        List<SleepSegment> reversedSegments = Lists.reverse(reversed);
+
+        if (hasSleepSegmentOffsetRemapping(accountId)) {
+            reversedSegments = sensorDataTimezoneMap.remapSleepSegmentOffsets(reversedSegments);
+        }
+
         final Timeline timeline = Timeline.create(sleepScore, timeLineMessage, date.toString(DateTimeUtil.DYNAMO_DB_DATE_FORMAT), reversedSegments, insights, sleepStats);
 
         return new PopulatedTimelines(Lists.newArrayList(timeline),isValidSleepScore);

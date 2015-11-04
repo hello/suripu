@@ -7,7 +7,7 @@ branches:
   - master
 notifications:
   email:
-  - tim+travis-suripu@sayhello.com
+  - infra@sayhello.com
   hipchat:
     rooms:
     - mDwGqxGUPFlLf8CBEWGs9JPzZBmhJiQahoaHmlns@ops

@@ -82,6 +82,10 @@ public class DeviceData {
     @JsonProperty("audio_peak_background_db")
     public final Integer audioPeakBackgroundDB; // already converted to decibels, multiplied by 1000
 
+    public DateTime localTime() {
+        return dateTimeUTC.plusMillis(offsetMillis);
+    }
+
     public DeviceData withCalibratedLight(Optional<Device.Color> colorOptional) {
 
         Device.Color color = Device.DEFAULT_COLOR;

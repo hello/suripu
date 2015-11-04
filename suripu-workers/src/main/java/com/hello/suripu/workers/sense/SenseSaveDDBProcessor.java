@@ -6,20 +6,12 @@ import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.CacheStats;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDataIngestDAO;
-import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.SensorsViewsDynamoDB;
-import com.hello.suripu.core.flipper.FeatureFlipper;
-import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
@@ -33,28 +25,23 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-// WARNING ALL CHANGES HAVE TO REPLICATED TO SenseSaveDDBProcessor
-// TODO Burn this worker to the ground once everything has switched to DynamoDB
-public class SenseSaveProcessor extends HelloBaseRecordProcessor {
+/**
+ * Created by jakepiccolo on 11/4/15.
+ */
+// WARNING ALL CHANGES HAVE TO REPLICATED TO SenseSaveProcessor
+public class SenseSaveDDBProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);
 
-    public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
-    private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 24 * 3600;
-    private final DeviceReadDAO deviceDAO;
     private final DeviceDataIngestDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
-    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final Integer maxRecords;
-    private final boolean updateLastSeen;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
@@ -65,16 +52,11 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
 
     private String shardId = "";
-    private Random random;
-    private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceReadDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords, final boolean updateLastSeen) {
-        this.deviceDAO = deviceDAO;
+    public SenseSaveDDBProcessor(final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final Integer maxRecords) {
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
-        this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
         this.maxRecords = maxRecords;
-        this.updateLastSeen = updateLastSeen;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "batch", "batch-saved", TimeUnit.SECONDS);
@@ -82,20 +64,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.clockOutOfSync = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "clock", "clock-out-of-sync", TimeUnit.SECONDS);
         this.fetchTimezones = Metrics.defaultRegistry().newTimer(deviceDataDAO.name(), "fetch-timezones");
         this.capacity = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "capacity", "capacity", TimeUnit.SECONDS);
-
-        this.dbCache  = CacheBuilder.newBuilder()
-                .maximumSize(20000)
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .recordStats()
-                .build(
-                        new CacheLoader<String, List<DeviceAccountPair>>() {
-                            @Override
-                            public List<DeviceAccountPair> load(final String senseId) {
-                                return deviceDAO.getAccountIdsForDeviceId(senseId);
-                            }
-                        });
-        random = new Random(System.currentTimeMillis());
-
     }
 
     @Override
@@ -124,25 +92,9 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             final String deviceName = batchPeriodicDataWorker.getData().getDeviceId();
 
-            final List<DeviceAccountPair> deviceAccountPairs = Lists.newArrayList();
-
-            if(!flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST) || batchPeriodicDataWorker.getUptimeInSecond() < MIN_UPTIME_IN_SECONDS_FOR_CACHING) {
-                deviceAccountPairs.addAll(deviceDAO.getAccountIdsForDeviceId(deviceName));
-            } else {
-                deviceAccountPairs.addAll(dbCache.getUnchecked(deviceName));
-            }
-
-
-            // We should not have too many accounts with more than two accounts paired to a sense
-            // warn if it is the case
-            if(deviceAccountPairs.size() > 2) {
-                LOGGER.warn("Found too many pairs ({}) for device = {}", deviceAccountPairs.size(), deviceName);
-            }
-
-            // Compare Postgres views with DynamoDB views.
             final List<Long> accounts = Lists.newArrayList();
-            for (final DeviceAccountPair deviceAccountPair : deviceAccountPairs) {
-                accounts.add(deviceAccountPair.accountId);
+            for (final DataInputProtos.AccountMetadata metadata: batchPeriodicDataWorker.getTimezonesList()) {
+                accounts.add(metadata.getAccountId());
             }
 
             final Map<Long, DateTimeZone> timezonesByUser = getTimezonesByUser(deviceName, batchPeriodicDataWorker, accounts);
@@ -172,21 +124,20 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
                 final Integer firmwareVersion = SenseProcessorUtils.getFirmwareVersion(batchPeriodicDataWorker, periodicData);
 
-                for (final DeviceAccountPair pair : deviceAccountPairs) {
-                    if(!timezonesByUser.containsKey(pair.accountId)) {
+                for (final Long accountId: accounts) {
+                    if(!timezonesByUser.containsKey(accountId)) {
                         LOGGER.warn("No timezone info for account {} paired with device {}, account may already unpaired with device but merge table not updated.",
-                                pair.accountId,
+                                accountId,
                                 deviceName);
                         continue;
                     }
 
-                    final DateTimeZone userTimeZone = timezonesByUser.get(pair.accountId);
+                    final DateTimeZone userTimeZone = timezonesByUser.get(accountId);
 
 
                     final DeviceData.Builder builder = new DeviceData.Builder()
-                            .withAccountId(pair.accountId)
-                            .withDeviceId(pair.internalDeviceId)
-                            .withExternalDeviceId(pair.externalDeviceId)
+                            .withAccountId(accountId)
+                            .withExternalDeviceId(deviceName)
                             .withAmbientTemperature(periodicData.getTemperature())
                             .withAmbientAirQualityRaw(periodicData.getDust())
                             .withAmbientDustVariance(periodicData.getDustVariability())
@@ -237,28 +188,12 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
         messagesProcessed.mark(records.size());
 
-        if(random.nextInt(11) % 10 == 0) {
-            final CacheStats stats = dbCache.stats();
-            LOGGER.info("{} - Cache hitrate: {}", this.shardId, stats.hitRate());
-        }
-
-        // This lets us clear the cache remotely by turning on the feature in FeatureFlipper.
-        // DeviceId is not required and thus empty
-        if(flipper.deviceFeatureActive(FeatureFlipper.WORKER_CLEAR_ALL_CACHE, "", Collections.EMPTY_LIST)) {
-            LOGGER.warn("Clearing all caches");
-            dbCache.invalidateAll();
-        }
-
         try {
             iRecordProcessorCheckpointer.checkpoint();
         } catch (InvalidStateException e) {
             LOGGER.error("checkpoint {}", e.getMessage());
         } catch (ShutdownException e) {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
-        }
-
-        if(!lastSeenDeviceData.isEmpty() && this.updateLastSeen) {
-            sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
         final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f) ;

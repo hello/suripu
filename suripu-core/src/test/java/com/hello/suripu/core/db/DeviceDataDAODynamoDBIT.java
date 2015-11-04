@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
@@ -37,6 +38,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsEqual.equalTo;
 
 /**
  * Created by jakepiccolo on 10/13/15.
@@ -201,16 +203,16 @@ public class DeviceDataDAODynamoDBIT {
         final String deviceId = "2";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
-        final int insertedThisMonth = addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+        final List<DeviceData> insertedThisMonth = addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
         final DateTime nextMonth = firstTime.plusMonths(1);
-        final int insertedNextMonth = addDataForQuerying(accountId, deviceId, offsetMillis, nextMonth);
+        final List<DeviceData> insertedNextMonth = addDataForQuerying(accountId, deviceId, offsetMillis, nextMonth);
 
-        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(insertedThisMonth));
-        assertThat(getTableCount(NOVEMBER_TABLE_NAME), is(insertedNextMonth));
+        assertThat(getTableCount(OCTOBER_TABLE_NAME), is(insertedThisMonth.size()));
+        assertThat(getTableCount(NOVEMBER_TABLE_NAME), is(insertedNextMonth.size()));
     }
 
-    private int addDataForQuerying(final Long accountId, final String deviceId, final Integer offsetMillis, final DateTime firstTime) {
+    private List<DeviceData> addDataForQuerying(final Long accountId, final String deviceId, final Integer offsetMillis, final DateTime firstTime) {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(new DeviceData.Builder()
                 .withAccountId(accountId)
@@ -277,7 +279,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withAmbientHumidity(4658)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
-        return deviceDataList.size();
+        return deviceDataList;
     }
 
     @Test
@@ -500,6 +502,148 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(sampleList.get(Sensor.LIGHT).size(), is(11));
         assertThat(sampleList.get(Sensor.TEMPERATURE).size(), is(11));
         assertThat(sampleList.get(Sensor.HUMIDITY).size(), is(11));
+    }
+
+    @Test
+    public void testGetMostRecentByAccountId() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        final List<DeviceData> inserted = addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+        final DeviceData mostRecent = deviceDataDAODynamoDB.getMostRecent(accountId, firstTime).get();
+        assertThat(mostRecent.dateTimeUTC, is(inserted.get(inserted.size() - 1).dateTimeUTC));
+    }
+
+    @Test
+    public void testGetMostRecentByAccountIdNotPresent() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        assertThat(deviceDataDAODynamoDB.getMostRecent(accountId, firstTime.plusMonths(1)).isPresent(), is(false));
+        assertThat(deviceDataDAODynamoDB.getMostRecent(2L, firstTime).isPresent(), is(false));
+    }
+
+    private DeviceData last(final List<DeviceData> list) {
+        return list.get(list.size() - 1);
+    }
+
+    @Test
+    public void testGetMostRecentByAccountAndDeviceId() {
+        final Long accountId = new Long(1);
+        final String deviceId1 = "2";
+        final String deviceId2 = "3";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        final List<DeviceData> firstDeviceFirstMonthBatch = addDataForQuerying(accountId, deviceId1, offsetMillis, firstTime);
+        final List<DeviceData> secondDeviceFirstMonthBatch = addDataForQuerying(accountId, deviceId2, offsetMillis, firstTime);
+        final List<DeviceData> firstDeviceSecondMonthBatch = addDataForQuerying(accountId, deviceId1, offsetMillis, firstTime.plusMonths(1));
+
+        final Optional<DeviceData> firstDeviceFirstMonth = deviceDataDAODynamoDB.getMostRecent(accountId, deviceId1, firstTime.plusMinutes(10), firstTime);
+        assertThat(
+                firstDeviceFirstMonth.get().dateTimeUTC,
+                is(last(firstDeviceFirstMonthBatch).dateTimeUTC));
+        assertThat(
+                firstDeviceFirstMonth.get().externalDeviceId,
+                is(last(firstDeviceFirstMonthBatch).externalDeviceId));
+
+        final Optional<DeviceData> secondDeviceFirstMonth = deviceDataDAODynamoDB.getMostRecent(accountId, deviceId2, firstTime.plusMinutes(10), firstTime);
+        assertThat(
+                secondDeviceFirstMonth.get().dateTimeUTC,
+                is(last(secondDeviceFirstMonthBatch).dateTimeUTC));
+        assertThat(
+                secondDeviceFirstMonth.get().externalDeviceId,
+                is(last(secondDeviceFirstMonthBatch).externalDeviceId));
+
+        final Optional<DeviceData> firstDeviceSecondMonth = deviceDataDAODynamoDB.getMostRecent(accountId, deviceId1, firstTime.plusMonths(1).plusMinutes(10), firstTime);
+        assertThat(
+                firstDeviceSecondMonth.get().dateTimeUTC,
+                is(last(firstDeviceSecondMonthBatch).dateTimeUTC));
+        assertThat(
+                firstDeviceSecondMonth.get().externalDeviceId,
+                is(last(firstDeviceSecondMonthBatch).externalDeviceId));
+
+        final Optional<DeviceData> secondDeviceFirstMonthStartingFromNextMonth = deviceDataDAODynamoDB.getMostRecent(accountId, deviceId2, firstTime.plusMonths(1).plusMinutes(10), firstTime);
+        assertThat(
+                secondDeviceFirstMonthStartingFromNextMonth.get().dateTimeUTC,
+                is(last(secondDeviceFirstMonthBatch).dateTimeUTC));
+        assertThat(
+                secondDeviceFirstMonthStartingFromNextMonth.get().externalDeviceId,
+                is(last(secondDeviceFirstMonthBatch).externalDeviceId));
+
+        assertThat(
+                deviceDataDAODynamoDB.getMostRecent(accountId, deviceId2, firstTime.plusMonths(1).plusMinutes(10), firstTime.plusMonths(1)).isPresent(),
+                is(false));
+    }
+
+    @Test
+    public void testGetLightByBetweenHourDateByTS() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
+        final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
+        final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
+        final DateTime maxLocalTime = new DateTime(2015, 10, 1, 15, 0, DateTimeZone.forOffsetMillis(offsetMillis));
+        final int minAmbientLight = 100;
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        // NO: Enough ambient light, date time too early
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(0))
+                .withAmbientLight(minAmbientLight + 2).build());
+        // YES: Enough ambient light, good time
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(1))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(2))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(4))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(8))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // NO, ambient light too low
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(3))
+                .withAmbientLight(minAmbientLight).build());
+        // NO, wrong hour
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusHours(2))
+                .withAmbientLight(minAmbientLight + 3).build());
+        // NO, bad ID
+        data.add(builder
+                .withExternalDeviceId("badId")
+                .withDateTimeUTC(firstUTCTime.plusMinutes(7))
+                .withAmbientLight(minAmbientLight + 3).build());
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, deviceId, minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(10), minLocalTime, maxLocalTime, 10, 10);
+        LOGGER.debug("results: {}", results);
+        for (final DeviceData result : results) {
+            LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
+        }
+        assertThat(results.size(), is(4));
+        assertThat(results.get(0).dateTimeUTC, is(firstUTCTime.plusMinutes(1)));
+        assertThat(results.get(1).dateTimeUTC, is(firstUTCTime.plusMinutes(2)));
+        assertThat(results.get(2).dateTimeUTC, is(firstUTCTime.plusMinutes(4)));
+        assertThat(results.get(3).dateTimeUTC, is(firstUTCTime.plusMinutes(8)));
     }
 
 }

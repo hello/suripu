@@ -3,6 +3,8 @@ package com.hello.suripu.workers.sense;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsync;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
@@ -58,14 +60,6 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
     @Override
     protected void run(Environment environment, Namespace namespace, SenseSaveWorkerConfiguration configuration) throws Exception {
 
-        final DBIFactory dbiFactory = new DBIFactory();
-        final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
-
-        commonDBI.registerArgumentFactory(new JodaArgumentFactory());
-
-        final DeviceReadDAO deviceDAO = commonDBI.onDemand(DeviceReadDAO.class);
-
-
         if(configuration.getMetricsEnabled()) {
             final String graphiteHostName = configuration.getGraphite().getHost();
             final String apiKey = configuration.getGraphite().getApiKey();
@@ -111,7 +105,7 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
 
         final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
-        final AmazonDynamoDB sensorViewsDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.SENSE_LAST_SEEN);
+
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
 
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
@@ -123,35 +117,43 @@ public final class SenseSaveWorkerCommand extends WorkerEnvironmentCommand<Sense
 
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(alarmInfoDynamoDBClient , tableNames.get(DynamoDBTableName.ALARM_INFO));
 
-        final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
-                sensorViewsDynamoDBClient,
-                tableNames.get(DynamoDBTableName.SENSE_PREFIX),
-                tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
-        );
-
-        DeviceDataIngestDAO deviceDataIngestDAO;
+        final DeviceDataIngestDAO deviceDataIngestDAO;
+        final IRecordProcessorFactory factory;
         if (useDynamoDeviceData) {
             final AmazonDynamoDB deviceDataDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.DEVICE_DATA);
             deviceDataIngestDAO = new DeviceDataDAODynamoDB(deviceDataDynamoDB, tableNames.get(DynamoDBTableName.DEVICE_DATA));
+            factory = new SenseSaveDDBProcessorFactory(mergedUserInfoDynamoDB, deviceDataIngestDAO, configuration.getMaxRecords());
         } else {
+            final DBIFactory dbiFactory = new DBIFactory();
+            final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
+
+            commonDBI.registerArgumentFactory(new JodaArgumentFactory());
+
+            final DeviceReadDAO deviceDAO = commonDBI.onDemand(DeviceReadDAO.class);
+
             final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorsDB(), "postgresql");
             sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
             deviceDataIngestDAO = sensorsDBI.onDemand(DeviceDataDAO.class);
+
+            // WARNING: Do not use async methods for anything but SensorsViewsDynamoDB for now
+            final AmazonDynamoDBAsync senseLastSeenDynamoDBClient = new AmazonDynamoDBAsyncClient(awsCredentialsProvider, AmazonDynamoDBClientFactory.getDefaultClientConfiguration());
+            senseLastSeenDynamoDBClient.setEndpoint(configuration.dynamoDBConfiguration().endpoints().get(DynamoDBTableName.SENSE_LAST_SEEN));
+
+            final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
+                    senseLastSeenDynamoDBClient,
+                    tableNames.get(DynamoDBTableName.SENSE_PREFIX),
+                    tableNames.get(DynamoDBTableName.SENSE_LAST_SEEN)
+            );
+
+            factory = new SenseSaveProcessorFactory(
+                    deviceDAO,
+                    mergedUserInfoDynamoDB,
+                    sensorsViewsDynamoDB,
+                    deviceDataIngestDAO,
+                    configuration.getMaxRecords(),
+                    updateLastSeen
+            );
         }
-
-        final JedisPool jedisPool = new JedisPool(
-                configuration.getRedisConfiguration().getHost(),
-                configuration.getRedisConfiguration().getPort()
-        );
-
-        final IRecordProcessorFactory factory = new SenseSaveProcessorFactory(
-                deviceDAO,
-                mergedUserInfoDynamoDB,
-                sensorsViewsDynamoDB,
-                deviceDataIngestDAO,
-                configuration.getMaxRecords(),
-                updateLastSeen
-        );
 
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

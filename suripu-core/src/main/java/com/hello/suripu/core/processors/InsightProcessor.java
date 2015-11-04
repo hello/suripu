@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
@@ -14,6 +15,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
@@ -70,6 +72,7 @@ public class InsightProcessor {
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountInfoProcessor accountInfoProcessor;
+    private final CalibrationDAO calibrationDAO;
 
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
                             @NotNull final DeviceReadDAO deviceDAO,
@@ -81,7 +84,8 @@ public class InsightProcessor {
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
                             @NotNull final LightData lightData,
-                            @NotNull final WakeStdDevData wakeStdDevData
+                            @NotNull final WakeStdDevData wakeStdDevData,
+                            @NotNull final CalibrationDAO calibrationDAO
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -94,6 +98,7 @@ public class InsightProcessor {
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountInfoProcessor = accountInfoProcessor;
+        this.calibrationDAO = calibrationDAO;
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
@@ -338,7 +343,7 @@ public class InsightProcessor {
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
                 break;
             case AIR_QUALITY:
-                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataDAO);
+                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataDAO, calibrationDAO);
                 break;
         }
 
@@ -407,6 +412,7 @@ public class InsightProcessor {
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
+        private @Nullable CalibrationDAO calibrationDAO;
 
         public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceReadDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
@@ -451,6 +457,11 @@ public class InsightProcessor {
             return this;
         }
 
+        public Builder withCalibrationDAO(final CalibrationDAO calibrationDAO) {
+            this.calibrationDAO = calibrationDAO;
+            return this;
+        }
+
         public InsightProcessor build() {
             checkNotNull(deviceDataDAO, "deviceDataDAO can not be null");
             checkNotNull(deviceDAO, "deviceDAO can not be null");
@@ -463,6 +474,7 @@ public class InsightProcessor {
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
+            checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
 
             return new InsightProcessor(deviceDataDAO, deviceDAO,
                     trendsInsightsDAO,
@@ -472,7 +484,8 @@ public class InsightProcessor {
                     preferencesDAO,
                     accountInfoProcessor,
                     lightData,
-                    wakeStdDevData);
+                    wakeStdDevData,
+                    calibrationDAO);
         }
     }
 }

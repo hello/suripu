@@ -6,12 +6,13 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.models.SensorReading;
 import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import junit.framework.TestCase;
 import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -253,6 +254,78 @@ public class TimelineSafeguardTest {
         filteredMotionData.add(new TrackerMotion(0L,0L,0L,t1 + 60000L * 1000,lowval,0,0L,0L,0L));
 
         TestCase.assertEquals(TimelineError.NO_ERROR,TimelineProcessor.isValidNight(0L, originalMotionData, filteredMotionData));
+
+    }
+
+    @Test
+    public void testTimelineTimezoneOffsetMapping() {
+        final List<Sample> samples = Lists.newArrayList();
+        final long t0 = 1446576648000L;
+        int offset = 0;
+        long tf = 0;
+        long tOfChange = 0;
+        int i;
+
+        samples.add(new Sample(t0 - 60000L,42,offset));
+        offset += 1;
+
+        for (i = 0; i < 16 * 60; i++) {
+
+            tf = t0 + i*60000L;
+
+            if (i == 8*60) {
+                offset = 2;
+                tOfChange = tf;
+            }
+
+            samples.add(new Sample(tf,42,offset));
+        }
+
+        offset += 1;
+        samples.add(new Sample(tf + 60000L,42,offset));
+
+
+
+        final SensorDataTimezoneMap sensorDataTimezoneMap = SensorDataTimezoneMap.create(samples);
+
+        final int offsetFirst = sensorDataTimezoneMap.get(t0 - 5*60000L);
+        final int offsetBefore = sensorDataTimezoneMap.get(tOfChange - 60000L);
+        final int offsetAt = sensorDataTimezoneMap.get(tOfChange - 1000L);
+        final int offsetAfter = sensorDataTimezoneMap.get(tOfChange + 60001L);
+        final int offsetLast = sensorDataTimezoneMap.get(tf + 5*60000L);
+
+        TestCase.assertEquals(0,offsetFirst);
+        TestCase.assertEquals(1,offsetBefore);
+        TestCase.assertEquals(2,offsetAt);
+        TestCase.assertEquals(2,offsetAfter);
+        TestCase.assertEquals(3,offsetLast);
+
+        final Event event0 = Event.createFromType(Event.Type.OUT_OF_BED, t0 - 40000L, t0 + 20000L, 42, Optional.<String>absent(), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+        final Event event1 = Event.createFromType(Event.Type.OUT_OF_BED, t0 + 60000L, t0 + 2*60000L, 42, Optional.<String>absent(), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+        final Event event2 = Event.createFromType(Event.Type.OUT_OF_BED, t0, t0 + 60000L, 42, Optional.<String>absent(), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+        final Event event3 = Event.createFromType(Event.Type.OUT_OF_BED, tf - 60000L, tf , 42, Optional.<String>absent(), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+        final Event event4 = Event.createFromType(Event.Type.OUT_OF_BED, tf + 1*60000L, tf + 2*60000L, 42, Optional.<String>absent(), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+
+        final SleepSegment sleepSegment0 = new SleepSegment(0L,event0,Lists.<SensorReading>newArrayList());
+        final SleepSegment sleepSegment1 = new SleepSegment(0L,event1,Lists.<SensorReading>newArrayList());
+        final SleepSegment sleepSegment2 = new SleepSegment(0L,event2,Lists.<SensorReading>newArrayList());
+        final SleepSegment sleepSegment3 = new SleepSegment(0L,event3,Lists.<SensorReading>newArrayList());
+        final SleepSegment sleepSegment4 = new SleepSegment(0L,event4,Lists.<SensorReading>newArrayList());
+
+
+        final List<SleepSegment> segments = Lists.newArrayList(sleepSegment0,sleepSegment1,sleepSegment2,sleepSegment3,sleepSegment4);
+
+
+        final List<SleepSegment> remapped = sensorDataTimezoneMap.remapSleepSegmentOffsets(segments);
+
+        TestCase.assertEquals(remapped.get(0).getOffsetMillis(),0);
+        TestCase.assertEquals(remapped.get(1).getOffsetMillis(),1);
+        TestCase.assertEquals(remapped.get(2).getOffsetMillis(),1);
+        TestCase.assertEquals(remapped.get(3).getOffsetMillis(),2);
+        TestCase.assertEquals(remapped.get(4).getOffsetMillis(),3);
+
+
+
 
     }
 }
