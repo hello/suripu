@@ -73,6 +73,7 @@ public class FeatureFlipper {
     public final static String SENSE_LAST_SEEN_VIEW_DYNAMODB_READ = "sense_last_seen_view_dynamodb_read";
     public final static String SENSORS_DB_UNAVAILABLE = "sensors_db_unavailable";
     public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
+    public final static String SLEEP_SEGMENT_OFFSET_REMAPPING = "sleep_segment_offset_remapping";
     public final static String SMART_ALARM = "smart_alarm";
     public final static String SMART_ALARM_LOGGING = "smart_alarm_log";
     public final static String SOUND_EVENTS_IN_TIMELINE = "sound_event_in_timeline";
