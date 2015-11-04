@@ -8,6 +8,7 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAOFromFile;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -38,51 +39,28 @@ import java.util.UUID;
  */
 public class OnlineHmmTest {
 
-    final static class LocalDefaultModelEnsembleDAO implements com.hello.suripu.core.db.DefaultModelEnsembleDAO {
+    public final static String SEED_MODEL_RESOURCE = "fixtures/algorithm/normal3.model";
+    public final static String ENSEMBLE_MODELS_RESOURCE = "fixtures/algorithm/normal3ensemble.model";
+    public final static String FEATURE_EXTRACTION_RESOURCE = "fixtures/algorithm/featureextractionlayer.bin";
 
-        @Override
-        public OnlineHmmPriors getDefaultModelEnsemble() {
 
-            //get model
-            try {
-                final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3ensemble.model",false);
-                final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
 
-                TestCase.assertTrue(model.isPresent());
-                return model.get();
-
-            } catch (IOException exception) {
-                TestCase.assertTrue(false);
-            }
-
-            return OnlineHmmPriors.createEmpty();
-        }
-
-        @Override
-        public OnlineHmmPriors getSeedModel() {
-            //get model
-            try {
-                final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3.model",false);
-                final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
-
-                TestCase.assertTrue(model.isPresent());
-                return model.get();
-
-            } catch (IOException exception) {
-                TestCase.assertTrue(false);
-            }
-
-            return OnlineHmmPriors.createEmpty();
-        }
-    }
-
-    final static class LocalFeatureExtractionDAO implements FeatureExtractionModelsDAO {
+    public final static class LocalFeatureExtractionDAO implements FeatureExtractionModelsDAO {
         FeatureExtractionModelData deserialization = null;
 
-        public LocalFeatureExtractionDAO() {
+        public static LocalFeatureExtractionDAO create(final String resourcePath) {
+            final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
+            localFeatureExtractionDAO.initialize(resourcePath);
+            return localFeatureExtractionDAO;
+        }
+
+        private LocalFeatureExtractionDAO() {
+        }
+
+        private void initialize(final String resourcePath) {
             try {
                 deserialization = new FeatureExtractionModelData(Optional.<UUID>absent());
-                deserialization.deserialize(HmmUtils.loadFile("fixtures/algorithm/featureextractionlayer.bin",true));
+                deserialization.deserialize(HmmUtils.loadFile(resourcePath,true));
             }
             catch (IOException exception) {
                 TestCase.assertTrue(false);
@@ -96,13 +74,23 @@ public class OnlineHmmTest {
         }
     };
 
-    final static class LocalOnlineHmmModelsDAO implements OnlineHmmModelsDAO  {
+    public final static class LocalOnlineHmmModelsDAO implements OnlineHmmModelsDAO  {
 
         public int putModelCounts = 0;
         public int putScratchpadCounts = 0;
         public int getCounts = 0;
 
-        public LocalOnlineHmmModelsDAO(boolean startEmpty) {
+        public static LocalOnlineHmmModelsDAO create(boolean startEmpty) {
+            return new LocalOnlineHmmModelsDAO(startEmpty); //start empty
+
+        }
+
+        public static LocalOnlineHmmModelsDAO create() {
+            return new LocalOnlineHmmModelsDAO(true); //start empty
+        }
+
+
+        private LocalOnlineHmmModelsDAO(boolean startEmpty) {
             priorByDate = Maps.newTreeMap();
 
             if (!startEmpty) {
@@ -184,7 +172,7 @@ public class OnlineHmmTest {
         }
     };
 
-    static AllSensorSampleList getTypicalDayOfSense(final DateTime startTime, final DateTime endTime, int tzOffset) {
+    public static AllSensorSampleList getTypicalDayOfSense(final DateTime startTime, final DateTime endTime, int tzOffset) {
         final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
 
         final List<Sample> light = Lists.newArrayList();
@@ -223,7 +211,7 @@ public class OnlineHmmTest {
         return allSensorSampleList;
     }
 
-    static AllSensorSampleList getWeirdDayOfSenseData(final DateTime startTime, final DateTime endTime, int tzOffset) {
+    public static AllSensorSampleList getWeirdDayOfSenseData(final DateTime startTime, final DateTime endTime, int tzOffset) {
         final AllSensorSampleList allSensorSampleList = new AllSensorSampleList();
 
         final List<Sample> light = Lists.newArrayList();
@@ -262,7 +250,7 @@ public class OnlineHmmTest {
         return allSensorSampleList;
     }
 
-    static ImmutableList<TrackerMotion> getTypicalDayOfPill(final DateTime startTime, final DateTime endTime, int tzOffset) {
+    public static ImmutableList<TrackerMotion> getTypicalDayOfPill(final DateTime startTime, final DateTime endTime, int tzOffset) {
         final List<TrackerMotion> trackerMotions = Lists.newArrayList();
         final long tstart = startTime.withZone(DateTimeZone.UTC).getMillis();
         final long tstop = endTime.withZone(DateTimeZone.UTC).getMillis();
@@ -292,9 +280,12 @@ public class OnlineHmmTest {
 
     @Test
     public void testShortenedDay() {
-        final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
-        final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
-        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
+        final LocalOnlineHmmModelsDAO modelsDAO = LocalOnlineHmmModelsDAO.create();
+        final LocalFeatureExtractionDAO localFeatureExtractionDAO =  LocalFeatureExtractionDAO.create(FEATURE_EXTRACTION_RESOURCE);
+
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAOFromFile(
+                HmmUtils.getPathFromResourcePath(ENSEMBLE_MODELS_RESOURCE),
+                HmmUtils.getPathFromResourcePath(SEED_MODEL_RESOURCE));
 
         final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO, modelsDAO, Optional.<UUID>absent());
 
@@ -324,9 +315,12 @@ public class OnlineHmmTest {
 
     @Test
     public void testNormalSequenceOfEvents() {
-        final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
-        final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
-        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
+        final LocalOnlineHmmModelsDAO modelsDAO = LocalOnlineHmmModelsDAO.create();
+        final LocalFeatureExtractionDAO localFeatureExtractionDAO =  LocalFeatureExtractionDAO.create(FEATURE_EXTRACTION_RESOURCE);
+
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAOFromFile(
+                HmmUtils.getPathFromResourcePath(ENSEMBLE_MODELS_RESOURCE),
+                HmmUtils.getPathFromResourcePath(SEED_MODEL_RESOURCE));
 
         final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
 
@@ -464,10 +458,12 @@ public class OnlineHmmTest {
 
     @Test
     public void testDelayedFeedback() {
-        final LocalOnlineHmmModelsDAO modelsDAO = new LocalOnlineHmmModelsDAO(true);
-        final LocalFeatureExtractionDAO localFeatureExtractionDAO = new LocalFeatureExtractionDAO();
-        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
+        final LocalOnlineHmmModelsDAO modelsDAO = LocalOnlineHmmModelsDAO.create();
+        final LocalFeatureExtractionDAO localFeatureExtractionDAO =  LocalFeatureExtractionDAO.create(FEATURE_EXTRACTION_RESOURCE);
 
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAOFromFile(
+                HmmUtils.getPathFromResourcePath(ENSEMBLE_MODELS_RESOURCE),
+                HmmUtils.getPathFromResourcePath(SEED_MODEL_RESOURCE));
 
         final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, localFeatureExtractionDAO,modelsDAO,Optional.<UUID>absent());
 

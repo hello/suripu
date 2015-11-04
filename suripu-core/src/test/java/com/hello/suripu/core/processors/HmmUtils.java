@@ -23,6 +23,11 @@ import java.util.UUID;
  */
 public class HmmUtils {
 
+    static public String getPathFromResourcePath(final String resourcePath) {
+        final URL fileUrl = Resources.getResource(resourcePath);
+        return fileUrl.getFile();
+    }
+
     public static byte[] loadFile(final String path, final boolean isBase64) throws IOException {
         final URL fileUrl = Resources.getResource(path);
         final File file = new File(fileUrl.getFile());
