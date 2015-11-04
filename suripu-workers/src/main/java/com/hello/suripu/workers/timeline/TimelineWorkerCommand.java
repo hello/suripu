@@ -17,27 +17,22 @@ import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.AccountReadDAO;
-import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
-import com.hello.suripu.core.db.DeviceReadDAO;
-import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
-import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
+import com.hello.suripu.core.db.DeviceReadDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
@@ -45,6 +40,8 @@ import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.TimelineProcessor;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
@@ -183,7 +180,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.CALIBRATION));
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.create(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
         final TimelineProcessor timelineProcessor =
                 TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
                 deviceDAO, deviceDataDAO, deviceDataDAODynamoDB,

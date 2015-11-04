@@ -364,7 +364,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
 
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.create(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
 
         final AmazonDynamoDB wifiInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getWifiInfoConfiguration().getEndpoint());
         final WifiInfoDAO wifiInfoDAO = new WifiInfoDynamoDB(wifiInfoDynamoDBClient, configuration.getWifiInfoConfiguration().getTableName());
