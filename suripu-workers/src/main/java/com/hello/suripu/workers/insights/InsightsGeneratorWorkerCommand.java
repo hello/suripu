@@ -171,7 +171,7 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
 
 
         final AmazonDynamoDB calibrationDynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.CALIBRATION, CalibrationDynamoDB.class);
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.create(
                 calibrationDynamoDBClient,
                 tableNames.get(DynamoDBTableName.CALIBRATION)
         );

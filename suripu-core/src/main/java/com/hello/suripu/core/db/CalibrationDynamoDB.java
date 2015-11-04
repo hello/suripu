@@ -72,7 +72,7 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     final CacheLoader loader = new CacheLoader<String, Optional<Calibration>>() {
         public Optional<Calibration> load(final String senseId) {
             LOGGER.debug("{} not in cache, fetching from DB", senseId);
-            return getRemotely(senseId);
+            return getStrict(senseId);
         }
     };
 
@@ -93,26 +93,24 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     }
 
     /**
-     * Fetches a Sense from DynamoDB
+     * Fetches a Sense from cache or DynamoDB
      * @param senseId
-     * @throws IllegalArgumentException is calibration if missing because it should not be the case
-     * @return Calibration, possibly empty state
+     * @return Optional<Calibration>
      */
     @Override
     public Optional<Calibration> get(final String senseId) {
         return cache.getUnchecked(senseId);
     }
 
+    /**
+     * Fetches a Sense from DynamoDB only
+     * @param senseId
+     * @return Optional<Calibration>
+     */
     @Override
     public Optional<Calibration> getStrict(final String senseId) {
         final Map<String, AttributeValue> item = queryDynamoDB(senseId);
-        return fromItem(item, senseId, true);
-    }
-
-
-    private Optional<Calibration> getRemotely(final String senseId) {
-        final Map<String, AttributeValue> item = queryDynamoDB(senseId);
-        return fromItem(item, senseId, true);
+        return fromItem(item, senseId);
     }
 
     /**
@@ -134,14 +132,11 @@ public class CalibrationDynamoDB implements CalibrationDAO {
      * Attempts to convert an item to a Calibration
      * @param item
      * @param senseId
-     * @param strict
      * @return Optional<Calibration>
      */
-    private Optional<Calibration> fromItem(final Map<String, AttributeValue> item, final String senseId, final boolean strict) {
-        if (item == null && strict) {
+    private Optional<Calibration> fromItem(final Map<String, AttributeValue> item, final String senseId) {
+        if (item == null) {
             return Optional.absent();
-        } else if(item == null) {
-            return Optional.of(Calibration.createDefault(senseId));
         }
 
         if(item.containsKey(DUST_OFFSET_ATTRIBUTE_NAME) && item.containsKey(TESTED_AT_ATTRIBUTE_NAME)) {
