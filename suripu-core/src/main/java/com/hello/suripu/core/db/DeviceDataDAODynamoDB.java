@@ -18,11 +18,14 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
@@ -107,12 +110,19 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             return item.get(this.name);
         }
 
+        Integer getInteger(final Map<String, AttributeValue> item) {
+            if (item.containsKey(this.name)) {
+                return Integer.valueOf(get(item).getN());
+            }
+            return 0;
+        }
+
         String expressionAttributeName() {
             return "#" + this.toString();
         }
     }
 
-    private final static ImmutableSet<Attribute> BASE_ATTRIBUTES = new ImmutableSet.Builder<Attribute>()
+    public final static ImmutableSet<Attribute> BASE_ATTRIBUTES = new ImmutableSet.Builder<Attribute>()
             .add(Attribute.ACCOUNT_ID)
             .add(Attribute.OFFSET_MILLIS)
             .add(Attribute.LOCAL_UTC_TIMESTAMP)
@@ -127,7 +137,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             .put("sound", ImmutableSet.of(Attribute.AUDIO_PEAK_BACKGROUND_DB, Attribute.AUDIO_PEAK_DISTURBANCES_DB))
             .build();
 
-    private final static ImmutableSet<Attribute> ALL_ATTRIBUTES = ImmutableSet.copyOf(Attribute.values());
+    public final static ImmutableSet<Attribute> ALL_ATTRIBUTES = ImmutableSet.copyOf(Attribute.values());
 
     private static final int MAX_PUT_ITEMS = 25;
     private static final int MAX_BATCH_WRITE_ATTEMPTS = 5;
@@ -416,11 +426,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return resultList;
     }
 
-    private String getBinaryKeyConditionExpression(final Attribute attribute, final String operator, final String valueToken) {
+    private String getBinaryExpression(final Attribute attribute, final String operator, final String valueToken) {
         return Joiner.on(" ").join(attribute.expressionAttributeName(), operator, valueToken);
     }
 
-    private String getBetweenKeyConditionExpression(final Attribute attribute, final String lowerToken, final String upperToken) {
+    private String getBetweenExpression(final Attribute attribute, final String lowerToken, final String upperToken) {
         return Joiner.on(" ").join(attribute.expressionAttributeName(), "BETWEEN", lowerToken, "AND", upperToken);
     }
 
@@ -495,13 +505,13 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private String getKeyConditionExpression(final String hashKeyString) {
-        return getBinaryKeyConditionExpression(Attribute.ACCOUNT_ID, "=", hashKeyString);
+        return getBinaryExpression(Attribute.ACCOUNT_ID, "=", hashKeyString);
     }
 
     private String getKeyConditionExpression(final String hashKeyString, final String rangeStartString, final String rangeEndString) {
         return Joiner.on(" AND ").join(
                 getKeyConditionExpression(hashKeyString),
-                getBetweenKeyConditionExpression(Attribute.RANGE_KEY, rangeStartString, rangeEndString));
+                getBetweenExpression(Attribute.RANGE_KEY, rangeStartString, rangeEndString));
     }
 
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
@@ -726,17 +736,17 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .withDateTimeUTC(timestampFromDDBItem(item))
                 .withAccountId(Long.valueOf(Attribute.ACCOUNT_ID.get(item).getN()))
                 .withExternalDeviceId(externalDeviceIdFromDDBItem(item))
-                .withOffsetMillis(Integer.valueOf(Attribute.OFFSET_MILLIS.get(item).getN()))
-                .withAmbientTemperature(Integer.valueOf(Attribute.AMBIENT_TEMP.get(item).getN()))
-                .withAmbientLight(Integer.valueOf(Attribute.AMBIENT_LIGHT.get(item).getN()))
-                .withAmbientLightVariance(Integer.valueOf(Attribute.AMBIENT_LIGHT_VARIANCE.get(item).getN()))
-                .withAmbientHumidity(Integer.valueOf(Attribute.AMBIENT_HUMIDITY.get(item).getN()))
-                .withWaveCount(Integer.valueOf(Attribute.WAVE_COUNT.get(item).getN()))
-                .withHoldCount(Integer.valueOf(Attribute.HOLD_COUNT.get(item).getN()))
-                .withAudioNumDisturbances(Integer.valueOf(Attribute.AUDIO_NUM_DISTURBANCES.get(item).getN()))
-                .withAudioPeakBackgroundDB(Integer.valueOf(Attribute.AUDIO_PEAK_BACKGROUND_DB.get(item).getN()))
-                .withAudioPeakDisturbancesDB(Integer.valueOf(Attribute.AUDIO_PEAK_DISTURBANCES_DB.get(item).getN()))
-                .withAmbientAirQualityRaw(Integer.valueOf(Attribute.AMBIENT_AIR_QUALITY_RAW.get(item).getN()))
+                .withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(item))
+                .withAmbientTemperature(Attribute.AMBIENT_TEMP.getInteger(item))
+                .withAmbientLight(Attribute.AMBIENT_LIGHT.getInteger(item))
+                .withAmbientLightVariance(Attribute.AMBIENT_LIGHT_VARIANCE.getInteger(item))
+                .withAmbientHumidity(Attribute.AMBIENT_HUMIDITY.getInteger(item))
+                .withWaveCount(Attribute.WAVE_COUNT.getInteger(item))
+                .withHoldCount(Attribute.HOLD_COUNT.getInteger(item))
+                .withAudioNumDisturbances(Attribute.AUDIO_NUM_DISTURBANCES.getInteger(item))
+                .withAudioPeakBackgroundDB(Attribute.AUDIO_PEAK_BACKGROUND_DB.getInteger(item))
+                .withAudioPeakDisturbancesDB(Attribute.AUDIO_PEAK_DISTURBANCES_DB.getInteger(item))
+                .withAmbientAirQualityRaw(Attribute.AMBIENT_AIR_QUALITY_RAW.getInteger(item))
                 .build();
     }
 
@@ -832,8 +842,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         final String keyConditionExpression = getKeyConditionExpression(hashKeyString, rangeStartString, rangeEndString);
 
         final String filterExpression = Joiner.on(" AND ").join(
-                getBetweenKeyConditionExpression(Attribute.LOCAL_UTC_TIMESTAMP, startLocalTimeString, endLocalTimeString),
-                getBinaryKeyConditionExpression(Attribute.AMBIENT_LIGHT, ">", minLightString));
+                getBetweenExpression(Attribute.LOCAL_UTC_TIMESTAMP, startLocalTimeString, endLocalTimeString),
+                getBinaryExpression(Attribute.AMBIENT_LIGHT, ">", minLightString));
 
         final Map<String, AttributeValue> expressionAttributeValues = new ImmutableMap.Builder<String, AttributeValue>()
                 .put(hashKeyString, new AttributeValue().withN(String.valueOf(accountId)))
@@ -858,4 +868,128 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
         return ImmutableList.copyOf(results);
     }
+
+    public List<DeviceData> getBetweenLocalTime(final Long accountId,
+                                                final String externalDeviceId,
+                                                final DateTime startUTCTime,
+                                                final DateTime endUTCTime,
+                                                final DateTime startLocalTime,
+                                                final DateTime endLocalTime,
+                                                final Collection<Attribute> attributes)
+    {
+        final String hashKeyString = ":hash_key";
+        final String rangeStartString = ":range_start";
+        final String rangeEndString = ":range_end";
+        final String startLocalTimeString = ":start_local_time";
+        final String endLocalTimeString = ":end_local_time";
+
+        final String keyConditionExpression = getKeyConditionExpression(hashKeyString, rangeStartString, rangeEndString);
+
+        final String filterExpression = getBetweenExpression(Attribute.LOCAL_UTC_TIMESTAMP, startLocalTimeString, endLocalTimeString);
+
+        final Map<String, AttributeValue> expressionAttributeValues = new ImmutableMap.Builder<String, AttributeValue>()
+                .put(hashKeyString, new AttributeValue().withN(String.valueOf(accountId)))
+                .put(rangeStartString, getRangeKey(startUTCTime, externalDeviceId))
+                .put(rangeEndString, getRangeKey(endUTCTime, externalDeviceId))
+                .put(startLocalTimeString, dateTimeToAttributeValue(startLocalTime))
+                .put(endLocalTimeString, dateTimeToAttributeValue(endLocalTime))
+                .build();
+
+        final List<DeviceData> results = Lists.newArrayList();
+        for (final String tableName: getTableNames(startUTCTime, endUTCTime)) {
+            for (final Map<String, AttributeValue> result : query(tableName, keyConditionExpression, attributes, Optional.of(filterExpression), expressionAttributeValues)) {
+                final DeviceData data = attributeMapToDeviceData(result);
+                if (data.externalDeviceId.equals(externalDeviceId)) {
+                    results.add(data);
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private List<Integer> averageDailyAirQualityRaw(final List<DeviceData> deviceDataList) {
+        if (deviceDataList.isEmpty()) {
+            return ImmutableList.of();
+        }
+
+        // Daily aggregate items
+        final LinkedList<LinkedList<Integer>> airQuality = Lists.newLinkedList();
+        DateTime lastLocalTime = deviceDataList.get(0).localTime().withTimeAtStartOfDay();
+        for (final DeviceData data: deviceDataList) {
+            if (!data.localTime().withTimeAtStartOfDay().equals(lastLocalTime) || airQuality.isEmpty()) {
+                airQuality.add(Lists.<Integer>newLinkedList());
+            }
+            airQuality.getLast().add(data.ambientAirQualityRaw);
+            lastLocalTime = data.localTime().withTimeAtStartOfDay();
+        }
+
+        final List<Integer> aggregated = Lists.newArrayListWithCapacity(airQuality.size());
+        for (final List<Integer> currList : airQuality) {
+            double sum = 0;
+            for (final Integer x : currList) {
+                sum += x;
+            }
+            aggregated.add((int) sum / currList.size());
+        }
+
+        return aggregated;
+    }
+
+    public ImmutableList<Integer> getAirQualityRawList(final Long accountId,
+                                                       final String externalDeviceId,
+                                                       final DateTime startUTCTime,
+                                                       final DateTime endUTCTime,
+                                                       final DateTime startLocalTime,
+                                                       final DateTime endLocalTime)
+    {
+        final Set<Attribute> attributes = new ImmutableSet.Builder<Attribute>().addAll(BASE_ATTRIBUTES).add(Attribute.AMBIENT_AIR_QUALITY_RAW).build();
+        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
+
+        final List<Integer> aggregated = averageDailyAirQualityRaw(results);
+        return ImmutableList.copyOf(aggregated);
+    }
+
+    public ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(final Long accountId,
+                                                                   final String externalDeviceId,
+                                                                   final DateTime startUTCTime,
+                                                                   final DateTime endUTCTime,
+                                                                   final DateTime startLocalTime,
+                                                                   final DateTime endLocalTime,
+                                                                   final int startHour,
+                                                                   final int endHour)
+    {
+        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
+        final List<DeviceData> filteredResults = Lists.newArrayList();
+        for (final DeviceData data: results) {
+            final int hourOfDay = data.localTime().getHourOfDay();
+            if (hourOfDay >= startHour && hourOfDay < endHour) {
+                filteredResults.add(data);
+            }
+        }
+
+        return ImmutableList.copyOf(filteredResults);
+    }
+
+    public ImmutableList<DeviceData> getBetweenHourDateByTS(final Long accountId,
+                                                            final String externalDeviceId,
+                                                            final DateTime startUTCTime,
+                                                            final DateTime endUTCTime,
+                                                            final DateTime startLocalTime,
+                                                            final DateTime endLocalTime,
+                                                            final int startHour,
+                                                            final int endHour)
+    {
+        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
+        final List<DeviceData> filteredResults = Lists.newArrayList();
+        for (final DeviceData data: results) {
+            final int hourOfDay = data.localTime().getHourOfDay();
+            if (hourOfDay >= startHour || hourOfDay < endHour) {
+                filteredResults.add(data);
+            }
+        }
+
+        return ImmutableList.copyOf(filteredResults);
+    }
+
 }

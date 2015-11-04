@@ -634,7 +634,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, deviceId, minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(10), minLocalTime, maxLocalTime, 10, 10);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, deviceId, minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 20, 11);
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -644,6 +644,174 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(results.get(1).dateTimeUTC, is(firstUTCTime.plusMinutes(2)));
         assertThat(results.get(2).dateTimeUTC, is(firstUTCTime.plusMinutes(4)));
         assertThat(results.get(3).dateTimeUTC, is(firstUTCTime.plusMinutes(8)));
+    }
+
+    @Test
+    public void testGetBetweenLocalTime() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
+        final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
+        final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
+        final DateTime maxLocalTime = new DateTime(2015, 10, 1, 15, 0, DateTimeZone.forOffsetMillis(offsetMillis));
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        // NO: date time too early
+        data.add(builder.withDateTimeUTC(firstUTCTime.plusMinutes(0)).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(1)).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(8)).build());
+        // NO, bad ID
+        data.add(builder
+                .withExternalDeviceId("badId")
+                .withDateTimeUTC(firstUTCTime.plusMinutes(7)).build());
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenLocalTime(accountId, deviceId, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, deviceDataDAODynamoDB.ALL_ATTRIBUTES);
+        LOGGER.debug("results: {}", results);
+        for (final DeviceData result : results) {
+            LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
+        }
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0).dateTimeUTC, is(firstUTCTime.plusMinutes(1)));
+        assertThat(results.get(1).dateTimeUTC, is(firstUTCTime.plusMinutes(8)));
+    }
+
+    @Test
+    public void testGetBetweenHourDateByTSSameDay() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
+        final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
+        final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
+        final DateTime maxLocalTime = new DateTime(2015, 10, 1, 15, 0, DateTimeZone.forOffsetMillis(offsetMillis));
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        // NO: date time too early
+        data.add(builder.withDateTimeUTC(firstUTCTime.plusMinutes(0)).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(1)).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(8)).build());
+        // NO, bad ID
+        data.add(builder
+                .withExternalDeviceId("badId")
+                .withDateTimeUTC(firstUTCTime.plusMinutes(7)).build());
+        // NO, wrong hour
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusHours(2))
+                .build());
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTSSameDay(accountId, deviceId, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 10, 11);
+        LOGGER.debug("results: {}", results);
+        for (final DeviceData result : results) {
+            LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
+        }
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0).dateTimeUTC, is(firstUTCTime.plusMinutes(1)));
+        assertThat(results.get(1).dateTimeUTC, is(firstUTCTime.plusMinutes(8)));
+    }
+
+    @Test
+    public void testGetBetweenHourDateByTS() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
+        final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
+        final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
+        final DateTime maxLocalTime = new DateTime(2015, 10, 1, 15, 0, DateTimeZone.forOffsetMillis(offsetMillis));
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        // NO: date time too early
+        data.add(builder.withDateTimeUTC(firstUTCTime.plusMinutes(0)).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(1)).build());
+        // YES
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(8)).build());
+        // NO, bad ID
+        data.add(builder
+                .withExternalDeviceId("badId")
+                .withDateTimeUTC(firstUTCTime.plusMinutes(7)).build());
+        // NO, wrong hour
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusHours(2))
+                .build());
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTS(accountId, deviceId, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20);
+        LOGGER.debug("results: {}", results);
+        for (final DeviceData result : results) {
+            LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
+        }
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0).dateTimeUTC, is(firstUTCTime.plusMinutes(1)));
+        assertThat(results.get(1).dateTimeUTC, is(firstUTCTime.plusMinutes(8)));
+    }
+
+    @Test
+    public void testGetAirQualityRawList() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
+        final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
+        final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
+        final DateTime maxLocalTime = new DateTime(2015, 10, 2, 15, 0, DateTimeZone.forOffsetMillis(offsetMillis));
+
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(1))
+                .withAmbientAirQualityRaw(10).build());
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusMinutes(20))
+                .withAmbientAirQualityRaw(20).build());
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusDays(1).plusMinutes(0))
+                .withAmbientAirQualityRaw(100).build());
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusDays(1).plusMinutes(1))
+                .withAmbientAirQualityRaw(200).build());
+        // Won't be included, outside local time window
+        data.add(builder
+                .withDateTimeUTC(firstUTCTime.plusDays(1).plusHours(7).plusMinutes(0))
+                .withAmbientAirQualityRaw(300).build());
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final List<Integer> results = deviceDataDAODynamoDB.getAirQualityRawList(accountId, deviceId, firstUTCTime, firstUTCTime.plusDays(3), minLocalTime, maxLocalTime);
+        assertThat(results.size(), is(2));
+        assertThat(results.get(0), is(15));
+        assertThat(results.get(1), is(150));
     }
 
 }
