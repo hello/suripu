@@ -289,7 +289,7 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
             Thread.sleep(3000L); // pause a little between files
 
         }
-
+        LOGGER.debug("ALL DONE!");
         this.executor.shutdown();
     }
 
