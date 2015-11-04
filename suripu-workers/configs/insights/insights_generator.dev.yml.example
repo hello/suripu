@@ -138,7 +138,6 @@ dynamo_db:
       sleep_score : sleep_score
 
   endpoints:
-      alarm_info : http://localhost:7777
       features : http://localhost:7777
       calibration: http://localhost:7777
       insights: http://localhost:7777

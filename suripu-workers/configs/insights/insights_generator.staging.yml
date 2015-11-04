@@ -153,7 +153,6 @@ dynamo_db:
       sleep_score : sleep_score
 
   endpoints:
-      alarm_info : http://dynamodb.us-east-1.amazonaws.com
       features : http://dynamodb.us-east-1.amazonaws.com
       calibration: http://dynamodb.us-east-1.amazonaws.com
       insights: http://dynamodb.us-east-1.amazonaws.com
