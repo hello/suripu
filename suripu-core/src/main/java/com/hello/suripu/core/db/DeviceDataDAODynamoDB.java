@@ -35,6 +35,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -322,6 +323,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
      * @param deviceDataList
      * @return The number of items that were successfully inserted
      */
+    @Timed
     public int batchInsertAll(final List<DeviceData> deviceDataList) {
         final List<List<DeviceData>> deviceDataLists = Lists.partition(deviceDataList, MAX_PUT_ITEMS);
         int successfulInsertions = 0;
@@ -377,6 +379,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .build();
     }
 
+    @Timed
     private List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
         final List<DeviceData> resultList = Lists.newLinkedList();
         LinkedList<Map<String, AttributeValue>> currentWorkingList = Lists.newLinkedList();
