@@ -225,8 +225,6 @@ public class OnlineHmmModelEvaluator {
         int [] votepath = new int[T];
 
         for (int t = 0; t < T; t++) {
-            double max = 0;
-
             final List<ScoreWithIndex> scoreList = Lists.newArrayList();
             for (int i = 0; i < N; i++) {
                 scoreList.add(new ScoreWithIndex(votes[i][t],i));

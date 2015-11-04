@@ -76,8 +76,6 @@ public class OnlineHmm {
 
     //static for testing purposes
     public static OnlineHmmPriors updateModelPriorsWithScratchpad(final OnlineHmmPriors existingModels, final OnlineHmmScratchPad newModel, final long startTimeUtc, boolean forceUpdate,final Logger logger) {
-        final Map<String, List<OnlineHmmModelParams>> modelsByOutputId = Maps.newHashMap();
-
 
         //check to see if this scratchpad is old enough
         //old enough == it was created yesterday or earlier
@@ -180,8 +178,6 @@ public class OnlineHmm {
     }
 
     public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening, final OnlineHmmPriors seedModels, boolean forceLearning) {
-        final OnlineHmmData emptyResult = OnlineHmmData.createEmpty();
-
         String modelIdSuffix = "custom";
 
         //we do this do differentiate models that were learned in the field, or models that were

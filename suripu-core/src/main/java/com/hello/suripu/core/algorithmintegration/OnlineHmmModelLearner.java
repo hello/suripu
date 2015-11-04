@@ -155,9 +155,6 @@ public class OnlineHmmModelLearner {
 
             for (final MultiEvalHmmDecodedResult result : allModelsPredictions) {
 
-                //prior
-                final ModelVotingInfo thisModelVoteInfo = votingInfoForThisOutput.get(result.originatingModel);
-
                 //bayes update
                 final double newProb = jointLikelihoods.get(result.originatingModel) / likelihoodSum;
 
@@ -229,9 +226,6 @@ public class OnlineHmmModelLearner {
             final MultiObsSequenceAlphabetHiddenMarkovModel hmm = new MultiObsSequenceAlphabetHiddenMarkovModel(params.logAlphabetNumerators,params.logTransitionMatrixNumerator,params.logDenominator,params.pi);
 
             hmm.reestimate(meas,PRIORS_WEIGHT_AS_NUMBER_OF_UPDATES);
-
-            //insert sort
-            final TreeSet<String> oldModelIds = Sets.newTreeSet(priors.modelsByOutputId.get(outputId).keySet());
 
             //meet the new model ID -- same as the old model ID
             final String newModelId = params.id;
