@@ -40,7 +40,6 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
     private static final int NUM_BEFORE_FLUSH = 100;
     private static final int ITEMS_PER_BATCH = 25;
-    private static final float WRITE_THROUGHPUT = 1000.0f;
     private int backOffCounts = 0;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(NUM_BEFORE_FLUSH / ITEMS_PER_BATCH);
@@ -105,6 +104,12 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                 .nargs("?")
                 .required(true)
                 .help("csv files");
+
+        subparser.addArgument("--dir")
+                .nargs("?")
+                .required(false)
+                .help("data files directory");
+
     }
 
     private List<DeviceData> writeData(final DeviceDataDAODynamoDB deviceDataDAO,
@@ -166,121 +171,142 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                 deviceDataConfiguration.getEndpoint());
 
         int entriesWritten = 0;
+        int entriesDiscarded = 0;
         int linesRead = 0;
 
         final Set<String> missingAccountMapping = Sets.newHashSet();
 
-        final File csvFile = new File(namespace.getString("csv"));
-        try (final InputStream rawInput = new FileInputStream(csvFile);
-             final GZIPInputStream decodedInput = new GZIPInputStream(rawInput);
-             final CSVReader reader = new CSVReader(new InputStreamReader(decodedInput), ',')) {
-            LOGGER.debug("Beginning migration");
+        final String directoryName = namespace.getString("dir");
+        final String prefix = namespace.getString("csv") + "-";
+        final List<File> csvFiles = getDataFiles(directoryName, prefix);
 
-            final DeviceDataDAODynamoDB deviceDataDAO = new DeviceDataDAODynamoDB(dynamoDBClient,
-                    deviceDataConfiguration.getTableName());
+        for (final File csvFile : csvFiles) {
+            try (final InputStream rawInput = new FileInputStream(csvFile);
+                 final GZIPInputStream decodedInput = new GZIPInputStream(rawInput);
+                 final CSVReader reader = new CSVReader(new InputStreamReader(decodedInput), ',')) {
+                LOGGER.debug("Beginning migration for file {}", csvFile.getName());
 
-            final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-            final List<DeviceData> accumulator = Lists.newArrayListWithCapacity(25);
-            for (final String[] entry : reader) {
-                linesRead++;
-                final String accountId = getDeviceDataString(entry, Columns.ACCOUNT_ID);
+                final DeviceDataDAODynamoDB deviceDataDAO = new DeviceDataDAODynamoDB(dynamoDBClient,
+                        deviceDataConfiguration.getTableName());
 
-                if (missingAccountMapping.contains(accountId)) {
-                    continue;
-                }
+                final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+                final List<DeviceData> accumulator = Lists.newArrayListWithCapacity(ITEMS_PER_BATCH);
+                for (final String[] entry : reader) {
+                    linesRead++;
+                    final String accountId = getDeviceDataString(entry, Columns.ACCOUNT_ID);
 
-                final String externalSenseId = idMapping.get(accountId);
-                if (externalSenseId == null) {
-                    LOGGER.error("No mapping for account id {}! Skipping row.", accountId);
-                    missingAccountMapping.add(accountId);
-                    continue;
-                }
+                    if (missingAccountMapping.contains(accountId)) {
+                        entriesDiscarded++;
+                        continue;
+                    }
 
-                final DeviceData deviceData = new DeviceData.Builder()
-                        .withAccountId(getDeviceDataLong(entry, Columns.ACCOUNT_ID))
-                        .withExternalDeviceId(externalSenseId)
-                        .withAmbientTemperature(getDeviceDataInteger(entry, Columns.AMBIENT_TEMP))
-                        .withAmbientLight(getDeviceDataInteger(entry, Columns.AMBIENT_LIGHT))
-                        .withAmbientLightVariance(getDeviceDataInteger(entry, Columns.AMBIENT_LIGHT_VARIANCE))
-                        .withAmbientHumidity(getDeviceDataInteger(entry, Columns.AMBIENT_HUMIDITY))
-                        .withAmbientAirQualityRaw(getDeviceDataInteger(entry, Columns.AMBIENT_AIR_QUALITY_RAW))
-                        .withAudioPeakBackgroundDB(getDeviceDataInteger(entry, Columns.AUDIO_PEAK_BACKGROUND_DB))
-                        .withAudioPeakDisturbancesDB(getDeviceDataInteger(entry, Columns.AUDIO_PEAK_DISTURBANCES_DB))
-                        .withAudioNumDisturbances(getDeviceDataInteger(entry, Columns.AUDIO_NUM_DISTURBANCES))
-                        .withOffsetMillis(getDeviceDataInteger(entry, Columns.OFFSET_MILLIS))
-                        .withDateTimeUTC(dateTimeFormatter.parseDateTime(getDeviceDataString(entry, Columns.TS)))
-                        .withWaveCount(getDeviceDataInteger(entry, Columns.WAVE_COUNT))
-                        .withHoldCount(getDeviceDataInteger(entry, Columns.HOLD_COUNT))
-                        .build();
+                    final String externalSenseId = idMapping.get(accountId);
+                    if (externalSenseId == null) {
+                        LOGGER.error("No mapping for account id {}! Skipping row.", accountId);
+                        missingAccountMapping.add(accountId);
+                        entriesDiscarded++;
+                        continue;
+                    }
 
-                accumulator.add(deviceData);
+                    final DeviceData deviceData = new DeviceData.Builder()
+                            .withAccountId(getDeviceDataLong(entry, Columns.ACCOUNT_ID))
+                            .withExternalDeviceId(externalSenseId)
+                            .withAmbientTemperature(getDeviceDataInteger(entry, Columns.AMBIENT_TEMP))
+                            .withAmbientLight(getDeviceDataInteger(entry, Columns.AMBIENT_LIGHT))
+                            .withAmbientLightVariance(getDeviceDataInteger(entry, Columns.AMBIENT_LIGHT_VARIANCE))
+                            .withAmbientHumidity(getDeviceDataInteger(entry, Columns.AMBIENT_HUMIDITY))
+                            .withAmbientAirQualityRaw(getDeviceDataInteger(entry, Columns.AMBIENT_AIR_QUALITY_RAW))
+                            .withAlreadyCalibratedAudioPeakBackgroundDB(getDeviceDataInteger(entry, Columns.AUDIO_PEAK_BACKGROUND_DB))
+                            .withAlreadyCalibratedAudioPeakDisturbancesDB(getDeviceDataInteger(entry, Columns.AUDIO_PEAK_DISTURBANCES_DB))
+                            .withAudioNumDisturbances(getDeviceDataInteger(entry, Columns.AUDIO_NUM_DISTURBANCES))
+                            .withOffsetMillis(getDeviceDataInteger(entry, Columns.OFFSET_MILLIS))
+                            .withDateTimeUTC(dateTimeFormatter.parseDateTime(getDeviceDataString(entry, Columns.TS)))
+                            .withWaveCount(getDeviceDataInteger(entry, Columns.WAVE_COUNT))
+                            .withHoldCount(getDeviceDataInteger(entry, Columns.HOLD_COUNT))
+                            .build();
 
-                if (accumulator.size() >= NUM_BEFORE_FLUSH) {
-                    LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
-                    final List<DeviceData> remainingItems = writeData(deviceDataDAO, accumulator);
+                    accumulator.add(deviceData);
 
-                    final int numberWritten =  (accumulator.size() - remainingItems.size());
-                    entriesWritten += numberWritten;
-                    LOGGER.debug("Wrote {} entries to DynamoDB; {} written so far, read {} lines",
-                            numberWritten, entriesWritten, linesRead);
+                    if (accumulator.size() >= NUM_BEFORE_FLUSH) {
+                        LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
+                        final List<DeviceData> remainingItems = writeData(deviceDataDAO, accumulator);
 
-                    accumulator.clear();
-                    Thread.sleep(nextFlushSleepMillis); // let it breathe a little
+                        final int numberWritten = (accumulator.size() - remainingItems.size());
+                        entriesWritten += numberWritten;
+                        LOGGER.debug("Wrote {} entries to DynamoDB; {} written so far, read {} lines",
+                                numberWritten, entriesWritten, linesRead);
 
-                    if (!remainingItems.isEmpty()) {
-                        LOGGER.debug("{} remaining", remainingItems.size());
-                        accumulator.addAll(remainingItems);
+                        accumulator.clear();
+                        Thread.sleep(nextFlushSleepMillis); // let it breathe a little
 
-                        // files are in local_utc, we may spillover, set to -1 to not check
-                        if (stopMonth > 0 && accumulator.get(0).dateTimeUTC.getMonthOfYear() > stopMonth) {
-                            LOGGER.debug("We're in month {}!", stopMonth + 1);
-                            accumulator.clear();
-                            break;
+                        if (!remainingItems.isEmpty()) {
+                            LOGGER.debug("{} remaining", remainingItems.size());
+                            accumulator.addAll(remainingItems);
+
+                            // files are in local_utc, we may spillover, set to -1 to not check
+                            if (stopMonth > 0 && accumulator.get(0).dateTimeUTC.getMonthOfYear() > stopMonth) {
+                                LOGGER.debug("We're in month {}!", stopMonth + 1);
+                                accumulator.clear();
+                                break;
+                            }
+
+                            backOff(remainingItems.size());
+                            this.backOffCounts++;
                         }
+                    }
+                }
+
+                LOGGER.debug("Finished processing file, inserting remaining {}.", accumulator.size());
+
+                int loop = 0;
+                while (!accumulator.isEmpty()) {
+                    loop++;
+                    LOGGER.debug("remainder loop {}, size {}", loop, accumulator.size());
+                    final int originalSize = accumulator.size();
+                    final List<DeviceData> remainingItems = writeData(deviceDataDAO, accumulator);
+                    accumulator.clear();
+                    if (!remainingItems.isEmpty()) {
+                        accumulator.addAll(remainingItems);
 
                         backOff(remainingItems.size());
                         this.backOffCounts++;
+                        entriesWritten += originalSize - remainingItems.size();
                     }
                 }
-            }
 
-            LOGGER.debug("Finished processing files, inserting remaining {}", accumulator.size());
-
-            int loop = 0;
-            while (!accumulator.isEmpty()) {
-                loop++;
-                LOGGER.debug("remainder loop {}, size {}", loop, accumulator.size());
-                final int originalSize = accumulator.size();
-                final List<DeviceData> remainingItems = writeData(deviceDataDAO, accumulator);
-                accumulator.clear();
-                if (!remainingItems.isEmpty()) {
-                    accumulator.addAll(remainingItems);
-
-                    backOff(remainingItems.size());
-                    this.backOffCounts++;
-                    entriesWritten += originalSize - remainingItems.size();
-                }
+                LOGGER.debug("Migration completed, wrote {} from {} lines, discarded {}",
+                        entriesWritten, linesRead, entriesDiscarded);
+                LOGGER.debug("Number of back-offs {}.", this.backOffCounts);
             }
 
 
-//            if (!accumulator.isEmpty()) {
-//                LOGGER.debug("Writing {} entries to DynamoDB", accumulator.size());
-//                final int numberWritten = writeData(deviceDataDAO, accumulator);
-//                entriesWritten += numberWritten;
-//                LOGGER.debug("Wrote {} entries to DynamoDB; {} written",
-//                        numberWritten, entriesWritten);
-//            }
+            LOGGER.debug("Missing {} account to device mapping", missingAccountMapping.size());
+            for (final String accountId : missingAccountMapping) {
+                LOGGER.debug("No mapping for {}", accountId);
+            }
 
-            LOGGER.debug("Migration completed, wrote {} from {} lines", entriesWritten, linesRead);
-        }
-        LOGGER.debug("Missing {} account to device mapping", missingAccountMapping.size());
-        for (final String accountId : missingAccountMapping) {
-            LOGGER.debug("No mapping for {}", accountId);
-        }
+            LOGGER.debug("Import done for file {}.", csvFile.getName());
+            Thread.sleep(3000L); // pause a little between files
 
-        LOGGER.debug("Import done");
+        }
 
         this.executor.shutdown();
+    }
+
+    private List<File> getDataFiles(final String directoryName, final String prefix) {
+        LOGGER.debug("Getting data files from directory {}, prefix {}", directoryName, prefix);
+        final File directory = new File(directoryName);
+        final File[] fileList = directory.listFiles();
+        final List<File> resultList = Lists.newArrayList();
+        if (fileList != null) {
+            for (final File file : fileList) {
+                if (file.getName().startsWith(prefix)) {
+                    LOGGER.debug("Adding data file {}", file.getName());
+                    resultList.add(file);
+                }
+            }
+        }
+        return resultList;
     }
 
     private static String getDeviceDataString(final String[] entry, final Columns column) {
