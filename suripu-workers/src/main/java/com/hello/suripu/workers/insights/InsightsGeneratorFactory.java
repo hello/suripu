@@ -5,6 +5,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorF
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
@@ -37,6 +38,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountPreferencesDAO accountPreferencesDAO;
+    private final CalibrationDAO calibrationDAO;
 
     public InsightsGeneratorFactory(final AccountDAO accountDAO,
                                     final DeviceDataDAO deviceDataDAO,
@@ -49,7 +51,8 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                                     final LightData lightData,
                                     final WakeStdDevData wakeStdDevData,
-                                    final AccountPreferencesDAO accountPreferencesDAO) {
+                                    final AccountPreferencesDAO accountPreferencesDAO,
+                                    final CalibrationDAO calibrationDAO) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -62,6 +65,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountPreferencesDAO = accountPreferencesDAO;
+        this.calibrationDAO = calibrationDAO;
     }
 
     @Override
@@ -79,7 +83,8 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withLightData(lightData)
                 .withWakeStdDevData(wakeStdDevData)
-                .withPreferencesDAO(accountPreferencesDAO);
+                .withPreferencesDAO(accountPreferencesDAO)
+                .withCalibrationDAO(calibrationDAO);
 
         final InsightProcessor insightProcessor = insightBuilder.build();
 
