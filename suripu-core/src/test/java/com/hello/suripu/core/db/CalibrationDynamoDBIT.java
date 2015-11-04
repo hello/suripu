@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-public class CalibrationDynamoDBTest {
+public class CalibrationDynamoDBIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDBIT.class);
 
