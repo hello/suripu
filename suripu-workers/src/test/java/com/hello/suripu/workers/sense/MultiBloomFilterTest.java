@@ -14,7 +14,7 @@ public class MultiBloomFilterTest {
     MultiBloomFilter multiBloomFilter;
     @Before
     public void setUp() {
-        multiBloomFilter = new MultiBloomFilter(2, 2, 1, 4000, 0.05);
+        multiBloomFilter = new MultiBloomFilter(2, 4, 2, 4000, 0.05);
     }
 
     @Test
