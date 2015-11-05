@@ -442,7 +442,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withPreferencesDAO(accountPreferencesDAO)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withWakeStdDevData(new WakeStdDevData())
-                .withLightData(new LightData());
+                .withLightData(new LightData())
+                .withCalibrationDAO(calibrationDAO);
+
+
         final InsightProcessor insightProcessor = insightBuilder.build();
 
         environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB, insightProcessor));
