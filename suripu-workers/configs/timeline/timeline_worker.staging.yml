@@ -159,9 +159,9 @@ user_info_max_read_capacity_sec: 200
 
 timeline_model_ensembles:
   bucket: hello-timeline-models
-  key: normal3ensemble.base64
+  key: normal4ensemble.base64
 
 timeline_seed_model:
   bucket: hello-timeline-models
-  key: normal3.base64
+  key: normal4.base64
 
