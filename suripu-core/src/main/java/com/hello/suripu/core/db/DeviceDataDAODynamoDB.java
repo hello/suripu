@@ -223,9 +223,13 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return new AttributeValue().withN(String.valueOf(value));
     }
 
+    private static AttributeValue toAttributeValue(final Long value) {
+        return new AttributeValue().withN(String.valueOf(value));
+    }
+
     private static HashMap<String, AttributeValue> deviceDataToAttributeMap(final DeviceData data) {
         final HashMap<String, AttributeValue> item = Maps.newHashMap();
-        item.put(Attribute.ACCOUNT_ID.name, new AttributeValue().withN(String.valueOf(data.accountId)));
+        item.put(Attribute.ACCOUNT_ID.name, toAttributeValue(data.accountId));
         item.put(Attribute.RANGE_KEY.name, getRangeKey(data.dateTimeUTC, data.externalDeviceId));
         item.put(Attribute.AMBIENT_TEMP.name, toAttributeValue(data.ambientTemperature));
         item.put(Attribute.AMBIENT_LIGHT.name, toAttributeValue(data.ambientLight));
@@ -431,7 +435,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                     .withDateTimeUTC(getFloorOfDateTime(itemDateTime, slotDuration))
                     .withAccountId(Long.valueOf(item.get(Attribute.ACCOUNT_ID.name).getN()))
                     .withExternalDeviceId(externalDeviceIdFromDDBItem(item))
-                    .withOffsetMillis(Integer.valueOf(item.get(Attribute.OFFSET_MILLIS.name).getN()));
+                    .withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(item));
         }
         if (!currentWorkingList.isEmpty()) {
             resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
@@ -564,7 +568,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
 
     private static Map<String, AttributeValue> getExpressionAttributeValues(final Long accountId) {
         final Map<String, AttributeValue> expAttValues = Maps.newHashMap();
-        expAttValues.put(Attribute.ACCOUNT_ID.expressionAttributeValue(), new AttributeValue().withN(String.valueOf(accountId)));
+        expAttValues.put(Attribute.ACCOUNT_ID.expressionAttributeValue(), toAttributeValue(accountId));
         return expAttValues;
     }
 
@@ -886,7 +890,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 getBinaryExpression(Attribute.AMBIENT_LIGHT, ">"));
 
         final Map<String, AttributeValue> expressionAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, startTime, endTime, startLocalTime, endLocalTime);
-        expressionAttributeValues.put(Attribute.AMBIENT_LIGHT.expressionAttributeValue(), new AttributeValue().withN(String.valueOf(minLightLevel)));
+        expressionAttributeValues.put(Attribute.AMBIENT_LIGHT.expressionAttributeValue(), toAttributeValue(minLightLevel));
 
         final List<DeviceData> results = Lists.newArrayList();
         for (final Map<String, AttributeValue> result : query(getTableNames(startTime, endTime), keyConditionExpression, ALL_ATTRIBUTES, Optional.of(filterExpression), expressionAttributeValues)) {
