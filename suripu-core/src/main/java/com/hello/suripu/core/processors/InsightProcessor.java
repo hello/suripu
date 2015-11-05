@@ -348,6 +348,9 @@ public class InsightProcessor {
             case AIR_QUALITY:
                 insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataDAO, calibrationDAO);
                 break;
+            case PARTNER_MOTION:
+                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
+                break;
         }
 
         if (insightCardOptional.isPresent()) {
