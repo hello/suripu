@@ -33,6 +33,9 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -70,6 +73,8 @@ import java.util.Set;
  */
 public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
+
+    private final Timer aggregationTimer;
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String tablePrefix;
@@ -141,6 +146,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     public DeviceDataDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tablePrefix) {
         this.dynamoDBClient = dynamoDBClient;
         this.tablePrefix = tablePrefix;
+        this.aggregationTimer = Metrics.defaultRegistry().newTimer(DeviceDataDAODynamoDB.class, "aggregation");
     }
 
     public String getTableName(final DateTime dateTime) {
@@ -537,7 +543,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             }
         }
 
-        return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration));
+        final TimerContext context = aggregationTimer.time();
+        try {
+            return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration));
+        } finally {
+            context.stop();
+        }
     }
 
 
