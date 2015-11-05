@@ -35,7 +35,10 @@ public class OnlineHmmSensorDataBinning {
     final static protected int MAX_NUMBER_OF_MEAUSUREMENTS = 100; //for sanity check
     final static protected int NUMBER_OF_MILLIS_IN_A_MINUTE = 60000;
     final static protected double LIGHT_INCREASE_THRESHOLD = 1.0;
+    final static protected double LIGHT_INCREASE_MAXIMUM_LIGHT = 3.0;
     final static protected double LIGHT_DECREASE_THRESHOLD = -1.0;
+    final static protected int HOUR_OF_DAY_WAVES_COUNT_START = 4; //04:00 local time
+    final static protected int HOUR_OF_DAY_WAVES_COUNT_END = 12; //12:00 local time
 
 
     static public class BinnedData {
@@ -84,7 +87,6 @@ public class OnlineHmmSensorDataBinning {
 
         final List<Sample> light = sensors.get(Sensor.LIGHT);
         final List<Sample> wave = sensors.get(Sensor.WAVE_COUNT);
-        final List<Sample> sound = sensors.get(Sensor.SOUND_PEAK_DISTURBANCE);
         final List<Sample> soundCounts = sensors.get(Sensor.SOUND_NUM_DISTURBANCES);
 
         int max = 0;
@@ -100,7 +102,7 @@ public class OnlineHmmSensorDataBinning {
 
         final int numberOfDataDimensions = max + 1;
 
-        if (light == Collections.EMPTY_LIST || light.isEmpty()) {
+        if (light.equals(Collections.EMPTY_LIST) || light.isEmpty()) {
             return Optional.absent();
         }
 
@@ -153,7 +155,7 @@ public class OnlineHmmSensorDataBinning {
             final double v2 = Math.log(value * params.lightPreMultiplier + 1.0) / Math.log(2.0);
             final double v1 = Math.log(prevvalue * params.lightPreMultiplier + 1.0) / Math.log(2.0);
 
-            if (v2 - v1 > LIGHT_INCREASE_THRESHOLD) {
+            if (v2 - v1 > LIGHT_INCREASE_THRESHOLD && v1 < LIGHT_INCREASE_MAXIMUM_LIGHT) {
                 maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.LIGHT_INCREASE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
 
@@ -178,15 +180,13 @@ public class OnlineHmmSensorDataBinning {
         while (it2.hasNext()) {
             final TrackerMotion m = it2.next();
 
-            double value = m.value;
-
             //heartbeat value
-            if (value == -1) {
+            if (m.value == -1) {
                 continue;
             }
 
             //if there's a disturbance, register it in the disturbance index
-            if (value > params.pillMagnitudeForDisturbance) {
+            if (m.value > params.pillMagnitudeForDisturbance) {
                 maxInBin(data, m.timestamp, 1.0, SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
 
@@ -201,8 +201,12 @@ public class OnlineHmmSensorDataBinning {
             final Sample sample = it3.next();
             double value = sample.value;
 
+            final DateTime sampleTime = new DateTime(sample.dateTime).withZone(DateTimeZone.forOffsetMillis(sample.offsetMillis));
+            final int hour = sampleTime.toLocalDateTime().getHourOfDay();
+            final boolean isMorning =  hour >= HOUR_OF_DAY_WAVES_COUNT_START && hour <= HOUR_OF_DAY_WAVES_COUNT_END;
+
             //either wave happened or it didn't.. value can be 1.0 or 0.0
-            if (value > 0.0 && params.useWavesForDisturbances) {
+            if (value > 0.0 && params.useWavesForDisturbances && isMorning) {
                 maxInBin(data, sample.dateTime, 1.0, SleepHmmBayesNetProtos.MeasType.WAVE_DISTURBANCE_VALUE, startTimeMillisInUTC, numMinutesInWindow);
             }
         }
@@ -275,30 +279,13 @@ public class OnlineHmmSensorDataBinning {
         while (it7.hasNext()) {
             final TrackerMotion m = it7.next();
 
-            double value = m.value;
-
             //heartbeat value
-            if (value == -1) {
+            if (m.value == -1) {
                 continue;
             }
 
             addToBin(data, m.timestamp, m.onDurationInSeconds,  SleepHmmBayesNetProtos.MeasType.PARTNER_MOTION_DURATION_VALUE, startTimeMillisInUTC, numMinutesInWindow);
         }
-
-
-        final DateTime dateTimeBegin = new DateTime(startTimeMillisInUTC).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
-        final DateTime dateTimeEnd = new DateTime(startTimeMillisInUTC + numMinutesInWindow * NUMBER_OF_MILLIS_IN_A_MINUTE * dataLength).withZone(DateTimeZone.forOffsetMillis(timezoneOffset));
-
-        /*
-        LOGGER.debug("t0UTC={},tf={}",dateTimeBegin.toLocalTime().toString(),dateTimeEnd.toLocalTime().toString());
-        LOGGER.debug("light={}",getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.LOG_LIGHT_VALUE]));
-        LOGGER.debug("motion={}",getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.MOTION_DURATION_VALUE]));
-        LOGGER.debug("waves={}", getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.PILL_MAGNITUDE_DISTURBANCE_VALUE]));
-        LOGGER.debug("logsc={}", getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.LOG_SOUND_VALUE]));
-        LOGGER.debug("natlight={}", getDoubleVectorAsString(data[SleepHmmBayesNetProtos.MeasType.NATURAL_LIGHT_VALUE]));
-        */
-
-        //fill out the indices of the FORBIDDEN TRANSITIONS.  FORBIDDEN!
 
 
         return Optional.of(new BinnedData(data,numMinutesInWindow,startTimeMillisInUTC));

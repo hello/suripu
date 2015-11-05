@@ -1,6 +1,7 @@
 package com.hello.suripu.core.processors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Event;
@@ -11,6 +12,7 @@ import java.util.Map;
 /**
  * Created by benjo on 8/3/15.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AlphabetsAndLabels {
 
     @JsonProperty("alphabets")

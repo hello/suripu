@@ -11,6 +11,7 @@ import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
@@ -98,6 +99,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final FeatureExtractionModelsDAO featureExtractionModelsDAO;
     private final Optional<UUID> uuidOptional;
     private final CalibrationDAO calibrationDAO;
+    private final DefaultModelEnsembleDAO defaultModelEnsembleDAO;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -125,37 +127,39 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final SenseColorDAO senseColorDAO,
                                                             final OnlineHmmModelsDAO priorsDAO,
                                                             final FeatureExtractionModelsDAO featureExtractionModelsDAO,
-                                                            final CalibrationDAO calibrationDAO) {
+                                                            final CalibrationDAO calibrationDAO,
+                                                            final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(trackerMotionDAO,
                 deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO, featureExtractionModelsDAO,
-                Optional.<UUID>absent(), calibrationDAO);
+                Optional.<UUID>absent(), calibrationDAO,defaultModelEnsembleDAO);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO);
+        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO);
     }
 
     //private SessionLogDebug(final String)
 
     private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                              final DeviceReadDAO deviceDAO,
-                              final DeviceDataDAO deviceDataDAO,
+                            final DeviceReadDAO deviceDAO,
+                            final DeviceDataDAO deviceDataDAO,
                               final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
-                              final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
-                              final FeedbackReadDAO feedbackDAO,
-                              final SleepHmmDAO sleepHmmDAO,
-                              final AccountReadDAO accountDAO,
-                              final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+                            final FeedbackReadDAO feedbackDAO,
+                            final SleepHmmDAO sleepHmmDAO,
+                            final AccountReadDAO accountDAO,
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
                               final OnlineHmmModelsDAO priorsDAO,
                               final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                               final Optional<UUID> uuid,
-                              final CalibrationDAO calibrationDAO) {
+                              final CalibrationDAO calibrationDAO,
+                              final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
@@ -169,6 +173,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.priorsDAO = priorsDAO;
         this.featureExtractionModelsDAO = featureExtractionModelsDAO;
         this.calibrationDAO = calibrationDAO;
+        this.defaultModelEnsembleDAO = defaultModelEnsembleDAO;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -243,54 +248,73 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
 
-      try {
+        try {
             boolean algorithmWorked = false;
 
             Optional<SleepEvents<Optional<Event>>> sleepEventsFromAlgorithmOptional = Optional.absent();
             List<Event> extraEvents = Collections.EMPTY_LIST;
 
+            final DateTime currentTimeInLocalUtc = currentTime.plus(sensorData.timezoneOffsetMillis);
 
+            ONLINEHMM:
             if (this.hasOnlineHmmEnabled(accountId)) {
-                //get model from DB
-                final OnlineHmm onlineHmm = new OnlineHmm(featureExtractionModelsDAO,priorsDAO,uuidOptional);
+                try {
+                    LOGGER.info("TRYING THE ONLINE HMM");
 
+                    final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, featureExtractionModelsDAO, priorsDAO, uuidOptional);
 
-                    //get priors from DB
-                final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(
-                        accountId,
-                        date,
-                        targetDate,
-                        endDate,
-                        sensorData,
-                        newFeedback.isPresent(),
-                        false);
+                    final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(
+                            accountId,
+                            date,
+                            targetDate,
+                            endDate,
+                            currentTimeInLocalUtc,
+                            sensorData,
+                            newFeedback.isPresent(),
+                            false);
 
-                sleepEventsFromAlgorithmOptional = Optional.of(events);
+                    sleepEventsFromAlgorithmOptional = Optional.of(events);
 
+                    //verify that algorithm produced something useable
+                    final TimelineError error = timelineSafeguards.checkIfValidTimeline(
+                            sleepEventsFromAlgorithmOptional.get(),
+                            ImmutableList.copyOf(Collections.EMPTY_LIST),
+                            ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
 
-                //verify that algorithm produced something useable
-                final TimelineError error = timelineSafeguards.checkIfValidTimeline(
-                        sleepEventsFromAlgorithmOptional.get(),
-                        ImmutableList.copyOf(Collections.EMPTY_LIST),
-                        ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
+                    if (!error.equals(TimelineError.NO_ERROR)) {
+                        log.addMessage(AlgorithmType.ONLINE_HMM, error);
+                        LOGGER.info("online HMM error {}",error);
+                        break ONLINEHMM;
+                    }
 
-                if (error.equals(TimelineError.NO_ERROR)) {
                     algorithmWorked = true;
                     log.addMessage(AlgorithmType.ONLINE_HMM, timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithmOptional.get().toList()));
+
                 }
-                else {
-                    log.addMessage(AlgorithmType.ONLINE_HMM, error);
+                catch (Exception e) {
+                    log.addMessage(AlgorithmType.ONLINE_HMM, TimelineError.UNEXEPECTED);
+                    LOGGER.error(e.getMessage());
                 }
             }
-            else {
 
-                // HMM is **DEFAULT** algorithm, revert to wupang if there's no result
-                final Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
-                        sensorData.trackerMotions,
-                        sensorData.allSensorSampleList);
 
-                if (results.isPresent()) {
-                    LOGGER.debug("HMM Suceeded.");
+
+
+          /* Default if Online HMM is not enabled, otherwise Backup #1  */
+            HMM:
+            if (!algorithmWorked) {
+                try {
+                    LOGGER.info("TRYING THE OLD HMM");
+
+                    final Optional<HmmAlgorithmResults> results = fromHmm(accountId, currentTime, targetDate, endDate,
+                            sensorData.trackerMotions,
+                            sensorData.allSensorSampleList);
+
+                    if (!results.isPresent()) {
+                        log.addMessage(AlgorithmType.HMM, TimelineError.MISSING_KEY_EVENTS);
+                        break HMM;
+                    }
+
                     sleepEventsFromAlgorithmOptional = Optional.of(results.get().mainEvents);
                     extraEvents = results.get().allTheOtherWakesAndSleeps.asList();
 
@@ -300,58 +324,74 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             ImmutableList.copyOf(extraEvents),
                             ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
 
-                    if (error.equals(TimelineError.NO_ERROR)) {
-                        algorithmWorked = true;
-                        log.addMessage(AlgorithmType.HMM, timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithmOptional.get().toList()));
-                    }
-                    else {
+                    if (!error.equals(TimelineError.NO_ERROR)) {
                         log.addMessage(AlgorithmType.HMM, error);
+                        LOGGER.info("ye olde HMM error {}",error);
+                        break HMM;
                     }
+
+                    log.addMessage(AlgorithmType.HMM, timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithmOptional.get().toList()));
+                    algorithmWorked = true;
+
+                }
+                catch (Exception e) {
+                    log.addMessage(AlgorithmType.HMM, TimelineError.UNEXEPECTED);
+                    LOGGER.error(e.getMessage());
                 }
             }
 
 
-
-            /* TRY THE BACKUP PLAN!  */
+          /* Backup 2  */
+            VOTING:
             if (!algorithmWorked) {
-                LOGGER.warn("ALGORITHM FAILED, trying voting algorithm instead");
+                LOGGER.info("TRYING VOTING ALGORITHM");
 
-                //reset state
-                final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
-                        sensorData.allSensorSampleList.get(Sensor.SOUND),
-                        sensorData.allSensorSampleList.get(Sensor.LIGHT),
-                        sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
+                try {
+                    //reset state
+                    final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
+                            sensorData.allSensorSampleList.get(Sensor.SOUND),
+                            sensorData.allSensorSampleList.get(Sensor.LIGHT),
+                            sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
 
-                if (!votingSleepEventsOptional.isPresent()) {
-                    LOGGER.warn("backup algorithm did not produce ANY events, account_id = {} and day = {}", accountId, targetDate);
-                    log.addMessage(AlgorithmType.VOTING,TimelineError.UNEXEPECTED,"optional.absent from fromVotingAlgorithm");
-                    return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
-                }
-
-                sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
-                extraEvents = votingSleepEventsOptional.get().extraEvents;
-
-                final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = sleepEventsFromAlgorithmOptional.get();
-
-                for (final Optional<Event> eventOptional : sleepEventsFromAlgorithm.toList()) {
-
-                    if (!eventOptional.isPresent()) {
-                        LOGGER.info("backup algorithm did not produce all four events, account_id = {} and day = {}", accountId, targetDate);
-                        log.addMessage(AlgorithmType.VOTING,TimelineError.MISSING_KEY_EVENTS);
-                        return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+                    if (!votingSleepEventsOptional.isPresent()) {
+                        LOGGER.warn("backup algorithm did not produce ANY events, account_id = {} and day = {}", accountId, targetDate);
+                        log.addMessage(AlgorithmType.VOTING, TimelineError.UNEXEPECTED, "optional.absent from fromVotingAlgorithm");
+                        break VOTING;
                     }
-                }
 
-                log.addMessage(AlgorithmType.VOTING,timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithm.toList()));
+                    sleepEventsFromAlgorithmOptional = Optional.of(votingSleepEventsOptional.get().sleepEvents);
+                    extraEvents = votingSleepEventsOptional.get().extraEvents;
+
+                    final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = sleepEventsFromAlgorithmOptional.get();
+
+                    //make sure all events are created, otherwise fail, but this is the only check we are running
+                    for (final Optional<Event> eventOptional : sleepEventsFromAlgorithm.toList()) {
+
+                        if (!eventOptional.isPresent()) {
+                            LOGGER.info("backup algorithm did not produce all four events, account_id = {} and day = {}", accountId, targetDate);
+                            log.addMessage(AlgorithmType.VOTING, TimelineError.MISSING_KEY_EVENTS);
+                            break VOTING;
+                        }
+                    }
+
+                    log.addMessage(AlgorithmType.VOTING, timelineUtils.eventsFromOptionalEvents(sleepEventsFromAlgorithm.toList()));
+                    algorithmWorked = true;
+                }
+                catch (Exception e) {
+                    log.addMessage(AlgorithmType.VOTING, TimelineError.UNEXEPECTED);
+                    LOGGER.error(e.getMessage());
+                }
             }
 
-            if (!sleepEventsFromAlgorithmOptional.isPresent()) {
+            //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
+            if (!sleepEventsFromAlgorithmOptional.isPresent() || !algorithmWorked) {
                 LOGGER.error("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
-                log.addMessage(AlgorithmType.NONE,TimelineError.UNEXEPECTED,"impossibly got no events, bypassing the backup alg.  Logic bug?");
+                log.addMessage(AlgorithmType.NONE,TimelineError.UNEXEPECTED,"no successful algorithms");
                 return TimelineResult.createEmpty(log);
             }
 
             final SleepEvents<Optional<Event>> sleepEvents = sleepEventsFromAlgorithmOptional.get();
+
             /* FEATURE FLIP EXTRA EVENTS */
             if (!this.hasExtraEventsEnabled(accountId)) {
                 LOGGER.info("not using {} extra events", extraEvents.size());
@@ -364,12 +404,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
             if (!populateTimelines.isValidSleepScore) {
                 log.addMessage(TimelineError.INVALID_SLEEP_SCORE);
+                LOGGER.warn("invalid sleep score");
                 return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
             }
 
             return TimelineResult.create(populateTimelines.timelines, log);
         }
         catch (Exception e) {
+            log.addMessage(AlgorithmType.NONE,TimelineError.UNEXEPECTED,"unexpected exception on outer try/catch");
             LOGGER.error(e.toString());
         }
 
@@ -494,11 +536,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                 );
                 LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
             } else {
-                allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                        targetDate.minusMillis(tzOffsetMillis).getMillis(),
-                        endDate.minusMillis(tzOffsetMillis).getMillis(),
-                        accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
-                );
+            allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                    endDate.minusMillis(tzOffsetMillis).getMillis(),
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
+            );
             }
         } else {
             // TODO the feature flipper has been at 100 for a while, remove this?

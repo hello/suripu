@@ -1,39 +1,34 @@
 package com.hello.suripu.core.processors;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
-import com.hello.suripu.algorithm.hmm.Transition;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.EvaluationResult;
 import com.hello.suripu.core.algorithmintegration.LabelMaker;
+import com.hello.suripu.core.algorithmintegration.ModelVotingInfo;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
-import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
+import com.hello.suripu.core.algorithmintegration.OnlineHmmModelLearner;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.OnlineHmmData;
-import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.TimelineFeedback;
+import com.hello.suripu.core.util.FeatureExtractionModelData;
 import junit.framework.TestCase;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +38,65 @@ import java.util.UUID;
  * Created by benjo on 8/25/15.
  */
 public class MultiObsHmmIntegrationTest {
-    private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(MultiObsHmmIntegrationTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultiObsHmmIntegrationTest.class);
+
+    final static class LocalDefaultModelEnsembleDAO implements com.hello.suripu.core.db.DefaultModelEnsembleDAO {
+
+        @Override
+        public OnlineHmmPriors getDefaultModelEnsemble() {
+
+            //get model
+            try {
+                final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3ensemble.model",false);
+                final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
+
+                TestCase.assertTrue(model.isPresent());
+                return model.get();
+
+            } catch (IOException exception) {
+                TestCase.assertTrue(false);
+            }
+
+            return OnlineHmmPriors.createEmpty();
+        }
+
+        @Override
+        public OnlineHmmPriors getSeedModel() {
+            //get model
+            try {
+                final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3.model",false);
+                final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
+
+                TestCase.assertTrue(model.isPresent());
+                return model.get();
+
+            } catch (IOException exception) {
+                TestCase.assertTrue(false);
+            }
+
+            return OnlineHmmPriors.createEmpty();
+        }
+    }
+
+    final static class LocalFeatureExtractionDAO implements FeatureExtractionModelsDAO {
+        FeatureExtractionModelData deserialization = null;
+
+        public LocalFeatureExtractionDAO() {
+            try {
+                deserialization = new FeatureExtractionModelData(Optional.<UUID>absent());
+                deserialization.deserialize(HmmUtils.loadFile("fixtures/algorithm/featureextractionlayer.bin",true));
+            }
+            catch (IOException exception) {
+                TestCase.assertTrue(false);
+                deserialization = null;
+            }
+        }
+
+        @Override
+        public FeatureExtractionModelData getLatestModelForDate(Long accountId, DateTime dateTimeLocalUTC, Optional<UUID> uuidForLogger) {
+            return deserialization;
+        }
+    };
 
     static private Set<Integer> getUniqueValues( final Map<Integer,Integer> labels) {
 
@@ -159,25 +212,31 @@ public class MultiObsHmmIntegrationTest {
     public void testAllFourEvents() {
         try {
             //get model
-            final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/allfoureventsmodel.bin");
+
+            final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
+            final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3.model",false);
             final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
             TestCase.assertTrue(model.isPresent());
 
+            final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModelEnsemble();
+            TestCase.assertFalse(defaultEnsemble.isEmpty());
+
             //get feature data -- it should be a list of days, each day has a bunch of key value pairs that correspond to different sensor data streams for that day
-            List<Map<String,ImmutableList<Integer>>> featureData = HmmUtils.getFeatureDataFromFile("fixtures/algorithm/1012-August2.json");
+            List<Map<String,ImmutableList<Integer>>> featureData = HmmUtils.getFeatureDataFromFile("fixtures/algorithm/1012-August.json");
             TestCase.assertFalse(featureData.isEmpty());
 
             //evaluate
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
 
             final Map<String,ImmutableList<Integer>> features = featureData.get(0);
-            final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features);
+            final EvaluationResult evaluationResult = evaluator.evaluate(defaultEnsemble, model.get(),features);
+            final Map<String,MultiEvalHmmDecodedResult> results = evaluationResult.predictions;
 
             TestCase.assertTrue(results.size() == 2);
             TestCase.assertTrue(results.containsKey("SLEEP"));
             TestCase.assertTrue(results.containsKey("BED"));
 
-            final SleepEvents<Optional<Event>> events = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, STATIC_LOGGER);
+            final SleepEvents<Optional<Event>> events = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, LOGGER);
 
             TestCase.assertTrue(events.goToBed.get().getStartTimestamp() < events.fallAsleep.get().getStartTimestamp());
             TestCase.assertTrue(events.outOfBed.get().getStartTimestamp() > events.wakeUp.get().getStartTimestamp());
@@ -195,7 +254,7 @@ public class MultiObsHmmIntegrationTest {
             TestCase.assertTrue(sleepResult.transitions.get(0).idx == bedResult.transitions.get(0).idx);
             TestCase.assertTrue(sleepResult.transitions.get(1).idx == bedResult.transitions.get(1).idx);
 
-            final SleepEvents<Optional<Event>> eventsMatched = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, STATIC_LOGGER);
+            final SleepEvents<Optional<Event>> eventsMatched = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, LOGGER);
             TestCase.assertTrue(eventsMatched.goToBed.get().getStartTimestamp() + 60000L == eventsMatched.fallAsleep.get().getStartTimestamp());
             TestCase.assertTrue(eventsMatched.outOfBed.get().getStartTimestamp() == eventsMatched.wakeUp.get().getStartTimestamp() + 60000L);
 
@@ -207,78 +266,34 @@ public class MultiObsHmmIntegrationTest {
 
     @Test
     public void testMultiDayEvaluation() {
-        //reference from C++ code
-        /*  for wakes that require two consecutive periods
-        final Transition [] wakes = {
-                new Transition( 1,2,158),
-                new Transition(1,2,147),
-                new Transition(1,2,151),
-                new Transition(1,2,132),
-                new Transition(1,2,143),
-                new Transition(1,2,151),
-                new Transition(1,2,174),
-                new Transition(1,2,142),
-                new Transition(1,2,145),
-                new Transition(1,2,159)};
-         */
-        final Transition [] wakes = {
-                new Transition( 1,2,166),
-                new Transition(1,2,147),
-                new Transition(1,2,158),
-                new Transition(1,2,132),
-                new Transition(1,2,145),
-                new Transition(1,2,151),
-                new Transition(1,2,174),
-                new Transition(1,2,142),
-                new Transition(1,2,160),
-                new Transition(1,2,177)};
 
-        final Transition [] sleeps = {
-                new Transition(0,1,55),
-                new Transition(0,1,85),
-                new Transition(0,1,54),
-                new Transition(0,1,51),
-                new Transition(0,1,44),
-                new Transition(0,1,42),
-                new Transition(0,1,70),
-                new Transition(0,1,73),
-                new Transition(0,1,48),
-                new Transition(0,1,35)};
-
-
-
-
+        //just test and make sure sleep is greater than 4 hours.  Easy.
         try {
             //get model
-            final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/default_model.bin");
+            final byte [] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3.model",false);
             final Optional<OnlineHmmPriors> model = OnlineHmmPriors.createFromProtoBuf(protobuf);
             TestCase.assertTrue(model.isPresent());
 
+            final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
+            final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModelEnsemble();
+            TestCase.assertFalse(defaultEnsemble.isEmpty());
+
             //get feature data -- it should be a list of days, each day has a bunch of key value pairs that correspond to different sensor data streams for that day
-            List<Map<String,ImmutableList<Integer>>> featureData = HmmUtils.getFeatureDataFromFile("fixtures/algorithm/1012-August2.json");
+            List<Map<String,ImmutableList<Integer>>> featureData = HmmUtils.getFeatureDataFromFile("fixtures/algorithm/1012-August.json");
             TestCase.assertFalse(featureData.isEmpty());
 
             //evaluate
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
             final String outputId = "SLEEP";
 
-            int count = 0;
             for (final Map<String,ImmutableList<Integer>> features : featureData) {
 
-                final Map<String,MultiEvalHmmDecodedResult> results = evaluator.evaluate(model.get(),features);
+                final EvaluationResult evaluationResult = evaluator.evaluate(defaultEnsemble, model.get(),features);
+                final Map<String,MultiEvalHmmDecodedResult> results = evaluationResult.predictions;
 
-                final List<Transition> transitions = results.get(outputId).transitions;
+                final int durationOfInterest = results.get(outputId).stateDurations[1];
 
-                for (final Transition transition : transitions) {
-                    if (transition.fromState == 0) {
-                        TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
-                    }
-                    else if (transition.fromState == 1) {
-                        TestCase.assertEquals(wakes[count].idx,transition.idx,1);
-                    }
-                }
-
-                count++;
+                TestCase.assertTrue (durationOfInterest > 4 * 12.0);
             }
 
 
@@ -293,75 +308,18 @@ public class MultiObsHmmIntegrationTest {
     @Test
     public void testReestimation() {
 
-        try {
-            final Transition [] sleeps = {
-                    new Transition(0,1,51),
-                    new Transition(0,1,39),
-                    new Transition(0,1,39),
-                    new Transition(0,1,39),
-                    new Transition(0,1,36),
-                    new Transition(0,1,45),
-                    new Transition(0,1,46),
-                    new Transition(0,1,44),
-                    new Transition(0,1,39),
-                    new Transition(0,1,41),
-                    new Transition(0,1,41),
-                    new Transition(0,1,28),
-                    new Transition(0,1,42),
-                    new Transition(0,1,32),
-                    new Transition(0,1,44),
-                    new Transition(0,1,33),
-                    new Transition(0,1,36),
-                    new Transition(0,1,34),
-                    new Transition(0,1,39),
-                    new Transition(0,1,39)};
-/* if there are two motion periods required to wake
-            final Transition [] wakes = {
-                    new Transition(1,2,124),
-                    new Transition(1,2,137),
-                    new Transition(1,2,124),
-                    new Transition(1,2,180),
-                    new Transition(1,2,127),
-                    new Transition(1,2,124),
-                    new Transition(1,2,132),
-                    new Transition(1,2,131),
-                    new Transition(1,2,113),
-                    new Transition(1,2,114),
-                    new Transition(1,2,113),
-                    new Transition(1,2,113),
-                    new Transition(1,2,125),
-                    new Transition(1,2,127),
-                    new Transition(1,2,136),
-                    new Transition(1,2,117),
-                    new Transition(1,2,101),
-                    new Transition(1,2,113),
-                    new Transition(1,2,113),
-                    new Transition(1,2,116)};
-*/
+        /*
+            Test of one guy's data to see if learning makes the voter trust this guy's own custom model more.
 
-            final Transition [] wakes = {
-                    new Transition(1,2,127),
-                    new Transition(1,2,137),
-                    new Transition(1,2,129),
-                    new Transition(1,2,170),
-                    new Transition(1,2,127),
-                    new Transition(1,2,124),
-                    new Transition(1,2,132),
-                    new Transition(1,2,131),
-                    new Transition(1,2,113),
-                    new Transition(1,2,116),
-                    new Transition(1,2,113),
-                    new Transition(1,2,107),
-                    new Transition(1,2,125),
-                    new Transition(1,2,127),
-                    new Transition(1,2,136),
-                    new Transition(1,2,117),
-                    new Transition(1,2,101),
-                    new Transition(1,2,113),
-                    new Transition(1,2,113),
-                    new Transition(1,2,116)};
+         */
+
+        try {
+            final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new LocalDefaultModelEnsembleDAO();
+            final OnlineHmmPriors defaultEnsemble = defaultModelEnsembleDAO.getDefaultModelEnsemble();
+            TestCase.assertFalse(defaultEnsemble.isEmpty());
+
             //get model
-            final byte[] protobuf = HmmUtils.loadFile("fixtures/algorithm/default_model.bin");
+            final byte[] protobuf = HmmUtils.loadFile("fixtures/algorithm/normal3.model",false);
             final Optional<OnlineHmmPriors> modelOptional = OnlineHmmPriors.createFromProtoBuf(protobuf);
             TestCase.assertTrue(modelOptional.isPresent());
             final OnlineHmmPriors model = modelOptional.get();
@@ -374,6 +332,7 @@ public class MultiObsHmmIntegrationTest {
             TestCase.assertTrue(labels.size() == featureData.size());
 
             final OnlineHmmModelEvaluator evaluator = new OnlineHmmModelEvaluator(Optional.<UUID>absent());
+            final OnlineHmmModelLearner learner = new OnlineHmmModelLearner(Optional.<UUID>absent());
 
             final String outputId = "SLEEP";
             String modelId = "default";
@@ -381,12 +340,23 @@ public class MultiObsHmmIntegrationTest {
             final Map<String,String> modelIds = Maps.newHashMap();
             modelIds.put(outputId, modelId);
 
+            int feedbackCount = 0;
+            int bettercount = 0;
             for (int count = 0;  count < featureData.size(); count++) {
-                final OnlineHmmScratchPad scratchPad = evaluator.reestimate(modelIds, model, featureData.get(count), labels.get(count), 0);
+                final EvaluationResult evaluationResult = evaluator.evaluate(defaultEnsemble, model, featureData.get(count));
+                final OnlineHmmScratchPad scratchPad = learner.reestimate(evaluationResult, model, featureData.get(count), labels.get(count), 0);
+
+
 
                 if (!scratchPad.paramsByOutputId.containsKey(outputId)) {
                     continue;
                 }
+
+                if (!scratchPad.votingInfo.containsKey(outputId)) {
+                    continue;
+                }
+
+                feedbackCount++;
 
                 modelId = scratchPad.paramsByOutputId.get(outputId).id;
 
@@ -394,109 +364,36 @@ public class MultiObsHmmIntegrationTest {
                 model.modelsByOutputId.get(outputId).put(modelId, scratchPad.paramsByOutputId.get(outputId));
                 modelIds.put(outputId,modelId);
 
-            }
 
-            for (int count = 0;  count < featureData.size(); count++) {
-                final Map<String, MultiEvalHmmDecodedResult> results = evaluator.evaluate(model, featureData.get(count));
+                final Map<String,ModelVotingInfo> votingInfoMap =  scratchPad.votingInfo.get(outputId);
 
-                //System.out.print(String.format("COST: %f\n",results.get(outputId).pathcost));
-                List<Transition> transitions = results.get(outputId).transitions;
+                final double voteWeightOfMyCustomModel = votingInfoMap.get(modelId).prob;
 
-                for (final Transition transition : transitions) {
-
-                    if (transition.fromState == 0) {
-                        TestCase.assertEquals(sleeps[count].idx,transition.idx,1);
-                    }
-                    else if (transition.fromState == 1) {
-                        TestCase.assertEquals(wakes[count].idx, transition.idx, 1);
-                    }
+                double sum = 0.0;
+                int modelcount = 0;
+                for (final ModelVotingInfo info : votingInfoMap.values()) {
+                    sum += info.prob;
+                    modelcount++;
                 }
 
-                /*
-                for (Transition t : transitions) {
-                    int hour = t.idx / 12;
-                    int frac = t.idx % 12;
+                sum /= modelcount;
 
-                    int minute = frac * 5;
-
-                    hour -= 4;
-
-                    if (hour < 0) {
-                        hour += 24;
-                    }
-
-                    String foo = String.format("%d --> %d at %2d:%02d\n",t.fromState,t.toState,hour,minute);
-                    System.out.print(foo);
+                //IS BETTER THAN AVERAGE MODEL WEIGHT?
+                if (voteWeightOfMyCustomModel > sum) {
+                    bettercount++;
                 }
 
-                System.out.print("----------------\n\n");
-
-
-                */
-
             }
+
+            double successFraction = (double) bettercount / (double) feedbackCount;
+
+            TestCase.assertTrue(successFraction > 0.5);
+
 
 
         } catch (IOException e) {
             TestCase.assertTrue(false);
         }
-    }
-
-    @Test
-    public void testUpdateModelsWithScratchpad() {
-        //get model
-        try {
-            final byte[] protobuf = HmmUtils.loadFile("fixtures/algorithm/34124.bin");
-            final Optional<OnlineHmmPriors> modelOptional = OnlineHmmPriors.createFromProtoBuf(protobuf);
-            TestCase.assertTrue(modelOptional.isPresent());
-            final OnlineHmmPriors model = modelOptional.get();
-
-            final Map<String,OnlineHmmModelParams> modelUpdates = Maps.newHashMap();
-            final OnlineHmmModelParams params = model.modelsByOutputId.get("SLEEP").get("default-2");
-            final OnlineHmmModelParams params2 = model.modelsByOutputId.get("SLEEP").get("default-3");
-
-            modelUpdates.put("SLEEP",params);
-
-            final Map<String,OnlineHmmModelParams> existingModel = model.modelsByOutputId.get("SLEEP");
-
-            for (final String key : existingModel.keySet()) {
-                STATIC_LOGGER.info("existing model: {}", key);
-            }
-
-            for (int i = 0; i < OnlineHmm.MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT; i++) {
-                final String newId = String.format("foobars%03d", i);
-                STATIC_LOGGER.debug("adding model {}", newId);
-
-                model.modelsByOutputId.get("SLEEP").put(newId,params2.clone(newId));
-            }
-
-            final OnlineHmmScratchPad scratchPad = new OnlineHmmScratchPad(modelUpdates,0);
-
-            OnlineHmmPriors updateModel = OnlineHmm.updateModelPriorsWithScratchpad(model, scratchPad, 1, false, STATIC_LOGGER);
-
-            for (final String key : updateModel.modelsByOutputId.keySet()) {
-                STATIC_LOGGER.info("{}", key);
-            }
-
-
-            final Map<String,OnlineHmmModelParams> sleepModels = updateModel.modelsByOutputId.get("SLEEP");
-
-            TestCase.assertFalse(sleepModels == null);
-
-
-            final int numberOfModelsExpected = OnlineHmm.MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT + 1;
-            STATIC_LOGGER.info("number of sleep models: {}, expected: {}", sleepModels.size(),numberOfModelsExpected);
-            final int size = sleepModels.size();
-
-            TestCase.assertTrue(size == numberOfModelsExpected);
-            
-        }
-        catch (IOException e) {
-            TestCase.assertTrue(false);
-        }
-
-      //  OnlineHmmPriors onlineHmmPriors = OnlineHmmPriors.createFromProtoBuf()
-       // OnlineHmm.updateModelPriorsWithScratchpad()
     }
 
 }

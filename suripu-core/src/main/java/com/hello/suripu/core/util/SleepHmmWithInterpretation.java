@@ -3,6 +3,7 @@ package com.hello.suripu.core.util;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.Segment;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.api.datascience.SleepHmmProtos;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -182,7 +183,7 @@ CREATE CREATE CREATE
                 continue;
             }
 
-            final HmmDecodedResult result = model.hmm.decode(data,allowableEndings);
+            final HmmDecodedResult result = model.hmm.decode(data,allowableEndings,HiddenMarkovModel.MIN_LIKELIHOOD);
 
             ImmutableList<SegmentPairWithGaps> sleep = filterSleepSegmentPairsByHeuristic(
                     mindTheGapsAndJoinPairs(getSetBoundaries(result.bestPath, model.sleepStates),MAX_ALLOWABLE_SLEEP_GAP_IN_MINUTES / model.numMinutesInMeasPeriod));
@@ -244,7 +245,7 @@ CREATE CREATE CREATE
             final Integer [] allowableEndings = model.allowableEndingStates.toArray(new Integer[model.allowableEndingStates.size()]);
 
             //decode via viterbi
-            final HmmDecodedResult result = model.hmm.decode(binnedData.data, allowableEndings);
+            final HmmDecodedResult result = model.hmm.decode(binnedData.data, allowableEndings,HiddenMarkovModel.MIN_LIKELIHOOD);
 
             LOGGER.debug("path={}", SleepHmmSensorDataBinning.getPathAsString(result.bestPath));
             LOGGER.debug("model \"{}\" BIC={}",model.modelName,result.bic);

@@ -21,6 +21,8 @@ import com.hello.suripu.core.db.AccountDAOImpl;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleFromS3;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceReadDAO;
@@ -32,6 +34,8 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.models.OnlineHmmPriors;
+import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
@@ -121,6 +125,10 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final AmazonDynamoDB featureExtractionDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
         final FeatureExtractionModelsDAO featureExtractionModelsDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
 
+        final S3BucketConfiguration timelineModelEnsemblesConfig = configuration.getTimelineModelEnsemblesConfiguration();
+        final S3BucketConfiguration seedModelConfig = configuration.getTimelineSeedModelConfiguration();
+
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3, timelineModelEnsemblesConfig.getBucket(), timelineModelEnsemblesConfig.getKey(), seedModelConfig.getBucket(), seedModelConfig.getKey());
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
         final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
@@ -192,7 +200,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 senseColorDAO,
                 onlineHmmModelsDAO,
                 featureExtractionModelsDAO,
-                calibrationDAO);
+                calibrationDAO,
+                        defaultModelEnsembleDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

@@ -3,12 +3,13 @@ package com.hello.suripu.core.util;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 
 /**
  * Created by benjo on 3/16/15.
  */
 public class NamedSleepHmmModel {
-    public final HiddenMarkovModel hmm;
+    public final HiddenMarkovModelInterface hmm;
     public final String modelName;
     public final ImmutableSet<Integer> sleepStates;
     public final ImmutableSet<Integer> onBedStates;
@@ -23,7 +24,7 @@ public class NamedSleepHmmModel {
     public final double lightPreMultiplier;
     public final double lightFloorLux;
 
-    public NamedSleepHmmModel(HiddenMarkovModel hmm,
+    public NamedSleepHmmModel(HiddenMarkovModelInterface hmm,
                               String modelName,
                               ImmutableSet<Integer> sleepStates,
                               ImmutableSet<Integer> onBedStates,

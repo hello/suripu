@@ -1,12 +1,18 @@
 package com.hello.suripu.algorithm.hmm;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.hello.suripu.algorithm.core.AlgorithmException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -20,6 +26,7 @@ import java.util.SortedSet;
 
 
 public class MultiObsSequenceAlphabetHiddenMarkovModel {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultiObsSequenceAlphabetHiddenMarkovModel.class);
     Map<String,double [][]> logAlphabetNumerator;
     double [][] logANumerator;
     double [] logDenominator;
@@ -80,15 +87,6 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return x;
     }
 
-    private static double [][]  getLogZeroedMatrix(final int m, final int n) {
-        final double [][] x = new double[m][n];
-
-        for (int j = 0; j < m; j++) {
-            Arrays.fill(x[j], LogMath.LOGZERO);
-        }
-
-        return x;
-    }
 
 
 
@@ -176,7 +174,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
     }
 
-    private double [][] getLogBMap(final Map<String,double [][]>  rawdataMap, final Map<String,double [][]> alphabetProbsMap)  {
+    private double [][] getLogBMap(final Map<String,double [][]>  rawdataMap, final Map<String,double [][]> alphabetProbsMap) throws  AlgorithmException {
 
         if (rawdataMap.isEmpty()) {
             return new double[numStates][0];
@@ -195,6 +193,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
             if (rawdata == null) {
                 //TODO log this as error
+                LOGGER.warn("skipping measurement {} in logbmap",key);
                 continue;
             }
 
@@ -204,7 +203,9 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
                 for (int t = 0; t < numObs; t++) {
                     final int idx = (int)rawdata[0][t];
 
-                    assert(idx >= 0 && idx < alphabetProbs[0].length);
+                    if (!(idx >= 0 && idx < alphabetProbs[0].length)) {
+                        throw new AlgorithmException(String.format("in method getLogBMap, index out of bounds for %s, idx=%d, maxidx=%d",key,idx,alphabetProbs[0].length));
+                    }
 
                     logbmap[iState][t] = LogMath.elnproduct(logbmap[iState][t], LogMath.eln(alphabetProbs[iState][idx]));
                 }
@@ -253,7 +254,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         final double [] scores = new double[numStates];
 
-        final double [][] phi = getLogZeroedMatrix(numStates, numObs);
+        final double [][] phi = LogMath.getLogZeroedMatrix(numStates, numObs);
         final int [][] vindices = new int[numStates][numObs];
 
         double [][] logA = clone2d(getAMatrix()); //copy
@@ -297,15 +298,36 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
                     scores[i] = LogMath.elnproduct(scores[i], phi[i][t - 1]);
                 }
 
-                final SortedSet<CostWithIndex> costsWithIndex = Sets.newTreeSet();
+                final List<CostWithIndex> costsWithIndex = Lists.newArrayList();
 
                 for (i = 0; i < numStates; i++) {
                     costsWithIndex.add(new CostWithIndex(i, scores[i]));
                 }
 
-                Iterator<CostWithIndex> costIterator = costsWithIndex.iterator();
-                int maxIdx = costIterator.next().idx;
-                double maxVal = scores[maxIdx];
+                Collections.sort(costsWithIndex);
+
+
+                //check to see if any of the other possible "from" states (i.e. i != j)
+                //are below min. duration.  If so, we must force a transition from that state
+
+                int maxIdx = costsWithIndex.get(0).idx;
+                double maxVal = costsWithIndex.get(0).cost;
+
+                for (i = 0; i < numStates; i++) {
+                    //not possible, quit
+                    final int idx = costsWithIndex.get(i).idx;
+                    final double cost = costsWithIndex.get(i).cost;
+
+                    if (cost == Double.NEGATIVE_INFINITY) {
+                        break;
+                    }
+
+                    if (zeta[idx] < minStateDurations[idx] && idx != j) {
+                        maxIdx = idx;
+                        maxVal = cost;
+                        break;
+                    }
+                }
 
                 //best path is to stay?  increment zeta.
                 if (maxIdx == j) {
@@ -317,17 +339,9 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
                 //if zeta of the state I'm coming FROM is above min durations,
                 //I'll let the transition happen.  Otherwise, pick the next best state.
-                boolean worked = true;
-                while (zeta[maxIdx] < minStateDurations[maxIdx] && costIterator.hasNext()) {
-                    maxIdx = costIterator.next().idx;
-                    maxVal = scores[maxIdx];
 
-                    worked = zeta[maxIdx] >= minStateDurations[maxIdx];
-                }
-
-                if (!worked) {
-                    //failboat
-                    return new Result(new int[0],Double.NEGATIVE_INFINITY);
+                if (maxVal == Double.NEGATIVE_INFINITY) {
+                    maxIdx = j;
                 }
 
                 phi[j][t] = maxVal;
@@ -374,11 +388,13 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
         return new Result(path,maxScore);
     }
 
-    static private void printMat(double [][] mat) {
+    static private void printMat(final String name,double [][] mat) {
+        System.out.print(name);
+        System.out.print(" = [[");
         for (int j = 0; j < mat.length; j++) {
 
             if (j != 0) {
-                System.out.print("\n");
+                System.out.print(",\n[");
             }
 
             for (int i = 0; i < mat[j].length; i++) {
@@ -388,10 +404,38 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
                 System.out.print(String.format("%.2f",mat[j][i]));
             }
+            System.out.print("]");
 
         }
+        System.out.print("]\n");
     }
 
+    static private void printMat(final String name,int [][] mat) {
+        System.out.print(name);
+        System.out.print(" = [[");
+
+
+        for (int j = 0; j < mat.length; j++) {
+
+            if (j != 0) {
+                System.out.print(",\n[");
+            }
+
+            for (int i = 0; i < mat[j].length; i++) {
+                if (i != 0) {
+                    System.out.print(",");
+                }
+
+                System.out.print(String.format("%d", mat[j][i]));
+            }
+
+            System.out.print("]");
+
+        }
+
+        System.out.print("]\n");
+
+    }
     public boolean reestimate(final MultiObsSequence meas, final double priorWeightAsNumberOfSamples) {
         int iterationNumber;
         int iSequence;
@@ -522,8 +566,8 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
      */
 
         int t,j,i;
-        double [][] logalpha = getLogZeroedMatrix(numStates,numObs);
-        double [][] logbeta = getLogZeroedMatrix(numStates,numObs);
+        double [][] logalpha = LogMath.getLogZeroedMatrix(numStates, numObs);
+        double [][] logbeta = LogMath.getLogZeroedMatrix(numStates,numObs);
         double temp;
         double [][] logA = clone2d(A); //copy
 
@@ -627,7 +671,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
     static double [][] getLogANumerator(final double [][] originalA, final AlphaBetaResult alphabeta,final double [][]logbmap,final Multimap<Integer,Transition> forbiddenTransitions,final int numObs, final int numStates) {
 
         int i,j,t;
-        final double [][] logANumerator = getLogZeroedMatrix(numStates, numStates);
+        final double [][] logANumerator = LogMath.getLogZeroedMatrix(numStates, numStates);
 
         final double [][]logalpha = alphabeta.logalpha;
         final double [][]logbeta = alphabeta.logbeta;
@@ -681,7 +725,7 @@ public class MultiObsSequenceAlphabetHiddenMarkovModel {
 
         int iState,iAlphabet,t;
 
-        double [][] logAlphabetNumerator = getLogZeroedMatrix(numStates, alphabetSize);
+        double [][] logAlphabetNumerator = LogMath.getLogZeroedMatrix(numStates, alphabetSize);
 
         final double [][] logalpha = alphabeta.logalpha;
         final double [][] logbeta = alphabeta.logbeta;
