@@ -12,8 +12,9 @@ import java.util.List;
  *  viterbi decoding
  *
  */
-public class HiddenMarkovModel {
-    static private final double MIN_NORMALIZING = 1e-6;
+public class HiddenMarkovModel implements HiddenMarkovModelInterface {
+    static public final double MIN_LIKELIHOOD = 1e-15;
+
     final int numStates;
     final int numFreeParams;
     double [][] A;
@@ -27,36 +28,12 @@ public class HiddenMarkovModel {
     }
 
     //ctor
-    public HiddenMarkovModel(final int numStates, final double [][] A,final double [] initialStateProbs, final HmmPdfInterface [] obsModels, final int numFreeParams) {
+    protected HiddenMarkovModel(final int numStates, final double [][] A,final double [] initialStateProbs, final HmmPdfInterface [] obsModels, final int numFreeParams) {
         this.numStates = numStates;
         this.A = A;
         this.initialState = initialStateProbs;
         this.obsModels = obsModels;
         this.numFreeParams = numFreeParams; //whatever, not important here since this is only used for test now
-    }
-
-    public HiddenMarkovModel(final int numStates,final List<Double> stm,final List<Double> initialProbs,final HmmPdfInterface [] obsModels,final int numFreeParams) {
-
-        this.numStates = numStates;
-        this.numFreeParams = numFreeParams; //used for BIC / AIC calculation
-
-        //turn state transition matrix into something we like
-        this.A = new double[numStates][numStates];
-
-        int k = 0;
-        for (int j = 0; j < numStates; j++) {
-            for (int i = 0; i < numStates; i++) {
-                this.A[j][i] = stm.get(k);
-                k++;
-            }
-        }
-
-        this.initialState = new double[numStates];
-        for (int j = 0; j < numStates; j++) {
-            this.initialState[j] = initialProbs.get(j);
-        }
-
-        this.obsModels = obsModels;
     }
 
 
@@ -104,7 +81,7 @@ public class HiddenMarkovModel {
         return 2.0*pathCost + 2.0*this.numFreeParams;
     }
     public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates) {
-        return decode(observations,possibleEndStates,HmmPdfInterface.MIN_LIKELIHOOD);
+        return decode(observations,possibleEndStates,MIN_LIKELIHOOD);
     }
 
     public HmmDecodedResult decode(final double[][] observations, final Integer[] possibleEndStates, final double minLikelihood) {
@@ -225,7 +202,7 @@ public class HiddenMarkovModel {
         }
 
 
-        final double bic = this.getBIC(minCost,numObs);
+        final double bic = this.getBIC(minCost, numObs);
         final double aic = this.getAIC(minCost);
 
 
@@ -233,91 +210,10 @@ public class HiddenMarkovModel {
 
     }
 
-
-    //actually this is useless until we do training
-    private AlphaResult calcAlpha(int numObs,final double [][] bmap) {
-
-        /*
-        Calculates 'alpha' the forward variable.
-
-                The alpha variable is a numpy array indexed by time, then state (TxN).
-                alpha[t][i] = the probability of being in state 'i' after observing the
-        first t symbols.
-        */
-        double [][] alpha = new  double[numObs][this.numStates];
-        double [] c = new double[numObs];
-
-
-        // init stage - alpha_1(x) = pi(x)b_x(O1)
-        for (int iState = 0; iState < this.numStates; iState++) {
-            alpha[0][iState] = this.initialState[iState]*bmap[iState][0];
-        }
-
-        // induction
-        for (int t = 1; t < numObs; t++) {
-            for (int j = 0; j < this.numStates; j++) {
-                for (int i = 0; i < this.numStates; i++) {
-                    alpha[t][j] += alpha[t - 1][i] * this.A[i][j];
-                }
-            }
-
-            double sum = 0.0;
-
-            for (int j = 0; j < this.numStates; j++) {
-                sum += alpha[t][j];
-            }
-
-            if (sum < MIN_NORMALIZING) {
-                sum = MIN_NORMALIZING;
-            }
-
-            c[t] = sum;
-
-            for (int j = 0; j < this.numStates; j++) {
-                alpha[t][j] /= sum;
-            }
-
-        }
-
-
-        AlphaResult res = new AlphaResult();
-
-        res.alpha = alpha;
-        res.c = c;
-
-        return res;
-
+    @Override
+    public int getNumberOfStates() {
+        return numStates;
     }
 
-    //actually this is useless until we do training in java
-    double [][] calcBeta(int numObs,double [] c,final double [][] bmap) {
-       /*
-        Calculates 'beta' the backward variable.
-
-                The beta variable is a numpy array indexed by time, then state (TxN).
-                beta[t][i] = the probability of being in state 'i' and then observing the
-        symbols from t+1 to the end (T).
-        */
-
-        double [][] beta = new double[numObs][this.numStates];
-
-        for (int s = 0 ; s < this.numStates; s++) {
-            beta[numObs-1][s] = 1.0;
-        }
-
-        for (int t = numObs - 2; t >= 0; t--) {
-            for (int i = 0; i < this.numStates; i++) {
-                for (int j = 0; j < this.numStates; j++) {
-                    beta[t][i] += this.A[i][j]*bmap[j][t+1]*beta[t+1][j];
-                }
-            }
-
-            for (int i = 0; i < this.numStates; i++) {
-                beta[t][i] /= c[t];
-            }
-        }
-
-        return beta;
-    }
 
 }

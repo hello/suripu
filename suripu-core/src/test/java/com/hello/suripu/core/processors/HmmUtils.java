@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hello.suripu.core.algorithmintegration.LabelMaker;
+import org.apache.commons.codec.binary.Base64;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,7 +23,12 @@ import java.util.UUID;
  */
 public class HmmUtils {
 
-    public static byte[] loadFile(String path) throws IOException {
+    static public String getPathFromResourcePath(final String resourcePath) {
+        final URL fileUrl = Resources.getResource(resourcePath);
+        return fileUrl.getFile();
+    }
+
+    public static byte[] loadFile(final String path, final boolean isBase64) throws IOException {
         final URL fileUrl = Resources.getResource(path);
         final File file = new File(fileUrl.getFile());
         final InputStream is = new FileInputStream(file);
@@ -45,6 +51,11 @@ public class HmmUtils {
         }
 
         is.close();
+
+        if (isBase64) {
+            return Base64.decodeBase64(bytes);
+        }
+
         return bytes;
     }
 

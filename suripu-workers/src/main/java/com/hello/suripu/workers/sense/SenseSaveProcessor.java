@@ -41,7 +41,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-
+// WARNING ALL CHANGES HAVE TO REPLICATED TO SenseSaveDDBProcessor
+// TODO Burn this worker to the ground once everything has switched to DynamoDB
 public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);
@@ -260,7 +261,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
-        final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f) ;
+        final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f) ;
         LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);

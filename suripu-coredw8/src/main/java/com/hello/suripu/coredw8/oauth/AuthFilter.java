@@ -1,6 +1,9 @@
 package com.hello.suripu.coredw8.oauth;
 
 import com.google.common.base.Preconditions;
+
+import com.hello.suripu.core.logging.DataLogger;
+
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.DefaultUnauthorizedHandler;
 import io.dropwizard.auth.UnauthorizedHandler;
@@ -17,6 +20,7 @@ public abstract class AuthFilter<C, P extends Principal> implements ContainerReq
     protected Authenticator<C, P> authenticator;
     protected Authorizer<P> authorizer;
     protected UnauthorizedHandler unauthorizedHandler;
+    protected DataLogger logger;
 
     /**
      * Abstract builder for auth filters.
@@ -31,6 +35,7 @@ public abstract class AuthFilter<C, P extends Principal> implements ContainerReq
         private Authenticator<C, P> authenticator;
         private Authorizer<P> authorizer = new PermitAllAuthorizer<>();
         private UnauthorizedHandler unauthorizedHandler = new DefaultUnauthorizedHandler();
+        private DataLogger logger;
 
         /**
          * Sets the given realm
@@ -87,6 +92,11 @@ public abstract class AuthFilter<C, P extends Principal> implements ContainerReq
             return this;
         }
 
+        public AuthFilterBuilder<C, P, T> setLogger(DataLogger logger) {
+          this.logger = logger;
+          return this;
+        }
+
         /**
          * Builds an instance of the filter with a provided authenticator,
          * an authorizer, a prefix, and a realm.
@@ -99,6 +109,7 @@ public abstract class AuthFilter<C, P extends Principal> implements ContainerReq
             Preconditions.checkArgument(authenticator != null, "Authenticator is not set");
             Preconditions.checkArgument(authorizer != null, "Authorizer is not set");
             Preconditions.checkArgument(unauthorizedHandler != null, "Unauthorized handler is not set");
+            Preconditions.checkArgument(logger != null, "Activity Logger is not set");
 
             T authFilter = newInstance();
             authFilter.authorizer = authorizer;
@@ -106,6 +117,7 @@ public abstract class AuthFilter<C, P extends Principal> implements ContainerReq
             authFilter.prefix = prefix;
             authFilter.realm = realm;
             authFilter.unauthorizedHandler = unauthorizedHandler;
+            authFilter.logger = logger;
             return authFilter;
         }
 

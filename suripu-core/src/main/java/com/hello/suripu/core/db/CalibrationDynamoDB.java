@@ -32,6 +32,9 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -45,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class CalibrationDynamoDB implements CalibrationDAO {
 
@@ -55,50 +59,100 @@ public class CalibrationDynamoDB implements CalibrationDAO {
     private final static String TESTED_AT_ATTRIBUTE_NAME = "tested_at";
 
     private final static Integer MAX_GET_SIZE = 100;
-    public final static Integer MAX_PUT_SIZE = 50;
     private final static Integer MAX_PUT_FORCE_SIZE_PER_BATCH = 25;
-    public final static Integer MAX_PUT_FORCE_SIZE = 500;
+    private final static Integer DEFAULT_EXPIRE_AFTER_WRITE_IN_SECONDS = 60;
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String calibrationTableName;
 
-    public CalibrationDynamoDB(final AmazonDynamoDB dynamoDBClient, final String calibrationTableName) {
+    private LoadingCache<String, Optional<Calibration>> cache;
+
+    // This is called by the cache when it doesn't contain the key
+
+    final CacheLoader loader = new CacheLoader<String, Optional<Calibration>>() {
+        public Optional<Calibration> load(final String senseId) {
+            LOGGER.debug("{} not in cache, fetching from DB", senseId);
+            return getStrict(senseId);
+        }
+    };
+
+    private CalibrationDynamoDB(final AmazonDynamoDB dynamoDBClient, final String calibrationTableName, final Integer expireAfterWriteInSeconds) {
         this.dynamoDBClient = dynamoDBClient;
         this.calibrationTableName = calibrationTableName;
+        this.cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(expireAfterWriteInSeconds, TimeUnit.SECONDS)
+                .build(loader);
     }
 
+    public static CalibrationDynamoDB create(final AmazonDynamoDB dynamoDBClient, final String calibrationTableName) {
+        return new CalibrationDynamoDB(dynamoDBClient, calibrationTableName, DEFAULT_EXPIRE_AFTER_WRITE_IN_SECONDS);
+    }
 
+    public static CalibrationDynamoDB createWithCacheConfig(final AmazonDynamoDB dynamoDBClient, final String calibrationTableName, final Integer expireAfterWriteInSeconds) {
+        return new CalibrationDynamoDB(dynamoDBClient, calibrationTableName, expireAfterWriteInSeconds);
+    }
+
+    /**
+     * Fetches a Sense from cache or DynamoDB
+     * @param senseId
+     * @return Optional<Calibration>
+     */
     @Override
-    public Calibration get(final String senseId) {
-        return getRemotely(senseId, Boolean.FALSE).get();
+    public Optional<Calibration> get(final String senseId) {
+        return cache.getUnchecked(senseId);
     }
 
-
+    /**
+     * Fetches a Sense from DynamoDB only
+     * @param senseId
+     * @return Optional<Calibration>
+     */
     @Override
     public Optional<Calibration> getStrict(final String senseId) {
-        return getRemotely(senseId, Boolean.TRUE);
+        final Map<String, AttributeValue> item = queryDynamoDB(senseId);
+        return fromItem(item, senseId);
     }
 
-    private Optional<Calibration> getRemotely(final String senseId, final Boolean strict) {
+    /**
+     * Queries DynamoDB for the item
+     * @param senseId
+     * @return
+     */
+    private Map<String, AttributeValue> queryDynamoDB(final String senseId) {
         final HashMap<String, AttributeValue> key = Maps.newHashMap();
         key.put(SENSE_ATTRIBUTE_NAME, new AttributeValue().withS(senseId));
         final GetItemRequest getItemRequest = new GetItemRequest()
                 .withTableName(calibrationTableName)
                 .withKey(key);
-
         final GetItemResult getItemResult = dynamoDBClient.getItem(getItemRequest);
-        final Map<String, AttributeValue> item = getItemResult.getItem();
-        if (item == null) {
-            if (strict) {
-                LOGGER.warn("Sense {} does not have calibration", senseId);
-                return Optional.absent();
-            }
-            LOGGER.warn("Not in strict mode, returning default calibration for sense {}", senseId);
-            return Optional.of(Calibration.createDefault(senseId));
-        }
-        return Optional.of(Calibration.create(senseId, Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()), Long.valueOf(item.get(TESTED_AT_ATTRIBUTE_NAME).getN())));
+        return getItemResult.getItem();
     }
 
+    /**
+     * Attempts to convert an item to a Calibration
+     * @param item
+     * @param senseId
+     * @return Optional<Calibration>
+     */
+    private Optional<Calibration> fromItem(final Map<String, AttributeValue> item, final String senseId) {
+        if (item == null) {
+            return Optional.absent();
+        }
+
+        if(item.containsKey(DUST_OFFSET_ATTRIBUTE_NAME) && item.containsKey(TESTED_AT_ATTRIBUTE_NAME)) {
+            final Calibration calibration = Calibration.create(
+                    senseId,
+                    Integer.valueOf(item.get(DUST_OFFSET_ATTRIBUTE_NAME).getN()),
+                    Long.valueOf(item.get(TESTED_AT_ATTRIBUTE_NAME).getN())
+            );
+
+            return Optional.of(calibration);
+        }
+
+        LOGGER.warn("Malformed record in dynamoDB for Sense: {}", senseId);
+        return Optional.absent();
+
+    }
 
     @Override
     public Optional<Boolean> putForce(final Calibration calibration) {

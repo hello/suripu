@@ -58,5 +58,7 @@ dynamodb:
   region: us-east-1
   tables:
     features: features
+    device_data: sense_data_local
   endpoints:
     features: http://localhost:7777
+    device_data: http://localhost:7777

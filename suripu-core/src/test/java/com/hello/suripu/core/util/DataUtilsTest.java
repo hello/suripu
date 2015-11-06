@@ -23,7 +23,7 @@ public class DataUtilsTest {
         final int raw_dust[] = new int[] {1179, 1570};
         final float expectedDensity[] = new float[] {203.90134f, 271.52255f};
         for (int i = 0; i < raw_dust.length; i++) {
-            final float calculatedDensity = DataUtils.convertRawDustCountsToDensity(raw_dust[i], Optional.of(Calibration.createDefault("dummy-sense")), 1);
+            final float calculatedDensity = DataUtils.convertRawDustCountsToDensity(raw_dust[i], Optional.of(Calibration.createDefault("dummy-sense")));
             LOGGER.trace("Under calibration of ADC_offset = 175, raw_dust {} -> aqi {}", raw_dust[i], calculatedDensity);
             assertThat(calculatedDensity, is(expectedDensity[i]));
         }
@@ -34,7 +34,7 @@ public class DataUtilsTest {
         final int raw_dust[] = new int[] {1179, 1570};
         final float expectedDensity[] = new float[] {216.52628f, 284.1475f};
         for (int i = 0; i < raw_dust.length; i++) {
-            final float calculatedDensity = DataUtils.convertRawDustCountsToDensity(raw_dust[i], Optional.of(Calibration.create("dummy-sense", 175, DateTime.now(DateTimeZone.UTC).getMillis())), 1);
+            final float calculatedDensity = DataUtils.convertRawDustCountsToDensity(raw_dust[i], Optional.of(Calibration.create("dummy-sense", 175, DateTime.now(DateTimeZone.UTC).getMillis())));
             LOGGER.trace("Under calibration of ADC_offset = 175, raw_dust {} -> aqi {}", raw_dust[i], calculatedDensity);
             assertThat(calculatedDensity, is(expectedDensity[i]));
         }
@@ -42,7 +42,7 @@ public class DataUtilsTest {
 
     @Test
     public void badCalibration() {
-        final float calculatedDensity = DataUtils.convertRawDustCountsToDensity(0, Optional.of(Calibration.create("dummy-sense", 600, DateTime.now(DateTimeZone.UTC).getMillis())), 1);
+        final float calculatedDensity = DataUtils.convertRawDustCountsToDensity(0, Optional.of(Calibration.create("dummy-sense", 600, DateTime.now(DateTimeZone.UTC).getMillis())));
         assertThat(calculatedDensity, equalTo(1f));
     }
 }

@@ -1,10 +1,11 @@
-package com.hello.suripu.core.clients;
+package com.hello.suripu.coredw.clients;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.google.common.collect.Maps;
+
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.core.metrics.InstrumentedDynamoDBClient;
@@ -81,6 +82,7 @@ public class AmazonDynamoDBClientFactory {
         return client;
     }
 
+
     public synchronized AmazonDynamoDB getInstrumented(final DynamoDBTableName tableName, final Class<?> klass) {
         if(!dynamoDBConfiguration.tables().containsKey(tableName) || !dynamoDBConfiguration.endpoints().containsKey(tableName)) {
             throw new IllegalArgumentException("Check configuration. Invalid tableName: " + tableName.toString());
@@ -95,5 +97,9 @@ public class AmazonDynamoDBClientFactory {
         client.setEndpoint(endpoint);
         instrumentedClients.put(klass.getName(), client);
         return client;
+    }
+
+    public static ClientConfiguration getDefaultClientConfiguration() {
+        return DEFAULT_CLIENT_CONFIGURATION;
     }
 }

@@ -10,11 +10,21 @@ import java.util.Set;
 
 public interface CalibrationDAO {
     /**
-     * Retrieves calibration per sense
+     * Retrieves calibration for given senseId
+     * Results are eventually consistent.
+     * Do not use for read to update patterns
      * @param senseId String
-     * @return Calibration
+     * @return Optional<Calibration>
      */
-    Calibration get(String senseId);
+    Optional<Calibration> get(String senseId);
+
+
+    /**
+     * Retrieves calibration for given senseId
+     * Should respect consistency semantics
+     * @param senseId
+     * @return Optional<Calibration>
+     */
     Optional<Calibration> getStrict(String senseId);
 
     /**

@@ -17,6 +17,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.util.DataUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -191,7 +192,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
             "AND ts >= :start_ts AND ts <= :end_ts " +
             "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts " +
             "GROUP BY date")
-    public abstract ImmutableList<Float> getAirQualityList(@Bind("account_id") Long accountId,
+    public abstract ImmutableList<Integer> getAirQualityRawList(@Bind("account_id") Long accountId,
                                                              @Bind("device_id") Long deviceId,
                                                              @Bind("start_ts") DateTime startTimestamp,
                                                              @Bind("end_ts") DateTime endTimestamp,
@@ -359,6 +360,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
         return sortedList;
 
     }
+    
 
     // used by timeline, query by local_utc_ts
     @Deprecated

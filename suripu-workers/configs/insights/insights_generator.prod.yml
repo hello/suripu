@@ -141,33 +141,23 @@ logging:
     # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
     timeZone: UTC
 
-insights_dynamo_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: prod_insights
-
-sleep_score_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: prod_sleep_score
-sleep_score_version: v_0_1
-
-features_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: features
-
-preferences_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+dynamo_db:
   region: us-east-1
-  table_name: prod_preferences
+  tables:
+      features : features
+      calibration : prod_calibration
+      insights : prod_insights
+      sleep_stats : prod_sleep_stats
+      preferences : prod_preferences
+      sleep_score : prod_sleep_score
 
+  endpoints:
+      features : http://dynamodb.us-east-1.amazonaws.com
+      calibration: http://dynamodb.us-east-1.amazonaws.com
+      insights: http://dynamodb.us-east-1.amazonaws.com
+      sleep_stats : http://dynamodb.us-east-1.amazonaws.com
+      preferences : http://dynamodb.us-east-1.amazonaws.com
+      sleep_score : http://dynamodb.us-east-1.amazonaws.com
 
-# store sleep scores and other stats
-# v0.2: score uses movement and duration
-sleep_stats_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: prod_sleep_stats
+sleep_score_version: v_0_1
 sleep_stats_version: v_0_2
-

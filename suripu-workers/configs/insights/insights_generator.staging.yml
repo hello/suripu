@@ -142,29 +142,23 @@ logging:
     # The timezone used to format dates. HINT: USE THE DEFAULT, UTC.
     timeZone: UTC
 
-insights_dynamo_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: insights
-
-sleep_score_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: sleep_score
-sleep_score_version: v_0_1
-
-features_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region: us-east-1
-    table_name: features
-
-preferences_db:
-  endpoint : http://dynamodb.us-east-1.amazonaws.com
+dynamo_db:
   region: us-east-1
-  table_name: preferences
+  tables:
+      features : features
+      calibration : calibration
+      insights : insights
+      sleep_stats : sleep_stats
+      preferences : preferences
+      sleep_score : sleep_score
 
-sleep_stats_db:
-    endpoint : http://dynamodb.us-east-1.amazonaws.com
-    region : us-east-1
-    table_name : sleep_stats
+  endpoints:
+      features : http://dynamodb.us-east-1.amazonaws.com
+      calibration: http://dynamodb.us-east-1.amazonaws.com
+      insights: http://dynamodb.us-east-1.amazonaws.com
+      sleep_stats : http://dynamodb.us-east-1.amazonaws.com
+      preferences : http://dynamodb.us-east-1.amazonaws.com
+      sleep_score : http://dynamodb.us-east-1.amazonaws.com
+
+sleep_score_version: v_0_1
 sleep_stats_version: v_0_2

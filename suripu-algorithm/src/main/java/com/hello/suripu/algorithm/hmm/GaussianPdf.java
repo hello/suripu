@@ -22,9 +22,6 @@ public class GaussianPdf implements HmmPdfInterface {
 
             double pdfEval = normalDistribution.density(col[i]);
 
-            if (pdfEval < MIN_LIKELIHOOD) {
-                pdfEval = MIN_LIKELIHOOD;
-            }
 
             result[i] = Math.log(pdfEval);
 

@@ -4,6 +4,8 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsync;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.s3.AmazonS3;
@@ -40,7 +42,7 @@ import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.app.v2.DeviceResource;
 import com.hello.suripu.app.v2.StoreFeedbackResource;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
@@ -52,6 +54,8 @@ import com.hello.suripu.core.db.AppStatsDAODynamoDB;
 import com.hello.suripu.core.db.ApplicationsDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleFromS3;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
@@ -109,6 +113,7 @@ import com.hello.suripu.core.support.SupportDAO;
 import com.hello.suripu.core.util.CustomJSONExceptionMapper;
 import com.hello.suripu.core.util.DropwizardServiceUtil;
 import com.hello.suripu.core.util.KeyStoreUtils;
+import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
@@ -284,6 +289,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
         final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
+        /* Default model ensemble for all users  */
+        final S3BucketConfiguration timelineModelEnsemblesConfig = configuration.getTimelineModelEnsemblesConfiguration();
+        final S3BucketConfiguration seedModelConfig = configuration.getTimelineSeedModelConfiguration();
+
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3,timelineModelEnsemblesConfig.getBucket(),timelineModelEnsemblesConfig.getKey(),seedModelConfig.getBucket(),seedModelConfig.getKey());
+
         final AmazonDynamoDB teamStoreDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTeamsDynamoDBConfiguration().getEndpoint());
         final TeamStoreDAO teamStore = new TeamStore(teamStoreDBClient, "teams");
 
@@ -351,8 +362,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
-        
-        final AmazonDynamoDB senseLastSeenDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseLastSeenConfiguration().getEndpoint());
+
+        // WARNING: Do not use async methods for anything but SensorsViewsDynamoDB for now
+        final AmazonDynamoDBAsync senseLastSeenDynamoDBClient = new AmazonDynamoDBAsyncClient(awsCredentialsProvider, AmazonDynamoDBClientFactory.getDefaultClientConfiguration());
+        senseLastSeenDynamoDBClient.setEndpoint(configuration.getSenseLastSeenConfiguration().getEndpoint());
+
         final SensorsViewsDynamoDB sensorsViewsDynamoDB = new SensorsViewsDynamoDB(
                 senseLastSeenDynamoDBClient,
                 "", // We are not using dynamodb for minute by minute data yet
@@ -361,7 +375,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
 
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.create(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
 
         final AmazonDynamoDB wifiInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getWifiInfoConfiguration().getEndpoint());
         final WifiInfoDAO wifiInfoDAO = new WifiInfoDynamoDB(wifiInfoDynamoDBClient, configuration.getWifiInfoConfiguration().getTableName());
@@ -382,6 +396,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 trackerMotionDAO,
                 deviceDAO,
                 deviceDataDAO,
+                deviceDataDAODynamoDB,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
@@ -390,7 +405,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 senseColorDAO,
                 onlineHmmModelsDAO,
                 featureExtractionDAO,
-                calibrationDAO);
+                calibrationDAO,
+                defaultModelEnsembleDAO);
                 
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO,timelineLogger, timelineProcessor));
@@ -427,7 +443,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withPreferencesDAO(accountPreferencesDAO)
                 .withAccountInfoProcessor(accountInfoProcessor)
                 .withWakeStdDevData(new WakeStdDevData())
-                .withLightData(new LightData());
+                .withLightData(new LightData())
+                .withCalibrationDAO(calibrationDAO);
+
+
         final InsightProcessor insightProcessor = insightBuilder.build();
 
         environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB, insightProcessor));

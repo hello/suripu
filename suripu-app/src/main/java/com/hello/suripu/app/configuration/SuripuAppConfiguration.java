@@ -7,6 +7,7 @@ import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
+import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -411,4 +412,16 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("stop_month")
     private int stopMonth = 2; // set default to feb
     public int getStopMonth() { return this.stopMonth; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_model_ensembles")
+    private S3BucketConfiguration timelineModelEnsemblesConfiguration;
+    public S3BucketConfiguration getTimelineModelEnsemblesConfiguration() { return timelineModelEnsemblesConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_seed_model")
+    private S3BucketConfiguration timelineSeedModelConfiguration;
+    public S3BucketConfiguration getTimelineSeedModelConfiguration() { return timelineSeedModelConfiguration; }
 }

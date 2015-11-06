@@ -124,6 +124,7 @@ dynamodb:
     feature_extraction_models: feature_extraction_models
     online_hmm_models: online_hmm_models
     calibration: calibration
+    device_data: sense_data
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
@@ -138,6 +139,7 @@ dynamodb:
     feature_extraction_models: http://dynamodb.us-east-1.amazonaws.com
     online_hmm_models: http://dynamodb.us-east-1.amazonaws.com
     calibration: http://dynamodb.us-east-1.amazonaws.com
+    device_data: http://dynamodb.us-east-1.amazonaws.com
 
 aggregate_window_size_min: 10
 
@@ -154,3 +156,12 @@ max_cache_refresh_days: 20
 sleep_stats_version: v_0_2
 
 user_info_max_read_capacity_sec: 200
+
+timeline_model_ensembles:
+  bucket: hello-timeline-models
+  key: normal4ensemble.base64
+
+timeline_seed_model:
+  bucket: hello-timeline-models
+  key: normal4.base64
+
