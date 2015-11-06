@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
+import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
@@ -137,4 +138,22 @@ public class SuripuResearchConfiguration extends Configuration {
     @JsonProperty("calibration")
     private DynamoDBConfiguration calibrationConfiguration;
     public DynamoDBConfiguration getCalibrationConfiguration() {return this.calibrationConfiguration;}
+
+    @Valid
+    @NotNull
+    @JsonProperty("device_data")
+    private DynamoDBConfiguration deviceDataConfiguration;
+    public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_model_ensembles")
+    private S3BucketConfiguration timelineModelEnsemblesConfiguration;
+    public S3BucketConfiguration getTimelineModelEnsemblesConfiguration() { return timelineModelEnsemblesConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("timeline_seed_model")
+    private S3BucketConfiguration timelineSeedModelConfiguration;
+    public S3BucketConfiguration getTimelineSeedModelConfiguration() { return timelineSeedModelConfiguration; }
 }

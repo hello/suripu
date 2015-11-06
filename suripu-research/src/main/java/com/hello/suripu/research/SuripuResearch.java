@@ -4,11 +4,17 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleFromS3;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
@@ -26,6 +32,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
@@ -138,6 +145,9 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, clientConfiguration);
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
 
+        final AmazonS3 amazonS3 = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
+
+
         final ImmutableMap<QueueName, String> streams = ImmutableMap.copyOf(configuration.getKinesisConfiguration().getStreams());
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(kinesisClient, streams);
         final DataLogger activityLogger = kinesisLoggerFactory.get(QueueName.ACTIVITY_STREAM);
@@ -158,10 +168,13 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
 
         final String modelDbTableName = configuration.getFeatureExtractionConfiguration().getTableName();
         final AmazonDynamoDB modelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionConfiguration().getEndpoint());
-        final FeatureExtractionModelsDAO modelDAO = new FeatureExtractionModelsDAODynamoDB(modelsDb,modelDbTableName);
+        final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(modelsDb,modelDbTableName);
+        final S3BucketConfiguration timelineModelEnsemblesConfig = configuration.getTimelineModelEnsemblesConfiguration();
+        final S3BucketConfiguration seedModelConfig = configuration.getTimelineSeedModelConfiguration();
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3, timelineModelEnsemblesConfig.getBucket(), timelineModelEnsemblesConfig.getKey(), seedModelConfig.getBucket(), seedModelConfig.getKey());
 
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getCalibrationConfiguration().getEndpoint());
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.create(calibrationDynamoDBClient, configuration.getCalibrationConfiguration().getTableName());
 
 
         //ring time history
@@ -180,6 +193,9 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
         final AmazonDynamoDB timelineLogDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getTimelineLogDBConfiguration().getEndpoint());
         final TimelineLogDAO timelineLogDAO = new TimelineLogDAODynamoDB(timelineLogDynamoDBClient,timelineLogTableName);
 
+        final AmazonDynamoDB deviceDataDAODynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(deviceDataDAODynamoDBClient, configuration.getDeviceDataConfiguration().getTableName());
+
         final RolloutResearchModule module = new RolloutResearchModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
@@ -197,9 +213,25 @@ public class SuripuResearch extends Service<SuripuResearchConfiguration> {
 
 
 
-        final TimelineProcessor timelineProcessor =  TimelineProcessor.createTimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAODynamoDB,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,modelDAO,calibrationDAO);
 
-        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,feedbackDAO,timelineProcessor,senseColorDAO,modelDAO,priorsDAO));
+        final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
+                trackerMotionDAO,
+                deviceDAO,
+                deviceDataDAO,
+                deviceDataDAODynamoDB,
+                ringTimeHistoryDAODynamoDB,
+                feedbackDAO,
+                sleepHmmDAODynamoDB,
+                accountDAO,
+                sleepStatsDAODynamoDB,
+                senseColorDAO,
+                priorsDAO,
+                featureExtractionDAO,
+                calibrationDAO,
+                defaultModelEnsembleDAO);
+
+
+        environment.addResource(new PredictionResource(accountDAO,trackerMotionDAO,deviceDataDAO,deviceDAO, userLabelDAO,sleepHmmDAODynamoDB,feedbackDAO,timelineProcessor,senseColorDAO,featureExtractionDAO,priorsDAO,defaultModelEnsembleDAO));
         environment.addResource(new AccountInfoResource(accountDAO, deviceDAO));
 
 

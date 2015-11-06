@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.sleep.Vote;
@@ -14,6 +15,7 @@ import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmSensorDataBinning;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
@@ -114,6 +116,7 @@ public class PredictionResource extends BaseResource {
     private final SenseColorDAO senseColorDAO;
     private final FeatureExtractionModelsDAO featureExtractionModelsDAO;
     private final OnlineHmmModelsDAO priorsDAO;
+    private final DefaultModelEnsembleDAO defaultModelEnsembleDAO;
 
     public PredictionResource(final AccountDAO accountDAO,
                               final TrackerMotionDAO trackerMotionDAO,
@@ -125,7 +128,8 @@ public class PredictionResource extends BaseResource {
                               final TimelineProcessor timelineProcessor,
                               final SenseColorDAO senseColorDAO,
                               final FeatureExtractionModelsDAO featureExtractionModelsDAO,
-                              final OnlineHmmModelsDAO priorsDAO) {
+                              final OnlineHmmModelsDAO priorsDAO,
+                              final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
 
         this.accountDAO = accountDAO;
         this.trackerMotionDAO = trackerMotionDAO;
@@ -139,6 +143,7 @@ public class PredictionResource extends BaseResource {
         this.senseColorDAO = senseColorDAO;
         this.featureExtractionModelsDAO = featureExtractionModelsDAO;
         this.priorsDAO = priorsDAO;
+        this.defaultModelEnsembleDAO = defaultModelEnsembleDAO;
     }
 
 
@@ -154,7 +159,7 @@ public class PredictionResource extends BaseResource {
 
 
     private static ImmutableList<Event> getOnlineHmmEvents(final DateTime dateOfNight, final DateTime startTime, final DateTime endTime, final long accountId,
-                                                    final OneDaysSensorData oneDaysSensorData, final FeatureExtractionModelsDAO featureExtractionModelsDAO,
+                                                    final OneDaysSensorData oneDaysSensorData, final DefaultModelEnsembleDAO defaultModelEnsembleDAO,final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                                                            final OnlineHmmModelsDAO priorsDAO,final boolean forceLearning) {
 
         //get model from DB
@@ -164,10 +169,10 @@ public class PredictionResource extends BaseResource {
 
             //get priors from DB
 
-            final OnlineHmm onlineHmm = new OnlineHmm(featureExtractionModelsDAO,priorsDAO,Optional.<UUID>absent());
+            final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO,featureExtractionModelsDAO,priorsDAO,Optional.<UUID>absent());
 
             //run the predictor--so the HMMs will decode, the output interpreted and segmented, and then turned into events
-            final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(accountId, dateOfNight, startTime, endTime, oneDaysSensorData, false, forceLearning);
+            final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(accountId, dateOfNight, startTime, endTime, endTime,oneDaysSensorData, false, forceLearning);
 
             final List<Event> predictions = Lists.newArrayList();
             for (final Optional<Event> event : events.toList()) {
@@ -498,19 +503,19 @@ public class PredictionResource extends BaseResource {
         }
 
         OnlineHmmSensorDataBinning.BinnedData binnedData = binnedDataOptional.get();
-        final Integer [] possibleEndStates = {0};
 
         final Map<String,List<Integer>> pathsByModelId = Maps.newHashMap();
         final Map<String,Integer> numStates = Maps.newHashMap();
 
-        final Map<String,HiddenMarkovModel> hmmByModelName = featureExtractionModelData.getDeserializedData().sensorDataReduction.hmmByModelName;
+        final Map<String,HiddenMarkovModelInterface> hmmByModelName = featureExtractionModelData.getDeserializedData().sensorDataReduction.hmmByModelName;
         //DECODE ALL SENSOR DATA INTO DISCRETE "CLASSIFICATIONS"
         for (final String modelName : hmmByModelName.keySet()) {
 
-            final HiddenMarkovModel hmm = hmmByModelName.get(modelName);
+            final HiddenMarkovModelInterface hmm = hmmByModelName.get(modelName);
+            final Integer [] possibleEndStates = {hmm.getNumberOfStates() - 1};
 
-            numStates.put(modelName,hmm.numStates);
-            final HmmDecodedResult hmmDecodedResult = hmm.decode(binnedData.data, possibleEndStates);
+            numStates.put(modelName,hmm.getNumberOfStates());
+            final HmmDecodedResult hmmDecodedResult = hmm.decode(binnedData.data, possibleEndStates,1e-320);
 
             pathsByModelId.put(modelName, hmmDecodedResult.bestPath);
         }
@@ -531,7 +536,7 @@ public class PredictionResource extends BaseResource {
         }
 
 
-        return new AlphabetsAndLabels(pathsByModelId,numStates,feedbackAsIndices);
+        return new AlphabetsAndLabels(pathsByModelId,numStates,feedbackAsIndices,accountId,dateOfNight);
 
     }
 
@@ -646,7 +651,7 @@ public class PredictionResource extends BaseResource {
             LOGGER.info("Found {} pieces of feedback",oneDaysSensorData.feedbackList.size());
 
             //this should automatically update the database for the user
-            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,inMemoryFeatureExtraction, inMemoryModelsDao,true);
+            getOnlineHmmEvents(night, startTime, endTime, accountId,oneDaysSensorData,defaultModelEnsembleDAO,inMemoryFeatureExtraction, inMemoryModelsDao,true);
 
         }
 
@@ -814,7 +819,7 @@ public class PredictionResource extends BaseResource {
                 break;
 
             case ALGORITHM_ONLINEHMM:
-                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData,featureExtractionModelsDAO,priorsDAO,forceLearning);
+                events = getOnlineHmmEvents(dateOfNight, targetDate, endDate, accountId,oneDaysSensorData,defaultModelEnsembleDAO,featureExtractionModelsDAO,priorsDAO,forceLearning);
                 break;
 
             default:

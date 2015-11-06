@@ -2,6 +2,8 @@ package com.hello.suripu.research.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.models.Event;
+import com.hello.suripu.core.util.DateTimeUtil;
+import org.joda.time.DateTime;
 
 import java.util.List;
 import java.util.Map;
@@ -21,10 +23,18 @@ public class AlphabetsAndLabels {
     @JsonProperty("feedback")
     final List<FeedbackAsIndices> feedback;
 
+    @JsonProperty("account_id")
+    final Long accountId;
 
-    public AlphabetsAndLabels(Map<String, List<Integer>> alphabets, final Map<String,Integer> stateSizes, List<FeedbackAsIndices> feedback) {
+    @JsonProperty("date_of_night")
+    final String dateOfNight;
+
+
+    public AlphabetsAndLabels(Map<String, List<Integer>> alphabets, final Map<String,Integer> stateSizes, List<FeedbackAsIndices> feedback, final Long accountId, final DateTime evening) {
         this.alphabets = alphabets;
         this.stateSizes = stateSizes;
         this.feedback = feedback;
+        this.accountId = accountId;
+        dateOfNight = DateTimeUtil.dateToYmdString(evening);
     }
 }

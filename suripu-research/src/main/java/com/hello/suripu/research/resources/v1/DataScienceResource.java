@@ -436,7 +436,7 @@ public class DataScienceResource extends BaseResource {
         final DateTime startTs = new DateTime(fromTimestamp, DateTimeZone.UTC);
         final DateTime endTs = startTs.plusDays(numDays).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
 
-        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForTimeRange(startTs, endTs);
+        final ImmutableList<TimelineFeedback> feedbacks = feedbackDAO.getForTimeRange(startTs.getMillis(), endTs.getMillis());
 
         //get unique account Ids that provided feedback in date range
         final Set<Long> accountIds = new HashSet<>();
