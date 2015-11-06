@@ -45,6 +45,11 @@ public class OnlineHmmModelLearner {
         final double [][] mtx = new double[numStates][numStates];
 
         for (final Map.Entry<Integer,Integer> entry : labels.entrySet()) {
+
+            if (entry.getKey() >= path.length) {
+                continue;
+            }
+
             final int prediction = path[entry.getKey()];
             final int label = entry.getValue();
 
