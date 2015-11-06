@@ -6,6 +6,7 @@ import com.amazonaws.Response;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.handlers.RequestHandler2;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
@@ -19,6 +20,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
@@ -27,6 +29,8 @@ import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,10 +39,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsEqual.equalTo;
 
 /**
  * Created by jakepiccolo on 10/13/15.
@@ -644,6 +648,32 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(results.get(1).dateTimeUTC, is(firstUTCTime.plusMinutes(2)));
         assertThat(results.get(2).dateTimeUTC, is(firstUTCTime.plusMinutes(4)));
         assertThat(results.get(3).dateTimeUTC, is(firstUTCTime.plusMinutes(8)));
+    }
+
+    @Test
+    public void benchmarkAggregation() {
+        final List<Map<String, AttributeValue>> items = Lists.newArrayList();
+        final Integer slotDuration = 60;
+        final DateTime firstTime = new DateTime(2015, 10, 10, 1, 1);
+        final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
+        final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
+        for (int i = 0; i < 10000; i++) {
+            final Map<String, AttributeValue> item = Maps.newHashMap();
+            final DateTime currTime = firstTime.plusMinutes(i);
+            item.put(DeviceDataDAODynamoDB.Attribute.ACCOUNT_ID.name, new AttributeValue().withN("0"));
+            item.put(DeviceDataDAODynamoDB.Attribute.LOCAL_UTC_TIMESTAMP.name, new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER)));
+            item.put(DeviceDataDAODynamoDB.Attribute.OFFSET_MILLIS.name, new AttributeValue().withN("0"));
+            item.put(DeviceDataDAODynamoDB.Attribute.RANGE_KEY.name, new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + "hi"));
+            item.put(DeviceDataDAODynamoDB.Attribute.AMBIENT_LIGHT.name, new AttributeValue().withN(String.valueOf(i)));
+            items.add(item);
+        }
+
+        for (int i = 0; i < 100; i++) {
+            final long start = System.nanoTime();
+            deviceDataDAODynamoDB.aggregateDynamoDBItemsToDeviceData(items, slotDuration);
+            final long end = System.nanoTime();
+            System.out.println("Time: " + (end - start) / 1000000.0);
+        }
     }
 
 }
