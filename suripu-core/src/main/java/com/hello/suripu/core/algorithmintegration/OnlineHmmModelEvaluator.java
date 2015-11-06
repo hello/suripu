@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.MultiObsSequence;
 import com.hello.suripu.algorithm.hmm.MultiObsSequenceAlphabetHiddenMarkovModel;
 import com.hello.suripu.algorithm.hmm.Transition;
@@ -33,10 +34,10 @@ public class OnlineHmmModelEvaluator {
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
     final static double MIN_NUM_PERIODS_ON_BED = 36;
-    final static float MIN_VOTE_PERCENT_TO_BE_IN_SLEEP = 0.80f; //be sure
-    final static float MIN_VOTE_PERCENT_TO_BE_IN_BED = 0.50f; //majority suffices
+    final static float [] MIN_VOTE_PERCENT_TO_BE_IN_SLEEP = {0.5f,0.8f,0.5f}; //be sure
+    final static float [] MIN_VOTE_PERCENT_TO_BE_IN_BED = {0.3f,0.3f,0.5f}; //majority suffices
 
-    final static Map<String,Float> CERTAINTY_THRESHOLDS;
+    final static Map<String,float []> CERTAINTY_THRESHOLDS;
     static {
         CERTAINTY_THRESHOLDS = Maps.newHashMap();
         CERTAINTY_THRESHOLDS.put(OnlineHmmData.OUTPUT_MODEL_BED,MIN_VOTE_PERCENT_TO_BE_IN_BED);
@@ -223,19 +224,19 @@ public class OnlineHmmModelEvaluator {
         }
     }
 
-    public static int [] getInterpretedPathFromVotes(final float[][] normalizedVotes, final Float alpha) {
-
-        //default
-        float threshold = 0.5f;
+    public static int [] getInterpretedPathFromVotes(final float[][] normalizedVotes, final float [] alphas) {
 
         //alpha should never be null
-        if (alpha != null) {
-            threshold = alpha.floatValue();
+        if (alphas == null) {
+            throw new AlgorithmException("thresholds for switching state was null");
         }
 
         final int N = normalizedVotes.length;
         final int T = normalizedVotes[0].length;
 
+        if (alphas.length < N) {
+            throw new AlgorithmException("not enough thresholds for switching state");
+        }
 
         final int [] firstAboveThreshold = new int[N + 1];
 
@@ -244,7 +245,7 @@ public class OnlineHmmModelEvaluator {
         //find the first item in each array that is above the threshold
         for (int i = 0; i < N; i++) {
             for (int t = 0; t < T; t++) {
-                if (normalizedVotes[i][t] > threshold) {
+                if (normalizedVotes[i][t] > alphas[i]) {
                     firstAboveThreshold[i] = t;
                     break;
                 }
