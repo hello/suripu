@@ -353,7 +353,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private DateTime getFloorOfDateTime(final DateTime dateTime, final Integer toMinutes) {
-        return new DateTime(dateTime, DateTimeZone.UTC).withMinuteOfHour(dateTime.getMinuteOfHour() - (dateTime.getMinuteOfHour() % toMinutes));
+        final int minute = dateTime.getMinuteOfHour();
+        return dateTime.withMinuteOfHour(minute - (minute % toMinutes));
     }
 
     private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
@@ -385,40 +386,42 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .build();
     }
 
-    private List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
-        final List<DeviceData> resultList = Lists.newLinkedList();
-        LinkedList<Map<String, AttributeValue>> currentWorkingList = Lists.newLinkedList();
-        final DeviceData.Builder templateBuilder = new DeviceData.Builder();
+    List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
+        final List<DeviceData> resultList = Lists.newArrayListWithExpectedSize(items.size() / slotDuration);
+        if (items.isEmpty()) {
+            return resultList;
+        }
+
+        List<Map<String, AttributeValue>> currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
+        final Map<String, AttributeValue> firstItem = items.get(0);
+        final DeviceData.Builder templateBuilder = new DeviceData.Builder()
+                .withAccountId(Long.valueOf(firstItem.get(Attribute.ACCOUNT_ID.name).getN()))
+                .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem))
+                .withOffsetMillis(Integer.valueOf(firstItem.get(Attribute.OFFSET_MILLIS.name).getN()));
+        DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
+
         for (final Map<String, AttributeValue> item: items) {
-            final DateTime itemDateTime = timestampFromDDBItem(item);
-            if (currentWorkingList.isEmpty()) {
-                // First iteration
-                currentWorkingList.add(item);
-            } else if (timestampFromDDBItem(currentWorkingList.getLast()).isAfter(itemDateTime)) {
-                // Unsorted list
-                throw new IllegalArgumentException("Input DeviceDatas must be sorted.");
-            } else if (getFloorOfDateTime(timestampFromDDBItem(currentWorkingList.getLast()), slotDuration)
-                    .plusMinutes(slotDuration)
-                    .isAfter(itemDateTime)) {
+            final DateTime itemDateTime = getFloorOfDateTime(timestampFromDDBItem(item), slotDuration);
+            if (currSlotTime.equals(itemDateTime)) {
                 // Within the window of our current working set.
                 currentWorkingList.add(item);
-            } else {
+            } else if (itemDateTime.isAfter(currSlotTime)) {
                 // Outside the window, aggregate working set to single value.
+                templateBuilder.withDateTimeUTC(currSlotTime);
                 resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
 
                 // Create new working sets
-                currentWorkingList = Lists.newLinkedList();
+                currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
                 currentWorkingList.add(item);
+            } else {
+                // Unsorted list
+                throw new IllegalArgumentException("Input DeviceDatas must be sorted.");
             }
-            templateBuilder
-                    .withDateTimeUTC(getFloorOfDateTime(itemDateTime, slotDuration))
-                    .withAccountId(Long.valueOf(item.get(Attribute.ACCOUNT_ID.name).getN()))
-                    .withExternalDeviceId(externalDeviceIdFromDDBItem(item))
-                    .withOffsetMillis(Integer.valueOf(item.get(Attribute.OFFSET_MILLIS.name).getN()));
+            currSlotTime = itemDateTime;
         }
-        if (!currentWorkingList.isEmpty()) {
-            resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
-        }
+
+        templateBuilder.withDateTimeUTC(currSlotTime);
+        resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
         return resultList;
     }
 
