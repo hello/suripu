@@ -41,7 +41,7 @@ public class OnlineHmmModelParams {
         this.transitionRestrictions = transitionRestrictions;
     }
 
-    public double [][] clone2d (final double [][] x) {
+    static public double [][] clone2d (final double [][] x) {
         final double [][] y = new double[x.length][];
         for(int i = 0; i < x.length; i++) {
             y[i] = x[i].clone();

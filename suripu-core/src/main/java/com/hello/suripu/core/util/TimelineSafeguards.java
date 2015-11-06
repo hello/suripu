@@ -203,8 +203,16 @@ public class TimelineSafeguards {
     /* takes sensor data, and timeline events and decides if there might be some problems with this timeline  */
     public TimelineError checkIfValidTimeline (SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents, final ImmutableList<Sample> lightData) {
 
+        //make sure events occur in proper order
         if (!checkEventOrdering(sleepEvents,extraEvents)) {
-            return TimelineError.NO_ERROR;
+            return TimelineError.EVENTS_OUT_OF_ORDER;
+        }
+
+        //make sure all events are present
+        for (final Optional<Event> event : sleepEvents.toList()) {
+            if (!event.isPresent()) {
+                return TimelineError.MISSING_KEY_EVENTS;
+            }
         }
 
         if (sleepEvents.wakeUp.isPresent() && sleepEvents.fallAsleep.isPresent()) {

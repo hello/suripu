@@ -17,10 +17,6 @@ public class DiscreteAlphabetPdf implements HmmPdfInterface {
 
         for (int i = 0; i < alphabetProbabilties.size(); i++) {
             this.probs[i] = alphabetProbabilties.get(i);
-
-            if (this.probs[i] < MIN_LIKELIHOOD) {
-                this.probs[i] = MIN_LIKELIHOOD;
-            }
         }
     }
 

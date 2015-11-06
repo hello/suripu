@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.algorithm.core.AlgorithmException;
 import com.hello.suripu.algorithm.hmm.HiddenMarkovModel;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelFactory;
+import com.hello.suripu.algorithm.hmm.HiddenMarkovModelInterface;
 import com.hello.suripu.algorithm.hmm.HmmDecodedResult;
 import com.hello.suripu.algorithm.hmm.HmmPdfInterface;
 import com.hello.suripu.algorithm.hmm.DiscreteAlphabetPdf;
@@ -28,7 +30,7 @@ public class PartnerHmm {
     static final Double PROB_ON_BED_WHEN_THERE_IS_ACTIVITY = 1e-10;
 
     static final double MIN_LIKELIHOOD = 1e-100;
-
+    static final HiddenMarkovModelFactory.HmmType HMM_TYPE = HiddenMarkovModelFactory.HmmType.ORIGINAL;
 
     private static Double getSelfTermFromDuration(final Double durationInMinutes, final int durationOfPeriodInMinutes) {
         Double n = (durationInMinutes + ((double)durationOfPeriodInMinutes/2)) / durationOfPeriodInMinutes;
@@ -279,12 +281,12 @@ public class PartnerHmm {
         final double [] initStateProbs = new double[NUM_STATES];
         initStateProbs[0] = 1.0;
 
-        final HiddenMarkovModel hmm = new HiddenMarkovModel(NUM_STATES,A,initStateProbs,obsModels,0);
+        final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HMM_TYPE,NUM_STATES, A, initStateProbs, obsModels, 0);
 
         final Integer [] endStates = new Integer[1];
         endStates[0] = NUM_STATES - 1;
 
-        final HmmDecodedResult result = hmm.decode(x, endStates, MIN_LIKELIHOOD);
+        final HmmDecodedResult result = hmm.decode(x, endStates,MIN_LIKELIHOOD);
 
         LOGGER.debug("meas = {}",x[0]);
        // LOGGER.debug("fracs = {}",fracs);

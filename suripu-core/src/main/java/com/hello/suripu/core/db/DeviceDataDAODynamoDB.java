@@ -33,6 +33,9 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -70,6 +73,8 @@ import java.util.Set;
  */
 public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
+
+    private final Timer aggregationTimer;
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String tablePrefix;
@@ -160,6 +165,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     public DeviceDataDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tablePrefix) {
         this.dynamoDBClient = dynamoDBClient;
         this.tablePrefix = tablePrefix;
+        this.aggregationTimer = Metrics.defaultRegistry().newTimer(DeviceDataDAODynamoDB.class, "aggregation");
     }
 
     public String getTableName(final DateTime dateTime) {
@@ -374,7 +380,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     }
 
     private DateTime getFloorOfDateTime(final DateTime dateTime, final Integer toMinutes) {
-        return new DateTime(dateTime, DateTimeZone.UTC).withMinuteOfHour(dateTime.getMinuteOfHour() - (dateTime.getMinuteOfHour() % toMinutes));
+        final int minute = dateTime.getMinuteOfHour();
+        return dateTime.withMinuteOfHour(minute - (minute % toMinutes));
     }
 
     private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
@@ -406,40 +413,42 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .build();
     }
 
-    private List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
-        final List<DeviceData> resultList = Lists.newLinkedList();
-        LinkedList<Map<String, AttributeValue>> currentWorkingList = Lists.newLinkedList();
-        final DeviceData.Builder templateBuilder = new DeviceData.Builder();
+    List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
+        final List<DeviceData> resultList = Lists.newArrayListWithExpectedSize(items.size() / slotDuration);
+        if (items.isEmpty()) {
+            return resultList;
+        }
+
+        List<Map<String, AttributeValue>> currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
+        final Map<String, AttributeValue> firstItem = items.get(0);
+        final DeviceData.Builder templateBuilder = new DeviceData.Builder()
+                .withAccountId(Long.valueOf(firstItem.get(Attribute.ACCOUNT_ID.name).getN()))
+                .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem))
+                .withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(firstItem));
+        DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
+
         for (final Map<String, AttributeValue> item: items) {
-            final DateTime itemDateTime = timestampFromDDBItem(item);
-            if (currentWorkingList.isEmpty()) {
-                // First iteration
-                currentWorkingList.add(item);
-            } else if (timestampFromDDBItem(currentWorkingList.getLast()).isAfter(itemDateTime)) {
-                // Unsorted list
-                throw new IllegalArgumentException("Input DeviceDatas must be sorted.");
-            } else if (getFloorOfDateTime(timestampFromDDBItem(currentWorkingList.getLast()), slotDuration)
-                    .plusMinutes(slotDuration)
-                    .isAfter(itemDateTime)) {
+            final DateTime itemDateTime = getFloorOfDateTime(timestampFromDDBItem(item), slotDuration);
+            if (currSlotTime.equals(itemDateTime)) {
                 // Within the window of our current working set.
                 currentWorkingList.add(item);
-            } else {
+            } else if (itemDateTime.isAfter(currSlotTime)) {
                 // Outside the window, aggregate working set to single value.
+                templateBuilder.withDateTimeUTC(currSlotTime);
                 resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
 
                 // Create new working sets
-                currentWorkingList = Lists.newLinkedList();
+                currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
                 currentWorkingList.add(item);
+            } else {
+                // Unsorted list
+                throw new IllegalArgumentException("Input DeviceDatas must be sorted.");
             }
-            templateBuilder
-                    .withDateTimeUTC(getFloorOfDateTime(itemDateTime, slotDuration))
-                    .withAccountId(Long.valueOf(item.get(Attribute.ACCOUNT_ID.name).getN()))
-                    .withExternalDeviceId(externalDeviceIdFromDDBItem(item))
-                    .withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(item));
+            currSlotTime = itemDateTime;
         }
-        if (!currentWorkingList.isEmpty()) {
-            resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
-        }
+
+        templateBuilder.withDateTimeUTC(currSlotTime);
+        resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
         return resultList;
     }
 
@@ -555,7 +564,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             }
         }
 
-        return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration));
+        final TimerContext context = aggregationTimer.time();
+        try {
+            return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration));
+        } finally {
+            context.stop();
+        }
     }
 
     private static String KEY_CONDITION_EXPRESSION = getBinaryExpression(Attribute.ACCOUNT_ID, "=");

@@ -8,7 +8,7 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.coredw.bundles.KinesisLoggerBundle;
-import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.KinesisLoggerConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;

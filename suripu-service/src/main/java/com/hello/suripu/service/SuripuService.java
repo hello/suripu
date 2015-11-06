@@ -14,7 +14,7 @@ import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -221,7 +221,10 @@ public class SuripuService extends Service<SuripuConfiguration> {
         ObjectGraphRoot.getInstance().init(module);
 
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBFactory.getForTable(DynamoDBTableName.CALIBRATION);
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, tableNames.get(DynamoDBTableName.CALIBRATION));
+
+        // 300 sec = 5 minutes, which should maximize cache hitrate
+        // TODO: add cache hitrate to metrics
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.createWithCacheConfig(calibrationDynamoDBClient, tableNames.get(DynamoDBTableName.CALIBRATION), 300);
 
         final ReceiveResource receiveResource = new ReceiveResource(
                 senseKeyStore,

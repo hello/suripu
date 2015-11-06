@@ -88,12 +88,12 @@ public class ScopesAllowedDynamicFeature implements DynamicFeature {
                 }
             }
 
-            final AccessToken token = (AccessToken) requestContext.getSecurityContext().getUserPrincipal();
+            final AccessToken accessToken = (AccessToken) requestContext.getSecurityContext().getUserPrincipal();
             LOGGER.warn("Token ({}) not authorized for any of the allowed scopes {}. Account ID: {}, App ID: {}",
-                    token.token,
-                    scopesAllowed,
-                    token.accountId,
-                    token.appId);
+                accessToken.token,
+                scopesAllowed,
+                accessToken.accountId,
+                accessToken.appId);
             throw new ForbiddenException();
         }
     }

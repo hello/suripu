@@ -349,3 +349,12 @@ device_data:
   endpoint: http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_sense_data
+
+timeline_model_ensembles:
+  bucket: hello-timeline-models
+  key: normal4ensemble.base64
+
+timeline_seed_model:
+  bucket: hello-timeline-models
+  key: normal4.base64
+
