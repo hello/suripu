@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
+import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAOFromFile;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
@@ -504,6 +505,43 @@ public class OnlineHmmTest {
         TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
 
+
+    }
+
+    void checkPathEquality(final int [] path1, final int [] path2) {
+        TestCase.assertEquals(path1.length,path2.length);
+
+        for (int i = 0; i < path1.length; i++) {
+            TestCase.assertEquals(path1[i],path2[i]);
+        }
+    }
+
+    @Test
+    public void testVotepathInterpretation() {
+
+        final float [][] votes = {
+                {1.0f,0.4f,0.04f,0.0f,0.0f,0.0f,0.0f,0.0f},
+                {0.0f,0.6f,0.85f,1.0f,0.8f,0.2f,0.0f,0.0f},
+                {0.0f,0.0f,0.11f,0.0f,0.2f,0.8f,1.0f,1.0f}};
+
+        final int [] expectedPath1 = {0,1,1,1,1,2,2,2};
+        final float [] alphas1 = {0.5f,0.5f,0.5f};
+
+        final int [] expectedPath2 = {0,0,1,1,1,2,2,2};
+        final float [] alphas2 = {0.5f,0.8f,0.5f};
+
+
+        final int [] path1 = OnlineHmmModelEvaluator.getInterpretedPathFromVotes(votes,alphas1);
+        checkPathEquality(expectedPath1,path1);
+
+        final int [] path2 = OnlineHmmModelEvaluator.getInterpretedPathFromVotes(votes,alphas2);
+        checkPathEquality(expectedPath2,path2);
+
+        final float [] alphas3 = {0.5f,0.5f,0.1f};
+        final int [] expectedPath3 = {0,1,2,2,2,2,2,2};
+
+        final int [] path3 = OnlineHmmModelEvaluator.getInterpretedPathFromVotes(votes,alphas3);
+        checkPathEquality(expectedPath3,path3);
 
     }
 

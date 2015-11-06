@@ -224,6 +224,7 @@ public class OnlineHmmModelEvaluator {
         }
     }
 
+    //assume that states go from 0-->1--->2--->3... etc.
     public static int [] getInterpretedPathFromVotes(final float[][] normalizedVotes, final float [] alphas) {
 
         //alpha should never be null
