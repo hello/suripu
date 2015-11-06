@@ -987,6 +987,28 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return ImmutableList.copyOf(aggregated);
     }
 
+    private ImmutableList<DeviceData> getBetweenHourDateByTS(final Long accountId,
+                                                            final String externalDeviceId,
+                                                            final DateTime startUTCTime,
+                                                            final DateTime endUTCTime,
+                                                            final DateTime startLocalTime,
+                                                            final DateTime endLocalTime,
+                                                            final int startHour,
+                                                            final int endHour,
+                                                            final boolean sameDay)
+    {
+        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
+        final List<DeviceData> filteredResults = Lists.newArrayList();
+        for (final DeviceData data: results) {
+            final int hourOfDay = data.localTime().getHourOfDay();
+            if (sameDay && (hourOfDay >= startHour && hourOfDay < endHour) ||
+                    (!sameDay && (hourOfDay >= startHour || hourOfDay < endHour))) {
+                filteredResults.add(data);
+            }
+        }
+        return ImmutableList.copyOf(filteredResults);
+    }
+
     /**
      * Get DeviceDatas that fall within [startHour, endHour) where endHour > startHour.
      */
@@ -999,16 +1021,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                                                                    final int startHour,
                                                                    final int endHour)
     {
-        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
-        final List<DeviceData> filteredResults = Lists.newArrayList();
-        for (final DeviceData data: results) {
-            final int hourOfDay = data.localTime().getHourOfDay();
-            if (hourOfDay >= startHour && hourOfDay < endHour) {
-                filteredResults.add(data);
-            }
-        }
-
-        return ImmutableList.copyOf(filteredResults);
+        return getBetweenHourDateByTS(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
     }
 
     /**
@@ -1023,16 +1036,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                                                             final int startHour,
                                                             final int endHour)
     {
-        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
-        final List<DeviceData> filteredResults = Lists.newArrayList();
-        for (final DeviceData data: results) {
-            final int hourOfDay = data.localTime().getHourOfDay();
-            if (hourOfDay >= startHour || hourOfDay < endHour) {
-                filteredResults.add(data);
-            }
-        }
-
-        return ImmutableList.copyOf(filteredResults);
+        return getBetweenHourDateByTS(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
     }
 
 }
