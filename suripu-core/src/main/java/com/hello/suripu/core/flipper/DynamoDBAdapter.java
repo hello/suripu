@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DynamoDBAdapter implements RolloutAdapter{
@@ -25,6 +26,7 @@ public class DynamoDBAdapter implements RolloutAdapter{
     private ScheduledFuture scheduledFuture;
     private final Integer pollingIntervalInSeconds;
     private final FeatureStore featureStore;
+    private final AtomicInteger failureCounts = new AtomicInteger(0);
 
     public DynamoDBAdapter(final FeatureStore featureStore, final Integer pollingIntervalInSeconds) {
         this.featureStore = featureStore;
@@ -38,8 +40,15 @@ public class DynamoDBAdapter implements RolloutAdapter{
         scheduledFuture = executorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                final Map<String, Feature> temp = featureStore.getData();
-                features.set(temp);
+                try {
+                    final Map<String, Feature> temp = featureStore.getData();
+                    features.set(temp);
+                    failureCounts.set(0);
+                } catch (Exception exception) {
+                    final Integer count = failureCounts.incrementAndGet();
+                    LOGGER.error("DynamoDBAdapter failed {} consecutive times: {}", count, exception.getMessage());
+
+                }
             }
         } , pollingIntervalInSeconds, pollingIntervalInSeconds, TimeUnit.SECONDS);
     }
@@ -84,7 +93,6 @@ public class DynamoDBAdapter implements RolloutAdapter{
      * Checks if a user/device has the named feature enabled
      * @param feature
      * @param entityId
-     * @param hashId
      * @param groups
      * @return boolean indicating whether feature is active
      */
@@ -112,12 +120,12 @@ public class DynamoDBAdapter implements RolloutAdapter{
             }
         }
 
-        if(feature.percentage == 0) {
-            LOGGER.trace("Percentage is 0, turning off for everyone");
+        if(feature.percentage == 0.0f) {
+            LOGGER.trace("Percentage is 0.0, turning off for everyone");
             return false;
         }
 
-        if (FeatureUtils.entityIdHashInPercentRange(entityId, 0, feature.percentage)) {
+        if (FeatureUtils.entityIdHashInPercentRange(entityId, 0.0f, feature.percentage)) {
             LOGGER.trace("Included in percentage.");
             return true;
         }

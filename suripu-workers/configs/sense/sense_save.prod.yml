@@ -13,7 +13,7 @@ common_db:
   driverClass: org.postgresql.Driver
   user: common
   password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  url: jdbc:postgresql://common-replica-1.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -117,12 +117,14 @@ dynamodb:
     sense_prefix : prod_sense #not used at the moment but we need it here
     sense_last_seen : prod_sense_last_seen
     calibration: prod_calibration
+    device_data: prod_sense_data
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
     sense_prefix: http://dynamodb.us-east-1.amazonaws.com
     sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
     calibration : http://dynamodb.us-east-1.amazonaws.com
+    device_data: http://dynamodb.us-east-1.amazonaws.com
 
 redis:
   host: stats.xoe7je.0001.use1.cache.amazonaws.com

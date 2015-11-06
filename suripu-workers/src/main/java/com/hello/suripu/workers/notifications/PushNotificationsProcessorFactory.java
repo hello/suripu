@@ -7,12 +7,12 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorF
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
-import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
+import com.hello.suripu.core.notifications.NotificationSubscriptionsReadDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.db.ManagedDataSource;
@@ -48,7 +48,7 @@ public class PushNotificationsProcessorFactory implements IRecordProcessorFactor
             commonSensor.registerContainerFactory(new OptionalContainerFactory());
             commonSensor.registerArgumentFactory(new JodaArgumentFactory());
 
-            final NotificationSubscriptionsDAO notificationSubscriptionsDAO = commonSensor.onDemand(NotificationSubscriptionsDAO.class);
+            final NotificationSubscriptionsReadDAO notificationSubscriptionsDAO = commonSensor.onDemand(NotificationSubscriptionsReadDAO.class);
             final AmazonSNS amazonSNS = new AmazonSNSClient(awsCredentialsProvider);
             final MobilePushNotificationProcessor pushNotificationProcessor = new MobilePushNotificationProcessor(amazonSNS, notificationSubscriptionsDAO);
 

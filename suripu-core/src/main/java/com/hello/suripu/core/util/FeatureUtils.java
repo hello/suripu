@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
  */
 public class FeatureUtils {
 
-    public static final Integer MAX_ROLLOUT_VALUE = 100;
+    public static final Float MAX_ROLLOUT_VALUE = 100.00f;
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureUtils.class);
 
-    public static Boolean entityIdHashInPercentRange(final String entityId, final Integer startRange, final Integer endRange) {
+    public static Boolean entityIdHashInPercentRange(final String entityId, final Float startRange, final Float endRange) {
 
         if (startRange > endRange) {
             LOGGER.error("Invalid range parameters.");
@@ -22,7 +22,7 @@ public class FeatureUtils {
             return false;
         }
 
-        final Integer remainder = Math.abs(entityId.hashCode()) % MAX_ROLLOUT_VALUE;
-        return ((startRange <= remainder) && (remainder < endRange));
+        final Float entityPercent = (Math.abs(entityId.hashCode()) % (MAX_ROLLOUT_VALUE * 100.00f) / 100.0f);
+        return ((startRange <= entityPercent) && (entityPercent <= endRange));
     }
 }

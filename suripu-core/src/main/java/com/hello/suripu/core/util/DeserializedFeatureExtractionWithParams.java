@@ -1,6 +1,6 @@
 package com.hello.suripu.core.util;
 
-import com.hello.suripu.algorithm.bayes.SensorDataReduction;
+import com.hello.suripu.algorithm.hmm.SensorDataReduction;
 
 /**
  * Created by benjo on 7/7/15.

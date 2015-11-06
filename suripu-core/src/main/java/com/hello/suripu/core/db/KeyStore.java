@@ -32,4 +32,5 @@ public interface KeyStore {
 
 
     Map<String, Optional<byte[]>> getBatch(Set<String> deviceIds);
+    Map<String, DeviceKeyStoreRecord> getKeyStoreRecordBatch(Set<String> deviceIds);
 }

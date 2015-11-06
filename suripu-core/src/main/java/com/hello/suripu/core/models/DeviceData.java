@@ -22,6 +22,9 @@ public class DeviceData {
     @JsonProperty("device_id")
     public final Long deviceId;
 
+    @JsonProperty("external_device_id")
+    public final String externalDeviceId;
+
     @JsonProperty("ambient_temperature")
     public final int ambientTemperature;
 
@@ -79,6 +82,10 @@ public class DeviceData {
     @JsonProperty("audio_peak_background_db")
     public final Integer audioPeakBackgroundDB; // already converted to decibels, multiplied by 1000
 
+    public DateTime localTime() {
+        return dateTimeUTC.plusMillis(offsetMillis);
+    }
+
     public DeviceData withCalibratedLight(Optional<Device.Color> colorOptional) {
 
         Device.Color color = Device.DEFAULT_COLOR;
@@ -92,6 +99,7 @@ public class DeviceData {
 
         return new DeviceData(accountId,
                 deviceId,
+                externalDeviceId,
                 ambientTemperature,
                 ambientHumidity,
                 ambientAirQuality,
@@ -113,6 +121,7 @@ public class DeviceData {
                 audioPeakBackgroundDB);
     }
 
+    @Deprecated
     public DeviceData(
             final Long accountId,
             final Long deviceId,
@@ -135,8 +144,56 @@ public class DeviceData {
             final Integer audioNumDisturbances,
             final Integer audioPeakDisturbancesDB,
             final Integer audioPeakBackgroundDB) {
+        this(accountId,
+                deviceId,
+                "",
+                ambientTemperature,
+                ambientHumidity,
+                ambientAirQuality,
+                ambientAirQualityRaw,
+                ambientDustVariance,
+                ambientDustMin,
+                ambientDustMax,
+                ambientLight,
+                ambientLightFloat,
+                ambientLightVariance,
+                ambientLightPeakiness,
+                dateTimeUTC,
+                offsetMillis,
+                firmwareVersion,
+                waveCount,
+                holdCount,
+                audioNumDisturbances,
+                audioPeakDisturbancesDB,
+                audioPeakBackgroundDB);
+    }
+
+    public DeviceData(
+            final Long accountId,
+            final Long deviceId,
+            final String externalDeviceId,
+            final int ambientTemperature,
+            final int ambientHumidity,
+            final int ambientAirQuality,
+            final int ambientAirQualityRaw,
+            final int ambientDustVariance,
+            final int ambientDustMin,
+            final int ambientDustMax,
+            final int ambientLight,
+            final float ambientLightFloat,
+            final int ambientLightVariance,
+            final int ambientLightPeakiness,
+            final DateTime dateTimeUTC,
+            final Integer offsetMillis,
+            final Integer firmwareVersion,
+            final Integer waveCount,
+            final Integer holdCount,
+            final Integer audioNumDisturbances,
+            final Integer audioPeakDisturbancesDB,
+            final Integer audioPeakBackgroundDB) {
         this.accountId = accountId;
         this.deviceId = deviceId;
+        this.externalDeviceId = externalDeviceId;
         this.ambientTemperature = ambientTemperature;
         this.ambientHumidity = ambientHumidity;
         this.ambientAirQuality = ambientAirQuality;
@@ -158,7 +215,7 @@ public class DeviceData {
         this.audioPeakDisturbancesDB = audioPeakDisturbancesDB;
 
         checkNotNull(this.accountId, "Account id can not be null");
-        checkNotNull(this.deviceId, "Device id can not be null");
+//        checkNotNull(this.deviceId, "Device id can not be null");
         checkNotNull(this.dateTimeUTC, "DateTimeUTC can not be null");
         checkNotNull(this.offsetMillis,"Offset millis can not be null");
     }
@@ -168,6 +225,7 @@ public class DeviceData {
     public static class Builder{
         private Long accountId;
         private Long deviceId;
+        private String externalDeviceId;
         private int ambientTemperature;
         private int ambientHumidity;
         private int ambientAirQuality = DEFAULT_AMBIENT_AIR_QUALITY;
@@ -182,8 +240,8 @@ public class DeviceData {
         private DateTime dateTimeUTC;
         private Integer offsetMillis;
         private Integer firmwareVersion;
-        private Integer waveCount;
-        private Integer holdCount;
+        private Integer waveCount = 0;
+        private Integer holdCount = 0;
         private Integer audioNumDisturbances = 0;
         private Integer audioPeakDisturbancesDB = 0;
         private Integer audioPeakBackgroundDB = 0;
@@ -193,8 +251,15 @@ public class DeviceData {
             return this;
         }
 
+        @Deprecated
+        // Prefer external device ID going forward
         public Builder withDeviceId(final Long deviceId){
             this.deviceId = deviceId;
+            return this;
+        }
+
+        public Builder withExternalDeviceId(final String deviceId) {
+            this.externalDeviceId = deviceId;
             return this;
         }
 
@@ -308,7 +373,7 @@ public class DeviceData {
         }
 
         public DeviceData build(){
-            return new DeviceData(this.accountId, this.deviceId, this.ambientTemperature, this.ambientHumidity,
+            return new DeviceData(this.accountId, this.deviceId, this.externalDeviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
                     this.ambientLight,this.ambientLightFloat, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
                     this.firmwareVersion, this.waveCount, this.holdCount,
@@ -323,6 +388,7 @@ public class DeviceData {
         return Objects.toStringHelper(DeviceData.class)
                 .add("account_id", accountId)
                 .add("device_id", deviceId)
+                .add("external_device_id", externalDeviceId)
                 .add("ambient_temperature", ambientTemperature)
                 .add("ambient_humidity", ambientHumidity)
                 .add("ambient_light", ambientLight)

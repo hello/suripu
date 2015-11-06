@@ -33,6 +33,7 @@ mkdir -p $TEMP_DIR/etc/init/
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pill.prod.yml $TEMP_DIR/etc/hello/pill.yml --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/alarm_worker.prod.yml $TEMP_DIR/etc/hello/alarm_worker.yml --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save.prod.yml $TEMP_DIR/etc/hello/sense_save.yml --force
+s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save_ddb.prod.yml $TEMP_DIR/etc/hello/sense_save_ddb.yml --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/index_logs_worker.prod.yml $TEMP_DIR/etc/hello/index_logs_worker.yml --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_logs.prod.yml $TEMP_DIR/etc/hello/timeline_logs.yml --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/insights_generator.prod.yml $TEMP_DIR/etc/hello/insights_generator.yml --force
@@ -45,7 +46,7 @@ cp init-scripts/suripu-workers-index-logs.conf $TEMP_DIR/etc/init/
 cp init-scripts/suripu-workers-timeline-logs.conf $TEMP_DIR/etc/init/
 cp init-scripts/suripu-workers-insights.conf $TEMP_DIR/etc/init/                                                          
 cp init-scripts/suripu-workers-pilldata.conf $TEMP_DIR/etc/init/
-cp init-scripts/suripu-workers-sense.conf $TEMP_DIR/etc/init/
+cp init-scripts/suripu-workers-sense-ddb.conf $TEMP_DIR/etc/init/
 cp init-scripts/suripu-workers-sense-last-seen.conf $TEMP_DIR/etc/init/
 cp init-scripts/suripu-workers-smartalarm.conf $TEMP_DIR/etc/init/                                                               
 cp init-scripts/suripu-workers-timeline.conf $TEMP_DIR/etc/init/

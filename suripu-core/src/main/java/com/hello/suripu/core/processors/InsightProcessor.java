@@ -5,14 +5,17 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
+import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
+import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
@@ -24,6 +27,7 @@ import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
@@ -58,7 +62,7 @@ public class InsightProcessor {
     private static final int NUM_INSIGHTS_ALLOWED_PER_WEEK = 2;
 
     private final DeviceDataDAO deviceDataDAO;
-    private final DeviceDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
@@ -68,9 +72,10 @@ public class InsightProcessor {
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountInfoProcessor accountInfoProcessor;
+    private final CalibrationDAO calibrationDAO;
 
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
-                            @NotNull final DeviceDAO deviceDAO,
+                            @NotNull final DeviceReadDAO deviceDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final TrackerMotionDAO trackerMotionDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
@@ -79,7 +84,8 @@ public class InsightProcessor {
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
                             @NotNull final LightData lightData,
-                            @NotNull final WakeStdDevData wakeStdDevData
+                            @NotNull final WakeStdDevData wakeStdDevData,
+                            @NotNull final CalibrationDAO calibrationDAO
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDAO = deviceDAO;
@@ -92,6 +98,7 @@ public class InsightProcessor {
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountInfoProcessor = accountInfoProcessor;
+        this.calibrationDAO = calibrationDAO;
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
@@ -334,6 +341,10 @@ public class InsightProcessor {
                 break;
             case BED_LIGHT_INTENSITY_RATIO:
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
+                break;
+            case AIR_QUALITY:
+                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataDAO, calibrationDAO);
+                break;
         }
 
         if (insightCardOptional.isPresent()) {
@@ -391,7 +402,7 @@ public class InsightProcessor {
      */
     public static class Builder {
         private @Nullable DeviceDataDAO deviceDataDAO;
-        private @Nullable DeviceDAO deviceDAO;
+        private @Nullable DeviceReadDAO deviceDAO;
         private @Nullable TrendsInsightsDAO trendsInsightsDAO;
         private @Nullable TrackerMotionDAO trackerMotionDAO;
         private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
@@ -401,8 +412,9 @@ public class InsightProcessor {
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
+        private @Nullable CalibrationDAO calibrationDAO;
 
-        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDAO deviceDAO) {
+        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceReadDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
             this.deviceDataDAO = deviceDataDAO;
             return this;
@@ -445,6 +457,11 @@ public class InsightProcessor {
             return this;
         }
 
+        public Builder withCalibrationDAO(final CalibrationDAO calibrationDAO) {
+            this.calibrationDAO = calibrationDAO;
+            return this;
+        }
+
         public InsightProcessor build() {
             checkNotNull(deviceDataDAO, "deviceDataDAO can not be null");
             checkNotNull(deviceDAO, "deviceDAO can not be null");
@@ -457,6 +474,7 @@ public class InsightProcessor {
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
+            checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
 
             return new InsightProcessor(deviceDataDAO, deviceDAO,
                     trendsInsightsDAO,
@@ -466,7 +484,8 @@ public class InsightProcessor {
                     preferencesDAO,
                     accountInfoProcessor,
                     lightData,
-                    wakeStdDevData);
+                    wakeStdDevData,
+                    calibrationDAO);
         }
     }
 }

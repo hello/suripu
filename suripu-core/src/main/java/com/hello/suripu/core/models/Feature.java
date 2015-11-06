@@ -27,14 +27,14 @@ public class Feature implements Comparable<Feature> {
     public final Set<String> groups;
 
     @JsonProperty("percentage")
-    public final Integer percentage;
+    public final Float percentage;
 
     @JsonCreator
     public Feature(
             @JsonProperty("name") final String name,
             @JsonProperty("ids") final Collection<String> ids,
             @JsonProperty("groups") final Collection<String> groups,
-            @JsonProperty("percentage") final Integer percentage) {
+            @JsonProperty("percentage") final Float percentage) {
         this.name = name.trim();
         this.ids = ImmutableSet.copyOf(trimStringsInCollection(ids));
         this.groups = ImmutableSet.copyOf(trimStringsInCollection(groups));
@@ -82,7 +82,7 @@ public class Feature implements Comparable<Feature> {
 
         final List<String> groups = Arrays.asList(splitResult[2].split(","));
         final List<String> userIds = Arrays.asList(splitResult[1].split(","));
-        final int percentage = Integer.parseInt(splitResult[0]);
+        final Float percentage = Float.parseFloat(splitResult[0]);
         return new Feature(featureName, userIds, groups, percentage);
     }
 

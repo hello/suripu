@@ -10,6 +10,7 @@ import com.hello.suripu.workers.logs.timeline.TimelineLogProcessor;
 import com.hello.suripu.workers.notifications.PushNotificationsProcessor;
 import com.hello.suripu.workers.pill.S3RecordProcessor;
 import com.hello.suripu.workers.pill.SavePillDataProcessor;
+import com.hello.suripu.workers.sense.SenseSaveDDBProcessor;
 import com.hello.suripu.workers.sense.SenseSaveProcessor;
 import com.hello.suripu.workers.sense.lastSeen.SenseLastSeenProcessor;
 import com.hello.suripu.workers.timeline.TimelineRecordProcessor;
@@ -28,6 +29,7 @@ import javax.inject.Singleton;
         S3RecordProcessor.class,
         SavePillDataProcessor.class,
         SenseSaveProcessor.class,
+        SenseSaveDDBProcessor.class,
         InsightsGenerator.class,
         InsightProcessor.class,
         PushNotificationsProcessor.class,

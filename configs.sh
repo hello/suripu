@@ -18,6 +18,7 @@ s3cmd put suripu-workers/configs/pill/pillscorer.prod.yml s3://hello-deploy/conf
 s3cmd put suripu-workers/configs/pill/pill.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pill.prod.yml
 s3cmd put suripu-workers/configs/alarm/alarm_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/alarm_worker.prod.yml
 s3cmd put suripu-workers/configs/sense/sense_save.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save.prod.yml
+s3cmd put suripu-workers/configs/sense/sense_save_ddb.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save_ddb.prod.yml
 s3cmd put suripu-workers/configs/sense/sense_last_seen.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_last_seen.prod.yml
 s3cmd put suripu-workers/configs/logs/index_logs_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/index_logs_worker.prod.yml
 s3cmd put suripu-workers/configs/logs/timeline_logs.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_logs.prod.yml
@@ -33,6 +34,7 @@ s3cmd put suripu-workers/configs/pill/pillscorer.staging.yml s3://hello-deploy/c
 s3cmd put suripu-workers/configs/pill/pill.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pill.staging.yml
 s3cmd put suripu-workers/configs/alarm/alarm_worker.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/alarm_worker.staging.yml
 s3cmd put suripu-workers/configs/sense/sense_save.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save.staging.yml
+s3cmd put suripu-workers/configs/sense/sense_save_ddb.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_save_ddb.staging.yml
 s3cmd put suripu-workers/configs/sense/sense_last_seen.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_last_seen.staging.yml
 s3cmd put suripu-workers/configs/logs/index_logs_worker.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/index_logs_worker.staging.yml
 s3cmd put suripu-workers/configs/logs/timeline_logs.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_logs.staging.yml

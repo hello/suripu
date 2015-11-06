@@ -114,7 +114,7 @@ public class FirmwareUpgradePathDAO {
         for (final Map<String, AttributeValue> item : items) {
             final Integer fromFW = Integer.parseInt(item.get(FROM_FW_VERSION_ATTRIBUTE_NAME).getN());
             final Integer toFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
-            final Integer rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Integer.parseInt(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
+            final Float rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Float.parseFloat(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
             final UpgradeNodeRequest nodeRequest = new UpgradeNodeRequest(groupName, fromFW, toFW, rolloutPercent);
 
             upgradeNodes.add(nodeRequest);
@@ -161,7 +161,7 @@ public class FirmwareUpgradePathDAO {
     }
 
     @Timed
-    public Optional<Pair<Integer, Integer>> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
+    public Optional<Pair<Integer, Float>> getNextFWVersionForGroup(final String GroupName, final Integer fromFWVersion) {
 
         final Condition byGroupName = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
@@ -200,9 +200,9 @@ public class FirmwareUpgradePathDAO {
         final Map<String, AttributeValue> item = items.get(0);
         final Integer itemNextFW = Integer.parseInt(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
 
-        final Integer rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Integer.parseInt(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
+        final Float rolloutPercent = item.containsKey(ROLLOUT_PERCENT_ATTRIBUTE_NAME) ? Float.parseFloat(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN()) : FeatureUtils.MAX_ROLLOUT_VALUE;
 
-        final Pair<Integer, Integer> nextFW = new Pair<>(itemNextFW, rolloutPercent);
+        final Pair<Integer, Float> nextFW = new Pair<>(itemNextFW, rolloutPercent);
         return Optional.of(nextFW);
     }
 
@@ -213,7 +213,7 @@ public class FirmwareUpgradePathDAO {
             final String groupName = item.get(GROUP_NAME_ATTRIBUTE_NAME).getS();
             final Integer fromFWVersion = Integer.valueOf(item.get(FROM_FW_VERSION_ATTRIBUTE_NAME).getN());
             final Integer newFWVersion = Integer.valueOf(item.get(TO_FW_VERSION_ATTRIBUTE_NAME).getN());
-            final Integer rolloutPercent = Integer.valueOf(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN());
+            final Float rolloutPercent = Float.valueOf(item.get(ROLLOUT_PERCENT_ATTRIBUTE_NAME).getN());
 
             return Optional.of(new UpgradeNodeRequest(groupName, fromFWVersion, newFWVersion, rolloutPercent));
         }catch (Exception ex){

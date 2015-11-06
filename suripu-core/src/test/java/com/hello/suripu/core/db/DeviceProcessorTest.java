@@ -84,7 +84,7 @@ public class DeviceProcessorTest {
         final OutputProtos.SyncResponse.PillSettings pillSettings = OutputProtos.SyncResponse.PillSettings.newBuilder()
                 .setPillColor(PillColorUtil.argbToIntBasedOnSystemEndianess(PillColorUtil.colorToARGB(new Color(0xFE, 0x00, 0x00)))) // Red
                 .setPillId(testPillId).build();
-        when(mergedUserInfoDynamoDB.getInfo(senseAccountPairPillColor.externalDeviceId)).thenReturn(Arrays.asList(new UserInfo(
+        when(mergedUserInfoDynamoDB.getInfo(senseAccountPairPillColor.externalDeviceId, senseAccountPairPillColor.accountId)).thenReturn(Optional.of(new UserInfo(
                         senseAccountPairPillColor.externalDeviceId,
                         senseAccountPairLastHour.accountId,
                         Collections.<Alarm>emptyList(),

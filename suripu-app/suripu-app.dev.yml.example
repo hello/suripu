@@ -274,3 +274,22 @@ app_stats:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: app_stats
+
+pill_heartbeat:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: pill_heartbeat
+
+device_data:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: sense_data
+
+timeline_model_ensembles:
+  bucket: hello-timeline-models
+  key: normal4ensemble.base64
+
+timeline_seed_model:
+  bucket: hello-timeline-models
+  key: normal4.base64
+

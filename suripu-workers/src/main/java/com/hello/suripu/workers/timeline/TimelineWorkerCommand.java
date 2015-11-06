@@ -4,6 +4,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
@@ -13,26 +14,28 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.core.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
-import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
-import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
+import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
-import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
+import com.hello.suripu.core.db.DefaultModelEnsembleFromS3;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
+import com.hello.suripu.core.db.DeviceReadDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
+import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
-import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
-import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
@@ -40,6 +43,8 @@ import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.TimelineProcessor;
+import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
+import com.hello.suripu.coredw.db.TimelineDAODynamoDB;
 import com.hello.suripu.workers.framework.WorkerEnvironmentCommand;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.config.Environment;
@@ -91,9 +96,9 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         commonDB.registerContainerFactory(new ImmutableListContainerFactory());
         commonDB.registerContainerFactory(new ImmutableSetContainerFactory());
 
-        final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
-        final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
-        final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
+        final AccountReadDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
+        final DeviceReadDAO deviceDAO = commonDB.onDemand(DeviceReadDAO.class);
+        final FeedbackReadDAO feedbackDAO = commonDB.onDemand(FeedbackReadDAO.class);
 
         final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
@@ -119,6 +124,10 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final AmazonDynamoDB featureExtractionDb = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
         final FeatureExtractionModelsDAO featureExtractionModelsDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionDb, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.FEATURE_EXTRACTION_MODELS));
 
+        final S3BucketConfiguration timelineModelEnsemblesConfig = configuration.getTimelineModelEnsemblesConfiguration();
+        final S3BucketConfiguration seedModelConfig = configuration.getTimelineSeedModelConfiguration();
+
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3, timelineModelEnsemblesConfig.getBucket(), timelineModelEnsemblesConfig.getKey(), seedModelConfig.getBucket(), seedModelConfig.getKey());
         final AmazonDynamoDB ringTimeDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
                 configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.RING_TIME_HISTORY));
         final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB = new RingTimeHistoryDAODynamoDB(
@@ -142,6 +151,9 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.SLEEP_STATS),
                 configuration.getSleepStatsVersion()
         );
+
+        final AmazonDynamoDB deviceDataDAODynamoDBClient = new AmazonDynamoDBClient(awsCredentialsProvider, clientConfiguration);
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(deviceDataDAODynamoDBClient, configuration.getDeviceDataConfiguration().getTableName());
 
 
         if(configuration.getMetricsEnabled()) {
@@ -175,10 +187,10 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
 
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
         final AmazonDynamoDB calibrationDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getDynamoDBConfiguration().endpoints().get(DynamoDBTableName.CALIBRATION));
-        final CalibrationDAO calibrationDAO = new CalibrationDynamoDB(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
+        final CalibrationDAO calibrationDAO = CalibrationDynamoDB.create(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
         final TimelineProcessor timelineProcessor =
                 TimelineProcessor.createTimelineProcessor(trackerMotionDAO,
-                deviceDAO, deviceDataDAO,
+                deviceDAO, deviceDataDAO, deviceDataDAODynamoDB,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 sleepHmmDAODynamoDB,
@@ -187,7 +199,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 senseColorDAO,
                 onlineHmmModelsDAO,
                 featureExtractionModelsDAO,
-                calibrationDAO);
+                calibrationDAO,
+                        defaultModelEnsembleDAO);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

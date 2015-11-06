@@ -420,12 +420,11 @@ public class Alarm {
                 if(alarm.isRepeated){
                     for(final Integer dayOfWeek:alarm.dayOfWeek){
                         int dayDifference = dayOfWeek - currentLocalTime.getDayOfWeek();
-                        DateTime ringTime = currentLocalTime.withTimeAtStartOfDay().plusDays(dayDifference).plusHours(alarm.hourOfDay).plusMinutes(alarm.minuteOfHour);
+                        DateTime ringTime = currentLocalTime.withTimeAtStartOfDay().plusDays(dayDifference).withHourOfDay(alarm.hourOfDay).withMinuteOfHour(alarm.minuteOfHour);
                         if(ringTime.isBefore(currentLocalTime)){
                             // this alarm should be in next week.
                             ringTime = ringTime.plusWeeks(1);
                         }
-
                         possibleRings.add(new RingTime(ringTime.getMillis(), ringTime.getMillis(), alarm.sound.id, alarm.isSmart));
                     }
                 }else{

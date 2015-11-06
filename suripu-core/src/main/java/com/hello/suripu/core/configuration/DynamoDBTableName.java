@@ -20,6 +20,7 @@ public enum DynamoDBTableName {
     SENSE_PREFIX("sense_prefix"),
     SENSE_LAST_SEEN("sense_last_seen"),
     PILL_LAST_SEEN("pill_last_seen"),
+    PILL_HEARTBEAT("pill_heartbeat"),
     SLEEP_SCORE("sleep_score"),
     TIMELINE("timeline"),
     SLEEP_HMM("sleep_hmm"),
@@ -33,7 +34,8 @@ public enum DynamoDBTableName {
     CALIBRATION("calibration"),
     INSIGHTS("insights"),
     WIFI_INFO("wifi_info"),
-    PREFERENCES("preferences");
+    PREFERENCES("preferences"),
+    DEVICE_DATA("device_data");
 
     private String value;
 

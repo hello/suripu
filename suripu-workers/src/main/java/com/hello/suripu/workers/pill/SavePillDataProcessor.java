@@ -14,13 +14,12 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.PillHeartBeatDAO;
-import com.hello.suripu.core.db.PillViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
@@ -40,30 +39,26 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
     private final TrackerMotionDAO trackerMotionDAO;
     private final int batchSize;
-    private final PillHeartBeatDAO pillHeartBeatDAO;
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
-    private final PillViewsDynamoDB pillViewsDynamoDB;
-
+    private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB; // will replace with interface as soon as we have validated this works
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
 
     public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO,
                                  final int batchSize,
-                                 final PillHeartBeatDAO pillHeartBeatDAO,
                                  final KeyStore pillKeyStore,
                                  final DeviceDAO deviceDAO,
                                  final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                 final PillViewsDynamoDB pillViewsDynamoDB) {
+                                 final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
         this.trackerMotionDAO = trackerMotionDAO;
         this.batchSize = batchSize;
-        this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
-        this.pillViewsDynamoDB = pillViewsDynamoDB;
+        this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
@@ -79,7 +74,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         // parse kinesis records
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
-        final List<DeviceStatus> heartBeats = Lists.newArrayList();
+        final Set<PillHeartBeat> pillHeartBeats = Sets.newHashSet(); // for dynamoDB writes
 
         final List<SenseCommandProtos.pill_data> pillData = Lists.newArrayList();
         final Map<String, Optional<byte[]>> pillKeys = Maps.newHashMap();
@@ -108,10 +103,13 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         try {
             // Fetch data from Dynamo and DB
-            for (final String pillId : pillIds) {
-                final Optional<byte[]> optionalKeys = pillKeyStore.get(pillId);
-                pillKeys.put(pillId, optionalKeys);
+            final Map<String, Optional<byte[]>> keys = pillKeyStore.getBatch(pillIds);
+            if(keys.isEmpty()) {
+                LOGGER.error("Failed to retrieve decryption keys. Can't proceed. Bailing");
+                System.exit(1);
             }
+
+            pillKeys.putAll(keys);
 
             for (final String pillId : pillIds) {
                 final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(pillId);
@@ -131,7 +129,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
             for (final SenseCommandProtos.pill_data data : pillData) {
                 final Optional<byte[]> decryptionKey = pillKeys.get(data.getDeviceId());
-                //TODO: Get the actual decryption key.
+
+                // The key should not be null
                 if (!decryptionKey.isPresent()) {
                     LOGGER.error("Missing decryption key for pill: {}", data.getDeviceId());
                     continue;
@@ -169,21 +168,25 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                         LOGGER.error("Fail to decrypt tracker motion payload for pill {}, account {}", pair.externalDeviceId, pair.accountId);
                     }
                 }
+            }
 
-
+            // Loop again for HeartBeat
+            for(final SenseCommandProtos.pill_data data : pillData) {
+                final String pillId = data.getDeviceId();
                 if (data.hasBatteryLevel()) {
+
                     final int batteryLevel = data.getBatteryLevel();
                     final int upTimeInSeconds = data.getUptime();
                     final int firmwareVersion = data.getFirmwareVersion();
                     final Long ts = data.getTimestamp() * 1000L;
                     final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
-                    LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pair.externalDeviceId, lastUpdated);
 
-                    heartBeats.add(new DeviceStatus(0L, pair.internalDeviceId, String.valueOf(firmwareVersion), batteryLevel, lastUpdated, upTimeInSeconds));
-//                        pillHeartBeatDAO.silentInsert(pair.internalDeviceId, batteryLevel, upTimeInSeconds, firmwareVersion, lastUpdated);
-                    // Best effort saving of the last seen HB
-                    if (hasPillLastSeenDynamoDBEnabled(senseId)) {
-                        pillViewsDynamoDB.update(data.getDeviceId(), upTimeInSeconds, firmwareVersion, batteryLevel, lastUpdated);
+
+                    // dual writes to dynamo
+                    if(hasPillHeartBeatDynamoDBEnabled(pillId)) {
+                        final PillHeartBeat pillHeartBeat = PillHeartBeat.create(pillId, batteryLevel, firmwareVersion, upTimeInSeconds, lastUpdated);
+                        LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pillId, lastUpdated);
+                        pillHeartBeats.add(pillHeartBeat);
                     }
                 }
             }
@@ -199,13 +202,14 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
         }
 
-        if (heartBeats.size() > 0) {
-            LOGGER.info("About to batch insert: {} heartbeats", heartBeats.size());
-            this.pillHeartBeatDAO.batchInsert(heartBeats);
-            LOGGER.info("Finished batch insert: {} heartbeats", heartBeats.size());
+        // Dual writes to DynamoDB
+        if (!pillHeartBeats.isEmpty()) {
+            final Set<PillHeartBeat> unproccessed = this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
+            final float perc = ((float) unproccessed.size() / (float) pillHeartBeats.size()) * 100.0f;
+            LOGGER.info("Finished dynamo batch insert: {} heartbeats, {} {}% unprocessed", pillHeartBeats.size(), unproccessed.size(), perc);
         }
 
-        if(!trackerData.isEmpty() || !heartBeats.isEmpty()) {
+        if(!trackerData.isEmpty() || !pillHeartBeats.isEmpty()) {
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.info("Successful checkpoint.");
@@ -223,7 +227,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     public void shutdown(final IRecordProcessorCheckpointer iRecordProcessorCheckpointer, final ShutdownReason shutdownReason) {
         LOGGER.warn("SHUTDOWN: {}", shutdownReason.toString());
         if(shutdownReason == ShutdownReason.TERMINATE) {
-            LOGGER.warn("Got Termintate. Attempting to checkpoint.");
+            LOGGER.warn("Got Terminate. Attempting to checkpoint.");
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.warn("Checkpoint successful.");

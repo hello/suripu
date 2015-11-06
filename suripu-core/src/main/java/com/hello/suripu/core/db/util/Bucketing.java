@@ -92,7 +92,7 @@ public class Bucketing {
             } else if(sensorName.equals("temperature")) {
                 sensorValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             } else if (sensorName.equals("particulates") && calibrationOptional.isPresent()) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional, deviceData.firmwareVersion);
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional);
             } else if (sensorName.equals("light")) {
                 sensorValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             } else if (sensorName.equals("sound")) {
@@ -112,9 +112,9 @@ public class Bucketing {
             } else if(sensorName.equals("light_peakiness")) {
                 sensorValue = deviceData.ambientLightPeakiness;
             } else if(sensorName.equals("dust_min")) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMin, calibrationOptional, deviceData.firmwareVersion);
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMin, calibrationOptional);
             } else if(sensorName.equals("dust_max")) {
-                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMax, calibrationOptional, deviceData.firmwareVersion);
+                sensorValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientDustMax, calibrationOptional);
             } else if(sensorName.equals("dust_raw")) {
                 sensorValue = deviceData.ambientAirQualityRaw;
             } else if(sensorName.equals("dust_variance")) {
@@ -157,7 +157,7 @@ public class Bucketing {
             final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
             final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
-            final float particulatesValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional, deviceData.firmwareVersion);
+            final float particulatesValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional);
             final int waveCount = deviceData.waveCount;
             final int holdCount = deviceData.holdCount;
             final float soundNumDisturbances = (float) deviceData.audioNumDisturbances;

@@ -12,6 +12,7 @@ import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.AlgorithmResultsDAODynamoDB;
 import com.hello.suripu.core.db.AppStatsDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FirmwareUpgradePathDAO;
@@ -23,12 +24,14 @@ import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.passwordreset.PasswordResetDB;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
@@ -37,6 +40,8 @@ import com.hello.suripu.coredw.db.TimelineLogDAODynamoDB;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfiguration> {
 
@@ -75,6 +80,9 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createCalibrationTable(configuration, awsCredentialsProvider);
         createWifiInfoTable(configuration, awsCredentialsProvider);
         createAppStatsTable(configuration, awsCredentialsProvider);
+        createPillHeartBeatTable(configuration, awsCredentialsProvider);
+        createDeviceDataTable(configuration, awsCredentialsProvider);
+        createLastSeenTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -499,6 +507,61 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(String.format("%s already exists.", tableName));
         } catch (AmazonServiceException exception) {
             final CreateTableResult result = AppStatsDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createPillHeartBeatTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getPillHeartBeatConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = PillHeartBeatDAODynamoDB.createTable(tableName, client);
+            final TableDescription description = result.getTableDescription();
+            System.out.println(description.getTableStatus());
+        }
+    }
+
+    private void createDeviceDataTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getDeviceDataConfiguration();
+        final String tablePrefix = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(client, tablePrefix);
+
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+
+        // Create 6 months worth of tables
+        for (int i = 0; i < 6; i++) {
+            final DateTime currDateTime = now.plusMonths(i);
+            try {
+                client.describeTable(deviceDataDAODynamoDB.getTableName(currDateTime));
+                System.out.println(String.format("%s already exists.", deviceDataDAODynamoDB.getTableName(currDateTime)));
+            } catch (AmazonServiceException exception) {
+                final String tableName = deviceDataDAODynamoDB.getTableName(currDateTime);
+                final CreateTableResult result = deviceDataDAODynamoDB.createTable(tableName);
+                System.out.println(result.getTableDescription().getTableStatus());
+            }
+        }
+    }
+
+    private void createLastSeenTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getSenseLastSeenConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        try {
+            client.describeTable(tableName);
+            System.out.println(String.format("%s already exists.", tableName));
+        } catch (AmazonServiceException exception) {
+            final CreateTableResult result = SensorsViewsDynamoDB.createLastSeenTable(tableName, client);
             final TableDescription description = result.getTableDescription();
             System.out.println(description.getTableStatus());
         }

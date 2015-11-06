@@ -267,11 +267,11 @@ public class DeviceProcessor {
             if (!accountId.equals(senseAccountPair.accountId)) {
                 continue;
             }
-            final List<UserInfo> userInfoList = mergedUserInfoDynamoDB.getInfo(senseAccountPair.externalDeviceId);
-            if (userInfoList.isEmpty()) {
+            final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseAccountPair.externalDeviceId, senseAccountPair.accountId);
+            if (!userInfoOptional.isPresent()) {
                 return Optional.absent();
             }
-            final Optional<OutputProtos.SyncResponse.PillSettings> pillSettingsOptional =  userInfoList.get(0).pillColor;
+            final Optional<OutputProtos.SyncResponse.PillSettings> pillSettingsOptional =  userInfoOptional.get().pillColor;
             if (!pillSettingsOptional.isPresent()){
                 return Optional.absent();
             }

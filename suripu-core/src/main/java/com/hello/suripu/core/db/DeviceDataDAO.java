@@ -2,6 +2,7 @@ package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.binders.BindDeviceData;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
@@ -16,6 +17,7 @@ import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.util.DataUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -38,9 +40,13 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 
-public abstract class DeviceDataDAO {
+public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
+
+    // Amount of records to attempt to insert at once.
+    // Higher numbers reduce database queries but increase likelihood of failure due to uniqueness constraint failure.
+    private static final int MAX_BATCH_INSERT_SIZE = 30;
 
     private static final String AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET = "SELECT " +  // for queries using DeviceDataBucketMapper
             "MAX(account_id) AS account_id," +
@@ -181,6 +187,19 @@ public abstract class DeviceDataDAO {
                                                                             @Bind("start_hour") int startHour,
                                                                             @Bind("end_hour") int endHour);
 
+    @SqlQuery("SELECT AVG(ambient_air_quality), EXTRACT(day FROM local_utc_ts) AS date FROM device_sensors_master " +
+            "WHERE account_id = :account_id AND device_id = :device_id " +
+            "AND ts >= :start_ts AND ts <= :end_ts " +
+            "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts " +
+            "GROUP BY date")
+    public abstract ImmutableList<Integer> getAirQualityRawList(@Bind("account_id") Long accountId,
+                                                             @Bind("device_id") Long deviceId,
+                                                             @Bind("start_ts") DateTime startTimestamp,
+                                                             @Bind("end_ts") DateTime endTimestamp,
+                                                             @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                             @Bind("end_local_utc_ts") DateTime endLocalTimeStamp);
+
+
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
@@ -240,40 +259,43 @@ public abstract class DeviceDataDAO {
                                                        @Bind("max_utc_ts_limit") final DateTime maxTsLimit,
                                                        @Bind("min_utc_ts_limit") final DateTime minTsLimit);
 
-    public int batchInsertWithFailureFallback(final List<DeviceData> data){
+    public int batchInsertAll(final List<DeviceData> allDeviceData){
+        final List<List<DeviceData>> batches = Lists.partition(allDeviceData, MAX_BATCH_INSERT_SIZE);
+
         int inserted = 0;
-        try {
-            this.batchInsert(data.iterator());
-            return data.size();
-        } catch (UnableToExecuteStatementException exception) {
-            LOGGER.error("Failed to insert batch data for sense: {}", exception.getMessage());
-            LOGGER.error("Failed to insert batch data for sense internal id= {}", data.get(0).deviceId);
-        }
+        for (final List<DeviceData> batchedData: batches) {
 
-        for(final DeviceData datum:data){
             try {
-                this.insert(datum);
-                inserted++;
+                this.batchInsert(batchedData.iterator());
+                inserted += batchedData.size();
+                continue;
             } catch (UnableToExecuteStatementException exception) {
-                final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
-                if(matcher.find())
-                {
-                    LOGGER.warn("Duplicate device sensor value for device {}, account {}, timestamp {}",
-                            datum.deviceId,
-                            datum.accountId,
-                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)));
-                }else{
-                    LOGGER.error("Cannot insert data for device {}, account {}, timestamp {}, error {}",
-                            datum.deviceId,
-                            datum.accountId,
-                            datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)),
-                            exception.getMessage());
-                }
+                LOGGER.error("Failed to insert batch data: {}", exception.getMessage());
+            }
 
+            for(final DeviceData datum:batchedData){
+                try {
+                    this.insert(datum);
+                    inserted++;
+                } catch (UnableToExecuteStatementException exception) {
+                    final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
+                    if(matcher.find())
+                    {
+                        LOGGER.warn("Duplicate device sensor value for device {}, account {}, timestamp {}",
+                                datum.deviceId,
+                                datum.accountId,
+                                datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)));
+                    }else{
+                        LOGGER.error("Cannot insert data for device {}, account {}, timestamp {}, error {}",
+                                datum.deviceId,
+                                datum.accountId,
+                                datum.dateTimeUTC.withZone(DateTimeZone.forOffsetMillis(datum.offsetMillis)),
+                                exception.getMessage());
+                    }
+
+                }
             }
         }
-
-
 
         return inserted;
     }
@@ -338,6 +360,7 @@ public abstract class DeviceDataDAO {
         return sortedList;
 
     }
+    
 
     // used by timeline, query by local_utc_ts
     @Deprecated
@@ -551,5 +574,10 @@ public abstract class DeviceDataDAO {
 
     public Integer getAverageDustForLast10Days(final Long accountId, final Long deviceId) {
         return this.getAverageDustForLastNDays(accountId, deviceId, DateTime.now(DateTimeZone.UTC).minusDays(10));
+    }
+
+    @Override
+    public Class name() {
+        return DeviceDataDAO.class;
     }
 }

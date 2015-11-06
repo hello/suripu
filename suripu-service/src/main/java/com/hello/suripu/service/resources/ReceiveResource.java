@@ -2,8 +2,10 @@ package com.hello.suripu.service.resources;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.TextFormat;
+
 import com.hello.dropwizard.mikkusu.helpers.AdditionalMediaTypes;
 import com.hello.suripu.api.audio.AudioControlProtos;
 import com.hello.suripu.api.ble.SenseCommandProtos;
@@ -33,6 +35,7 @@ import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.HelloHttpHeader;
 import com.hello.suripu.core.util.RoomConditionUtil;
+import com.hello.suripu.core.util.SenseLogLevelUtil;
 import com.hello.suripu.service.SignedMessage;
 import com.hello.suripu.service.configuration.OTAConfiguration;
 import com.hello.suripu.service.configuration.SenseUploadConfiguration;
@@ -41,6 +44,7 @@ import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
+
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -57,6 +61,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,6 +82,8 @@ public class ReceiveResource extends BaseResource {
     private static final int CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private static final int CLOCK_BUG_SKEW_IN_HOURS = 6 * 30 * 24 - 1; // 6 months in hours
     private static final String LOCAL_OFFICE_IP_ADDRESS = "199.87.82.114";
+    private static final Integer FW_VERSION_0_9_22_RC7 = 1530439804;
+    private static final Integer CLOCK_SYNC_SPECIAL_OTA_UPTIME_MINS = 15;
     private final int ringDurationSec;
 
     private final KeyStore keyStore;
@@ -132,7 +139,6 @@ public class ReceiveResource extends BaseResource {
     }
 
 
-
     @POST
     @Path("/sense/batch")
     @Consumes(AdditionalMediaTypes.APPLICATION_PROTOBUF)
@@ -145,7 +151,7 @@ public class ReceiveResource extends BaseResource {
         DataInputProtos.batched_periodic_data data = null;
 
         String debugSenseId = this.request.getHeader(HelloHttpHeader.SENSE_ID);
-        if(debugSenseId == null){
+        if (debugSenseId == null) {
             debugSenseId = "";
         }
 
@@ -164,7 +170,7 @@ public class ReceiveResource extends BaseResource {
         LOGGER.debug("Received valid protobuf {}", data.toString());
         LOGGER.debug("Received protobuf message {}", TextFormat.shortDebugString(data));
 
-        if(!data.hasDeviceId() || data.getDeviceId().isEmpty()){
+        if (!data.hasDeviceId() || data.getDeviceId().isEmpty()) {
             LOGGER.error("Empty device id");
             return plainTextError(Response.Status.BAD_REQUEST, "empty device id");
         }
@@ -176,26 +182,26 @@ public class ReceiveResource extends BaseResource {
         final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
 
 
-        if(featureFlipper.deviceFeatureActive(FeatureFlipper.PRINT_RAW_PB, deviceId, groups)) {
+        if (featureFlipper.deviceFeatureActive(FeatureFlipper.PRINT_RAW_PB, deviceId, groups)) {
             LOGGER.debug("RAW_PB for device_id={} {}", deviceId, Hex.encodeHexString(body));
         }
 
-        if(OTAProcessor.isPCH(ipAddress, ipGroups) && !(featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceId, groups))){
+        if (OTAProcessor.isPCH(ipAddress, ipGroups) && !(featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceId, groups))) {
             // return 202 to not confuse provisioning script with correct test key
             LOGGER.info("IP {} is from PCH. Return HTTP 202", ipAddress);
             return plainTextError(Response.Status.ACCEPTED, "");
         }
 
-        final Optional<byte[]> optionalKeyBytes= getKey(deviceId, groups, ipAddress);
+        final Optional<byte[]> optionalKeyBytes = getKey(deviceId, groups, ipAddress);
 
-        if(!optionalKeyBytes.isPresent()) {
+        if (!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", data.getDeviceId());
             return plainTextError(Response.Status.BAD_REQUEST, "");
         }
 
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
-        if(error.isPresent()) {
+        if (error.isPresent()) {
             LOGGER.error("{} : {}", deviceId, error.get().message);
             return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
@@ -205,7 +211,7 @@ public class ReceiveResource extends BaseResource {
 
         try {
             userInfoList.addAll(this.mergedInfoDynamoDB.getInfo(data.getDeviceId()));  // get alarm related info from DynamoDB "cache".
-        }catch (Exception ex){
+        } catch (Exception ex) {
             LOGGER.error("Failed to retrieve info from merge info db for device {}: {}", data.getDeviceId(), ex.getMessage());
         }
         LOGGER.debug("Found {} pairs for device_id = {}", userInfoList.size(), data.getDeviceId());
@@ -218,7 +224,7 @@ public class ReceiveResource extends BaseResource {
                 .setUptimeInSecond(data.getUptimeInSecond());
 
 
-        for(final Long accountId : accountTimezones.keySet()) {
+        for (final Long accountId : accountTimezones.keySet()) {
             final DataInputProtos.AccountMetadata metadata = DataInputProtos.AccountMetadata.newBuilder()
                     .setAccountId(accountId)
                     .setTimezone(accountTimezones.get(accountId).getID())
@@ -240,15 +246,15 @@ public class ReceiveResource extends BaseResource {
 
 
     public static OutputProtos.SyncResponse.Builder setPillColors(final List<UserInfo> userInfoList,
-                                                                  final OutputProtos.SyncResponse.Builder syncResponseBuilder){
+                                                                  final OutputProtos.SyncResponse.Builder syncResponseBuilder) {
         final ArrayList<OutputProtos.SyncResponse.PillSettings> pillSettings = new ArrayList<>();
-        for(final UserInfo userInfo:userInfoList){
-            if(userInfo.pillColor.isPresent()){
+        for (final UserInfo userInfo : userInfoList) {
+            if (userInfo.pillColor.isPresent()) {
                 pillSettings.add(userInfo.pillColor.get());
             }
         }
 
-        for(int i = pillSettings.size() - 1; i >= 0 && i >= pillSettings.size() - 2; i--){
+        for (int i = pillSettings.size() - 1; i >= 0 && i >= pillSettings.size() - 2; i--) {
             syncResponseBuilder.addPillSettings(pillSettings.get(i));
         }
 
@@ -275,12 +281,13 @@ public class ReceiveResource extends BaseResource {
         final OutputProtos.SyncResponse.Builder responseBuilder = OutputProtos.SyncResponse.newBuilder();
 
         final List<String> groups = groupFlipper.getGroups(deviceName);
+        Boolean deviceHasOutOfSyncClock = false;
 
-        for(int i = 0; i < batch.getDataCount(); i ++) {
+        for (int i = 0; i < batch.getDataCount(); i++) {
             final DataInputProtos.periodic_data data = batch.getData(i);
             final Long timestampMillis = data.getUnixTime() * 1000L;
             final DateTime roundedDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0);
-            if(roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+            if (roundedDateTime.isAfter(DateTime.now().plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || roundedDateTime.isBefore(DateTime.now().minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
                 LOGGER.error("The clock for device {} is not within reasonable bounds (2h), current time = {}, received time = {}",
                         deviceName,
                         DateTime.now(),
@@ -288,6 +295,7 @@ public class ReceiveResource extends BaseResource {
                 );
                 // TODO: throw exception?
                 senseClockOutOfSync.mark(1);
+                deviceHasOutOfSyncClock = true;
                 if (featureFlipper.deviceFeatureActive(FeatureFlipper.REBOOT_CLOCK_OUT_OF_SYNC_DEVICES, deviceName, groups)) {
                     LOGGER.warn("Reset MCU set for sense {}", deviceName);
                     responseBuilder.setResetMcu(true);
@@ -298,8 +306,8 @@ public class ReceiveResource extends BaseResource {
 
             // only compute the state for the most recent conditions
 
-            if(i == batch.getDataCount() -1) {
-                final Optional<Calibration> calibrationOptional = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.getStrict(deviceName) : Optional.<Calibration>absent();
+            if (i == batch.getDataCount() - 1) {
+                final Optional<Calibration> calibrationOptional = this.hasCalibrationEnabled(deviceName) ? calibrationDAO.get(deviceName) : Optional.<Calibration>absent();
 
                 final CurrentRoomState currentRoomState = CurrentRoomState.fromRawData(data.getTemperature(), data.getHumidity(), data.getDustMax(), data.getLight(), data.getAudioPeakBackgroundEnergyDb(), data.getAudioPeakDisturbanceEnergyDb(),
                         roundedDateTime.getMillis(),
@@ -319,7 +327,7 @@ public class ReceiveResource extends BaseResource {
                     responseBuilder.setRoomConditionsLightsOff(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
                                     roomConditionsLightsOff.ordinal()));
-                }else {
+                } else {
                     responseBuilder.setRoomConditions(
                             OutputProtos.SyncResponse.RoomConditions.valueOf(
                                     RoomConditionUtil.getGeneralRoomCondition(currentRoomState).ordinal()));
@@ -331,7 +339,7 @@ public class ReceiveResource extends BaseResource {
         final Optional<DateTimeZone> userTimeZone = getUserTimeZone(userInfoList);
 
 
-        if(userTimeZone.isPresent()) {
+        if (userTimeZone.isPresent()) {
             final RingTime nextRingTime = RingProcessor.getNextRingTimeForSense(deviceName, userInfoList, DateTime.now());
 
             // WARNING: now must generated after getNextRingTimeForSense, because that function can take a long time.
@@ -340,13 +348,13 @@ public class ReceiveResource extends BaseResource {
             // Start generate protobuf for alarm
             int ringOffsetFromNowInSecond = -1;
             int ringDurationInMS = 120 * DateTimeConstants.MILLIS_PER_SECOND;
-            if(this.featureFlipper.deviceFeatureActive(FeatureFlipper.RING_DURATION_FROM_CONFIG, deviceName, Collections.EMPTY_LIST)){
+            if (this.featureFlipper.deviceFeatureActive(FeatureFlipper.RING_DURATION_FROM_CONFIG, deviceName, Collections.EMPTY_LIST)) {
                 ringDurationInMS = this.ringDurationSec * DateTimeConstants.MILLIS_PER_SECOND;
             }
-            
+
             if (!nextRingTime.isEmpty()) {
                 ringOffsetFromNowInSecond = (int) ((nextRingTime.actualRingTimeUTC - now.getMillis()) / DateTimeConstants.MILLIS_PER_SECOND);
-                if(ringOffsetFromNowInSecond < 0){
+                if (ringOffsetFromNowInSecond < 0) {
                     // The ring time process took too much time, force the alarm take off immediately
                     ringOffsetFromNowInSecond = 1;
                 }
@@ -369,9 +377,10 @@ public class ReceiveResource extends BaseResource {
 
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
                 //Perform all OTA checks and compute the update file list (if necessary)
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, userTimeZone.get(), batch, userInfoList, deviceHasOutOfSyncClock);
                 if (!fileDownloadList.isEmpty()) {
                     responseBuilder.addAllFiles(fileDownloadList);
+                    responseBuilder.setResetMcu(false); //Clear the reset MCU command since in the fw it will take precedence over the OTA
                 }
             }
 
@@ -387,23 +396,24 @@ public class ReceiveResource extends BaseResource {
                 audioControl.setAudioSaveRawData(AudioControlProtos.AudioControl.AudioCaptureAction.ON);
             }
 
-            final Boolean isReducedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.REDUCE_BATCH_UPLOAD_INTERVAL, deviceName, groups);
-            final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isReducedInterval);
+            final Boolean isIncreasedInterval = featureFlipper.deviceFeatureActive(FeatureFlipper.INCREASE_UPLOAD_INTERVAL, deviceName, groups);
+            final int uploadCycle = computeNextUploadInterval(nextRingTime, now, senseUploadConfiguration, isIncreasedInterval);
             responseBuilder.setBatchSize(uploadCycle);
 
-            if(shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())){
+            if (shouldWriteRingTimeHistory(now, nextRingTime, responseBuilder.getBatchSize())) {
                 this.ringTimeHistoryDAODynamoDB.setNextRingTime(deviceName, userInfoList, nextRingTime);
             }
 
             LOGGER.debug("{} batch size set to {}", deviceName, responseBuilder.getBatchSize());
             responseBuilder.setAudioControl(audioControl);
             setPillColors(userInfoList, responseBuilder);
-        }else{
-            LOGGER.error("NO TIMEZONE IS A BIG DEAL.");
+        } else {
+            LOGGER.error("NO TIMEZONE IS A BIG DEAL. Defaulting to UTC for OTA purposes.");
             if (featureFlipper.deviceFeatureActive(FeatureFlipper.ENABLE_OTA_UPDATES, deviceName, groups)) {
-                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch);
+                final List<OutputProtos.SyncResponse.FileDownload> fileDownloadList = computeOTAFileList(deviceName, groups, DateTimeZone.UTC, batch, userInfoList, deviceHasOutOfSyncClock);
                 if (!fileDownloadList.isEmpty()) {
                     responseBuilder.addAllFiles(fileDownloadList);
+                    responseBuilder.setResetMcu(false);
                 }
             }
         }
@@ -412,40 +422,42 @@ public class ReceiveResource extends BaseResource {
             addCommandsToResponse(deviceName, firmwareVersion, responseBuilder);
         }
 
+
         final OutputProtos.SyncResponse syncResponse = responseBuilder.build();
 
         LOGGER.debug("Len pb = {}", syncResponse.toByteArray().length);
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(syncResponse.toByteArray(), encryptionKey);
-        if(!signedResponse.isPresent()) {
+        if (!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
 
         final int responseLength = signedResponse.get().length;
-        if(responseLength > 2048) {
+        if (responseLength > 2048) {
             LOGGER.warn("response_size too large ({}) for device_id= {}", responseLength, deviceName);
         }
 
         return signedResponse.get();
     }
 
-    public static boolean shouldWriteRingTimeHistory(final DateTime now, final RingTime nextRingTime, final int uploadIntervalInMinutes){
+    public static boolean shouldWriteRingTimeHistory(final DateTime now, final RingTime nextRingTime, final int uploadIntervalInMinutes) {
         return now.plusMinutes(uploadIntervalInMinutes).isBefore(nextRingTime.actualRingTimeUTC) == false &&  // now + upload_cycle >= next_ring
                 now.isAfter(nextRingTime.actualRingTimeUTC) == false &&
                 nextRingTime.isEmpty() == false;
     }
 
 
-    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration, final Boolean isReducedInterval){
+    public static int computeNextUploadInterval(final RingTime nextRingTime, final DateTime now, final SenseUploadConfiguration senseUploadConfiguration, final Boolean isIncreasedInterval){
+
         int uploadInterval = 1;
         final Long userNextAlarmTimestamp = nextRingTime.expectedRingTimeUTC; // This must be expected time, not actual.
         // Alter upload cycles based on date-time
-        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration, isReducedInterval);
+        uploadInterval = UploadSettings.computeUploadIntervalPerUserPerSetting(now, senseUploadConfiguration, isIncreasedInterval);
 
         // Boost upload cycle based on expected alarm deadline.
         final Integer adjustedUploadInterval = UploadSettings.adjustUploadIntervalInMinutes(now.getMillis(), uploadInterval, userNextAlarmTimestamp);
-        if(adjustedUploadInterval < uploadInterval){
+        if (adjustedUploadInterval < uploadInterval) {
             uploadInterval = adjustedUploadInterval;
         }
 
@@ -459,16 +471,16 @@ public class ReceiveResource extends BaseResource {
         return uploadInterval;
     }
 
-    public static boolean isNextUploadCrossRingBound(final RingTime nextRingTime, final DateTime now){
-        final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
+    public static boolean isNextUploadCrossRingBound(final RingTime nextRingTime, final DateTime now) {
+        final int ringTimeOffsetFromNowMillis = (int) (nextRingTime.actualRingTimeUTC - now.getMillis());
         return nextRingTime.isEmpty() == false &&
                 ringTimeOffsetFromNowMillis <= 2 * DateTimeConstants.MILLIS_PER_MINUTE &&
                 ringTimeOffsetFromNowMillis > 0;
     }
 
-    public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle){
-        final int ringTimeOffsetFromNowMillis = (int)(nextRingTime.actualRingTimeUTC - now.getMillis());
-        if(isNextUploadCrossRingBound(nextRingTime, now)){
+    public static int computePassRingTimeUploadInterval(final RingTime nextRingTime, final DateTime now, final int adjustedUploadCycle) {
+        final int ringTimeOffsetFromNowMillis = (int) (nextRingTime.actualRingTimeUTC - now.getMillis());
+        if (isNextUploadCrossRingBound(nextRingTime, now)) {
             //If an alarm will ring in the next 2 minutes, push the batch upload out 2 mins after the alarm ring time.
             final int uploadCycleThatPassRingTime = ringTimeOffsetFromNowMillis / DateTimeConstants.MILLIS_PER_MINUTE + 2;
             return uploadCycleThatPassRingTime;
@@ -498,13 +510,13 @@ public class ReceiveResource extends BaseResource {
 
 
         final Optional<byte[]> optionalKeyBytes = keyStore.get(batchPilldata.getDeviceId());
-        if(!optionalKeyBytes.isPresent()) {
+        if (!optionalKeyBytes.isPresent()) {
             LOGGER.error("Failed to get key from key store for device_id = {}", batchPilldata.getDeviceId());
             return plainTextError(Response.Status.BAD_REQUEST, "");
         }
         final Optional<SignedMessage.Error> error = signedMessage.validateWithKey(optionalKeyBytes.get());
 
-        if(error.isPresent()) {
+        if (error.isPresent()) {
             LOGGER.error("Failed validating signature with key: {}", error.get().message);
             return plainTextError(Response.Status.UNAUTHORIZED, "");
         }
@@ -512,10 +524,10 @@ public class ReceiveResource extends BaseResource {
         final SenseCommandProtos.batched_pill_data.Builder cleanBatch = SenseCommandProtos.batched_pill_data.newBuilder();
         cleanBatch.setDeviceId(batchPilldata.getDeviceId());
 
-        for(final SenseCommandProtos.pill_data pill : batchPilldata.getPillsList()) {
+        for (final SenseCommandProtos.pill_data pill : batchPilldata.getPillsList()) {
             final DateTime now = DateTime.now();
             final Long pillTimestamp = pill.getTimestamp() * 1000L;
-            if(pillTimestamp > now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS).getMillis()) {
+            if (pillTimestamp > now.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS).getMillis()) {
                 final DateTime outOfSyncDateTime = new DateTime(pillTimestamp, DateTimeZone.UTC);
                 LOGGER.warn("Pill data timestamp from {} is too much in the future. now = {}, timestamp = {}",
                         pill.getDeviceId(),
@@ -558,7 +570,7 @@ public class ReceiveResource extends BaseResource {
                 .build();
 
         final Optional<byte[]> signedResponse = SignedMessage.sign(responseCommand.toByteArray(), optionalKeyBytes.get());
-        if(!signedResponse.isPresent()) {
+        if (!signedResponse.isPresent()) {
             LOGGER.error("Failed signing message");
             return plainTextError(Response.Status.INTERNAL_SERVER_ERROR, "");
         }
@@ -579,8 +591,8 @@ public class ReceiveResource extends BaseResource {
     }
 
     private Optional<DateTimeZone> getUserTimeZone(List<UserInfo> userInfoList) {
-        for(final UserInfo info: userInfoList){
-            if(info.timeZone.isPresent()){
+        for (final UserInfo info : userInfoList) {
+            if (info.timeZone.isPresent()) {
                 return info.timeZone;
             }
         }
@@ -595,8 +607,8 @@ public class ReceiveResource extends BaseResource {
      */
     private Map<Long, DateTimeZone> getUserTimeZones(final List<UserInfo> userInfoList) {
         final Map<Long, DateTimeZone> map = Maps.newHashMap();
-        for(final UserInfo info: userInfoList){
-            if(info.timeZone.isPresent()){
+        for (final UserInfo info : userInfoList) {
+            if (info.timeZone.isPresent()) {
                 map.put(info.accountId, info.timeZone.get());
             }
         }
@@ -614,26 +626,32 @@ public class ReceiveResource extends BaseResource {
     private List<OutputProtos.SyncResponse.FileDownload> computeOTAFileList(final String deviceID,
                                                                             final List<String> deviceGroups,
                                                                             final DateTimeZone userTimeZone,
-                                                                            final DataInputProtos.batched_periodic_data batchData) {
+                                                                            final DataInputProtos.batched_periodic_data batchData,
+                                                                            final List<UserInfo> userInfoList,
+                                                                            final Boolean hasOutOfSyncClock) {
         final int currentFirmwareVersion = batchData.getFirmwareVersion();
         final int uptimeInSeconds = (batchData.hasUptimeInSecond()) ? batchData.getUptimeInSecond() : -1;
         final DateTime currentDTZ = DateTime.now().withZone(userTimeZone);
-        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0);
-        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0);
+        final DateTime startOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getStartUpdateWindowHour()).withMinuteOfHour(0).withSecondOfMinute(0);
+        final DateTime endOTAWindow = new DateTime(userTimeZone).withHourOfDay(otaConfiguration.getEndUpdateWindowHour()).withMinuteOfHour(0).withSecondOfMinute(0);
         final Set<String> alwaysOTAGroups = otaConfiguration.getAlwaysOTAGroups();
         final Integer deviceUptimeDelay = otaConfiguration.getDeviceUptimeDelay();
         final Boolean bypassOTAChecks = (featureFlipper.deviceFeatureActive(FeatureFlipper.BYPASS_OTA_CHECKS, deviceID, deviceGroups));
         final String ipAddress = getIpAddress(request);
 
+
+        // OTA SPECIAL CASES
+
+        // If device is coming from PCH, immediately allow OTA
         final List<String> ipGroups = groupFlipper.getGroups(ipAddress);
         final boolean pchOTA = (featureFlipper.deviceFeatureActive(FeatureFlipper.PCH_SPECIAL_OTA, deviceID, deviceGroups) &&
                 OTAProcessor.isPCH(ipAddress, ipGroups));
-
-        if(pchOTA) {
+        if (pchOTA) {
             LOGGER.debug("PCH Special OTA for device: {}", deviceID);
             return firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, true);
         }
 
+        // Allow OTA updates only to specified devices in the Hello offices
         final Boolean isOfficeDeviceWithOverride = ((featureFlipper.deviceFeatureActive(FeatureFlipper.OFFICE_ONLY_OVERRIDE, deviceID, deviceGroups) && OTAProcessor.isHelloOffice(ipAddress)));
         //Provides for an in-office override feature that allows OTA (ignores checks) provided the IP is our office IP.
         if (isOfficeDeviceWithOverride) {
@@ -646,9 +664,44 @@ public class ReceiveResource extends BaseResource {
             }
         }
 
-        final boolean canOTA = OTAProcessor.canDeviceOTA(deviceID, deviceGroups, ipGroups, alwaysOTAGroups, deviceUptimeDelay, uptimeInSeconds, currentDTZ, startOTAWindow, endOTAWindow, bypassOTAChecks, ipAddress);
+        // Allow special handling for devices coming from factory on 0.9.22_rc7 with the clock sync issue
+        if (hasOutOfSyncClock && currentFirmwareVersion == FW_VERSION_0_9_22_RC7) {
+            Integer pillCount = 0;
+            for (final UserInfo userInfo : userInfoList) {
+                if (userInfo.pillColor.isPresent()) {
+                    pillCount++;
+                }
+            }
+            if (pillCount > 1 || uptimeInSeconds > (CLOCK_SYNC_SPECIAL_OTA_UPTIME_MINS * DateTimeConstants.SECONDS_PER_MINUTE)) {
+                if (!deviceGroups.isEmpty()) {
+                    final String updateGroup = deviceGroups.get(0);
+                    LOGGER.warn("Clock Sync OTA Override for DeviceId {} with Group {}", deviceID, updateGroup);
+                    return firmwareUpdateStore.getFirmwareUpdate(deviceID, updateGroup, currentFirmwareVersion, false);
+                } else {
+                    if (featureFlipper.deviceFeatureActive(FeatureFlipper.OTA_RELEASE, deviceID, deviceGroups)) {
+                        LOGGER.warn("Clock Sync OTA Override for DeviceId {} with no group", deviceID);
+                        return firmwareUpdateStore.getFirmwareUpdate(deviceID, FeatureFlipper.OTA_RELEASE, currentFirmwareVersion, false);
+                    }
+                }
+            }
+            return Collections.emptyList();
+        }
 
-        if(canOTA) {
+        // Primary OTA code path
+        final boolean canOTA = OTAProcessor.canDeviceOTA(
+                deviceID,
+                deviceGroups,
+                ipGroups,
+                alwaysOTAGroups,
+                deviceUptimeDelay,
+                uptimeInSeconds,
+                currentDTZ,
+                startOTAWindow,
+                endOTAWindow,
+                bypassOTAChecks,
+                ipAddress);
+
+        if (canOTA) {
 
             // groups take precedence over feature
             if (!deviceGroups.isEmpty()) {
@@ -683,26 +736,46 @@ public class ReceiveResource extends BaseResource {
 
         LOGGER.info("Response commands allowed for DeviceId: {}", deviceName);
         //Create a list of SyncResponse commands to be fetched from DynamoDB for a given device & firmware
-        final List<ResponseCommand> respCommandsToFetch = new ArrayList<>();
-        respCommandsToFetch.add(ResponseCommand.RESET_TO_FACTORY_FW);
-        respCommandsToFetch.add(ResponseCommand.RESET_MCU);
+        final List<ResponseCommand> respCommandsToFetch = Lists.newArrayList(
+                ResponseCommand.RESET_TO_FACTORY_FW,
+                ResponseCommand.RESET_MCU,
+                ResponseCommand.SET_LOG_LEVEL
+        );
 
-        Map<ResponseCommand,String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
+        final Map<ResponseCommand, String> commandMap = responseCommandsDAODynamoDB.getResponseCommands(deviceName, firmwareVersion, respCommandsToFetch);
 
-        if (!commandMap.isEmpty()) {
-            //Process and inject commands
-            for (final ResponseCommand cmd : respCommandsToFetch) {
-                if (commandMap.containsKey(cmd)) {
-                    final String cmdValue = commandMap.get(cmd);
-                    switch(cmd) {
-                        case RESET_TO_FACTORY_FW:
-                            responseBuilder.setResetToFactoryFw(Boolean.parseBoolean(cmdValue));
-                            break;
-                        case RESET_MCU:
-                            responseBuilder.setResetMcu(Boolean.parseBoolean(cmdValue));
-                            break;
+        if (commandMap.isEmpty()) {
+            return;
+        }
+
+        //Process and inject commands
+        for (final ResponseCommand cmd : respCommandsToFetch) {
+            if (!commandMap.containsKey(cmd)) {
+                continue;
+            }
+
+            final String cmdValue = commandMap.get(cmd);
+
+            switch (cmd) {
+                case RESET_TO_FACTORY_FW:
+                    responseBuilder.setResetToFactoryFw(Boolean.parseBoolean(cmdValue));
+                    break;
+                case RESET_MCU:
+                    responseBuilder.setResetMcu(Boolean.parseBoolean(cmdValue));
+                    break;
+                case SET_LOG_LEVEL:
+                    try {
+                        final Integer logLevel = Integer.parseInt(cmdValue);
+                        if (!SenseLogLevelUtil.isAllowedLogLevel(logLevel)) {
+                            LOGGER.warn("Log level value '%03X' not allowed.", logLevel);
+                            continue;
+                        }
+                        responseBuilder.setUploadLogLevel(logLevel);
+                    } catch (NumberFormatException nfe) {
+                        LOGGER.warn("Bad log level value passed with 'set_log_level' response command.");
+                        return;
                     }
-                }
+                    break;
             }
         }
     }

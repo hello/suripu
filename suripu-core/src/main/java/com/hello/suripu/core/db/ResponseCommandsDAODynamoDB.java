@@ -46,7 +46,8 @@ public class ResponseCommandsDAODynamoDB {
 
     public enum ResponseCommand {
         RESET_TO_FACTORY_FW("reset_to_factory_fw"),
-        RESET_MCU("reset_mcu");
+        RESET_MCU("reset_mcu"),
+        SET_LOG_LEVEL("set_log_level");
 
         private String value;
         private ResponseCommand(final String value) {

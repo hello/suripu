@@ -14,7 +14,7 @@ kinesis:
     sense_sensors_data : sense_sensors_data
 
 app_name: SenseLastSeenProd
-max_records: 100
+max_records: 200
 trim_horizon: false
 
 logging:
@@ -26,7 +26,7 @@ logging:
   loggers:
 
     # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu.workers: DEBUG
+    com.hello.suripu.workers: INFO
   # Settings for logging to a file.
   file:
     enabled: true
@@ -47,8 +47,10 @@ dynamodb:
   tables:
     features: features
     wifi_info: prod_wifi_info
+    sense_last_seen: prod_sense_last_seen
 
   endpoints:
     features: http://dynamodb.us-east-1.amazonaws.com
     wifi_info: http://dynamodb.us-east-1.amazonaws.com
+    sense_last_seen: http://dynamodb.us-east-1.amazonaws.com
 

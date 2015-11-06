@@ -14,15 +14,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
-import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataIngestDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
-import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
@@ -36,28 +35,30 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-
+// WARNING ALL CHANGES HAVE TO REPLICATED TO SenseSaveDDBProcessor
+// TODO Burn this worker to the ground once everything has switched to DynamoDB
 public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);
 
     public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
     private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 24 * 3600;
-    private final DeviceDAO deviceDAO;
-    private final DeviceDataDAO deviceDataDAO;
+    private final DeviceReadDAO deviceDAO;
+    private final DeviceDataIngestDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final Integer maxRecords;
+    private final boolean updateLastSeen;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
+    private final Meter batchSaveFailures;
     private final Meter clockOutOfSync;
     private final Timer fetchTimezones;
     private final Meter capacity;
@@ -67,18 +68,20 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private Random random;
     private LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
-    public SenseSaveProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords) {
+    public SenseSaveProcessor(final DeviceReadDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords, final boolean updateLastSeen) {
         this.deviceDAO = deviceDAO;
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.sensorsViewsDynamoDB =  sensorsViewsDynamoDB;
         this.maxRecords = maxRecords;
+        this.updateLastSeen = updateLastSeen;
 
-        this.messagesProcessed = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
-        this.batchSaved = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
-        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "clock", "clock-out-of-sync", TimeUnit.SECONDS);
-        this.fetchTimezones = Metrics.defaultRegistry().newTimer(SenseSaveProcessor.class, "fetch-timezones");
-        this.capacity = Metrics.defaultRegistry().newMeter(SenseSaveProcessor.class, "capacity", "capacity", TimeUnit.SECONDS);
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "messages", "messages-processed", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "batch", "batch-saved", TimeUnit.SECONDS);
+        this.batchSaveFailures = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "batch-failure", "batch-save-failure", TimeUnit.SECONDS);
+        this.clockOutOfSync = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "clock", "clock-out-of-sync", TimeUnit.SECONDS);
+        this.fetchTimezones = Metrics.defaultRegistry().newTimer(deviceDataDAO.name(), "fetch-timezones");
+        this.capacity = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "capacity", "capacity", TimeUnit.SECONDS);
 
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
@@ -103,7 +106,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     @Timed
     @Override
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
-        final LinkedHashMap<String, LinkedList<DeviceData>> deviceDataGroupedByDeviceId = new LinkedHashMap<>();
+        final LinkedList<DeviceData> deviceDataList = new LinkedList<>();
 
         final Map<String, Long> activeSenses = new HashMap<>(records.size());
 
@@ -121,11 +124,6 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             final String deviceName = batchPeriodicDataWorker.getData().getDeviceId();
 
-            if(!deviceDataGroupedByDeviceId.containsKey(deviceName)){
-                deviceDataGroupedByDeviceId.put(deviceName, new LinkedList<DeviceData>());
-            }
-
-            final LinkedList<DeviceData> dataForDevice = deviceDataGroupedByDeviceId.get(deviceName);
             final List<DeviceAccountPair> deviceAccountPairs = Lists.newArrayList();
 
             if(!flipper.deviceFeatureActive(FeatureFlipper.WORKER_PG_CACHE, deviceName, Collections.EMPTY_LIST) || batchPeriodicDataWorker.getUptimeInSecond() < MIN_UPTIME_IN_SECONDS_FOR_CACHING) {
@@ -160,31 +158,19 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
             for(final DataInputProtos.periodic_data periodicData : batchPeriodicDataWorker.getData().getDataList()) {
 
-                // To validate that the firmware is sending a correct unix timestamp
-                // we need to compare it to something immutable, coming from a different clock (server)
-                // We can't compare to now because now changes, and if we want to reprocess old data it will be immediately discarded
                 final long createdAtTimestamp = batchPeriodicDataWorker.getReceivedAt();
                 final DateTime createdAtRounded = new DateTime(createdAtTimestamp, DateTimeZone.UTC);
-                final Long timestampMillis = periodicData.getUnixTime() * 1000L;
-                final DateTime rawDateTime = new DateTime(timestampMillis, DateTimeZone.UTC).withSecondOfMinute(0).withMillisOfSecond(0);
 
-                // This is intended to check for very specific clock bugs from Sense
-                final DateTime periodicDataSampleDateTime = attemptToRecoverSenseReportedTimeStamp(deviceName)
-                        ? DateTimeUtil.possiblySanitizeSampleTime(createdAtRounded, rawDateTime, CLOCK_SKEW_TOLERATED_IN_HOURS)
-                        : rawDateTime;
+                final DateTime periodicDataSampleDateTime = SenseProcessorUtils.getSampleTime(createdAtRounded, periodicData, attemptToRecoverSenseReportedTimeStamp(deviceName));
 
-
-                if(periodicDataSampleDateTime.isAfter(createdAtRounded.plusHours(CLOCK_SKEW_TOLERATED_IN_HOURS)) || periodicDataSampleDateTime.isBefore(createdAtRounded.minusHours(CLOCK_SKEW_TOLERATED_IN_HOURS))) {
+                if(SenseProcessorUtils.isClockOutOfSync(periodicDataSampleDateTime, createdAtRounded)) {
                     LOGGER.error("The clock for device {} is not within reasonable bounds (2h)", batchPeriodicDataWorker.getData().getDeviceId());
                     LOGGER.error("Created time = {}, sample time = {}, now = {}", createdAtRounded, periodicDataSampleDateTime, DateTime.now());
                     clockOutOfSync.mark();
                     continue;
                 }
 
-                // Grab FW version from Batch or periodic data for EVT units
-                final Integer firmwareVersion = (batchPeriodicDataWorker.getData().hasFirmwareVersion())
-                        ? batchPeriodicDataWorker.getData().getFirmwareVersion()
-                        : periodicData.getFirmwareVersion();
+                final Integer firmwareVersion = SenseProcessorUtils.getFirmwareVersion(batchPeriodicDataWorker, periodicData);
 
                 for (final DeviceAccountPair pair : deviceAccountPairs) {
                     if(!timezonesByUser.containsKey(pair.accountId)) {
@@ -200,6 +186,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                     final DeviceData.Builder builder = new DeviceData.Builder()
                             .withAccountId(pair.accountId)
                             .withDeviceId(pair.internalDeviceId)
+                            .withExternalDeviceId(pair.externalDeviceId)
                             .withAmbientTemperature(periodicData.getTemperature())
                             .withAmbientAirQualityRaw(periodicData.getDust())
                             .withAmbientDustVariance(periodicData.getDustVariability())
@@ -224,35 +211,28 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                         lastSeenDeviceData.put(deviceName, deviceData);
                     }
 
-                    dataForDevice.add(deviceData);
+                    deviceDataList.add(deviceData);
                 }
             }
         }
 
 
-        for(final String deviceId: deviceDataGroupedByDeviceId.keySet()){
-            final LinkedList<DeviceData> data = deviceDataGroupedByDeviceId.get(deviceId);
-            if(data.size() == 0){
-                continue;
+        try {
+            int inserted = deviceDataDAO.batchInsertAll(deviceDataList);
+
+            if(inserted == deviceDataList.size()) {
+                LOGGER.trace("Batch saved {} data to DB", inserted);
+            }else{
+                LOGGER.warn("Batch save failed, save {} data using itemize insert.", inserted);
             }
 
-            try {
-                int inserted = deviceDataDAO.batchInsertWithFailureFallback(data);
-
-                if(inserted == data.size()) {
-                    LOGGER.trace("Batch saved {} data to DB for device {}", data.size(), deviceId);
-                }else{
-                    LOGGER.warn("Batch save failed, save {} data for device {} using itemize insert.", inserted, deviceId);
-                }
-
-                batchSaved.mark(inserted);
-            } catch (Exception exception) {
-                LOGGER.error("Error saving data for device {} from {} to {}, {} data discarded",
-                        deviceId,
-                        data.getFirst().dateTimeUTC,
-                        data.getLast().dateTimeUTC,  // I love linkedlist
-                        data.size());
-            }
+            batchSaved.mark(inserted);
+            batchSaveFailures.mark(deviceDataList.size() - inserted);
+        } catch (Exception exception) {
+            LOGGER.error("Error saving data from {} to {}, {} data discarded",
+                    deviceDataList.getFirst().dateTimeUTC,
+                    deviceDataList.getLast().dateTimeUTC,  // I love linkedlist
+                    deviceDataList.size());
         }
 
         messagesProcessed.mark(records.size());
@@ -277,11 +257,11 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
             LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
         }
 
-        if(!lastSeenDeviceData.isEmpty()) {
+        if(!lastSeenDeviceData.isEmpty() && this.updateLastSeen) {
             sensorsViewsDynamoDB.saveLastSeenDeviceData(lastSeenDeviceData);
         }
 
-        final int batchCapacity = Math.round(activeSenses.size() / (float) maxRecords * 100.0f) ;
+        final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f) ;
         LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);

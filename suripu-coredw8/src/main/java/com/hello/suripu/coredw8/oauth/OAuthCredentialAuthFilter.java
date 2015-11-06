@@ -1,7 +1,11 @@
 package com.hello.suripu.coredw8.oauth;
 
 import com.google.common.base.Optional;
+
+import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.oauth.OAuthScope;
+import com.hello.suripu.coredw8.util.HttpUtils;
+
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import java.io.IOException;
@@ -24,7 +28,9 @@ public class OAuthCredentialAuthFilter<P extends Principal> extends AuthFilter<S
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-        final String header = requestContext.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+      final String header = requestContext.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+      final LoggingProtos.HttpRequest.Builder httpRequestBuilder = HttpUtils.httpRequestToProtobuf(requestContext);
+
         if (header != null) {
             try {
                 final int space = header.indexOf(' ');
@@ -42,8 +48,23 @@ public class OAuthCredentialAuthFilter<P extends Principal> extends AuthFilter<S
 
                                 @Override
                                 public boolean isUserInRole(String role) {
-                                    final OAuthScope roleScope = OAuthScope.valueOf(role);
-                                    return authorizer.authorize(principal.get(), roleScope);
+
+                                  final OAuthScope roleScope = OAuthScope.valueOf(role);
+                                  final AccessToken accessToken = (AccessToken)principal.get();
+
+                                  httpRequestBuilder.setAccessToken(accessToken.serializeAccessToken());
+                                  httpRequestBuilder.setApplicationId(accessToken.appId);
+                                  httpRequestBuilder.setAccessTokenCreatedAt(accessToken.createdAt.getMillis());
+
+                                  for(final OAuthScope scope : accessToken.scopes) {
+                                    httpRequestBuilder.addProvidedScopes(scope.name());
+                                  }
+
+                                  httpRequestBuilder.addRequiredScopes(roleScope.name());
+
+                                  logger.putAsync(accessToken.token.toString(), httpRequestBuilder.build().toByteArray());
+
+                                  return authorizer.authorize(principal.get(), roleScope);
                                 }
 
                                 @Override
@@ -56,7 +77,7 @@ public class OAuthCredentialAuthFilter<P extends Principal> extends AuthFilter<S
                                     return SecurityContext.BASIC_AUTH;
                                 }
                             });
-                            return;
+                          return;
                         }
                     }
                 }
