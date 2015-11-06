@@ -13,12 +13,10 @@ import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmModelParams;
 import com.hello.suripu.core.models.OnlineHmmPriors;
-import com.hello.suripu.core.util.OnlineHmmMeasurementParameters;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,9 +33,15 @@ public class OnlineHmmModelEvaluator {
     // ergo if this number is 5.0, you'll need more than 5 updates to dominate the prior
     // since each update can be though of a day.... that's like a work week
     final static double MIN_NUM_PERIODS_ON_BED = 36;
-    final static double MIN_VOTE_PERCENT_TO_BE_IN_SLEEP = 0.85; //be sure
-    final static double MIN_VOTE_PERCENT_TO_BE_IN_BED = 0.50; //majority suffices
+    final static float MIN_VOTE_PERCENT_TO_BE_IN_SLEEP = 0.80f; //be sure
+    final static float MIN_VOTE_PERCENT_TO_BE_IN_BED = 0.50f; //majority suffices
 
+    final static Map<String,Float> CERTAINTY_THRESHOLDS;
+    static {
+        CERTAINTY_THRESHOLDS = Maps.newHashMap();
+        CERTAINTY_THRESHOLDS.put(OnlineHmmData.OUTPUT_MODEL_BED,MIN_VOTE_PERCENT_TO_BE_IN_BED);
+        CERTAINTY_THRESHOLDS.put(OnlineHmmData.OUTPUT_MODEL_SLEEP,MIN_VOTE_PERCENT_TO_BE_IN_SLEEP);
+    }
 
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(OnlineHmmModelEvaluator.class);
     private final Logger LOGGER;
@@ -139,7 +143,8 @@ public class OnlineHmmModelEvaluator {
                 LOGGER.info("{}",votes[istate]);
             }
 
-            final int [] votepath = getVotedPathWithConstraints(votes,entryByOutput.getKey().equals(OnlineHmmData.OUTPUT_MODEL_SLEEP));
+
+            final int [] votepath = getInterpretedPathFromVotes(votes, CERTAINTY_THRESHOLDS.get(entryByOutput.getKey()));
 
             final MultiEvalHmmDecodedResult theResult = new MultiEvalHmmDecodedResult(votepath,0.0,String.format("%s-%s",entryByOutput.getKey(),"voted"));
 
@@ -218,39 +223,41 @@ public class OnlineHmmModelEvaluator {
         }
     }
 
-    private static int [] getVotedPathWithConstraints(final float[][] votes, boolean isSleep) {
-        final int N = votes.length;
-        final int T = votes[0].length;
+    public static int [] getInterpretedPathFromVotes(final float[][] normalizedVotes, final Float alpha) {
 
-        int [] votepath = new int[T];
+        //default
+        float threshold = 0.5f;
 
-        for (int t = 0; t < T; t++) {
-            final List<ScoreWithIndex> scoreList = Lists.newArrayList();
-            for (int i = 0; i < N; i++) {
-                scoreList.add(new ScoreWithIndex(votes[i][t],i));
-            }
+        //alpha should never be null
+        if (alpha != null) {
+            threshold = alpha.floatValue();
+        }
 
-            Collections.sort(scoreList);
+        final int N = normalizedVotes.length;
+        final int T = normalizedVotes[0].length;
 
-            int maxIdx = scoreList.get(0).index;
 
-            if (scoreList.get(0).index == LabelMaker.LABEL_DURING_SLEEP && isSleep) {
-                if (scoreList.get(0).score < MIN_VOTE_PERCENT_TO_BE_IN_SLEEP) {
-                    maxIdx = scoreList.get(1).index;
+        final int [] firstAboveThreshold = new int[N + 1];
+
+        firstAboveThreshold[N] = T;
+
+        //find the first item in each array that is above the threshold
+        for (int i = 0; i < N; i++) {
+            for (int t = 0; t < T; t++) {
+                if (normalizedVotes[i][t] > threshold) {
+                    firstAboveThreshold[i] = t;
+                    break;
                 }
             }
+        }
 
-            if (!isSleep && votes[LabelMaker.LABEL_DURING_BED ][t] > MIN_VOTE_PERCENT_TO_BE_IN_BED) {
-                maxIdx = LabelMaker.LABEL_DURING_BED;
+        final int [] votepath = new int[T];
+
+        //fill in votepath between the identified transition points.
+        for (int i = 0; i < N; i++) {
+            for (int t = firstAboveThreshold[i]; t < firstAboveThreshold[i+1]; t++) {
+                votepath[t] = i;
             }
-
-
-            //TODO vote on based on probability transitions to find various hypotheses
-
-
-
-            votepath[t] = maxIdx;
-
         }
 
         return votepath;
