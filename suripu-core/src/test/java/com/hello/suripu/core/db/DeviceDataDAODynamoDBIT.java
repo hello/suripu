@@ -225,6 +225,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime)
                 .withAmbientTemperature(2499)
                 .withAmbientLight(10)
+                .withAmbientLightVariance(100)
                 .withAmbientHumidity(4662)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
@@ -234,6 +235,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(1))
                 .withAmbientTemperature(2498)
                 .withAmbientLight(10)
+                .withAmbientLightVariance(10)
                 .withAmbientHumidity(4666)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
@@ -243,6 +245,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(2))
                 .withAmbientTemperature(2500)
                 .withAmbientLight(8)
+                .withAmbientLightVariance(8)
                 .withAmbientHumidity(4665)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
@@ -252,6 +255,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(3))
                 .withAmbientTemperature(2500)
                 .withAmbientLight(12)
+                .withAmbientLightVariance(12)
                 .withAmbientHumidity(4662)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
@@ -261,6 +265,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(4))
                 .withAmbientTemperature(2501)
                 .withAmbientLight(9)
+                .withAmbientLightVariance(9)
                 .withAmbientHumidity(4667)
                 .build());
         deviceDataList.add(new DeviceData.Builder()
@@ -270,6 +275,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(5))
                 .withAmbientTemperature(2502)
                 .withAmbientLight(10)
+                .withAmbientLightVariance(10)
                 .withAmbientHumidity(4669)
                 .build());
         // Skip minute 6
@@ -280,6 +286,7 @@ public class DeviceDataDAODynamoDBIT {
                 .withDateTimeUTC(firstTime.plusMinutes(7))
                 .withAmbientTemperature(2503)
                 .withAmbientLight(15)
+                .withAmbientLightVariance(15)
                 .withAmbientHumidity(4658)
                 .build());
         deviceDataDAODynamoDB.batchInsert(deviceDataList);
@@ -369,6 +376,7 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(fiveMinuteresults.size(), is(2));
         assertThat(fiveMinuteresults.get(0).ambientTemperature, is(2498));
         assertThat(fiveMinuteresults.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
+        assertThat(fiveMinuteresults.get(0).ambientLightVariance, is(28));
         assertThat(fiveMinuteresults.get(1).ambientTemperature, is(2502));
         assertThat(fiveMinuteresults.get(1).dateTimeUTC, is(firstTime.plusMinutes(5)));
 

@@ -391,17 +391,15 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         if (items.isEmpty()) {
             return resultList;
         }
-        LinkedList<Map<String, AttributeValue>> currentWorkingList = Lists.newLinkedList();
+
+        List<Map<String, AttributeValue>> currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
         final Map<String, AttributeValue> firstItem = items.get(0);
-        final Long accountId = Long.valueOf(firstItem.get(Attribute.ACCOUNT_ID.name).getN());
-        final String deviceId = externalDeviceIdFromDDBItem(firstItem);
-        final Integer offsetMillis = Integer.valueOf(firstItem.get(Attribute.OFFSET_MILLIS.name).getN());
-        currentWorkingList.add(firstItem);
         final DeviceData.Builder templateBuilder = new DeviceData.Builder()
-                .withAccountId(accountId)
-                .withExternalDeviceId(deviceId)
-                .withOffsetMillis(offsetMillis);
+                .withAccountId(Long.valueOf(firstItem.get(Attribute.ACCOUNT_ID.name).getN()))
+                .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem))
+                .withOffsetMillis(Integer.valueOf(firstItem.get(Attribute.OFFSET_MILLIS.name).getN()));
         DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
+
         for (final Map<String, AttributeValue> item: items) {
             final DateTime itemDateTime = getFloorOfDateTime(timestampFromDDBItem(item), slotDuration);
             if (currSlotTime.equals(itemDateTime)) {
@@ -413,7 +411,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
 
                 // Create new working sets
-                currentWorkingList = Lists.newLinkedList();
+                currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
                 currentWorkingList.add(item);
             } else {
                 // Unsorted list
@@ -421,10 +419,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             }
             currSlotTime = itemDateTime;
         }
-        if (!currentWorkingList.isEmpty()) {
-            templateBuilder.withDateTimeUTC(currSlotTime);
-            resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
-        }
+
+        templateBuilder.withDateTimeUTC(currSlotTime);
+        resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
         return resultList;
     }
 
