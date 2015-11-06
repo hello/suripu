@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.models.timeline.v2.ScoreCondition;
+import com.hello.suripu.core.models.timeline.v2.SleepMetrics;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.Event;
@@ -257,6 +258,16 @@ public class TimelineResource extends BaseResource {
         if (timeline.events.isEmpty()) {
             LOGGER.info("rejected feedback from account_id {} for evening of {} because it resulted in an empty timeline",accountId,timeline.dateNight);
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_CAUSED_INVALID_SLEEP_SCORE)).build());
+        }
+
+        for (final SleepMetrics sleepMetrics : timeline.metrics) {
+            if (!sleepMetrics.name.equals(SleepMetrics.TOTAL_SLEEP_NAME)) {
+                continue;
+            }
+            LOGGER.info("rejected feedback from account_id {} for evening of {} because it resulted in timeline with invalid sleep duration ",accountId,timeline.dateNight);
+            if (!sleepMetrics.value.isPresent() || (sleepMetrics.value.isPresent() && sleepMetrics.value.get() <= SleepMetrics.MINIMUM_TOTAL_SLEEP_DURATION_MINUTES)) {
+                throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED).entity(new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), English.FEEDBACK_CAUSED_INVALID_SLEEP_SCORE)).build());
+            }
         }
     }
 
