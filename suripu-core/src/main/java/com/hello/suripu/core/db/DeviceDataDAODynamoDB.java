@@ -444,8 +444,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .withWaveCount((int) aggregator.sum(Attribute.WAVE_COUNT.name))
                 .withHoldCount((int) aggregator.sum(Attribute.HOLD_COUNT.name))
                 .withAudioNumDisturbances((int) aggregator.max(Attribute.AUDIO_NUM_DISTURBANCES.name))
-                .withAudioPeakBackgroundDB((int) aggregator.max(Attribute.AUDIO_PEAK_BACKGROUND_DB.name))
-                .withAudioPeakDisturbancesDB((int) aggregator.max(Attribute.AUDIO_PEAK_DISTURBANCES_DB.name))
+                .withAlreadyCalibratedAudioPeakBackgroundDB((int) aggregator.max(Attribute.AUDIO_PEAK_BACKGROUND_DB.name))
+                .withAlreadyCalibratedAudioPeakDisturbancesDB((int) aggregator.max(Attribute.AUDIO_PEAK_DISTURBANCES_DB.name))
                 .withAmbientAirQualityRaw((int) aggregator.roundedMean(Attribute.AMBIENT_AIR_QUALITY_RAW.name))
                 .build();
     }
@@ -594,10 +594,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         final Map<String, AttributeValue> filterAttributeValues = new ImmutableMap.Builder<String, AttributeValue>()
                 .put(hashKey, new AttributeValue().withN(String.valueOf(accountId)))
                 .put(rangeStart, getRangeKey(start, externalDeviceId))
-                .put(rangeEnd, getRangeKey(end, externalDeviceId))
+                .put(rangeEnd, getRangeKey(end.minusMinutes(1), externalDeviceId))
                 .build();
 
-        for (final String tableName: getTableNames(start, end)) {
+        for (final String tableName: getTableNames(start, end.minusMinutes(1))) {
             results.addAll(query(tableName, keyConditionExpression, targetAttributes, Optional.<String>absent(), filterAttributeValues));
         }
 
@@ -810,8 +810,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .withWaveCount(Integer.valueOf(Attribute.WAVE_COUNT.get(item).getN()))
                 .withHoldCount(Integer.valueOf(Attribute.HOLD_COUNT.get(item).getN()))
                 .withAudioNumDisturbances(Integer.valueOf(Attribute.AUDIO_NUM_DISTURBANCES.get(item).getN()))
-                .withAudioPeakBackgroundDB(Integer.valueOf(Attribute.AUDIO_PEAK_BACKGROUND_DB.get(item).getN()))
-                .withAudioPeakDisturbancesDB(Integer.valueOf(Attribute.AUDIO_PEAK_DISTURBANCES_DB.get(item).getN()))
+                .withAlreadyCalibratedAudioPeakBackgroundDB(Integer.valueOf(Attribute.AUDIO_PEAK_BACKGROUND_DB.get(item).getN()))
+                .withAlreadyCalibratedAudioPeakDisturbancesDB(Integer.valueOf(Attribute.AUDIO_PEAK_DISTURBANCES_DB.get(item).getN()))
                 .withAmbientAirQualityRaw(Integer.valueOf(Attribute.AMBIENT_AIR_QUALITY_RAW.get(item).getN()))
                 .build();
     }

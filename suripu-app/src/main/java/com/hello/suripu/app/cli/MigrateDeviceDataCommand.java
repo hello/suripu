@@ -3,20 +3,38 @@ package com.hello.suripu.app.cli;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
+import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
+import com.hello.suripu.core.db.util.JodaArgumentFactory;
+import com.hello.suripu.core.models.AllSensorSampleList;
+import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.Sample;
+import com.hello.suripu.core.models.Sensor;
+import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.opencsv.CSVReader;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.db.ManagedDataSource;
+import com.yammer.dropwizard.db.ManagedDataSourceFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
+import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import net.sourceforge.argparse4j.inf.Namespace;
 import net.sourceforge.argparse4j.inf.Subparser;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,9 +118,15 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                 .required(true)
                 .help("mapping csv for ids");
 
-        subparser.addArgument("--csv")
+        subparser.addArgument("--task")
                 .nargs("?")
                 .required(true)
+                .help("task to perform. migrate or test");
+
+        // for migrate task
+        subparser.addArgument("--csv")
+                .nargs("?")
+                .required(false)
                 .help("csv files");
 
         subparser.addArgument("--dir")
@@ -110,66 +134,176 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                 .required(false)
                 .help("data files directory");
 
-    }
+        // for test task
+        subparser.addArgument("--account")
+                .nargs("?")
+                .required(false)
+                .help("account-id to test");
 
-    private List<DeviceData> writeData(final DeviceDataDAODynamoDB deviceDataDAO,
-                             final List<DeviceData> items) throws ExecutionException, InterruptedException {
+        subparser.addArgument("--start")
+                .nargs("?")
+                .required(false)
+                .help("start utc timestamp");
 
-        final List<List<DeviceData>> batches = Lists.partition(items, ITEMS_PER_BATCH);
+        subparser.addArgument("--end")
+                .nargs("?")
+                .required(false)
+                .help("end utc timestamp");
 
-        final List<Future<List<DeviceData>>> futures = Lists.newArrayListWithCapacity(batches.size());
-        for (final List<DeviceData> batch : batches) {
-            final Future<List<DeviceData>> future = executor.submit(new Callable<List<DeviceData>>() {
-                @Override
-                public List<DeviceData> call() throws Exception {
-                    LOGGER.debug("Submitting batch of {}", batch.size());
-                    final List<DeviceData> remaining = deviceDataDAO.batchInsertReturnsRemaining(batch);
-                    LOGGER.debug("Batch submitted, {} remaining", remaining.size());
-                    return remaining;
-                }
-            });
-            futures.add(future);
-        }
-
-        final List<DeviceData> remainingData = Lists.newArrayList();
-        for (final Future<List<DeviceData>> future : futures) {
-            if (!future.get().isEmpty()) {
-                remainingData.addAll(future.get());
-            }
-        }
-        return remainingData;
-    }
-
-
-    private void backOff(int remaining) throws InterruptedException {
-        long howLong = (long) (((float) remaining / NUM_BEFORE_FLUSH) * 500.0f);
-        final float percRemaining = remaining / ((float) ITEMS_PER_BATCH);
-        if (percRemaining > 0.5f) {
-            howLong += (long) ((percRemaining) / 0.2f) * 500L;
-        }
-        LOGGER.debug("Backing off for {} milliseconds", howLong);
-        Thread.sleep(howLong);
     }
 
     @Override
     protected void run(Bootstrap<SuripuAppConfiguration> bootstrap,
                        Namespace namespace,
                        SuripuAppConfiguration suripuAppConfiguration) throws Exception {
-        final File mappingFile = new File(namespace.getString("mapping"));
-        final Map<String, String> idMapping = readIdMapping(mappingFile);
-        LOGGER.debug("Loaded {} id mapping entries", idMapping.size());
 
-        final long nextFlushSleepMillis = suripuAppConfiguration.getNextFlushSleepMillis();
-        final int stopMonth = suripuAppConfiguration.getStopMonth();
+        final File mappingFile = new File(namespace.getString("mapping"));
+        final Map<String, String> accountToExternalMapping = readIdMapping(mappingFile, DeviceMapColumns.EXTERNAL_SENSE_ID);
+        LOGGER.debug("Loaded {} id mapping entries", accountToExternalMapping.size());
 
         final AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(provider);
         final DynamoDBConfiguration deviceDataConfiguration = suripuAppConfiguration.getDeviceDataConfiguration();
         dynamoDBClient.withEndpoint(deviceDataConfiguration.getEndpoint());
+
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(dynamoDBClient,
+                deviceDataConfiguration.getTableName());
+
         LOGGER.debug("DynamoDB client set up for {}/'{}'",
                 deviceDataConfiguration.getTableName(),
                 deviceDataConfiguration.getEndpoint());
 
+
+        // choose which task to perform, migration or test results
+        final String task = namespace.getString("task");
+        if (task.equals("migrate")) {
+            runMigrate(namespace, suripuAppConfiguration, accountToExternalMapping, deviceDataDAODynamoDB);
+        } else if (task.equals("test")) {
+
+            final Map<String, String> accountToInternalMapping = readIdMapping(mappingFile, DeviceMapColumns.ID);
+            testResults(namespace, suripuAppConfiguration, deviceDataDAODynamoDB, accountToExternalMapping, accountToInternalMapping);
+        } else {
+            LOGGER.error("WRONG task");
+        }
+
+        this.executor.shutdown();
+    }
+
+    /**
+     * Compare DDB vs Postgres results
+     * @param namespace
+     * @param configuration
+     * @param deviceDataDAODynamoDB
+     */
+    private void testResults(final Namespace namespace,
+                             final SuripuAppConfiguration configuration,
+                             final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
+                             final Map<String, String> accountToExternalMapping,
+                             final Map<String, String> accountToInternalMapping) throws Exception
+    {
+        // set up postgres DAO
+
+        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
+        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
+
+        final DBI jdbi = new DBI(dataSource);
+        jdbi.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorsDB().getDriverClass()));
+        jdbi.registerContainerFactory(new ImmutableListContainerFactory());
+        jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
+        jdbi.registerContainerFactory(new OptionalContainerFactory());
+        jdbi.registerArgumentFactory(new JodaArgumentFactory());
+
+        final DeviceDataDAO deviceDataDAO = jdbi.onDemand(DeviceDataDAO.class);
+
+        final String accountIdString = namespace.getString("account");
+        if (!accountToExternalMapping.containsKey(accountIdString)) {
+            LOGGER.error("No sense mapping found for account id {}", accountIdString);
+            return;
+        }
+
+        final String externalSenseId = accountToExternalMapping.get(accountIdString);
+        final Long internalSenseId = Long.valueOf(accountToInternalMapping.get(accountIdString));
+        final Long accountId = Long.valueOf(accountIdString);
+
+        final Long startTimestamp = DateTimeUtil.datetimeStringToDateTime(namespace.getString("start")).getMillis();
+        final Long endTimestamp = DateTimeUtil.datetimeStringToDateTime(namespace.getString("end")).withMillisOfSecond(0).getMillis();
+
+        final Optional<Calibration> optionalCalibration = Optional.absent();
+        final Optional<Device.Color> optionalColor = Optional.absent();
+
+        final int slotMinutes = 1;
+        final int defaultMissingValue = 0;
+        final AllSensorSampleList samplesDDB = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
+                startTimestamp, endTimestamp,
+                accountId, externalSenseId,
+                slotMinutes, defaultMissingValue,
+                optionalColor, optionalCalibration);
+
+        final AllSensorSampleList samplesRDS = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
+                startTimestamp, endTimestamp,
+                accountId, internalSenseId,
+                slotMinutes, defaultMissingValue,
+                optionalColor, optionalCalibration);
+
+        // make sure that what's in RDS is also present in DDB
+        final List<Sensor> sensors = samplesRDS.getAvailableSensors();
+        int sensorErrors = 0;
+        int sizeErrors = 0;
+        int valueErrors = 0;
+        int totalSamples = 0;
+
+        for (final Sensor sensor : sensors) {
+            if (samplesDDB.get(sensor).isEmpty()) {
+                LOGGER.error("sensor {} is not in DDB sample list", sensor.toString());
+                sensorErrors++;
+                continue;
+            }
+
+            // let's check the values
+            final List<Sample> valuesDDB = samplesDDB.get(sensor);
+            final List<Sample> valuesRDS = samplesRDS.get(sensor);
+            if (valuesDDB.size() != valuesRDS.size()) {
+                LOGGER.error("List size for sensor {} are not equal, DDB {}, RDS {}",
+                        sensor.toString(), valuesDDB.size(), valuesRDS.size());
+                sizeErrors++;
+                continue;
+            }
+
+            LOGGER.debug("Checking sensor values for {}", sensor.toString());
+            for (int i=0; i< valuesRDS.size(); i++) {
+                totalSamples++;
+                if (!valuesDDB.get(i).equals(valuesRDS.get(i))){
+                    LOGGER.error("Wrong values for timestamp {}:DDB {}, RDS {}",
+                            new DateTime(valuesDDB.get(i).dateTime, DateTimeZone.UTC).toString(),
+                            valuesDDB.get(i).toString(),
+                            valuesRDS.get(i).toString());
+                    valueErrors++;
+                }
+            }
+        }
+
+        LOGGER.debug("Check Results");
+        LOGGER.debug("Total Samples: {}", totalSamples);
+        LOGGER.debug("Sensor Errors: {}", sensorErrors);
+        LOGGER.debug("Size Errors: {}", sizeErrors);
+        LOGGER.debug("Value Errors: {}", valueErrors);
+    }
+
+    /**
+     * Perform migration from csv data file to DynamoDB
+     * @param namespace
+     * @param configuration
+     * @param idMapping
+     * @param deviceDataDAO
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    private void runMigrate(final Namespace namespace,
+                            final SuripuAppConfiguration configuration,
+                            final Map<String, String> idMapping,
+                            final DeviceDataDAODynamoDB deviceDataDAO)
+            throws IOException, InterruptedException, ExecutionException {
         int entriesWritten = 0;
         int entriesDiscarded = 0;
         int linesRead = 0;
@@ -178,7 +312,10 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
         final String directoryName = namespace.getString("dir");
         final String prefix = namespace.getString("csv") + "-";
-        final List<File> csvFiles = getDataFiles(directoryName, prefix);
+        final List<File> csvFiles = this.getDataFiles(directoryName, prefix);
+
+        final long nextFlushSleepMillis = configuration.getNextFlushSleepMillis();
+        final int stopMonth = configuration.getStopMonth();
 
         for (final File csvFile : csvFiles) {
             try (final InputStream rawInput = new FileInputStream(csvFile);
@@ -186,8 +323,6 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                  final CSVReader reader = new CSVReader(new InputStreamReader(decodedInput), ',')) {
                 LOGGER.debug("Beginning migration for file {}", csvFile.getName());
 
-                final DeviceDataDAODynamoDB deviceDataDAO = new DeviceDataDAODynamoDB(dynamoDBClient,
-                        deviceDataConfiguration.getTableName());
 
                 final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
                 final List<DeviceData> accumulator = Lists.newArrayListWithCapacity(ITEMS_PER_BATCH);
@@ -250,7 +385,7 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                                 break;
                             }
 
-                            backOff(remainingItems.size());
+                            this.backOff(remainingItems.size());
                             this.backOffCounts++;
                         }
                     }
@@ -290,7 +425,6 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
         }
         LOGGER.debug("ALL DONE!");
-        this.executor.shutdown();
     }
 
     private List<File> getDataFiles(final String directoryName, final String prefix) {
@@ -321,15 +455,54 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
         return Integer.parseInt(entry[column.index], 10);
     }
 
-    private Map<String, String> readIdMapping(final File mappingFile) throws IOException {
+    private Map<String, String> readIdMapping(final File mappingFile, final DeviceMapColumns senseColumn) throws IOException {
         final Map<String, String> mapping = Maps.newHashMap();
         try (final InputStream input = new FileInputStream(mappingFile);
              final CSVReader reader = new CSVReader(new InputStreamReader(input), ',')) {
             for (final String[] entry : reader) {
                 mapping.put(entry[DeviceMapColumns.ACCOUNT_ID.index],
-                        entry[DeviceMapColumns.EXTERNAL_SENSE_ID.index]);
+                        entry[senseColumn.index]);
             }
         }
         return mapping;
     }
+
+    private void backOff(int remaining) throws InterruptedException {
+        long howLong = (long) (((float) remaining / NUM_BEFORE_FLUSH) * 500.0f);
+        final float percRemaining = remaining / ((float) ITEMS_PER_BATCH);
+        if (percRemaining > 0.5f) {
+            howLong += (long) ((percRemaining) / 0.2f) * 500L;
+        }
+        LOGGER.debug("Backing off for {} milliseconds", howLong);
+        Thread.sleep(howLong);
+    }
+
+    private List<DeviceData> writeData(final DeviceDataDAODynamoDB deviceDataDAO,
+                                       final List<DeviceData> items) throws ExecutionException, InterruptedException {
+
+        final List<List<DeviceData>> batches = Lists.partition(items, ITEMS_PER_BATCH);
+
+        final List<Future<List<DeviceData>>> futures = Lists.newArrayListWithCapacity(batches.size());
+        for (final List<DeviceData> batch : batches) {
+            final Future<List<DeviceData>> future = executor.submit(new Callable<List<DeviceData>>() {
+                @Override
+                public List<DeviceData> call() throws Exception {
+                    LOGGER.debug("Submitting batch of {}", batch.size());
+                    final List<DeviceData> remaining = deviceDataDAO.batchInsertReturnsRemaining(batch);
+                    LOGGER.debug("Batch submitted, {} remaining", remaining.size());
+                    return remaining;
+                }
+            });
+            futures.add(future);
+        }
+
+        final List<DeviceData> remainingData = Lists.newArrayList();
+        for (final Future<List<DeviceData>> future : futures) {
+            if (!future.get().isEmpty()) {
+                remainingData.addAll(future.get());
+            }
+        }
+        return remainingData;
+    }
+
 }
