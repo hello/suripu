@@ -14,7 +14,7 @@ kinesis:
     sense_sensors_data : dev_sense_sensors_data
 
 app_name: SenseLastSeenDev
-
+trim_horizon: false
 max_records: 100
 
 logging:
