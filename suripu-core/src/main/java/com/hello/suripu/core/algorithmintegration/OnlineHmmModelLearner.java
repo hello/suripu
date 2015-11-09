@@ -41,17 +41,23 @@ public class OnlineHmmModelLearner {
 
     }
 
-    static double [][] getConfusionCountMatrix(final int[] path, final Map<Integer, Integer> labels, final int numStates) {
+    double [][] getConfusionCountMatrix(final int[] path, final Map<Integer, Integer> labels, final int numStates) {
         final double [][] mtx = new double[numStates][numStates];
 
         for (final Map.Entry<Integer,Integer> entry : labels.entrySet()) {
 
-            if (entry.getKey() >= path.length) {
+            if (entry.getKey() >= path.length || entry.getKey() < 0) {
                 continue;
             }
 
             final int prediction = path[entry.getKey()];
             final int label = entry.getValue();
+
+            if (label < 0 || label >= mtx[prediction].length) {
+                LOGGER.warn("label {} exceeds index bounds of {}, skipping",label,mtx[prediction].length);
+                continue;
+            }
+
 
             mtx[prediction][label] += 1.0;
         }
@@ -60,7 +66,7 @@ public class OnlineHmmModelLearner {
     }
 
 
-    static double getModelLikelihood(final int [] path, final Map<Integer,Integer> labels, final int numStates) {
+    double getModelLikelihood(final int [] path, final Map<Integer,Integer> labels, final int numStates) {
         final double [][] confusionCountMatrix = getConfusionCountMatrix(path, labels, numStates);
 
         //penalize mis-predictions
