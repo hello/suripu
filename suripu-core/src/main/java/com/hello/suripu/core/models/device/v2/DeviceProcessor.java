@@ -255,7 +255,6 @@ public class DeviceProcessor {
         // First attempt: get it from heartbeat
         final Optional<PillHeartBeat> pillHeartBeatOptional = this.pillHeartBeatDAODynamoDB.get(pillAccountPair.externalDeviceId);
 
-        // Second attempt: get it from tracker motion
         if (pillHeartBeatOptional.isPresent()) {
             return pillHeartBeatOptional;
         }
@@ -267,7 +266,7 @@ public class DeviceProcessor {
             return Optional.of(PillHeartBeat.fromDeviceStatus(pillAccountPair.externalDeviceId, pillStatusOptional.get()));
         }
 
-        LOGGER.warn("No pill heartbeat for pill {} in postgres", pillAccountPair.externalDeviceId);
+        LOGGER.warn("No pill heartbeat for pill {} in trackerMotionDAO", pillAccountPair.externalDeviceId);
         return Optional.absent();
     }
 
