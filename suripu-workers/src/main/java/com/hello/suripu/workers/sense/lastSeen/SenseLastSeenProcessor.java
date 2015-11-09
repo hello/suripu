@@ -136,6 +136,13 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
 
         messagesProcessed.mark(records.size());
 
+        try {
+            iRecordProcessorCheckpointer.checkpoint();
+        } catch (InvalidStateException e) {
+            LOGGER.error("checkpoint {}", e.getMessage());
+        } catch (ShutdownException e) {
+            LOGGER.error("Received shutdown command at checkpoint, bailing. {}", e.getMessage());
+        }
 
         final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f);
         LOGGER.info("{} - seen device: {}", shardId, seenSenses.size());
