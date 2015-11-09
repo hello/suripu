@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataReadDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -16,6 +17,7 @@ import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
@@ -61,7 +63,7 @@ public class InsightProcessor {
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_WEEK = 2;
 
-    private final DeviceDataDAO deviceDataDAO;
+    private final DeviceDataReadDAO deviceDataDAO;
     private final DeviceReadDAO deviceDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final TrackerMotionDAO trackerMotionDAO;
@@ -74,7 +76,7 @@ public class InsightProcessor {
     private final AccountInfoProcessor accountInfoProcessor;
     private final CalibrationDAO calibrationDAO;
 
-    public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
+    public InsightProcessor(@NotNull final DeviceDataReadDAO deviceDataDAO,
                             @NotNull final DeviceReadDAO deviceDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final TrackerMotionDAO trackerMotionDAO,
@@ -112,7 +114,9 @@ public class InsightProcessor {
             return;
         }
 
-        final Long deviceId = deviceIdOptional.get();
+        final Long internalDeviceId = deviceIdOptional.get();
+
+        final DeviceId deviceId = DeviceId.create(internalDeviceId);
 
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
             this.generateNewUserInsights(accountId, deviceId, accountAge);
@@ -127,7 +131,7 @@ public class InsightProcessor {
      * @param accountId
      * @param accountAge
      */
-    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final Long deviceId, final int accountAge) {
+    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final DeviceId deviceId, final int accountAge) {
 
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
 
@@ -163,7 +167,7 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId, final RolloutClient featureFlipper) {
+    private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final RolloutClient featureFlipper) {
         final Set<InsightCard.Category> recentCategories  = this.getRecentInsightsCategories(accountId);
         final DateTime currentTime = DateTime.now();
         return generateGeneralInsights(accountId, deviceId, recentCategories, currentTime, featureFlipper);
@@ -174,7 +178,7 @@ public class InsightProcessor {
      * @param accountId
      */
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final Long deviceId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+    public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(accountId, recentCategories, currentTime);
 
@@ -314,17 +318,17 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final Long deviceId, final InsightCard.Category category) {
+    public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceId deviceId, final InsightCard.Category category) {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
             case LIGHT:
-                insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData);
+                insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataDAO, lightData, sleepStatsDAODynamoDB);
                 break;
             case TEMPERATURE:
                 final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
                 final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit);
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataDAO, tempPref, tempUnit, sleepStatsDAODynamoDB);
                 break;
             case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);

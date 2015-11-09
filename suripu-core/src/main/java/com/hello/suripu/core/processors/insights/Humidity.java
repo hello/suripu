@@ -3,8 +3,10 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.HumidityMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
@@ -35,8 +37,8 @@ public class Humidity {
     //Do not set PRE_BED_END_HOUR_LOCAL before midnight or sql query will need to change
 
     public static Optional<InsightCard> getInsights(final Long accountId,
-                                                    final Long deviceId,
-                                                    final DeviceDataDAO deviceDataDAO,
+                                                    final DeviceId deviceId,
+                                                    final DeviceDataReadDAO deviceDataDAO,
                                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
 
@@ -89,7 +91,7 @@ public class Humidity {
         return medianHumidity;
     }
 
-    private static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final Integer timeZoneOffset) {
+    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataReadDAO deviceDataDAO, final Integer timeZoneOffset) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(PRE_BED_BEGIN_HOUR_LOCAL);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);

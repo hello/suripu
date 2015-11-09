@@ -6,8 +6,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.ParticulatesAnomalyMsgEN;
 import com.hello.suripu.core.models.Insights.Message.ParticulatesLevelMsgEN;
@@ -31,7 +33,7 @@ public class Particulates {
 
     private static final Integer NUM_DAYS = 7;
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataReadDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
@@ -61,7 +63,7 @@ public class Particulates {
                 DateTime.now(DateTimeZone.UTC)));
     }
 
-    private static List<Float> getAvgAirQualityList(final Long accountId, final Long deviceId, final Integer num_days, final Integer timeZoneOffset, final DeviceDataDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
+    private static List<Float> getAvgAirQualityList(final Long accountId, final DeviceId deviceId, final Integer num_days, final Integer timeZoneOffset, final DeviceDataReadDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay(); //start of day time?
         final DateTime queryStartTime = queryEndTime.minusDays(num_days);
@@ -122,9 +124,9 @@ public class Particulates {
     }
 
 
-    public static ImmutableList<Float> getAirQualityList(final DeviceDataDAO deviceDataDAO,
+    public static ImmutableList<Float> getAirQualityList(final DeviceDataReadDAO deviceDataDAO,
                                                          final Long accountId,
-                                                         final Long deviceId,
+                                                         final DeviceId deviceId,
                                                          final DateTime startTimestamp,
                                                          final DateTime endTimestamp,
                                                          final DateTime startLocalTimestamp,

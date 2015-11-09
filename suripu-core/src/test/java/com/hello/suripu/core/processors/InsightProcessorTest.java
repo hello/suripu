@@ -15,6 +15,7 @@ import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -45,7 +46,7 @@ public class InsightProcessorTest {
 
 
     private final Long FAKE_ACCOUNT_ID = 9999L;
-    private final Long FAKE_DEVICE_ID = 9998L;
+    private final DeviceId FAKE_DEVICE_ID = DeviceId.create(9998L);
 
     private final DateTime FAKE_SATURDAY = DateTime.parse("2015-09-05").withTimeAtStartOfDay();
     private final DateTime FAKE_FRIDAY = DateTime.parse("2015-09-04").withTimeAtStartOfDay();
@@ -115,7 +116,7 @@ public class InsightProcessorTest {
         fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, fakeSleepStat));
 
         //Taking care of @NotNull check for light
-        Mockito.when(deviceDataDAO.getLightByBetweenHourDate(Mockito.any(Long.class), Mockito.any(Long.class), Mockito.any(Integer.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class))).thenReturn(ImmutableList.copyOf(data));
+        Mockito.when(deviceDataDAO.getLightByBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class), Mockito.any(Integer.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class),Mockito.any(Integer.class), Mockito.any(Integer.class))).thenReturn(ImmutableList.copyOf(data));
 
         Mockito.when(deviceDataDAO.toString()).thenReturn("someString");
         Mockito.when(deviceDAO.getMostRecentSenseByAccountId(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_DEVICE_ID));
@@ -132,7 +133,7 @@ public class InsightProcessorTest {
 
         //Taking care of @NotNull check for humidity
         Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(offsetMillis));
-        Mockito.when(deviceDataDAO.getBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(Long.class),Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class)))
+        Mockito.when(deviceDataDAO.getBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class),Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class)))
                 .thenReturn(ImmutableList.copyOf(data));
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.HUMIDITY, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
 

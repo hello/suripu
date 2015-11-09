@@ -2,8 +2,11 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.TemperatureMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
@@ -48,16 +51,26 @@ public class TemperatureHumidity {
     private static final int TEMP_START_HOUR = 23; // 11pm
     private static final int TEMP_END_HOUR = 6; // 6am
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final Long deviceId,
-                                                    final DeviceDataDAO deviceDataDAO,
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId,
+                                                    final DeviceDataReadDAO deviceDataDAO,
                                                     final AccountInfo.SleepTempType tempPref,
-                                                    final TemperatureUnit tempUnit) {
-        final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(TEMP_END_HOUR); // today 6am
+                                                    final TemperatureUnit tempUnit, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
+        if (!timeZoneOffsetOptional.isPresent()) {
+            return Optional.absent(); //cannot compute insight without timezone info
+        }
+        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
+
+        // get light data for last three days, filter by time
+        final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(TEMP_END_HOUR); // today 6am
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS).withHourOfDay(TEMP_START_HOUR); // 11pm three days ago
+
+        final DateTime queryEndTimeLocal = queryEndTime.plusMillis(timeZoneOffset);
+        final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         final int slotDuration = 30;
         final List<DeviceData> sensorData = deviceDataDAO.getBetweenByLocalHourAggregateBySlotDuration(accountId, deviceId, queryStartTime,
-                queryEndTime, TEMP_START_HOUR, TEMP_END_HOUR, slotDuration);
+                queryEndTime, queryStartTimeLocal, queryEndTimeLocal, TEMP_START_HOUR, TEMP_END_HOUR, slotDuration);
 
         final Optional<InsightCard> card = processData(accountId, sensorData, tempPref, tempUnit);
         return card;
