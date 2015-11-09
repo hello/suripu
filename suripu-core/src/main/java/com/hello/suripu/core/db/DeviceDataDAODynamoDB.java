@@ -15,6 +15,7 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededExce
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -506,9 +507,13 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
             final QueryResult queryResult;
             try {
                 queryResult = this.dynamoDBClient.query(queryRequest);
-            } catch (ProvisionedThroughputExceededException e) {
+            } catch (ProvisionedThroughputExceededException ptee) {
                 backoff(numAttempts);
                 continue;
+            } catch (ResourceNotFoundException rnfe) {
+                // Invalid table name
+                LOGGER.error("Got ResourceNotFoundException while attempting to read from table {}; {}", tableName, rnfe);
+                break;
             }
             final List<Map<String, AttributeValue>> items = queryResult.getItems();
 

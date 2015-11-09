@@ -317,6 +317,18 @@ public class DeviceDataDAODynamoDBIT {
     }
 
     @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationNoShard() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        // No table created for this date
+        final DateTime firstTime = new DateTime(2015, 9, 1, 7, 0, DateTimeZone.UTC);
+
+        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                is(0));
+    }
+
+    @Test
     public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationAcrossMonths() {
         final Long accountId = new Long(1);
         final String deviceId = "2";
@@ -405,7 +417,7 @@ public class DeviceDataDAODynamoDBIT {
 
             @Override
             public void beforeRequest(Request<?> request) {
-                if (request.getOriginalRequest() instanceof QueryRequest &&  numTries < 2) {
+                if (request.getOriginalRequest() instanceof QueryRequest && numTries < 2) {
                     numTries++;
                     LOGGER.info("Injecting ProvisionedThroughputExceededException");
                     throw new ProvisionedThroughputExceededException("Injected Error");
