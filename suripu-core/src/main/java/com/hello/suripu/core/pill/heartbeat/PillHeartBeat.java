@@ -2,6 +2,7 @@ package com.hello.suripu.core.pill.heartbeat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.hello.suripu.core.models.DeviceStatus;
 import org.joda.time.DateTime;
 
 public class PillHeartBeat {
@@ -40,6 +41,11 @@ public class PillHeartBeat {
      */
     public static PillHeartBeat create(final String pillId, final int batteryLevel, final int firmwareVersion, final int uptimeInSeconds, final DateTime createdAtUTC) {
         return new PillHeartBeat(pillId, batteryLevel, firmwareVersion, uptimeInSeconds, createdAtUTC);
+    }
+
+
+    public static PillHeartBeat fromDeviceStatus(final String pillId, final DeviceStatus deviceStatus) {
+        return new PillHeartBeat(pillId, deviceStatus.batteryLevel, Integer.parseInt(deviceStatus.firmwareVersion), deviceStatus.uptime, deviceStatus.lastSeen);
     }
 
 
