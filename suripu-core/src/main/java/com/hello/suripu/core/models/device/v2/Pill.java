@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.*;
+import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
 import org.joda.time.DateTime;
 
 
@@ -62,13 +63,14 @@ public class Pill {
         this.color = color;
     }
 
-    public static Pill create(DeviceAccountPair pillAccountPair, Optional<DeviceStatus> pillStatusOptional, final Optional<Color> pillColorOptional) {
+    public static Pill create(DeviceAccountPair pillAccountPair, Optional<PillHeartBeat> pillHeartBeatOptional, final Optional<Color> pillColorOptional) {
         final Color color = pillColorOptional.isPresent() ? pillColorOptional.get() : DEFAULT_COLOR;
-        if (!pillStatusOptional.isPresent()) {
+        if (!pillHeartBeatOptional.isPresent()) {
             return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.<String>absent(), Optional.<Integer>absent(), Optional.<DateTime>absent(), State.UNKNOWN, color);
         }
-        final DeviceStatus pillStatus = pillStatusOptional.get();
-        final State state = pillStatus.batteryLevel < MIN_IDEAL_BATTERY_LEVEL ? State.LOW_BATTERY : State.NORMAL;
-        return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.of(pillStatus.firmwareVersion), Optional.of(pillStatus.batteryLevel), Optional.of(pillStatus.lastSeen), state, color);
+        final PillHeartBeat pillHeartBeat = pillHeartBeatOptional.get();
+        final State state = pillHeartBeat.batteryLevel < MIN_IDEAL_BATTERY_LEVEL ? State.LOW_BATTERY : State.NORMAL;
+        return new Pill(pillAccountPair.internalDeviceId, pillAccountPair.externalDeviceId, Optional.of(String.valueOf(pillHeartBeat.firmwareVersion)), Optional.of(pillHeartBeat.batteryLevel), Optional.of(pillHeartBeat.createdAtUTC), state, color);
     }
+
 }
