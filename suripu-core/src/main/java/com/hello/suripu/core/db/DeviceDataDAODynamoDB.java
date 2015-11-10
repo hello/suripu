@@ -30,6 +30,7 @@ import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -71,7 +72,7 @@ import java.util.Set;
  * See http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GuidelinesForTables.html#GuidelinesForTables.TimeSeriesDataAccessPatterns
  * and http://stackoverflow.com/a/30200359
  */
-public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
+public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataReadDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private final Timer aggregationTimer;
@@ -809,6 +810,14 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .build();
     }
 
+    final List<DeviceData> attributeMapsToDeviceDataList(final List<Map<String, AttributeValue>> items) {
+        final List<DeviceData> dataList = Lists.newArrayListWithCapacity(items.size());
+        for (final Map<String, AttributeValue> item: items) {
+            dataList.add(attributeMapToDeviceData(item));
+        }
+        return dataList;
+    }
+
     /**
      * Get the most recent DeviceData for the accountId, in the same shard as now.
      * @param accountId
@@ -877,7 +886,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     /**
      *
      * @param accountId
-     * @param externalDeviceId
+     * @param deviceId
      * @param minLightLevel Only return DeviceDatas whose ambientLight is > this value.
      * @param startTime Earliest UTC time to retrieve (inclusive)
      * @param endTime Latest UTC time to retrieve (inclusive)
@@ -887,8 +896,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
      * @param endHour The end hour of the "morning after"
      * @return DeviceDatas matching the above criteria
      */
+    @Override
     public ImmutableList<DeviceData> getLightByBetweenHourDateByTS(final Long accountId,
-                                                                   final String externalDeviceId,
+                                                                   final DeviceId deviceId,
                                                                    final int minLightLevel,
                                                                    final DateTime startTime,
                                                                    final DateTime endTime,
@@ -903,6 +913,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 LOCAL_UTC_FILTER_EXPRESSION,
                 getBinaryExpression(Attribute.AMBIENT_LIGHT, ">"));
 
+        final String externalDeviceId = deviceId.externalDeviceId.get();
         final Map<String, AttributeValue> expressionAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, startTime, endTime, startLocalTime, endLocalTime);
         expressionAttributeValues.put(Attribute.AMBIENT_LIGHT.expressionAttributeValue(), toAttributeValue(minLightLevel));
 
@@ -920,10 +931,36 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
         return ImmutableList.copyOf(results);
     }
 
+    private List<Map<String, AttributeValue>> getItemsBetweenLocalTime(
+            final Long accountId,
+            final DeviceId deviceId,
+            final DateTime startUTCTime,
+            final DateTime endUTCTime,
+            final DateTime startLocalTime,
+            final DateTime endLocalTime,
+            final Collection<Attribute> attributes)
+    {
+        final String keyConditionExpression = KEY_CONDITION_RANGE_EXPRESSION;
+
+        final String filterExpression = LOCAL_UTC_FILTER_EXPRESSION;
+
+        final String externalDeviceId = deviceId.externalDeviceId.get();
+        final Map<String, AttributeValue> expressionAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime);
+
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        for (final Map<String, AttributeValue> result : query(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, attributes, Optional.of(filterExpression), expressionAttributeValues)) {
+            if (externalDeviceIdFromDDBItem(result).equals(externalDeviceId)) {
+                results.add(result);
+            }
+        }
+
+        return results;
+    }
+
     /**
      *
      * @param accountId
-     * @param externalDeviceId
+     * @param deviceId
      * @param startUTCTime Earliest UTC time to retrieve (inclusive)
      * @param endUTCTime Latest UTC time to retrieve (inclusive)
      * @param startLocalTime Earliest local time to retrieve (inclusive)
@@ -932,28 +969,15 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
      * @return DeviceDatas matching the above criteria
      */
     public List<DeviceData> getBetweenLocalTime(final Long accountId,
-                                                final String externalDeviceId,
+                                                final DeviceId deviceId,
                                                 final DateTime startUTCTime,
                                                 final DateTime endUTCTime,
                                                 final DateTime startLocalTime,
                                                 final DateTime endLocalTime,
                                                 final Collection<Attribute> attributes)
     {
-        final String keyConditionExpression = KEY_CONDITION_RANGE_EXPRESSION;
-
-        final String filterExpression = LOCAL_UTC_FILTER_EXPRESSION;
-
-        final Map<String, AttributeValue> expressionAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime);
-
-        final List<DeviceData> results = Lists.newArrayList();
-        for (final Map<String, AttributeValue> result : query(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, attributes, Optional.of(filterExpression), expressionAttributeValues)) {
-            final DeviceData data = attributeMapToDeviceData(result);
-            if (data.externalDeviceId.equals(externalDeviceId)) {
-                results.add(data);
-            }
-        }
-
-        return results;
+        final List<Map<String, AttributeValue>> results = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
+        return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
     }
 
     private List<Integer> averageDailyAirQualityRaw(final List<DeviceData> deviceDataList) {
@@ -987,47 +1011,49 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     /**
      * Get daily (based on local time) average air quality raw.
      */
+    @Override
     public ImmutableList<Integer> getAirQualityRawList(final Long accountId,
-                                                       final String externalDeviceId,
+                                                       final DeviceId deviceId,
                                                        final DateTime startUTCTime,
                                                        final DateTime endUTCTime,
                                                        final DateTime startLocalTime,
                                                        final DateTime endLocalTime)
     {
         final Set<Attribute> attributes = new ImmutableSet.Builder<Attribute>().addAll(BASE_ATTRIBUTES).add(Attribute.AMBIENT_AIR_QUALITY_RAW).build();
-        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
+        final List<DeviceData> results = getBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
 
         final List<Integer> aggregated = averageDailyAirQualityRaw(results);
         return ImmutableList.copyOf(aggregated);
     }
 
-    private ImmutableList<DeviceData> getBetweenHourDateByTS(final Long accountId,
-                                                            final String externalDeviceId,
-                                                            final DateTime startUTCTime,
-                                                            final DateTime endUTCTime,
-                                                            final DateTime startLocalTime,
-                                                            final DateTime endLocalTime,
-                                                            final int startHour,
-                                                            final int endHour,
-                                                            final boolean sameDay)
+    private List<Map<String, AttributeValue>> getBetweenHourDateByTS(final Long accountId,
+                                                             final DeviceId deviceId,
+                                                             final DateTime startUTCTime,
+                                                             final DateTime endUTCTime,
+                                                             final DateTime startLocalTime,
+                                                             final DateTime endLocalTime,
+                                                             final int startHour,
+                                                             final int endHour,
+                                                             final boolean sameDay)
     {
-        final List<DeviceData> results = getBetweenLocalTime(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
-        final List<DeviceData> filteredResults = Lists.newArrayList();
-        for (final DeviceData data: results) {
-            final int hourOfDay = data.localTime().getHourOfDay();
+        final List<Map<String, AttributeValue>> results = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
+        final List<Map<String, AttributeValue>> filteredResults = Lists.newArrayList();
+        for (final Map<String, AttributeValue> result: results) {
+            final int hourOfDay = timestampFromDDBItem(result).plusMillis(Attribute.OFFSET_MILLIS.getInteger(result)).getHourOfDay();
             if (sameDay && (hourOfDay >= startHour && hourOfDay < endHour) ||
                     (!sameDay && (hourOfDay >= startHour || hourOfDay < endHour))) {
-                filteredResults.add(data);
+                filteredResults.add(result);
             }
         }
-        return ImmutableList.copyOf(filteredResults);
+        return filteredResults;
     }
 
     /**
      * Get DeviceDatas that fall within [startHour, endHour) where endHour > startHour.
      */
+    @Override
     public ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(final Long accountId,
-                                                                   final String externalDeviceId,
+                                                                   final DeviceId deviceId,
                                                                    final DateTime startUTCTime,
                                                                    final DateTime endUTCTime,
                                                                    final DateTime startLocalTime,
@@ -1035,14 +1061,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                                                                    final int startHour,
                                                                    final int endHour)
     {
-        return getBetweenHourDateByTS(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
+        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
+        return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
     }
 
     /**
      *  Get DeviceDatas that are >= startHour or < endHour, where startHour > endHour (because it's from the prev night)
      */
+    @Override
     public ImmutableList<DeviceData> getBetweenHourDateByTS(final Long accountId,
-                                                            final String externalDeviceId,
+                                                            final DeviceId deviceId,
                                                             final DateTime startUTCTime,
                                                             final DateTime endUTCTime,
                                                             final DateTime startLocalTime,
@@ -1050,7 +1078,25 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                                                             final int startHour,
                                                             final int endHour)
     {
-        return getBetweenHourDateByTS(accountId, externalDeviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
+        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
+        return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
+    }
+
+    /**
+     * Same as getBetweenHourDateByTS, but aggregated to slotDuration minutes.
+     */
+    @Override
+    public ImmutableList<DeviceData> getBetweenByLocalHourAggregateBySlotDuration(final Long accountId,
+                                                                                  final DeviceId deviceId,
+                                                                                  final DateTime start,
+                                                                                  final DateTime end,
+                                                                                  final DateTime startLocal,
+                                                                                  final DateTime endLocal,
+                                                                                  int startHour,
+                                                                                  int endHour,
+                                                                                  final Integer slotDuration) {
+        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, start, end, startLocal, endLocal, startHour, endHour, false);
+        return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(results, slotDuration));
     }
 
 }
