@@ -425,8 +425,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         final Map<String, AttributeValue> firstItem = items.get(0);
         final DeviceData.Builder templateBuilder = new DeviceData.Builder()
                 .withAccountId(Long.valueOf(firstItem.get(Attribute.ACCOUNT_ID.name).getN()))
-                .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem))
-                .withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(firstItem));
+                .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem));
         DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
 
         for (final Map<String, AttributeValue> item: items) {
@@ -437,6 +436,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             } else if (itemDateTime.isAfter(currSlotTime)) {
                 // Outside the window, aggregate working set to single value.
                 templateBuilder.withDateTimeUTC(currSlotTime);
+                templateBuilder.withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(currentWorkingList.get(0)));
                 resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
 
                 // Create new working sets
@@ -450,6 +450,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         }
 
         templateBuilder.withDateTimeUTC(currSlotTime);
+        templateBuilder.withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(currentWorkingList.get(0)));
         resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
         return resultList;
     }
