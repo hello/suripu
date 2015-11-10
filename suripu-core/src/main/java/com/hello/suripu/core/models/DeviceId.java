@@ -11,7 +11,7 @@ public class DeviceId {
     public final Optional<Long> internalDeviceId;
     public final Optional<String> externalDeviceId;
 
-    public DeviceId(final Optional<Long> internalDeviceId, final Optional<String> externalDeviceId) {
+    private DeviceId(final Optional<Long> internalDeviceId, final Optional<String> externalDeviceId) {
         this.internalDeviceId = internalDeviceId;
         this.externalDeviceId = externalDeviceId;
     }
