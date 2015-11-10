@@ -1,12 +1,18 @@
 package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
+import com.hello.suripu.core.algorithmintegration.EvaluationResult;
+import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
+import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
+import com.hello.suripu.core.algorithmintegration.OnlineHmmModelLearner;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAOFromFile;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
@@ -502,6 +508,44 @@ public class OnlineHmmTest {
         //make sure that no new entries were created, and that there is a scratchpad
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
         TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
+
+
+
+    }
+
+    @Test
+    public void testLabelArrayBounds() {
+
+        final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAOFromFile(
+                HmmUtils.getPathFromResourcePath(ENSEMBLE_MODELS_RESOURCE),
+                HmmUtils.getPathFromResourcePath(SEED_MODEL_RESOURCE));
+
+        final Multimap<String, MultiEvalHmmDecodedResult> modelEvaluations = ArrayListMultimap.create();
+        final Map<String, MultiEvalHmmDecodedResult> predictions = Maps.newHashMap();
+
+        final double pathcost = 99.99;
+        final int [] path = {0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2};
+        modelEvaluations.put("foo",new MultiEvalHmmDecodedResult(path,pathcost,"foobars"));
+
+        final EvaluationResult evaluationResult = new EvaluationResult(modelEvaluations,predictions);
+
+        final OnlineHmmModelLearner learner = new OnlineHmmModelLearner(Optional.<UUID>absent());
+
+
+        final Map<String,Map<Integer,Integer>> labels = Maps.newHashMap();
+        final Map<Integer,Integer> exceedTimeBoundsLabel = Maps.newHashMap();
+
+        exceedTimeBoundsLabel.put(-1,0);
+        exceedTimeBoundsLabel.put(1,0);
+        exceedTimeBoundsLabel.put(2,3);
+        exceedTimeBoundsLabel.put(3,-2);
+        exceedTimeBoundsLabel.put(4,0);
+        exceedTimeBoundsLabel.put(path.length + 100,0);
+
+        labels.put("foo",exceedTimeBoundsLabel);
+
+        //the test is that we do not get an exception
+        learner.updateModelWeights(evaluationResult,defaultModelEnsembleDAO.getDefaultModelEnsemble(),labels);
 
 
 

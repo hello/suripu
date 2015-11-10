@@ -276,33 +276,16 @@ public class DeviceResources extends BaseResource {
         final List<Device> devices = Lists.newArrayList();
 
         for (final DeviceAccountPair pill : pills) {
-
-            // Enable DynamoDB reads
-            if(hasPillHeartBeatDynamoDBReadEnabled(pill.externalDeviceId)) {
-                final Optional<PillHeartBeat> pillHeartBeatOptional = pillHeartBeatDAODynamoDB.get(pill.externalDeviceId);
-                if(pillHeartBeatOptional.isPresent()) {
-                    final PillHeartBeat pillHeartBeat = pillHeartBeatOptional.get();
-                    final Device.State state = pillState(pillHeartBeat.batteryLevel);
-                    devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, state, String.valueOf(pillHeartBeat.firmwareVersion), pillHeartBeat.createdAtUTC, pillColor));
-                    continue;
-                }
+            final Optional<PillHeartBeat> pillHeartBeatOptional = pillHeartBeatDAODynamoDB.get(pill.externalDeviceId);
+            if(pillHeartBeatOptional.isPresent()) {
+                final PillHeartBeat pillHeartBeat = pillHeartBeatOptional.get();
+                final Device.State state = pillState(pillHeartBeat.batteryLevel);
+                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, state, String.valueOf(pillHeartBeat.firmwareVersion), pillHeartBeat.createdAtUTC, pillColor));
+                continue;
             }
 
-            Optional<DeviceStatus> pillStatusOptional = this.pillHeartBeatDAO.getPillStatus(pill.internalDeviceId);
-            if (!pillStatusOptional.isPresent()) {
-                // no heartbeat yet, pull from tracker-motion
-                LOGGER.warn("No heartbeat yet for pill id = {} (external id = {}) for account_id = {}", pill.internalDeviceId, pill.externalDeviceId, pill.accountId);
-                pillStatusOptional = this.trackerMotionDAO.pillStatus(pill.internalDeviceId, accountId);
-            }
-
-            if(!pillStatusOptional.isPresent()) {
-                LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null, pillColor));
-            } else {
-                final DeviceStatus deviceStatus = pillStatusOptional.get();
-                final Device.State state = pillState(deviceStatus.batteryLevel);
-                devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, state, deviceStatus.firmwareVersion, deviceStatus.lastSeen, pillColor));
-            }
+            LOGGER.debug("No pill status found for pill_id = {} ({}) for account: {}", pill.externalDeviceId, pill.internalDeviceId, pill.accountId);
+            devices.add(new Device(Device.Type.PILL, pill.externalDeviceId, Device.State.UNKNOWN, null, null, pillColor));
         }
 
         return devices;

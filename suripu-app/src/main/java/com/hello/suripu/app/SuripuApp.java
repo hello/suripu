@@ -465,10 +465,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withDeviceDataDAO(deviceDataDAO)
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
-                .withPillHeartbeatDAO(pillHeartBeatDAO)
                 .withTrackerMotionDAO(trackerMotionDAO)
                 .withWifiInfoDAO(wifiInfoDAO)
                 .withSenseColorDAO(senseColorDAO)
+                .withPillHeartbeatDAO(pillHeartBeatDAODynamoDB)
                 .build();
 
         environment.addResource(PasswordResetResource.create(accountDAO, passwordResetDB, configuration.emailConfiguration()));

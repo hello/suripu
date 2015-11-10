@@ -65,8 +65,8 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
 
 
     private String shardId = "";
-    private Random random;
-    private LoadingCache<String, List<DeviceAccountPair>> dbCache;
+    private final Random random;
+    private final LoadingCache<String, List<DeviceAccountPair>> dbCache;
 
     public SenseSaveProcessor(final DeviceReadDAO deviceDAO, final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final Integer maxRecords, final boolean updateLastSeen) {
         this.deviceDAO = deviceDAO;
@@ -83,9 +83,13 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
         this.fetchTimezones = Metrics.defaultRegistry().newTimer(deviceDataDAO.name(), "fetch-timezones");
         this.capacity = Metrics.defaultRegistry().newMeter(deviceDataDAO.name(), "capacity", "capacity", TimeUnit.SECONDS);
 
+
+        random = new Random(System.currentTimeMillis());
+        final int jitter = random.nextInt(4);
+        LOGGER.info("Jitter: {}", jitter);
         this.dbCache  = CacheBuilder.newBuilder()
                 .maximumSize(20000)
-                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .expireAfterWrite(4 + jitter, TimeUnit.MINUTES)
                 .recordStats()
                 .build(
                         new CacheLoader<String, List<DeviceAccountPair>>() {
@@ -94,7 +98,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                                 return deviceDAO.getAccountIdsForDeviceId(senseId);
                             }
                         });
-        random = new Random(System.currentTimeMillis());
+
 
     }
 
