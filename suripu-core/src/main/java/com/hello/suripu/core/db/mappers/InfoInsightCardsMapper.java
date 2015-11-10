@@ -20,8 +20,10 @@ public class InfoInsightCardsMapper implements ResultSetMapper<Optional<InfoInsi
     @Override
     public Optional<InfoInsightCards> map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
+        final String categoryString = r.getString("category");
+
         try {
-            InsightCard.Category category = InsightCard.Category.fromString(r.getString("category"));
+            InsightCard.Category category = InsightCard.Category.fromString(categoryString);
 
             return Optional.of(new InfoInsightCards(r.getInt("id"),
                     category,
@@ -30,7 +32,7 @@ public class InfoInsightCardsMapper implements ResultSetMapper<Optional<InfoInsi
                     r.getString("image_url")));
 
         } catch (IllegalArgumentException exception) {
-            LOGGER.debug("Illegal argument {} found in info_insight_cards", r.getString("category"));
+            LOGGER.debug("Illegal argument {} found in info_insight_cards", categoryString);
         }
         return Optional.absent();
     }

@@ -26,7 +26,7 @@ public abstract class TrendsInsightsDAO {
     public List<InfoInsightCards> getGenericInsightCardsByCategory(final String category) {
         final List<Optional<InfoInsightCards>> optionalInfoInsightCards = this.getGenericOptionalInsightCardsByCategory(category);
 
-        final List<InfoInsightCards> infoInsightCards = getPresentInfoInsightCards(optionalInfoInsightCards);
+        final List<InfoInsightCards> infoInsightCards = filterAbsentCards(optionalInfoInsightCards);
         return infoInsightCards;
     }
 
@@ -38,7 +38,7 @@ public abstract class TrendsInsightsDAO {
     public ImmutableList<InfoInsightCards> getAllGenericInsightCards() {
         final List<Optional<InfoInsightCards>> optionalInfoInsightCards = this.getAllGenericOptionalInsightCards();
 
-        final List<InfoInsightCards> InfoInsightCards = getPresentInfoInsightCards(optionalInfoInsightCards);
+        final List<InfoInsightCards> InfoInsightCards = filterAbsentCards(optionalInfoInsightCards);
         return ImmutableList.copyOf(InfoInsightCards);
     }
 
@@ -47,7 +47,7 @@ public abstract class TrendsInsightsDAO {
     public abstract List<Optional<InfoInsightCards>> getAllGenericOptionalInsightCards();
 
 
-    public static List<InfoInsightCards> getPresentInfoInsightCards(final List<Optional<InfoInsightCards>> optionalInfoInsightCards) {
+    private static List<InfoInsightCards> filterAbsentCards(final List<Optional<InfoInsightCards>> optionalInfoInsightCards) {
         final List<InfoInsightCards> infoInsightCards = Lists.newArrayList();
 
         for (Optional<InfoInsightCards> optionalInsightCard : optionalInfoInsightCards) {
