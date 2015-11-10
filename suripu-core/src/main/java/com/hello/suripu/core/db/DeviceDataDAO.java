@@ -14,10 +14,10 @@ import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
-import com.hello.suripu.core.util.DataUtils;
 import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 
-public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
+public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataInsightQueryDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAO.class);
 
@@ -138,7 +138,6 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
             @Bind("end_ts") DateTime end,
             @Bind("slot_duration") Integer slotDuration);
 
-
     @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
@@ -146,27 +145,12 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
             "AND ts >= :start_ts AND ts < :end_ts " +
             "GROUP BY ts_bucket " +
             "ORDER BY ts_bucket ASC")
-    public abstract ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
+    protected abstract ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             @Bind("account_id") Long accountId,
             @Bind("device_id") Long deviceId,
             @Bind("start_ts") DateTime start,
             @Bind("end_ts") DateTime end,
             @Bind("slot_duration") Integer slotDuration);
-
-    @RegisterMapper(DeviceDataMapper.class)
-    @SqlQuery("SELECT * FROM device_sensors_master " +
-            "WHERE account_id = :account_id AND device_id = :device_id AND ambient_light > :light_level " +
-            "AND local_utc_ts >= :start_ts AND local_utc_ts <= :end_ts " +
-            "AND (CAST(date_part('hour', local_utc_ts) AS integer) >= :start_hour " +
-            "OR CAST(date_part('hour', local_utc_ts) AS integer) < :end_hour) " +
-            "ORDER BY ts")
-    public abstract ImmutableList<DeviceData> getLightByBetweenHourDate(@Bind("account_id") Long accountId,
-                                                                        @Bind("device_id") Long deviceId,
-                                                                        @Bind("light_level") int lightLevel,
-                                                                        @Bind("start_ts") DateTime startTimestamp,
-                                                                        @Bind("end_ts") DateTime endTimestamp,
-                                                                        @Bind("start_hour") int startHour,
-                                                                        @Bind("end_hour") int endHour);
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
@@ -177,28 +161,54 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
             "AND (CAST(date_part('hour', local_utc_ts) AS integer) >= :start_hour " +
             "OR CAST(date_part('hour', local_utc_ts) AS integer) < :end_hour) " +
             "ORDER BY ts")
-    public abstract ImmutableList<DeviceData> getLightByBetweenHourDateByTS(@Bind("account_id") Long accountId,
-                                                                            @Bind("device_id") Long deviceId,
-                                                                            @Bind("light_level") int lightLevel,
-                                                                            @Bind("start_ts") DateTime startTimestamp,
-                                                                            @Bind("end_ts") DateTime endTimestamp,
-                                                                            @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
-                                                                            @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
-                                                                            @Bind("start_hour") int startHour,
-                                                                            @Bind("end_hour") int endHour);
+    protected abstract ImmutableList<DeviceData> getLightByBetweenHourDateByTS(@Bind("account_id") Long accountId,
+                                                                               @Bind("device_id") Long deviceId,
+                                                                               @Bind("light_level") int lightLevel,
+                                                                               @Bind("start_ts") DateTime startTimestamp,
+                                                                               @Bind("end_ts") DateTime endTimestamp,
+                                                                               @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                               @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
+                                                                               @Bind("start_hour") int startHour,
+                                                                               @Bind("end_hour") int endHour);
+
+    @Override
+    public ImmutableList<DeviceData> getLightByBetweenHourDateByTS(final Long accountId,
+                                                                   final DeviceId deviceId,
+                                                                   final int lightLevel,
+                                                                   final DateTime startTimestamp,
+                                                                   final DateTime endTimestamp,
+                                                                   final DateTime startLocalTimeStamp,
+                                                                   final DateTime endLocalTimeStamp,
+                                                                   final int startHour,
+                                                                   final int endHour)
+    {
+        return getLightByBetweenHourDateByTS(
+                accountId, deviceId.internalDeviceId.get(), lightLevel,
+                startTimestamp, endTimestamp, startLocalTimeStamp, endLocalTimeStamp, startHour, endHour);
+    }
 
     @SqlQuery("SELECT AVG(ambient_air_quality), EXTRACT(day FROM local_utc_ts) AS date FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
             "AND ts >= :start_ts AND ts <= :end_ts " +
             "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts " +
             "GROUP BY date")
-    public abstract ImmutableList<Integer> getAirQualityRawList(@Bind("account_id") Long accountId,
-                                                             @Bind("device_id") Long deviceId,
-                                                             @Bind("start_ts") DateTime startTimestamp,
-                                                             @Bind("end_ts") DateTime endTimestamp,
-                                                             @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
-                                                             @Bind("end_local_utc_ts") DateTime endLocalTimeStamp);
+    protected abstract ImmutableList<Integer> getAirQualityRawList(@Bind("account_id") Long accountId,
+                                                                   @Bind("device_id") Long deviceId,
+                                                                   @Bind("start_ts") DateTime startTimestamp,
+                                                                   @Bind("end_ts") DateTime endTimestamp,
+                                                                   @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                   @Bind("end_local_utc_ts") DateTime endLocalTimeStamp);
 
+    @Override
+    public ImmutableList<Integer> getAirQualityRawList(final Long accountId,
+                                                       final DeviceId deviceId,
+                                                       final DateTime startTimestamp,
+                                                       final DateTime endTimestamp,
+                                                       final DateTime startLocalTimeStamp,
+                                                       final DateTime endLocalTimeStamp)
+    {
+        return getAirQualityRawList(accountId, deviceId.internalDeviceId.get(), startTimestamp, endTimestamp, startLocalTimeStamp, endLocalTimeStamp);
+    }
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
@@ -207,14 +217,29 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
             "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts " +
             "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour " +
             "AND CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)")
-    public abstract ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(@Bind("account_id") Long accountId,
-                                                                            @Bind("device_id") Long deviceId,
-                                                                            @Bind("start_ts") DateTime startTimestamp,
-                                                                            @Bind("end_ts") DateTime endTimestamp,
-                                                                            @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
-                                                                            @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
-                                                                            @Bind("start_hour") int startHour,
-                                                                            @Bind("end_hour") int endHour);
+    protected abstract ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(@Bind("account_id") Long accountId,
+                                                                               @Bind("device_id") Long deviceId,
+                                                                               @Bind("start_ts") DateTime startTimestamp,
+                                                                               @Bind("end_ts") DateTime endTimestamp,
+                                                                               @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                               @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
+                                                                               @Bind("start_hour") int startHour,
+                                                                               @Bind("end_hour") int endHour);
+
+    @Override
+    public ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(final Long accountId,
+                                                                   final DeviceId deviceId,
+                                                                   final DateTime startTimestamp,
+                                                                   final DateTime endTimestamp,
+                                                                   final DateTime startLocalTimeStamp,
+                                                                   final DateTime endLocalTimeStamp,
+                                                                   final int startHour,
+                                                                   final int endHour)
+    {
+        return getBetweenHourDateByTSSameDay(
+                accountId, deviceId.internalDeviceId.get(), startTimestamp, endTimestamp,
+                startLocalTimeStamp, endLocalTimeStamp, startHour, endHour);
+    }
 
     @RegisterMapper(DeviceDataMapper.class)
     @SqlQuery("SELECT * FROM device_sensors_master " +
@@ -223,31 +248,63 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO {
             "AND local_utc_ts >= :start_local_utc_ts AND local_utc_ts <= :end_local_utc_ts " +
             "AND (CAST(date_part('hour', local_utc_ts) AS INTEGER) >= :start_hour " +
             "OR CAST(date_part('hour', local_utc_ts) AS INTEGER) < :end_hour)")
-    public abstract ImmutableList<DeviceData> getBetweenHourDateByTS(@Bind("account_id") Long accountId,
-                                                                     @Bind("device_id") Long deviceId,
-                                                                     @Bind("start_ts") DateTime startTimestamp,
-                                                                     @Bind("end_ts") DateTime endTimestamp,
-                                                                     @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
-                                                                     @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
-                                                                     @Bind("start_hour") int startHour,
-                                                                     @Bind("end_hour") int endHour);
+    protected abstract ImmutableList<DeviceData> getBetweenHourDateByTS(@Bind("account_id") Long accountId,
+                                                                        @Bind("device_id") Long deviceId,
+                                                                        @Bind("start_ts") DateTime startTimestamp,
+                                                                        @Bind("end_ts") DateTime endTimestamp,
+                                                                        @Bind("start_local_utc_ts") DateTime startLocalTimeStamp,
+                                                                        @Bind("end_local_utc_ts") DateTime endLocalTimeStamp,
+                                                                        @Bind("start_hour") int startHour,
+                                                                        @Bind("end_hour") int endHour);
+
+    @Override
+    public ImmutableList<DeviceData> getBetweenHourDateByTS(final Long accountId,
+                                                            final DeviceId deviceId,
+                                                            final DateTime startTimestamp,
+                                                            final DateTime endTimestamp,
+                                                            final DateTime startLocalTimeStamp,
+                                                            final DateTime endLocalTimeStamp,
+                                                            final int startHour,
+                                                            final int endHour)
+    {
+        return getBetweenHourDateByTS(
+                accountId, deviceId.internalDeviceId.get(), startTimestamp, endTimestamp,
+                startLocalTimeStamp, endLocalTimeStamp, startHour, endHour);
+    }
 
     @RegisterMapper(DeviceDataBucketMapper.class)
     @SqlQuery(AGGREGATE_SELECT_STRING_GROUPBY_TSBUCKET +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id AND device_id = :device_id " +
-            "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts " +
+            "AND ts >= :start_ts AND ts <= :end_ts " +
+            "AND local_utc_ts >= :start_local_ts AND local_utc_ts < :end_local_ts " +
             "AND (CAST(date_part('hour', local_utc_ts) AS integer) >= :start_hour " +
             "OR CAST(date_part('hour', local_utc_ts) AS integer) < :end_hour) " +
             "GROUP BY ts_bucket " +
             "ORDER BY ts_bucket ASC")
-    public abstract ImmutableList<DeviceData> getBetweenByLocalHourAggregateBySlotDuration(@Bind("account_id") Long accountId,
-                                                                                           @Bind("device_id") Long deviceId,
-                                                                                           @Bind("start_ts") DateTime start,
-                                                                                           @Bind("end_ts") DateTime end,
-                                                                                           @Bind("start_hour") int startHour,
-                                                                                           @Bind("end_hour") int endHour,
-                                                                                           @Bind("slot_duration") Integer slotDuration);
+    protected abstract ImmutableList<DeviceData> getBetweenByLocalHourAggregateBySlotDuration(@Bind("account_id") Long accountId,
+                                                                                              @Bind("device_id") Long deviceId,
+                                                                                              @Bind("start_ts") DateTime start,
+                                                                                              @Bind("end_ts") DateTime end,
+                                                                                              @Bind("start_local_ts") DateTime startLocal,
+                                                                                              @Bind("end_local_ts") DateTime endLocal,
+                                                                                              @Bind("start_hour") int startHour,
+                                                                                              @Bind("end_hour") int endHour,
+                                                                                              @Bind("slot_duration") Integer slotDuration);
+
+    @Override
+    public ImmutableList<DeviceData> getBetweenByLocalHourAggregateBySlotDuration(final Long accountId,
+                                                                                  final DeviceId deviceId,
+                                                                                  final DateTime start,
+                                                                                  final DateTime end,
+                                                                                  final DateTime startLocal,
+                                                                                  final DateTime endLocal,
+                                                                                  final int startHour,
+                                                                                  final int endHour,
+                                                                                  final Integer slotDuration)
+    {
+        return getBetweenByLocalHourAggregateBySlotDuration(accountId, deviceId.internalDeviceId.get(), start, end, startLocal, endLocal, startHour, endHour, slotDuration);
+    }
 
     @RegisterMapper(DeviceDataMapper.class)
     @SingleValueResult(DeviceData.class)
