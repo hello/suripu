@@ -552,6 +552,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return items;
     }
 
+    /**
+     * Aggregate DeviceDatas to the given slotDuration in minutes.
+     * @param accountId
+     * @param externalDeviceId
+     * @param start - Start timestamp, inclusive
+     * @param end - End timestamp, exclusive
+     * @param slotDuration - Duration of each aggregated bucket in minutes
+     * @param targetAttributes - Attributes to include in output DeviceDatas
+     * @return DeviceDatas matching the above filter criteria
+     */
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             final Long accountId,
             final String externalDeviceId,
@@ -561,9 +571,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             final Collection<Attribute> targetAttributes)
     {
         final String keyConditionExpression = KEY_CONDITION_RANGE_EXPRESSION;
-        final Map<String, AttributeValue> filterAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, start, end);
+        final DateTime endExclusive = end.minusMinutes(1);
+        final Map<String, AttributeValue> filterAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, start, endExclusive);
 
-        final List<Map<String, AttributeValue>> results = query(getTableNames(start, end), keyConditionExpression, targetAttributes, Optional.<String>absent(), filterAttributeValues);
+        final List<Map<String, AttributeValue>> results = query(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes, Optional.<String>absent(), filterAttributeValues);
         final List<Map<String, AttributeValue>> filteredResults = Lists.newLinkedList();
         for (final Map<String, AttributeValue> item : results) {
             if (externalDeviceIdFromDDBItem(item).equals(externalDeviceId)) {
