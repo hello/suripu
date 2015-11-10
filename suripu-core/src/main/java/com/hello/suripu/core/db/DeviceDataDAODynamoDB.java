@@ -664,7 +664,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
     {
         final Map<String, AttributeValue> expAttValues = getExpressionAttributeValues(accountId);
         expAttValues.put(Attribute.RANGE_KEY.expressionAttributeValueStart(), getRangeKey(startUTCTime, externalDeviceId));
-        expAttValues.put(Attribute.RANGE_KEY.expressionAttributeValueEnd(), getRangeKey(endUTCTime, externalDeviceId));
+        expAttValues.put(Attribute.RANGE_KEY.expressionAttributeValueEnd(), getRangeKey(endUTCTime.minusMinutes(1), externalDeviceId));
         return expAttValues;
     }
 
