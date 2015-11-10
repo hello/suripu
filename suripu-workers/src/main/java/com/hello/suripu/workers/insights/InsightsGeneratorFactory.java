@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
@@ -28,6 +29,7 @@ import com.hello.suripu.core.processors.insights.WakeStdDevData;
 public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final AccountReadDAO accountDAO;
     private final DeviceDataDAO deviceDataDAO;
+    private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceReadDAO deviceDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
@@ -42,6 +44,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
 
     public InsightsGeneratorFactory(final AccountDAO accountDAO,
                                     final DeviceDataDAO deviceDataDAO,
+                                    final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                                     final DeviceDAO deviceDAO,
                                     final TrackerMotionDAO trackerMotionDAO,
                                     final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
@@ -55,6 +58,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final CalibrationDAO calibrationDAO) {
         this.accountDAO = accountDAO;
         this.deviceDataDAO = deviceDataDAO;
+        this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
@@ -76,7 +80,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
         final AccountInfoProcessor accountInfoProcessor = builder.build();
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
-                .withSenseDAOs(deviceDataDAO, deviceDAO)
+                .withSenseDAOs(deviceDataDAO, deviceDataDAODynamoDB, deviceDAO)
                 .withTrackerMotionDAO(trackerMotionDAO)
                 .withInsightsDAO(trendsInsightsDAO)
                 .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB)

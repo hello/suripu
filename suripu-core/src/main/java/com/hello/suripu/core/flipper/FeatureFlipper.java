@@ -25,6 +25,7 @@ public class FeatureFlipper {
     public final static String DUST_SMOOTH = "dust_smooth";
     public final static String DYNAMODB_DEVICE_DATA = "dynamodb_device_data";
     public final static String DYNAMODB_DEVICE_DATA_TIMELINE = "dynamodb_device_data_timeline";
+    public final static String DYNAMODB_DEVICE_DATA_INSIGHTS = "dynamodb_device_data_insights";
 
     public final static String ENABLE_OTA_UPDATES = "enable_ota_updates";
     public final static String ENVIRONMENT_IN_TIMELINE_SCORE = "environment_in_timeline_score";
