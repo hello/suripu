@@ -465,7 +465,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO {
                 .withAccountId(template.accountId)
                 .withExternalDeviceId(template.externalDeviceId)
                 .withDateTimeUTC(template.dateTimeUTC)
-                .withOffsetMillis(template.offsetMillis)
+                .withOffsetMillis((int) aggregator.min(Attribute.OFFSET_MILLIS.name))
                 .withAmbientTemperature((int) aggregator.min(Attribute.AMBIENT_TEMP.name))
                 .calibrateAmbientLight((int) aggregator.roundedMean(Attribute.AMBIENT_LIGHT.name))
                 .withAmbientLightVariance((int) aggregator.roundedMean(Attribute.AMBIENT_LIGHT_VARIANCE.name))
