@@ -157,7 +157,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final AmazonS3 amazonS3UrlSigner = new AmazonS3Client(s3credentials);
 
-        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
+
+        final ClientConfiguration kinesisClientConfiguration = new ClientConfiguration().withMaxConnections(100);
+        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, kinesisClientConfiguration);
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
 
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(
