@@ -1,8 +1,7 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.DeviceData;
@@ -52,7 +51,7 @@ public class TemperatureHumidity {
     private static final int TEMP_END_HOUR = 6; // 6am
 
     public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId,
-                                                    final DeviceDataReadDAO deviceDataDAO,
+                                                    final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final AccountInfo.SleepTempType tempPref,
                                                     final TemperatureUnit tempUnit, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);

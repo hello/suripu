@@ -72,7 +72,7 @@ import java.util.Set;
  * See http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GuidelinesForTables.html#GuidelinesForTables.TimeSeriesDataAccessPatterns
  * and http://stackoverflow.com/a/30200359
  */
-public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataReadDAO {
+public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataInsightQueryDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     private final Timer aggregationTimer;

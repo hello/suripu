@@ -2,8 +2,7 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -30,7 +29,7 @@ public class BedLightIntensity {
     private static final int MORNING_START_HOUR_LOCAL = 5; //5am
     private static final int MORNING_END_HOUR_LOCAL = 11; //11am
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataReadDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         //get timezone offset
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
@@ -104,7 +103,7 @@ public class BedLightIntensity {
         return totalLight;
     }
 
-    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataReadDAO deviceDataDAO, final Integer timeZoneOffset, final Integer startHour, final Integer endHour) {
+    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final Integer timeZoneOffset, final Integer startHour, final Integer endHour) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(0);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);

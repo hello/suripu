@@ -1,8 +1,7 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -26,7 +25,7 @@ public class Lights {
     public static final float LIGHT_LEVEL_WARNING = 2.0f;  // in lux
     public static final float LIGHT_LEVEL_ALERT = 8.0f;  // in lux
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataReadDAO deviceDataDAO,
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final LightData lightData, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);

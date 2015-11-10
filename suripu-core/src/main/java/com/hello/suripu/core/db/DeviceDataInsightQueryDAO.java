@@ -8,7 +8,7 @@ import org.joda.time.DateTime;
 /**
  * Created by jakepiccolo on 11/9/15.
  */
-public interface DeviceDataReadDAO {
+public interface DeviceDataInsightQueryDAO {
 
     ImmutableList<DeviceData> getBetweenByLocalHourAggregateBySlotDuration(
             final Long accountId,

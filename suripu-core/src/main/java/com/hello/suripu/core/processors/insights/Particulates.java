@@ -5,8 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.CalibrationDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DeviceId;
@@ -33,7 +32,7 @@ public class Particulates {
 
     private static final Integer NUM_DAYS = 7;
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataReadDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
@@ -63,7 +62,7 @@ public class Particulates {
                 DateTime.now(DateTimeZone.UTC)));
     }
 
-    private static List<Float> getAvgAirQualityList(final Long accountId, final DeviceId deviceId, final Integer num_days, final Integer timeZoneOffset, final DeviceDataReadDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
+    private static List<Float> getAvgAirQualityList(final Long accountId, final DeviceId deviceId, final Integer num_days, final Integer timeZoneOffset, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay(); //start of day time?
         final DateTime queryStartTime = queryEndTime.minusDays(num_days);
@@ -124,7 +123,7 @@ public class Particulates {
     }
 
 
-    public static ImmutableList<Float> getAirQualityList(final DeviceDataReadDAO deviceDataDAO,
+    public static ImmutableList<Float> getAirQualityList(final DeviceDataInsightQueryDAO deviceDataDAO,
                                                          final Long accountId,
                                                          final DeviceId deviceId,
                                                          final DateTime startTimestamp,

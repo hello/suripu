@@ -2,8 +2,7 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -38,7 +37,7 @@ public class Humidity {
 
     public static Optional<InsightCard> getInsights(final Long accountId,
                                                     final DeviceId deviceId,
-                                                    final DeviceDataReadDAO deviceDataDAO,
+                                                    final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
 
@@ -91,7 +90,7 @@ public class Humidity {
         return medianHumidity;
     }
 
-    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataReadDAO deviceDataDAO, final Integer timeZoneOffset) {
+    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final Integer timeZoneOffset) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(PRE_BED_BEGIN_HOUR_LOCAL);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);

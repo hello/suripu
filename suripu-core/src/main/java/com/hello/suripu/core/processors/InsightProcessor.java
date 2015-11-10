@@ -6,9 +6,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -16,7 +15,6 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
-import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -63,7 +61,7 @@ public class InsightProcessor {
     private static final int DAYS_ONE_WEEK = 7;
     private static final int NUM_INSIGHTS_ALLOWED_PER_WEEK = 2;
 
-    private final DeviceDataReadDAO deviceDataDAO;
+    private final DeviceDataInsightQueryDAO deviceDataDAO;
     private final DeviceReadDAO deviceDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final TrackerMotionDAO trackerMotionDAO;
@@ -76,7 +74,7 @@ public class InsightProcessor {
     private final AccountInfoProcessor accountInfoProcessor;
     private final CalibrationDAO calibrationDAO;
 
-    public InsightProcessor(@NotNull final DeviceDataReadDAO deviceDataDAO,
+    public InsightProcessor(@NotNull final DeviceDataInsightQueryDAO deviceDataDAO,
                             @NotNull final DeviceReadDAO deviceDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final TrackerMotionDAO trackerMotionDAO,

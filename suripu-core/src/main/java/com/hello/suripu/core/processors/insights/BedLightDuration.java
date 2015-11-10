@@ -3,8 +3,7 @@ package com.hello.suripu.core.processors.insights;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.db.DeviceDataDAO;
-import com.hello.suripu.core.db.DeviceDataReadDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -35,7 +34,7 @@ public class BedLightDuration {
     private static final Integer OFFLINE_HOURS = 17; // num hours after night end and before next night start. If set OFFLINE_HOURS<length of night hours, sameDay function will need to change
     private static final Integer OFF_MINUTES_THRESHOLD = 45; //If lights are off for more than 45 minutes, we discard preceding data
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataReadDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
@@ -141,7 +140,7 @@ public class BedLightDuration {
         return elapsedMinutes < comparisonPeriodMinutes;
     }
 
-    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataReadDAO deviceDataDAO, final Integer timeZoneOffset) {
+    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final Integer timeZoneOffset) {
 
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(NIGHT_START_HOUR_LOCAL);
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.PAST_WEEK);
