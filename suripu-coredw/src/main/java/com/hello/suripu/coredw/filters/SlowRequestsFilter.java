@@ -64,7 +64,7 @@ public class SlowRequestsFilter implements Filter {
             final String senseId = (req.getHeader(HelloHttpHeader.SENSE_ID) == null) ? "unknown": req.getHeader(HelloHttpHeader.SENSE_ID);
 
             if (elapsedNS >= threshold) {
-                LOGGER.warn("SLOW request: {} {} {} {} ({}ms)",
+                LOGGER.warn("SLOW request: {} {} {} ({}ms)",
                         req.getMethod(),
                         getFullUrl(req), senseId, elapsedMS);
             }
