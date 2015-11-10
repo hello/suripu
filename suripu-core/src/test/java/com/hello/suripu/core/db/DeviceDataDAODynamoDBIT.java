@@ -318,6 +318,28 @@ public class DeviceDataDAODynamoDBIT {
     }
 
     @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationDifferentOffsetMillis() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer firstBatchOffsetMillis = 0;
+        final Integer secondBatchOffsetMillis = 1000 * 60 * 60; // 1 hour
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        final List<DeviceData> firstBatch = addDataForQuerying(accountId, deviceId, firstBatchOffsetMillis, firstTime);
+        final DateTime secondBatchFirstTime = last(firstBatch).dateTimeUTC.plusMinutes(1);
+        final List<DeviceData> secondBatch = addDataForQuerying(accountId, deviceId, secondBatchOffsetMillis, secondBatchFirstTime);
+
+        // Aggregate to 5 minutes, should get 3 batches
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                accountId, deviceId, firstTime, firstTime.plusMinutes(14), 5);
+
+        assertThat(results.size(), is(3));
+        assertThat(results.get(0).offsetMillis, is(firstBatchOffsetMillis));
+        assertThat(results.get(1).offsetMillis, is(firstBatchOffsetMillis));
+        assertThat(results.get(2).offsetMillis, is(secondBatchOffsetMillis));
+    }
+
+    @Test
     public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationNoShard() {
         final Long accountId = new Long(1);
         final String deviceId = "2";
