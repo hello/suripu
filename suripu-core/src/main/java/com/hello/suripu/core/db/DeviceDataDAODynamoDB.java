@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
-import com.hello.suripu.core.db.dynamo.AttributeUtils;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.util.Bucketing;
@@ -50,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -463,8 +461,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         int numAttempts = 0;
         boolean keepTrying = true;
 
-        final Map<String, String> expressionAttributeNames = AttributeUtils.getExpressionAttributeNames(targetAttributes);
-        final String projectionExpression = AttributeUtils.getProjectionExpression(targetAttributes);
+        final Map<String, String> expressionAttributeNames = Expressions.getExpressionAttributeNames(targetAttributes);
+        final String projectionExpression = Expressions.getProjectionExpression(targetAttributes);
 
         do {
             numAttempts++;
@@ -762,8 +760,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         final QueryRequest queryRequest = new QueryRequest()
                 .withTableName(tableName)
                 .withKeyConditionExpression(keyConditionExpression.getExpressionString())
-                .withProjectionExpression(AttributeUtils.getProjectionExpression(attributes))
-                .withExpressionAttributeNames(AttributeUtils.getExpressionAttributeNames(attributes))
+                .withProjectionExpression(Expressions.getProjectionExpression(attributes))
+                .withExpressionAttributeNames(Expressions.getExpressionAttributeNames(attributes))
                 .withExpressionAttributeValues(keyConditionExpression.getExpressionAttributeValues())
                 .withScanIndexForward(false)
                 .withLimit(1);
