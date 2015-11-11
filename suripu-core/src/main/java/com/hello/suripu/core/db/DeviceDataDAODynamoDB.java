@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -121,12 +122,20 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             return 0;
         }
 
+        public String sanitizedName() {
+            return toString();
+        }
+
+        public String shortName() {
+            return name;
+        }
+
         private String expressionAttributeName() {
-            return "#" + this.toString();
+            return "#" + sanitizedName();
         }
 
         private String expressionAttributeValue() {
-            return ":" + this.toString();
+            return ":" + sanitizedName();
         }
 
         private String expressionAttributeValueStart() {
@@ -468,7 +477,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
     private Map<String, String> getExpressionAttributeNames(final Collection<Attribute> attributes) {
         final Map<String, String> names = Maps.newHashMapWithExpectedSize(attributes.size());
         for (final Attribute attribute: attributes) {
-            names.put(attribute.expressionAttributeName(), attribute.name);
+            names.put(attribute.expressionAttributeName(), attribute.shortName());
         }
         return names;
     }
@@ -889,6 +898,127 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return Optional.absent();
     }
 
+    private interface Expression {
+        Map<String, AttributeValue> getExpressionAttributeValues();
+        String getExpressionString();
+    }
+
+    private class BinaryExpression implements Expression {
+        private final Attribute attribute;
+        private final String operator;
+        private final AttributeValue compareToValue;
+
+        BinaryExpression(final Attribute attribute, final String operator, final AttributeValue attributeValue) {
+            this.attribute = attribute;
+            this.operator = operator;
+            this.compareToValue = attributeValue;
+        }
+
+        @Override
+        public Map<String, AttributeValue> getExpressionAttributeValues() {
+            return ImmutableMap.of(attribute.expressionAttributeValue(), compareToValue);
+        }
+
+        @Override
+        public String getExpressionString() {
+            return Joiner.on(" ").join(attribute.expressionAttributeName(), operator, attribute.expressionAttributeValue());
+        }
+    }
+
+    private class BetweenExpression implements Expression {
+        private final Attribute attribute;
+        private final AttributeValue lowerBound;
+        private final AttributeValue upperBound;
+
+        BetweenExpression(final Attribute attribute, final AttributeValue lowerBound, final AttributeValue upperBound) {
+            this.attribute = attribute;
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
+        }
+
+        @Override
+        public Map<String, AttributeValue> getExpressionAttributeValues() {
+            return ImmutableMap.of(
+                    attribute.expressionAttributeValueStart(), lowerBound,
+                    attribute.expressionAttributeValueEnd(), upperBound);
+        }
+
+        @Override
+        public String getExpressionString() {
+            return Joiner.on(" ").join(
+                    attribute.expressionAttributeName(), "BETWEEN",
+                    attribute.expressionAttributeValueStart(), "AND", attribute.expressionAttributeValueEnd());
+        }
+    }
+
+    private class AndExpression implements Expression {
+        private final List<Expression> expressions;
+
+        AndExpression(final List<Expression> expressions) {
+            this.expressions = expressions;
+        }
+
+        @Override
+        public Map<String, AttributeValue> getExpressionAttributeValues() {
+            final ImmutableMap.Builder<String, AttributeValue> builder = new ImmutableMap.Builder<>();
+            for (final Expression expression : expressions) {
+                builder.putAll(expression.getExpressionAttributeValues());
+            }
+            return builder.build();
+        }
+
+        @Override
+        public String getExpressionString() {
+            final List<String> expStrings = Lists.newArrayListWithExpectedSize(expressions.size());
+            for (final Expression expression: expressions) {
+                expStrings.add(expression.getExpressionString());
+            }
+            return Joiner.on(" AND ").join(expStrings);
+        }
+    }
+
+    private AndExpression and(Expression... expressions) {
+        return new AndExpression(Arrays.asList(expressions));
+    }
+
+    private BetweenExpression between(final Attribute attribute, final AttributeValue lowerBound, final AttributeValue upperBound) {
+        return new BetweenExpression(attribute, lowerBound, upperBound);
+    }
+
+    private BinaryExpression compare(final Attribute attribute, final String operator, final AttributeValue toValue) {
+        return new BinaryExpression(attribute, operator, toValue);
+    }
+
+    private List<Map<String, AttributeValue>> queryTables(final Iterable<String> tableNames,
+                                                          final Expression keyConditionExpression,
+                                                          final Collection<Attribute> attributes)
+    {
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        final String keyCondition = keyConditionExpression.getExpressionString();
+        for (final String table: tableNames) {
+            results.addAll(query(table, keyCondition, attributes, Optional.<String>absent(), keyConditionExpression.getExpressionAttributeValues()));
+        }
+        return results;
+    }
+
+    private List<Map<String, AttributeValue>> queryTables(final Iterable<String> tableNames,
+                                                          final Expression keyConditionExpression,
+                                                          final Expression filterExpression,
+                                                          final Collection<Attribute> attributes)
+    {
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        final String keyCondition = keyConditionExpression.getExpressionString();
+        final String filterCondition = filterExpression.getExpressionString();
+        final Map<String,AttributeValue> attributeValues = new ImmutableMap.Builder<String, AttributeValue>()
+                .putAll(keyConditionExpression.getExpressionAttributeValues())
+                .putAll(filterExpression.getExpressionAttributeValues())
+                .build();
+        for (final String table: tableNames) {
+            results.addAll(query(table, keyCondition, attributes, Optional.of(filterCondition), attributeValues));
+        }
+        return results;
+    }
+
     /**
      *
      * @param accountId
@@ -913,18 +1043,17 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                                    final int startHour,
                                                                    final int endHour)
     {
-        final String keyConditionExpression = KEY_CONDITION_RANGE_EXPRESSION;
-
-        final String filterExpression = Joiner.on(" AND ").join(
-                LOCAL_UTC_FILTER_EXPRESSION,
-                getBinaryExpression(Attribute.AMBIENT_LIGHT, ">"));
-
         final String externalDeviceId = deviceId.externalDeviceId.get();
-        final Map<String, AttributeValue> expressionAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, startTime, endTime, startLocalTime, endLocalTime);
-        expressionAttributeValues.put(Attribute.AMBIENT_LIGHT.expressionAttributeValue(), toAttributeValue(minLightLevel));
+
+        final Expression filterExp = and(
+                between(Attribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime)),
+                compare(Attribute.AMBIENT_LIGHT, ">", toAttributeValue(minLightLevel)));
+        final Expression keyConditionExp = and(
+                compare(Attribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
+                between(Attribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
 
         final List<DeviceData> results = Lists.newArrayList();
-        for (final Map<String, AttributeValue> result : query(getTableNames(startTime, endTime), keyConditionExpression, ALL_ATTRIBUTES, Optional.of(filterExpression), expressionAttributeValues)) {
+        for (final Map<String, AttributeValue> result : queryTables(getTableNames(startTime, endTime), keyConditionExp, filterExp, ALL_ATTRIBUTES)) {
             final DeviceData data = attributeMapToDeviceData(result);
             final int hourOfDay = data.localTime().getHourOfDay();
             if (data.externalDeviceId.equals(externalDeviceId) &&
