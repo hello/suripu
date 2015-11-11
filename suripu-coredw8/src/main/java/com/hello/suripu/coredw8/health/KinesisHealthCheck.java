@@ -1,14 +1,13 @@
-package com.hello.suripu.core.health;
+package com.hello.suripu.coredw8.health;
 
 import com.amazonaws.services.kinesis.AmazonKinesis;
-import com.yammer.metrics.core.HealthCheck;
+import com.codahale.metrics.health.HealthCheck;
 
 public class KinesisHealthCheck extends HealthCheck {
 
     private final AmazonKinesis client;
 
     public KinesisHealthCheck(AmazonKinesis client) {
-        super("kinesis");
         this.client = client;
     }
 
