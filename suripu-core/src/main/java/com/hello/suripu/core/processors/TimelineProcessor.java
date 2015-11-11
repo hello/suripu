@@ -8,16 +8,13 @@ import com.hello.suripu.algorithm.sleep.SleepEvents;
 import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
-import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
-import com.hello.suripu.core.db.FeedbackDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
@@ -257,12 +254,16 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final DateTime currentTimeInLocalUtc = currentTime.plus(sensorData.timezoneOffsetMillis);
 
             ONLINEHMM:
-            if (this.hasOnlineHmmEnabled(accountId)) {
+            if (this.hasOnlineHmmAlgorithmEnabled(accountId)) {
                 try {
                     LOGGER.info("TRYING THE ONLINE HMM");
 
                     final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, featureExtractionModelsDAO, priorsDAO, uuidOptional);
 
+
+                    final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmAlgorithmEnabled(accountId);
+
+                    
                     final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(
                             accountId,
                             date,
@@ -270,7 +271,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             endDate,
                             currentTimeInLocalUtc,
                             sensorData,
-                            newFeedback.isPresent(),
+                            feedbackChanged,
                             false);
 
                     sleepEventsFromAlgorithmOptional = Optional.of(events);

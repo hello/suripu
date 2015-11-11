@@ -319,3 +319,16 @@ WHERE category='light';
 UPDATE info_insight_cards SET text=
 'The temperature of your sleeping environment and how comfortable you feel in it affects the quality of sleep because our brain has an ideal **set point** for body temperature that it is trying to achieve, almost like an internal thermostat. If it’s too cold, or too hot, the body struggles to achieve this set point, hence interrupting sleep. The usual recommendation is to keep the bedroom cool, quiet, & dark, between 65°F (18°C) and 72°F (22°C). However, the perfect room temperature level is different for everyone and should be whatever is most comfortable for the sleeper.'
 WHERE category='temperature';
+
+--jyfan/11/5/2015 partner motion text
+ALTER TYPE insight_category ADD VALUE 'partner_motion';
+
+INSERT INTO info_insight_cards (category, title, text)
+VALUES
+ ---
+('partner_motion',
+'Sleep Better, Together.',
+'When you sleep next to someone, their movements can cause you to move more too, and this can affect the overall quality of your sleep. However, sleeping next to someone can have a positive effect as well. Many couples report sleeping better when they sleep together than when they sleep apart, hinting at a more complex link between your sleep and your partner.
+
+ Satisfaction with your relationship is simultaneously impacted by and affects sleep quality. In addition to managing personal sleep disruptions such as sleep apnea and snoring, you and your partner can encourage each other to keep good sleep habits. Go to bed and wake up at a consistent time, keep distracting electronics out of the bedroom, and if possible, you and your partner should try to go to bed at the same time.'
+ );
