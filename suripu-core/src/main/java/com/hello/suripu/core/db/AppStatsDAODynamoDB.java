@@ -16,6 +16,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 public class AppStatsDAODynamoDB implements AppStatsDAO {
     private final static String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id";
     private final static String INSIGHTS_LAST_VIEWED_ATTRIBUTE_NAME = "insights_last_viewed";
+    private final static String QUESTIONS_LAST_VIEWED_ATTRIBUTE_NAME = "questions_last_viewed";
 
     private final AmazonDynamoDB dynamoDB;
     private final String tableName;
@@ -67,6 +69,39 @@ public class AppStatsDAODynamoDB implements AppStatsDAO {
         }
     }
 
+    @Override
+    public void putQuestionsLastViewed(Long accountId, final DateTime lastViewed) {
+        final Long lastViewedMillis = lastViewed.getMillis();
+        final UpdateItemRequest updateRequest = new UpdateItemRequest();
+        updateRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME,
+                                  new AttributeValue().withN(accountId.toString()));
+        final AttributeValueUpdate update = new AttributeValueUpdate();
+        update.setValue(new AttributeValue().withN(lastViewedMillis.toString()));
+        updateRequest.addAttributeUpdatesEntry(QUESTIONS_LAST_VIEWED_ATTRIBUTE_NAME, update);
+        updateRequest.setTableName(tableName);
+        dynamoDB.updateItem(updateRequest);
+    }
+
+    @Override
+    public Optional<DateTime> getQuestionsLastViewed(Long accountId) {
+        final GetItemRequest getRequest = new GetItemRequest();
+        getRequest.addKeyEntry(ACCOUNT_ID_ATTRIBUTE_NAME,
+                               new AttributeValue().withN(accountId.toString()));
+        getRequest.setAttributesToGet(Lists.newArrayList(QUESTIONS_LAST_VIEWED_ATTRIBUTE_NAME));
+        getRequest.setTableName(tableName);
+        final GetItemResult result = dynamoDB.getItem(getRequest);
+        final Map<String, AttributeValue> attributes = result.getItem();
+        if (attributes != null && attributes.containsKey(QUESTIONS_LAST_VIEWED_ATTRIBUTE_NAME)) {
+            final AttributeValue attribute = attributes.get(QUESTIONS_LAST_VIEWED_ATTRIBUTE_NAME);
+            final String value = attribute.getN();
+            final long lastViewedMillis = Long.parseLong(value, 10);
+            return Optional.of(new DateTime(lastViewedMillis, DateTimeZone.UTC));
+        } else {
+            return Optional.absent();
+        }
+    }
+
+
     public static CreateTableResult createTable(final String tableName, final AmazonDynamoDBClient dynamoDBClient) {
         final CreateTableRequest request = new CreateTableRequest().withTableName(tableName);
 
@@ -83,7 +118,6 @@ public class AppStatsDAODynamoDB implements AppStatsDAO {
                 .withReadCapacityUnits(1L)
                 .withWriteCapacityUnits(1L));
 
-        final CreateTableResult result = dynamoDBClient.createTable(request);
-        return result;
+        return dynamoDBClient.createTable(request);
     }
 }

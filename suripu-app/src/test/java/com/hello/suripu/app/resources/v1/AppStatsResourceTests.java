@@ -2,18 +2,22 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AppStatsDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
+import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.AppStats;
 import com.hello.suripu.core.models.AppUnreadStats;
+import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.processors.QuestionProcessor;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
 import org.joda.time.DateTimeZone;
@@ -21,9 +25,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import javax.ws.rs.core.Response;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -60,6 +66,9 @@ public class AppStatsResourceTests {
     @Before
     public void setUp() {
         this.appStatsDAO = mock(AppStatsDAO.class);
+        doReturn(Optional.absent())
+                .when(appStatsDAO)
+                .getQuestionsLastViewed(ACCOUNT_ID);
         this.insightsDAO = mock(InsightsDAODynamoDB.class);
         this.questionProcessor = mock(QuestionProcessor.class);
         this.accountDAO = mock(AccountDAO.class);
@@ -80,7 +89,7 @@ public class AppStatsResourceTests {
 
     @Test
     public void updateLastViewedEmptyPayload() throws Exception {
-        final AppStats badAppStats = new AppStats(Optional.<DateTime>absent());
+        final AppStats badAppStats = new AppStats(Optional.<DateTime>absent(), Optional.<DateTime>absent());
         final Response response = resource.updateLastViewed(accessToken, badAppStats);
         assertThat(response.getStatus(), is(equalTo(Response.Status.NOT_MODIFIED.getStatusCode())));
     }
@@ -98,7 +107,7 @@ public class AppStatsResourceTests {
         // would prefer to mock the insight card, but it doesn't support
         // mocking public member variables (for the timestamp)
         final InsightCard fakeInsight = new InsightCard(
-                Long.valueOf(1),
+                1L,
                 "fake",
                 "fake body",
                 InsightCard.Category.GENERIC,
@@ -107,7 +116,7 @@ public class AppStatsResourceTests {
         final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
         doReturn(fakeInsights)
                 .when(insightsDAO)
-                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
+                .getInsightsByDate(ACCOUNT_ID, nowUTC.plusDays(1), false, 1);
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(true));
         assertThat(unread.hasUnansweredQuestions, is(false));
@@ -125,7 +134,7 @@ public class AppStatsResourceTests {
                 .getInsightsLastViewed(ACCOUNT_ID);
         doReturn(ImmutableList.of())
                 .when(insightsDAO)
-                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
+                .getInsightsByDate(ACCOUNT_ID, nowUTC.plusDays(1), false, 1);
 
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(false));
@@ -143,7 +152,7 @@ public class AppStatsResourceTests {
                 .when(appStatsDAO)
                 .getInsightsLastViewed(ACCOUNT_ID);
         final InsightCard fakeInsight = new InsightCard(
-                Long.valueOf(1),
+                1L,
                 "fake",
                 "fake body",
                 InsightCard.Category.GENERIC,
@@ -152,14 +161,14 @@ public class AppStatsResourceTests {
         final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
         doReturn(fakeInsights)
                 .when(insightsDAO)
-                .getInsightsByDate(ACCOUNT_ID, nowUTC, false, 1);
+                .getInsightsByDate(ACCOUNT_ID, nowUTC.plusDays(1), false, 1);
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(false));
         assertThat(unread.hasUnansweredQuestions, is(false));
     }
 
     @Test
-    public void unreadWithUnansweredQuestions() {
+    public void unreadWithUnansweredQuestionsWithoutQuestionLastViewed() {
         doReturn(Optional.absent())
                 .when(appStatsDAO)
                 .getInsightsLastViewed(ACCOUNT_ID);
@@ -182,6 +191,84 @@ public class AppStatsResourceTests {
         final AppUnreadStats unread = resource.unread(accessToken);
         assertThat(unread.hasUnreadInsights, is(false));
         assertThat(unread.hasUnansweredQuestions, is(true));
+    }
+
+    @Test
+    public void unreadWithUnansweredQuestionsWithQuestionLastViewed() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
+        doReturn(Optional.absent())
+                .when(appStatsDAO)
+                .getInsightsLastViewed(ACCOUNT_ID);
+        doReturn(Optional.of(nowUTC.minusDays(1)))
+                .when(appStatsDAO)
+                .getQuestionsLastViewed(ACCOUNT_ID);
+        final Account fakeAccount = new Account.Builder()
+                .withId(ACCOUNT_ID)
+                .withCreated(FIXED_NOW.minusDays(1))
+                .withEmail("john.everyman@theinter.net")
+                .build();
+        doReturn(Optional.of(fakeAccount))
+                .when(accountDAO)
+                .getById(ACCOUNT_ID);
+        @SuppressWarnings("unchecked")
+        final List<Question> fakeQuestions = Lists.newArrayList(new Question(0, ACCOUNT_ID,
+                                                                             "Question question",
+                                                                             "en_US",
+                                                                             Question.Type.CHOICE,
+                                                                             Question.FREQUENCY.ONE_TIME,
+                                                                             Question.ASK_TIME.ANYTIME,
+                                                                             0, 0,
+                                                                             nowUTC,
+                                                                             Collections.<Choice>emptyList(),
+                                                                             AccountInfo.Type.SLEEP_TEMPERATURE,
+                                                                             Optional.of(nowUTC)));
+        doReturn(fakeQuestions)
+                .when(questionProcessor)
+                .getQuestions(eq(ACCOUNT_ID), eq(fakeAccount.getAgeInDays()), any(DateTime.class),
+                              eq(QuestionProcessor.DEFAULT_NUM_QUESTIONS), eq(true));
+
+        final AppUnreadStats unread = resource.unread(accessToken);
+        assertThat(unread.hasUnreadInsights, is(false));
+        assertThat(unread.hasUnansweredQuestions, is(true));
+    }
+
+    @Test
+    public void readWithAnsweredQuestionsWithQuestionLastViewed() {
+        final DateTime nowUTC = DateTime.now(DateTimeZone.UTC);
+        doReturn(Optional.absent())
+                .when(appStatsDAO)
+                .getInsightsLastViewed(ACCOUNT_ID);
+        doReturn(Optional.of(nowUTC.minusDays(1)))
+                .when(appStatsDAO)
+                .getQuestionsLastViewed(ACCOUNT_ID);
+        final Account fakeAccount = new Account.Builder()
+                .withId(ACCOUNT_ID)
+                .withCreated(FIXED_NOW.minusDays(1))
+                .withEmail("john.everyman@theinter.net")
+                .build();
+        doReturn(Optional.of(fakeAccount))
+                .when(accountDAO)
+                .getById(ACCOUNT_ID);
+        @SuppressWarnings("unchecked")
+        final List<Question> fakeQuestions = Lists.newArrayList(new Question(0, ACCOUNT_ID,
+                                                                             "Question question",
+                                                                             "en_US",
+                                                                             Question.Type.CHOICE,
+                                                                             Question.FREQUENCY.ONE_TIME,
+                                                                             Question.ASK_TIME.ANYTIME,
+                                                                             0, 0,
+                                                                             nowUTC,
+                                                                             Collections.<Choice>emptyList(),
+                                                                             AccountInfo.Type.SLEEP_TEMPERATURE,
+                                                                             Optional.of(nowUTC.minusDays(1))));
+        doReturn(fakeQuestions)
+                .when(questionProcessor)
+                .getQuestions(eq(ACCOUNT_ID), eq(fakeAccount.getAgeInDays()), any(DateTime.class),
+                              eq(QuestionProcessor.DEFAULT_NUM_QUESTIONS), eq(true));
+
+        final AppUnreadStats unread = resource.unread(accessToken);
+        assertThat(unread.hasUnreadInsights, is(false));
+        assertThat(unread.hasUnansweredQuestions, is(false));
     }
 
     @Test

@@ -19,8 +19,11 @@ import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.QuestionProcessor;
 import com.hello.suripu.core.util.PATCH;
 import com.yammer.metrics.annotation.Timed;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+
+import java.util.List;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -29,7 +32,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
 @Path("/v1/app/stats")
 public class AppStatsResource {
@@ -57,7 +59,8 @@ public class AppStatsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public AppStats getLastViewed(@Scope(OAuthScope.APP_STATS) final AccessToken accessToken) {
         final Optional<DateTime> insightsLastViewed = appStatsDAO.getInsightsLastViewed(accessToken.accountId);
-        return new AppStats(insightsLastViewed);
+        final Optional<DateTime> questionsLastViewed = appStatsDAO.getQuestionsLastViewed(accessToken.accountId);
+        return new AppStats(insightsLastViewed, questionsLastViewed);
     }
 
     @Timed
@@ -68,10 +71,18 @@ public class AppStatsResource {
         if (appStats.insightsLastViewed.isPresent()) {
             final DateTime insightsLastViewed = appStats.insightsLastViewed.get();
             appStatsDAO.putInsightsLastViewed(accessToken.accountId, insightsLastViewed);
-            return Response.status(Response.Status.ACCEPTED).build();
         }
 
-        return Response.status(Response.Status.NOT_MODIFIED).build();
+        if (appStats.questionsLastViewed.isPresent()) {
+            final DateTime questionsLastViewed = appStats.questionsLastViewed.get();
+            appStatsDAO.putQuestionsLastViewed(accessToken.accountId, questionsLastViewed);
+        }
+
+        if (appStats.questionsLastViewed.isPresent() || appStats.insightsLastViewed.isPresent()) {
+            return Response.status(Response.Status.ACCEPTED).build();
+        } else {
+            return Response.status(Response.Status.NOT_MODIFIED).build();
+        }
     }
 
     @Timed
@@ -88,17 +99,12 @@ public class AppStatsResource {
                 final Boolean chronological = false; // most recent first
                 final DateTime queryDate = DateTime.now(DateTimeZone.UTC).plusDays(1); // matches InsightsResource
                 final ImmutableList<InsightCard> insights = insightsDAO.getInsightsByDate(accountId, queryDate, chronological, 1);
-                final Boolean hasUnread;
-                if (!insights.isEmpty()) {
-                    hasUnread = insights.get(0).timestamp.isAfter(insightsLastViewed);
-                } else {
-                    hasUnread = false;
-                }
-                return hasUnread;
+                return (!insights.isEmpty() && insights.get(0).timestamp.isAfter(insightsLastViewed));
             }
         });
 
         final Optional<Integer> accountAgeInDays = getAccountAgeInDays(accountId);
+        final Optional<DateTime> questionsLastViewed = appStatsDAO.getQuestionsLastViewed(accountId);
         final Optional<Boolean> hasUnansweredQuestions = accountAgeInDays.transform(new Function<Integer, Boolean>() {
             @Override
             public Boolean apply(Integer accountAgeInDays) {
@@ -106,7 +112,22 @@ public class AppStatsResource {
                 final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
                 final List<Question> questions = questionProcessor.getQuestions(accountId, accountAgeInDays,
                         today, QuestionProcessor.DEFAULT_NUM_QUESTIONS, true);
-                return !questions.isEmpty();
+                if (questionsLastViewed.isPresent()) {
+                    final DateTime lastViewed = questionsLastViewed.get();
+                    for (final Question question : questions) {
+                        if (!question.created.isPresent()) {
+                            continue;
+                        }
+
+                        if (question.created.get().isAfter(lastViewed)) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                } else {
+                    return !questions.isEmpty();
+                }
             }
         });
 
