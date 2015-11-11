@@ -305,11 +305,11 @@ public class DeviceDataDAODynamoDBIT {
 
         // From start to start+1, 2 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).size(),
                 is(2));
         // from start to start should be 1 result
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime, 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
                 is(1));
         // Account ID unrecognized should be 0 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
@@ -331,7 +331,7 @@ public class DeviceDataDAODynamoDBIT {
 
         // Aggregate to 5 minutes, should get 3 batches
         final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                accountId, deviceId, firstTime, firstTime.plusMinutes(14), 5);
+                accountId, deviceId, firstTime, firstTime.plusMinutes(15), 5);
 
         assertThat(results.size(), is(3));
         assertThat(results.get(0).offsetMillis, is(firstBatchOffsetMillis));
@@ -363,11 +363,11 @@ public class DeviceDataDAODynamoDBIT {
 
         // From start to start+1, 2 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).size(),
                 is(2));
         // from start to start should be 1 result
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime, 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
                 is(1));
         // Account ID unrecognized should be 0 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
@@ -467,7 +467,7 @@ public class DeviceDataDAODynamoDBIT {
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).size(),
                 is(2));
     }
 
