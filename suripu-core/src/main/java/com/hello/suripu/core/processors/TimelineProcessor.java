@@ -261,7 +261,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                     final OnlineHmm onlineHmm = new OnlineHmm(defaultModelEnsembleDAO, featureExtractionModelsDAO, priorsDAO, uuidOptional);
 
 
-                    final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmAlgorithmEnabled(accountId);
+                    final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
 
                     
                     final SleepEvents<Optional<Event>> events = onlineHmm.predictAndUpdateWithLabels(
