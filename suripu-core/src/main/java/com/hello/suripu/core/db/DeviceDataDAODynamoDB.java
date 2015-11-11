@@ -24,6 +24,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.dynamo.Attribute;
+import com.hello.suripu.core.db.dynamo.Expressions;
+import com.hello.suripu.core.db.dynamo.expressions.BinaryExpression;
+import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
@@ -82,11 +86,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
     private final AmazonDynamoDB dynamoDBClient;
     private final String tablePrefix;
 
-    public interface Attribute {
-        String shortName();
-        String sanitizedName();
-    }
-
     public enum DeviceDataAttribute implements Attribute {
         ACCOUNT_ID ("aid", "N"),
         RANGE_KEY ("ts|dev", "S"),  // <utc_timestamp>|<external_device_id>
@@ -103,7 +102,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         WAVE_COUNT ("wc", "N"),
         HOLD_COUNT ("hc", "N");
 
-        public final String name;
+        private final String name;
         private final String type;
 
         DeviceDataAttribute(String name, String type) {
@@ -137,18 +136,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
         private String expressionAttributeName() {
             return "#" + sanitizedName();
-        }
-
-        private String expressionAttributeValue() {
-            return ":" + sanitizedName();
-        }
-
-        private String expressionAttributeValueStart() {
-            return expressionAttributeValue() + "_start";
-        }
-
-        private String expressionAttributeValueEnd() {
-            return expressionAttributeValue() + "_end";
         }
     }
 
@@ -551,9 +538,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             final Integer slotDuration,
             final Collection<DeviceDataAttribute> targetAttributes)
     {
-        final Expression keyConditionExpression = and(
-                compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
-                between(DeviceDataAttribute.RANGE_KEY, getRangeKey(start, externalDeviceId), getRangeKey(end, externalDeviceId)));
+        final Expression keyConditionExpression = Expressions.and(
+                Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
+                Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(start, externalDeviceId), getRangeKey(end, externalDeviceId)));
 
         final List<Map<String, AttributeValue>> results = queryTables(getTableNames(start, end), keyConditionExpression, targetAttributes);
         final List<Map<String, AttributeValue>> filteredResults = Lists.newLinkedList();
@@ -785,7 +772,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
      * @return Optional of the latest DeviceData, or Optional.absent() if data not present or query fails.
      */
     public Optional<DeviceData> getMostRecent(final Long accountId, final DateTime now) {
-        final Expression keyConditionExpression = compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId));
+        final Expression keyConditionExpression = Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId));
         final Collection<DeviceDataAttribute> attributes = ALL_ATTRIBUTES;
         final String tableName = getTableName(now);
 
@@ -840,97 +827,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         }
 
         return Optional.absent();
-    }
-
-    private interface Expression {
-        Map<String, AttributeValue> getExpressionAttributeValues();
-        String getExpressionString();
-    }
-
-    private class BinaryExpression implements Expression {
-        private final DeviceDataAttribute attribute;
-        private final String operator;
-        private final AttributeValue compareToValue;
-
-        BinaryExpression(final DeviceDataAttribute attribute, final String operator, final AttributeValue attributeValue) {
-            this.attribute = attribute;
-            this.operator = operator;
-            this.compareToValue = attributeValue;
-        }
-
-        @Override
-        public Map<String, AttributeValue> getExpressionAttributeValues() {
-            return ImmutableMap.of(attribute.expressionAttributeValue(), compareToValue);
-        }
-
-        @Override
-        public String getExpressionString() {
-            return Joiner.on(" ").join(attribute.expressionAttributeName(), operator, attribute.expressionAttributeValue());
-        }
-    }
-
-    private class BetweenExpression implements Expression {
-        private final DeviceDataAttribute attribute;
-        private final AttributeValue lowerBound;
-        private final AttributeValue upperBound;
-
-        BetweenExpression(final DeviceDataAttribute attribute, final AttributeValue lowerBound, final AttributeValue upperBound) {
-            this.attribute = attribute;
-            this.lowerBound = lowerBound;
-            this.upperBound = upperBound;
-        }
-
-        @Override
-        public Map<String, AttributeValue> getExpressionAttributeValues() {
-            return ImmutableMap.of(
-                    attribute.expressionAttributeValueStart(), lowerBound,
-                    attribute.expressionAttributeValueEnd(), upperBound);
-        }
-
-        @Override
-        public String getExpressionString() {
-            return Joiner.on(" ").join(
-                    attribute.expressionAttributeName(), "BETWEEN",
-                    attribute.expressionAttributeValueStart(), "AND", attribute.expressionAttributeValueEnd());
-        }
-    }
-
-    private class AndExpression implements Expression {
-        private final List<Expression> expressions;
-
-        AndExpression(final List<Expression> expressions) {
-            this.expressions = expressions;
-        }
-
-        @Override
-        public Map<String, AttributeValue> getExpressionAttributeValues() {
-            final ImmutableMap.Builder<String, AttributeValue> builder = new ImmutableMap.Builder<>();
-            for (final Expression expression : expressions) {
-                builder.putAll(expression.getExpressionAttributeValues());
-            }
-            return builder.build();
-        }
-
-        @Override
-        public String getExpressionString() {
-            final List<String> expStrings = Lists.newArrayListWithExpectedSize(expressions.size());
-            for (final Expression expression: expressions) {
-                expStrings.add(expression.getExpressionString());
-            }
-            return Joiner.on(" AND ").join(expStrings);
-        }
-    }
-
-    private AndExpression and(Expression... expressions) {
-        return new AndExpression(Arrays.asList(expressions));
-    }
-
-    private BetweenExpression between(final DeviceDataAttribute attribute, final AttributeValue lowerBound, final AttributeValue upperBound) {
-        return new BetweenExpression(attribute, lowerBound, upperBound);
-    }
-
-    private BinaryExpression compare(final DeviceDataAttribute attribute, final String operator, final AttributeValue toValue) {
-        return new BinaryExpression(attribute, operator, toValue);
     }
 
     private List<Map<String, AttributeValue>> queryTables(final Iterable<String> tableNames,
@@ -989,12 +885,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
     {
         final String externalDeviceId = deviceId.externalDeviceId.get();
 
-        final Expression filterExp = and(
-                between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime)),
-                compare(DeviceDataAttribute.AMBIENT_LIGHT, ">", toAttributeValue(minLightLevel)));
-        final Expression keyConditionExp = and(
-                compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
-                between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
+        final Expression filterExp = Expressions.and(
+                Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime)),
+                Expressions.compare(DeviceDataAttribute.AMBIENT_LIGHT, ">", toAttributeValue(minLightLevel)));
+        final Expression keyConditionExp = Expressions.and(
+                Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
+                Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
 
         final List<DeviceData> results = Lists.newArrayList();
         for (final Map<String, AttributeValue> result : queryTables(getTableNames(startTime, endTime), keyConditionExp, filterExp, ALL_ATTRIBUTES)) {
@@ -1020,10 +916,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             final Collection<DeviceDataAttribute> attributes)
     {
         final String externalDeviceId = deviceId.externalDeviceId.get();
-        final Expression keyConditionExpression = and(
-                compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
-                between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startUTCTime, externalDeviceId), getRangeKey(endUTCTime, externalDeviceId)));
-        final Expression filterExpression = between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime));
+        final Expression keyConditionExpression = Expressions.and(
+                Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
+                Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startUTCTime, externalDeviceId), getRangeKey(endUTCTime, externalDeviceId)));
+        final Expression filterExpression = Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime));
 
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
         for (final Map<String, AttributeValue> result : queryTables(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, filterExpression, attributes)) {

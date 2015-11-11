@@ -916,11 +916,11 @@ public class DeviceDataDAODynamoDBIT {
         for (int i = 0; i < 10000; i++) {
             final Map<String, AttributeValue> item = Maps.newHashMap();
             final DateTime currTime = firstTime.plusMinutes(i);
-            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.ACCOUNT_ID.name, new AttributeValue().withN("0"));
-            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.LOCAL_UTC_TIMESTAMP.name, new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER)));
-            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.OFFSET_MILLIS.name, new AttributeValue().withN("0"));
-            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.RANGE_KEY.name, new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + "hi"));
-            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.AMBIENT_LIGHT.name, new AttributeValue().withN(String.valueOf(i)));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.ACCOUNT_ID.shortName(), new AttributeValue().withN("0"));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.LOCAL_UTC_TIMESTAMP.shortName(), new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER)));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.OFFSET_MILLIS.shortName(), new AttributeValue().withN("0"));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.RANGE_KEY.shortName(), new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + "hi"));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.AMBIENT_LIGHT.shortName(), new AttributeValue().withN(String.valueOf(i)));
             items.add(item);
         }
 
