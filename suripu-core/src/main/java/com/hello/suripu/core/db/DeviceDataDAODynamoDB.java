@@ -17,7 +17,6 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -25,8 +24,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
+import com.hello.suripu.core.db.dynamo.AttributeUtils;
 import com.hello.suripu.core.db.dynamo.Expressions;
-import com.hello.suripu.core.db.dynamo.expressions.BinaryExpression;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -132,10 +131,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
         public String shortName() {
             return name;
-        }
-
-        private String expressionAttributeName() {
-            return "#" + sanitizedName();
         }
     }
 
@@ -456,18 +451,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return resultList;
     }
 
-    private Map<String, String> getExpressionAttributeNames(final Collection<DeviceDataAttribute> attributes) {
-        final Map<String, String> names = Maps.newHashMapWithExpectedSize(attributes.size());
-        for (final DeviceDataAttribute attribute: attributes) {
-            names.put(attribute.expressionAttributeName(), attribute.shortName());
-        }
-        return names;
-    }
-
-    private String getProjectionExpression(final Collection<DeviceDataAttribute> attributes) {
-        return Joiner.on(", ").join(getExpressionAttributeNames(attributes).keySet());
-    }
-
     private List<Map<String, AttributeValue>> query(final String tableName,
                                                     final String keyConditionExpression,
                                                     final Collection<DeviceDataAttribute> targetAttributes,
@@ -480,8 +463,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         int numAttempts = 0;
         boolean keepTrying = true;
 
-        final Map<String, String> expressionAttributeNames = getExpressionAttributeNames(targetAttributes);
-        final String projectionExpression = getProjectionExpression(targetAttributes);
+        final Map<String, String> expressionAttributeNames = AttributeUtils.getExpressionAttributeNames(targetAttributes);
+        final String projectionExpression = AttributeUtils.getProjectionExpression(targetAttributes);
 
         do {
             numAttempts++;
@@ -779,8 +762,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         final QueryRequest queryRequest = new QueryRequest()
                 .withTableName(tableName)
                 .withKeyConditionExpression(keyConditionExpression.getExpressionString())
-                .withProjectionExpression(getProjectionExpression(attributes))
-                .withExpressionAttributeNames(getExpressionAttributeNames(attributes))
+                .withProjectionExpression(AttributeUtils.getProjectionExpression(attributes))
+                .withExpressionAttributeNames(AttributeUtils.getExpressionAttributeNames(attributes))
                 .withExpressionAttributeValues(keyConditionExpression.getExpressionAttributeValues())
                 .withScanIndexForward(false)
                 .withLimit(1);
