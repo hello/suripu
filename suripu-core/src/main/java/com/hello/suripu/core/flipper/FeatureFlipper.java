@@ -52,6 +52,7 @@ public class FeatureFlipper {
 
     public final static String OFFICE_ONLY_OVERRIDE = "office_only_override";
     public final static String ONLINE_HMM_ALGORITHM = "online_hmm_algorithm";
+    public final static String ONLINE_HMM_LEARNING = "online_hmm_learning";
     public final static String OTA_RELEASE = "release";
 
     public final static String PARTNER_FILTER = "partner_filter";
