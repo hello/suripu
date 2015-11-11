@@ -104,6 +104,7 @@ http:
   port: 5555
   adminPort: 5556
   minThreads: 2
+  maxIdleTime: 25s
   # HTTP request log settings.
   requestLog:
     file:
