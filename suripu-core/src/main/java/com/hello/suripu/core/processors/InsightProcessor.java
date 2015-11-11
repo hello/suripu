@@ -29,6 +29,7 @@ import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
+import com.hello.suripu.core.processors.insights.PartnerMotionInsight;
 import com.hello.suripu.core.processors.insights.SleepMotion;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
@@ -64,7 +65,7 @@ public class InsightProcessor {
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
-    private final DeviceReadDAO deviceDAO;
+    private final DeviceReadDAO deviceReadDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
@@ -78,7 +79,7 @@ public class InsightProcessor {
 
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
                             @NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
-                            @NotNull final DeviceReadDAO deviceDAO,
+                            @NotNull final DeviceReadDAO deviceReadDAO,
                             @NotNull final TrendsInsightsDAO trendsInsightsDAO,
                             @NotNull final TrackerMotionDAO trackerMotionDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
@@ -92,7 +93,7 @@ public class InsightProcessor {
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
-        this.deviceDAO = deviceDAO;
+        this.deviceReadDAO = deviceReadDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
@@ -111,7 +112,7 @@ public class InsightProcessor {
             return; // not slept one night yet
         }
 
-        final Optional<Long> deviceIdOptional = deviceDAO.getMostRecentSenseByAccountId(accountId);
+        final Optional<Long> deviceIdOptional = deviceReadDAO.getMostRecentSenseByAccountId(accountId);
         if (!deviceIdOptional.isPresent()) {
             return;
         }
@@ -359,6 +360,9 @@ public class InsightProcessor {
             case AIR_QUALITY:
                 insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
                 break;
+            case PARTNER_MOTION:
+                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
+                break;
         }
 
         if (insightCardOptional.isPresent()) {
@@ -417,7 +421,7 @@ public class InsightProcessor {
     public static class Builder {
         private @Nullable DeviceDataDAO deviceDataDAO;
         private @Nullable DeviceDataDAODynamoDB deviceDataDAODynamoDB;
-        private @Nullable DeviceReadDAO deviceDAO;
+        private @Nullable DeviceReadDAO deviceReadDAO;
         private @Nullable TrendsInsightsDAO trendsInsightsDAO;
         private @Nullable TrackerMotionDAO trackerMotionDAO;
         private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
@@ -429,8 +433,8 @@ public class InsightProcessor {
         private @Nullable AccountInfoProcessor accountInfoProcessor;
         private @Nullable CalibrationDAO calibrationDAO;
 
-        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceDAO) {
-            this.deviceDAO = deviceDAO;
+        public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
+            this.deviceReadDAO = deviceReadDAO;
             this.deviceDataDAO = deviceDataDAO;
             this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
             return this;
@@ -480,7 +484,7 @@ public class InsightProcessor {
 
         public InsightProcessor build() {
             checkNotNull(deviceDataDAO, "deviceDataDAO can not be null");
-            checkNotNull(deviceDAO, "deviceDAO can not be null");
+            checkNotNull(deviceReadDAO, "deviceReadDAO can not be null");
             checkNotNull(trendsInsightsDAO, "trendsInsightsDAO can not be null");
             checkNotNull(trackerMotionDAO, "trackerMotionDAO can not be null");
             checkNotNull(scoreDAODynamoDB, "scoreDAODynamoDB can not be null");
@@ -492,10 +496,7 @@ public class InsightProcessor {
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
 
-            return new InsightProcessor(
-                    deviceDataDAO,
-                    deviceDataDAODynamoDB,
-                    deviceDAO,
+            return new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceReadDAO,
                     trendsInsightsDAO,
                     trackerMotionDAO,
                     scoreDAODynamoDB, insightsDAODynamoDB,

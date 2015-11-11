@@ -14,7 +14,6 @@ import com.hello.dropwizard.mikkusu.helpers.JacksonProtobufProvider;
 import com.hello.dropwizard.mikkusu.resources.PingResource;
 import com.hello.dropwizard.mikkusu.resources.VersionResource;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -48,6 +47,8 @@ import com.hello.suripu.core.oauth.ClientDetails;
 import com.hello.suripu.core.oauth.stores.OAuthTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentAccessTokenStore;
 import com.hello.suripu.core.oauth.stores.PersistentApplicationStore;
+import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredw.filters.SlowRequestsFilter;
 import com.hello.suripu.coredw.managers.DynamoDBClientManaged;
 import com.hello.suripu.coredw.managers.KinesisClientManaged;
 import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
@@ -156,7 +157,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
 
         final AmazonS3 amazonS3UrlSigner = new AmazonS3Client(s3credentials);
 
-        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider);
+
+        final ClientConfiguration kinesisClientConfiguration = new ClientConfiguration().withMaxConnections(100);
+        final AmazonKinesisAsyncClient kinesisClient = new AmazonKinesisAsyncClient(awsCredentialsProvider, kinesisClientConfiguration);
         kinesisClient.setEndpoint(configuration.getKinesisConfiguration().getEndpoint());
 
         final KinesisLoggerFactory kinesisLoggerFactory = new KinesisLoggerFactory(
@@ -290,6 +293,9 @@ public class SuripuService extends Service<SuripuConfiguration> {
         environment.addHealthCheck(new DynamoDbHealthCheck(teamStoreDynamoDBClient));
         environment.addHealthCheck(new DynamoDbHealthCheck(featuresDynamoDBClient));
         environment.addHealthCheck(new KinesisHealthCheck(kinesisClient));
+
+        environment.addFilter(new SlowRequestsFilter(), "/*");
+
     }
 
 

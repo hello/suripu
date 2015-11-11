@@ -425,8 +425,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         final Map<String, AttributeValue> firstItem = items.get(0);
         final DeviceData.Builder templateBuilder = new DeviceData.Builder()
                 .withAccountId(Long.valueOf(firstItem.get(Attribute.ACCOUNT_ID.name).getN()))
-                .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem))
-                .withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(firstItem));
+                .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem));
         DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
 
         for (final Map<String, AttributeValue> item: items) {
@@ -437,6 +436,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             } else if (itemDateTime.isAfter(currSlotTime)) {
                 // Outside the window, aggregate working set to single value.
                 templateBuilder.withDateTimeUTC(currSlotTime);
+                templateBuilder.withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(currentWorkingList.get(0)));
                 resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
 
                 // Create new working sets
@@ -450,6 +450,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         }
 
         templateBuilder.withDateTimeUTC(currSlotTime);
+        templateBuilder.withOffsetMillis(Attribute.OFFSET_MILLIS.getInteger(currentWorkingList.get(0)));
         resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
         return resultList;
     }
@@ -551,6 +552,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return items;
     }
 
+    /**
+     * Aggregate DeviceDatas to the given slotDuration in minutes.
+     * @param accountId
+     * @param externalDeviceId
+     * @param start - Start timestamp, inclusive
+     * @param end - End timestamp, exclusive
+     * @param slotDuration - Duration of each aggregated bucket in minutes
+     * @param targetAttributes - Attributes to include in output DeviceDatas
+     * @return DeviceDatas matching the above filter criteria
+     */
     public ImmutableList<DeviceData> getBetweenByAbsoluteTimeAggregateBySlotDuration(
             final Long accountId,
             final String externalDeviceId,
@@ -560,9 +571,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             final Collection<Attribute> targetAttributes)
     {
         final String keyConditionExpression = KEY_CONDITION_RANGE_EXPRESSION;
-        final Map<String, AttributeValue> filterAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, start, end);
+        final DateTime endExclusive = end.minusMinutes(1);
+        final Map<String, AttributeValue> filterAttributeValues = getExpressionAttributeValues(accountId, externalDeviceId, start, endExclusive);
 
-        final List<Map<String, AttributeValue>> results = query(getTableNames(start, end), keyConditionExpression, targetAttributes, Optional.<String>absent(), filterAttributeValues);
+        final List<Map<String, AttributeValue>> results = query(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes, Optional.<String>absent(), filterAttributeValues);
         final List<Map<String, AttributeValue>> filteredResults = Lists.newLinkedList();
         for (final Map<String, AttributeValue> item : results) {
             if (externalDeviceIdFromDDBItem(item).equals(externalDeviceId)) {
