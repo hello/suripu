@@ -45,8 +45,8 @@ import java.util.Map;
    dynamo db table has
    account_id, model_create_date, model_protobuf_blob
 
-   Hash Attribute Name: account_id
-   Range Attribute Name: model_create_date
+   Hash DeviceDataAttribute Name: account_id
+   Range DeviceDataAttribute Name: model_create_date
 
 
 
