@@ -11,6 +11,7 @@ import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -147,7 +148,10 @@ public class QuestionProcessor {
                 final Integer qid = question.questionId;
                 if (!preGeneratedQuestions.containsKey(qid)) {
                     final Long accountQId = question.id;
-                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid), accountQId, today));
+                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid),
+                                                                                  accountQId,
+                                                                                  today,
+                                                                                  Optional.of(question.created)));
                 }
             }
 
@@ -260,7 +264,7 @@ public class QuestionProcessor {
                 skip = response.skip.get();
             }
 
-            if (skip != null && skip == false) {
+            if (skip != null && !skip) {
                 // not a skip, bolt
                 break;
             }
@@ -320,7 +324,8 @@ public class QuestionProcessor {
             addedIds.add(questionId);
             final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
             if (savedID > 0L) {
-                questions.add(Question.withAskTimeAccountQId(this.questionIdMap.get(questionId), savedID, today));
+                final Question question = this.questionIdMap.get(questionId);
+                questions.add(Question.withAskTimeAccountQId(question, savedID, today, question.created));
             }
         }
 
@@ -433,7 +438,7 @@ public class QuestionProcessor {
                 addedIds.add(question.id);
                 final Long savedId = this.saveGeneratedQuestion(accountId, question.id, today);
                 if (savedId > 0L) {
-                    questions.add(Question.withAskTimeAccountQId(question, savedId, today));
+                    questions.add(Question.withAskTimeAccountQId(question, savedId, today, Optional.of(today)));
                 }
                 questionsPool.remove(qid);
                 poolSize--;
@@ -511,7 +516,10 @@ public class QuestionProcessor {
             final Integer qid = question.questionId;
             if (!questions.containsKey(qid)) {
                 final Long accountQId = question.id;
-                questions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid), accountQId, today));
+                questions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid),
+                                                                  accountQId,
+                                                                  today,
+                                                                  Optional.of(question.askTime)));
             }
         }
 
