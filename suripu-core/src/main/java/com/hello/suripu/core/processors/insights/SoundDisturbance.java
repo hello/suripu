@@ -2,10 +2,15 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataDAO;
+import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.SoundDisturbanceMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
@@ -31,8 +36,8 @@ public class SoundDisturbance {
     private static final Integer DATA_END_HOUR_LOCAL = 12;
 
     public static Optional<InsightCard> getInsights(final Long accountId,
-                                                    final Long deviceId,
-                                                    final DeviceDataDAO deviceDataDAO,
+                                                    final DeviceId deviceId,
+                                                    final DeviceDataInsightQueryDAO deviceDataDAO,
                                                     final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
 
         final Optional<Integer> timeZoneOffsetOptional = getTimeZoneOffsetOptional(sleepStatsDAODynamoDB, accountId, DateTime.now(DateTimeZone.UTC));
@@ -111,7 +116,7 @@ er
         return queryDate.withHourOfDay(DATA_END_HOUR_LOCAL);
     }
 
-    private static final List<DeviceData> getDeviceData(final Long accountId, final Long deviceId, final DeviceDataDAO deviceDataDAO, final DateTime queryEndTime, final Integer timeZoneOffset) {
+    private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final DateTime queryEndTime, final Integer timeZoneOffset) {
 
         final DateTime queryStartTime = queryEndTime.minusDays(1);
 
@@ -119,7 +124,11 @@ er
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         //Grab all pre-bed data for past week
-        return deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, DATA_START_HOUR_LOCAL, DATA_END_HOUR_LOCAL);
+        DeviceDataResponse response = deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, DATA_START_HOUR_LOCAL, DATA_END_HOUR_LOCAL);
+        if (response.status == Response.Status.SUCCESS) {
+            return response.data;
+        }
+        return Lists.newArrayList();
     }
 
     private static final Optional<Integer> getTimeZoneOffsetOptional(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final Long accountId, final DateTime queryEndDate) {
