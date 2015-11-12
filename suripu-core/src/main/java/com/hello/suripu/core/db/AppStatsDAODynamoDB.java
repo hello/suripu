@@ -64,9 +64,9 @@ public class AppStatsDAODynamoDB implements AppStatsDAO {
             final String value = attribute.getN();
             final long lastViewedMillis = Long.parseLong(value, 10);
             return Optional.of(new DateTime(lastViewedMillis, DateTimeZone.UTC));
-        } else {
-            return Optional.absent();
         }
+
+        return Optional.absent();
     }
 
     @Override
@@ -96,9 +96,9 @@ public class AppStatsDAODynamoDB implements AppStatsDAO {
             final String value = attribute.getN();
             final long lastViewedMillis = Long.parseLong(value, 10);
             return Optional.of(new DateTime(lastViewedMillis, DateTimeZone.UTC));
-        } else {
-            return Optional.absent();
         }
+
+        return Optional.absent();
     }
 
 

@@ -80,9 +80,9 @@ public class AppStatsResource {
 
         if (appStats.questionsLastViewed.isPresent() || appStats.insightsLastViewed.isPresent()) {
             return Response.status(Response.Status.ACCEPTED).build();
-        } else {
-            return Response.status(Response.Status.NOT_MODIFIED).build();
         }
+
+        return Response.status(Response.Status.NOT_MODIFIED).build();
     }
 
     @Timed
@@ -125,9 +125,9 @@ public class AppStatsResource {
                     }
 
                     return false;
-                } else {
-                    return !questions.isEmpty();
                 }
+
+                return !questions.isEmpty();
             }
         });
 
