@@ -151,7 +151,7 @@ public class QuestionProcessor {
                     preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid),
                                                                                   accountQId,
                                                                                   today,
-                                                                                  Optional.of(question.created)));
+                                                                                  question.created));
                 }
             }
 
@@ -325,7 +325,7 @@ public class QuestionProcessor {
             final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
             if (savedID > 0L) {
                 final Question question = this.questionIdMap.get(questionId);
-                questions.add(Question.withAskTimeAccountQId(question, savedID, today, Optional.of(DateTime.now(DateTimeZone.UTC))));
+                questions.add(Question.withAskTimeAccountQId(question, savedID, today, DateTime.now(DateTimeZone.UTC)));
             }
         }
 
@@ -438,7 +438,7 @@ public class QuestionProcessor {
                 addedIds.add(question.id);
                 final Long savedId = this.saveGeneratedQuestion(accountId, question.id, today);
                 if (savedId > 0L) {
-                    questions.add(Question.withAskTimeAccountQId(question, savedId, today, Optional.of(DateTime.now(DateTimeZone.UTC))));
+                    questions.add(Question.withAskTimeAccountQId(question, savedId, today, DateTime.now(DateTimeZone.UTC)));
                 }
                 questionsPool.remove(qid);
                 poolSize--;
@@ -519,7 +519,7 @@ public class QuestionProcessor {
                 questions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid),
                                                                   accountQId,
                                                                   today,
-                                                                  Optional.of(question.askTime)));
+                                                                  question.askTime));
             }
         }
 

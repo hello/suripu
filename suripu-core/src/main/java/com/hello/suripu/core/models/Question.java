@@ -2,7 +2,6 @@ package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import org.joda.time.DateTime;
 
@@ -140,14 +139,14 @@ public class Question {
     final public AccountInfo.Type accountInfo;
 
     @JsonIgnore
-    final public Optional<DateTime> created;
+    final public DateTime created;
 
     public Question(final Integer id, final Long accountQuestionId, final String text, final String lang,
                     final Type type, final FREQUENCY frequency, final ASK_TIME askTime,
                     final int dependency, final int parentId,
                     final DateTime askLocalDate, final List<Choice> choiceList,
                     final AccountInfo.Type accountInfo,
-                    final Optional<DateTime> created) {
+                    final DateTime created) {
         this.id = id;
         this.accountQuestionId = accountQuestionId;
         this.text = text;
@@ -163,17 +162,10 @@ public class Question {
         this.created = created;
     }
 
-    public static Question withAskLocalTime(final Question question, final DateTime askLocalTime) {
-        return new Question(question.id, question.accountQuestionId, question.text, question.lang,
-                            question.type, question.frequency, question.askTime,
-                            question.dependency, question.parentId, askLocalTime, question.choiceList, question.accountInfo,
-                            Optional.<DateTime>absent());
-    }
-
     public static Question withAskTimeAccountQId(final Question question,
                                                  final Long accountQuestionId,
                                                  final DateTime askLocalTime,
-                                                 final Optional<DateTime> created) {
+                                                 final DateTime created) {
         return new Question(question.id, accountQuestionId, question.text, question.lang,
                             question.type, question.frequency, question.askTime,
                             question.dependency, question.parentId, askLocalTime, question.choiceList, question.accountInfo,

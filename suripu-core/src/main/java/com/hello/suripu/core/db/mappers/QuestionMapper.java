@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db.mappers;
 
-import com.google.common.base.Optional;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
@@ -55,7 +54,7 @@ public class QuestionMapper implements ResultSetMapper<Question> {
                                                createdLocal,
                                                choices,
                                                AccountInfo.Type.fromString(r.getString("account_info")),
-                                               Optional.of(createdLocal));
+                                               createdLocal);
 
         return question;
     }

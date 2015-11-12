@@ -221,7 +221,7 @@ public class AppStatsResourceTests {
                                                                              nowUTC,
                                                                              Collections.<Choice>emptyList(),
                                                                              AccountInfo.Type.SLEEP_TEMPERATURE,
-                                                                             Optional.of(nowUTC)));
+                                                                             nowUTC));
         doReturn(fakeQuestions)
                 .when(questionProcessor)
                 .getQuestions(eq(ACCOUNT_ID), eq(fakeAccount.getAgeInDays()), any(DateTime.class),
@@ -260,7 +260,7 @@ public class AppStatsResourceTests {
                                                                              nowUTC,
                                                                              Collections.<Choice>emptyList(),
                                                                              AccountInfo.Type.SLEEP_TEMPERATURE,
-                                                                             Optional.of(nowUTC.minusDays(1))));
+                                                                             nowUTC.minusDays(1)));
         doReturn(fakeQuestions)
                 .when(questionProcessor)
                 .getQuestions(eq(ACCOUNT_ID), eq(fakeAccount.getAgeInDays()), any(DateTime.class),
