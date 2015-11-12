@@ -13,18 +13,6 @@ cp init-scripts/suripuapp.conf $TEMP_DIR/etc/init/
 
 fpm --force -s dir -C $TEMP_DIR -t deb --name "suripu-app" --version $VERSION --config-files etc/hello .
 
-TEMP_DIR="/tmp/suripu-service"
-mkdir -p $TEMP_DIR/opt/hello
-mkdir -p $TEMP_DIR/etc/hello
-mkdir -p $TEMP_DIR/etc/init/
-
-s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-service/$VERSION/suripu-service.prod.yml $TEMP_DIR/etc/hello/suripu-service.yml --force
-s3cmd get s3://hello-maven/release/com/hello/suripu/suripu-service/$VERSION/suripu-service-$VERSION.jar $TEMP_DIR/opt/hello/suripu-service.jar --force
-
-cp init-scripts/suripuservice.conf $TEMP_DIR/etc/init/
-
-fpm --force -s dir -C $TEMP_DIR -t deb --name "suripu-service" --version $VERSION --config-files etc/hello .
-
 TEMP_DIR="/tmp/suripu-workers"
 mkdir -p $TEMP_DIR/opt/hello
 mkdir -p $TEMP_DIR/etc/hello

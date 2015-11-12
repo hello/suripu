@@ -18,18 +18,6 @@ restart suripuapp
 echo "Sleeping 30s to let suripu-app restart properly"
 sleep 30
 
-echo "Updating symlink for suripu-service"
-rm /home/build/build/suripu-service.jar
-ln -s /home/build/build/suripu-service-$1.jar /home/build/build/suripu-service.jar
-
-echo "Moving configs to /etc/"
-cp /home/build/build/suripu-service.staging.yml /etc/
-
-echo "restarting..."
-restart suripuservice
-
-sleep 1
-
 echo "Updating symlink for suripu-workers"
 rm /home/build/build/suripu-workers.jar
 ln -s /home/build/build/suripu-workers-$1.jar /home/build/build/suripu-workers.jar

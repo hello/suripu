@@ -13,7 +13,6 @@ VERSION=$1
 # prod
 
 s3cmd put suripu-app/suripu-app.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-app/$VERSION/suripu-app.prod.yml
-s3cmd put suripu-service/suripu-service.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-service/$VERSION/suripu-service.prod.yml
 s3cmd put suripu-workers/configs/pill/pillscorer.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pillscorer.prod.yml
 s3cmd put suripu-workers/configs/pill/pill.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pill.prod.yml
 s3cmd put suripu-workers/configs/alarm/alarm_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/alarm_worker.prod.yml
@@ -29,7 +28,6 @@ s3cmd put suripu-workers/configs/push/push-notifications.prod.yml s3://hello-dep
 
 # staging
 s3cmd put suripu-app/suripu-app.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-app/$VERSION/suripu-app.staging.yml
-s3cmd put suripu-service/suripu-service.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-service/$VERSION/suripu-service.staging.yml
 s3cmd put suripu-workers/configs/pill/pillscorer.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pillscorer.staging.yml
 s3cmd put suripu-workers/configs/pill/pill.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/pill.staging.yml
 s3cmd put suripu-workers/configs/alarm/alarm_worker.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/alarm_worker.staging.yml
