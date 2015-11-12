@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -51,6 +52,10 @@ public class TrackerMotion {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
+    @JsonProperty("external_tracker_id")
+    @JsonIgnore
+    public final String externalTrackerId;
+
     @JsonCreator
     // TODO: make constructor private and force Builder use to reduce risks on not
     // TODO: converting data properly
@@ -62,7 +67,8 @@ public class TrackerMotion {
                          @JsonProperty("timezone_offset") final int timeZoneOffset,
                          final Long motionRange,
                          final Long kickOffCounts,
-                         final Long onDurationInSeconds){
+                         final Long onDurationInSeconds,
+                         @JsonProperty("external_tracker_id") final String externalTrackerId){
 
         this.id = id;
         this.accountId = accountId;
@@ -75,6 +81,7 @@ public class TrackerMotion {
         this.motionRange = motionRange;
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
+        this.externalTrackerId = externalTrackerId;
     }
 
 
@@ -82,7 +89,7 @@ public class TrackerMotion {
         final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey, accountPair.externalDeviceId);
         final Long timestampInMillis = Utils.convertTimestampInSecondsToTimestampInMillis(pill_data.getTimestamp());
         final Integer timeZoneOffset = timeZone.getOffset(timestampInMillis);
-
+        final String externalPillId = pill_data.getDeviceId();
         return new TrackerMotion(
                 0L,
                 accountPair.accountId,
@@ -92,7 +99,8 @@ public class TrackerMotion {
                 timeZoneOffset,
                 payloadV2.motionRange,
                 payloadV2.kickOffCounts,
-                payloadV2.onDurationInSeconds
+                payloadV2.onDurationInSeconds,
+                externalPillId
         );
     }
 
@@ -179,6 +187,7 @@ public class TrackerMotion {
         private Long motionRange = 0L;
         private Long kickOffCounts = 0L;
         private Long onDurationInSeconds = 0L;
+        private String externalTrackerId = "";
 
         public Builder(){
 
@@ -224,9 +233,13 @@ public class TrackerMotion {
             return this;
         }
 
-
         public Builder withOnDurationInSeconds(final Long onDurationInSeconds) {
             this.onDurationInSeconds = onDurationInSeconds;
+            return this;
+        }
+
+        public Builder withExternalTrackerId(final String externalPillId) {
+            this .externalTrackerId = externalPillId;
             return this;
         }
 
@@ -240,7 +253,8 @@ public class TrackerMotion {
                     this.offsetMillis,
                     this.motionRange,
                     this.kickOffCounts,
-                    this.onDurationInSeconds);
+                    this.onDurationInSeconds,
+                    this.externalTrackerId);
         }
 
 
