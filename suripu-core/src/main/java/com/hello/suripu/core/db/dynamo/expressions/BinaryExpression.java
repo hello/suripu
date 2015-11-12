@@ -23,12 +23,12 @@ public class BinaryExpression implements Expression {
     }
 
     @Override
-    public Map<String, AttributeValue> getExpressionAttributeValues() {
+    public Map<String, AttributeValue> expressionAttributeValues() {
         return ImmutableMap.of(AttributeUtils.expressionAttributeValue(attribute), compareToValue);
     }
 
     @Override
-    public String getExpressionString() {
+    public String expressionString() {
         return Joiner.on(" ").join(AttributeUtils.expressionAttributeName(attribute), operator, AttributeUtils.expressionAttributeValue(attribute));
     }
 }

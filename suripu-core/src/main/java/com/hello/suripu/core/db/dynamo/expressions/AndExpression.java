@@ -19,19 +19,19 @@ public class AndExpression implements Expression {
     }
 
     @Override
-    public Map<String, AttributeValue> getExpressionAttributeValues() {
+    public Map<String, AttributeValue> expressionAttributeValues() {
         final ImmutableMap.Builder<String, AttributeValue> builder = new ImmutableMap.Builder<>();
         for (final Expression expression : expressions) {
-            builder.putAll(expression.getExpressionAttributeValues());
+            builder.putAll(expression.expressionAttributeValues());
         }
         return builder.build();
     }
 
     @Override
-    public String getExpressionString() {
+    public String expressionString() {
         final List<String> expStrings = Lists.newArrayListWithExpectedSize(expressions.size());
         for (final Expression expression: expressions) {
-            expStrings.add(expression.getExpressionString());
+            expStrings.add(expression.expressionString());
         }
         return Joiner.on(" AND ").join(expStrings);
     }

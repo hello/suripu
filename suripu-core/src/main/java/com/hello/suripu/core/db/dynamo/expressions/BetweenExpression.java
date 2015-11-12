@@ -23,14 +23,14 @@ public class BetweenExpression implements Expression {
     }
 
     @Override
-    public Map<String, AttributeValue> getExpressionAttributeValues() {
+    public Map<String, AttributeValue> expressionAttributeValues() {
         return ImmutableMap.of(
                 AttributeUtils.expressionAttributeValueStart(attribute), lowerBound,
                 AttributeUtils.expressionAttributeValueEnd(attribute), upperBound);
     }
 
     @Override
-    public String getExpressionString() {
+    public String expressionString() {
         return Joiner.on(" ").join(
                 AttributeUtils.expressionAttributeName(attribute), "BETWEEN",
                 AttributeUtils.expressionAttributeValueStart(attribute), "AND", AttributeUtils.expressionAttributeValueEnd(attribute));

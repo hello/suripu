@@ -461,8 +461,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         int numAttempts = 0;
         boolean keepTrying = true;
 
-        final Map<String, String> expressionAttributeNames = Expressions.getExpressionAttributeNames(targetAttributes);
-        final String projectionExpression = Expressions.getProjectionExpression(targetAttributes);
+        final Map<String, String> expressionAttributeNames = Expressions.expressionAttributeNames(targetAttributes);
+        final String projectionExpression = Expressions.projectionExpression(targetAttributes);
 
         do {
             numAttempts++;
@@ -531,7 +531,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
     {
         final DateTime endExclusive = end.minusMinutes(1);
         final Expression keyConditionExpression = Expressions.and(
-                Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
+                Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(start, externalDeviceId), getRangeKey(endExclusive, externalDeviceId)));
 
         final List<Map<String, AttributeValue>> results = queryTables(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes);
@@ -764,16 +764,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
      * @return Optional of the latest DeviceData, or Optional.absent() if data not present or query fails.
      */
     public Optional<DeviceData> getMostRecent(final Long accountId, final DateTime now) {
-        final Expression keyConditionExpression = Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId));
+        final Expression keyConditionExpression = Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId));
         final Collection<DeviceDataAttribute> attributes = ALL_ATTRIBUTES;
         final String tableName = getTableName(now);
 
         final QueryRequest queryRequest = new QueryRequest()
                 .withTableName(tableName)
-                .withKeyConditionExpression(keyConditionExpression.getExpressionString())
-                .withProjectionExpression(Expressions.getProjectionExpression(attributes))
-                .withExpressionAttributeNames(Expressions.getExpressionAttributeNames(attributes))
-                .withExpressionAttributeValues(keyConditionExpression.getExpressionAttributeValues())
+                .withKeyConditionExpression(keyConditionExpression.expressionString())
+                .withProjectionExpression(Expressions.projectionExpression(attributes))
+                .withExpressionAttributeNames(Expressions.expressionAttributeNames(attributes))
+                .withExpressionAttributeValues(keyConditionExpression.expressionAttributeValues())
                 .withScanIndexForward(false)
                 .withLimit(1);
 
@@ -826,9 +826,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                           final Collection<DeviceDataAttribute> attributes)
     {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        final String keyCondition = keyConditionExpression.getExpressionString();
+        final String keyCondition = keyConditionExpression.expressionString();
         for (final String table: tableNames) {
-            results.addAll(query(table, keyCondition, attributes, Optional.<String>absent(), keyConditionExpression.getExpressionAttributeValues()));
+            results.addAll(query(table, keyCondition, attributes, Optional.<String>absent(), keyConditionExpression.expressionAttributeValues()));
         }
         return results;
     }
@@ -839,11 +839,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                           final Collection<DeviceDataAttribute> attributes)
     {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        final String keyCondition = keyConditionExpression.getExpressionString();
-        final String filterCondition = filterExpression.getExpressionString();
+        final String keyCondition = keyConditionExpression.expressionString();
+        final String filterCondition = filterExpression.expressionString();
         final Map<String,AttributeValue> attributeValues = new ImmutableMap.Builder<String, AttributeValue>()
-                .putAll(keyConditionExpression.getExpressionAttributeValues())
-                .putAll(filterExpression.getExpressionAttributeValues())
+                .putAll(keyConditionExpression.expressionAttributeValues())
+                .putAll(filterExpression.expressionAttributeValues())
                 .build();
         for (final String table: tableNames) {
             results.addAll(query(table, keyCondition, attributes, Optional.of(filterCondition), attributeValues));
@@ -881,7 +881,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                 Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime)),
                 Expressions.compare(DeviceDataAttribute.AMBIENT_LIGHT, ">", toAttributeValue(minLightLevel)));
         final Expression keyConditionExp = Expressions.and(
-                Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
+                Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
 
         final List<DeviceData> results = Lists.newArrayList();
@@ -909,7 +909,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
     {
         final String externalDeviceId = deviceId.externalDeviceId.get();
         final Expression keyConditionExpression = Expressions.and(
-                Expressions.compare(DeviceDataAttribute.ACCOUNT_ID, "=", toAttributeValue(accountId)),
+                Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startUTCTime, externalDeviceId), getRangeKey(endUTCTime, externalDeviceId)));
         final Expression filterExpression = Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime));
 

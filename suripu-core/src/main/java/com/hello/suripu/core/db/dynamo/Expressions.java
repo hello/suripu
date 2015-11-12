@@ -31,6 +31,13 @@ public class Expressions {
     }
 
     /**
+     * Convenience method for when the comparator of `compare` is "="
+     */
+    public static Expression equals(final Attribute attribute, final AttributeValue toValue) {
+        return compare(attribute, "=", toValue);
+    }
+
+    /**
      * Compound Expression that takes the "and" of multiple sub-expressions.
      * and(expression1, expression2, expression3) => "<expression1> AND <expression2> AND <expression3>"
      * @param expressions
@@ -58,7 +65,7 @@ public class Expressions {
      * @return Map that can be passed to QueryRequest.withExpressionAttributeNames
      *  (http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/model/QueryRequest.html#withExpressionAttributeNames(java.util.Map))
      */
-    public static Map<String, String> getExpressionAttributeNames(final Collection<? extends Attribute> attributes) {
+    public static Map<String, String> expressionAttributeNames(final Collection<? extends Attribute> attributes) {
         final Map<String, String> names = Maps.newHashMapWithExpectedSize(attributes.size());
         for (final Attribute attribute: attributes) {
             names.put(AttributeUtils.expressionAttributeName(attribute), attribute.shortName());
@@ -71,7 +78,7 @@ public class Expressions {
      * @return String that can be passed to QueryRequest.withProjectionExpression
      *  (http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/model/QueryRequest.html#withProjectionExpression(java.lang.String))
      */
-    public static String getProjectionExpression(final Collection<? extends Attribute> attributes) {
-        return Joiner.on(", ").join(getExpressionAttributeNames(attributes).keySet());
+    public static String projectionExpression(final Collection<? extends Attribute> attributes) {
+        return Joiner.on(", ").join(expressionAttributeNames(attributes).keySet());
     }
 }
