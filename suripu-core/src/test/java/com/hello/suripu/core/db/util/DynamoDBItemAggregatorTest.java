@@ -3,6 +3,7 @@ package com.hello.suripu.core.db.util;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.dynamo.Item;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,17 +19,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class DynamoDBItemAggregatorTest {
 
     DynamoDBItemAggregator aggregator;
-    List<Map<String, AttributeValue>> items;
+    List<Item> items;
 
     private AttributeValue toAttributeValue(final double x) {
         return new AttributeValue().withN(String.valueOf(x));
     }
 
-    private Map makeItem(final double x, final double y) {
+    private Item makeItem(final double x, final double y) {
         final Map<String, AttributeValue> item = Maps.newHashMap();
         item.put("x", toAttributeValue(x));
         item.put("y", toAttributeValue(y));
-        return item;
+        return new Item(item);
     }
 
     @Before
@@ -89,7 +90,7 @@ public class DynamoDBItemAggregatorTest {
 
     @Test
     public void testEmptyItems() {
-        final List<Map<String, AttributeValue>> items = Lists.newArrayList();
+        final List<Item> items = Lists.newArrayList();
         DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
         assertThat(aggregator.sum("x"), is(0.0));
         assertThat(aggregator.mean("x"), is(0.0));
