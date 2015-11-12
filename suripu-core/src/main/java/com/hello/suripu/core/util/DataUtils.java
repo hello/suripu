@@ -57,7 +57,7 @@ public class DataUtils{
         // TODO: add checks for firmware version when we switch sensor
 
         final float dustDensity = (dustCount / MAX_DUST_ANALOG_VALUE) * 4.1076f * (0.5f/2.9f);
-        if(dustDensity < 0.0f) {
+        if(dustDensity < -0.1f) {
             LOGGER.error("bad calibration for device_id = {}: value was: {}", senseId, dustDensity);
         }
 
