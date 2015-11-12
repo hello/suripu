@@ -1,6 +1,7 @@
 package com.hello.suripu.core.db.util;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.hello.suripu.core.db.dynamo.Item;
 
 import java.util.List;
 import java.util.Map;
@@ -10,14 +11,14 @@ import java.util.Map;
  */
 public class DynamoDBItemAggregator {
 
-    final List<Map<String, AttributeValue>> items;
+    final List<Item> items;
     final double defaultValue;
 
-    public DynamoDBItemAggregator(final List<Map<String, AttributeValue>> items) {
+    public DynamoDBItemAggregator(final List<Item> items) {
         this(items, 0.0);
     }
 
-    public DynamoDBItemAggregator(final List<Map<String, AttributeValue>> items, final double defaultValue) {
+    public DynamoDBItemAggregator(final List<Item> items, final double defaultValue) {
         this.items = items;
         this.defaultValue = defaultValue;
     }
@@ -36,7 +37,7 @@ public class DynamoDBItemAggregator {
      */
     public double sum(final String key) {
         double total = 0;
-        for (final Map<String, AttributeValue> item: items) {
+        for (final Item item: items) {
             total += toDouble(item.get(key));
         }
         return total;
@@ -73,7 +74,7 @@ public class DynamoDBItemAggregator {
             return defaultValue;
         }
         double currMax = Double.NEGATIVE_INFINITY;
-        for (final Map<String, AttributeValue> item: items) {
+        for (final Item item: items) {
             currMax = Math.max(currMax, toDouble(item.get(key)));
         }
         return currMax;
@@ -89,7 +90,7 @@ public class DynamoDBItemAggregator {
             return defaultValue;
         }
         double currMin = Double.POSITIVE_INFINITY;
-        for (final Map<String, AttributeValue> item: items) {
+        for (final Item item: items) {
             currMin = Math.min(currMin, toDouble(item.get(key)));
         }
         return currMin;

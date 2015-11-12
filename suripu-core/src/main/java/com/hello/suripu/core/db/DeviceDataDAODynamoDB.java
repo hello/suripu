@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Expressions;
+import com.hello.suripu.core.db.dynamo.Item;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -112,12 +113,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
          * @param item
          * @return
          */
-        private AttributeValue get(final Map<String, AttributeValue> item) {
+        private AttributeValue get(final Item item) {
             return item.get(this.name);
         }
 
-        private Integer getInteger(final Map<String, AttributeValue> item) {
-            if (item.containsKey(this.name)) {
+        private Integer getInteger(final Item item) {
+            if (item.attributes.containsKey(this.name)) {
                 return Integer.valueOf(get(item).getN());
             }
             return 0;
@@ -380,16 +381,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return dateTime.withMinuteOfHour(minute - (minute % toMinutes));
     }
 
-    private DateTime timestampFromDDBItem(final Map<String, AttributeValue> item) {
+    private DateTime timestampFromDDBItem(final Item item) {
         final String dateString = DeviceDataAttribute.RANGE_KEY.get(item).getS().substring(0, DATE_TIME_STRING_TEMPLATE.length());
         return DateTime.parse(dateString + ":00Z", DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
     }
 
-    private String externalDeviceIdFromDDBItem(final Map<String, AttributeValue> item) {
+    private String externalDeviceIdFromDDBItem(final Item item) {
         return item.get(DeviceDataAttribute.RANGE_KEY.name).getS().substring(DATE_TIME_STRING_TEMPLATE.length() + 1);
     }
 
-    private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final DeviceData template) {
+    private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Item> items, final DeviceData template) {
         final DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
         return new DeviceData.Builder()
                 .withAccountId(template.accountId)
@@ -409,20 +410,20 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                 .build();
     }
 
-    List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final Integer slotDuration) {
+    List<DeviceData> aggregateDynamoDBItemsToDeviceData(final List<Item> items, final Integer slotDuration) {
         final List<DeviceData> resultList = Lists.newArrayListWithExpectedSize(items.size() / slotDuration);
         if (items.isEmpty()) {
             return resultList;
         }
 
-        List<Map<String, AttributeValue>> currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
-        final Map<String, AttributeValue> firstItem = items.get(0);
+        List<Item> currentWorkingList = Lists.newArrayListWithExpectedSize(slotDuration);
+        final Item firstItem = items.get(0);
         final DeviceData.Builder templateBuilder = new DeviceData.Builder()
-                .withAccountId(Long.valueOf(firstItem.get(DeviceDataAttribute.ACCOUNT_ID.name).getN()))
+                .withAccountId(Long.valueOf(DeviceDataAttribute.ACCOUNT_ID.get(firstItem).getN()))
                 .withExternalDeviceId(externalDeviceIdFromDDBItem(firstItem));
         DateTime currSlotTime = getFloorOfDateTime(timestampFromDDBItem(firstItem), slotDuration);
 
-        for (final Map<String, AttributeValue> item: items) {
+        for (final Item item: items) {
             final DateTime itemDateTime = getFloorOfDateTime(timestampFromDDBItem(item), slotDuration);
             if (currSlotTime.equals(itemDateTime)) {
                 // Within the window of our current working set.
@@ -449,13 +450,13 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return resultList;
     }
 
-    private List<Map<String, AttributeValue>> query(final String tableName,
-                                                    final String keyConditionExpression,
-                                                    final Collection<DeviceDataAttribute> targetAttributes,
-                                                    final Optional<String> filterExpression,
-                                                    final Map<String, AttributeValue> filterAttributeValues)
+    private List<Item> query(final String tableName,
+                             final String keyConditionExpression,
+                             final Collection<DeviceDataAttribute> targetAttributes,
+                             final Optional<String> filterExpression,
+                             final Map<String, AttributeValue> filterAttributeValues)
     {
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        final List<Item> results = Lists.newArrayList();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int numAttempts = 0;
@@ -493,7 +494,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
             if (queryResult.getItems() != null) {
                 for (final Map<String, AttributeValue> item : items) {
-                    results.add(item);
+                    results.add(new Item(item));
                 }
             }
 
@@ -534,9 +535,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                 Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(start, externalDeviceId), getRangeKey(endExclusive, externalDeviceId)));
 
-        final List<Map<String, AttributeValue>> results = queryTables(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes);
-        final List<Map<String, AttributeValue>> filteredResults = Lists.newLinkedList();
-        for (final Map<String, AttributeValue> item : results) {
+        final List<Item> results = queryTables(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes);
+        final List<Item> filteredResults = Lists.newLinkedList();
+        for (final Item item : results) {
             if (externalDeviceIdFromDDBItem(item).equals(externalDeviceId)) {
                 filteredResults.add(item);
             }
@@ -730,7 +731,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return Optional.absent();
     }
 
-    final DeviceData attributeMapToDeviceData(final Map<String, AttributeValue> item) {
+    final DeviceData attributeMapToDeviceData(final Item item) {
         return new DeviceData.Builder()
                 .withDateTimeUTC(timestampFromDDBItem(item))
                 .withAccountId(Long.valueOf(DeviceDataAttribute.ACCOUNT_ID.get(item).getN()))
@@ -749,9 +750,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                 .build();
     }
 
-    final List<DeviceData> attributeMapsToDeviceDataList(final List<Map<String, AttributeValue>> items) {
+    final List<DeviceData> attributeMapsToDeviceDataList(final List<Item> items) {
         final List<DeviceData> dataList = Lists.newArrayListWithCapacity(items.size());
-        for (final Map<String, AttributeValue> item: items) {
+        for (final Item item: items) {
             dataList.add(attributeMapToDeviceData(item));
         }
         return dataList;
@@ -785,9 +786,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         }
 
         if (queryResultOptional.isPresent()) {
-            final List<Map<String, AttributeValue>> items = queryResultOptional.get().getItems();
-            if (!items.isEmpty()) {
-                final DeviceData deviceData = attributeMapToDeviceData(items.get(0));
+            final List<Map<String, AttributeValue>> results = queryResultOptional.get().getItems();
+            if (!results.isEmpty()) {
+                final DeviceData deviceData = attributeMapToDeviceData(new Item(results.get(0)));
                 return Optional.of(deviceData);
             }
         }
@@ -821,11 +822,11 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return Optional.absent();
     }
 
-    private List<Map<String, AttributeValue>> queryTables(final Iterable<String> tableNames,
-                                                          final Expression keyConditionExpression,
-                                                          final Collection<DeviceDataAttribute> attributes)
+    private List<Item> queryTables(final Iterable<String> tableNames,
+                                   final Expression keyConditionExpression,
+                                   final Collection<DeviceDataAttribute> attributes)
     {
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        final List<Item> results = Lists.newArrayList();
         final String keyCondition = keyConditionExpression.expressionString();
         for (final String table: tableNames) {
             results.addAll(query(table, keyCondition, attributes, Optional.<String>absent(), keyConditionExpression.expressionAttributeValues()));
@@ -833,12 +834,12 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return results;
     }
 
-    private List<Map<String, AttributeValue>> queryTables(final Iterable<String> tableNames,
-                                                          final Expression keyConditionExpression,
-                                                          final Expression filterExpression,
-                                                          final Collection<DeviceDataAttribute> attributes)
+    private List<Item> queryTables(final Iterable<String> tableNames,
+                                   final Expression keyConditionExpression,
+                                   final Expression filterExpression,
+                                   final Collection<DeviceDataAttribute> attributes)
     {
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        final List<Item> results = Lists.newArrayList();
         final String keyCondition = keyConditionExpression.expressionString();
         final String filterCondition = filterExpression.expressionString();
         final Map<String,AttributeValue> attributeValues = new ImmutableMap.Builder<String, AttributeValue>()
@@ -885,7 +886,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
 
         final List<DeviceData> results = Lists.newArrayList();
-        for (final Map<String, AttributeValue> result : queryTables(getTableNames(startTime, endTime), keyConditionExp, filterExp, ALL_ATTRIBUTES)) {
+        for (final Item result : queryTables(getTableNames(startTime, endTime), keyConditionExp, filterExp, ALL_ATTRIBUTES)) {
             final DeviceData data = attributeMapToDeviceData(result);
             final int hourOfDay = data.localTime().getHourOfDay();
             if (data.externalDeviceId.equals(externalDeviceId) &&
@@ -898,7 +899,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return ImmutableList.copyOf(results);
     }
 
-    private List<Map<String, AttributeValue>> getItemsBetweenLocalTime(
+    private List<Item> getItemsBetweenLocalTime(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime startUTCTime,
@@ -913,8 +914,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startUTCTime, externalDeviceId), getRangeKey(endUTCTime, externalDeviceId)));
         final Expression filterExpression = Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime));
 
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        for (final Map<String, AttributeValue> result : queryTables(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, filterExpression, attributes)) {
+        final List<Item> results = Lists.newArrayList();
+        for (final Item result : queryTables(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, filterExpression, attributes)) {
             if (externalDeviceIdFromDDBItem(result).equals(externalDeviceId)) {
                 results.add(result);
             }
@@ -942,7 +943,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                 final DateTime endLocalTime,
                                                 final Collection<DeviceDataAttribute> attributes)
     {
-        final List<Map<String, AttributeValue>> results = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
+        final List<Item> results = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
         return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
     }
 
@@ -992,7 +993,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return ImmutableList.copyOf(aggregated);
     }
 
-    private List<Map<String, AttributeValue>> getBetweenHourDateByTS(final Long accountId,
+    private List<Item> getBetweenHourDateByTS(final Long accountId,
                                                              final DeviceId deviceId,
                                                              final DateTime startUTCTime,
                                                              final DateTime endUTCTime,
@@ -1002,9 +1003,9 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                              final int endHour,
                                                              final boolean sameDay)
     {
-        final List<Map<String, AttributeValue>> results = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
-        final List<Map<String, AttributeValue>> filteredResults = Lists.newArrayList();
-        for (final Map<String, AttributeValue> result: results) {
+        final List<Item> results = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
+        final List<Item> filteredResults = Lists.newArrayList();
+        for (final Item result: results) {
             final int hourOfDay = timestampFromDDBItem(result).plusMillis(DeviceDataAttribute.OFFSET_MILLIS.getInteger(result)).getHourOfDay();
             if (sameDay && (hourOfDay >= startHour && hourOfDay < endHour) ||
                     (!sameDay && (hourOfDay >= startHour || hourOfDay < endHour))) {
@@ -1027,7 +1028,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                                    final int startHour,
                                                                    final int endHour)
     {
-        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
+        final List<Item> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
         return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
     }
 
@@ -1044,7 +1045,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                             final int startHour,
                                                             final int endHour)
     {
-        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
+        final List<Item> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
         return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
     }
 
@@ -1061,7 +1062,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                                                   int startHour,
                                                                                   int endHour,
                                                                                   final Integer slotDuration) {
-        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, start, end, startLocal, endLocal, startHour, endHour, false);
+        final List<Item> results = getBetweenHourDateByTS(accountId, deviceId, start, end, startLocal, endLocal, startHour, endHour, false);
         return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(results, slotDuration));
     }
 

@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.dynamo.Item;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
@@ -908,7 +909,7 @@ public class DeviceDataDAODynamoDBIT {
 
     @Test
     public void benchmarkAggregation() {
-        final List<Map<String, AttributeValue>> items = Lists.newArrayList();
+        final List<Item> items = Lists.newArrayList();
         final Integer slotDuration = 60;
         final DateTime firstTime = new DateTime(2015, 10, 10, 1, 1);
         final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
@@ -921,7 +922,7 @@ public class DeviceDataDAODynamoDBIT {
             item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.OFFSET_MILLIS.shortName(), new AttributeValue().withN("0"));
             item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.RANGE_KEY.shortName(), new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + "hi"));
             item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.AMBIENT_LIGHT.shortName(), new AttributeValue().withN(String.valueOf(i)));
-            items.add(item);
+            items.add(new Item(item));
         }
 
         for (int i = 0; i < 100; i++) {
