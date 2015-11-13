@@ -11,7 +11,7 @@ import java.util.Map;
  * Created by jakepiccolo on 11/12/15.
  */
 public class DynamoDBResponse extends Response<List<Map<String, AttributeValue>>> {
-    public DynamoDBResponse(final List<Map<String, AttributeValue>> data, final Status status, final Optional<Exception> exception) {
+    public DynamoDBResponse(final List<Map<String, AttributeValue>> data, final Status status, final Optional<? extends Exception> exception) {
         super(data, status, exception);
     }
 }

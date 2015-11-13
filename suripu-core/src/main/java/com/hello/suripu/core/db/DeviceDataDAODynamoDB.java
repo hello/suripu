@@ -85,7 +85,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
     private final String tablePrefix;
 
     public class DeviceDataResponse extends Response<ImmutableList<DeviceData>> {
-        DeviceDataResponse(final ImmutableList<DeviceData> data, final Status status, final Optional<Exception> exception) {
+        DeviceDataResponse(final ImmutableList<DeviceData> data, final Status status, final Optional<? extends Exception> exception) {
             super(data, status, exception);
         }
     }
@@ -489,12 +489,15 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             try {
                 queryResult = this.dynamoDBClient.query(queryRequest);
             } catch (ProvisionedThroughputExceededException ptee) {
+                if (numAttempts > MAX_QUERY_ATTEMPTS) {
+                    return new DynamoDBResponse(results, Response.Status.FAILURE, Optional.of(ptee));
+                }
                 backoff(numAttempts);
                 continue;
             } catch (ResourceNotFoundException rnfe) {
                 // Invalid table name
                 LOGGER.error("Got ResourceNotFoundException while attempting to read from table {}; {}", tableName, rnfe);
-                break;
+                return new DynamoDBResponse(results, Response.Status.FAILURE, Optional.of(rnfe));
             }
             final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
@@ -509,13 +512,16 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
         } while (keepTrying && (numAttempts < MAX_QUERY_ATTEMPTS));
 
-        // TODO should actually probably throw an error or return a flag here if your query could not complete
+        final Response.Status status;
         if (lastEvaluatedKey != null) {
             LOGGER.warn("Exceeded {} attempts while querying. Stopping with last evaluated key: {}",
                     MAX_QUERY_ATTEMPTS, lastEvaluatedKey);
+            status = Response.Status.FAILURE;
+        } else {
+            status = Response.Status.SUCCESS;
         }
 
-        return new DynamoDBResponse(results, Response.Status.SUCCESS, Optional.<Exception>absent());
+        return new DynamoDBResponse(results, status, Optional.<Exception>absent());
     }
 
     /**
