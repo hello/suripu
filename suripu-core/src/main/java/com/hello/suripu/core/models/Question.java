@@ -139,14 +139,14 @@ public class Question {
     final public AccountInfo.Type accountInfo;
 
     @JsonIgnore
-    final public DateTime created;
+    final public DateTime accountCreationDate; // UTC
 
     public Question(final Integer id, final Long accountQuestionId, final String text, final String lang,
                     final Type type, final FREQUENCY frequency, final ASK_TIME askTime,
                     final int dependency, final int parentId,
                     final DateTime askLocalDate, final List<Choice> choiceList,
                     final AccountInfo.Type accountInfo,
-                    final DateTime created) {
+                    final DateTime accountCreationDate) {
         this.id = id;
         this.accountQuestionId = accountQuestionId;
         this.text = text;
@@ -159,7 +159,7 @@ public class Question {
         this.askLocalDate = askLocalDate;
         this.choiceList = choiceList;
         this.accountInfo = accountInfo;
-        this.created = created;
+        this.accountCreationDate = accountCreationDate;
     }
 
     public static Question withAskTimeAccountQId(final Question question,

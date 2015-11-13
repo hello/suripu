@@ -115,7 +115,7 @@ public class AppStatsResource {
                 if (questionsLastViewed.isPresent()) {
                     final DateTime lastViewed = questionsLastViewed.get();
                     for (final Question question : questions) {
-                        if (question.created.isAfter(lastViewed)) {
+                        if (question.accountCreationDate.isAfter(lastViewed)) {
                             return true;
                         }
                     }
