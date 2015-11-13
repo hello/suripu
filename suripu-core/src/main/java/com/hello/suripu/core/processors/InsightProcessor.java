@@ -123,6 +123,7 @@ public class InsightProcessor {
 
         final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO;
         if (featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_INSIGHTS, accountId, null)) {
+            LOGGER.info("Generating insights with DynamoDB for account {}", accountId);
             deviceDataInsightQueryDAO = deviceDataDAODynamoDB;
         } else {
             deviceDataInsightQueryDAO = deviceDataDAO;
