@@ -107,15 +107,15 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
             }
 
             // Do not persist data for sense if there is no interaction and we have seen it recently
-            if (!hasInteraction(lastSeenSenseDataOptional.get()) && this.multiBloomFilter.mightHaveSeen(senseExternalId, lastSeenSenseDataOptional.get().dateTimeUTC.getMinuteOfHour())) {
-                LOGGER.info("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_LIFE_SPAN_SECONDS);
+            if (!hasInteraction(lastSeenSenseDataOptional.get()) && this.multiBloomFilter.mightHaveSeen(senseExternalId)) {
+                LOGGER.trace("Skip persisting last-seen-data for sense {} as it might have been seen within last {} minutes", senseExternalId, BLOOM_FILTER_LIFE_SPAN_SECONDS);
                 continue;
             }
             LOGGER.info("Persisting for sense {}", senseExternalId);
 
             // If all is well, update bloom filter and persist data
 
-            this.multiBloomFilter.addElement(senseExternalId, lastSeenSenseDataOptional.get().dateTimeUTC.getMinuteOfHour());
+            this.multiBloomFilter.addElement(senseExternalId);
             lastSeenSenseDataMap.put(senseExternalId, lastSeenSenseDataOptional.get());
         }
 

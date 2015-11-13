@@ -1,8 +1,6 @@
 package com.hello.suripu.workers.sense;
 
 import com.hello.suripu.workers.sense.lastSeen.MultiBloomFilter;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,34 +44,45 @@ public class MultiBloomFilterTest {
     }
 
     @Test
-    public void testSeenSenses(){
+    public void testMemorizeSenseIds(){
         multiBloomFilter.initializeAllBloomFilters();
 
+        // Zer --> has code = 120487, One --> hash code = 110182,
+        multiBloomFilter.addElement("Zer");
+        multiBloomFilter.addElement("One");
 
-        final int lastSeenMinuteOfHour = DateTime.now(DateTimeZone.UTC).getMinuteOfHour();
-
-
-        multiBloomFilter.addElement("Zer", lastSeenMinuteOfHour);
-        multiBloomFilter.addElement("One", lastSeenMinuteOfHour);
-
-
-        assertThat(multiBloomFilter.mightHaveSeen("Zer", lastSeenMinuteOfHour), is(true));
-        assertThat(multiBloomFilter.mightHaveSeen("One", lastSeenMinuteOfHour), is(true));
+        // Expectation is Zer is added to bloom filter #1 and One is added to bloom filter #0
+        assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(true));
+        assertThat(multiBloomFilter.mightHaveSeen("One"), is(true));
 
         try {
-            Thread.sleep(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000);
 
+            // At 1 cycle, bloom filter #0 got reset first
+            Thread.sleep(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000);
             multiBloomFilter.resetAllBloomExpiredFilters();
 
-            // Zer --> has code = 120487, One --> hash code = 110182,
-            // so these 2 senses will be put into different bloom filters
-            // Hence after the one of the bloom filter is removed, we expect to see only exactly one of them as "might have been seen"
+            // Thus we expect to forget One but not Zer
+            assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(true));
+            assertThat(multiBloomFilter.mightHaveSeen("One"), is(false));
 
-            assertThat(multiBloomFilter.mightHaveSeen("Zer", lastSeenMinuteOfHour)
-                    && multiBloomFilter.mightHaveSeen("One", lastSeenMinuteOfHour), is(false));
+            // We now need to memorize One again
+            multiBloomFilter.addElement("One");
 
-            assertThat(multiBloomFilter.mightHaveSeen("Zer", lastSeenMinuteOfHour)
-                    || multiBloomFilter.mightHaveSeen("One", lastSeenMinuteOfHour), is(true));
+            // At 1 cycle and half, bloom filter #1 got reset in turn
+            Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000);
+            multiBloomFilter.resetAllBloomExpiredFilters();
+
+            // Thus we expect to forget Zer but not One
+            assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
+            assertThat(multiBloomFilter.mightHaveSeen("One"), is(true));
+
+            // Let say we don't memorize anymore to see what happen at 2 cycles
+            Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000);
+            multiBloomFilter.resetAllBloomExpiredFilters();
+
+            // Both Zer and One are forgotten then
+            assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
+            assertThat(multiBloomFilter.mightHaveSeen("One"), is(false));
 
         } catch (InterruptedException e) {
             e.printStackTrace();

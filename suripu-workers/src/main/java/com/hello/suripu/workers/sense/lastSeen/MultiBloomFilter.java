@@ -37,8 +37,8 @@ public class MultiBloomFilter {
         this.bloomFilterCreatedMap.put(bloomFilterId, DateTime.now(DateTimeZone.UTC).plusSeconds(headwaySeconds));
     }
 
-    public boolean mightHaveSeen(final String senseExternalId, final int lastSeenMinuteOfHour) {
-        final int bloomFilterId = (Math.abs(senseExternalId.hashCode()) + lastSeenMinuteOfHour) % this.numberOfBloomFilters;
+    public boolean mightHaveSeen(final String senseExternalId) {
+        final int bloomFilterId = (Math.abs(senseExternalId.hashCode())) % this.numberOfBloomFilters;
         return this.bloomFilterMap.get(bloomFilterId).mightContain(senseExternalId);
     }
 
@@ -63,8 +63,8 @@ public class MultiBloomFilter {
         return DateTime.now(DateTimeZone.UTC).isAfter(this.bloomFilterCreatedMap.get(bloomFilterId).plusSeconds(this.bloomFilterLifeSpanSeconds));
     }
 
-    public void addElement(final String senseExternalId, int lastSeenMinuteOfHour) {
-        final int bloomFilterId = (Math.abs(senseExternalId.hashCode()) + lastSeenMinuteOfHour) % this.numberOfBloomFilters;
+    public void addElement(final String senseExternalId) {
+        final int bloomFilterId = (Math.abs(senseExternalId.hashCode())) % this.numberOfBloomFilters;
         this.bloomFilterMap.get(bloomFilterId).put(senseExternalId);
     }
 
