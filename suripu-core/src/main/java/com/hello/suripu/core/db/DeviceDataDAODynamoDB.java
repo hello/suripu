@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.DynamoDBResponse;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
@@ -84,12 +85,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
     private final AmazonDynamoDB dynamoDBClient;
     private final String tablePrefix;
-
-    public class DeviceDataResponse extends Response<ImmutableList<DeviceData>> {
-        DeviceDataResponse(final ImmutableList<DeviceData> data, final Status status, final Optional<? extends Exception> exception) {
-            super(data, status, exception);
-        }
-    }
 
     public enum DeviceDataAttribute implements Attribute {
         ACCOUNT_ID ("aid", "N"),
@@ -491,7 +486,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                 queryResult = this.dynamoDBClient.query(queryRequest);
             } catch (ProvisionedThroughputExceededException ptee) {
                 if (numAttempts > MAX_QUERY_ATTEMPTS) {
-                    return new DynamoDBResponse(results, Response.Status.FAILURE, Optional.of(ptee));
+                    return new DynamoDBResponse(results, Response.Status.PARTIAL_RESULTS, Optional.of(ptee));
                 }
                 backoff(numAttempts);
                 continue;
@@ -517,7 +512,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         if (lastEvaluatedKey != null) {
             LOGGER.warn("Exceeded {} attempts while querying. Stopping with last evaluated key: {}",
                     MAX_QUERY_ATTEMPTS, lastEvaluatedKey);
-            status = Response.Status.FAILURE;
+            status = Response.Status.PARTIAL_RESULTS;
         } else {
             status = Response.Status.SUCCESS;
         }
@@ -893,15 +888,15 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
      * @return DeviceDatas matching the above criteria
      */
     @Override
-    public ImmutableList<DeviceData> getLightByBetweenHourDateByTS(final Long accountId,
-                                                                   final DeviceId deviceId,
-                                                                   final int minLightLevel,
-                                                                   final DateTime startTime,
-                                                                   final DateTime endTime,
-                                                                   final DateTime startLocalTime,
-                                                                   final DateTime endLocalTime,
-                                                                   final int startHour,
-                                                                   final int endHour)
+    public DeviceDataResponse getLightByBetweenHourDateByTS(final Long accountId,
+                                                            final DeviceId deviceId,
+                                                            final int minLightLevel,
+                                                            final DateTime startTime,
+                                                            final DateTime endTime,
+                                                            final DateTime startLocalTime,
+                                                            final DateTime endLocalTime,
+                                                            final int startHour,
+                                                            final int endHour)
     {
         final String externalDeviceId = deviceId.externalDeviceId.get();
 
@@ -924,7 +919,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         }
 
 
-        return ImmutableList.copyOf(results);
+        return new DeviceDataResponse(ImmutableList.copyOf(results), response.status, response.exception);
     }
 
     private DynamoDBResponse getItemsBetweenLocalTime(
@@ -1009,64 +1004,47 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
      * Get daily (based on local time) average air quality raw.
      */
     @Override
-    public ImmutableList<Integer> getAirQualityRawList(final Long accountId,
-                                                       final DeviceId deviceId,
-                                                       final DateTime startUTCTime,
-                                                       final DateTime endUTCTime,
-                                                       final DateTime startLocalTime,
-                                                       final DateTime endLocalTime)
+    public Response<ImmutableList<Integer>> getAirQualityRawList(final Long accountId,
+                                                                 final DeviceId deviceId,
+                                                                 final DateTime startUTCTime,
+                                                                 final DateTime endUTCTime,
+                                                                 final DateTime startLocalTime,
+                                                                 final DateTime endLocalTime)
     {
         final Set<DeviceDataAttribute> attributes = new ImmutableSet.Builder<DeviceDataAttribute>().addAll(BASE_ATTRIBUTES).add(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW).build();
-        final List<DeviceData> results = getBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes).data;
+        final DeviceDataResponse response = getBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
 
-        final List<Integer> aggregated = averageDailyAirQualityRaw(results);
-        return ImmutableList.copyOf(aggregated);
+        final List<Integer> aggregated = averageDailyAirQualityRaw(response.data);
+        return new Response<>(ImmutableList.copyOf(aggregated), response.status, response.exception);
     }
 
-    private List<Map<String, AttributeValue>> getBetweenHourDateByTS(final Long accountId,
-                                                                     final DeviceId deviceId,
-                                                                     final DateTime startUTCTime,
-                                                                     final DateTime endUTCTime,
-                                                                     final DateTime startLocalTime,
-                                                                     final DateTime endLocalTime,
-                                                                     final int startHour,
-                                                                     final int endHour,
-                                                                     final boolean sameDay)
+    private DynamoDBResponse getBetweenHourDateByTS(final Long accountId,
+                                                    final DeviceId deviceId,
+                                                    final DateTime startUTCTime,
+                                                    final DateTime endUTCTime,
+                                                    final DateTime startLocalTime,
+                                                    final DateTime endLocalTime,
+                                                    final int startHour,
+                                                    final int endHour,
+                                                    final boolean sameDay)
     {
         final DynamoDBResponse response = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
-        final List<Map<String, AttributeValue>> filteredResults = Lists.newArrayList();
+        final ImmutableList.Builder<Map<String, AttributeValue>> filteredBuilder = new ImmutableList.Builder<>();
         for (final Map<String, AttributeValue> result: response.data) {
             final int hourOfDay = timestampFromDDBItem(result).plusMillis(DeviceDataAttribute.OFFSET_MILLIS.getInteger(result)).getHourOfDay();
             if (sameDay && (hourOfDay >= startHour && hourOfDay < endHour) ||
                     (!sameDay && (hourOfDay >= startHour || hourOfDay < endHour))) {
-                filteredResults.add(result);
+                filteredBuilder.add(result);
             }
         }
-        return filteredResults;
+        return new DynamoDBResponse(filteredBuilder.build(), response.status, response.exception);
     }
 
     /**
      * Get DeviceDatas that fall within [startHour, endHour) where endHour > startHour.
      */
     @Override
-    public ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(final Long accountId,
-                                                                   final DeviceId deviceId,
-                                                                   final DateTime startUTCTime,
-                                                                   final DateTime endUTCTime,
-                                                                   final DateTime startLocalTime,
-                                                                   final DateTime endLocalTime,
-                                                                   final int startHour,
-                                                                   final int endHour)
-    {
-        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
-        return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
-    }
-
-    /**
-     *  Get DeviceDatas that are >= startHour or < endHour, where startHour > endHour (because it's from the prev night)
-     */
-    @Override
-    public ImmutableList<DeviceData> getBetweenHourDateByTS(final Long accountId,
+    public DeviceDataResponse getBetweenHourDateByTSSameDay(final Long accountId,
                                                             final DeviceId deviceId,
                                                             final DateTime startUTCTime,
                                                             final DateTime endUTCTime,
@@ -1075,25 +1053,45 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
                                                             final int startHour,
                                                             final int endHour)
     {
-        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
-        return ImmutableList.copyOf(attributeMapsToDeviceDataList(results));
+        final DynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
+        final ImmutableList<DeviceData> data = ImmutableList.copyOf(attributeMapsToDeviceDataList(response.data));
+        return new DeviceDataResponse(data, response.status, response.exception);
+    }
+
+    /**
+     *  Get DeviceDatas that are >= startHour or < endHour, where startHour > endHour (because it's from the prev night)
+     */
+    @Override
+    public DeviceDataResponse getBetweenHourDateByTS(final Long accountId,
+                                                     final DeviceId deviceId,
+                                                     final DateTime startUTCTime,
+                                                     final DateTime endUTCTime,
+                                                     final DateTime startLocalTime,
+                                                     final DateTime endLocalTime,
+                                                     final int startHour,
+                                                     final int endHour)
+    {
+        final DynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
+        final ImmutableList<DeviceData> data = ImmutableList.copyOf(attributeMapsToDeviceDataList(response.data));
+        return new DeviceDataResponse(data, response.status, response.exception);
     }
 
     /**
      * Same as getBetweenHourDateByTS, but aggregated to slotDuration minutes.
      */
     @Override
-    public ImmutableList<DeviceData> getBetweenByLocalHourAggregateBySlotDuration(final Long accountId,
-                                                                                  final DeviceId deviceId,
-                                                                                  final DateTime start,
-                                                                                  final DateTime end,
-                                                                                  final DateTime startLocal,
-                                                                                  final DateTime endLocal,
-                                                                                  int startHour,
-                                                                                  int endHour,
-                                                                                  final Integer slotDuration) {
-        final List<Map<String, AttributeValue>> results = getBetweenHourDateByTS(accountId, deviceId, start, end, startLocal, endLocal, startHour, endHour, false);
-        return ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(results, slotDuration));
+    public DeviceDataResponse getBetweenByLocalHourAggregateBySlotDuration(final Long accountId,
+                                                                           final DeviceId deviceId,
+                                                                           final DateTime start,
+                                                                           final DateTime end,
+                                                                           final DateTime startLocal,
+                                                                           final DateTime endLocal,
+                                                                           int startHour,
+                                                                           int endHour,
+                                                                           final Integer slotDuration) {
+        final DynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, start, end, startLocal, endLocal, startHour, endHour, false);
+        final ImmutableList<DeviceData> data = ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(response.data, slotDuration));
+        return new DeviceDataResponse(data, response.status, response.exception);
     }
 
 }

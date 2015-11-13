@@ -681,7 +681,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, DeviceId.create(deviceId), minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 20, 11);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, DeviceId.create(deviceId), minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 20, 11).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -767,7 +767,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTSSameDay(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 10, 11);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTSSameDay(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 10, 11).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -811,7 +811,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTS(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTS(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -856,7 +856,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByLocalHourAggregateBySlotDuration(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20, slotDuration);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByLocalHourAggregateBySlotDuration(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20, slotDuration).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -900,7 +900,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<Integer> results = deviceDataDAODynamoDB.getAirQualityRawList(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusDays(3), minLocalTime, maxLocalTime);
+        final List<Integer> results = deviceDataDAODynamoDB.getAirQualityRawList(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusDays(3), minLocalTime, maxLocalTime).data;
         assertThat(results.size(), is(2));
         assertThat(results.get(0), is(15));
         assertThat(results.get(1), is(150));

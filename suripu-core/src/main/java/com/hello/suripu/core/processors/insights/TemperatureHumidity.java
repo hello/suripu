@@ -1,8 +1,11 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -68,8 +71,15 @@ public class TemperatureHumidity {
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         final int slotDuration = 30;
-        final List<DeviceData> sensorData = deviceDataDAO.getBetweenByLocalHourAggregateBySlotDuration(accountId, deviceId, queryStartTime,
-                queryEndTime, queryStartTimeLocal, queryEndTimeLocal, TEMP_START_HOUR, TEMP_END_HOUR, slotDuration);
+        final List<DeviceData> sensorData;
+        final DeviceDataResponse response = deviceDataDAO.getBetweenByLocalHourAggregateBySlotDuration(
+                accountId, deviceId, queryStartTime, queryEndTime,
+                queryStartTimeLocal, queryEndTimeLocal, TEMP_START_HOUR, TEMP_END_HOUR, slotDuration);
+        if (response.status == Response.Status.SUCCESS) {
+            sensorData = response.data;
+        } else {
+            sensorData = Lists.newArrayList();
+        }
 
         final Optional<InsightCard> card = processData(accountId, sensorData, tempPref, tempUnit);
         return card;

@@ -1,6 +1,8 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import org.joda.time.DateTime;
@@ -10,7 +12,7 @@ import org.joda.time.DateTime;
  */
 public interface DeviceDataInsightQueryDAO {
 
-    ImmutableList<DeviceData> getBetweenByLocalHourAggregateBySlotDuration(
+    DeviceDataResponse getBetweenByLocalHourAggregateBySlotDuration(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime start,
@@ -21,7 +23,7 @@ public interface DeviceDataInsightQueryDAO {
             final int endHour,
             final Integer slotDuration);
 
-    ImmutableList<DeviceData> getLightByBetweenHourDateByTS(
+    DeviceDataResponse getLightByBetweenHourDateByTS(
             final Long accountId,
             final DeviceId deviceId,
             final int lightLevel,
@@ -32,7 +34,7 @@ public interface DeviceDataInsightQueryDAO {
             final int startHour,
             final int endHour);
 
-    ImmutableList<DeviceData> getBetweenHourDateByTSSameDay(
+    DeviceDataResponse getBetweenHourDateByTSSameDay(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime startTimestamp,
@@ -42,7 +44,7 @@ public interface DeviceDataInsightQueryDAO {
             final int startHour,
             final int endHour);
 
-    ImmutableList<DeviceData> getBetweenHourDateByTS(
+    DeviceDataResponse getBetweenHourDateByTS(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime startTimestamp,
@@ -52,7 +54,7 @@ public interface DeviceDataInsightQueryDAO {
             final int startHour,
             final int endHour);
 
-    ImmutableList<Integer> getAirQualityRawList(
+    Response<ImmutableList<Integer>> getAirQualityRawList(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime startTimestamp,

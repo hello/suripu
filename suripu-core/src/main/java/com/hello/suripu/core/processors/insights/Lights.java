@@ -1,8 +1,11 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -42,7 +45,13 @@ public class Lights {
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         // get light data > 0 between the hour of 6pm to 1am
-        final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, 0, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
+        final List<DeviceData> rows;
+        final DeviceDataResponse response = deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, 0, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
+        if (response.status == Response.Status.SUCCESS) {
+            rows = response.data;
+        } else {
+            rows = Lists.newArrayList();
+        }
 
         final Optional<InsightCard> card = processLightData(accountId, rows, lightData);
         return card;

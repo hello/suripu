@@ -10,13 +10,14 @@ public class Response<T> {
     public enum Status {
         SUCCESS,
         FAILURE,
+        PARTIAL_RESULTS,
     }
 
     public final T data;
     public final Status status;
     public final Optional<? extends Exception> exception;
 
-    protected Response(final T data, final Status status, final Optional<? extends Exception> exception) {
+    public Response(final T data, final Status status, final Optional<? extends Exception> exception) {
         this.data = data;
         this.status = status;
         this.exception = exception;
