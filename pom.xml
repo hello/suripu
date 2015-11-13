@@ -20,7 +20,6 @@
     <modules>
         <module>suripu-api</module>
         <module>suripu-core</module>
-        <module>suripu-service</module>
         <module>suripu-app</module>
         <module>suripu-algorithm</module>
         <module>suripu-workers</module>
