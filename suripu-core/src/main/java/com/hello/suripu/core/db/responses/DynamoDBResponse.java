@@ -1,8 +1,7 @@
-package com.hello.suripu.core.db.dynamo;
+package com.hello.suripu.core.db.responses;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.common.base.Optional;
-import com.hello.suripu.core.db.Response;
 
 import java.util.List;
 import java.util.Map;

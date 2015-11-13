@@ -1,4 +1,4 @@
-package com.hello.suripu.core.db;
+package com.hello.suripu.core.db.responses;
 
 import com.google.common.base.Optional;
 
