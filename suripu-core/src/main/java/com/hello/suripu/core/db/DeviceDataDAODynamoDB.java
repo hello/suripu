@@ -485,7 +485,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             try {
                 queryResult = this.dynamoDBClient.query(queryRequest);
             } catch (ProvisionedThroughputExceededException ptee) {
-                if (numAttempts > MAX_QUERY_ATTEMPTS) {
+                if (numAttempts >= MAX_QUERY_ATTEMPTS) {
                     return new DynamoDBResponse(results, Response.Status.PARTIAL_RESULTS, Optional.of(ptee));
                 }
                 backoff(numAttempts);

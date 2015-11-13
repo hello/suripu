@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
@@ -346,9 +347,10 @@ public class DeviceDataDAODynamoDBIT {
         // No table created for this date
         final DateTime firstTime = new DateTime(2015, 9, 1, 7, 0, DateTimeZone.UTC);
 
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).data.size(),
-                is(0));
+        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1);
+        assertThat(response.data.size(), is(0));
+        assertThat(response.status, is(com.hello.suripu.core.db.responses.Response.Status.FAILURE));
     }
 
     @Test
@@ -433,14 +435,13 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(hourlyResults.get(0).dateTimeUTC, is(firstTime));
     }
 
-    @Test
-    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationThroughputExceeded() {
-        amazonDynamoDBClient.addRequestHandler(new RequestHandler2() {
+    private RequestHandler2 throttlingRequestHandler(final int timesToThrottle) {
+        return new RequestHandler2() {
             int numTries = 0;
 
             @Override
             public void beforeRequest(Request<?> request) {
-                if (request.getOriginalRequest() instanceof QueryRequest && numTries < 2) {
+                if (request.getOriginalRequest() instanceof QueryRequest && numTries < timesToThrottle) {
                     numTries++;
                     LOGGER.info("Injecting ProvisionedThroughputExceededException");
                     throw new ProvisionedThroughputExceededException("Injected Error");
@@ -457,7 +458,12 @@ public class DeviceDataDAODynamoDBIT {
             public void afterError(Request<?> request, Response<?> response, Exception e) {
 
             }
-        });
+        };
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationThroughputExceeded() {
+        amazonDynamoDBClient.addRequestHandler(throttlingRequestHandler(2));
 
         final Long accountId = new Long(1);
         final String deviceId = "2";
@@ -466,9 +472,29 @@ public class DeviceDataDAODynamoDBIT {
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).data.size(),
+        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1);
+        assertThat(response.data.size(),
                 is(2));
+        assertThat(response.status, is(com.hello.suripu.core.db.responses.Response.Status.SUCCESS));
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationThroughputExceededTooManyTimes() {
+        amazonDynamoDBClient.addRequestHandler(throttlingRequestHandler(100));
+
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1);
+        assertThat(response.data.size(),
+                is(0));
+        assertThat(response.status, is(com.hello.suripu.core.db.responses.Response.Status.PARTIAL_RESULTS));
     }
 
     private int countSamplesWithFillValue(final List<Sample> samples, final int fillValue) {
