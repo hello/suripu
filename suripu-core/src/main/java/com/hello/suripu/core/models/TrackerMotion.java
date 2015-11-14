@@ -66,33 +66,6 @@ public class TrackerMotion {
                          @JsonProperty("timezone_offset") final int timeZoneOffset,
                          final Long motionRange,
                          final Long kickOffCounts,
-                         final Long onDurationInSeconds,
-                         @JsonProperty("external_tracker_id") final String externalTrackerId){
-
-        this.id = id;
-        this.accountId = accountId;
-        this.trackerId = trackerId;
-        this.timestamp = timestamp;
-        this.value = value;
-        this.offsetMillis = timeZoneOffset;
-
-        this.motionRange = motionRange;
-        this.kickOffCounts = kickOffCounts;
-        this.onDurationInSeconds = onDurationInSeconds;
-        this.externalTrackerId = externalTrackerId;
-    }
-
-    @JsonCreator
-    // TODO: make constructor private and force Builder use to reduce risks on not
-    // TODO: converting data properly
-    public TrackerMotion(@JsonProperty("id") final long id,
-                         @JsonProperty("account_id") final long accountId,
-                         @JsonProperty("tracker_id") final Long trackerId,
-                         @JsonProperty("timestamp") final long timestamp,
-                         @JsonProperty("value") final int value,
-                         @JsonProperty("timezone_offset") final int timeZoneOffset,
-                         final Long motionRange,
-                         final Long kickOffCounts,
                          final Long onDurationInSeconds) {
         this.id = id;
         this.accountId = accountId;
@@ -105,6 +78,30 @@ public class TrackerMotion {
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
         this.externalTrackerId = "";
+    }
+
+    // used by create and builder
+    public TrackerMotion(final long id,
+                         final long accountId,
+                         final Long trackerId,
+                         final long timestamp,
+                         final int value,
+                         final int timeZoneOffset,
+                         final Long motionRange,
+                         final Long kickOffCounts,
+                         final Long onDurationInSeconds,
+                         final String externalTrackerId){
+
+        this.id = id;
+        this.accountId = accountId;
+        this.trackerId = trackerId;
+        this.timestamp = timestamp;
+        this.value = value;
+        this.offsetMillis = timeZoneOffset;
+        this.motionRange = motionRange;
+        this.kickOffCounts = kickOffCounts;
+        this.onDurationInSeconds = onDurationInSeconds;
+        this.externalTrackerId = externalTrackerId;
     }
 
     public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
