@@ -28,6 +28,7 @@ public class HelloWorker extends Service<WorkerConfiguration> {
     @Override
     public void initialize(Bootstrap<WorkerConfiguration> bootstrap) {
         bootstrap.addCommand(new PillWorkerCommand("pill", "all things about pill"));
+        bootstrap.addCommand(new PillWorkerCommand("pill_save_ddb", "save pill data to DynamoDB", true));
         bootstrap.addCommand(new SenseSaveWorkerCommand("sense_save", "saving sense sensor data"));
         bootstrap.addCommand(new SenseSaveWorkerCommand("sense_save_ddb", "saving sense sensor data to DynamoDB", true, false));
         bootstrap.addCommand(new SenseLastSeenWorkerCommand("sense_last_seen", "saving sense last seen data"));

@@ -52,7 +52,6 @@ public class TrackerMotion {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
-    @JsonProperty("external_tracker_id")
     @JsonIgnore
     public final String externalTrackerId;
 
@@ -77,19 +76,41 @@ public class TrackerMotion {
         this.value = value;
         this.offsetMillis = timeZoneOffset;
 
-
         this.motionRange = motionRange;
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
         this.externalTrackerId = externalTrackerId;
     }
 
+    @JsonCreator
+    // TODO: make constructor private and force Builder use to reduce risks on not
+    // TODO: converting data properly
+    public TrackerMotion(@JsonProperty("id") final long id,
+                         @JsonProperty("account_id") final long accountId,
+                         @JsonProperty("tracker_id") final Long trackerId,
+                         @JsonProperty("timestamp") final long timestamp,
+                         @JsonProperty("value") final int value,
+                         @JsonProperty("timezone_offset") final int timeZoneOffset,
+                         final Long motionRange,
+                         final Long kickOffCounts,
+                         final Long onDurationInSeconds) {
+        this.id = id;
+        this.accountId = accountId;
+        this.trackerId = trackerId;
+        this.timestamp = timestamp;
+        this.value = value;
+        this.offsetMillis = timeZoneOffset;
+
+        this.motionRange = motionRange;
+        this.kickOffCounts = kickOffCounts;
+        this.onDurationInSeconds = onDurationInSeconds;
+        this.externalTrackerId = "";
+    }
 
     public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
         final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey, accountPair.externalDeviceId);
         final Long timestampInMillis = Utils.convertTimestampInSecondsToTimestampInMillis(pill_data.getTimestamp());
         final Integer timeZoneOffset = timeZone.getOffset(timestampInMillis);
-        final String externalPillId = pill_data.getDeviceId();
         return new TrackerMotion(
                 0L,
                 accountPair.accountId,
@@ -100,7 +121,7 @@ public class TrackerMotion {
                 payloadV2.motionRange,
                 payloadV2.kickOffCounts,
                 payloadV2.onDurationInSeconds,
-                externalPillId
+                accountPair.externalDeviceId
         );
     }
 
@@ -203,8 +224,14 @@ public class TrackerMotion {
             return this;
         }
 
+        @Deprecated
         public Builder withTrackerId(final Long internalPillId){
             this.trackerId = internalPillId;
+            return this;
+        }
+
+        public Builder withExternalTrackerId(final String externalPillId) {
+            this .externalTrackerId = externalPillId;
             return this;
         }
 
@@ -235,11 +262,6 @@ public class TrackerMotion {
 
         public Builder withOnDurationInSeconds(final Long onDurationInSeconds) {
             this.onDurationInSeconds = onDurationInSeconds;
-            return this;
-        }
-
-        public Builder withExternalTrackerId(final String externalPillId) {
-            this .externalTrackerId = externalPillId;
             return this;
         }
 

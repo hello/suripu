@@ -11,7 +11,6 @@ import com.hello.suripu.core.algorithmintegration.EvaluationResult;
 import com.hello.suripu.core.algorithmintegration.MultiEvalHmmDecodedResult;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
 import com.hello.suripu.core.algorithmintegration.OnlineHmm;
-import com.hello.suripu.core.algorithmintegration.OnlineHmmModelEvaluator;
 import com.hello.suripu.core.algorithmintegration.OnlineHmmModelLearner;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAOFromFile;
@@ -266,12 +265,12 @@ public class OnlineHmmTest {
 
             if (percent < 0.39 && percent > 0.25) {
                 if (t % 60000L * 30L == 0) {
-                    trackerMotions.add(new TrackerMotion(0, 0, 0L, t, 5000, tzOffset, 5000L, 1L, 2L));
+                    trackerMotions.add(new TrackerMotion(0, 0, 0L, t, 5000, tzOffset, 5000L, 1L, 2L, "ABC"));
                 }
             }
             else if (percent >= 0.33 && percent < 0.66) {
                 if (t % 60000L * 10L == 0) {
-                    trackerMotions.add(new TrackerMotion(0, 0, 0L, t, 5000, tzOffset, 5000L, 1L, 1L));
+                    trackerMotions.add(new TrackerMotion(0, 0, 0L, t, 5000, tzOffset, 5000L, 1L, 1L, "ABC"));
                 }
             }
             else{
