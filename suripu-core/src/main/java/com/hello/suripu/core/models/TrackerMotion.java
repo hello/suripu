@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedInts;
 import com.hello.suripu.api.ble.SenseCommandProtos;
@@ -106,6 +107,8 @@ public class TrackerMotion {
                 case 2:
                 case 3: // cleans up error code, new interrupt
                     return Utils.encryptedToRawVersion2(encryptionKey, data.getMotionDataEntrypted().toByteArray());
+                case 4: // introduction of motion mask and cosTheta, remove a couple unused fields
+                    return Utils.encryptedToRawVersion3(encryptionKey, data.getMotionDataEntrypted().toByteArray());
             }
         }
 
@@ -159,12 +162,30 @@ public class TrackerMotion {
         public final Long motionRange;
         public final Long kickOffCounts;
         public final Long onDurationInSeconds;
+        public final Optional<Long> motionMask;
+        public final Optional<Long> cosTheta;
 
-        public PillPayloadV2(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds) {
+        public PillPayloadV2(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds,
+                             final Optional<Long> motionMask, final Optional<Long> cosTheta) {
             this.maxAmplitude = maxAmplitude;
             this.motionRange = motionRange;
             this.kickOffCounts = kickOffCounts;
             this.onDurationInSeconds = onDurationInSeconds;
+            this.motionMask = motionMask;
+            this.cosTheta = cosTheta;
+        }
+
+        public static PillPayloadV2 createWithMotionMask(final Long maxAmplitude, final Long motionMask, final Long cosTheta) {
+            final Long onDurationSeconds = new Long(Long.bitCount(motionMask));
+            return new PillPayloadV2(maxAmplitude, 0L, 0L, onDurationSeconds, Optional.of(motionMask), Optional.of(cosTheta));
+        }
+
+        public static PillPayloadV2 create(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds) {
+            return new PillPayloadV2(maxAmplitude, motionRange, kickOffCounts, onDurationInSeconds, Optional.<Long>absent(), Optional.<Long>absent());
+        }
+
+        public static PillPayloadV2 create(final Long maxAmplitude) {
+            return new PillPayloadV2(maxAmplitude, 0L, 0L, 0L, Optional.<Long>absent(), Optional.<Long>absent());
         }
     }
 
@@ -287,19 +308,7 @@ public class TrackerMotion {
 
         public static PillPayloadV2 encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
 
-            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
-
-            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
-            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
-
-            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
-
-            // check for magic bytes 5A5A added by the pill
-            // fail if they don't match
-            // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
-            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 90 && decryptedRawMotion[decryptedRawMotion.length -2] != 90) {
-                throw new InvalidEncryptedPayloadException("Magic bytes don't match");
-            }
+            final byte[] decryptedRawMotion = decryptRawMotion(key, encryptedMotionData);
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
             Exception exception = null;
             long motionAmplitude = -1;
@@ -323,26 +332,13 @@ public class TrackerMotion {
                 throw new InvalidEncryptedPayloadException(exception.getMessage());
             }
 
-            return new PillPayloadV2(motionAmplitude,0L,0L,0L);
+            return PillPayloadV2.create(motionAmplitude);
         }
 
 
         public static PillPayloadV2 encryptedToRawVersion2(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
 
-            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
-
-            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
-            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
-
-            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
-
-            // check for magic bytes 5A5A added by the pill
-            // fail if they don't match
-            // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
-            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 0x5A &&
-                    decryptedRawMotion[decryptedRawMotion.length -2] != 0x5A) {
-                throw new InvalidEncryptedPayloadException("Magic bytes don't match");
-            }
+            final byte[] decryptedRawMotion = decryptRawMotion(key, encryptedMotionData);
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
 
             Exception exception = null;
@@ -359,7 +355,7 @@ public class TrackerMotion {
 
             }catch (IOException ioe){
                 exception = ioe;
-            }finally {
+            } finally {
                 try {
                     littleEndianDataInputStream.close();
                 }catch (IOException ioe){
@@ -371,7 +367,46 @@ public class TrackerMotion {
                 throw new InvalidEncryptedPayloadException(exception.getMessage());
             }
 
-            return new PillPayloadV2(motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
+            return PillPayloadV2.create(motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
+
+        }
+
+        private static byte[] decryptRawMotion(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
+            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
+
+            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
+            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
+
+            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
+
+            // check for magic bytes 5A5A added by the pill
+            // fail if they don't match
+            // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
+            if(decryptedRawMotion.length > 4 && decryptedRawMotion[decryptedRawMotion.length -1] != 0x5A &&
+                    decryptedRawMotion[decryptedRawMotion.length -2] != 0x5A) {
+                throw new InvalidEncryptedPayloadException("Magic bytes don't match");
+            }
+            return decryptedRawMotion;
+        }
+
+        public static PillPayloadV2 encryptedToRawVersion3(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
+            final byte[] decryptedRawMotion = decryptRawMotion(key, encryptedMotionData);
+
+            final long motionAmplitude;
+            final long cosTheta;
+            final long motionMask;
+
+            try (final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion))) {
+                // TODO convert this.
+                motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
+                cosTheta = littleEndianDataInputStream.readByte() & 0xFFL;
+                motionMask = littleEndianDataInputStream.readLong();
+
+            }catch (IOException ioe){
+                throw new InvalidEncryptedPayloadException(ioe.getMessage());
+            }
+
+            return PillPayloadV2.createWithMotionMask(motionAmplitude, motionMask, cosTheta);
 
         }
 
