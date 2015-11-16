@@ -151,6 +151,7 @@ dynamo_db:
       sleep_stats : sleep_stats
       preferences : preferences
       sleep_score : sleep_score
+      device_data: sense_data
 
   endpoints:
       features : http://dynamodb.us-east-1.amazonaws.com
@@ -159,6 +160,7 @@ dynamo_db:
       sleep_stats : http://dynamodb.us-east-1.amazonaws.com
       preferences : http://dynamodb.us-east-1.amazonaws.com
       sleep_score : http://dynamodb.us-east-1.amazonaws.com
+      device_data: http://dynamodb.us-east-1.amazonaws.com
 
 sleep_score_version: v_0_1
 sleep_stats_version: v_0_2
