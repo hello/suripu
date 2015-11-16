@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
@@ -305,15 +306,15 @@ public class DeviceDataDAODynamoDBIT {
 
         // From start to start+1, 2 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).data.size(),
                 is(2));
         // from start to start should be 1 result
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).data.size(),
                 is(1));
         // Account ID unrecognized should be 0 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId + 1000, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId + 1000, deviceId, firstTime, firstTime.plusMinutes(1), 1).data.size(),
                 is(0));
     }
 
@@ -331,7 +332,7 @@ public class DeviceDataDAODynamoDBIT {
 
         // Aggregate to 5 minutes, should get 3 batches
         final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                accountId, deviceId, firstTime, firstTime.plusMinutes(15), 5);
+                accountId, deviceId, firstTime, firstTime.plusMinutes(15), 5).data;
 
         assertThat(results.size(), is(3));
         assertThat(results.get(0).offsetMillis, is(firstBatchOffsetMillis));
@@ -346,9 +347,10 @@ public class DeviceDataDAODynamoDBIT {
         // No table created for this date
         final DateTime firstTime = new DateTime(2015, 9, 1, 7, 0, DateTimeZone.UTC);
 
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
-                is(0));
+        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1);
+        assertThat(response.data.size(), is(0));
+        assertThat(response.status, is(com.hello.suripu.core.db.responses.Response.Status.FAILURE));
     }
 
     @Test
@@ -363,15 +365,15 @@ public class DeviceDataDAODynamoDBIT {
 
         // From start to start+1, 2 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).data.size(),
                 is(2));
         // from start to start should be 1 result
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1).data.size(),
                 is(1));
         // Account ID unrecognized should be 0 results
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId + 1000, deviceId, firstTime, firstTime.plusMinutes(1), 1).size(),
+                        accountId + 1000, deviceId, firstTime, firstTime.plusMinutes(1), 1).data.size(),
                 is(0));
     }
 
@@ -388,10 +390,10 @@ public class DeviceDataDAODynamoDBIT {
 
         assertThat(getTableCount(OCTOBER_TABLE_NAME), is(14));
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId1, firstTime, firstTime.plusMinutes(10), 1).size(),
+                        accountId, deviceId1, firstTime, firstTime.plusMinutes(10), 1).data.size(),
                 is(7));
         assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId2, firstTime, firstTime.plusMinutes(10), 1).size(),
+                        accountId, deviceId2, firstTime, firstTime.plusMinutes(10), 1).data.size(),
                 is(7));
     }
 
@@ -407,7 +409,7 @@ public class DeviceDataDAODynamoDBIT {
 
         // 5-minute results starting at firstTime
         final List<DeviceData> fiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                accountId, deviceId, firstTime, firstTime.plusMinutes(10), 5);
+                accountId, deviceId, firstTime, firstTime.plusMinutes(10), 5).data;
         assertThat(fiveMinuteresults.size(), is(2));
         assertThat(fiveMinuteresults.get(0).ambientTemperature, is(2498));
         assertThat(fiveMinuteresults.get(0).dateTimeUTC, is(firstTime.plusMinutes(0)));
@@ -417,7 +419,7 @@ public class DeviceDataDAODynamoDBIT {
 
         // 5-minute results starting at a weird time (firstTime+3)
         final List<DeviceData> offsetFiveMinuteresults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                accountId, deviceId, firstTime.plusMinutes(3), firstTime.plusMinutes(10), 5);
+                accountId, deviceId, firstTime.plusMinutes(3), firstTime.plusMinutes(10), 5).data;
         assertThat(offsetFiveMinuteresults.size(), is(2));
         assertThat(offsetFiveMinuteresults.get(0).ambientTemperature, is(2500));
         assertThat(offsetFiveMinuteresults.get(0).dateTimeUTC, is(firstTime));
@@ -427,20 +429,19 @@ public class DeviceDataDAODynamoDBIT {
 
         // Aggregate by hour (60 minutes)
         final List<DeviceData> hourlyResults = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                accountId, deviceId, firstTime, firstTime.plusMinutes(90), 60);
+                accountId, deviceId, firstTime, firstTime.plusMinutes(90), 60).data;
         assertThat(hourlyResults.size(), is(1));
         assertThat(hourlyResults.get(0).ambientTemperature, is(2498));
         assertThat(hourlyResults.get(0).dateTimeUTC, is(firstTime));
     }
 
-    @Test
-    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationThroughputExceeded() {
-        amazonDynamoDBClient.addRequestHandler(new RequestHandler2() {
+    private RequestHandler2 throttlingRequestHandler(final int timesToThrottle) {
+        return new RequestHandler2() {
             int numTries = 0;
 
             @Override
             public void beforeRequest(Request<?> request) {
-                if (request.getOriginalRequest() instanceof QueryRequest && numTries < 2) {
+                if (request.getOriginalRequest() instanceof QueryRequest && numTries < timesToThrottle) {
                     numTries++;
                     LOGGER.info("Injecting ProvisionedThroughputExceededException");
                     throw new ProvisionedThroughputExceededException("Injected Error");
@@ -457,7 +458,12 @@ public class DeviceDataDAODynamoDBIT {
             public void afterError(Request<?> request, Response<?> response, Exception e) {
 
             }
-        });
+        };
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationThroughputExceeded() {
+        amazonDynamoDBClient.addRequestHandler(throttlingRequestHandler(2));
 
         final Long accountId = new Long(1);
         final String deviceId = "2";
@@ -466,9 +472,29 @@ public class DeviceDataDAODynamoDBIT {
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
-        assertThat(deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
-                        accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1).size(),
+        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1);
+        assertThat(response.data.size(),
                 is(2));
+        assertThat(response.status, is(com.hello.suripu.core.db.responses.Response.Status.SUCCESS));
+    }
+
+    @Test
+    public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationThroughputExceededTooManyTimes() {
+        amazonDynamoDBClient.addRequestHandler(throttlingRequestHandler(100));
+
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
+
+        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
+
+        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+                accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1);
+        assertThat(response.data.size(),
+                is(0));
+        assertThat(response.status, is(com.hello.suripu.core.db.responses.Response.Status.PARTIAL_RESULTS));
     }
 
     private int countSamplesWithFillValue(final List<Sample> samples, final int fillValue) {
@@ -681,7 +707,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, DeviceId.create(deviceId), minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 20, 11);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getLightByBetweenHourDateByTS(accountId, DeviceId.create(deviceId), minAmbientLight, firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 20, 11).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -723,7 +749,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenLocalTime(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, deviceDataDAODynamoDB.ALL_ATTRIBUTES);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenLocalTime(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, deviceDataDAODynamoDB.ALL_ATTRIBUTES).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -767,7 +793,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTSSameDay(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 10, 11);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTSSameDay(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 10, 11).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -811,7 +837,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTS(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenHourDateByTS(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -856,7 +882,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByLocalHourAggregateBySlotDuration(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20, slotDuration);
+        final List<DeviceData> results = deviceDataDAODynamoDB.getBetweenByLocalHourAggregateBySlotDuration(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusMinutes(200), minLocalTime, maxLocalTime, 11, 20, slotDuration).data;
         LOGGER.debug("results: {}", results);
         for (final DeviceData result : results) {
             LOGGER.debug("ambient light: {}, device id: {}, datetime: {}, localtime: {}", result.ambientLight, result.externalDeviceId, result.dateTimeUTC, result.localTime());
@@ -900,7 +926,7 @@ public class DeviceDataDAODynamoDBIT {
 
         deviceDataDAODynamoDB.batchInsert(data);
 
-        final List<Integer> results = deviceDataDAODynamoDB.getAirQualityRawList(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusDays(3), minLocalTime, maxLocalTime);
+        final List<Integer> results = deviceDataDAODynamoDB.getAirQualityRawList(accountId, DeviceId.create(deviceId), firstUTCTime, firstUTCTime.plusDays(3), minLocalTime, maxLocalTime).data;
         assertThat(results.size(), is(2));
         assertThat(results.get(0), is(15));
         assertThat(results.get(1), is(150));

@@ -2,8 +2,11 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -112,7 +115,11 @@ public class BedLightIntensity {
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
 //        TODO: add safeguard for patchy missing data
-        return deviceDataDAO.getBetweenHourDateByTSSameDay(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, startHour, endHour);
+        final DeviceDataResponse response = deviceDataDAO.getBetweenHourDateByTSSameDay(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, startHour, endHour);
+        if (response.status == Response.Status.SUCCESS) {
+            return response.data;
+        }
+        return Lists.newArrayList();
     }
 
 }

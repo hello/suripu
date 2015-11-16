@@ -12,6 +12,8 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
 import com.hello.suripu.core.models.AggregateSleepStats;
@@ -120,7 +122,8 @@ public class InsightProcessorTest {
         fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, fakeSleepStat));
 
         //Taking care of @NotNull check for light
-        Mockito.when(deviceDataDAO.getLightByBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class), Mockito.any(Integer.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class),Mockito.any(Integer.class), Mockito.any(Integer.class))).thenReturn(ImmutableList.copyOf(data));
+        final DeviceDataResponse successfulResponse = new DeviceDataResponse(ImmutableList.copyOf(data), Response.Status.SUCCESS, Optional.<Exception>absent());
+        Mockito.when(deviceDataDAO.getLightByBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class), Mockito.any(Integer.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class),Mockito.any(Integer.class), Mockito.any(Integer.class))).thenReturn(successfulResponse);
 
         Mockito.when(deviceDataDAO.toString()).thenReturn("someString");
         Mockito.when(deviceDAO.getMostRecentSenseByAccountId(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_DEVICE_ID));
@@ -138,7 +141,7 @@ public class InsightProcessorTest {
         //Taking care of @NotNull check for humidity
         Mockito.when(sleepStatsDAODynamoDB.getTimeZoneOffset(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(offsetMillis));
         Mockito.when(deviceDataDAO.getBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class),Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(Integer.class), Mockito.any(Integer.class)))
-                .thenReturn(ImmutableList.copyOf(data));
+                .thenReturn(successfulResponse);
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.HUMIDITY, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
 
         //Initialize InsightProcessor

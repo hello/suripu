@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -132,14 +133,14 @@ public class Particulates {
                                                          final DateTime endLocalTimestamp,
                                                          final Optional<Calibration> calibrationOptional) {
 
-        final ImmutableList<Integer> airQualityRawList = deviceDataDAO.getAirQualityRawList(accountId, deviceId, startTimestamp, endTimestamp, startLocalTimestamp, endLocalTimestamp);
+        final Response<ImmutableList<Integer>> response = deviceDataDAO.getAirQualityRawList(accountId, deviceId, startTimestamp, endTimestamp, startLocalTimestamp, endLocalTimestamp);
 
         final List<Float> airQualityList = Lists.newArrayList();
-        if (airQualityRawList.isEmpty()) {
+        if (response.data.isEmpty() || response.status != Response.Status.SUCCESS) {
             return ImmutableList.copyOf(airQualityList);
         }
 
-        for (Integer airQualityRaw : airQualityRawList) {
+        for (Integer airQualityRaw : response.data) {
             airQualityList.add(DataUtils.convertRawDustCountsToDensity(airQualityRaw, calibrationOptional));
         }
 
