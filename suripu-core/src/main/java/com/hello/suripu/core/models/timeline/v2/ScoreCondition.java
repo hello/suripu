@@ -13,7 +13,7 @@ public enum ScoreCondition {
             return INCOMPLETE;
         } else if (score == 0) {
             return UNAVAILABLE;
-        } else if (score < 50) {
+        } else if (score < 60) {
             return ALERT;
         } else if (score < 80) {
             return WARNING;
