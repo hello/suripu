@@ -143,13 +143,13 @@ public class TrackerMotionUtilTest {
     public void testDecryptedToRawVersion3() throws Exception {
         // Little endian, remember
         final byte[] decrypted = bytes(
-                0x00, 0x02,  // max amplitude
+                0x80,  // max amplitude. Most sig byte of 0x80000000
                 0x11, // cosTheta
                 0x11, 0x00, 0x03, 0x00, 0x11, 0x00, 0x03, 0x00 // motionMask
         );
         final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToRawVersion3(decrypted);
         assertThat(payloadV2.onDurationInSeconds, is(8L));
-        assertThat(payloadV2.maxAmplitude, is(512L));
+        assertThat(payloadV2.maxAmplitude, is(0x80000000L));
         assertThat(payloadV2.cosTheta.get(), is(17L));
         assertThat(payloadV2.motionMask.get(), is(0x0003001100030011L));
     }

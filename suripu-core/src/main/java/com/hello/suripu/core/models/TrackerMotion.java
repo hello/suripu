@@ -441,8 +441,8 @@ public class TrackerMotion {
             final long motionMask;
 
             try (final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion))) {
-                // TODO convert this.
-                motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readShort());
+                // Need to left-shift, since we just have the most significant byte of a 32-bit int.
+                motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readByte() << 24);
                 cosTheta = littleEndianDataInputStream.readByte() & 0xFFL;
                 motionMask = littleEndianDataInputStream.readLong();
 
