@@ -203,8 +203,8 @@ public class TrackerMotion {
         public final Optional<Long> motionMask;
         public final Optional<Long> cosTheta;
 
-        public PillPayloadV2(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds,
-                             final Optional<Long> motionMask, final Optional<Long> cosTheta) {
+        private PillPayloadV2(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds,
+                              final Optional<Long> motionMask, final Optional<Long> cosTheta) {
             this.maxAmplitude = maxAmplitude;
             this.motionRange = motionRange;
             this.kickOffCounts = kickOffCounts;
