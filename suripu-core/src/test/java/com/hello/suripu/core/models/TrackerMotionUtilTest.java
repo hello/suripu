@@ -112,15 +112,42 @@ public class TrackerMotionUtilTest {
     }
 
     @Test
+    public void testDecryptedToRaw() throws Exception {
+        // Little endian
+        final byte[] decrypted = bytes(0x07, 0x01, 0x00, 0x00);
+        final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToRaw(decrypted);
+        assertThat(payloadV2.motionMask.isPresent(), is(false));
+        assertThat(payloadV2.cosTheta.isPresent(), is(false));
+        assertThat(payloadV2.maxAmplitude, is(263L));
+    }
+
+    @Test
+    public void testDecryptedToRawVersion2() throws Exception {
+        // Little endian
+        final byte[] decrypted = bytes(
+                0x07, 0x01, 0x00, 0x00, // max amplitude
+                0x00, 0x01, // max acceleration range
+                0x0F, // kickoff per minute
+                0x0A // Motion duration
+        );
+        final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToRawVersion2(decrypted);
+        assertThat(payloadV2.motionMask.isPresent(), is(false));
+        assertThat(payloadV2.cosTheta.isPresent(), is(false));
+        assertThat(payloadV2.maxAmplitude, is(263L));
+        assertThat(payloadV2.motionRange, is(256L));
+        assertThat(payloadV2.kickOffCounts, is(15L));
+        assertThat(payloadV2.onDurationInSeconds, is(10L));
+    }
+
+    @Test
     public void testDecryptedToRawVersion3() throws Exception {
         // Little endian, remember
         final byte[] decrypted = bytes(
-                0x00, 0x02,  // max
+                0x00, 0x02,  // max amplitude
                 0x11, // cosTheta
                 0x11, 0x00, 0x03, 0x00, 0x11, 0x00, 0x03, 0x00 // motionMask
         );
         final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToRawVersion3(decrypted);
-        System.out.println(payloadV2);
         assertThat(payloadV2.onDurationInSeconds, is(8L));
         assertThat(payloadV2.maxAmplitude, is(512L));
         assertThat(payloadV2.cosTheta.get(), is(17L));
