@@ -28,6 +28,7 @@ public @interface BindTimelineFeedback{
                     q.bind("event_type", arg.eventType.getValue());
                     q.bind("old_time", arg.oldTimeOfEvent);
                     q.bind("new_time", arg.newTimeOfEvent);
+                    q.bind("created", arg.created);
                 }
             };
         }
