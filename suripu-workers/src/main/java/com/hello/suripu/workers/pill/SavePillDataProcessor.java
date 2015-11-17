@@ -219,7 +219,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         if (this.useDynamoDBDAO) {
             try {
-                Thread.sleep(100L);
+                Thread.sleep(1000L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

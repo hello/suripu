@@ -23,6 +23,9 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("sensors_db")
     private DatabaseConfiguration sensorsDB = new DatabaseConfiguration();
 
+    public SuripuAppConfiguration() {
+    }
+
     public DatabaseConfiguration getSensorsDB() {
         return sensorsDB;
     }
@@ -402,7 +405,7 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("device_data")
     private DynamoDBConfiguration deviceDataConfiguration;
     public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
-    
+
     @Valid
     @NotNull
     @JsonProperty("timeline_model_ensembles")
@@ -414,4 +417,12 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("timeline_seed_model")
     private S3BucketConfiguration timelineSeedModelConfiguration;
     public S3BucketConfiguration getTimelineSeedModelConfiguration() { return timelineSeedModelConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("pill_data")
+    private DynamoDBConfiguration pillDataConfiguration;
+    public DynamoDBConfiguration getPillDataConfiguration() { return this.pillDataConfiguration; }
+
+
 }
