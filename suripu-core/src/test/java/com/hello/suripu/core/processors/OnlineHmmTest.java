@@ -342,15 +342,13 @@ public class OnlineHmmTest {
         final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),0);
 
         ////--------------------
-        //step 1) make sure we save off default model on first day
+        //step 1) make sure we DO NOT save a model on first day
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,false,false);
-        TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
+        TestCase.assertTrue(modelsDAO.priorByDate.size() == 0);
 
-        //make sure evaluating again doesn't screw things up
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,false,false);
+        //okay go on and create the models
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,true,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
-        TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 
 
 
@@ -484,7 +482,7 @@ public class OnlineHmmTest {
 
         ////--------------------
         //step 1) make sure we save off default model on first day
-        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,false,false);
+        onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData,true,false);
         TestCase.assertTrue(modelsDAO.priorByDate.size() == 1);
         TestCase.assertTrue(modelsDAO.priorByDate.firstEntry().getValue().scratchPad.isEmpty());
 

@@ -5,7 +5,7 @@
     <groupId>com.hello.suripu</groupId>
     <artifactId>suripu-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.83-SNAPSHOT</version>
+    <version>0.5.92-SNAPSHOT</version>
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
@@ -20,7 +20,6 @@
     <modules>
         <module>suripu-api</module>
         <module>suripu-core</module>
-        <module>suripu-service</module>
         <module>suripu-app</module>
         <module>suripu-algorithm</module>
         <module>suripu-workers</module>

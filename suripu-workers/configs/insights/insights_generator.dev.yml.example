@@ -136,6 +136,7 @@ dynamo_db:
       sleep_stats : prod_sleep_stats
       preferences : preferences
       sleep_score : sleep_score
+      device_data : sense_data_local
 
   endpoints:
       features : http://localhost:7777
@@ -144,6 +145,7 @@ dynamo_db:
       sleep_stats : http://localhost:7777
       preferences : http://localhost:7777
       sleep_score : http://localhost:7777
+      device_data : http://localhost:7777
 
 sleep_score_version: v_0_1
 sleep_stats_version: v_0_2

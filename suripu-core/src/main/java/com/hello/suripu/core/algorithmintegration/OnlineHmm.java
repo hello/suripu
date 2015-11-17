@@ -177,7 +177,7 @@ public class OnlineHmm {
 
     }
 
-    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening, final OnlineHmmPriors seedModels, boolean forceLearning) {
+    public OnlineHmmData getReconciledModelsForUser(final long accountId, final DateTime evening, final OnlineHmmPriors seedModels,boolean feedbackChanged, boolean forceLearning) {
         String modelIdSuffix = "custom";
 
         //we do this do differentiate models that were learned in the field, or models that were
@@ -191,8 +191,8 @@ public class OnlineHmm {
 
         final OnlineHmmPriors modelPriors = userModelData.modelPriors;
 
-        /*  CREATE DEFAULT MODELS IF NECESSARY */
-        if (userModelData.modelPriors.isEmpty()) {
+        /*  CREATE DEFAULT MODELS IF NONE EXIST YET AND WE HAVE A FEEDBACK EVENT */
+        if (userModelData.modelPriors.isEmpty() && feedbackChanged) {
             LOGGER.info("creating default model data for account {}",accountId);
 
             if (seedModels.isEmpty()) {
@@ -394,10 +394,10 @@ public class OnlineHmm {
         final DeserializedFeatureExtractionWithParams featureExtractionModels = serializedData.getDeserializedData();
 
         //GET THE VOTING WEIGHTS AND CUSTOM MODEL FOR THE USER
-        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening,seedModel,forceLearning);
+        final OnlineHmmData userModelData = getReconciledModelsForUser(accountId,evening,seedModel,feedbackHasChanged,forceLearning);
 
-        if (userModelData.modelPriors.isEmpty()) {
-            LOGGER.error("somehow we did not get a model prior, so we are not outputting anything");
+        if (userModelData.modelPriors.isEmpty() && defaultEnsemble.modelsByOutputId.isEmpty()) {
+            LOGGER.error("somehow we did not get a model prior nor default models, so we are not outputting anything");
             return sleepEvents;
         }
 
