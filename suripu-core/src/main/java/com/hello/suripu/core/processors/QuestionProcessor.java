@@ -6,11 +6,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
-import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Response;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
@@ -147,7 +147,10 @@ public class QuestionProcessor {
                 final Integer qid = question.questionId;
                 if (!preGeneratedQuestions.containsKey(qid)) {
                     final Long accountQId = question.id;
-                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid), accountQId, today));
+                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid),
+                                                                                  accountQId,
+                                                                                  today,
+                                                                                  question.questionCreationDate));
                 }
             }
 
@@ -260,7 +263,7 @@ public class QuestionProcessor {
                 skip = response.skip.get();
             }
 
-            if (skip != null && skip == false) {
+            if (skip != null && !skip) {
                 // not a skip, bolt
                 break;
             }
@@ -320,7 +323,8 @@ public class QuestionProcessor {
             addedIds.add(questionId);
             final Long savedID = this.saveGeneratedQuestion(accountId, questionId, today);
             if (savedID > 0L) {
-                questions.add(Question.withAskTimeAccountQId(this.questionIdMap.get(questionId), savedID, today));
+                final Question question = this.questionIdMap.get(questionId);
+                questions.add(Question.withAskTimeAccountQId(question, savedID, today, DateTime.now(DateTimeZone.UTC)));
             }
         }
 
@@ -433,7 +437,7 @@ public class QuestionProcessor {
                 addedIds.add(question.id);
                 final Long savedId = this.saveGeneratedQuestion(accountId, question.id, today);
                 if (savedId > 0L) {
-                    questions.add(Question.withAskTimeAccountQId(question, savedId, today));
+                    questions.add(Question.withAskTimeAccountQId(question, savedId, today, DateTime.now(DateTimeZone.UTC)));
                 }
                 questionsPool.remove(qid);
                 poolSize--;
@@ -493,29 +497,6 @@ public class QuestionProcessor {
 
         LOGGER.debug("User {} has seen {} base questions", accountId, recentResponses.size());
         return uniqueIds;
-    }
-
-    /**
-     * Get questions that were generated earlier and saved to DB, and have not been responded
-     */
-    private Map<Integer, Question> getPreGeneratedQuestions(final Long accountId, final DateTime today) {
-        final DateTime expiration = today.plusDays(1);
-        final ImmutableList<AccountQuestion> questionIds = this.questionResponseDAO.getAccountQuestions(accountId, expiration);
-        if (questionIds == null || questionIds.size() == 0) {
-            return Collections.emptyMap();
-        }
-
-        final Map<Integer, Question> questions = new HashMap<>();
-
-        for (final AccountQuestion question : questionIds) {
-            final Integer qid = question.questionId;
-            if (!questions.containsKey(qid)) {
-                final Long accountQId = question.id;
-                questions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid), accountQId, today));
-            }
-        }
-
-        return questions;
     }
 
     /**
