@@ -135,9 +135,11 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB = PillHeartBeatDAODynamoDB.create(pillDynamoDB, tableNames.get(DynamoDBTableName.PILL_HEARTBEAT));
 
         PillDataIngestDAO pillDataIngestDAO;
+        Boolean savePillHeartBeat = true;
         if (useDynamoPillData) {
             final AmazonDynamoDB trackerMotionDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_DATA);
             pillDataIngestDAO = new PillDataDAODynamoDB(trackerMotionDynamoDB, tableNames.get(DynamoDBTableName.PILL_DATA));
+            savePillHeartBeat = false;
         } else {
             final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
             sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
@@ -145,13 +147,14 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         }
 
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(
-                    pillDataIngestDAO,
-                    configuration.getBatchSize(),
-                    mergedUserInfoDynamoDB,
-                    pillKeyStore,
-                    deviceDAO,
-                    pillHeartBeatDAODynamoDB
-            );
+                pillDataIngestDAO,
+                configuration.getBatchSize(),
+                mergedUserInfoDynamoDB,
+                pillKeyStore,
+                deviceDAO,
+                pillHeartBeatDAODynamoDB,
+                savePillHeartBeat
+        );
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();
     }

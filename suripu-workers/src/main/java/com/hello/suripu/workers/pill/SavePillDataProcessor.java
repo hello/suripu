@@ -44,7 +44,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB; // will replace with interface as soon as we have validated this works
-    private final Boolean useDynamoDBDAO;
+    private final Boolean savePillHeartbeat;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
@@ -54,24 +54,18 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                                  final KeyStore pillKeyStore,
                                  final DeviceDAO deviceDAO,
                                  final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                 final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
+                                 final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB,
+                                 final Boolean savePillHeartbeat) {
         this.pillDataIngestDAO = pillDataIngestDAO;
         this.batchSize = batchSize;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
+        this.savePillHeartbeat = savePillHeartbeat;
 
-        String metricsName = "";
-        if (pillDataIngestDAO.name() == PillDataDAODynamoDB.class) {
-            this.useDynamoDBDAO = true;
-            metricsName = "-ddb";
-        } else {
-            this.useDynamoDBDAO = false;
-        }
-
-        this.messagesProcessed = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, String.format("messages%s", metricsName), "messages-processed", TimeUnit.SECONDS);
-        this.batchSaved = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, String.format("batch%s", metricsName), "batch-saved", TimeUnit.SECONDS);
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(pillDataIngestDAO.name(), "messages", "messages-processed", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(pillDataIngestDAO.name(), "batch", "batch-saved", TimeUnit.SECONDS);
     }
 
     @Override
@@ -183,7 +177,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             }
 
             // only write heartbeat for postgres worker
-            if (!this.useDynamoDBDAO) {
+            if (!this.savePillHeartbeat) {
                 // Loop again for HeartBeat
                 for (final SenseCommandProtos.pill_data data : pillData) {
                     final String pillId = data.getDeviceId();
@@ -217,7 +211,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
         }
 
-        if (this.useDynamoDBDAO) {
+        if (pillDataIngestDAO.name().isInstance(PillDataDAODynamoDB.class)) {
             try {
                 Thread.sleep(1000L);
             } catch (InterruptedException e) {
@@ -226,7 +220,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         }
 
         // only write heartbeats for postgres worker
-        if (!this.useDynamoDBDAO && !pillHeartBeats.isEmpty()) {
+        if (!this.savePillHeartbeat && !pillHeartBeats.isEmpty()) {
             final Set<PillHeartBeat> unproccessed = this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
             final float perc = ((float) unproccessed.size() / (float) pillHeartBeats.size()) * 100.0f;
             LOGGER.info("Finished dynamo batch insert: {} heartbeats, {} {}% unprocessed", pillHeartBeats.size(), unproccessed.size(), perc);
@@ -254,9 +248,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.warn("Checkpoint successful.");
-            } catch (InvalidStateException e) {
-                LOGGER.error(e.getMessage());
-            } catch (ShutdownException e) {
+            } catch (InvalidStateException | ShutdownException e) {
                 LOGGER.error(e.getMessage());
             }
         }
