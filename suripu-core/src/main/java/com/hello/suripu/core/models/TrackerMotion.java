@@ -52,6 +52,10 @@ public class TrackerMotion {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
+    public final Optional<Long> motionMask;
+
+    public final Optional<Long> cosTheta;
+
     @JsonCreator
     // TODO: make constructor private and force Builder use to reduce risks on not
     // TODO: converting data properly
@@ -76,6 +80,37 @@ public class TrackerMotion {
         this.motionRange = motionRange;
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
+
+        this.cosTheta = Optional.absent();
+        this.motionMask = Optional.absent();
+    }
+
+    private TrackerMotion(@JsonProperty("id") final long id,
+                          @JsonProperty("account_id") final long accountId,
+                          @JsonProperty("tracker_id") final Long trackerId,
+                          @JsonProperty("timestamp") final long timestamp,
+                          @JsonProperty("value") final int value,
+                          @JsonProperty("timezone_offset") final int timeZoneOffset,
+                          final Long motionRange,
+                          final Long kickOffCounts,
+                          final Long onDurationInSeconds,
+                          final Optional<Long> motionMask,
+                          final Optional<Long> cosTheta){
+
+        this.id = id;
+        this.accountId = accountId;
+        this.trackerId = trackerId;
+        this.timestamp = timestamp;
+        this.value = value;
+        this.offsetMillis = timeZoneOffset;
+
+
+        this.motionRange = motionRange;
+        this.kickOffCounts = kickOffCounts;
+        this.onDurationInSeconds = onDurationInSeconds;
+
+        this.cosTheta = cosTheta;
+        this.motionMask = motionMask;
     }
 
 
@@ -93,7 +128,9 @@ public class TrackerMotion {
                 timeZoneOffset,
                 payloadV2.motionRange,
                 payloadV2.kickOffCounts,
-                payloadV2.onDurationInSeconds
+                payloadV2.onDurationInSeconds,
+                payloadV2.motionMask,
+                payloadV2.cosTheta
         );
     }
 
@@ -200,6 +237,8 @@ public class TrackerMotion {
         private Long motionRange = 0L;
         private Long kickOffCounts = 0L;
         private Long onDurationInSeconds = 0L;
+        private Optional<Long> motionMask = Optional.absent();
+        private Optional<Long> cosTheta = Optional.absent();
 
         public Builder(){
 
@@ -251,6 +290,16 @@ public class TrackerMotion {
             return this;
         }
 
+        public Builder withMotionMask(final Long motionMask) {
+            this.motionMask = Optional.of(motionMask);
+            return this;
+        }
+
+        public Builder withCosTheta(final Long cosTheta) {
+            this.cosTheta = Optional.of(cosTheta);
+            return this;
+        }
+
         public TrackerMotion build(){
             return new TrackerMotion(
                     this.id,
@@ -261,7 +310,9 @@ public class TrackerMotion {
                     this.offsetMillis,
                     this.motionRange,
                     this.kickOffCounts,
-                    this.onDurationInSeconds);
+                    this.onDurationInSeconds,
+                    this.motionMask,
+                    this.cosTheta);
         }
 
 
