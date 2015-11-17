@@ -93,7 +93,8 @@ public class TrackerMotionUtilTest {
         }
 
         try {
-            final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.encryptedToRaw(new byte[16], encrypted);
+            final byte[] decrypted = TrackerMotion.Utils.decryptRawMotion(new byte[16], encrypted);
+            final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToRaw(decrypted);
             assertThat(payloadV2.maxAmplitude, is(expectedLong));
         } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
             LOGGER.error("Fail to decrypt tracker motion payload");
@@ -101,6 +102,30 @@ public class TrackerMotionUtilTest {
 
     }
 
+
+    private byte[] bytes(int... ints) {
+        final byte[] output = new byte[ints.length];
+        for (int i = 0; i < ints.length; i++) {
+            output[i] = (byte) ints[i];
+        }
+        return output;
+    }
+
+    @Test
+    public void testDecryptedToRawVersion3() throws Exception {
+        // Little endian, remember
+        final byte[] decrypted = bytes(
+                0x00, 0x02,  // max
+                0x11, // cosTheta
+                0x11, 0x00, 0x03, 0x00, 0x11, 0x00, 0x03, 0x00 // motionMask
+        );
+        final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToRawVersion3(decrypted);
+        System.out.println(payloadV2);
+        assertThat(payloadV2.onDurationInSeconds, is(8L));
+        assertThat(payloadV2.maxAmplitude, is(512L));
+        assertThat(payloadV2.cosTheta.get(), is(17L));
+        assertThat(payloadV2.motionMask.get(), is(0x0003001100030011L));
+    }
 
 
 
@@ -128,7 +153,8 @@ public class TrackerMotionUtilTest {
 
         byte[] key = Hex.decodeHex("F4A1F4340DBF599A91C61F724064E650".toCharArray());
         try {
-            TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.encryptedToRaw(key, encrypted);
+            final byte[] decrypted = TrackerMotion.Utils.decryptRawMotion(key, encrypted);
+            TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToRaw(decrypted);
             assertThat(payloadV2.maxAmplitude == 0, is(false));
         } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
             LOGGER.debug("Fail to decrypt tracker motion");

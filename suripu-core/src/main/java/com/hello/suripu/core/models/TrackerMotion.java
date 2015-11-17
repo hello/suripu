@@ -137,15 +137,16 @@ public class TrackerMotion {
 
     public static PillPayloadV2 data(SenseCommandProtos.pill_data data, final byte[] encryptionKey, final String pillId) throws InvalidEncryptedPayloadException{
         if(data.hasMotionDataEntrypted()) {
+            final byte[] decrypted = Utils.decryptRawMotion(encryptionKey, data.getMotionDataEntrypted().toByteArray());
             switch(data.getFirmwareVersion()) {
                 case 0:
                 case 1:
-                    return Utils.encryptedToRaw(encryptionKey, data.getMotionDataEntrypted().toByteArray());
+                    return Utils.decryptedToRaw(decrypted);
                 case 2:
                 case 3: // cleans up error code, new interrupt
-                    return Utils.encryptedToRawVersion2(encryptionKey, data.getMotionDataEntrypted().toByteArray());
+                    return Utils.decryptedToRawVersion2(decrypted);
                 case 4: // introduction of motion mask and cosTheta, remove a couple unused fields
-                    return Utils.encryptedToRawVersion3(encryptionKey, data.getMotionDataEntrypted().toByteArray());
+                    return Utils.decryptedToRawVersion3(decrypted);
             }
         }
 
@@ -357,9 +358,7 @@ public class TrackerMotion {
             return (int)(trackerValueInMS2 * 1000);
         }
 
-        public static PillPayloadV2 encryptedToRaw(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
-
-            final byte[] decryptedRawMotion = decryptRawMotion(key, encryptedMotionData);
+        public static PillPayloadV2 decryptedToRaw(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
             Exception exception = null;
             long motionAmplitude = -1;
@@ -386,10 +385,7 @@ public class TrackerMotion {
             return PillPayloadV2.create(motionAmplitude);
         }
 
-
-        public static PillPayloadV2 encryptedToRawVersion2(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
-
-            final byte[] decryptedRawMotion = decryptRawMotion(key, encryptedMotionData);
+        public static PillPayloadV2 decryptedToRawVersion2(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
 
             Exception exception = null;
@@ -419,10 +415,9 @@ public class TrackerMotion {
             }
 
             return PillPayloadV2.create(motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
-
         }
 
-        private static byte[] decryptRawMotion(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
+        public static byte[] decryptRawMotion(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
             final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
 
             //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
@@ -440,9 +435,7 @@ public class TrackerMotion {
             return decryptedRawMotion;
         }
 
-        public static PillPayloadV2 encryptedToRawVersion3(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
-            final byte[] decryptedRawMotion = decryptRawMotion(key, encryptedMotionData);
-
+        public static PillPayloadV2 decryptedToRawVersion3(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
             final long motionAmplitude;
             final long cosTheta;
             final long motionMask;
@@ -458,9 +451,7 @@ public class TrackerMotion {
             }
 
             return PillPayloadV2.createWithMotionMask(motionAmplitude, motionMask, cosTheta);
-
         }
-
 
         public static List<TrackerMotion> removeDuplicates(final List<TrackerMotion> original){
             final LinkedList<TrackerMotion> noDuplicateList = new LinkedList<>();
