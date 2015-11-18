@@ -8,15 +8,30 @@ import org.joda.time.DateTimeZone;
 
 public class TimelineFeedback {
 
+    @JsonProperty("id")
+    public final Optional<Long> id;
+
+    @JsonProperty("date_of_night")
     public final DateTime dateOfNight;
+
+    @JsonProperty("old_time_event")
     public final String oldTimeOfEvent;
+
+    @JsonProperty("new_time_event")
     public final String newTimeOfEvent;
+
+    @JsonProperty("event_type")
     public final Event.Type eventType;
+
+    @JsonProperty("account_id")
     public final Optional<Long> accountId;
+
+    @JsonProperty("created")
     public final Optional<Long> created;
 
     //public for testing purposes
-    public TimelineFeedback(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Optional<Long> accountId, final Optional<Long> created) {
+    public TimelineFeedback(final Long id, final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Optional<Long> accountId, final Optional<Long> created) {
+        this.id = Optional.fromNullable(id);
         this.dateOfNight= dateOfNight;
         this.oldTimeOfEvent = oldTimeOfEvent;
         this.newTimeOfEvent = newTimeOfEvent;
@@ -35,19 +50,23 @@ public class TimelineFeedback {
         final DateTime date = DateTime.parse(dateOfNight);
         final DateTime realDate = new DateTime(date.getMillis(), DateTimeZone.UTC).withTimeAtStartOfDay();
         final Event.Type eventType = Event.Type.fromString(eventTypeString);
-        return new TimelineFeedback(realDate, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent(),Optional.<Long>absent());
+        return new TimelineFeedback(0L, realDate, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent(),Optional.<Long>absent());
     }
 
     public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType) {
-        return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.<Long>absent(),Optional.<Long>absent());
+        return new TimelineFeedback(0L,dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.<Long>absent(),Optional.<Long>absent());
     }
 
     public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId, final Long created) {
-        return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.of(created));
+        return new TimelineFeedback(0L, dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.of(created));
     }
 
     public static TimelineFeedback create(final String dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId) {
         final DateTime realDate = new DateTime(DateTime.parse(dateOfNight), DateTimeZone.UTC).withTimeAtStartOfDay();
-        return new TimelineFeedback(realDate, oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.<Long>absent());
+        return new TimelineFeedback(0L, realDate, oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.<Long>absent());
+    }
+
+    public static TimelineFeedback create(final Long id, final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId, final Long created) {
+        return new TimelineFeedback(id, dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.of(created));
     }
 }

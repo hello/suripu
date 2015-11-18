@@ -1,6 +1,5 @@
 package com.hello.suripu.core.db.mappers;
 
-import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.TimelineFeedback;
 import org.joda.time.DateTime;
@@ -14,7 +13,7 @@ import java.sql.SQLException;
 public class TimelineFeedbackMapper implements ResultSetMapper<TimelineFeedback>{
     @Override
     public TimelineFeedback map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-
+        final Long id = r.getLong("id");
         final DateTime dateOfNight = new DateTime(r.getTimestamp("date_of_night"), DateTimeZone.UTC);
         final Long accountId = r.getLong("account_id");
         final String oldTime = r.getString("old_time");
@@ -23,6 +22,7 @@ public class TimelineFeedbackMapper implements ResultSetMapper<TimelineFeedback>
         final Event.Type eventType = Event.Type.fromInteger(r.getInt("event_type"));
 
         return TimelineFeedback.create(
+                id,
                 dateOfNight,
                 oldTime,
                 newTime,

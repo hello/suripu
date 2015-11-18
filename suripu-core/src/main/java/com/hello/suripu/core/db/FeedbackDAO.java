@@ -29,9 +29,9 @@ public abstract class FeedbackDAO extends FeedbackReadDAO {
     @SqlUpdate("INSERT INTO timeline_feedback (account_id, date_of_night, old_time, new_time, event_type, created) VALUES(:account_id, :date_of_night, :old_time, :new_time, :event_type, now())")
     public abstract void insertNewTimelineFeedback(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
-    /* Update new_time=old_time if created datetime and account id match   */
-    @SqlUpdate("UPDATE timeline_feedback SET new_time=old_time WHERE account_id=:account_id AND created=:created")
-    public abstract int undoFeedbackUpdate(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
+    /* Update new_time=old_time by Row ID   */
+    @SqlUpdate("UPDATE timeline_feedback SET new_time=old_time WHERE id=:id")
+    public abstract int undoFeedbackUpdate(@Bind("id") final Long id);
 
     public void insert(SleepFeedback feedback) {
         if(feedback.accountId.isPresent()) {
