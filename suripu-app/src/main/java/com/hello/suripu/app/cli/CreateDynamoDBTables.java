@@ -572,17 +572,23 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
     private void createPillDataTable(SuripuAppConfiguration configuration, AWSCredentialsProvider awsCredentialsProvider) {
         final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
         final DynamoDBConfiguration config = configuration.getPillDataConfiguration();
-        final String tableName = "fail2_" + config.getTableName();
+        final String tableName = config.getTableName();
         client.setEndpoint(config.getEndpoint());
 
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
         final PillDataDAODynamoDB pillDataDynamoDB = new PillDataDAODynamoDB(client, config.getTableName());
-        try {
-            client.describeTable(tableName);
-            System.out.println(String.format("%s already exists.", tableName));
-        } catch (AmazonServiceException exception) {
-            final CreateTableResult result = pillDataDynamoDB.createTable(tableName, client);
-            final TableDescription description = result.getTableDescription();
-            System.out.println(description.getTableStatus());
+        for (int i = 0; i < 6; i++) {
+            final DateTime currDateTime = now.plusMonths(i);
+            final String currentTablename = pillDataDynamoDB.getTableName(currDateTime);
+            System.out.println(String.format("Creating table %s", currentTablename));
+            try {
+                client.describeTable(tableName);
+                System.out.println(String.format("%s already exists.", currentTablename));
+            } catch (AmazonServiceException exception) {
+                final CreateTableResult result = pillDataDynamoDB.createTable(currentTablename, client);
+                final TableDescription description = result.getTableDescription();
+                System.out.println(description.getTableStatus());
+            }
         }
     }
 
