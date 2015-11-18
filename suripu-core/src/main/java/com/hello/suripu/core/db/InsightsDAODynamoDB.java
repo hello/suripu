@@ -23,6 +23,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 
@@ -248,8 +249,8 @@ public class InsightsDAODynamoDB {
         item.put(TITLE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.title));
         item.put(MESSAGE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.message));
         item.put(TIMESTAMP_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.timestamp.toString()));
-        if (insightCard.image.isPresent()) {
-            final InsightCard.Image image = insightCard.image.get();
+        if (insightCard.multiDensityImage.isPresent()) {
+            final MultiDensityImage image = insightCard.multiDensityImage.get();
             if (image.normalDensity.isPresent()) {
                 item.put(IMAGE_1X_ATTRIBUTE_NAME, new AttributeValue().withS(image.normalDensity.get()));
             }
@@ -280,9 +281,9 @@ public class InsightsDAODynamoDB {
                 ? item.get(IMAGE_3X_ATTRIBUTE_NAME).getS()
                 : null;
 
-        final Optional<InsightCard.Image> image;
+        final Optional<MultiDensityImage> image;
         if (image1x != null || image2x != null || image3x != null) {
-            image = Optional.of(new InsightCard.Image(Optional.fromNullable(image1x),
+            image = Optional.of(new MultiDensityImage(Optional.fromNullable(image1x),
                                                       Optional.fromNullable(image2x),
                                                       Optional.fromNullable(image3x)));
         } else {

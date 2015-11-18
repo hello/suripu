@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.MultiDensityImage;
 
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -72,7 +73,7 @@ public class InsightsDAODynamoDBIT {
 
     private void insertInsight(final List<InsightCard> insightCards,
                                final Long accountId,
-                               final String date, Optional<InsightCard.Image> image) {
+                               final String date, Optional<MultiDensityImage> image) {
         final String title = "title";
         final String message = "message";
         final InsightCard.Category category = InsightCard.Category.LIGHT;
@@ -86,12 +87,12 @@ public class InsightsDAODynamoDBIT {
         // Set up some test data in the table
         final List<InsightCard> insightCards = new ArrayList<>();
         final Long accountId = 0L;
-        insertInsight(insightCards, accountId, "2015-05-06T23:17:25.162Z", Optional.<InsightCard.Image>absent());
-        insertInsight(insightCards, accountId, "2015-05-05T23:17:25.162Z", Optional.<InsightCard.Image>absent());
-        insertInsight(insightCards, accountId, "2015-05-04T20:17:25.162Z", Optional.<InsightCard.Image>absent());
-        insertInsight(insightCards, accountId, "2015-05-03T01:17:25.162Z", Optional.<InsightCard.Image>absent());
-        insertInsight(insightCards, accountId, "2015-05-02T01:17:25.162Z", Optional.<InsightCard.Image>absent());
-        insertInsight(insightCards, accountId, "2015-05-01T01:17:25.162Z", Optional.<InsightCard.Image>absent());
+        insertInsight(insightCards, accountId, "2015-05-06T23:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-05T23:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-04T20:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-03T01:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-02T01:17:25.162Z", Optional.<MultiDensityImage>absent());
+        insertInsight(insightCards, accountId, "2015-05-01T01:17:25.162Z", Optional.<MultiDensityImage>absent());
 
         insightsDAODynamoDB.insertListOfInsights(insightCards);
 
@@ -101,9 +102,9 @@ public class InsightsDAODynamoDBIT {
         final List<InsightCard> insightsReverseChronological = insightsDAODynamoDB.getInsightsByDate(accountId, DateTime.parse("2015-05-07T23:17:25.162Z"), false, limit);
         assertThat(insightsReverseChronological.size(), is(limit));
         assertThat(insightsReverseChronological.get(0).timestamp, is(DateTime.parse("2015-05-06T23:17:25.162Z")));
-        assertThat(insightsReverseChronological.get(0).image.isPresent(), is(false));
+        assertThat(insightsReverseChronological.get(0).multiDensityImage.isPresent(), is(false));
         assertThat(insightsReverseChronological.get(2).timestamp, is(DateTime.parse("2015-05-04T20:17:25.162Z")));
-        assertThat(insightsReverseChronological.get(2).image.isPresent(), is(false));
+        assertThat(insightsReverseChronological.get(2).multiDensityImage.isPresent(), is(false));
 
         // Chronological order
         final List<InsightCard> insightsChronological = insightsDAODynamoDB.getInsightsByDate(accountId, DateTime.parse("2012-01-01T00:00:25.162Z"), true, limit);
@@ -113,21 +114,21 @@ public class InsightsDAODynamoDBIT {
             LOGGER.debug(card.timestamp.toString());
         }
         assertThat(insightsChronological.get(0).timestamp, is(DateTime.parse("2015-05-04T20:17:25.162Z")));
-        assertThat(insightsChronological.get(0).image.isPresent(), is(false));
+        assertThat(insightsChronological.get(0).multiDensityImage.isPresent(), is(false));
         assertThat(insightsChronological.get(3).timestamp, is(DateTime.parse("2015-05-01T01:17:25.162Z")));
-        assertThat(insightsChronological.get(3).image.isPresent(), is(false));
+        assertThat(insightsChronological.get(3).multiDensityImage.isPresent(), is(false));
     }
 
     @Test
     public void testGetInsightsByDateWithImages() {
         final List<InsightCard> insightCards = new ArrayList<>();
         final Long accountId = 0L;
-        final InsightCard.Image completeImage = new InsightCard.Image(Optional.of("http://hellocdn.net/insights/images/test@1x.png"),
+        final MultiDensityImage completeImage = new MultiDensityImage(Optional.of("http://hellocdn.net/insights/images/test@1x.png"),
                                                                       Optional.of("http://hellocdn.net/insights/images/test@2x.png"),
                                                                       Optional.of("http://hellocdn.net/insights/images/test@3x.png"));
         insertInsight(insightCards, accountId, "2015-05-06T23:17:25.162Z", Optional.of(completeImage));
 
-        final InsightCard.Image incompleteImage = new InsightCard.Image(Optional.of("http://hellocdn.net/insights/images/test@1x.png"),
+        final MultiDensityImage incompleteImage = new MultiDensityImage(Optional.of("http://hellocdn.net/insights/images/test@1x.png"),
                                                                         Optional.<String>absent(),
                                                                         Optional.of("http://hellocdn.net/insights/images/test@3x.png"));
         insertInsight(insightCards, accountId, "2015-05-05T23:17:25.162Z", Optional.of(incompleteImage));
@@ -140,9 +141,9 @@ public class InsightsDAODynamoDBIT {
         assertThat(insights.size(), is(equalTo(2)));
 
         final InsightCard withCompleteImage = insights.get(0);
-        assertThat(withCompleteImage.image.isPresent(), is(true));
+        assertThat(withCompleteImage.multiDensityImage.isPresent(), is(true));
 
-        final InsightCard.Image fromDbCompleteImage = withCompleteImage.image.get();
+        final MultiDensityImage fromDbCompleteImage = withCompleteImage.multiDensityImage.get();
         assertThat(fromDbCompleteImage.normalDensity.isPresent(), is(true));
         assertThat(fromDbCompleteImage.normalDensity, is(equalTo(completeImage.normalDensity)));
 
@@ -153,9 +154,9 @@ public class InsightsDAODynamoDBIT {
         assertThat(fromDbCompleteImage.extraHighDensity, is(equalTo(completeImage.extraHighDensity)));
 
         final InsightCard withIncompleteImage = insights.get(1);
-        assertThat(withIncompleteImage.image.isPresent(), is(true));
+        assertThat(withIncompleteImage.multiDensityImage.isPresent(), is(true));
 
-        final InsightCard.Image fromDbIncompleteImage = withIncompleteImage.image.get();
+        final MultiDensityImage fromDbIncompleteImage = withIncompleteImage.multiDensityImage.get();
         assertThat(fromDbIncompleteImage.normalDensity.isPresent(), is(true));
         assertThat(fromDbIncompleteImage.normalDensity, is(equalTo(completeImage.normalDensity)));
 

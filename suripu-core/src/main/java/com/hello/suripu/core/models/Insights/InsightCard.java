@@ -98,25 +98,6 @@ public class InsightCard implements Comparable<InsightCard> {
 
     }
 
-    public static class Image {
-        @JsonProperty("1x")
-        public final Optional<String> normalDensity;
-
-        @JsonProperty("2x")
-        public final Optional<String> highDensity;
-
-        @JsonProperty("3x")
-        public final Optional<String> extraHighDensity;
-
-        public Image(@JsonProperty("1x") final Optional<String> normalDensity,
-                     @JsonProperty("2x") final Optional<String> highDensity,
-                     @JsonProperty("3x") final Optional<String> extraHighDensity) {
-            this.normalDensity = normalDensity;
-            this.highDensity = highDensity;
-            this.extraHighDensity = extraHighDensity;
-        }
-    }
-
     @JsonProperty("account_id")
     public final Optional<Long> accountId;
 
@@ -138,17 +119,17 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("info_preview")
     public final Optional<String> infoPreview;
 
-    @JsonProperty("image")
-    public final Optional<Image> image;
+    @JsonProperty("multi_density_image")
+    public final Optional<MultiDensityImage> multiDensityImage;
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
-        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent(), Optional.<Image>absent());
+        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent(), Optional.<MultiDensityImage>absent());
     }
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                       final Optional<String> infoPreview, final Optional<Image> image) {
+                       final Optional<String> infoPreview, final Optional<MultiDensityImage> multiDensityImage) {
         this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
@@ -156,7 +137,7 @@ public class InsightCard implements Comparable<InsightCard> {
         this.timePeriod = timePeriod;
         this.timestamp = timestamp;
         this.infoPreview = infoPreview;
-        this.image = image;
+        this.multiDensityImage = multiDensityImage;
     }
 
     @Override
@@ -181,7 +162,7 @@ public class InsightCard implements Comparable<InsightCard> {
                 this.timePeriod,
                 this.timestamp,
                 infoPreview,
-                this.image);
+                this.multiDensityImage);
     }
 
 }
