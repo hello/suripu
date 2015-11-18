@@ -139,4 +139,34 @@ public class PillDataDAODynamoDBIT {
         assertThat(results.isEmpty(), is(false));
         assertThat(results.get(0).value, is (trackerMotionList.get(0).value));
     }
+
+    @Test
+    public void crossMonthBatchInsert() {
+        final List<TrackerMotion> trackerMotionList = new ArrayList<>();
+        final int dataSize = 80;
+        final DateTime firstTime = new DateTime(2015, 11, 30, 23, 59, DateTimeZone.UTC);
+        Long accountId = 1L;
+        for (int i = 0; i < dataSize; i++) {
+            trackerMotionList.add(
+                    new TrackerMotion.Builder()
+                            .withAccountId(accountId + i)
+                            .withTimestampMillis(firstTime.plusMinutes(i).getMillis())
+                            .withExternalTrackerId(String.format("ABCDEFG%d", i))
+                            .withOffsetMillis(-28800000)
+                            .withValue(900 + i)
+                            .build()
+            );
+        }
+
+        final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotionList, trackerMotionList.size());
+        assertThat(successfulInserts, is(trackerMotionList.size()));
+        assertThat(getTableCount(NOVEMBER_TABLE_NAME), is(1));
+        assertThat(getTableCount(DECEMBER_TABLE_NAME), is(trackerMotionList.size()-1));
+
+        final List<TrackerMotion> results = pillDataDAODynamoDB.getSinglePillData(accountId+1, "ABCDEFG1", firstTime.plusMinutes(1));
+        assertThat(results.isEmpty(), is(false));
+        assertThat(results.get(0).value, is (trackerMotionList.get(1).value));
+
+
+    }
 }
