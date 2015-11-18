@@ -31,7 +31,7 @@ public abstract class FeedbackDAO extends FeedbackReadDAO {
 
     /* Update new_time=old_time if created datetime and account id match   */
     @SqlUpdate("UPDATE timeline_feedback SET new_time=old_time WHERE account_id=:account_id AND created=:created")
-    public abstract int updateFeedbackByAccountCreated(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
+    public abstract int undoFeedbackUpdate(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
 
     public void insert(SleepFeedback feedback) {
         if(feedback.accountId.isPresent()) {
