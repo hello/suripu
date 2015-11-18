@@ -6,12 +6,16 @@ import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
+import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
+import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
+import com.amazonaws.services.dynamodbv2.model.QueryRequest;
+import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableSet;
@@ -26,6 +30,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,6 +108,15 @@ public class PillDataDAODynamoDB implements PillDataIngestDAO {
             .add(PillDataAttribute.KICKOFF_COUNTS)
             .add(PillDataAttribute.ON_DURATION).build();
 
+    private static final Set<String> TARGET_ATTRIBUTE_NAMES = ImmutableSet.of(
+            PillDataAttribute.ACCOUNT_ID.name,
+            PillDataAttribute.TS_PILL_ID.name,
+            PillDataAttribute.VALUE.name,
+            PillDataAttribute.OFFSET_MILLIS.name,
+            PillDataAttribute.LOCAL_UTC_TS.name,
+            PillDataAttribute.MOTION_RANGE.name,
+            PillDataAttribute.KICKOFF_COUNTS.name,
+            PillDataAttribute.ON_DURATION.name);
 
     // Store everything to the minute level
     private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ssZ");
@@ -119,7 +133,7 @@ public class PillDataDAODynamoDB implements PillDataIngestDAO {
         return tablePrefix + "_" + dateTime.toString(formatter);
     }
 
-    private static  AttributeValue getRangeKey(final Long timestamp, final String pillId) {
+    private static AttributeValue getRangeKey(final Long timestamp, final String pillId) {
         final DateTime dateTime = new DateTime(timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
         return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + pillId);
     }
@@ -261,12 +275,43 @@ public class PillDataDAODynamoDB implements PillDataIngestDAO {
         return numberInserted;
     }
 
+    public List<TrackerMotion> getSinglePillData(final Long accountId, final String externalPillId, final DateTime queryDateTime) {
+        final Map<String, Condition> queryConditions = Maps.newHashMap();
+
+        queryConditions.put(PillDataAttribute.ACCOUNT_ID.name, new Condition()
+                        .withComparisonOperator(ComparisonOperator.EQ)
+                        .withAttributeValueList(new AttributeValue().withN(accountId.toString())));
+
+        final AttributeValue rangeKey = getRangeKey(queryDateTime.getMillis(), externalPillId);
+        queryConditions.put(PillDataAttribute.TS_PILL_ID.name, new Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(rangeKey));
+
+        final String tableName = getTableName(queryDateTime);
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(tableName)
+                .withKeyConditions(queryConditions)
+                .withAttributesToGet(TARGET_ATTRIBUTE_NAMES)
+                .withLimit(1);
+
+        final QueryResult queryResult = this.dynamoDBClient.query(queryRequest);
+
+        final List<Map<String, AttributeValue>> items = queryResult.getItems();
+
+        if (items.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final TrackerMotion trackerMotion = fromDynamoDBItem(items.get(0));
+        return Lists.newArrayList(trackerMotion);
+    }
+
     @Override
     public Class name() {
         return  PillDataDAODynamoDB.class;
     }
 
-    public CreateTableResult createTable(final String tableName, final AmazonDynamoDB dynamoDBClient){
+    public CreateTableResult createTable(final String tableName) {
         if (!tableName.startsWith(this.tablePrefix)) {
             final String status = String.format("Fail to create %s, wrong prefix!", tableName);
             return new CreateTableResult().withTableDescription(

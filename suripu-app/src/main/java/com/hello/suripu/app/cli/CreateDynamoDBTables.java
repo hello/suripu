@@ -585,7 +585,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
                 client.describeTable(tableName);
                 System.out.println(String.format("%s already exists.", currentTablename));
             } catch (AmazonServiceException exception) {
-                final CreateTableResult result = pillDataDynamoDB.createTable(currentTablename, client);
+                final CreateTableResult result = pillDataDynamoDB.createTable(currentTablename);
                 final TableDescription description = result.getTableDescription();
                 System.out.println(description.getTableStatus());
             }
