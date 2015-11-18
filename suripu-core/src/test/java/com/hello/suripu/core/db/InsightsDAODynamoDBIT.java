@@ -102,9 +102,9 @@ public class InsightsDAODynamoDBIT {
         final List<InsightCard> insightsReverseChronological = insightsDAODynamoDB.getInsightsByDate(accountId, DateTime.parse("2015-05-07T23:17:25.162Z"), false, limit);
         assertThat(insightsReverseChronological.size(), is(limit));
         assertThat(insightsReverseChronological.get(0).timestamp, is(DateTime.parse("2015-05-06T23:17:25.162Z")));
-        assertThat(insightsReverseChronological.get(0).multiDensityImage.isPresent(), is(false));
+        assertThat(insightsReverseChronological.get(0).image.isPresent(), is(false));
         assertThat(insightsReverseChronological.get(2).timestamp, is(DateTime.parse("2015-05-04T20:17:25.162Z")));
-        assertThat(insightsReverseChronological.get(2).multiDensityImage.isPresent(), is(false));
+        assertThat(insightsReverseChronological.get(2).image.isPresent(), is(false));
 
         // Chronological order
         final List<InsightCard> insightsChronological = insightsDAODynamoDB.getInsightsByDate(accountId, DateTime.parse("2012-01-01T00:00:25.162Z"), true, limit);
@@ -114,9 +114,9 @@ public class InsightsDAODynamoDBIT {
             LOGGER.debug(card.timestamp.toString());
         }
         assertThat(insightsChronological.get(0).timestamp, is(DateTime.parse("2015-05-04T20:17:25.162Z")));
-        assertThat(insightsChronological.get(0).multiDensityImage.isPresent(), is(false));
+        assertThat(insightsChronological.get(0).image.isPresent(), is(false));
         assertThat(insightsChronological.get(3).timestamp, is(DateTime.parse("2015-05-01T01:17:25.162Z")));
-        assertThat(insightsChronological.get(3).multiDensityImage.isPresent(), is(false));
+        assertThat(insightsChronological.get(3).image.isPresent(), is(false));
     }
 
     @Test
@@ -141,28 +141,28 @@ public class InsightsDAODynamoDBIT {
         assertThat(insights.size(), is(equalTo(2)));
 
         final InsightCard withCompleteImage = insights.get(0);
-        assertThat(withCompleteImage.multiDensityImage.isPresent(), is(true));
+        assertThat(withCompleteImage.image.isPresent(), is(true));
 
-        final MultiDensityImage fromDbCompleteImage = withCompleteImage.multiDensityImage.get();
-        assertThat(fromDbCompleteImage.normalDensity.isPresent(), is(true));
-        assertThat(fromDbCompleteImage.normalDensity, is(equalTo(completeImage.normalDensity)));
+        final MultiDensityImage fromDbCompleteImage = withCompleteImage.image.get();
+        assertThat(fromDbCompleteImage.phoneDensityNormal.isPresent(), is(true));
+        assertThat(fromDbCompleteImage.phoneDensityNormal, is(equalTo(completeImage.phoneDensityNormal)));
 
-        assertThat(fromDbCompleteImage.highDensity.isPresent(), is(true));
-        assertThat(fromDbCompleteImage.highDensity, is(equalTo(completeImage.highDensity)));
+        assertThat(fromDbCompleteImage.phoneDensityHigh.isPresent(), is(true));
+        assertThat(fromDbCompleteImage.phoneDensityHigh, is(equalTo(completeImage.phoneDensityHigh)));
 
-        assertThat(fromDbCompleteImage.extraHighDensity.isPresent(), is(true));
-        assertThat(fromDbCompleteImage.extraHighDensity, is(equalTo(completeImage.extraHighDensity)));
+        assertThat(fromDbCompleteImage.phoneDensityExtraHigh.isPresent(), is(true));
+        assertThat(fromDbCompleteImage.phoneDensityExtraHigh, is(equalTo(completeImage.phoneDensityExtraHigh)));
 
         final InsightCard withIncompleteImage = insights.get(1);
-        assertThat(withIncompleteImage.multiDensityImage.isPresent(), is(true));
+        assertThat(withIncompleteImage.image.isPresent(), is(true));
 
-        final MultiDensityImage fromDbIncompleteImage = withIncompleteImage.multiDensityImage.get();
-        assertThat(fromDbIncompleteImage.normalDensity.isPresent(), is(true));
-        assertThat(fromDbIncompleteImage.normalDensity, is(equalTo(completeImage.normalDensity)));
+        final MultiDensityImage fromDbIncompleteImage = withIncompleteImage.image.get();
+        assertThat(fromDbIncompleteImage.phoneDensityNormal.isPresent(), is(true));
+        assertThat(fromDbIncompleteImage.phoneDensityNormal, is(equalTo(completeImage.phoneDensityNormal)));
 
-        assertThat(fromDbIncompleteImage.highDensity.isPresent(), is(false));
+        assertThat(fromDbIncompleteImage.phoneDensityHigh.isPresent(), is(false));
 
-        assertThat(fromDbIncompleteImage.extraHighDensity.isPresent(), is(true));
-        assertThat(fromDbIncompleteImage.extraHighDensity, is(equalTo(completeImage.extraHighDensity)));
+        assertThat(fromDbIncompleteImage.phoneDensityExtraHigh.isPresent(), is(true));
+        assertThat(fromDbIncompleteImage.phoneDensityExtraHigh, is(equalTo(completeImage.phoneDensityExtraHigh)));
     }
 }

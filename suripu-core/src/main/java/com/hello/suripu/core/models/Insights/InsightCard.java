@@ -119,8 +119,8 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("info_preview")
     public final Optional<String> infoPreview;
 
-    @JsonProperty("multi_density_image")
-    public final Optional<MultiDensityImage> multiDensityImage;
+    @JsonProperty("image")
+    public final Optional<MultiDensityImage> image;
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
@@ -129,7 +129,7 @@ public class InsightCard implements Comparable<InsightCard> {
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                       final Optional<String> infoPreview, final Optional<MultiDensityImage> multiDensityImage) {
+                       final Optional<String> infoPreview, final Optional<MultiDensityImage> image) {
         this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
@@ -137,7 +137,7 @@ public class InsightCard implements Comparable<InsightCard> {
         this.timePeriod = timePeriod;
         this.timestamp = timestamp;
         this.infoPreview = infoPreview;
-        this.multiDensityImage = multiDensityImage;
+        this.image = image;
     }
 
     @Override
@@ -162,7 +162,7 @@ public class InsightCard implements Comparable<InsightCard> {
                 this.timePeriod,
                 this.timestamp,
                 infoPreview,
-                this.multiDensityImage);
+                this.image);
     }
 
 }

@@ -21,7 +21,7 @@ import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class InsightsDAODynamoDB {
 
@@ -46,8 +45,8 @@ public class InsightsDAODynamoDB {
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
 
-    public final Set<String> attributesToFetch;
-    public final Set<String> requiredAttributes;
+    public final ImmutableSet<String> attributesToFetch;
+    public final ImmutableSet<String> requiredAttributes;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id"; // primary key
     public static final String DATE_CATEGORY_ATTRIBUTE_NAME = "date_category"; // range key
@@ -56,9 +55,9 @@ public class InsightsDAODynamoDB {
     public static final String TITLE_ATTRIBUTE_NAME = "title";
     public static final String MESSAGE_ATTRIBUTE_NAME = "message";
     public static final String TIMESTAMP_UTC_ATTRIBUTE_NAME = "timestamp_utc";
-    public static final String IMAGE_1X_ATTRIBUTE_NAME = "image_1x";
-    public static final String IMAGE_2X_ATTRIBUTE_NAME = "image_2x";
-    public static final String IMAGE_3X_ATTRIBUTE_NAME = "image_3x";
+    public static final String IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME = "phone_image_1x";
+    public static final String IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME = "phone_image_2x";
+    public static final String IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME = "phone_image_3x";
     private static final int MAX_CALL_COUNT = 5;
 
 
@@ -68,13 +67,14 @@ public class InsightsDAODynamoDB {
     public InsightsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
-        this.requiredAttributes = Sets.newHashSet(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
+        this.requiredAttributes = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
                                                   CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
                                                   TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME);
-        this.attributesToFetch = Sets.newHashSet(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
+        this.attributesToFetch = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
                                                  CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
                                                  TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
-                                                 IMAGE_1X_ATTRIBUTE_NAME, IMAGE_2X_ATTRIBUTE_NAME, IMAGE_3X_ATTRIBUTE_NAME);
+                                                 IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME,
+                                                 IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME);
     }
 
     @Timed
@@ -249,18 +249,18 @@ public class InsightsDAODynamoDB {
         item.put(TITLE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.title));
         item.put(MESSAGE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.message));
         item.put(TIMESTAMP_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.timestamp.toString()));
-        if (insightCard.multiDensityImage.isPresent()) {
-            final MultiDensityImage image = insightCard.multiDensityImage.get();
-            if (image.normalDensity.isPresent()) {
-                item.put(IMAGE_1X_ATTRIBUTE_NAME, new AttributeValue().withS(image.normalDensity.get()));
+        if (insightCard.image.isPresent()) {
+            final MultiDensityImage image = insightCard.image.get();
+            if (image.phoneDensityNormal.isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityNormal.get()));
             }
 
-            if (image.highDensity.isPresent()) {
-                item.put(IMAGE_2X_ATTRIBUTE_NAME, new AttributeValue().withS(image.highDensity.get()));
+            if (image.phoneDensityHigh.isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityHigh.get()));
             }
 
-            if (image.extraHighDensity.isPresent()) {
-                item.put(IMAGE_3X_ATTRIBUTE_NAME, new AttributeValue().withS(image.extraHighDensity.get()));
+            if (image.phoneDensityExtraHigh.isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityExtraHigh.get()));
             }
         }
 
@@ -271,14 +271,14 @@ public class InsightsDAODynamoDB {
         final InsightCard.Category category = InsightCard.Category.fromInteger(Integer.valueOf(item.get(CATEGORY_ATTRIBUTE_NAME).getN()));
         final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.fromString(item.get(TIME_PERIOD_ATTRIBUTE_NAME).getS());
 
-        final String image1x = item.containsKey(IMAGE_1X_ATTRIBUTE_NAME)
-                ? item.get(IMAGE_1X_ATTRIBUTE_NAME).getS()
+        final String image1x = item.containsKey(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME)
+                ? item.get(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME).getS()
                 : null;
-        final String image2x = item.containsKey(IMAGE_2X_ATTRIBUTE_NAME)
-                ? item.get(IMAGE_2X_ATTRIBUTE_NAME).getS()
+        final String image2x = item.containsKey(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME)
+                ? item.get(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME).getS()
                 : null;
-        final String image3x = item.containsKey(IMAGE_3X_ATTRIBUTE_NAME)
-                ? item.get(IMAGE_3X_ATTRIBUTE_NAME).getS()
+        final String image3x = item.containsKey(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME)
+                ? item.get(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME).getS()
                 : null;
 
         final Optional<MultiDensityImage> image;
