@@ -20,8 +20,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 public abstract class AccountAlgorithmDAOImpl implements AccountAlgorithmDAO {
 
     /* get the latest algorithm for a day (but not after)  */
-    @SqlQuery("SELECT * FROM account_algorithm_map WHERE account_id = :account_id AND date <= :date ORDER BY date DESC LIMIT 1;")
+    @SqlQuery("SELECT * FROM account_algorithm_map WHERE account_id = :account_id AND utc_ts <= :date ORDER BY date DESC LIMIT 1;")
     @SingleValueResult(Account.class)
     public abstract Optional<AccountAlgorithm> getLatestAlgorithmForAccount(@Bind("account_id") final Long accountId,@Bind("date") final DateTime date);
-    
+
 }

@@ -287,3 +287,18 @@ CREATE INDEX date_of_night_idx ON timeline_analytics(date_of_night);
 
 GRANT ALL PRIVILEGES ON timeline_analytics TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE timeline_analytics_id_seq TO ingress_user;
+
+
+-- ACCOUNT ALGORITHM MAP
+CREATE TABLE account_algorithm_map (
+  id BIGSERIAL PRIMARY KEY,
+  account_id BIGINT,
+  algorithm INTEGER,
+  utc_ts TIMESTAMP,
+  comment VARCHAR(255)
+);
+
+CREATE INDEX account_id_idx ON account_algorithm_map(account_id);
+
+GRANT ALL PRIVILEGES ON account_algorithm_map TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE account_algorithm_map_id_seq TO ingress_user;
