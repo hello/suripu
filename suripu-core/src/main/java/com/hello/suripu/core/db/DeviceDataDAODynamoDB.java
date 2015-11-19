@@ -370,9 +370,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             }
         }
 
-        final List<DeviceData> aggregated;
-
-        aggregated = aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration);
+        final List<DeviceData> aggregated = aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration);
 
         return new DeviceDataResponse(ImmutableList.copyOf(aggregated), results.status, results.exception);
     }
