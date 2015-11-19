@@ -9,7 +9,7 @@
     <properties>
         <dropwizard.version>0.6.2</dropwizard.version>
         <protobuf.version>2.5.0</protobuf.version>
-        <aws.sdk.version>1.9.37</aws.sdk.version>
+        <aws.sdk.version>1.10.34</aws.sdk.version>
         <librato.reporter.version>2.2.0.5</librato.reporter.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
