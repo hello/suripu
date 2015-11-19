@@ -362,10 +362,10 @@ public class OnlineHmmTest {
         senseData = getWeirdDayOfSenseData(startTime, endTime, 0);
         pillData = getTypicalDayOfPill(startTime,endTime,0);
         final List<TimelineFeedback> timelineFeedbacks = Lists.newArrayList();
-        final TimelineFeedback feedbackForNight2 = new TimelineFeedback(null, date,"00:00","01:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()));
-        final TimelineFeedback feedbackForNight2Wake = new TimelineFeedback(null, date,"00:00","6:30", Event.Type.WAKE_UP,Optional.of(0L),Optional.of(endTime.getMillis()));
+        final TimelineFeedback feedbackForNight2 = new TimelineFeedback(date,"00:00","01:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()), null);
+        final TimelineFeedback feedbackForNight2Wake = new TimelineFeedback(date,"00:00","6:30", Event.Type.WAKE_UP,Optional.of(0L),Optional.of(endTime.getMillis()), null);
 
-        final TimelineFeedback feedbackForNight2bed = new TimelineFeedback(null, date,"00:00","23:00", Event.Type.IN_BED,Optional.of(0L),Optional.of(endTime.getMillis()));
+        final TimelineFeedback feedbackForNight2bed = new TimelineFeedback(date,"00:00","23:00", Event.Type.IN_BED,Optional.of(0L),Optional.of(endTime.getMillis()), null);
 
         timelineFeedbacks.add(feedbackForNight2);
         timelineFeedbacks.add(feedbackForNight2bed);
@@ -447,7 +447,7 @@ public class OnlineHmmTest {
         endTime = endTime.plusDays(1);
         senseData = getTypicalDayOfSense(startTime, endTime, 0);
         pillData = getTypicalDayOfPill(startTime,endTime,0);
-        final TimelineFeedback feedbackForNight4 = new TimelineFeedback(null, date,"00:00","23:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()));
+        final TimelineFeedback feedbackForNight4 = new TimelineFeedback(date,"00:00","23:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.getMillis()), null);
 
         final OneDaysSensorData oneDaysSensorData4 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Lists.newArrayList(feedbackForNight4)),0);
 
@@ -496,7 +496,7 @@ public class OnlineHmmTest {
         senseData = getTypicalDayOfSense(startTime,endTime,0);
         pillData = getTypicalDayOfPill(startTime,endTime,0);
         final List<TimelineFeedback> timelineFeedbacks = Lists.newArrayList();
-        final TimelineFeedback feedbackForNight2 = new TimelineFeedback(null, date,"00:00","23:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.plusDays(1).getMillis()));
+        final TimelineFeedback feedbackForNight2 = new TimelineFeedback(date,"00:00","23:00", Event.Type.SLEEP,Optional.of(0L),Optional.of(endTime.plusDays(1).getMillis()), null);
         timelineFeedbacks.add(feedbackForNight2);
         final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),0);
 
