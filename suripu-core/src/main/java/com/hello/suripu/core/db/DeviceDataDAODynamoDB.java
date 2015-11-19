@@ -12,25 +12,22 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
-import com.hello.suripu.core.db.responses.DynamoDBResponse;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.DynamoDBResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.db.util.Bucketing;
+import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
-import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -68,8 +65,6 @@ import java.util.Set;
  */
 public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> implements DeviceDataIngestDAO, DeviceDataInsightQueryDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
-
-    private final Timer aggregationTimer;
 
     public enum DeviceDataAttribute implements Attribute {
         ACCOUNT_ID ("aid", "N"),
@@ -144,7 +139,6 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
     public DeviceDataDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tablePrefix) {
         super(dynamoDBClient, tablePrefix);
-        this.aggregationTimer = Metrics.defaultRegistry().newTimer(DeviceDataDAODynamoDB.class, "aggregation");
     }
 
 
@@ -376,13 +370,8 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             }
         }
 
-        final TimerContext context = aggregationTimer.time();
-        final List<DeviceData> aggregated;
-        try {
-            aggregated = aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration);
-        } finally {
-            context.stop();
-        }
+        final List<DeviceData> aggregated = aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration);
+
         return new DeviceDataResponse(ImmutableList.copyOf(aggregated), results.status, results.exception);
     }
 
