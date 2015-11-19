@@ -233,12 +233,15 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
 
         final int slotMinutes = 1;
         final int defaultMissingValue = 0;
+
+        LOGGER.debug("Getting data from DynamoDB");
         final AllSensorSampleList samplesDDB = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                 startTimestamp, endTimestamp,
                 accountId, externalSenseId,
                 slotMinutes, defaultMissingValue,
                 optionalColor, optionalCalibration);
 
+        LOGGER.debug("Getting data from Postgres");
         final AllSensorSampleList samplesRDS = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 startTimestamp, endTimestamp,
                 accountId, internalSenseId,
@@ -282,11 +285,11 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
             }
         }
 
-        LOGGER.debug("Check Results");
-        LOGGER.debug("Total Samples: {}", totalSamples);
-        LOGGER.debug("Sensor Errors: {}", sensorErrors);
-        LOGGER.debug("Size Errors: {}", sizeErrors);
-        LOGGER.debug("Value Errors: {}", valueErrors);
+        System.out.println("Check Results");
+        System.out.println(String.format("Total Samples: %d", totalSamples));
+        System.out.println(String.format("Sensor Errors: %d", sensorErrors));
+        System.out.println(String.format("Size Errors: %d", sizeErrors));
+        System.out.println(String.format("Value Errors: %d", valueErrors));
     }
 
     /**
