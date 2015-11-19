@@ -134,9 +134,9 @@ public class OnlineHmmModelEvaluator {
 
             normalizeVotes(votes);
 
-            LOGGER.info("votes for {}",entryByOutput.getKey());
-            for (int istate = 0; istate < N; istate++) {
-                LOGGER.info("{}",votes[istate]);
+            //print votes for sleep/bed state
+            if (votes.length > LabelMaker.LABEL_DURING_SLEEP) {
+                LOGGER.info("{} = {}", entryByOutput.getKey(), votes[LabelMaker.LABEL_DURING_SLEEP]);
             }
 
             final int [] votepath = getVotedPathWithConstraints(votes,entryByOutput.getKey().equals(OnlineHmmData.OUTPUT_MODEL_SLEEP));

@@ -3,6 +3,7 @@ package com.hello.suripu.workers.insights;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionInStream;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
@@ -10,6 +11,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
@@ -176,6 +178,9 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 tableNames.get(DynamoDBTableName.CALIBRATION)
         );
 
+        final AmazonDynamoDB deviceDataDAODynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.DEVICE_DATA, DeviceDataDAODynamoDB.class);
+        final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(deviceDataDAODynamoDBClient, tableNames.get(DynamoDBTableName.DEVICE_DATA));
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
@@ -186,6 +191,7 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
         final IRecordProcessorFactory factory = new InsightsGeneratorFactory(
                 accountDAO,
                 deviceDataDAO,
+                deviceDataDAODynamoDB,
                 deviceDAO,
                 trackerMotionDAO,
                 aggregateSleepScoreDAODynamoDB,

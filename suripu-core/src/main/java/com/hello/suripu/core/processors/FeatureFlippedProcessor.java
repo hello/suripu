@@ -50,8 +50,12 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.VOTING_ALGORITHM, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasOnlineHmmEnabled(final Long accountId) {
+    protected Boolean hasOnlineHmmAlgorithmEnabled(final Long accountId) {
         return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_ALGORITHM,accountId,Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasOnlineHmmLearningEnabled(final Long accountId) {
+        return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_LEARNING,accountId,Collections.EMPTY_LIST);
     }
 
     protected Boolean hasPartnerFilterEnabled(final Long accountId) {
