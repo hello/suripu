@@ -326,7 +326,7 @@ public class TrackerMotion {
         public static final double ACC_RANGE_IN_G = 4.0;
         public static final double GRAVITY_IN_MS2 = 9.81;
         public static final double ACC_RESOLUTION_32BIT = 65536.0;
-        public static final double COUNTS_IN_G_SQUARE = Math.pow((ACC_RANGE_IN_G  * GRAVITY_IN_MS2)/ ACC_RESOLUTION_32BIT, 2);
+        public static final double COUNTS_IN_G = (ACC_RANGE_IN_G  * GRAVITY_IN_MS2)/ ACC_RESOLUTION_32BIT;
 
 
 
@@ -355,7 +355,7 @@ public class TrackerMotion {
         }
 
         public static Long rawToMilliMS2(final Long rawMotionAmplitude){
-            final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude) * Math.sqrt(COUNTS_IN_G_SQUARE) - GRAVITY_IN_MS2;
+            final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude) * COUNTS_IN_G - GRAVITY_IN_MS2;
             return (long)(trackerValueInMS2 * 1000);
         }
 
@@ -437,14 +437,14 @@ public class TrackerMotion {
         }
 
         public static PillPayloadV2 decryptedToPillPayloadVersion3(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
-            final long maxAccelerationMS2;
+            final double maxAccelerationMS2;
             final long cosTheta;
             final long motionMask;
 
             try (final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion))) {
                 // Need to left-shift, since we have bits 8-15 of a 16-bit number.
                 final byte rawMaxByte = littleEndianDataInputStream.readByte();
-                maxAccelerationMS2 = UnsignedBytes.toInt(rawMaxByte) << 7;
+                maxAccelerationMS2 = (UnsignedBytes.toInt(rawMaxByte) << 7) * COUNTS_IN_G;
                 cosTheta = littleEndianDataInputStream.readByte() & 0xFFL;
                 motionMask = littleEndianDataInputStream.readLong();
 
@@ -452,7 +452,7 @@ public class TrackerMotion {
                 throw new InvalidEncryptedPayloadException(ioe.getMessage());
             }
 
-            return PillPayloadV2.createWithMotionMask(1000 * maxAccelerationMS2, motionMask, cosTheta);
+            return PillPayloadV2.createWithMotionMask((long) (1000 * maxAccelerationMS2), motionMask, cosTheta);
         }
 
         public static List<TrackerMotion> removeDuplicates(final List<TrackerMotion> original){

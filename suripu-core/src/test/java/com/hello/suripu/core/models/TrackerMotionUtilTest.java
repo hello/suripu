@@ -149,7 +149,7 @@ public class TrackerMotionUtilTest {
         );
         final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToPillPayloadVersion3(decrypted);
         assertThat(payloadV2.onDurationInSeconds, is(8L));
-        assertThat(payloadV2.maxAcceleration, is(0x4000L * 1000));
+        assertThat(payloadV2.maxAcceleration, is(9810L));
         assertThat(payloadV2.cosTheta.get(), is(17L));
         assertThat(payloadV2.motionMask.get(), is(0x0003001100030011L));
     }
