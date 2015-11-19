@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.primitives.UnsignedBytes;
 import com.google.common.primitives.UnsignedInts;
 import com.hello.suripu.api.ble.SenseCommandProtos;
 import org.joda.time.DateTimeZone;
@@ -124,7 +125,7 @@ public class TrackerMotion {
                 accountPair.accountId,
                 accountPair.internalDeviceId,
                 timestampInMillis,
-                Utils.rawToMilliMS2(payloadV2.maxAmplitude),
+                payloadV2.maxAcceleration.intValue(),
                 timeZoneOffset,
                 payloadV2.motionRange,
                 payloadV2.kickOffCounts,
@@ -141,12 +142,12 @@ public class TrackerMotion {
             switch(data.getFirmwareVersion()) {
                 case 0:
                 case 1:
-                    return Utils.decryptedToRaw(decrypted);
+                    return Utils.decryptedToPillPayload(decrypted);
                 case 2:
                 case 3: // cleans up error code, new interrupt
-                    return Utils.decryptedToRawVersion2(decrypted);
+                    return Utils.decryptedToPillPayloadVersion2(decrypted);
                 case 4: // introduction of motion mask and cosTheta, remove a couple unused fields
-                    return Utils.decryptedToRawVersion3(decrypted);
+                    return Utils.decryptedToPillPayloadVersion3(decrypted);
             }
         }
 
@@ -196,16 +197,16 @@ public class TrackerMotion {
     }
 
     public static class PillPayloadV2 {
-        public final Long maxAmplitude;
+        public final Long maxAcceleration; // millimeters/s^2
         public final Long motionRange;
         public final Long kickOffCounts;
         public final Long onDurationInSeconds;
         public final Optional<Long> motionMask;
         public final Optional<Long> cosTheta;
 
-        private PillPayloadV2(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds,
+        private PillPayloadV2(final Long maxAcceleration, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds,
                               final Optional<Long> motionMask, final Optional<Long> cosTheta) {
-            this.maxAmplitude = maxAmplitude;
+            this.maxAcceleration = maxAcceleration;
             this.motionRange = motionRange;
             this.kickOffCounts = kickOffCounts;
             this.onDurationInSeconds = onDurationInSeconds;
@@ -213,17 +214,17 @@ public class TrackerMotion {
             this.cosTheta = cosTheta;
         }
 
-        public static PillPayloadV2 createWithMotionMask(final Long maxAmplitude, final Long motionMask, final Long cosTheta) {
+        public static PillPayloadV2 createWithMotionMask(final Long maxAcceleration, final Long motionMask, final Long cosTheta) {
             final Long onDurationSeconds = new Long(Long.bitCount(motionMask));
-            return new PillPayloadV2(maxAmplitude, 0L, 0L, onDurationSeconds, Optional.of(motionMask), Optional.of(cosTheta));
+            return new PillPayloadV2(maxAcceleration, 0L, 0L, onDurationSeconds, Optional.of(motionMask), Optional.of(cosTheta));
         }
 
-        public static PillPayloadV2 create(final Long maxAmplitude, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds) {
-            return new PillPayloadV2(maxAmplitude, motionRange, kickOffCounts, onDurationInSeconds, Optional.<Long>absent(), Optional.<Long>absent());
+        public static PillPayloadV2 create(final Long maxAcceleration, final Long motionRange, final Long kickOffCounts, final Long onDurationInSeconds) {
+            return new PillPayloadV2(maxAcceleration, motionRange, kickOffCounts, onDurationInSeconds, Optional.<Long>absent(), Optional.<Long>absent());
         }
 
-        public static PillPayloadV2 create(final Long maxAmplitude) {
-            return new PillPayloadV2(maxAmplitude, 0L, 0L, 0L, Optional.<Long>absent(), Optional.<Long>absent());
+        public static PillPayloadV2 create(final Long maxAcceleration) {
+            return new PillPayloadV2(maxAcceleration, 0L, 0L, 0L, Optional.<Long>absent(), Optional.<Long>absent());
         }
     }
 
@@ -353,12 +354,12 @@ public class TrackerMotion {
             }
         }
 
-        public static int rawToMilliMS2(final Long rawMotionAmplitude){
+        public static Long rawToMilliMS2(final Long rawMotionAmplitude){
             final double trackerValueInMS2 = Math.sqrt(rawMotionAmplitude) * Math.sqrt(COUNTS_IN_G_SQUARE) - GRAVITY_IN_MS2;
-            return (int)(trackerValueInMS2 * 1000);
+            return (long)(trackerValueInMS2 * 1000);
         }
 
-        public static PillPayloadV2 decryptedToRaw(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
+        public static PillPayloadV2 decryptedToPillPayload(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
             Exception exception = null;
             long motionAmplitude = -1;
@@ -382,10 +383,10 @@ public class TrackerMotion {
                 throw new InvalidEncryptedPayloadException(exception.getMessage());
             }
 
-            return PillPayloadV2.create(motionAmplitude);
+            return PillPayloadV2.create(rawToMilliMS2(motionAmplitude));
         }
 
-        public static PillPayloadV2 decryptedToRawVersion2(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
+        public static PillPayloadV2 decryptedToPillPayloadVersion2(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
 
             Exception exception = null;
@@ -414,7 +415,7 @@ public class TrackerMotion {
                 throw new InvalidEncryptedPayloadException(exception.getMessage());
             }
 
-            return PillPayloadV2.create(motionAmplitude, maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
+            return PillPayloadV2.create(rawToMilliMS2(motionAmplitude), maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
         }
 
         public static byte[] decryptRawMotion(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
@@ -435,14 +436,15 @@ public class TrackerMotion {
             return decryptedRawMotion;
         }
 
-        public static PillPayloadV2 decryptedToRawVersion3(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
-            final long motionAmplitude;
+        public static PillPayloadV2 decryptedToPillPayloadVersion3(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
+            final long maxAccelerationMS2;
             final long cosTheta;
             final long motionMask;
 
             try (final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion))) {
-                // Need to left-shift, since we just have the most significant byte of a 32-bit int.
-                motionAmplitude = UnsignedInts.toLong(littleEndianDataInputStream.readByte() << 24);
+                // Need to left-shift, since we have bits 8-15 of a 16-bit number.
+                final byte rawMaxByte = littleEndianDataInputStream.readByte();
+                maxAccelerationMS2 = UnsignedBytes.toInt(rawMaxByte) << 7;
                 cosTheta = littleEndianDataInputStream.readByte() & 0xFFL;
                 motionMask = littleEndianDataInputStream.readLong();
 
@@ -450,7 +452,7 @@ public class TrackerMotion {
                 throw new InvalidEncryptedPayloadException(ioe.getMessage());
             }
 
-            return PillPayloadV2.createWithMotionMask(motionAmplitude, motionMask, cosTheta);
+            return PillPayloadV2.createWithMotionMask(1000 * maxAccelerationMS2, motionMask, cosTheta);
         }
 
         public static List<TrackerMotion> removeDuplicates(final List<TrackerMotion> original){

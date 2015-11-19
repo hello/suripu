@@ -17,7 +17,7 @@ public class PillPayloadV2Test {
         final Long maxAmp = 1L;
         final TrackerMotion.PillPayloadV2 pillPayloadV2 = TrackerMotion.PillPayloadV2.createWithMotionMask(maxAmp, motionMask, cosTheta);
         assertThat(pillPayloadV2.cosTheta.get(), is(cosTheta));
-        assertThat(pillPayloadV2.maxAmplitude, is(maxAmp));
+        assertThat(pillPayloadV2.maxAcceleration, is(maxAmp));
         assertThat(pillPayloadV2.motionMask.get(), is(motionMask));
         assertThat(pillPayloadV2.onDurationInSeconds, is(8L));
 
