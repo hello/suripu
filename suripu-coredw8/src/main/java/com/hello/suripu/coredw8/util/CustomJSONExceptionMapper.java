@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 @Provider
@@ -72,7 +73,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
 
             // To not confuse Timeout exceptions from ELB with real 500s
             // let's catch them and return a blank response
-            if(throwable instanceof TimeoutException) {
+            if(throwable instanceof TimeoutException || throwable instanceof IOException) {
                 return Response.status(Response.Status.REQUEST_TIMEOUT)
                         .entity("")
                         .type(MediaType.TEXT_PLAIN_TYPE)
