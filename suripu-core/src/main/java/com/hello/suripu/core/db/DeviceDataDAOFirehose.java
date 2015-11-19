@@ -91,21 +91,22 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
 
     private static Record toRecord(final DeviceData model) {
         final String pipeDelimited = Joiner.on("|").join(
+                "0", // Dummy primary key
                 model.accountId.toString(),
                 model.deviceId.toString(),
                 toString(model.ambientTemperature),
                 toString(model.ambientLight),
-                toString(model.ambientLightVariance),
-                toString(model.ambientLightPeakiness),
                 toString(model.ambientHumidity),
                 toString(model.ambientAirQuality),
+                toString(model.dateTimeUTC),
+                toString(model.localTime()),
+                toString(model.offsetMillis),
+                toString(model.ambientLightVariance),
+                toString(model.ambientLightPeakiness),
                 toString(model.ambientAirQualityRaw),
                 toString(model.ambientDustVariance),
                 toString(model.ambientDustMin),
                 toString(model.ambientDustMax),
-                toString(model.dateTimeUTC),
-                toString(model.localTime()),
-                toString(model.offsetMillis),
                 toString(model.firmwareVersion),
                 toString(model.waveCount),
                 toString(model.holdCount),

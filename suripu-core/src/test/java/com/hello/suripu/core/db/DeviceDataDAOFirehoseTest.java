@@ -121,8 +121,8 @@ public class DeviceDataDAOFirehoseTest{
         assertThat(result, is(2));
         assertThat(request.getDeliveryStreamName(), is(streamName));
         assertThat(request.getRecords().size(), is(2));
-        assertThat(new String(request.getRecords().get(0).getData().array()), is("1|2|0|0|0|0|0|0|0|0|0|0|2014-01-01 01:01|2014-01-01 01:01|0|0|0|0|0|0|0\n"));
-        assertThat(new String(request.getRecords().get(1).getData().array()), is("3|4|0|0|0|0|0|0|0|0|0|0|2014-01-01 01:02|2014-01-01 01:02|0|0|0|0|0|0|0\n"));
+        assertThat(new String(request.getRecords().get(0).getData().array()), is("0|1|2|0|0|0|0|2014-01-01 01:01|2014-01-01 01:01|0|0|0|0|0|0|0|0|0|0|0|0|0\n"));
+        assertThat(new String(request.getRecords().get(1).getData().array()), is("0|3|4|0|0|0|0|2014-01-01 01:02|2014-01-01 01:02|0|0|0|0|0|0|0|0|0|0|0|0|0\n"));
     }
 
 }
