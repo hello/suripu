@@ -326,10 +326,9 @@ public class OnlineHmm {
 
         //move sleep up some number of minutes to account for the fact since it actually takes time for you to become asleep even when you've stopped moving.
         //this also keeps in bed from ever being too close to falling asleep.
-        //NUM_MINUTES_IT_TAKES_TO_FALL_ASLEEP
         if (sleep.isPresent()) {
             final long sleepTimeDelayed = sleep.get().getStartTimestamp() + NUM_MINUTES_IT_TAKES_TO_FALL_ASLEEP * NUM_MILLIS_IN_A_MINUTE;
-            sleep = Optional.of(Event.createFromType(Event.Type.IN_BED, sleepTimeDelayed, sleepTimeDelayed + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+            sleep = Optional.of(Event.createFromType(Event.Type.SLEEP, sleepTimeDelayed, sleepTimeDelayed + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
         }
 
 
