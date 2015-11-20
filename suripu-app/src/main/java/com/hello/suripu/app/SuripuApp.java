@@ -389,7 +389,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDataDAODynamoDB, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB));
 
-        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, "hello-secure", "hello-pvt.pem");
+        final S3BucketConfiguration provisionKeyConfiguration = configuration.getProvisionKeyConfiguration();
+
+        final KeyStoreUtils keyStoreUtils = KeyStoreUtils.build(amazonS3, provisionKeyConfiguration.getBucket(), provisionKeyConfiguration.getKey());
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(

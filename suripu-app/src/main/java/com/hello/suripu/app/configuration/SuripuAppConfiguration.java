@@ -424,4 +424,8 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("timeline_seed_model")
     private S3BucketConfiguration timelineSeedModelConfiguration;
     public S3BucketConfiguration getTimelineSeedModelConfiguration() { return timelineSeedModelConfiguration; }
+
+    @JsonProperty("provision_key")
+    private S3BucketConfiguration provisionKeyConfiguration = S3BucketConfiguration.create("hello-secure", "hello-pvt.pem");
+    public S3BucketConfiguration getProvisionKeyConfiguration() { return provisionKeyConfiguration; }
 }

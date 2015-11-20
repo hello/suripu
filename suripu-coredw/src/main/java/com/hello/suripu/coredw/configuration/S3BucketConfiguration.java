@@ -27,5 +27,10 @@ public class S3BucketConfiguration extends Configuration {
 
     public String getKey(){ return key; }
 
-
+    public static S3BucketConfiguration create(final String bucket, final String key) {
+        final S3BucketConfiguration s3BucketConfiguration = new S3BucketConfiguration();
+        s3BucketConfiguration.bucket = bucket;
+        s3BucketConfiguration.key = key;
+        return s3BucketConfiguration;
+    }
 }
