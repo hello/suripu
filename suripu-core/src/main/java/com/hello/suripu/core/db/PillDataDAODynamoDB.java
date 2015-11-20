@@ -4,8 +4,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
@@ -16,7 +14,6 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -201,6 +198,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
     }
     //endregion
 
+
     private static AttributeValue getRangeKey(final Long timestamp, final String pillId) {
         final DateTime dateTime = new DateTime(timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
         return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + pillId);
@@ -229,42 +227,23 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
     }
 
     /**
-     * Insert a list of TrackerMotion of size 25 (current DynamoDB max batch size)
-     * @param trackerMotionList list of pill data
-     * @param retry try to insert again if throttled, backoff appropriately
-     * @return list of unsuccessful inserts
+     * insert method used for migration
+     * @param trackerMotionList list of pill data to insert
+     * @return list of tracker motions not inserted
      */
-    public List<TrackerMotion> batchInsert(final List<TrackerMotion> trackerMotionList, final Boolean retry) {
-        if (trackerMotionList.size() > MAX_PUT_ITEMS) {
-            return trackerMotionList;
-        }
+    public List<TrackerMotion> migrationBatchInsert(final List<TrackerMotion> trackerMotionList) {
+        final List<List<TrackerMotion>> dataList = Lists.partition(trackerMotionList, MAX_PUT_ITEMS);
 
-        Map<String, List<WriteRequest>> requestItems = toWriteRequestItems(trackerMotionList);
-        int numAttempts = 0;
-        do {
-            if (numAttempts > 0) {
-                // Being throttled! Back off, buddy.
-                backoff(numAttempts);
-            }
-
-            numAttempts++;
-            final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
-            final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-
-            // check for unprocessed items
-            requestItems = result.getUnprocessedItems();
-        } while (retry && !requestItems.isEmpty() && (numAttempts < maxBatchWriteAttempts()));
-
-        // convert write request items back to tracker motion
-        final List<TrackerMotion> remainingTrackerMotions = Lists.newArrayList();
-        for (final List<WriteRequest> writeRequests : requestItems.values()) {
-            for (final WriteRequest request : writeRequests) {
-                final TrackerMotion trackerMotion = fromDynamoDBItem(request.getPutRequest().getItem());
-                remainingTrackerMotions.add(trackerMotion);
+        final List<TrackerMotion> remainingData = Lists.newArrayList();
+        for (final List<TrackerMotion> trackerMotions : dataList) {
+            final List<Map<String, AttributeValue>> remainingItems = batchInsertNoRetryReturnsRemaining(trackerMotions);
+            for (final Map<String, AttributeValue> item : remainingItems) {
+                if (item != null && !item.isEmpty()) {
+                    remainingData.add(fromDynamoDBItem(item));
+                }
             }
         }
-
-        return remainingTrackerMotions;
+        return remainingData;
     }
 
     /**
@@ -278,8 +257,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
 
         for (final List<TrackerMotion> trackerMotions : dataList) {
             try {
-                final List<TrackerMotion> remaining = batchInsert(trackerMotions, true);
-                numberInserted += (trackerMotions.size() - remaining.size());
+                numberInserted += batchInsert(trackerMotions);
             } catch (AmazonClientException e) {
                 LOGGER.error("Got exception while attempting to batchInsert to DynamoDB: {}", e);
             }
@@ -287,6 +265,13 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         return numberInserted;
     }
 
+    /**
+     * Get a single datapoint (used for tests for now)
+     * @param accountId hash key
+     * @param externalPillId range key pill id
+     * @param queryDateTime range key ts
+     * @return list of tracker motion
+     */
     public List<TrackerMotion> getSinglePillData(final Long accountId, final String externalPillId, final DateTime queryDateTime) {
         final Map<String, Condition> queryConditions = Maps.newHashMap();
 

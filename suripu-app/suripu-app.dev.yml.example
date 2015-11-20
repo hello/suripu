@@ -293,3 +293,11 @@ timeline_seed_model:
   bucket: hello-timeline-models
   key: normal4.base64
 
+# for sense_data DDB migration
+#next_flush_sleep: 50
+#stop_month: -1
+
+pill_data:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: pill_data
