@@ -189,6 +189,33 @@ public abstract class TimeSeriesDAODynamoDB<T> {
     }
 
     /**
+     * batch insert a list of T objects, no retry. (used by mainly by migration)
+     * @param modelList
+     * @return return items that failed
+     */
+    public List<Map<String, AttributeValue>> batchInsertNoRetryReturnsRemaining(final List<T> modelList) {
+        final Map<String, List<WriteRequest>> requestItems = toWriteRequestItems(modelList);
+        final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
+
+        final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
+
+        final Map<String, List<WriteRequest>> remainingItems = result.getUnprocessedItems();
+
+        final List<Map<String, AttributeValue>> remainingData = Lists.newArrayList();
+        for (final List<WriteRequest> requests : remainingItems.values()) {
+            for (final WriteRequest request: requests) {
+                final Map<String, AttributeValue> item = request.getPutRequest().getItem();
+                if (item != null && !item.isEmpty()) {
+                    remainingData.add(item);
+                }
+            }
+        }
+
+        return remainingData;
+    }
+
+
+    /**
      * Partitions and inserts list of objects.
      * @param modelList
      * @return The number of items that were successfully inserted

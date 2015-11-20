@@ -623,7 +623,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
         return Optional.absent();
     }
-    
+
     /**
      * Get the most recent DeviceData for the given accountId and externalDeviceId.
      *
@@ -739,12 +739,12 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
      * @return DeviceDatas matching the above criteria
      */
     public DeviceDataResponse getBetweenLocalTime(final Long accountId,
-                                                final DeviceId deviceId,
-                                                final DateTime startUTCTime,
-                                                final DateTime endUTCTime,
-                                                final DateTime startLocalTime,
-                                                final DateTime endLocalTime,
-                                                final Collection<DeviceDataAttribute> attributes)
+                                                  final DeviceId deviceId,
+                                                  final DateTime startUTCTime,
+                                                  final DateTime endUTCTime,
+                                                  final DateTime startLocalTime,
+                                                  final DateTime endLocalTime,
+                                                  final Collection<DeviceDataAttribute> attributes)
     {
         final DynamoDBResponse response = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
         ImmutableList<DeviceData> data = ImmutableList.copyOf(attributeMapsToDeviceDataList(response.data));
@@ -874,4 +874,55 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
     }
     //endregion
 
+    //region migration
+    /**
+     * Write batch without retries, simply return unsuccessful inserts. (used by data migration)
+     * @param deviceDataList -- always match batch write item size
+     * @return
+     */
+    public List<DeviceData> batchInsertReturnsRemaining(final List<DeviceData> deviceDataList) {
+        final List<Map<String, AttributeValue>> remainingItems = batchInsertNoRetryReturnsRemaining(deviceDataList);
+        final List<DeviceData> remainingDeviceData = Lists.newArrayListWithCapacity(remainingItems.size());
+        for (final Map<String, AttributeValue> item : remainingItems) {
+            remainingDeviceData.add(dynamoItemToRawDeviceData(item));
+        }
+        return remainingDeviceData;
+    }
+
+    private DeviceData dynamoItemToRawDeviceData(final Map<String, AttributeValue> item) {
+        final String externalDeviceId = externalDeviceIdFromDDBItem(item);
+        final DateTime dateTimeUTC = timestampFromDDBItem(item);
+
+        final int temp = DeviceDataAttribute.AMBIENT_TEMP.getInteger(item);
+        final int humid = DeviceDataAttribute.AMBIENT_HUMIDITY.getInteger(item);
+        final int dust = DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW.getInteger(item);
+        final int light = DeviceDataAttribute.AMBIENT_LIGHT.getInteger(item);
+        final int lightVar = DeviceDataAttribute.AMBIENT_LIGHT_VARIANCE.getInteger(item);
+
+        final Integer offsetMillis = DeviceDataAttribute.OFFSET_MILLIS.getInteger(item);
+        final Integer waveCount = DeviceDataAttribute.WAVE_COUNT.getInteger(item);
+        final Integer holdCount = DeviceDataAttribute.HOLD_COUNT.getInteger(item);
+        final Integer audioNum = DeviceDataAttribute.AUDIO_NUM_DISTURBANCES.getInteger(item);
+        final Integer audioPeak = DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB.getInteger(item);
+        final Integer audioBG = DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB.getInteger(item);
+
+        return new DeviceData.Builder()
+                .withAccountId(Long.valueOf(DeviceDataAttribute.ACCOUNT_ID.get(item).getN()))
+                .withExternalDeviceId(externalDeviceId)
+                .withAmbientTemperature(temp)
+                .withAmbientLight(light)
+                .withAmbientLightVariance(lightVar)
+                .withAmbientHumidity(humid)
+                .withAmbientAirQualityRaw(dust)
+                .withAlreadyCalibratedAudioPeakBackgroundDB(audioBG)    // use data as-is
+                .withAlreadyCalibratedAudioPeakDisturbancesDB(audioPeak)
+                .withAudioNumDisturbances(audioNum)
+                .withOffsetMillis(offsetMillis)
+                .withDateTimeUTC(dateTimeUTC)
+                .withWaveCount(waveCount)
+                .withHoldCount(holdCount)
+                .build();
+
+    }
+    //endregion
 }

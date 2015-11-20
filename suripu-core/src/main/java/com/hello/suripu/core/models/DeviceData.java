@@ -372,6 +372,11 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withAlreadyCalibratedAudioPeakDisturbancesDB(final Integer audioPeakDisturbancesDB) {
+            this.audioPeakDisturbancesDB = audioPeakDisturbancesDB;
+            return this;
+        }
+
         public DeviceData build(){
             return new DeviceData(this.accountId, this.deviceId, this.externalDeviceId, this.ambientTemperature, this.ambientHumidity,
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
@@ -379,7 +384,6 @@ public class DeviceData {
                     this.firmwareVersion, this.waveCount, this.holdCount,
                     this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB);
         }
-
 
     }
 

@@ -46,7 +46,6 @@ public class DateTimeUtilTest {
         assertThat(targetDateLocalUTC, is(new DateTime(2015, 3, 13, 0, 0, DateTimeZone.UTC)));
     }
 
-
     @Test
     public void testSanitizeDateTimeSenseThinksIts2016() {
         // This attempts to simulate the bug where Sense is off by 5 months
