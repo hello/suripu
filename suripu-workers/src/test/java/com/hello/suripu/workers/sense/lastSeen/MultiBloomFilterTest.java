@@ -1,6 +1,7 @@
-package com.hello.suripu.workers.sense;
+package com.hello.suripu.workers.sense.lastSeen;
 
-import com.hello.suripu.workers.sense.lastSeen.MultiBloomFilter;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,31 +13,32 @@ public class MultiBloomFilterTest {
     MultiBloomFilter multiBloomFilter;
     @Before
     public void setUp() {
-            multiBloomFilter = new MultiBloomFilter(2, 6, 3, 4000, 0.05);
+        multiBloomFilter = new MultiBloomFilter(2, 6, 3, 4000, 0.05);
     }
 
     @Test
     public void testAlternateBloomFilterExpiration(){
         multiBloomFilter.initializeAllBloomFilters();
         try {
+
             Thread.sleep(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000 + 1);
-            assertThat(multiBloomFilter.hasExpired(0), is(true));
-            assertThat(multiBloomFilter.hasExpired(1), is(false));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(true));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(false));
 
-            multiBloomFilter.resetAllBloomExpiredFilters();
+            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
 
-            assertThat(multiBloomFilter.hasExpired(0), is(false));
-            assertThat(multiBloomFilter.hasExpired(1), is(false));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(false));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(false));
 
             Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
 
-            assertThat(multiBloomFilter.hasExpired(0), is(false));
-            assertThat(multiBloomFilter.hasExpired(1), is(true));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(false));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(true));
 
-            multiBloomFilter.resetAllBloomExpiredFilters();
+            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
 
-            assertThat(multiBloomFilter.hasExpired(0), is(false));
-            assertThat(multiBloomFilter.hasExpired(1), is(false));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(false));
+            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(false));
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -59,7 +61,7 @@ public class MultiBloomFilterTest {
 
             // At 1 cycle, bloom filter #0 got reset first
             Thread.sleep(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000 + 1);
-            multiBloomFilter.resetAllBloomExpiredFilters();
+            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
 
             // Thus we expect to forget One but not Zer
             assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(true));
@@ -70,7 +72,7 @@ public class MultiBloomFilterTest {
 
             // At 1 cycle and half, bloom filter #1 got reset in turn
             Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
-            multiBloomFilter.resetAllBloomExpiredFilters();
+            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
 
             // Thus we expect to forget Zer but not One
             assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
@@ -78,7 +80,7 @@ public class MultiBloomFilterTest {
 
             // Let say we don't memorize anymore to see what happen at 2 cycles
             Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
-            multiBloomFilter.resetAllBloomExpiredFilters();
+            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
 
             // Both Zer and One are forgotten then
             assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
