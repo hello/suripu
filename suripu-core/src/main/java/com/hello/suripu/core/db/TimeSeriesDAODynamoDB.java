@@ -188,8 +188,13 @@ public abstract class TimeSeriesDAODynamoDB<T> {
         return totalItemsToInsert;
     }
 
-    public List<Map<String, AttributeValue>> batchInsertNoRetryReturnsRemaining(final List<T> deviceDataList) {
-        final Map<String, List<WriteRequest>> requestItems = toWriteRequestItems(deviceDataList);
+    /**
+     * batch insert a list of T objects, no retry. (used by mainly by migration)
+     * @param modelList
+     * @return return items that failed
+     */
+    public List<Map<String, AttributeValue>> batchInsertNoRetryReturnsRemaining(final List<T> modelList) {
+        final Map<String, List<WriteRequest>> requestItems = toWriteRequestItems(modelList);
         final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(requestItems);
 
         final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
