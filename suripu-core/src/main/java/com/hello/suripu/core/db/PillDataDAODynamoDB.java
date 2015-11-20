@@ -13,7 +13,6 @@ import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
@@ -50,13 +49,12 @@ import java.util.Set;
  * od       (on_duration, N)
  * see https://hello.hackpad.com/Pill-Data-Explained-wgXcyalTFcq
  */
-public class PillDataDAODynamoDB implements PillDataIngestDAO {
+public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> implements PillDataIngestDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(PillDataDAODynamoDB.class);
-    private static final int MAX_PUT_ITEMS = 25;
-    private static final int MAX_BATCH_WRITE_ATTEMPTS = 5;
 
-    private final AmazonDynamoDB dynamoDBClient;
-    private final String tablePrefix;
+    public PillDataDAODynamoDB(AmazonDynamoDB dynamoDBClient, String tablePrefix) {
+        super(dynamoDBClient, tablePrefix);
+    }
 
     public enum PillDataAttribute implements Attribute {
         ACCOUNT_ID ("aid", "N"),
@@ -118,34 +116,70 @@ public class PillDataDAODynamoDB implements PillDataIngestDAO {
             PillDataAttribute.KICKOFF_COUNTS.name,
             PillDataAttribute.ON_DURATION.name);
 
-    // Store everything to the minute level
+    // Store one datapoint per minute, ts can contain seconds value
     private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ssZ");
     private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
 
-    public PillDataDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tablePrefix) {
-        this.dynamoDBClient = dynamoDBClient;
-        this.tablePrefix = tablePrefix;
+    //region Override abstract methods
+    @Override
+    protected Logger logger() {
+        return LOGGER;
     }
 
-    public String getTableName(final DateTime dateTime) {
-        final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy_MM");
-        return tablePrefix + "_" + dateTime.toString(formatter);
+    @Override
+    protected Integer maxQueryAttempts() {
+        return 5;
     }
 
-    private static AttributeValue getRangeKey(final Long timestamp, final String pillId) {
-        final DateTime dateTime = new DateTime(timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
-        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + pillId);
+    @Override
+    protected Integer maxBatchWriteAttempts() {
+        return 5;
     }
 
-    private Map<String, AttributeValue> toDynamoDBItem(final TrackerMotion trackerMotion) {
+    @Override
+    protected String hashKeyName() {
+        return PillDataAttribute.ACCOUNT_ID.name;
+    }
+
+    @Override
+    protected String rangeKeyName() {
+        return PillDataAttribute.TS_PILL_ID.name;
+    }
+
+    @Override
+    protected String hashKeyType() {
+        return PillDataAttribute.ACCOUNT_ID.type;
+    }
+
+    @Override
+    protected String rangeKeyType() {
+        return PillDataAttribute.TS_PILL_ID.type;
+    }
+
+    @Override
+    protected String getHashKey(AttributeValue attributeValue) {
+        return attributeValue.getN();
+    }
+
+    @Override
+    protected String getRangeKey(AttributeValue attributeValue) {
+        return attributeValue.getS();
+    }
+
+    @Override
+    protected DateTime getTimestamp(TrackerMotion trackerMotion) {
+        return new DateTime(trackerMotion.timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
+    }
+
+    @Override
+    protected Map<String, AttributeValue> toAttributeMap(TrackerMotion trackerMotion) {
         final Map<String, AttributeValue> item = Maps.newHashMap();
         item.put(PillDataAttribute.ACCOUNT_ID.name, new AttributeValue().withN(String.valueOf(trackerMotion.accountId)));
         item.put(PillDataAttribute.TS_PILL_ID.name, getRangeKey(trackerMotion.timestamp, trackerMotion.externalTrackerId));
         item.put(PillDataAttribute.VALUE.name, new AttributeValue().withN(String.valueOf(trackerMotion.value)));
         item.put(PillDataAttribute.OFFSET_MILLIS.name, new AttributeValue().withN(String.valueOf(trackerMotion.offsetMillis)));
 
-        //TODO: may not need this
         final DateTime localUTCDateTIme = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC).plusMillis(trackerMotion.offsetMillis);
         item.put(PillDataAttribute.LOCAL_UTC_TS.name, new AttributeValue().withS(localUTCDateTIme.toString(DATE_TIME_WRITE_FORMATTER)));
 
@@ -153,6 +187,23 @@ public class PillDataDAODynamoDB implements PillDataIngestDAO {
         item.put(PillDataAttribute.KICKOFF_COUNTS.name, new AttributeValue().withN(String.valueOf(trackerMotion.kickOffCounts)));
         item.put(PillDataAttribute.ON_DURATION.name, new AttributeValue().withN(String.valueOf(trackerMotion.onDurationInSeconds)));
         return item;
+    }
+
+    @Override
+    public String getTableName(final DateTime dateTime) {
+        final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy_MM");
+        return tablePrefix + "_" + dateTime.toString(formatter);
+    }
+
+    @Override
+    public List<String> getTableNames(DateTime start, DateTime end) {
+        return null;
+    }
+    //endregion
+
+    private static AttributeValue getRangeKey(final Long timestamp, final String pillId) {
+        final DateTime dateTime = new DateTime(timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + pillId);
     }
 
     private String externalTrackerIdFromDDBItem(final Map<String, AttributeValue> item) {
@@ -175,45 +226,6 @@ public class PillDataDAODynamoDB implements PillDataIngestDAO {
                 .withKickOffCounts(PillDataAttribute.KICKOFF_COUNTS.getLong(item))
                 .withOnDurationInSeconds(PillDataAttribute.ON_DURATION.getLong(item))
                 .build();
-    }
-
-    private static void backoff(int numberOfAttempts) {
-        try {
-            long sleepMillis = (long) Math.pow(2, numberOfAttempts) * 50;
-            LOGGER.warn("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
-            Thread.sleep(sleepMillis);
-        } catch (InterruptedException e) {
-            LOGGER.error("Interrupted while attempting exponential backoff.");
-        }
-    }
-
-    public Map<String, List<WriteRequest>> toWriteRequestItems(final List<TrackerMotion> trackerMotionList) {
-        final Map<String, Map<String, WriteRequest>> writeRequestMap = Maps.newHashMap(); // table -> requests
-        for (final TrackerMotion trackerMotion: trackerMotionList) {
-            final DateTime dateTimeUTC = new DateTime(trackerMotion.timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
-            final String tableName = getTableName(dateTimeUTC);
-
-            // convert trackerMotion to DynamoDB item
-            final Map<String, AttributeValue> item = toDynamoDBItem(trackerMotion);
-
-            // make sure the batch of write requests has unique hash-range keys, over-write
-            final String hashRangeKey = item.get(PillDataAttribute.ACCOUNT_ID.name).getN() + item.get(PillDataAttribute.TS_PILL_ID.name).getS();
-            final WriteRequest request = new WriteRequest().withPutRequest(new PutRequest().withItem(item));
-            if (writeRequestMap.containsKey(tableName)) {
-                writeRequestMap.get(tableName).put(hashRangeKey, request);
-            } else {
-                final Map<String, WriteRequest> newMap = Maps.newHashMap();
-                newMap.put(hashRangeKey, request);
-                writeRequestMap.put(tableName, newMap);
-            }
-        }
-
-        // flatten
-        final Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(writeRequestMap.size());
-        for (final Map.Entry<String, Map<String, WriteRequest>> entry : writeRequestMap.entrySet()) {
-            requestItems.put(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
-        }
-        return requestItems;
     }
 
     /**
@@ -241,7 +253,7 @@ public class PillDataDAODynamoDB implements PillDataIngestDAO {
 
             // check for unprocessed items
             requestItems = result.getUnprocessedItems();
-        } while (retry && !requestItems.isEmpty() && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
+        } while (retry && !requestItems.isEmpty() && (numAttempts < maxBatchWriteAttempts()));
 
         // convert write request items back to tracker motion
         final List<TrackerMotion> remainingTrackerMotions = Lists.newArrayList();

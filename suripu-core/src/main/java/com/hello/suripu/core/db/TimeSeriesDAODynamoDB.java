@@ -41,7 +41,7 @@ import java.util.Map;
  */
 public abstract class TimeSeriesDAODynamoDB<T> {
 
-    private static final int MAX_PUT_ITEMS = 25;
+    protected static final int MAX_PUT_ITEMS = 25;
 
     protected final AmazonDynamoDB dynamoDBClient;
     protected final String tablePrefix;
