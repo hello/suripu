@@ -79,7 +79,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
         final Map<String, DeviceData> lastSeenSenseDataMap = Maps.newHashMap();
 
-        this.multiBloomFilter.resetAllBloomExpiredFilters();
+        this.multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
 
         final Set<String> seenSenses = Sets.newHashSet();
         for(final Record record : records) {

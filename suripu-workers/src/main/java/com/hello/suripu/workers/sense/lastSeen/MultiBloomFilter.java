@@ -1,6 +1,5 @@
 package com.hello.suripu.workers.sense.lastSeen;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
@@ -16,8 +15,8 @@ public class MultiBloomFilter {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseLastSeenProcessor.class);
 
-    private final Map<Integer, BloomFilter<CharSequence>> bloomFilterMap = Maps.newHashMap();
-    private final Map<Integer, DateTime> bloomFilterCreatedMap = Maps.newHashMap();
+    private final Map<Integer, TimestampedBloomFilter> timestampedBloomFilterMap = Maps.newHashMap();
+
     private final Integer numberOfBloomFilters;
     private final Integer bloomFilterLifeSpanSeconds;
     private final Integer bloomFilterOffsetSeconds;
@@ -33,39 +32,41 @@ public class MultiBloomFilter {
     }
 
     private void createNewBloomFilter(final int bloomFilterId, final int headwaySeconds) {
-        this.bloomFilterMap.put(bloomFilterId, BloomFilter.create(Funnels.stringFunnel(), this.bloomFilterCapacity, this.bloomFilterErrorRate));
-        this.bloomFilterCreatedMap.put(bloomFilterId, DateTime.now(DateTimeZone.UTC).plusSeconds(headwaySeconds));
+        this.timestampedBloomFilterMap.put(bloomFilterId, new TimestampedBloomFilter(
+                BloomFilter.create(Funnels.stringFunnel(), this.bloomFilterCapacity, this.bloomFilterErrorRate),
+                DateTime.now(DateTimeZone.UTC).plusSeconds(headwaySeconds)
+        ));
     }
 
-    public boolean mightHaveSeen(final String senseExternalId) {
-        final int bloomFilterId = (Math.abs(senseExternalId.hashCode())) % this.numberOfBloomFilters;
-        return this.bloomFilterMap.get(bloomFilterId).mightContain(senseExternalId);
+    public boolean mightHaveSeen(final String element) {
+        final int bloomFilterId = (Math.abs(element.hashCode())) % this.numberOfBloomFilters;
+        return this.timestampedBloomFilterMap.get(bloomFilterId).bloomFilter.mightContain(element);
     }
 
     public void initializeAllBloomFilters() {
         for (int j=0; j< this.numberOfBloomFilters; j++) {
             createNewBloomFilter(j, j * this.bloomFilterOffsetSeconds);
-            LOGGER.trace("Bloom filter {} created at {}", j, this.bloomFilterCreatedMap.get(j));
+            LOGGER.trace("Bloom filter {} created at {}", j, this.timestampedBloomFilterMap.get(j).created);
         }
     }
 
-    public void resetAllBloomExpiredFilters() {
+    public void resetAllBloomExpiredFilters(final DateTime dt) {
         for (int j=0; j< this.numberOfBloomFilters; j++) {
-            if(hasExpired(j)) {
+            if(hasExpired(dt, j)) {
                 createNewBloomFilter(j, 0);
-                LOGGER.trace("Bloom filter {} reseted at {}", j, this.bloomFilterCreatedMap.get(j));
+                LOGGER.trace("Bloom filter {} reseted at {}", j, this.timestampedBloomFilterMap.get(j).created);
             }
         }
     }
 
-    @VisibleForTesting
-    public boolean hasExpired(final int bloomFilterId) {
-        return DateTime.now(DateTimeZone.UTC).isAfter(this.bloomFilterCreatedMap.get(bloomFilterId).plusSeconds(this.bloomFilterLifeSpanSeconds));
+
+    boolean hasExpired(final DateTime dt, final int bloomFilterId) {
+        return dt.isAfter(this.timestampedBloomFilterMap.get(bloomFilterId).created.plusSeconds(this.bloomFilterLifeSpanSeconds));
     }
 
-    public void addElement(final String senseExternalId) {
-        final int bloomFilterId = (Math.abs(senseExternalId.hashCode())) % this.numberOfBloomFilters;
-        this.bloomFilterMap.get(bloomFilterId).put(senseExternalId);
+    public void addElement(final String element) {
+        final int bloomFilterId = (Math.abs(element.hashCode())) % this.numberOfBloomFilters;
+        this.timestampedBloomFilterMap.get(bloomFilterId).bloomFilter.put(element);
     }
 
     public Integer getBloomFilterLifeSpanSeconds() {
@@ -75,8 +76,16 @@ public class MultiBloomFilter {
     public Integer getBloomFilterOffsetSeconds() {
         return this.bloomFilterOffsetSeconds;
     }
-    public DateTime getCreated(Integer bloomFilterId) {
-        return this.bloomFilterCreatedMap.get(bloomFilterId);
-    }
+    public DateTime getCreated(Integer bloomFilterId) {return this.timestampedBloomFilterMap.get(bloomFilterId).created;}
 
+
+    private class TimestampedBloomFilter {
+        private final BloomFilter<CharSequence> bloomFilter;
+        private final DateTime created;
+        public TimestampedBloomFilter(final BloomFilter<CharSequence> bloomFilter, final DateTime created) {
+            this.bloomFilter = bloomFilter;
+            this.created = created;
+        }
+
+    }
 }
