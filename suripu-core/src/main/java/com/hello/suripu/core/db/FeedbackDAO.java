@@ -1,13 +1,10 @@
 package com.hello.suripu.core.db;
 
-import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.binders.BindTimelineFeedback;
 import com.hello.suripu.core.db.mappers.TimelineFeedbackMapper;
 import com.hello.suripu.core.models.SleepFeedback;
 import com.hello.suripu.core.models.TimelineFeedback;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
@@ -31,6 +28,10 @@ public abstract class FeedbackDAO extends FeedbackReadDAO {
 
     @SqlUpdate("INSERT INTO timeline_feedback (account_id, date_of_night, old_time, new_time, event_type, created) VALUES(:account_id, :date_of_night, :old_time, :new_time, :event_type, now())")
     public abstract void insertNewTimelineFeedback(@Bind("account_id") final Long accountId, @BindTimelineFeedback final TimelineFeedback timelineFeedback);
+
+    /* Update new_time=old_time by Row ID   */
+    @SqlUpdate("UPDATE timeline_feedback SET new_time=old_time WHERE id=:id")
+    public abstract int undoFeedbackUpdate(@Bind("id") final Long id);
 
     public void insert(SleepFeedback feedback) {
         if(feedback.accountId.isPresent()) {

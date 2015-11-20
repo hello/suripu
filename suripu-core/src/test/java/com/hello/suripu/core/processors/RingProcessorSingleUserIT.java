@@ -90,7 +90,7 @@ public class RingProcessorSingleUserIT {
                 long timestamp = Long.valueOf(columns[0]) + offset;
                 long value = Long.valueOf(columns[1]);
                 int offsetMillis = DateTimeZone.forID("America/Los_Angeles").getOffset(timestamp);
-                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis, 0L, 0L, 0L, "ABC"));
+                motions.add(new TrackerMotion(1L, 1L, 1L, timestamp, (int)value, offsetMillis, 0L, 0L, 0L));
             }
         }catch (IOException ioe){
             LOGGER.error("Failed parsing CSV: {}", ioe.getMessage());
@@ -188,7 +188,7 @@ public class RingProcessorSingleUserIT {
         final List<TrackerMotion> last5MinsMotion = new ArrayList<>();
         DateTime currentTime = queryEnd;
         while (currentTime.isAfter(queryStart)){
-            last5MinsMotion.add(new TrackerMotion(0, 1L, 1L, currentTime.getMillis(), 7000, 0, 0L, 0L, 0L, "ABC"));
+            last5MinsMotion.add(new TrackerMotion(0, 1L, 1L, currentTime.getMillis(), 7000, 0, 0L, 0L, 0L));
             currentTime = currentTime.minusMinutes(1);
         }
         when(trackerMotionDAO.getBetween(1L, queryStart, queryEnd.plusMinutes(1))).thenReturn(ImmutableList.copyOf(last5MinsMotion));

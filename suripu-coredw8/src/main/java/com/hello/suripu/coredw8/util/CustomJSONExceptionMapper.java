@@ -1,6 +1,9 @@
 package com.hello.suripu.coredw8.util;
 
 import com.hello.suripu.core.util.JsonError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -8,8 +11,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
@@ -66,6 +69,15 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
             if (throwable.getClass().getName().startsWith("com.sun.jersey.api")) {
 //                    final String message = throwable.
                 LOGGER.error("{}", throwable);
+            }
+
+            // To not confuse Timeout exceptions from ELB with real 500s
+            // let's catch them and return a blank response
+            if(throwable instanceof TimeoutException || throwable instanceof IOException) {
+                return Response.status(Response.Status.REQUEST_TIMEOUT)
+                        .entity("")
+                        .type(MediaType.TEXT_PLAIN_TYPE)
+                        .build();
             }
 
             // Use the default

@@ -1,22 +1,10 @@
 package com.hello.suripu.core.db;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
-import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -24,25 +12,22 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
-import com.hello.suripu.core.db.responses.DynamoDBResponse;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
+import com.hello.suripu.core.db.responses.DeviceDataResponse;
+import com.hello.suripu.core.db.responses.DynamoDBResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.db.util.Bucketing;
+import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.AllSensorSampleMap;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
-import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.util.DateTimeUtil;
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -78,13 +63,8 @@ import java.util.Set;
  * See http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GuidelinesForTables.html#GuidelinesForTables.TimeSeriesDataAccessPatterns
  * and http://stackoverflow.com/a/30200359
  */
-public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataInsightQueryDAO {
+public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> implements DeviceDataIngestDAO, DeviceDataInsightQueryDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
-
-    private final Timer aggregationTimer;
-
-    private final AmazonDynamoDB dynamoDBClient;
-    private final String tablePrefix;
 
     public enum DeviceDataAttribute implements Attribute {
         ACCOUNT_ID ("aid", "N"),
@@ -152,32 +132,74 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
     public final static ImmutableSet<DeviceDataAttribute> ALL_ATTRIBUTES = ImmutableSet.copyOf(DeviceDataAttribute.values());
 
-    private static final int MAX_PUT_ITEMS = 25;
-    private static final int MAX_BATCH_WRITE_ATTEMPTS = 5;
-    private static final int MAX_QUERY_ATTEMPTS = 5;
-
     // Store everything to the minute level
     private static final DateTimeFormatter DATE_TIME_READ_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:00Z");
     private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
     private static final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
 
     public DeviceDataDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tablePrefix) {
-        this.dynamoDBClient = dynamoDBClient;
-        this.tablePrefix = tablePrefix;
-        this.aggregationTimer = Metrics.defaultRegistry().newTimer(DeviceDataDAODynamoDB.class, "aggregation");
+        super(dynamoDBClient, tablePrefix);
     }
 
+
+    //region Override abstract methods
+    @Override
+    protected Logger logger() {
+        return LOGGER;
+    }
+
+    @Override
+    protected Integer maxQueryAttempts() {
+        return 5;
+    }
+
+    @Override
+    protected Integer maxBatchWriteAttempts() {
+        return 5;
+    }
+
+    @Override
+    protected String hashKeyName() {
+        return DeviceDataAttribute.ACCOUNT_ID.name;
+    }
+
+    @Override
+    protected String rangeKeyName() {
+        return DeviceDataAttribute.RANGE_KEY.name;
+    }
+
+    @Override
+    protected String hashKeyType() {
+        return DeviceDataAttribute.ACCOUNT_ID.type;
+    }
+
+    @Override
+    protected String rangeKeyType() {
+        return DeviceDataAttribute.RANGE_KEY.type;
+    }
+
+    @Override
+    protected String getHashKey(AttributeValue attributeValue) {
+        return attributeValue.getN();
+    }
+
+    @Override
+    protected String getRangeKey(AttributeValue attributeValue) {
+        return attributeValue.getS();
+    }
+
+    @Override
+    protected DateTime getTimestamp(DeviceData model) {
+        return model.dateTimeUTC;
+    }
+
+    @Override
     public String getTableName(final DateTime dateTime) {
         final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy_MM");
         return tablePrefix + "_" + dateTime.toString(formatter);
     }
 
-    /**
-     * Return table names from start to end, in chronological order.
-     * @param start
-     * @param end
-     * @return
-     */
+    @Override
     public List<String> getTableNames(final DateTime start, final DateTime end) {
         final LinkedList<String> names = Lists.newLinkedList();
         for (final DateTime dateTime: DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end)) {
@@ -187,52 +209,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return names;
     }
 
-    public CreateTableResult createTable(final String tableName) {
-        final DeviceDataAttribute hashKeyAttribute = DeviceDataAttribute.ACCOUNT_ID;
-        final DeviceDataAttribute rangeKeyAttribute = DeviceDataAttribute.RANGE_KEY;
-
-        // attributes
-        ArrayList<AttributeDefinition> attributes = Lists.newArrayList();
-        attributes.add(new AttributeDefinition().withAttributeName(hashKeyAttribute.name).withAttributeType(hashKeyAttribute.type));
-        attributes.add(new AttributeDefinition().withAttributeName(rangeKeyAttribute.name).withAttributeType(rangeKeyAttribute.type));
-
-        // keys
-        ArrayList<KeySchemaElement> keySchema = Lists.newArrayList();
-        keySchema.add(new KeySchemaElement().withAttributeName(hashKeyAttribute.name).withKeyType(KeyType.HASH));
-        keySchema.add(new KeySchemaElement().withAttributeName(rangeKeyAttribute.name).withKeyType(KeyType.RANGE));
-
-        // throughput provision
-        // TODO make this configurable
-        ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
-                .withReadCapacityUnits(1L)
-                .withWriteCapacityUnits(1L);
-
-        final CreateTableRequest request = new CreateTableRequest()
-                .withTableName(tableName)
-                .withAttributeDefinitions(attributes)
-                .withKeySchema(keySchema)
-                .withProvisionedThroughput(provisionedThroughput);
-
-        return dynamoDBClient.createTable(request);
-    }
-
-    private static AttributeValue dateTimeToAttributeValue(final DateTime dateTime) {
-        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER));
-    }
-
-    private static AttributeValue getRangeKey(final DateTime dateTime, final String senseId) {
-        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + senseId);
-    }
-
-    private static AttributeValue toAttributeValue(final Integer value) {
-        return new AttributeValue().withN(String.valueOf(value));
-    }
-
-    private static AttributeValue toAttributeValue(final Long value) {
-        return new AttributeValue().withN(String.valueOf(value));
-    }
-
-    private static HashMap<String, AttributeValue> deviceDataToAttributeMap(final DeviceData data) {
+    @Override
+    protected Map<String, AttributeValue> toAttributeMap(DeviceData data) {
         final HashMap<String, AttributeValue> item = Maps.newHashMap();
         item.put(DeviceDataAttribute.ACCOUNT_ID.name, toAttributeValue(data.accountId));
         item.put(DeviceDataAttribute.RANGE_KEY.name, getRangeKey(data.dateTimeUTC, data.externalDeviceId));
@@ -250,133 +228,38 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         item.put(DeviceDataAttribute.OFFSET_MILLIS.name, toAttributeValue(data.offsetMillis));
         return item;
     }
+    //endregion
 
-    private static void backoff(int numberOfAttempts) {
-        try {
-            long sleepMillis = (long) Math.pow(2, numberOfAttempts) * 50;
-            LOGGER.warn("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
-            Thread.sleep(sleepMillis);
-        } catch (InterruptedException e) {
-            LOGGER.error("Interrupted while attempting exponential backoff.");
-        }
+
+    private static AttributeValue dateTimeToAttributeValue(final DateTime dateTime) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER));
     }
 
-    /**
-     * Convert a list of DeviceData to write request items, which can be used for batchInsert.
-     * @param deviceDataList
-     * @return Map of {tableName => writeRequests}
-     */
-    public Map<String, List<WriteRequest>> toWriteRequestItems(final List<DeviceData> deviceDataList) {
-        // Create a map with hash+range as the key to deduplicate and avoid DynamoDB exceptions
-        final Map<String, Map<String, WriteRequest>> writeRequestMap = Maps.newHashMap();
-        for (final DeviceData data: deviceDataList) {
-            final String tableName = getTableName(data.dateTimeUTC);
-            final Map<String, AttributeValue> item = deviceDataToAttributeMap(data);
-            final String hashAndRangeKey = item.get(DeviceDataAttribute.ACCOUNT_ID.name).getN() + item.get(DeviceDataAttribute.RANGE_KEY.name).getS();
-            final WriteRequest request = new WriteRequest().withPutRequest(new PutRequest().withItem(item));
-            if (writeRequestMap.containsKey(tableName)) {
-                writeRequestMap.get(tableName).put(hashAndRangeKey, request);
-            } else {
-                final Map<String, WriteRequest> newMap = Maps.newHashMap();
-                newMap.put(hashAndRangeKey, request);
-                writeRequestMap.put(tableName, newMap);
-            }
-        }
-
-        final Map<String, List<WriteRequest>> requestItems = Maps.newHashMapWithExpectedSize(writeRequestMap.size());
-        for (final Map.Entry<String, Map<String, WriteRequest>> entry : writeRequestMap.entrySet()) {
-            requestItems.put(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
-        }
-
-        return requestItems;
+    private static AttributeValue getRangeKey(final DateTime dateTime, final String senseId) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + senseId);
     }
 
-    /**
-     * Batch insert write requests.
-     * Subject to DynamoDB's maximum BatchWriteItem size.
-     * Utilizes exponential backoff in case of throttling.
-     *
-     * @param requestItems - map of {tableName => writeRequests}
-     * @return the remaining unprocessed items. The return value of this method can be used to call this method again
-     * to process remaining items.
-     */
-    public Map<String, List<WriteRequest>> batchInsert(final Map<String, List<WriteRequest>> requestItems) {
-        int numAttempts = 0;
-        Map<String, List<WriteRequest>> remainingItems = requestItems;
-
-        do {
-            if (numAttempts > 0) {
-                // Being throttled! Back off, buddy.
-                backoff(numAttempts);
-            }
-
-            numAttempts++;
-            final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest().withRequestItems(remainingItems);
-            final BatchWriteItemResult result = this.dynamoDBClient.batchWriteItem(batchWriteItemRequest);
-            // check for unprocessed items
-            remainingItems = result.getUnprocessedItems();
-        } while (!remainingItems.isEmpty() && (numAttempts < MAX_BATCH_WRITE_ATTEMPTS));
-
-        return remainingItems;
+    private static AttributeValue toAttributeValue(final Integer value) {
+        return new AttributeValue().withN(String.valueOf(value));
     }
 
-    private int countWriteRequestItems(final Map<String, List<WriteRequest>> requestItems) {
-        int total = 0;
-        for (final List<WriteRequest> writeRequests : requestItems.values()) {
-            total += writeRequests.size();
-        }
-        return total;
+    private static AttributeValue toAttributeValue(final Long value) {
+        return new AttributeValue().withN(String.valueOf(value));
     }
 
-    /**
-     * Batch insert list of DeviceData objects.
-     * Subject to DynamoDB's maximum BatchWriteItem size.
-     * @param deviceDataList
-     * @return The number of successfully inserted elements.
-     */
-    public int batchInsert(final List<DeviceData> deviceDataList) {
 
-        final Map<String, List<WriteRequest>> requestItems = toWriteRequestItems(deviceDataList);
-        final Map<String, List<WriteRequest>> remainingItems = batchInsert(requestItems);
-
-        final int totalItemsToInsert = countWriteRequestItems(requestItems);
-
-        if (!remainingItems.isEmpty()) {
-            final int remainingItemsCount = countWriteRequestItems(remainingItems);
-            LOGGER.warn("Exceeded {} attempts to batch write to Dynamo. {} items left over.",
-                    MAX_BATCH_WRITE_ATTEMPTS, remainingItemsCount);
-            return totalItemsToInsert - remainingItemsCount;
-        }
-
-        return totalItemsToInsert;
-    }
-
-    /**
-     * Partitions and inserts list of DeviceData objects.
-     * @param deviceDataList
-     * @return The number of items that were successfully inserted
-     */
-    public int batchInsertAll(final List<DeviceData> deviceDataList) {
-        final List<List<DeviceData>> deviceDataLists = Lists.partition(deviceDataList, MAX_PUT_ITEMS);
-        int successfulInsertions = 0;
-
-        // Insert each chunk
-        for (final List<DeviceData> deviceDataListToWrite: deviceDataLists) {
-            try {
-                successfulInsertions += batchInsert(deviceDataListToWrite);
-            } catch (AmazonClientException e) {
-                LOGGER.error("Got exception while attempting to batchInsert to DynamoDB: {}", e);
-            }
-
-        }
-
-        return successfulInsertions;
+    //region DeviceDataIngestDAO implementation
+    @Override
+    public int batchInsertAll(List<DeviceData> allDeviceData) {
+        return batchInsertAllPartitions(allDeviceData);
     }
 
     @Override
     public Class name() {
         return  DeviceDataDAODynamoDB.class;
     }
+    //endregion
+
 
     private DateTime getFloorOfDateTime(final DateTime dateTime, final Integer toMinutes) {
         final int minute = dateTime.getMinuteOfHour();
@@ -392,6 +275,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return item.get(DeviceDataAttribute.RANGE_KEY.name).getS().substring(DATE_TIME_STRING_TEMPLATE.length() + 1);
     }
 
+
+    //region Aggregation
     private DeviceData aggregateDynamoDBItemsToDeviceData(final List<Map<String, AttributeValue>> items, final DeviceData template) {
         final DynamoDBItemAggregator aggregator = new DynamoDBItemAggregator(items);
         return new DeviceData.Builder()
@@ -451,74 +336,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         resultList.add(aggregateDynamoDBItemsToDeviceData(currentWorkingList, templateBuilder.build()));
         return resultList;
     }
+    //endregion
 
-    private DynamoDBResponse query(final String tableName,
-                                   final String keyConditionExpression,
-                                   final Collection<DeviceDataAttribute> targetAttributes,
-                                   final Optional<String> filterExpression,
-                                   final Map<String, AttributeValue> filterAttributeValues)
-    {
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-
-        Map<String, AttributeValue> lastEvaluatedKey = null;
-        int numAttempts = 0;
-        boolean keepTrying = true;
-
-        final Map<String, String> expressionAttributeNames = Expressions.expressionAttributeNames(targetAttributes);
-        final String projectionExpression = Expressions.projectionExpression(targetAttributes);
-
-        do {
-            numAttempts++;
-            final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(tableName)
-                    .withProjectionExpression(projectionExpression)
-                    .withExpressionAttributeNames(expressionAttributeNames)
-                    .withKeyConditionExpression(keyConditionExpression)
-                    .withExpressionAttributeValues(filterAttributeValues)
-                    .withExclusiveStartKey(lastEvaluatedKey);
-
-            if (filterExpression.isPresent()) {
-                queryRequest.setFilterExpression(filterExpression.get());
-            }
-
-            final QueryResult queryResult;
-            try {
-                queryResult = this.dynamoDBClient.query(queryRequest);
-            } catch (ProvisionedThroughputExceededException ptee) {
-                if (numAttempts >= MAX_QUERY_ATTEMPTS) {
-                    return new DynamoDBResponse(results, Response.Status.PARTIAL_RESULTS, Optional.of(ptee));
-                }
-                backoff(numAttempts);
-                continue;
-            } catch (ResourceNotFoundException rnfe) {
-                // Invalid table name
-                LOGGER.error("Got ResourceNotFoundException while attempting to read from table {}; {}", tableName, rnfe);
-                return new DynamoDBResponse(results, Response.Status.FAILURE, Optional.of(rnfe));
-            }
-            final List<Map<String, AttributeValue>> items = queryResult.getItems();
-
-            if (queryResult.getItems() != null) {
-                for (final Map<String, AttributeValue> item : items) {
-                    results.add(item);
-                }
-            }
-
-            lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-            keepTrying = (lastEvaluatedKey != null);
-
-        } while (keepTrying && (numAttempts < MAX_QUERY_ATTEMPTS));
-
-        final Response.Status status;
-        if (lastEvaluatedKey != null) {
-            LOGGER.warn("Exceeded {} attempts while querying. Stopping with last evaluated key: {}",
-                    MAX_QUERY_ATTEMPTS, lastEvaluatedKey);
-            status = Response.Status.PARTIAL_RESULTS;
-        } else {
-            status = Response.Status.SUCCESS;
-        }
-
-        return new DynamoDBResponse(results, status, Optional.<Exception>absent());
-    }
 
     /**
      * Aggregate DeviceDatas to the given slotDuration in minutes.
@@ -551,13 +370,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
             }
         }
 
-        final TimerContext context = aggregationTimer.time();
-        final List<DeviceData> aggregated;
-        try {
-            aggregated = aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration);
-        } finally {
-            context.stop();
-        }
+        final List<DeviceData> aggregated = aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration);
+
         return new DeviceDataResponse(ImmutableList.copyOf(aggregated), results.status, results.exception);
     }
 
@@ -770,6 +584,8 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         return dataList;
     }
 
+
+    //region Most recent
     /**
      * Get the most recent DeviceData for the accountId, in the same shard as now.
      * @param accountId
@@ -792,7 +608,7 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
         int numAttempts = 0;
         Optional<QueryResult> queryResultOptional = Optional.absent();
-        while ((numAttempts < MAX_QUERY_ATTEMPTS) && !queryResultOptional.isPresent()) {
+        while ((numAttempts < maxQueryAttempts()) && !queryResultOptional.isPresent()) {
             numAttempts++;
             queryResultOptional = queryWithBackoff(queryRequest, numAttempts);
         }
@@ -833,47 +649,10 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
 
         return Optional.absent();
     }
+    //endregion
 
-    private DynamoDBResponse queryTables(final Iterable<String> tableNames,
-                                         final Expression keyConditionExpression,
-                                         final Collection<DeviceDataAttribute> attributes)
-    {
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        final String keyCondition = keyConditionExpression.expressionString();
-        for (final String table: tableNames) {
-            final DynamoDBResponse response = query(table, keyCondition, attributes, Optional.<String>absent(), keyConditionExpression.expressionAttributeValues());
-            if (response.status == Response.Status.SUCCESS) {
-                results.addAll(response.data);
-            } else {
-                return new DynamoDBResponse(results, response.status, response.exception);
-            }
-        }
-        return new DynamoDBResponse(results, Response.Status.SUCCESS, Optional.<Exception>absent());
-    }
 
-    private DynamoDBResponse queryTables(final Iterable<String> tableNames,
-                                         final Expression keyConditionExpression,
-                                         final Expression filterExpression,
-                                         final Collection<DeviceDataAttribute> attributes)
-    {
-        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        final String keyCondition = keyConditionExpression.expressionString();
-        final String filterCondition = filterExpression.expressionString();
-        final Map<String,AttributeValue> attributeValues = new ImmutableMap.Builder<String, AttributeValue>()
-                .putAll(keyConditionExpression.expressionAttributeValues())
-                .putAll(filterExpression.expressionAttributeValues())
-                .build();
-        for (final String table: tableNames) {
-            final DynamoDBResponse response = query(table, keyCondition, attributes, Optional.of(filterCondition), attributeValues);
-            if (response.status == Response.Status.SUCCESS) {
-                results.addAll(response.data);
-            } else {
-                return new DynamoDBResponse(results, response.status, response.exception);
-            }
-        }
-        return new DynamoDBResponse(results, Response.Status.SUCCESS, Optional.<Exception>absent());
-    }
-
+    //region DeviceDataInsightQueryDAO implementation
     /**
      *
      * @param accountId
@@ -1093,5 +872,6 @@ public class DeviceDataDAODynamoDB implements DeviceDataIngestDAO, DeviceDataIns
         final ImmutableList<DeviceData> data = ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(response.data, slotDuration));
         return new DeviceDataResponse(data, response.status, response.exception);
     }
+    //endregion
 
 }

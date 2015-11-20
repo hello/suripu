@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.5.92-SNAPSHOT</version>
+        <version>0.6.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,11 +19,16 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-algorithm</artifactId>
-            <version>0.5.92-SNAPSHOT</version>
+            <version>0.6.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.5.3</version>
         </dependency>
         <dependency>
             <groupId>org.mindrot</groupId>
@@ -44,7 +49,7 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-api</artifactId>
-            <version>0.5.92-SNAPSHOT</version>
+            <version>0.6.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.xerial.snappy</groupId>
