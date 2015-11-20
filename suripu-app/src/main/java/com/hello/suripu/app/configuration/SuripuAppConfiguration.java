@@ -403,6 +403,16 @@ public class SuripuAppConfiguration extends Configuration {
     public DynamoDBConfiguration getDeviceDataConfiguration() { return this.deviceDataConfiguration; }
 
     @Valid
+    @JsonProperty("next_flush_sleep")
+    private Long nextFlushSleepMillis = 50L;
+    public Long getNextFlushSleepMillis() { return nextFlushSleepMillis; }
+
+    @Valid
+    @JsonProperty("stop_month")
+    private int stopMonth = 2; // set default to feb
+    public int getStopMonth() { return this.stopMonth; }
+
+    @Valid
     @NotNull
     @JsonProperty("timeline_model_ensembles")
     private S3BucketConfiguration timelineModelEnsemblesConfiguration;
@@ -419,6 +429,4 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("pill_data")
     private DynamoDBConfiguration pillDataConfiguration;
     public DynamoDBConfiguration getPillDataConfiguration() { return this.pillDataConfiguration; }
-
-
 }
