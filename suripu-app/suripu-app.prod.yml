@@ -358,6 +358,3 @@ timeline_seed_model:
   bucket: hello-timeline-models
   key: normal4.base64
 
-provision_key:
-  bucket: hello-secure
-  key: hello-pvt.pem
