@@ -49,6 +49,8 @@ public class OnlineHmm {
     private static final long NUMBER_OF_MILLIS_IN_AN_HOUR = 3600000L;
     private static final long MAX_AGE_OF_TARGET_DATE_TO_UPDATE_SCRATCHPAD = 12 * NUMBER_OF_MILLIS_IN_AN_HOUR;
 
+    public static final int NUM_MINUTES_IT_TAKES_TO_FALL_ASLEEP = 15; //hopefully a good compromise
+
     public final static int MAXIMUM_NUMBER_OF_MODELS_PER_USER_PER_OUTPUT = 15;
     public final static Set<String> DEFAULT_MODEL_KEYS;
 
@@ -310,7 +312,7 @@ public class OnlineHmm {
         if (inbed.isPresent() && sleep.isPresent()) {
             if (inbed.get().getStartTimestamp() >= sleep.get().getStartTimestamp()) {
                 //need to adjust in-bed
-                final long inBedTime = sleep.get().getStartTimestamp() - NUM_MILLIS_IN_A_MINUTE;
+                final long inBedTime = sleep.get().getStartTimestamp();
                 inbed = Optional.of(Event.createFromType(Event.Type.IN_BED, inBedTime, inBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
             }
         }
@@ -321,6 +323,15 @@ public class OnlineHmm {
                 outofbed = Optional.of(Event.createFromType(Event.Type.OUT_OF_BED, outOfBedTime, outOfBedTime + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.OUT_OF_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
             }
         }
+
+        //move sleep up some number of minutes to account for the fact since it actually takes time for you to become asleep even when you've stopped moving.
+        //this also keeps in bed from ever being too close to falling asleep.
+        //NUM_MINUTES_IT_TAKES_TO_FALL_ASLEEP
+        if (sleep.isPresent()) {
+            final long sleepTimeDelayed = sleep.get().getStartTimestamp() + NUM_MINUTES_IT_TAKES_TO_FALL_ASLEEP * NUM_MILLIS_IN_A_MINUTE;
+            sleep = Optional.of(Event.createFromType(Event.Type.IN_BED, sleepTimeDelayed, sleepTimeDelayed + NUM_MILLIS_IN_A_MINUTE, tzOffset, Optional.of(English.FALL_ASLEEP_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent()));
+        }
+
 
         return SleepEvents.create(inbed,sleep,wake,outofbed);
     }

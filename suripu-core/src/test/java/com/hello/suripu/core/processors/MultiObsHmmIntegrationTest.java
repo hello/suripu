@@ -255,7 +255,7 @@ public class MultiObsHmmIntegrationTest {
             TestCase.assertTrue(sleepResult.transitions.get(1).idx == bedResult.transitions.get(1).idx);
 
             final SleepEvents<Optional<Event>> eventsMatched = OnlineHmm.getSleepEventsFromPredictions(results, 0, 5, 0, LOGGER);
-            TestCase.assertTrue(eventsMatched.goToBed.get().getStartTimestamp() + 60000L == eventsMatched.fallAsleep.get().getStartTimestamp());
+            TestCase.assertTrue(eventsMatched.goToBed.get().getStartTimestamp() + OnlineHmm.NUM_MINUTES_IT_TAKES_TO_FALL_ASLEEP*60000L == eventsMatched.fallAsleep.get().getStartTimestamp());
             TestCase.assertTrue(eventsMatched.outOfBed.get().getStartTimestamp() == eventsMatched.wakeUp.get().getStartTimestamp() + 60000L);
 
         } catch (IOException e) {
