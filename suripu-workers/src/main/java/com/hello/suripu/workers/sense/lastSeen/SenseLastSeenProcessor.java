@@ -71,7 +71,7 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     @Override
     public void initialize(String s) {
         this.shardId = s;
-        this.multiBloomFilter.initializeAllBloomFilters();
+        this.multiBloomFilter.initializeAllBloomFilters(DateTime.now(DateTimeZone.UTC));
     }
 
     @Timed

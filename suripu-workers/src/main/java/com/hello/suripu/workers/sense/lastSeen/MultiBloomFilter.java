@@ -4,7 +4,6 @@ import com.google.common.collect.Maps;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,10 +30,10 @@ public class MultiBloomFilter {
         this.bloomFilterErrorRate = bloomFilterErrorRate;
     }
 
-    private void createNewBloomFilter(final int bloomFilterId, final int headwaySeconds) {
+    private void createNewBloomFilter(final int bloomFilterId, final DateTime dt, final int headwaySeconds) {
         this.timestampedBloomFilterMap.put(bloomFilterId, new TimestampedBloomFilter(
                 BloomFilter.create(Funnels.stringFunnel(), this.bloomFilterCapacity, this.bloomFilterErrorRate),
-                DateTime.now(DateTimeZone.UTC).plusSeconds(headwaySeconds)
+                dt.plusSeconds(headwaySeconds)
         ));
     }
 
@@ -43,9 +42,9 @@ public class MultiBloomFilter {
         return this.timestampedBloomFilterMap.get(bloomFilterId).bloomFilter.mightContain(element);
     }
 
-    public void initializeAllBloomFilters() {
+    public void initializeAllBloomFilters(final DateTime dt) {
         for (int j=0; j< this.numberOfBloomFilters; j++) {
-            createNewBloomFilter(j, j * this.bloomFilterOffsetSeconds);
+            createNewBloomFilter(j, dt, j * this.bloomFilterOffsetSeconds);
             LOGGER.trace("Bloom filter {} created at {}", j, this.timestampedBloomFilterMap.get(j).created);
         }
     }
@@ -53,7 +52,7 @@ public class MultiBloomFilter {
     public void resetAllBloomExpiredFilters(final DateTime dt) {
         for (int j=0; j< this.numberOfBloomFilters; j++) {
             if(hasExpired(dt, j)) {
-                createNewBloomFilter(j, 0);
+                createNewBloomFilter(j, dt, 0);
                 LOGGER.trace("Bloom filter {} reseted at {}", j, this.timestampedBloomFilterMap.get(j).created);
             }
         }

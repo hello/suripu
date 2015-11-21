@@ -18,36 +18,34 @@ public class MultiBloomFilterTest {
 
     @Test
     public void testAlternateBloomFilterExpiration(){
-        multiBloomFilter.initializeAllBloomFilters();
-        try {
+        final DateTime dt = DateTime.now(DateTimeZone.UTC);
+        multiBloomFilter.initializeAllBloomFilters(dt);
 
-            Thread.sleep(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000 + 1);
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(true));
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(false));
+        final DateTime dtCycleOne = dt.plusMillis(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000 + 1);
+        assertThat(multiBloomFilter.hasExpired(dtCycleOne, 0), is(true));
+        assertThat(multiBloomFilter.hasExpired(dtCycleOne, 1), is(false));
 
-            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
+        multiBloomFilter.resetAllBloomExpiredFilters(dtCycleOne);
 
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(false));
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(false));
+        assertThat(multiBloomFilter.hasExpired(dtCycleOne, 0), is(false));
+        assertThat(multiBloomFilter.hasExpired(dtCycleOne, 1), is(false));
 
-            Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
 
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(false));
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(true));
+        final DateTime dtCycleOneAndHalf = dtCycleOne.plusMillis(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
 
-            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
+        assertThat(multiBloomFilter.hasExpired(dtCycleOneAndHalf, 0), is(false));
+        assertThat(multiBloomFilter.hasExpired(dtCycleOneAndHalf, 1), is(true));
 
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 0), is(false));
-            assertThat(multiBloomFilter.hasExpired(DateTime.now(DateTimeZone.UTC), 1), is(false));
+        multiBloomFilter.resetAllBloomExpiredFilters(dtCycleOneAndHalf);
 
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        assertThat(multiBloomFilter.hasExpired(dtCycleOneAndHalf, 0), is(false));
+        assertThat(multiBloomFilter.hasExpired(dtCycleOneAndHalf, 1), is(false));
     }
 
     @Test
     public void testMemorizeSenseIds(){
-        multiBloomFilter.initializeAllBloomFilters();
+        final DateTime dt = DateTime.now(DateTimeZone.UTC);
+        multiBloomFilter.initializeAllBloomFilters(dt);
 
         // Zer --> has code = 120487, One --> hash code = 110182,
         multiBloomFilter.addElement("Zer");
@@ -57,38 +55,32 @@ public class MultiBloomFilterTest {
         assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(true));
         assertThat(multiBloomFilter.mightHaveSeen("One"), is(true));
 
-        try {
 
-            // At 1 cycle, bloom filter #0 got reset first
-            Thread.sleep(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000 + 1);
-            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
+        // At 1 cycle, bloom filter #0 got reset first
+        final DateTime dtCycleOne = dt.plusMillis(multiBloomFilter.getBloomFilterLifeSpanSeconds() * 1000 + 1);
+        multiBloomFilter.resetAllBloomExpiredFilters(dtCycleOne);
 
-            // Thus we expect to forget One but not Zer
-            assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(true));
-            assertThat(multiBloomFilter.mightHaveSeen("One"), is(false));
+        // Thus we expect to forget One but not Zer
+        assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(true));
+        assertThat(multiBloomFilter.mightHaveSeen("One"), is(false));
 
-            // We now need to memorize One again
-            multiBloomFilter.addElement("One");
+        // We now need to memorize One again
+        multiBloomFilter.addElement("One");
 
-            // At 1 cycle and half, bloom filter #1 got reset in turn
-            Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
-            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
+        // At 1 cycle and half, bloom filter #1 got reset in turn
+        final DateTime dtCycleOneAndHalf = dtCycleOne.plusMillis(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
+        multiBloomFilter.resetAllBloomExpiredFilters(dtCycleOneAndHalf);
 
-            // Thus we expect to forget Zer but not One
-            assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
-            assertThat(multiBloomFilter.mightHaveSeen("One"), is(true));
+        // Thus we expect to forget Zer but not One
+        assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
+        assertThat(multiBloomFilter.mightHaveSeen("One"), is(true));
 
-            // Let say we don't memorize anymore to see what happen at 2 cycles
-            Thread.sleep(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
-            multiBloomFilter.resetAllBloomExpiredFilters(DateTime.now(DateTimeZone.UTC));
+        // Let say we don't memorize anymore to see what happen at 2 cycles
+        final DateTime dtCycleTwo = dtCycleOneAndHalf.plusMillis(multiBloomFilter.getBloomFilterOffsetSeconds() * 1000 + 1);
+        multiBloomFilter.resetAllBloomExpiredFilters(dtCycleTwo);
 
-            // Both Zer and One are forgotten then
-            assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
-            assertThat(multiBloomFilter.mightHaveSeen("One"), is(false));
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+        // Both Zer and One are forgotten then
+        assertThat(multiBloomFilter.mightHaveSeen("Zer"), is(false));
+        assertThat(multiBloomFilter.mightHaveSeen("One"), is(false));
     }
 }
