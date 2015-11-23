@@ -32,6 +32,13 @@ public @interface BindTimelineLog {
                     } else {
                         q.bind("created_at", (Timestamp) null);
                     }
+
+                    if (arg.hasTestGroup()) {
+                        q.bind("test_group", arg.getTestGroup());
+                    }
+                    else {
+                        q.bind("test_group",0L); //just set default
+                    }
                 }
             };
         }

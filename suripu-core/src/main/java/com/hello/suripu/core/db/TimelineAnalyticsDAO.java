@@ -23,13 +23,13 @@ public abstract class TimelineAnalyticsDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TimelineAnalyticsDAO.class);
     
-    @SqlUpdate("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at)" +
-            " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at);")
+    @SqlUpdate("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at,test_group)" +
+            " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at, :test_group);")
     abstract void insert(@BindTimelineLog LoggingProtos.TimelineLog timelineLog);
 
     @BatchChunkSize(100)
-    @SqlBatch("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at)" +
-            " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at);")
+    @SqlBatch("INSERT INTO timeline_analytics (account_id, date_of_night, algorithm, error, created_at, test_group)" +
+            " VALUES (:account_id, :date_of_night, :algorithm, :error, :created_at, :test_group);")
     abstract void insert(@BindTimelineLog Collection<LoggingProtos.TimelineLog> timelineLogs);
 
     /**
