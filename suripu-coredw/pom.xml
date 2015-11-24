@@ -42,5 +42,10 @@
             <artifactId>suripu-core</artifactId>
             <version>0.6.4-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.5.3</version>
+        </dependency>
     </dependencies>
 </project>
