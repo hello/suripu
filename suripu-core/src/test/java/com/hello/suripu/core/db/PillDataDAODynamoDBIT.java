@@ -161,12 +161,38 @@ public class PillDataDAODynamoDBIT {
         final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotionList, trackerMotionList.size());
         assertThat(successfulInserts, is(trackerMotionList.size()));
         assertThat(getTableCount(NOVEMBER_TABLE_NAME), is(1));
-        assertThat(getTableCount(DECEMBER_TABLE_NAME), is(trackerMotionList.size()-1));
+        assertThat(getTableCount(DECEMBER_TABLE_NAME), is(trackerMotionList.size() - 1));
 
-        final List<TrackerMotion> results = pillDataDAODynamoDB.getSinglePillData(accountId+1, "ABCDEFG1", firstTime.plusMinutes(1));
+        final List<TrackerMotion> results = pillDataDAODynamoDB.getBetween(accountId + 1, firstTime.plusMinutes(1), firstTime.plusMinutes(2));
         assertThat(results.isEmpty(), is(false));
         assertThat(results.get(0).value, is (trackerMotionList.get(1).value));
+    }
 
+    @Test
+    public void testGetBetween() {
+        final List<TrackerMotion> trackerMotionList = new ArrayList<>();
+        final int dataSize = 500;
+        final Long accountId = 1L;
+        final DateTime firstTime = new DateTime(2015, 11, 01, 1, 0, DateTimeZone.UTC);
+        for (int i = 0; i < dataSize; i++) {
+            trackerMotionList.add(
+                    new TrackerMotion.Builder()
+                            .withAccountId(accountId)
+                            .withTimestampMillis(firstTime.plusMinutes(i).getMillis())
+                            .withExternalTrackerId("ABCDEFG")
+                            .withOffsetMillis(-28800000)
+                            .withValue(900 + i)
+                            .build()
+            );
+        }
 
+        final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotionList, trackerMotionList.size());
+        assertThat(successfulInserts, is(trackerMotionList.size()));
+
+        final DateTime queryStartTimeUTC = firstTime.plusMinutes(10);
+        final int numDataPoints = 100;
+        final DateTime queryEndTimeUTC = firstTime.plusMinutes(10 + numDataPoints);
+        final List<TrackerMotion> results = pillDataDAODynamoDB.getBetween(accountId, queryStartTimeUTC, queryEndTimeUTC);
+        assertThat(results.size(), is(numDataPoints));
     }
 }

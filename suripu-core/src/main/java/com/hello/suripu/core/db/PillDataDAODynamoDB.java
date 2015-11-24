@@ -14,11 +14,18 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
+import com.hello.suripu.core.db.dynamo.Expressions;
+import com.hello.suripu.core.db.dynamo.expressions.Expression;
+import com.hello.suripu.core.db.responses.DynamoDBResponse;
+import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -27,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -194,14 +202,30 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
 
     @Override
     public List<String> getTableNames(DateTime start, DateTime end) {
-        return null;
+        final LinkedList<String> names = Lists.newLinkedList();
+        for (final DateTime dateTime: DateTimeUtil.dateTimesForStartOfMonthBetweenDates(start, end)) {
+            final String tableName = getTableName(dateTime);
+            names.add(tableName);
+        }
+        return names;
     }
     //endregion
 
+    private static AttributeValue getRangeKey(final DateTime dateTime, final String pillId) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + pillId);
+    }
 
     private static AttributeValue getRangeKey(final Long timestamp, final String pillId) {
         final DateTime dateTime = new DateTime(timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
-        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + pillId);
+        return getRangeKey(dateTime, pillId);
+    }
+
+    private static AttributeValue toAttributeValue(final Long value) {
+        return new AttributeValue().withN(String.valueOf(value));
+    }
+
+    private static AttributeValue dateTimeToAttributeValue(final DateTime dateTime) {
+        return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER));
     }
 
     private String externalTrackerIdFromDDBItem(final Map<String, AttributeValue> item) {
@@ -302,6 +326,115 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         final TrackerMotion trackerMotion = fromDynamoDBItem(items.get(0));
         return Lists.newArrayList(trackerMotion);
     }
+
+    final List<TrackerMotion> attributeMapsToPillDataList(final List<Map<String, AttributeValue>> items) {
+        final List<TrackerMotion> dataList = Lists.newArrayListWithCapacity(items.size());
+        for (final Map<String, AttributeValue> item : items) {
+            dataList.add(fromDynamoDBItem(item));
+        }
+        return dataList;
+    }
+
+    private DynamoDBResponse getItemsBetweenTS(final long accountId,
+                                               final DateTime startTimestampUTC,
+                                               final DateTime endTimestampUTC) {
+
+        // aid = accountId, ts >= start, ts <= end
+        // with pill_id == "", there is no need to minus 1 minute from the endTimestamp
+        final Expression keyConditionExpression = Expressions.and(
+                Expressions.equals(PillDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(PillDataAttribute.TS_PILL_ID,
+                        getRangeKey(startTimestampUTC, ""),
+                        getRangeKey(endTimestampUTC, "")));
+
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        final DynamoDBResponse response = queryTables(
+                getTableNames(startTimestampUTC, endTimestampUTC),
+                keyConditionExpression,
+                TARGET_ATTRIBUTES);
+
+        for (final Map<String, AttributeValue> result : response.data) {
+            results.add(result);
+        }
+        return new DynamoDBResponse(results, response.status, response.exception);
+    }
+
+    private DynamoDBResponse getItemsBetweenLocalTS(final long accountId,
+                                               final DateTime startLocalTime,
+                                               final DateTime endLocalTime) {
+        // aid = accountId, lutcts >= startLocal, lutcts <= endLocal (note, inclusive)
+        final DateTime startTimestampUTC = startLocalTime.minusDays(1).minusMinutes(1);
+        final DateTime endTimestampUTC = endLocalTime.plusDays(1).plusMinutes(1);
+
+        final Expression keyConditionExpression = Expressions.and(
+                Expressions.equals(PillDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(PillDataAttribute.TS_PILL_ID,
+                        getRangeKey(startTimestampUTC, ""),
+                        getRangeKey(endTimestampUTC, "")));
+
+        final Expression filterExpression = Expressions.between(
+                PillDataAttribute.LOCAL_UTC_TS,
+                dateTimeToAttributeValue(startLocalTime),
+                dateTimeToAttributeValue(endLocalTime));
+
+        final DynamoDBResponse response = queryTables(getTableNames(startTimestampUTC, endTimestampUTC),
+                keyConditionExpression,
+                filterExpression,
+                TARGET_ATTRIBUTES);
+
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
+        for (final Map<String, AttributeValue> result : response.data) {
+            results.add(result);
+        }
+        return new DynamoDBResponse(results, response.status, response.exception);
+    }
+
+    //region query methods mirroring TrackerMotionDAO
+    public ImmutableList<TrackerMotion> getBetween(final long accountId,
+                                                   final DateTime startTimestampUTC,
+                                                   final DateTime endTimestampUTC) {
+        final DynamoDBResponse response = getItemsBetweenTS(accountId, startTimestampUTC, endTimestampUTC);
+        return ImmutableList.copyOf(attributeMapsToPillDataList(response.data));
+    }
+
+    public ImmutableList<TrackerMotion>  getBetweenLocalUTC(final long accountId,
+                                                            final DateTime startLocalTime,
+                                                            final DateTime endLocalTime) {
+        final DynamoDBResponse response = getItemsBetweenLocalTS(accountId, startLocalTime, endLocalTime);
+        return ImmutableList.copyOf(attributeMapsToPillDataList(response.data));
+    }
+
+    public Integer getDataCountBetweenLocalUTC(final long accountId,
+                                               final DateTime startLocalTime,
+                                               final DateTime endLocalTime) {
+        final DynamoDBResponse response = getItemsBetweenLocalTS(accountId, startLocalTime, endLocalTime);
+        return response.data.size();
+    }
+
+    //region TODO
+    public Optional<DeviceStatus> pillStatus(final Long pillId, final Long accountId) {
+        return Optional.absent();
+    }
+
+    public ImmutableList<TrackerMotion> getBetweenGrouped(final long accountId,
+                                                          final DateTime startLocalTime,
+                                                          final DateTime endLocalTime,
+                                                          final Integer slotDuration) {
+        return ImmutableList.of();
+    }
+
+    public Integer deleteDataTrackerID(final Long trackerId) {
+        return 0;
+    }
+    public ImmutableList<TrackerMotion> getTrackerOffsetMillis(final long accountId,
+                                                               final DateTime startDate,
+                                                               final DateTime endDate) {
+        return ImmutableList.of();
+    }
+    //endregion TODO
+
+    //endregion
+
 
     @Override
     public Class name() {

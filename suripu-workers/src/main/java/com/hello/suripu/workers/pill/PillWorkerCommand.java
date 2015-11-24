@@ -103,9 +103,6 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
         String kinesisAppName = configuration.getAppName();
-        if (useDynamoPillData) {
-            kinesisAppName = String.format("%sDDB", configuration.getAppName());
-        }
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(
                 kinesisAppName,
                 queueName,
