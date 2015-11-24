@@ -149,8 +149,14 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
                 accounts.add(deviceAccountPair.accountId);
             }
 
-            final Map<Long, DateTimeZone> timezonesByUser = SenseProcessorUtils.getTimezonesByUser(
-                    deviceName, batchPeriodicDataWorker, accounts, mergedInfoDynamoDB, hasKinesisTimezonesEnabled(deviceName));
+            final Map<Long, DateTimeZone> timezonesByUser;
+            final TimerContext context = fetchTimezones.time();
+            try {
+                timezonesByUser = SenseProcessorUtils.getTimezonesByUser(
+                        deviceName, batchPeriodicDataWorker, accounts, mergedInfoDynamoDB, hasKinesisTimezonesEnabled(deviceName));
+            } finally {
+                context.stop();
+            }
 
             if(timezonesByUser.isEmpty()) {
                 LOGGER.warn("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
