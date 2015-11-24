@@ -1,6 +1,5 @@
 package com.hello.suripu.workers.sense;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
@@ -21,7 +20,7 @@ import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.util.SenseProcessorUtils;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
