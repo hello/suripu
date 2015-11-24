@@ -25,6 +25,7 @@ import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,6 +196,7 @@ public class RingProcessorSingleUserIT {
     }
 
     @Test
+    @Ignore
     public void testProgressiveSmartAlarmWithFakeDataForTwoDays(){
         // Test the case user has repeated smart alarm and has data for two days in a row
         final List<Alarm> alarmList = new ArrayList<Alarm>();

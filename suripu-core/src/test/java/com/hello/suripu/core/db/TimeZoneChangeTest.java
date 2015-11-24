@@ -4,6 +4,8 @@ import com.google.common.io.Resources;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +21,9 @@ import static org.hamcrest.Matchers.not;
  * Created by pangwu on 9/18/14.
  */
 public class TimeZoneChangeTest {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(TimeZoneChangeTest.class);
+
     @Test
     public void testDayLightSavingTimeZoneName(){
         final DateTimeZone PST = DateTimeZone.forID("America/Los_Angeles");
@@ -26,11 +31,11 @@ public class TimeZoneChangeTest {
         final DateTime dayLightSaving = new DateTime(2014, 3, 8, 0, 0, 0, PST);
         final DateTime normalTime = new DateTime(2014, 3, 11, 0, 0, 0, PST);
 
-        System.out.println(dayLightSaving.getZone().getOffset(dayLightSaving));
-        System.out.println(normalTime.getZone().getOffset(normalTime));
+        LOGGER.debug("{}", dayLightSaving.getZone().getOffset(dayLightSaving));
+        LOGGER.debug("{}", normalTime.getZone().getOffset(normalTime));
 
-        System.out.println(dayLightSaving.getZone().getName(dayLightSaving.getMillis()));
-        System.out.println(normalTime.getZone().getName(normalTime.getMillis()));
+        LOGGER.debug("{}", dayLightSaving.getZone().getName(dayLightSaving.getMillis()));
+        LOGGER.debug("{}", normalTime.getZone().getName(normalTime.getMillis()));
 
         assertThat(normalTime.getZone().getOffset(normalTime) == dayLightSaving.getZone().getOffset(dayLightSaving), is(false));
         assertThat(normalTime.getZone().getID().equals(dayLightSaving.getZone().getID()), is(true));
@@ -62,7 +67,7 @@ public class TimeZoneChangeTest {
                 }
 
                 if(!jodaTimeZoneNames.contains(line)){
-                    System.out.println(line);
+                    LOGGER.trace("{}", line);
                 }
                 final DateTimeZone zone = DateTimeZone.forID(line);
 
