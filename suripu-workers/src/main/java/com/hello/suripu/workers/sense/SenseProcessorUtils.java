@@ -53,21 +53,21 @@ public class SenseProcessorUtils {
                                                              final List<Long> accountsList,
                                                              final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                                              final boolean hasKinesisTimezonesEnabled) {
-        final Map<Long, DateTimeZone> map = Maps.newHashMap();
+        final Map<Long, DateTimeZone> accountIdToTimeZone = Maps.newHashMap();
         for (final DataInputProtos.AccountMetadata accountMetadata : batchPeriodicDataWorker.getTimezonesList()) {
-            map.put(accountMetadata.getAccountId(), DateTimeZone.forID(accountMetadata.getTimezone()));
+            accountIdToTimeZone.put(accountMetadata.getAccountId(), DateTimeZone.forID(accountMetadata.getTimezone()));
         }
 
         for (final Long accountId : accountsList) {
-            if (!map.containsKey(accountId)) {
+            if (!accountIdToTimeZone.containsKey(accountId)) {
                 LOGGER.warn("Found account_id {} in account_device_map but not in alarm_info for device_id {}", accountId, deviceName);
             }
         }
 
         // Kinesis, DynamoDB and Postgres have a consistent view of accounts
         // move on
-        if (!map.isEmpty() && map.size() == accountsList.size() && hasKinesisTimezonesEnabled) {
-            return map;
+        if (!accountIdToTimeZone.isEmpty() && accountIdToTimeZone.size() == accountsList.size() && hasKinesisTimezonesEnabled) {
+            return accountIdToTimeZone;
         }
 
 
@@ -80,7 +80,7 @@ public class SenseProcessorUtils {
                 final List<UserInfo> userInfoList = mergedUserInfoDynamoDB.getInfo(deviceName);
                 for (UserInfo userInfo : userInfoList) {
                     if (userInfo.timeZone.isPresent()) {
-                        map.put(userInfo.accountId, userInfo.timeZone.get());
+                        accountIdToTimeZone.put(userInfo.accountId, userInfo.timeZone.get());
                     }
                 }
                 break;
@@ -97,10 +97,13 @@ public class SenseProcessorUtils {
             retries++;
         }
 
-        return map;
+        return accountIdToTimeZone;
 
     }
 
+    /**
+     * @return A Builder with the appropriate sensor data set from the periodicData (ambientTemp, ambientLight, etc)
+     */
     public static DeviceData.Builder periodicDataToDeviceDataBuilder(final DataInputProtos.periodic_data periodicData) {
         return new DeviceData.Builder()
                 .withAmbientTemperature(periodicData.getTemperature())
