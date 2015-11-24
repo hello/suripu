@@ -55,11 +55,6 @@
             <name>project</name>
             <url>file:${project.basedir}/../repo</url>
         </repository>
-        <repository>
-            <id>version99</id>
-            <!-- highly available repository serving empty artifacts -->
-            <url>http://version99.qos.ch/</url>
-        </repository>
     </repositories>
 
     <dependencyManagement>
