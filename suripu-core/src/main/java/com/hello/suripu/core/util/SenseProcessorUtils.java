@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.sense;
+package com.hello.suripu.core.util;
 
 
 import com.amazonaws.AmazonClientException;
@@ -7,7 +7,6 @@ import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.UserInfo;
-import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;

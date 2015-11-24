@@ -1,4 +1,4 @@
-package com.hello.suripu.workers.sense;
+package com.hello.suripu.core.util;
 
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.models.DeviceData;
