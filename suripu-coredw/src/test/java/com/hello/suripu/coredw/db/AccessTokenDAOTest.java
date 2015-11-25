@@ -15,6 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
@@ -22,6 +24,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class AccessTokenDAOTest {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(AccessTokenDAOTest.class);
 
     private DBI dbi;
     private Handle handle;
@@ -40,7 +44,7 @@ public class AccessTokenDAOTest {
                 "    account_id BIGINT, " +
                 "    scopes  ARRAY)";
 
-        System.out.println(createTableQuery);
+        LOGGER.debug(createTableQuery);
         final JdbcDataSource ds = new JdbcDataSource();
         ds.setURL("jdbc:h2:mem:" + UUID.randomUUID());
         dbi = new DBI(ds);

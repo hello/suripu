@@ -31,11 +31,14 @@ public class TimelineLog {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineLog.class);
 
+    private static final long DEFAULT_TEST_GROUP = 0L;
+
     private final LoggingProtos.BatchLogMessage.Builder builder; //mutable, but only to add timeline log messages
     private final long dateOfNight;
     private final String dateOfNightString;
     private final long accountId; //use for partition as well
     private final long timestamp;
+    private final long testGroup;
 
     private static final BiMap<TimelineError, ErrorType> invalidNightErrorMap;
     private static final BiMap<AlgorithmType,AlgType> algorithmTypeMap;
@@ -99,7 +102,12 @@ public class TimelineLog {
                 return Optional.absent();
             }
 
-            return Optional.of(new TimelineLog(log.toBuilder(),timelineLog.getAccountId(),timelineLog.getNightOfTimeline(), timelineLog.getTimestampWhenLogGenerated()));
+            long testGroup = DEFAULT_TEST_GROUP;
+            if (timelineLog.hasTestGroup()) {
+                testGroup = timelineLog.getTestGroup();
+            }
+
+            return Optional.of(new TimelineLog(log.toBuilder(),timelineLog.getAccountId(),timelineLog.getNightOfTimeline(), timelineLog.getTimestampWhenLogGenerated(),testGroup));
 
         }
         catch (InvalidProtocolBufferException e) {
@@ -110,6 +118,10 @@ public class TimelineLog {
     }
 
     public TimelineLog(final long accountId, final long dateOfNight, final long timestamp) {
+        this(accountId, dateOfNight, timestamp, DEFAULT_TEST_GROUP);
+    }
+
+    public TimelineLog(final long accountId, final long dateOfNight, final long timestamp, final long testGroup) {
         this.dateOfNight = dateOfNight;
         this.dateOfNightString = DateTimeUtil.dateToYmdString(new DateTime().withZone(DateTimeZone.UTC).withMillis(dateOfNight));
         this.accountId = accountId;
@@ -118,18 +130,21 @@ public class TimelineLog {
         builder.setLogType(LoggingProtos.BatchLogMessage.LogType.TIMELINE_LOG);
         builder.setReceivedAt(timestamp);
         this.timestamp = timestamp;
+        this.testGroup = testGroup;
+
     }
 
     public TimelineLog(final Long accountId, final long dateOfNight) {
-        this(accountId, dateOfNight, DateTime.now(DateTimeZone.UTC).getMillis());
+        this(accountId, dateOfNight, DateTime.now(DateTimeZone.UTC).getMillis(),DEFAULT_TEST_GROUP);
     }
 
-    private TimelineLog(final LoggingProtos.BatchLogMessage.Builder builder, final long accountId, final long dateOfNight, final long timestamp) {
+    private TimelineLog(final LoggingProtos.BatchLogMessage.Builder builder, final long accountId, final long dateOfNight, final long timestamp, final long testGroup) {
         this.builder = builder;
         this.accountId = accountId;
         this.dateOfNight = dateOfNight;
         this.timestamp = timestamp;
         this.dateOfNightString = DateTimeUtil.dateToYmdString(new DateTime().withZone(DateTimeZone.UTC).withMillis(dateOfNight));
+        this.testGroup = testGroup;
     }
 
     @VisibleForTesting
@@ -168,7 +183,8 @@ public class TimelineLog {
                 .setAccountId(accountId)
                 .setNightOfTimeline(dateOfNight)
                 .setNightOf(dateOfNightString)
-                .setTimestampWhenLogGenerated(timestamp);
+                .setTimestampWhenLogGenerated(timestamp)
+                .setTestGroup(testGroup);
     }
 
     public void addMessage(final TimelineError timelineError) {

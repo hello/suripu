@@ -428,4 +428,9 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("pill_data")
     private DynamoDBConfiguration pillDataConfiguration;
     public DynamoDBConfiguration getPillDataConfiguration() { return this.pillDataConfiguration; }
+
+    @JsonProperty("provision_key")
+    private S3BucketConfiguration provisionKeyConfiguration = S3BucketConfiguration.create("hello-secure", "hello-pvt.pem");
+    public S3BucketConfiguration getProvisionKeyConfiguration() { return provisionKeyConfiguration; }
+
 }

@@ -954,7 +954,7 @@ public class DeviceDataDAODynamoDBIT {
             final long start = System.nanoTime();
             deviceDataDAODynamoDB.aggregateDynamoDBItemsToDeviceData(items, slotDuration);
             final long end = System.nanoTime();
-            System.out.println("Time: " + (end - start) / 1000000.0);
+            LOGGER.debug("Time: {}", (end - start) / 1000000.0);
         }
     }
 

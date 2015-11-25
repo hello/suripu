@@ -37,7 +37,8 @@ public class TimelineAnalyticsDAOTest {
                 "    date_of_night VARCHAR,\n" +
                 "    algorithm INTEGER,\n" +
                 "    error INTEGER,\n" +
-                "    created_at TIMESTAMP\n" +
+                "    created_at TIMESTAMP,\n" +
+                "    test_group BIGINT\n" +
                 ");";
 
         final JdbcDataSource ds = new JdbcDataSource();
@@ -65,6 +66,7 @@ public class TimelineAnalyticsDAOTest {
                 .setNightOf("2015-10-01")
                 .setAlgorithm(LoggingProtos.TimelineLog.AlgType.HMM)
                 .setError(LoggingProtos.TimelineLog.ErrorType.NO_ERROR)
+                .setTestGroup(0L)
                 .build();
         dao.insert(log);
         List<Map<String, Object>> result = handle.select(String.format("SELECT account_id FROM timeline_analytics WHERE account_id=%d;", accountId));

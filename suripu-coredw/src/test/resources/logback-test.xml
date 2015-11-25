@@ -1,0 +1,10 @@
+<configuration debug="false" scan="true" scanPeriod="30 seconds">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="log4j.logger.com.amazonaws" level="INFO"/>
+    <logger name="log4j.logger.org.apache.http" level="WARN" />
+</configuration>

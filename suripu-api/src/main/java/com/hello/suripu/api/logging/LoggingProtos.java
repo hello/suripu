@@ -9768,6 +9768,16 @@ public final class LoggingProtos {
      */
     com.google.protobuf.ByteString
         getNightOfBytes();
+
+    // optional int64 test_group = 13;
+    /**
+     * <code>optional int64 test_group = 13;</code>
+     */
+    boolean hasTestGroup();
+    /**
+     * <code>optional int64 test_group = 13;</code>
+     */
+    long getTestGroup();
   }
   /**
    * Protobuf type {@code TimelineLog}
@@ -9898,6 +9908,11 @@ public final class LoggingProtos {
             case 98: {
               bitField0_ |= 0x00000400;
               nightOf_ = input.readBytes();
+              break;
+            }
+            case 104: {
+              bitField0_ |= 0x00000800;
+              testGroup_ = input.readInt64();
               break;
             }
           }
@@ -11222,6 +11237,22 @@ public final class LoggingProtos {
       }
     }
 
+    // optional int64 test_group = 13;
+    public static final int TEST_GROUP_FIELD_NUMBER = 13;
+    private long testGroup_;
+    /**
+     * <code>optional int64 test_group = 13;</code>
+     */
+    public boolean hasTestGroup() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional int64 test_group = 13;</code>
+     */
+    public long getTestGroup() {
+      return testGroup_;
+    }
+
     private void initFields() {
       accountId_ = 0L;
       timestampWhenLogGenerated_ = 0L;
@@ -11235,6 +11266,7 @@ public final class LoggingProtos {
       predictions_ = java.util.Collections.emptyList();
       message_ = "";
       nightOf_ = "";
+      testGroup_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -11283,6 +11315,9 @@ public final class LoggingProtos {
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeBytes(12, getNightOfBytes());
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeInt64(13, testGroup_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -11340,6 +11375,10 @@ public final class LoggingProtos {
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(12, getNightOfBytes());
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(13, testGroup_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -11491,6 +11530,8 @@ public final class LoggingProtos {
         bitField0_ = (bitField0_ & ~0x00000400);
         nightOf_ = "";
         bitField0_ = (bitField0_ & ~0x00000800);
+        testGroup_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00001000);
         return this;
       }
 
@@ -11572,6 +11613,10 @@ public final class LoggingProtos {
           to_bitField0_ |= 0x00000400;
         }
         result.nightOf_ = nightOf_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.testGroup_ = testGroup_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -11652,6 +11697,9 @@ public final class LoggingProtos {
           bitField0_ |= 0x00000800;
           nightOf_ = other.nightOf_;
           onChanged();
+        }
+        if (other.hasTestGroup()) {
+          setTestGroup(other.getTestGroup());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -12444,6 +12492,39 @@ public final class LoggingProtos {
         return this;
       }
 
+      // optional int64 test_group = 13;
+      private long testGroup_ ;
+      /**
+       * <code>optional int64 test_group = 13;</code>
+       */
+      public boolean hasTestGroup() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional int64 test_group = 13;</code>
+       */
+      public long getTestGroup() {
+        return testGroup_;
+      }
+      /**
+       * <code>optional int64 test_group = 13;</code>
+       */
+      public Builder setTestGroup(long value) {
+        bitField0_ |= 0x00001000;
+        testGroup_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 test_group = 13;</code>
+       */
+      public Builder clearTestGroup() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        testGroup_ = 0L;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:TimelineLog)
     }
 
@@ -12546,7 +12627,7 @@ public final class LoggingProtos {
       "\n\014request_body\030\004 \001(\014\022\r\n\005other\030\005 \001(\t\"W\n\020P",
       "rovisionRequest\022\014\n\004body\030\001 \001(\014\022\025\n\rserial_" +
       "number\030\002 \001(\t\022\n\n\002ts\030\003 \001(\003\022\022\n\nip_address\030\004" +
-      " \001(\t\"\272\007\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
+      " \001(\t\"\316\007\n\013TimelineLog\022\022\n\naccount_id\030\001 \001(\003" +
       "\022$\n\034timestamp_when_log_generated\030\002 \001(\003\022\031" +
       "\n\021night_of_timeline\030\003 \001(\003\022\'\n\talgorithm\030\004" +
       " \001(\0162\024.TimelineLog.AlgType\022%\n\005error\030\005 \001(" +
@@ -12554,24 +12635,24 @@ public final class LoggingProtos {
       "per\030\006 \001(\003\022\026\n\016log_uuid_lower\030\007 \001(\003\022\023\n\013mod" +
       "el_score\030\010 \001(\002\022\022\n\nmodel_name\030\t \001(\t\022,\n\013pr" +
       "edictions\030\n \003(\0132\027.TimelineLog.Prediction",
-      "\022\017\n\007message\030\013 \001(\t\022\020\n\010night_of\030\014 \001(\t\032|\n\nP" +
-      "rediction\022/\n\nevent_type\030\001 \001(\0162\033.Timeline" +
-      "Log.SleepEventType\022\035\n\025event_time_utc_mil" +
-      "lis\030\002 \001(\003\022\036\n\026timezone_offset_millis\030\003 \001(" +
-      "\005\"L\n\007AlgType\022\020\n\014NO_ALGORITHM\020\000\022\n\n\006WUPANG" +
-      "\020\001\022\007\n\003HMM\020\002\022\n\n\006VOTING\020\003\022\016\n\nONLINE_HMM\020\004\"" +
-      "O\n\016SleepEventType\022\014\n\010NO_EVENT\020\000\022\n\n\006IN_BE" +
-      "D\020\001\022\t\n\005SLEEP\020\002\022\010\n\004WAKE\020\003\022\016\n\nOUT_OF_BED\020\004" +
-      "\"\276\002\n\tErrorType\022\014\n\010NO_ERROR\020\000\022\036\n\032INTENDED" +
-      "_ALGORITHM_FAILURE\020\001\022\026\n\022TIMESPAN_TOO_SHO",
-      "RT\020\002\022\023\n\017NOT_ENOUGH_DATA\020\003\022\013\n\007NO_DATA\020\004\022\026" +
-      "\n\022LOW_AMPLITUDE_DATA\020\005\022#\n\037PARTNER_FILTER" +
-      "_REJECTED_MY_DATA\020\006\022\026\n\022MISSING_KEY_EVENT" +
-      "S\020\007\022\027\n\023INVALID_SLEEP_SCORE\020\010\022\031\n\025NOT_ENOU" +
-      "GH_SLEEP_TIME\020\t\022\017\n\013UNEXEPECTED\020\n\022\026\n\022DATA" +
-      "_GAP_TOO_LARGE\020\013\022\027\n\023EVENTS_OUT_OF_ORDER\020" +
-      "\014B-\n\034com.hello.suripu.api.loggingB\rLoggi" +
-      "ngProtos"
+      "\022\017\n\007message\030\013 \001(\t\022\020\n\010night_of\030\014 \001(\t\022\022\n\nt" +
+      "est_group\030\r \001(\003\032|\n\nPrediction\022/\n\nevent_t" +
+      "ype\030\001 \001(\0162\033.TimelineLog.SleepEventType\022\035" +
+      "\n\025event_time_utc_millis\030\002 \001(\003\022\036\n\026timezon" +
+      "e_offset_millis\030\003 \001(\005\"L\n\007AlgType\022\020\n\014NO_A" +
+      "LGORITHM\020\000\022\n\n\006WUPANG\020\001\022\007\n\003HMM\020\002\022\n\n\006VOTIN" +
+      "G\020\003\022\016\n\nONLINE_HMM\020\004\"O\n\016SleepEventType\022\014\n" +
+      "\010NO_EVENT\020\000\022\n\n\006IN_BED\020\001\022\t\n\005SLEEP\020\002\022\010\n\004WA" +
+      "KE\020\003\022\016\n\nOUT_OF_BED\020\004\"\276\002\n\tErrorType\022\014\n\010NO" +
+      "_ERROR\020\000\022\036\n\032INTENDED_ALGORITHM_FAILURE\020\001",
+      "\022\026\n\022TIMESPAN_TOO_SHORT\020\002\022\023\n\017NOT_ENOUGH_D" +
+      "ATA\020\003\022\013\n\007NO_DATA\020\004\022\026\n\022LOW_AMPLITUDE_DATA" +
+      "\020\005\022#\n\037PARTNER_FILTER_REJECTED_MY_DATA\020\006\022" +
+      "\026\n\022MISSING_KEY_EVENTS\020\007\022\027\n\023INVALID_SLEEP" +
+      "_SCORE\020\010\022\031\n\025NOT_ENOUGH_SLEEP_TIME\020\t\022\017\n\013U" +
+      "NEXEPECTED\020\n\022\026\n\022DATA_GAP_TOO_LARGE\020\013\022\027\n\023" +
+      "EVENTS_OUT_OF_ORDER\020\014B-\n\034com.hello.surip" +
+      "u.api.loggingB\rLoggingProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -12631,7 +12712,7 @@ public final class LoggingProtos {
           internal_static_TimelineLog_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_TimelineLog_descriptor,
-              new java.lang.String[] { "AccountId", "TimestampWhenLogGenerated", "NightOfTimeline", "Algorithm", "Error", "LogUuidUpper", "LogUuidLower", "ModelScore", "ModelName", "Predictions", "Message", "NightOf", });
+              new java.lang.String[] { "AccountId", "TimestampWhenLogGenerated", "NightOfTimeline", "Algorithm", "Error", "LogUuidUpper", "LogUuidLower", "ModelScore", "ModelName", "Predictions", "Message", "NightOf", "TestGroup", });
           internal_static_TimelineLog_Prediction_descriptor =
             internal_static_TimelineLog_descriptor.getNestedTypes().get(0);
           internal_static_TimelineLog_Prediction_fieldAccessorTable = new

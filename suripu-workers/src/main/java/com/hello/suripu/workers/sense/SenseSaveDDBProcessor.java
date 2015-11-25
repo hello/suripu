@@ -1,19 +1,17 @@
 package com.hello.suripu.workers.sense;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.DeviceDataIngestDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.models.DeviceData;
-import com.hello.suripu.core.models.UserInfo;
+import com.hello.suripu.core.util.SenseProcessorUtils;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
@@ -25,7 +23,6 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -76,10 +73,6 @@ public class SenseSaveDDBProcessor extends HelloBaseRecordProcessor {
     public void processRecords(List<Record> records, IRecordProcessorCheckpointer iRecordProcessorCheckpointer) {
         final LinkedList<DeviceData> deviceDataList = new LinkedList<>();
 
-        final Map<String, Long> activeSenses = new HashMap<>(records.size());
-
-        final Map<String, DeviceData> lastSeenDeviceData = Maps.newHashMap();
-
         for(final Record record : records) {
             DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker;
             try {
@@ -97,12 +90,17 @@ public class SenseSaveDDBProcessor extends HelloBaseRecordProcessor {
                 accounts.add(metadata.getAccountId());
             }
 
-            final Map<Long, DateTimeZone> timezonesByUser = getTimezonesByUser(deviceName, batchPeriodicDataWorker, accounts);
+            final Map<Long, DateTimeZone> timezonesByUser;
+            final TimerContext context = fetchTimezones.time();
+            try {
+                timezonesByUser = SenseProcessorUtils.getTimezonesByUser(
+                        deviceName, batchPeriodicDataWorker, accounts, mergedInfoDynamoDB, hasKinesisTimezonesEnabled(deviceName));
+            } finally {
+                context.stop();
+            }
 
             if(timezonesByUser.isEmpty()) {
                 LOGGER.warn("Device {} is not stored in DynamoDB or doesn't have any accounts linked.", deviceName);
-            } else { // track only for sense paired to accounts
-                activeSenses.put(deviceName, batchPeriodicDataWorker.getReceivedAt());
             }
 
 
@@ -134,33 +132,14 @@ public class SenseSaveDDBProcessor extends HelloBaseRecordProcessor {
 
                     final DateTimeZone userTimeZone = timezonesByUser.get(accountId);
 
-
-                    final DeviceData.Builder builder = new DeviceData.Builder()
+                    final DeviceData.Builder builder = SenseProcessorUtils.periodicDataToDeviceDataBuilder(periodicData)
                             .withAccountId(accountId)
                             .withExternalDeviceId(deviceName)
-                            .withAmbientTemperature(periodicData.getTemperature())
-                            .withAmbientAirQualityRaw(periodicData.getDust())
-                            .withAmbientDustVariance(periodicData.getDustVariability())
-                            .withAmbientDustMin(periodicData.getDustMin())
-                            .withAmbientDustMax(periodicData.getDustMax())
-                            .withAmbientHumidity(periodicData.getHumidity())
-                            .withAmbientLight(periodicData.getLight())
-                            .withAmbientLightVariance(periodicData.getLightVariability())
-                            .withAmbientLightPeakiness(periodicData.getLightTonality())
                             .withOffsetMillis(userTimeZone.getOffset(periodicDataSampleDateTime))
                             .withDateTimeUTC(periodicDataSampleDateTime)
-                            .withFirmwareVersion(firmwareVersion)
-                            .withWaveCount(periodicData.hasWaveCount() ? periodicData.getWaveCount() : 0)
-                            .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0)
-                            .withAudioNumDisturbances(periodicData.hasAudioNumDisturbances() ? periodicData.getAudioNumDisturbances() : 0)
-                            .withAudioPeakDisturbancesDB(periodicData.hasAudioPeakDisturbanceEnergyDb() ? periodicData.getAudioPeakDisturbanceEnergyDb() : 0)
-                            .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0);
+                            .withFirmwareVersion(firmwareVersion);
 
                     final DeviceData deviceData = builder.build();
-
-                    if(hasLastSeenViewDynamoDBEnabled(deviceName)) {
-                        lastSeenDeviceData.put(deviceName, deviceData);
-                    }
 
                     deviceDataList.add(deviceData);
                 }
@@ -197,7 +176,6 @@ public class SenseSaveDDBProcessor extends HelloBaseRecordProcessor {
         }
 
         final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f) ;
-        LOGGER.info("{} - seen device: {}", shardId, activeSenses.size());
         LOGGER.info("{} - capacity: {}%", shardId, batchCapacity);
         capacity.mark(batchCapacity);
     }
@@ -220,65 +198,4 @@ public class SenseSaveDDBProcessor extends HelloBaseRecordProcessor {
 
     }
 
-
-    /**
-     *
-     * @param deviceName
-     * @param batchPeriodicDataWorker
-     * @return
-     */
-    public Map<Long, DateTimeZone> getTimezonesByUser(final String deviceName, final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker, final List<Long> accountsList) {
-        final TimerContext context = fetchTimezones.time();
-        try {
-
-
-            final Map<Long, DateTimeZone> map = Maps.newHashMap();
-            for (final DataInputProtos.AccountMetadata accountMetadata : batchPeriodicDataWorker.getTimezonesList()) {
-                map.put(accountMetadata.getAccountId(), DateTimeZone.forID(accountMetadata.getTimezone()));
-            }
-
-            for (final Long accountId : accountsList) {
-                if (!map.containsKey(accountId)) {
-                    LOGGER.warn("Found account_id {} in account_device_map but not in alarm_info for device_id {}", accountId, deviceName);
-                }
-            }
-
-            // Kinesis, DynamoDB and Postgres have a consistent view of accounts
-            // move on
-            if (!map.isEmpty() && map.size() == accountsList.size() && hasKinesisTimezonesEnabled(deviceName)) {
-                return map;
-            }
-
-
-            // At this point we need to go to dynamoDB
-            LOGGER.warn("Querying dynamoDB. One or several timezones not found in Kinesis message for device_id = {}.", deviceName);
-
-            int retries = 2;
-            for (int i = 0; i < retries; i++) {
-                try {
-                    final List<UserInfo> userInfoList = this.mergedInfoDynamoDB.getInfo(deviceName);
-                    for (UserInfo userInfo : userInfoList) {
-                        if (userInfo.timeZone.isPresent()) {
-                            map.put(userInfo.accountId, userInfo.timeZone.get());
-                        }
-                    }
-                    break;
-                } catch (AmazonClientException exception) {
-                    LOGGER.error("Failed getting info from DynamoDB for device = {}", deviceName);
-                }
-
-                try {
-                    LOGGER.warn("Sleeping for 1 sec");
-                    Thread.sleep(1000);
-                } catch (InterruptedException e1) {
-                    LOGGER.warn("Thread sleep interrupted");
-                }
-                retries++;
-            }
-
-            return map;
-        } finally {
-            context.stop();
-        }
-    }
 }

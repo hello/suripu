@@ -19,7 +19,7 @@ import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
-import com.hello.suripu.workers.sense.SenseProcessorUtils;
+import com.hello.suripu.core.util.SenseProcessorUtils;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.Meter;
