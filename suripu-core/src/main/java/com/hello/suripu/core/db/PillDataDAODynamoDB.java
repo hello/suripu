@@ -363,8 +363,8 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
                                                final DateTime startLocalTime,
                                                final DateTime endLocalTime) {
         // aid = accountId, lutcts >= startLocal, lutcts <= endLocal (note, inclusive)
-        final DateTime startTimestampUTC = startLocalTime.minusDays(1).minusMinutes(1);
-        final DateTime endTimestampUTC = endLocalTime.plusDays(1).plusMinutes(1);
+        final DateTime startTimestampUTC = startLocalTime.minusDays(1).minusSeconds(1);
+        final DateTime endTimestampUTC = endLocalTime.plusDays(1).minusSeconds(1);
 
         final Expression keyConditionExpression = Expressions.and(
                 Expressions.equals(PillDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),

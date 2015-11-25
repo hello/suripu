@@ -37,6 +37,7 @@ public class PillDataDAODynamoDBIT {
     private PillDataDAODynamoDB pillDataDAODynamoDB;
 
     private static final String TABLE_PREFIX = "test_pill_data";
+    private static final String OCTOBER_TABLE_NAME = TABLE_PREFIX + "_2015_10";
     private static final String NOVEMBER_TABLE_NAME = TABLE_PREFIX + "_2015_11";
     private static final String DECEMBER_TABLE_NAME = TABLE_PREFIX + "_2015_12";
 
@@ -74,6 +75,11 @@ public class PillDataDAODynamoDBIT {
         this.pillDataDAODynamoDB = new PillDataDAODynamoDB(amazonDynamoDBClient, TABLE_PREFIX);
 
         try {
+            LOGGER.debug("-------- Creating Table {} ---------", OCTOBER_TABLE_NAME);
+            final String octTableName = pillDataDAODynamoDB.getTableName(new DateTime(2015, 10, 1, 0, 0, DateTimeZone.UTC));
+            final CreateTableResult octResult = pillDataDAODynamoDB.createTable(octTableName);
+            LOGGER.debug("Created dynamoDB table {}", octResult.getTableDescription());
+
             LOGGER.debug("-------- Creating Table {} ---------", NOVEMBER_TABLE_NAME);
             final String novTableName = pillDataDAODynamoDB.getTableName(new DateTime(2015, 11, 1, 0, 0, DateTimeZone.UTC));
             final CreateTableResult novResult = pillDataDAODynamoDB.createTable(novTableName);
@@ -90,7 +96,7 @@ public class PillDataDAODynamoDBIT {
 
     @After
     public void tearDown() throws Exception {
-        final List<String> tableNames = ImmutableList.of(NOVEMBER_TABLE_NAME, DECEMBER_TABLE_NAME);
+        final List<String> tableNames = ImmutableList.of(OCTOBER_TABLE_NAME, NOVEMBER_TABLE_NAME, DECEMBER_TABLE_NAME);
         for (final String name: tableNames) {
             final DeleteTableRequest deleteTableRequest = new DeleteTableRequest()
                     .withTableName(name);
@@ -173,7 +179,7 @@ public class PillDataDAODynamoDBIT {
         final List<TrackerMotion> trackerMotionList = new ArrayList<>();
         final int dataSize = 500;
         final Long accountId = 1L;
-        final DateTime firstTime = new DateTime(2015, 11, 01, 1, 0, DateTimeZone.UTC);
+        final DateTime firstTime = new DateTime(2015, 11, 1, 1, 0, DateTimeZone.UTC);
         for (int i = 0; i < dataSize; i++) {
             trackerMotionList.add(
                     new TrackerMotion.Builder()
@@ -189,10 +195,78 @@ public class PillDataDAODynamoDBIT {
         final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotionList, trackerMotionList.size());
         assertThat(successfulInserts, is(trackerMotionList.size()));
 
+        final int numMinutes = 100;
         final DateTime queryStartTimeUTC = firstTime.plusMinutes(10);
-        final int numDataPoints = 100;
-        final DateTime queryEndTimeUTC = firstTime.plusMinutes(10 + numDataPoints);
+        final DateTime queryEndTimeUTC = firstTime.plusMinutes(10 + numMinutes);
+
         final List<TrackerMotion> results = pillDataDAODynamoDB.getBetween(accountId, queryStartTimeUTC, queryEndTimeUTC);
-        assertThat(results.size(), is(numDataPoints));
+        assertThat(results.size(), is(numMinutes));
+    }
+
+    @Test
+    public void testGetBetweenLocalUTC() {
+        final List<TrackerMotion> trackerMotionList = new ArrayList<>();
+        final int dataSize = 500;
+        final Long accountId = 1L;
+        final int startValue = 900;
+        final int offsetMillis = -28800000;
+        final DateTime firstTime = new DateTime(2015, 11, 1, 1, 0, DateTimeZone.UTC);
+        for (int i = 0; i < dataSize; i++) {
+            trackerMotionList.add(
+                    new TrackerMotion.Builder()
+                            .withAccountId(accountId)
+                            .withTimestampMillis(firstTime.plusMinutes(i).getMillis())
+                            .withExternalTrackerId("ABCDEFG")
+                            .withOffsetMillis(offsetMillis)
+                            .withValue(startValue + i)
+                            .build()
+            );
+        }
+
+        final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotionList, trackerMotionList.size());
+        assertThat(successfulInserts, is(trackerMotionList.size()));
+
+        final int offset = 10;
+        final int numMinutes = 50;
+        final DateTime queryStartLocalUTC = firstTime.plusMinutes(offset).plusMillis(offsetMillis);
+        final DateTime queryEndLocalUTC = queryStartLocalUTC.plusMinutes(numMinutes);
+
+        final List<TrackerMotion> results = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, queryStartLocalUTC, queryEndLocalUTC);
+        assertThat(results.size(), is(numMinutes+1)); // inclusive, add one
+
+        final int correctValue = startValue + offset;
+        assertThat(results.get(0).value, is(correctValue));
+    }
+
+    @Test
+    public void testGetDataCountBetweenLocalUTC() {
+        final List<TrackerMotion> trackerMotionList = new ArrayList<>();
+        final int dataSize = 500;
+        final Long accountId = 1L;
+        final int startValue = 900;
+        final int offsetMillis = -28800000;
+        final DateTime firstTime = new DateTime(2015, 11, 1, 1, 0, DateTimeZone.UTC);
+        for (int i = 0; i < dataSize; i++) {
+            trackerMotionList.add(
+                    new TrackerMotion.Builder()
+                            .withAccountId(accountId)
+                            .withTimestampMillis(firstTime.plusMinutes(i).getMillis())
+                            .withExternalTrackerId("ABCDEFG")
+                            .withOffsetMillis(offsetMillis)
+                            .withValue(startValue + i)
+                            .build()
+            );
+        }
+
+        final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotionList, trackerMotionList.size());
+        assertThat(successfulInserts, is(trackerMotionList.size()));
+
+        final int offset = 10;
+        final int numMinutes = 75;
+        final DateTime queryStartLocalUTC = firstTime.plusMinutes(offset).plusMillis(offsetMillis);
+        final DateTime queryEndLocalUTC = queryStartLocalUTC.plusMinutes(numMinutes);
+
+        final Integer dataCount = pillDataDAODynamoDB.getDataCountBetweenLocalUTC(accountId, queryStartLocalUTC, queryEndLocalUTC);
+        assertThat(dataCount, is(numMinutes+1)); // inclusive, add one
     }
 }
