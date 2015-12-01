@@ -128,7 +128,7 @@ public class DataUtils{
     }
 
     public static float calibrateAudio(final float backgroundDB, final float peakDB) {
-        return (peakDB - 40);
+        return (peakDB - 40) + 25;
     }
 
     private static double computeDewPoint(final double temperature, final double humidity) {
