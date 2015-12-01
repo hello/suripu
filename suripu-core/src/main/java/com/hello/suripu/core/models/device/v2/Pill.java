@@ -10,7 +10,7 @@ import org.joda.time.DateTime;
 
 public class Pill {
     public static final Color DEFAULT_COLOR = Color.BLUE;
-    private static final Integer MIN_IDEAL_BATTERY_LEVEL = 10;
+    private static final Integer MIN_IDEAL_BATTERY_LEVEL = 15;
 
     public enum Color {
         BLUE("BLUE"),
