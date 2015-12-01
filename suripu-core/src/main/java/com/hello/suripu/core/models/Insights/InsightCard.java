@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
+
 import org.joda.time.DateTime;
 
 /**
@@ -37,7 +38,7 @@ public class InsightCard implements Comparable<InsightCard> {
 
         private int value;
 
-        private Category(final int value) {this.value = value;}
+        Category(final int value) {this.value = value;}
 
         public int getValue() {return this.value;}
 
@@ -81,7 +82,7 @@ public class InsightCard implements Comparable<InsightCard> {
 
         private int value;
 
-        private TimePeriod(final int value) {this.value = value;}
+        TimePeriod(final int value) {this.value = value;}
 
         public int getValue() {return this.value;}
 
@@ -118,14 +119,17 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("info_preview")
     public final Optional<String> infoPreview;
 
+    @JsonProperty("image")
+    public final Optional<MultiDensityImage> image;
+
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
-        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent());
+        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent(), Optional.<MultiDensityImage>absent());
     }
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                       final Optional<String> infoPreview) {
+                       final Optional<String> infoPreview, final Optional<MultiDensityImage> image) {
         this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
@@ -133,6 +137,7 @@ public class InsightCard implements Comparable<InsightCard> {
         this.timePeriod = timePeriod;
         this.timestamp = timestamp;
         this.infoPreview = infoPreview;
+        this.image = image;
     }
 
     @Override
@@ -156,7 +161,8 @@ public class InsightCard implements Comparable<InsightCard> {
                 this.category,
                 this.timePeriod,
                 this.timestamp,
-                infoPreview);
+                infoPreview,
+                this.image);
     }
 
 }

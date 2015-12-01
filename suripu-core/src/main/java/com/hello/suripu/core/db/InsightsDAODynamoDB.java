@@ -18,12 +18,15 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.amazonaws.services.dynamodbv2.model.Select;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -33,17 +36,17 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class InsightsDAODynamoDB {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(InsightsDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
-    public final Set<String> targetAttributes;
+
+    public final ImmutableSet<String> attributesToFetch;
+    public final ImmutableSet<String> requiredAttributes;
 
     public static final String ACCOUNT_ID_ATTRIBUTE_NAME = "account_id"; // primary key
     public static final String DATE_CATEGORY_ATTRIBUTE_NAME = "date_category"; // range key
@@ -52,6 +55,9 @@ public class InsightsDAODynamoDB {
     public static final String TITLE_ATTRIBUTE_NAME = "title";
     public static final String MESSAGE_ATTRIBUTE_NAME = "message";
     public static final String TIMESTAMP_UTC_ATTRIBUTE_NAME = "timestamp_utc";
+    public static final String IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME = "phone_image_1x";
+    public static final String IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME = "phone_image_2x";
+    public static final String IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME = "phone_image_3x";
     private static final int MAX_CALL_COUNT = 5;
 
 
@@ -61,11 +67,14 @@ public class InsightsDAODynamoDB {
     public InsightsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
-
-        this.targetAttributes = new HashSet<>();
-        Collections.addAll(targetAttributes, ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
-                CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
-                TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME);
+        this.requiredAttributes = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
+                                                  CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
+                                                  TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME);
+        this.attributesToFetch = ImmutableSet.of(ACCOUNT_ID_ATTRIBUTE_NAME, DATE_CATEGORY_ATTRIBUTE_NAME,
+                                                 CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
+                                                 TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
+                                                 IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME,
+                                                 IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME);
     }
 
     @Timed
@@ -88,7 +97,7 @@ public class InsightsDAODynamoDB {
         }
 
         // batch-write
-        Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+        final Map<String, List<WriteRequest>> requestItems = new HashMap<>();
         requestItems.put(this.tableName, insights);
 
         BatchWriteItemResult results;
@@ -163,7 +172,7 @@ public class InsightsDAODynamoDB {
             final QueryRequest queryRequest = new QueryRequest()
                     .withTableName(this.tableName)
                     .withKeyConditions(queryConditions)
-                    .withAttributesToGet(this.targetAttributes)
+                    .withAttributesToGet(this.attributesToFetch)
                     .withLimit(limit)
                     .withScanIndexForward(scanForward)
                     .withExclusiveStartKey(lastEvaluatedKey);
@@ -173,7 +182,7 @@ public class InsightsDAODynamoDB {
 
             if (queryResult.getItems() != null) {
                 for (final Map<String, AttributeValue> item : items) {
-                    if (!item.keySet().containsAll(targetAttributes)) {
+                    if (!item.keySet().containsAll(requiredAttributes)) {
                         LOGGER.warn("Missing field in item {}", item);
                         continue;
                     }
@@ -240,6 +249,21 @@ public class InsightsDAODynamoDB {
         item.put(TITLE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.title));
         item.put(MESSAGE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.message));
         item.put(TIMESTAMP_UTC_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.timestamp.toString()));
+        if (insightCard.image.isPresent()) {
+            final MultiDensityImage image = insightCard.image.get();
+            if (image.phoneDensityNormal.isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityNormal.get()));
+            }
+
+            if (image.phoneDensityHigh.isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityHigh.get()));
+            }
+
+            if (image.phoneDensityExtraHigh.isPresent()) {
+                item.put(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, new AttributeValue().withS(image.phoneDensityExtraHigh.get()));
+            }
+        }
+
         return item;
     }
 
@@ -247,13 +271,34 @@ public class InsightsDAODynamoDB {
         final InsightCard.Category category = InsightCard.Category.fromInteger(Integer.valueOf(item.get(CATEGORY_ATTRIBUTE_NAME).getN()));
         final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.fromString(item.get(TIME_PERIOD_ATTRIBUTE_NAME).getS());
 
+        final String image1x = item.containsKey(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME)
+                ? item.get(IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME).getS()
+                : null;
+        final String image2x = item.containsKey(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME)
+                ? item.get(IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME).getS()
+                : null;
+        final String image3x = item.containsKey(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME)
+                ? item.get(IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME).getS()
+                : null;
+
+        final Optional<MultiDensityImage> image;
+        if (image1x != null || image2x != null || image3x != null) {
+            image = Optional.of(new MultiDensityImage(Optional.fromNullable(image1x),
+                                                      Optional.fromNullable(image2x),
+                                                      Optional.fromNullable(image3x)));
+        } else {
+            image = Optional.absent();
+        }
+
         return new InsightCard(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
                 item.get(TITLE_ATTRIBUTE_NAME).getS(),
                 item.get(MESSAGE_ATTRIBUTE_NAME).getS(),
                 category,
                 timePeriod,
-                new DateTime(item.get(TIMESTAMP_UTC_ATTRIBUTE_NAME).getS(), DateTimeZone.UTC)
+                new DateTime(item.get(TIMESTAMP_UTC_ATTRIBUTE_NAME).getS(), DateTimeZone.UTC),
+                Optional.<String>absent(),
+                image
         );
     }
 
