@@ -37,10 +37,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -214,10 +216,12 @@ public class MovePillDataToDynamoDBCommand extends ConfiguredCommand<SuripuAppCo
 
 
         LOGGER.debug("Getting data from DynamoDB");
-        final List<TrackerMotion> samplesDDB = pillDataDAODynamoDB.getBetween(accountId, startDateTimeUTC, endDateTimeUTC);
+        final List<TrackerMotion> rawDDB = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, startDateTimeUTC, endDateTimeUTC);
+        final List<TrackerMotion> samplesDDB = getUniqueList(rawDDB);
 
         LOGGER.debug("Getting data from Postgres");
-        final List<TrackerMotion> samplesRDS = trackerMotionDAO.getBetween(accountId, startDateTimeUTC, endDateTimeUTC);
+        final List<TrackerMotion> rawRDS = trackerMotionDAO.getBetweenLocalUTC(accountId, startDateTimeUTC, endDateTimeUTC);
+        final List<TrackerMotion> samplesRDS = getUniqueList(rawRDS);
 
         int sizeErrors = 0;
         int valueErrors = 0;
@@ -226,16 +230,17 @@ public class MovePillDataToDynamoDBCommand extends ConfiguredCommand<SuripuAppCo
             System.out.println(String.format("Data size not the same. DDB: %d, RDS: %d",
                     samplesDDB.size(), samplesRDS.size()));
             sizeErrors++;
-        } else {
-            for (int i=0; i<samplesRDS.size(); i++) {
-                final TrackerMotion rdsData = samplesRDS.get(i);
-                final TrackerMotion ddbData = samplesDDB.get(i);
-                if (!rdsData.equals(ddbData)) {
-                    valueErrors++;
-                    LOGGER.error("Data {} not match. RDS: {}, DDb:{}", rdsData.toString(), ddbData.toString());
-                }
+        }
+
+        for (int i=0; i<samplesRDS.size(); i++) {
+            final TrackerMotion rdsData = samplesRDS.get(i);
+            final TrackerMotion ddbData = samplesDDB.get(i);
+            if (!rdsData.equals(ddbData)) {
+                valueErrors++;
+                LOGGER.error("Data {} not match. RDS: {}, DDb:{}", rdsData.toString(), ddbData.toString());
             }
         }
+
 
         System.out.println("Check Results");
         System.out.println(String.format("Size Errors: %d", sizeErrors));
@@ -243,6 +248,26 @@ public class MovePillDataToDynamoDBCommand extends ConfiguredCommand<SuripuAppCo
 
     }
 
+    private List<TrackerMotion> getUniqueList(final List<TrackerMotion> data) {
+        final Set<TrackerMotion> samples = new TreeSet<>(new Comparator<TrackerMotion>() {
+            @Override
+            public int compare(TrackerMotion o1, TrackerMotion o2) {
+                final long t1 = o1.timestamp;
+                final long t2 = o2.timestamp;
+                if (t1 < t2) {
+                    return -1;
+                }
+                if (t1 > t2) {
+                    return 1;
+                }
+                return 0;
+            }
+        });
+        samples.addAll(data);
+        final List<TrackerMotion> results = Lists.newArrayListWithCapacity(samples.size());
+        results.addAll(samples);
+        return results;
+    }
     /**
      * Perform migration from csv data file to DynamoDB
      * @param namespace name

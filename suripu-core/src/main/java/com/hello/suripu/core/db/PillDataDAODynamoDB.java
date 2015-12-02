@@ -241,6 +241,19 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         return new TrackerMotion.Builder()
                 .withAccountId(PillDataAttribute.ACCOUNT_ID.getLong(item))
                 .withExternalTrackerId(externalTrackerIdFromDDBItem(item))
+                .withTimestampMillis(timestampFromDDBItem(item).withSecondOfMinute(0).getMillis()) // query results return minute-level
+                .withValue(PillDataAttribute.VALUE.getInteger(item))
+                .withOffsetMillis(PillDataAttribute.OFFSET_MILLIS.getInteger(item))
+                .withMotionRange(PillDataAttribute.MOTION_RANGE.getLong(item))
+                .withKickOffCounts(PillDataAttribute.KICKOFF_COUNTS.getLong(item))
+                .withOnDurationInSeconds(PillDataAttribute.ON_DURATION.getLong(item))
+                .build();
+    }
+
+    private TrackerMotion fromDynamoDBItemRaw(final Map<String, AttributeValue> item) {
+        return new TrackerMotion.Builder()
+                .withAccountId(PillDataAttribute.ACCOUNT_ID.getLong(item))
+                .withExternalTrackerId(externalTrackerIdFromDDBItem(item))
                 .withTimestampMillis(timestampFromDDBItem(item).getMillis())
                 .withValue(PillDataAttribute.VALUE.getInteger(item))
                 .withOffsetMillis(PillDataAttribute.OFFSET_MILLIS.getInteger(item))
@@ -263,7 +276,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
             final List<Map<String, AttributeValue>> remainingItems = batchInsertNoRetryReturnsRemaining(trackerMotions);
             for (final Map<String, AttributeValue> item : remainingItems) {
                 if (item != null && !item.isEmpty()) {
-                    remainingData.add(fromDynamoDBItem(item));
+                    remainingData.add(fromDynamoDBItemRaw(item));
                 }
             }
         }
@@ -363,8 +376,8 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
                                                final DateTime startLocalTime,
                                                final DateTime endLocalTime) {
         // aid = accountId, lutcts >= startLocal, lutcts <= endLocal (note, inclusive)
-        final DateTime startTimestampUTC = startLocalTime.minusDays(1).minusSeconds(1);
-        final DateTime endTimestampUTC = endLocalTime.plusDays(1).minusSeconds(1);
+        final DateTime startTimestampUTC = startLocalTime.minusDays(1).minusMinutes(1);
+        final DateTime endTimestampUTC = endLocalTime.plusDays(1).plusMinutes(1);
 
         final Expression keyConditionExpression = Expressions.and(
                 Expressions.equals(PillDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
