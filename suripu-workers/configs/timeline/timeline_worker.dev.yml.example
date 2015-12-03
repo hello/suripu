@@ -113,6 +113,7 @@ dynamodb:
     hmm_bayesnet_priors: hmm_bayesnet_priors
     hmm_bayesnet_models: hmm_bayesnet_models
     calibration: calibration
+    pill_data: pill_data
   endpoints:
     alarm_info: http://localhost:7777
     features : http://localhost:7777
@@ -127,6 +128,7 @@ dynamodb:
     hmm_bayesnet_priors: http://localhost:7777
     hmm_bayesnet_models: http://localhost:7777
     calibration: http://localhost:7777
+    pill_data: http://localhost:7777
 
 
 aggregate_window_size_min: 10

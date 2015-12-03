@@ -117,4 +117,9 @@ public class FeatureFlippedProcessor {
     protected Boolean hasSleepSegmentOffsetRemapping(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SEGMENT_OFFSET_REMAPPING, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasPillDataDynamoDBTimelineEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_PILL_DATA_TIMELINE, accountId, Collections.EMPTY_LIST);
+    }
+
 }

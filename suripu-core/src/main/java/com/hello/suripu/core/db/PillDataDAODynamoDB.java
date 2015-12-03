@@ -429,9 +429,11 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         return ImmutableList.of();
     }
 
+    // used by TrackerMotionDAOIT. not implementing.
     public Integer deleteDataTrackerID(final Long trackerId) {
         return 0;
     }
+
     public ImmutableList<TrackerMotion> getTrackerOffsetMillis(final long accountId,
                                                                final DateTime startDate,
                                                                final DateTime endDate) {

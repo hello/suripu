@@ -174,4 +174,9 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
     private S3BucketConfiguration timelineSeedModelConfiguration;
     public S3BucketConfiguration getTimelineSeedModelConfiguration() { return timelineSeedModelConfiguration; }
 
+    @Valid
+    @NotNull
+    @JsonProperty("pill_data")
+    private DynamoDBConfiguration pillDataConfiguration;
+    public DynamoDBConfiguration getPillDataConfiguration() { return this.pillDataConfiguration; }
 }
