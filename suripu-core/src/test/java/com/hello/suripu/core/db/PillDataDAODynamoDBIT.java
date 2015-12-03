@@ -11,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceInUseException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
@@ -141,9 +142,9 @@ public class PillDataDAODynamoDBIT {
         assertThat(successfulDupeInserts, is(trackerMotionList.size()));
         assertThat(getTableCount(NOVEMBER_TABLE_NAME), is(trackerMotionList.size()));
 
-        final List<TrackerMotion> results = pillDataDAODynamoDB.getSinglePillData(accountId, "ABCDEFG0", firstTime);
-        assertThat(results.isEmpty(), is(false));
-        assertThat(results.get(0).value, is (trackerMotionList.get(0).value));
+        final Optional<TrackerMotion> results = pillDataDAODynamoDB.getSinglePillData(accountId, "ABCDEFG0", firstTime);
+        assertThat(results.isPresent(), is(true));
+        assertThat(results.get().value, is (trackerMotionList.get(0).value));
     }
 
     @Test
@@ -179,13 +180,14 @@ public class PillDataDAODynamoDBIT {
         final List<TrackerMotion> trackerMotionList = new ArrayList<>();
         final int dataSize = 500;
         final Long accountId = 1L;
+        final String externalPillId = "ABCDEFG";
         final DateTime firstTime = new DateTime(2015, 11, 1, 1, 0, DateTimeZone.UTC);
         for (int i = 0; i < dataSize; i++) {
             trackerMotionList.add(
                     new TrackerMotion.Builder()
                             .withAccountId(accountId)
                             .withTimestampMillis(firstTime.plusMinutes(i).getMillis())
-                            .withExternalTrackerId("ABCDEFG")
+                            .withExternalTrackerId(externalPillId)
                             .withOffsetMillis(-28800000)
                             .withValue(900 + i)
                             .build()
@@ -199,7 +201,7 @@ public class PillDataDAODynamoDBIT {
         final DateTime queryStartTimeUTC = firstTime.plusMinutes(10);
         final DateTime queryEndTimeUTC = firstTime.plusMinutes(10 + numMinutes);
 
-        final List<TrackerMotion> results = pillDataDAODynamoDB.getBetween(accountId, queryStartTimeUTC, queryEndTimeUTC);
+        final List<TrackerMotion> results = pillDataDAODynamoDB.getBetween(accountId, queryStartTimeUTC, queryEndTimeUTC, externalPillId);
         assertThat(results.size(), is(numMinutes));
     }
 
