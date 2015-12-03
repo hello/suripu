@@ -14,7 +14,6 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.PillDataIngestDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -177,7 +176,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             }
 
             // only write heartbeat for postgres worker
-            if (!this.savePillHeartbeat) {
+            if (this.savePillHeartbeat) {
                 // Loop again for HeartBeat
                 for (final SenseCommandProtos.pill_data data : pillData) {
                     final String pillId = data.getDeviceId();
@@ -211,16 +210,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
         }
 
-        if (pillDataIngestDAO.name().isInstance(PillDataDAODynamoDB.class)) {
-            try {
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
         // only write heartbeats for postgres worker
-        if (!this.savePillHeartbeat && !pillHeartBeats.isEmpty()) {
+        if (this.savePillHeartbeat && !pillHeartBeats.isEmpty()) {
             final Set<PillHeartBeat> unproccessed = this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
             final float perc = ((float) unproccessed.size() / (float) pillHeartBeats.size()) * 100.0f;
             LOGGER.info("Finished dynamo batch insert: {} heartbeats, {} {}% unprocessed", pillHeartBeats.size(), unproccessed.size(), perc);
