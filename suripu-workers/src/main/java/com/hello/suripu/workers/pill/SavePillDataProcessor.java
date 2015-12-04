@@ -14,7 +14,7 @@ import com.hello.suripu.api.ble.SenseCommandProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
+import com.hello.suripu.core.db.PillDataIngestDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
@@ -37,31 +37,34 @@ import java.util.concurrent.TimeUnit;
 public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(SavePillDataProcessor.class);
 
-    private final TrackerMotionDAO trackerMotionDAO;
+    private final PillDataIngestDAO pillDataIngestDAO;
     private final int batchSize;
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB; // will replace with interface as soon as we have validated this works
+    private final Boolean savePillHeartbeat;
 
     private final Meter messagesProcessed;
     private final Meter batchSaved;
 
-    public SavePillDataProcessor(final TrackerMotionDAO trackerMotionDAO,
+    public SavePillDataProcessor(final PillDataIngestDAO pillDataIngestDAO,
                                  final int batchSize,
                                  final KeyStore pillKeyStore,
                                  final DeviceDAO deviceDAO,
                                  final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                                 final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
-        this.trackerMotionDAO = trackerMotionDAO;
+                                 final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB,
+                                 final Boolean savePillHeartbeat) {
+        this.pillDataIngestDAO = pillDataIngestDAO;
         this.batchSize = batchSize;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
+        this.savePillHeartbeat = savePillHeartbeat;
 
-        this.messagesProcessed = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "messages", "messages-processed", TimeUnit.SECONDS);
-        this.batchSaved = Metrics.defaultRegistry().newMeter(SavePillDataProcessor.class, "batch", "batch-saved", TimeUnit.SECONDS);
+        this.messagesProcessed = Metrics.defaultRegistry().newMeter(pillDataIngestDAO.name(), "messages", "messages-processed", TimeUnit.SECONDS);
+        this.batchSaved = Metrics.defaultRegistry().newMeter(pillDataIngestDAO.name(), "batch", "batch-saved", TimeUnit.SECONDS);
     }
 
     @Override
@@ -111,11 +114,13 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
             pillKeys.putAll(keys);
 
+            // get account_ids associated with the pill external_ids
             for (final String pillId : pillIds) {
                 final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(pillId);
                 pairs.put(pillId, optionalPair);
             }
 
+            // get timezones
             for (final String pillId : pillIds) {
                 final String senseId = pillIdToSenseId.get(pillId);
                 final Optional<DeviceAccountPair> pair = pairs.get(pillId);
@@ -170,23 +175,26 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 }
             }
 
-            // Loop again for HeartBeat
-            for(final SenseCommandProtos.pill_data data : pillData) {
-                final String pillId = data.getDeviceId();
-                if (data.hasBatteryLevel()) {
+            // only write heartbeat for postgres worker
+            if (this.savePillHeartbeat) {
+                // Loop again for HeartBeat
+                for (final SenseCommandProtos.pill_data data : pillData) {
+                    final String pillId = data.getDeviceId();
+                    if (data.hasBatteryLevel()) {
 
-                    final int batteryLevel = data.getBatteryLevel();
-                    final int upTimeInSeconds = data.getUptime();
-                    final int firmwareVersion = data.getFirmwareVersion();
-                    final Long ts = data.getTimestamp() * 1000L;
-                    final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
+                        final int batteryLevel = data.getBatteryLevel();
+                        final int upTimeInSeconds = data.getUptime();
+                        final int firmwareVersion = data.getFirmwareVersion();
+                        final Long ts = data.getTimestamp() * 1000L;
+                        final DateTime lastUpdated = new DateTime(ts, DateTimeZone.UTC);
 
 
-                    // dual writes to dynamo
-                    if(hasPillHeartBeatDynamoDBEnabled(pillId)) {
-                        final PillHeartBeat pillHeartBeat = PillHeartBeat.create(pillId, batteryLevel, firmwareVersion, upTimeInSeconds, lastUpdated);
-                        LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pillId, lastUpdated);
-                        pillHeartBeats.add(pillHeartBeat);
+                        // dual writes to dynamo
+                        if (hasPillHeartBeatDynamoDBEnabled(pillId)) {
+                            final PillHeartBeat pillHeartBeat = PillHeartBeat.create(pillId, batteryLevel, firmwareVersion, upTimeInSeconds, lastUpdated);
+                            LOGGER.trace("Received heartbeat for pill_id {}, last_updated {}", pillId, lastUpdated);
+                            pillHeartBeats.add(pillHeartBeat);
+                        }
                     }
                 }
             }
@@ -197,13 +205,13 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         if (trackerData.size() > 0) {
             LOGGER.info("About to batch insert: {} tracker motion samples", trackerData.size());
-            this.trackerMotionDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
+            this.pillDataIngestDAO.batchInsertTrackerMotionData(trackerData, this.batchSize);
             batchSaved.mark(trackerData.size());
             LOGGER.info("Finished batch insert: {} tracker motion samples", trackerData.size());
         }
 
-        // Dual writes to DynamoDB
-        if (!pillHeartBeats.isEmpty()) {
+        // only write heartbeats for postgres worker
+        if (this.savePillHeartbeat && !pillHeartBeats.isEmpty()) {
             final Set<PillHeartBeat> unproccessed = this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
             final float perc = ((float) unproccessed.size() / (float) pillHeartBeats.size()) * 100.0f;
             LOGGER.info("Finished dynamo batch insert: {} heartbeats, {} {}% unprocessed", pillHeartBeats.size(), unproccessed.size(), perc);
@@ -231,9 +239,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             try {
                 iRecordProcessorCheckpointer.checkpoint();
                 LOGGER.warn("Checkpoint successful.");
-            } catch (InvalidStateException e) {
-                LOGGER.error(e.getMessage());
-            } catch (ShutdownException e) {
+            } catch (InvalidStateException | ShutdownException e) {
                 LOGGER.error(e.getMessage());
             }
         }

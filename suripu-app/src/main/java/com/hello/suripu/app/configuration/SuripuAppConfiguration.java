@@ -22,7 +22,6 @@ public class SuripuAppConfiguration extends Configuration {
     @NotNull
     @JsonProperty("sensors_db")
     private DatabaseConfiguration sensorsDB = new DatabaseConfiguration();
-
     public DatabaseConfiguration getSensorsDB() {
         return sensorsDB;
     }
@@ -425,7 +424,13 @@ public class SuripuAppConfiguration extends Configuration {
     private S3BucketConfiguration timelineSeedModelConfiguration;
     public S3BucketConfiguration getTimelineSeedModelConfiguration() { return timelineSeedModelConfiguration; }
 
+    @Valid
+    @JsonProperty("pill_data")
+    private DynamoDBConfiguration pillDataConfiguration;
+    public DynamoDBConfiguration getPillDataConfiguration() { return this.pillDataConfiguration; }
+
     @JsonProperty("provision_key")
     private S3BucketConfiguration provisionKeyConfiguration = S3BucketConfiguration.create("hello-secure", "hello-pvt.pem");
     public S3BucketConfiguration getProvisionKeyConfiguration() { return provisionKeyConfiguration; }
+
 }

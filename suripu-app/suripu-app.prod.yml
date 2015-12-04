@@ -358,3 +358,7 @@ timeline_seed_model:
   bucket: hello-timeline-models
   key: normal4.base64
 
+pill_data:
+  endpoint: http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_pill_data

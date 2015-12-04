@@ -1,5 +1,5 @@
-metrics_enabled: true
-debug: false
+metrics_enabled: false
+debug: true
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
@@ -9,9 +9,9 @@ graphite:
 
 sensors_db:
   driverClass: org.postgresql.Driver
-  user: sensors
-  password: hello-sensors
-  url: jdbc:postgresql://sensors-2.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/sensors1
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -42,9 +42,9 @@ sensors_db:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -76,9 +76,9 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    batch_pill_data : batch_pill_data
+    batch_pill_data : dev_batch_pill_data
 
-app_name: SavePillDataConsumerProd
+app_name: SavePillDataConsumerDDB
 
 max_records: 50
 
@@ -113,15 +113,14 @@ logging:
 dynamodb:
   region: us-east-1
   tables:
-    alarm_info: prod_alarm_info
+    alarm_info: alarm_info
     features: features
     pill_key_store : pill_key_store
-    pill_heartbeat : prod_pill_heartbeat
-    pill_data: prod_pill_data
+    pill_heartbeat : pill_heartbeat
+    pill_data: pill_data
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
     pill_key_store : http://dynamodb.us-east-1.amazonaws.com
     pill_heartbeat : http://dynamodb.us-east-1.amazonaws.com
     pill_data: http://dynamodb.us-east-1.amazonaws.com
-

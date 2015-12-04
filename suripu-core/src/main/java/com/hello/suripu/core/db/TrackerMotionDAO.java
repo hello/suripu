@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 /**
  * Created by pangwu on 5/8/14.
  */
-public abstract class TrackerMotionDAO {
+public abstract class TrackerMotionDAO implements PillDataIngestDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrackerMotionDAO.class);
     private static final Pattern PG_UNIQ_PATTERN = Pattern.compile("ERROR: duplicate key value violates unique constraint \"(\\w+)\"");
 
@@ -274,6 +274,11 @@ public abstract class TrackerMotionDAO {
             offsets.put(date, trackerMotions.get(offsetIndex).offsetMillis);
         }
         return offsets;
+    }
+
+    @Override
+    public Class name() {
+        return  TrackerMotionDAO.class;
     }
 
 }

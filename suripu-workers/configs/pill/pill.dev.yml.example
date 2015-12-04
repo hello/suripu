@@ -127,9 +127,11 @@ dynamodb:
     features: features
     pill_key_store : pill_key_store
     pill_heartbeat: pill_heartbeat
+    pill_data: pill_data
   endpoints:
     alarm_info: http://localhost:7777
     features : http://localhost:7777
     pill_key_store : http://localhost:7777
     pill_heartbeat: http://localhost:7777
+    pill_data: http://localhost:7777
 

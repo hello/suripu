@@ -11,6 +11,8 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
+import com.hello.suripu.core.db.PillDataIngestDAO;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
@@ -45,8 +47,15 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillWorkerCommand.class);
 
+    private boolean useDynamoPillData = false;
+
     public PillWorkerCommand(String name, String description) {
         super(name, description);
+    }
+
+    public PillWorkerCommand(String name, String description, final boolean useDynamoPillData) {
+        this(name, description);
+        this.useDynamoPillData = useDynamoPillData;
     }
 
     @Override
@@ -56,14 +65,11 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
 
 
         final DBIFactory dbiFactory = new DBIFactory();
-        final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
         final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql");
 
         // Joda Argument factory is not supported by default by DW, needs to be added manually
-        sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
         commonDBI.registerArgumentFactory(new JodaArgumentFactory());
 
-        final TrackerMotionDAO trackerMotionDAO = sensorsDBI.onDemand(TrackerMotionDAO.class);
         final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
         final PillHeartBeatDAO heartBeatDAO = commonDBI.onDemand(PillHeartBeatDAO.class);
 
@@ -96,8 +102,9 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
+        String kinesisAppName = configuration.getAppName();
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(
-                configuration.getAppName(),
+                kinesisAppName,
                 queueName,
                 awsCredentialsProvider,
                 workerId);
@@ -124,13 +131,26 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
         final AmazonDynamoDB pillDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_HEARTBEAT);
         final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB = PillHeartBeatDAODynamoDB.create(pillDynamoDB, tableNames.get(DynamoDBTableName.PILL_HEARTBEAT));
 
+        PillDataIngestDAO pillDataIngestDAO;
+        Boolean savePillHeartBeat = true;
+        if (useDynamoPillData) {
+            final AmazonDynamoDB trackerMotionDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_DATA);
+            pillDataIngestDAO = new PillDataDAODynamoDB(trackerMotionDynamoDB, tableNames.get(DynamoDBTableName.PILL_DATA));
+            savePillHeartBeat = false;
+        } else {
+            final DBI sensorsDBI = dbiFactory.build(environment, configuration.getSensorDB(), "postgresql");
+            sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
+            pillDataIngestDAO = sensorsDBI.onDemand(TrackerMotionDAO.class);
+        }
+
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(
-                trackerMotionDAO,
+                pillDataIngestDAO,
                 configuration.getBatchSize(),
                 mergedUserInfoDynamoDB,
                 pillKeyStore,
                 deviceDAO,
-                pillHeartBeatDAODynamoDB
+                pillHeartBeatDAODynamoDB,
+                savePillHeartBeat
         );
         final Worker worker = new Worker(factory, kinesisConfig);
         worker.run();

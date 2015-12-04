@@ -21,6 +21,7 @@ import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.OTAHistoryDAODynamoDB;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.ResponseCommandsDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
@@ -83,6 +84,7 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
         createPillHeartBeatTable(configuration, awsCredentialsProvider);
         createDeviceDataTable(configuration, awsCredentialsProvider);
         createLastSeenTable(configuration, awsCredentialsProvider);
+        createPillDataTable(configuration, awsCredentialsProvider);
     }
 
     private void createSmartAlarmLogTable(final SuripuAppConfiguration configuration, final AWSCredentialsProvider awsCredentialsProvider){
@@ -566,4 +568,29 @@ public class CreateDynamoDBTables extends ConfiguredCommand<SuripuAppConfigurati
             System.out.println(description.getTableStatus());
         }
     }
+
+    private void createPillDataTable(SuripuAppConfiguration configuration, AWSCredentialsProvider awsCredentialsProvider) {
+        final AmazonDynamoDBClient client = new AmazonDynamoDBClient(awsCredentialsProvider);
+        final DynamoDBConfiguration config = configuration.getPillDataConfiguration();
+        final String tableName = config.getTableName();
+        client.setEndpoint(config.getEndpoint());
+
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final PillDataDAODynamoDB pillDataDynamoDB = new PillDataDAODynamoDB(client, config.getTableName());
+        for (int i = 0; i < 6; i++) {
+            final DateTime currDateTime = now.plusMonths(i);
+            final String currentTablename = pillDataDynamoDB.getTableName(currDateTime);
+            System.out.println(String.format("Creating table %s", currentTablename));
+            try {
+                client.describeTable(tableName);
+                System.out.println(String.format("%s already exists.", currentTablename));
+            } catch (AmazonServiceException exception) {
+                final CreateTableResult result = pillDataDynamoDB.createTable(currentTablename);
+                final TableDescription description = result.getTableDescription();
+                System.out.println(description.getTableStatus());
+            }
+        }
+    }
+
+
 }

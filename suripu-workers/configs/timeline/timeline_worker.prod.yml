@@ -124,6 +124,7 @@ dynamodb:
     online_hmm_models: prod_online_hmm_models
     calibration: prod_calibration
     device_data: prod_sense_data
+    pill_data: prod_pill_data
   endpoints:
     alarm_info: http://dynamodb.us-east-1.amazonaws.com
     features : http://dynamodb.us-east-1.amazonaws.com
@@ -139,6 +140,7 @@ dynamodb:
     online_hmm_models: http://dynamodb.us-east-1.amazonaws.com
     calibration: http://dynamodb.us-east-1.amazonaws.com
     device_data: http://dynamodb.us-east-1.amazonaws.com
+    pill_data: http://dynamodb.us-east-1.amazonaws.com
 
 aggregate_window_size_min: 10
 

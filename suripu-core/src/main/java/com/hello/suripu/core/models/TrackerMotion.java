@@ -1,6 +1,7 @@
 package com.hello.suripu.core.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -53,9 +54,13 @@ public class TrackerMotion {
     @JsonProperty("on_duration_seconds")
     public final Long onDurationInSeconds;
 
+    @JsonIgnore
+    public final String externalTrackerId;
+
     public final Optional<Long> motionMask;
 
     public final Optional<Long> cosTheta;
+
 
     @JsonCreator
     // TODO: make constructor private and force Builder use to reduce risks on not
@@ -68,8 +73,7 @@ public class TrackerMotion {
                          @JsonProperty("timezone_offset") final int timeZoneOffset,
                          final Long motionRange,
                          final Long kickOffCounts,
-                         final Long onDurationInSeconds){
-
+                         final Long onDurationInSeconds) {
         this.id = id;
         this.accountId = accountId;
         this.trackerId = trackerId;
@@ -77,10 +81,11 @@ public class TrackerMotion {
         this.value = value;
         this.offsetMillis = timeZoneOffset;
 
-
         this.motionRange = motionRange;
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
+
+        this.externalTrackerId = "";
 
         this.cosTheta = Optional.absent();
         this.motionMask = Optional.absent();
@@ -95,6 +100,7 @@ public class TrackerMotion {
                           final Long motionRange,
                           final Long kickOffCounts,
                           final Long onDurationInSeconds,
+                          final String externalTrackerId,
                           final Optional<Long> motionMask,
                           final Optional<Long> cosTheta){
 
@@ -110,16 +116,15 @@ public class TrackerMotion {
         this.kickOffCounts = kickOffCounts;
         this.onDurationInSeconds = onDurationInSeconds;
 
+        this.externalTrackerId = externalTrackerId;
         this.cosTheta = cosTheta;
         this.motionMask = motionMask;
     }
-
 
     public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
         final PillPayloadV2 payloadV2 = TrackerMotion.data(pill_data, encryptionKey, accountPair.externalDeviceId);
         final Long timestampInMillis = Utils.convertTimestampInSecondsToTimestampInMillis(pill_data.getTimestamp());
         final Integer timeZoneOffset = timeZone.getOffset(timestampInMillis);
-
         return new TrackerMotion(
                 0L,
                 accountPair.accountId,
@@ -130,11 +135,11 @@ public class TrackerMotion {
                 payloadV2.motionRange,
                 payloadV2.kickOffCounts,
                 payloadV2.onDurationInSeconds,
+                accountPair.externalDeviceId,
                 payloadV2.motionMask,
                 payloadV2.cosTheta
         );
     }
-
 
     public static PillPayloadV2 data(SenseCommandProtos.pill_data data, final byte[] encryptionKey, final String pillId) throws InvalidEncryptedPayloadException{
         if(data.hasMotionDataEntrypted()) {
@@ -239,6 +244,7 @@ public class TrackerMotion {
         private Long motionRange = 0L;
         private Long kickOffCounts = 0L;
         private Long onDurationInSeconds = 0L;
+        private String externalTrackerId = "";
         private Optional<Long> motionMask = Optional.absent();
         private Optional<Long> cosTheta = Optional.absent();
 
@@ -256,8 +262,14 @@ public class TrackerMotion {
             return this;
         }
 
+        @Deprecated
         public Builder withTrackerId(final Long internalPillId){
             this.trackerId = internalPillId;
+            return this;
+        }
+
+        public Builder withExternalTrackerId(final String externalPillId) {
+            this .externalTrackerId = externalPillId;
             return this;
         }
 
@@ -286,7 +298,6 @@ public class TrackerMotion {
             return this;
         }
 
-
         public Builder withOnDurationInSeconds(final Long onDurationInSeconds) {
             this.onDurationInSeconds = onDurationInSeconds;
             return this;
@@ -313,6 +324,7 @@ public class TrackerMotion {
                     this.motionRange,
                     this.kickOffCounts,
                     this.onDurationInSeconds,
+                    this.externalTrackerId,
                     this.motionMask,
                     this.cosTheta);
         }

@@ -9,17 +9,16 @@ import com.hello.suripu.core.models.Event;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.Sensor;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.util.HmmDeserialization;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import junit.framework.TestCase;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**

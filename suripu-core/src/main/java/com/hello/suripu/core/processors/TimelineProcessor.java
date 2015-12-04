@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -78,6 +79,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public static final String VERSION = "0.0.2";
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private final TrackerMotionDAO trackerMotionDAO;
+    private final PillDataDAODynamoDB pillDataDAODynamoDB;
     private final DeviceReadDAO deviceDAO;
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
@@ -113,6 +115,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
     static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
+                                                            final PillDataDAODynamoDB pillDataDAODynamoDB,
                                                             final DeviceReadDAO deviceDAO,
                                                             final DeviceDataDAO deviceDataDAO,
                                                             final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
@@ -128,7 +131,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
-        return new TimelineProcessor(trackerMotionDAO,
+        return new TimelineProcessor(trackerMotionDAO, pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO, featureExtractionModelsDAO,
@@ -137,20 +140,21 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO,deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO);
+        return new TimelineProcessor(trackerMotionDAO, pillDataDAODynamoDB, deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO);
     }
 
     //private SessionLogDebug(final String)
 
     private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
-                            final DeviceReadDAO deviceDAO,
-                            final DeviceDataDAO deviceDataDAO,
+                              final PillDataDAODynamoDB pillDataDAODynamoDB,
+                              final DeviceReadDAO deviceDAO,
+                              final DeviceDataDAO deviceDataDAO,
                               final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
-                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
-                            final FeedbackReadDAO feedbackDAO,
-                            final SleepHmmDAO sleepHmmDAO,
-                            final AccountReadDAO accountDAO,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                              final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+                              final FeedbackReadDAO feedbackDAO,
+                              final SleepHmmDAO sleepHmmDAO,
+                              final AccountReadDAO accountDAO,
+                              final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
                               final OnlineHmmModelsDAO priorsDAO,
                               final FeatureExtractionModelsDAO featureExtractionModelsDAO,
@@ -158,6 +162,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                               final CalibrationDAO calibrationDAO,
                               final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
         this.trackerMotionDAO = trackerMotionDAO;
+        this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -449,7 +454,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
     protected Optional<OneDaysSensorData> getSensorData(final long accountId, final DateTime targetDate, final DateTime endDate, final long currentTimeUTC,final Optional<TimelineFeedback> newFeedback) {
-        final List<TrackerMotion> originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
+
+        List<TrackerMotion> originalTrackerMotions;
+        if (hasPillDataDynamoDBTimelineEnabled(accountId)) {
+            originalTrackerMotions = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, targetDate, endDate);
+            LOGGER.info("Pill data for timeline generated by DynamoDB for account {}", accountId);
+        } else {
+            originalTrackerMotions = trackerMotionDAO.getBetweenLocalUTC(accountId, targetDate, endDate);
+        }
+
         if (originalTrackerMotions.isEmpty()) {
             LOGGER.warn("No original tracker motion data for account {} on {}, returning optional absent", accountId, targetDate);
             return Optional.absent();
@@ -539,7 +552,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                     targetDate.minusMillis(tzOffsetMillis).getMillis(),
                     endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
+                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId), optionalColor, calibrationOptional
             );
         }
 
@@ -862,7 +875,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (optionalPartnerAccountId.isPresent()) {
             final Long partnerAccountId = optionalPartnerAccountId.get();
             LOGGER.debug("partner account {}", partnerAccountId);
-            return this.trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
+            if (hasPillDataDynamoDBTimelineEnabled(partnerAccountId)) {
+                LOGGER.info("Pill data for timeline generated by DynamoDB for partner account {}", accountId);
+                return pillDataDAODynamoDB.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
+            } else {
+                return trackerMotionDAO.getBetweenLocalUTC(partnerAccountId, startTime, endTime);
+            }
         }
         return Collections.EMPTY_LIST;
     }
