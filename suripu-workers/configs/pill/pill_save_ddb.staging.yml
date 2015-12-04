@@ -78,7 +78,7 @@ kinesis:
   streams :
     batch_pill_data : dev_batch_pill_data
 
-app_name: SavePillDataConsumer
+app_name: SavePillDataConsumerDDB
 
 max_records: 50
 
