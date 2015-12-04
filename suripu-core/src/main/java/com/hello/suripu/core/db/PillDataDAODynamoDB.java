@@ -64,7 +64,9 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         LOCAL_UTC_TS ("lutcts", "S"),
         MOTION_RANGE ("mr", "N"),
         KICKOFF_COUNTS ("kc", "N"),
-        ON_DURATION ("od", "N");
+        ON_DURATION ("od", "N"),
+        COS_THETA ("cosT", "N"),
+        MOTION_MASK ("mask", "N");
 
         private final String name;
         private final String type;
@@ -105,6 +107,8 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
             .add(PillDataAttribute.MOTION_RANGE)
             .add(PillDataAttribute.KICKOFF_COUNTS)
             .add(PillDataAttribute.ON_DURATION)
+            .add(PillDataAttribute.COS_THETA)
+            .add(PillDataAttribute.MOTION_MASK)
             .build();
 
 
@@ -178,6 +182,15 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         item.put(PillDataAttribute.MOTION_RANGE.name, new AttributeValue().withN(String.valueOf(trackerMotion.motionRange)));
         item.put(PillDataAttribute.KICKOFF_COUNTS.name, new AttributeValue().withN(String.valueOf(trackerMotion.kickOffCounts)));
         item.put(PillDataAttribute.ON_DURATION.name, new AttributeValue().withN(String.valueOf(trackerMotion.onDurationInSeconds)));
+
+        if (trackerMotion.cosTheta.isPresent()) {
+            item.put(PillDataAttribute.COS_THETA.name, new AttributeValue().withN(String.valueOf(trackerMotion.cosTheta.get())));
+        }
+
+        if (trackerMotion.motionMask.isPresent()) {
+            item.put(PillDataAttribute.MOTION_MASK.name, new AttributeValue().withN(String.valueOf(trackerMotion.motionMask.get())));
+        }
+
         return item;
     }
 
@@ -225,21 +238,8 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         return DateTime.parse(dateString + "Z", DATE_TIME_READ_FORMATTER).withZone(DateTimeZone.UTC);
     }
 
-    private TrackerMotion fromDynamoDBItem(final Map<String, AttributeValue> item) {
-        return new TrackerMotion.Builder()
-                .withAccountId(PillDataAttribute.ACCOUNT_ID.getLong(item))
-                .withExternalTrackerId(externalTrackerIdFromDDBItem(item))
-                .withTimestampMillis(timestampFromDDBItem(item).withSecondOfMinute(0).getMillis()) // query results return minute-level
-                .withValue(PillDataAttribute.VALUE.getInteger(item))
-                .withOffsetMillis(PillDataAttribute.OFFSET_MILLIS.getInteger(item))
-                .withMotionRange(PillDataAttribute.MOTION_RANGE.getLong(item))
-                .withKickOffCounts(PillDataAttribute.KICKOFF_COUNTS.getLong(item))
-                .withOnDurationInSeconds(PillDataAttribute.ON_DURATION.getLong(item))
-                .build();
-    }
-
-    private TrackerMotion fromDynamoDBItemRaw(final Map<String, AttributeValue> item) {
-        return new TrackerMotion.Builder()
+    private TrackerMotion.Builder rawBuilderFromTrackerMotion(final Map<String, AttributeValue> item) {
+        final TrackerMotion.Builder builder = new TrackerMotion.Builder()
                 .withAccountId(PillDataAttribute.ACCOUNT_ID.getLong(item))
                 .withExternalTrackerId(externalTrackerIdFromDDBItem(item))
                 .withTimestampMillis(timestampFromDDBItem(item).getMillis())
@@ -247,8 +247,27 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
                 .withOffsetMillis(PillDataAttribute.OFFSET_MILLIS.getInteger(item))
                 .withMotionRange(PillDataAttribute.MOTION_RANGE.getLong(item))
                 .withKickOffCounts(PillDataAttribute.KICKOFF_COUNTS.getLong(item))
-                .withOnDurationInSeconds(PillDataAttribute.ON_DURATION.getLong(item))
-                .build();
+                .withOnDurationInSeconds(PillDataAttribute.ON_DURATION.getLong(item));
+
+        if (item.containsKey(PillDataAttribute.COS_THETA.name)) {
+            builder.withCosTheta(PillDataAttribute.COS_THETA.getLong(item));
+        }
+
+        if (item.containsKey(PillDataAttribute.MOTION_MASK.name)) {
+            builder.withMotionMask(PillDataAttribute.MOTION_MASK.getLong(item));
+        }
+        return builder;
+    }
+
+    private TrackerMotion fromDynamoDBItem(final Map<String, AttributeValue> item) {
+        final TrackerMotion.Builder builder = rawBuilderFromTrackerMotion(item);
+        builder.withTimestampMillis(timestampFromDDBItem(item).withSecondOfMinute(0).getMillis()); // query results return minute-level
+        return builder.build();
+    }
+
+    private TrackerMotion fromDynamoDBItemRaw(final Map<String, AttributeValue> item) {
+        final TrackerMotion.Builder builder = rawBuilderFromTrackerMotion(item);
+        return builder.build();
     }
 
     /**

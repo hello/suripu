@@ -203,6 +203,42 @@ public class PillDataDAODynamoDBIT {
 
         final List<TrackerMotion> results = pillDataDAODynamoDB.getBetween(accountId, queryStartTimeUTC, queryEndTimeUTC, externalPillId);
         assertThat(results.size(), is(numMinutes));
+        assertThat(results.get(results.size() - 1).cosTheta.isPresent(), is(false));
+        assertThat(results.get(results.size() - 1).motionMask.isPresent(), is(false));
+    }
+
+    @Test
+    public void testGetBetweenWithOptionalFields() {
+        final List<TrackerMotion> trackerMotionList = new ArrayList<>();
+        final int dataSize = 500;
+        final Long accountId = 1L;
+        final String externalPillId = "ABCDEFG";
+        final DateTime firstTime = new DateTime(2015, 11, 1, 1, 0, DateTimeZone.UTC);
+        for (int i = 0; i < dataSize; i++) {
+            trackerMotionList.add(
+                    new TrackerMotion.Builder()
+                            .withAccountId(accountId)
+                            .withTimestampMillis(firstTime.plusMinutes(i).getMillis())
+                            .withExternalTrackerId(externalPillId)
+                            .withOffsetMillis(-28800000)
+                            .withValue(900 + i)
+                            .withCosTheta(new Long(i))
+                            .withMotionMask(new Long(i + 1))
+                            .build()
+            );
+        }
+
+        final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotionList, trackerMotionList.size());
+        assertThat(successfulInserts, is(trackerMotionList.size()));
+
+        final int numMinutes = 100;
+        final DateTime queryStartTimeUTC = firstTime.plusMinutes(10);
+        final DateTime queryEndTimeUTC = firstTime.plusMinutes(10 + numMinutes);
+
+        final List<TrackerMotion> results = pillDataDAODynamoDB.getBetween(accountId, queryStartTimeUTC, queryEndTimeUTC, externalPillId);
+        assertThat(results.size(), is(numMinutes));
+        assertThat(results.get(results.size() - 1).cosTheta.get(), is(new Long(numMinutes + 9)));
+        assertThat(results.get(results.size() - 1).motionMask.get(), is(new Long(numMinutes + 10)));
     }
 
     @Test
