@@ -38,6 +38,14 @@ restart suripuworkers-pilldata
 
 sleep 1
 
+echo "Moving pill save ddb configs to /etc/"
+cp /home/build/build/pill_save_ddb.staging.yml /etc/
+
+echo "restarting..."
+restart suripuworkers-pill-ddb
+
+sleep 1
+
 echo "Moving smart alarm configs to /etc/"
 cp /home/build/build/alarm_worker.staging.yml /etc/
 
