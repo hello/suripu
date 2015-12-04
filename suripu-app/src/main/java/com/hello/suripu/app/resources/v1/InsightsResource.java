@@ -374,6 +374,7 @@ public class InsightsResource extends BaseResource {
                 DateTimeUtil.dateToYmdString(endDate));
 
         if (sleepStats.size() < TRENDS_AVAILABLE_AFTER_DAYS) {
+            LOGGER.warn("checkTrendsEligibility is False for account {}", accountId);
             return false;
         }
         return true;
