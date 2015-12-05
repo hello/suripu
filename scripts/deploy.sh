@@ -53,7 +53,7 @@ sleep 1
 
 #### Pill DynamoDB worker
 echo "Moving pill save ddb configs to /etc/"
-cp /home/build/build/pill_save_ddb.staging.yml /etc/
+cp /home/build/build/pill_save_ddb.staging.yml /etc/pill_save_ddb.yml
 #echo "restarting..."
 #restart suripuworkers-pill-ddb
 #sleep 1
@@ -77,7 +77,7 @@ sleep 1
 
 #### Sense data DynamoDB
 echo "Moving sense save ddb configs to /etc/"
-cp /home/build/build/sense_save_ddb.staging.yml /etc/
+cp /home/build/build/sense_save_ddb.staging.yml /etc/sense_save_ddb.yml
 #echo "restarting"
 #restart suripuworkers-sense-ddb
 #sleep 1
@@ -93,7 +93,7 @@ cp /home/build/build/index_logs_worker.staging.yml /etc/index_logs_worker.prod.y
 
 #### Timeline Analytics logs
 echo "Moving timeline log worker configs to /etc/"
-cp /home/build/build/timeline_logs.staging.yml /etc/
+cp /home/build/build/timeline_logs.staging.yml /etc/timeline_logs.yml
 #echo "restarting"
 #restart suripuworkers-timeline-logs
 #sleep 1
