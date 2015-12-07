@@ -372,6 +372,8 @@ public class TrackerMotion {
         }
 
         public static PillPayloadV2 decryptedToPillPayload(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
+            checkForMagicBytes(decryptedRawMotion);
+
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
             Exception exception = null;
             long motionAmplitude = -1;
@@ -399,6 +401,8 @@ public class TrackerMotion {
         }
 
         public static PillPayloadV2 decryptedToPillPayloadVersion2(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
+            checkForMagicBytes(decryptedRawMotion);
+
             final LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new ByteArrayInputStream(decryptedRawMotion));
 
             Exception exception = null;
@@ -430,14 +434,7 @@ public class TrackerMotion {
             return PillPayloadV2.create(rawToMilliMS2(motionAmplitude), maxAccelerationRange, kickOffTimePerMinute, motionDurationInSecond);
         }
 
-        public static byte[] decryptRawMotion(final byte[] key, final byte[] encryptedMotionData) throws InvalidEncryptedPayloadException {
-            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
-
-            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
-            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
-
-            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
-
+        private static void checkForMagicBytes(final byte[] decryptedRawMotion) throws InvalidEncryptedPayloadException {
             // check for magic bytes 5A5A added by the pill
             // fail if they don't match
             // Only pill DVT has magic bytes, so check length to ensure only pill DVT fails if we don't find magic bytes
@@ -445,6 +442,15 @@ public class TrackerMotion {
                     decryptedRawMotion[decryptedRawMotion.length -2] != 0x5A) {
                 throw new InvalidEncryptedPayloadException("Magic bytes don't match");
             }
+        }
+
+        public static byte[] decryptRawMotion(final byte[] key, final byte[] encryptedMotionData) {
+            final byte[] nonce = Arrays.copyOfRange(encryptedMotionData, 0, 8);
+
+            //final byte[] crc = Arrays.copyOfRange(encryptedMotionData, encryptedMotionData.length - 1 - 2, encryptedMotionData.length);  // Not used yet
+            final byte[] encryptedRawMotion = Arrays.copyOfRange(encryptedMotionData, 8, encryptedMotionData.length);
+
+            final byte[] decryptedRawMotion = counterModeDecrypt(key, nonce, encryptedRawMotion);
             return decryptedRawMotion;
         }
 
