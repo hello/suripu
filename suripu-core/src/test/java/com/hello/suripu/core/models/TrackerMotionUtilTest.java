@@ -2,6 +2,8 @@ package com.hello.suripu.core.models;
 
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedInts;
+import com.google.protobuf.ByteString;
+import com.hello.suripu.api.ble.SenseCommandProtos;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
@@ -102,6 +104,28 @@ public class TrackerMotionUtilTest {
 
     }
 
+    @Test
+    public void testFirmwareVersion4() throws Exception {
+        final String pillId = "whateva";
+        final Integer firmwareVersion = 4;
+        final byte[] encryptedMotionData = bytes(0x0F, 0xFB, 0x55, 0x0A, 0xC4, 0x2C, 0x53, 0x03, 0x59,
+                                                 0x79, 0x0E, 0xC4, 0x5C, 0xD1, 0x43, 0x28, 0xA2, 0x87);
+        final byte[] key = bytes(0xD4, 0xD9, 0xEC, 0x79, 0xC9, 0x24, 0xB6, 0xC1,
+                                 0x23, 0xA2, 0x82, 0x4F, 0x47, 0x8A, 0x5E, 0xCB);
+        final SenseCommandProtos.pill_data pillData = SenseCommandProtos.pill_data.newBuilder()
+                .setDeviceId(pillId)
+                .setBatteryLevel(100)
+                .setFirmwareVersion(firmwareVersion)
+                .setMotionDataEntrypted(ByteString.copyFrom(encryptedMotionData))
+                .setTimestamp(1L)
+                .build();
+        final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.data(pillData, key, pillId);
+        assertThat(payloadV2.maxAcceleration, is(1072L));
+        assertThat(payloadV2.onDurationInSeconds, is(2L));
+        assertThat(payloadV2.motionMask.get(), is(3377699720527872L));
+        assertThat(payloadV2.cosTheta.get(), is(109L));
+    }
+
 
     private byte[] bytes(int... ints) {
         final byte[] output = new byte[ints.length];
@@ -128,7 +152,8 @@ public class TrackerMotionUtilTest {
                 0x07, 0x01, 0x00, 0x00, // max amplitude
                 0x00, 0x01, // max acceleration range
                 0x0F, // kickoff per minute
-                0x0A // Motion duration
+                0x0A, // Motion duration
+                0x5A, 0x5A // Magic bytes
         );
         final TrackerMotion.PillPayloadV2 payloadV2 = TrackerMotion.Utils.decryptedToPillPayloadVersion2(decrypted);
         assertThat(payloadV2.motionMask.isPresent(), is(false));
