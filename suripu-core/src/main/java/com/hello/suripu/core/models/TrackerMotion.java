@@ -5,10 +5,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedBytes;
 import com.google.common.primitives.UnsignedInts;
 import com.hello.suripu.api.ble.SenseCommandProtos;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.crypto.Cipher;
@@ -119,6 +121,29 @@ public class TrackerMotion {
         this.externalTrackerId = externalTrackerId;
         this.cosTheta = cosTheta;
         this.motionMask = motionMask;
+    }
+
+    public List<Boolean> motionsForSeconds() {
+        final int SECONDS_IN_MINUTE = 60;
+        final List<Boolean> result = Lists.newArrayListWithExpectedSize(SECONDS_IN_MINUTE);
+
+        if (!motionMask.isPresent()) {
+            for (int i = 0; i < SECONDS_IN_MINUTE; i++) {
+                result.add(Boolean.FALSE);
+            }
+            return result;
+        }
+
+        for (int i = 0; i < SECONDS_IN_MINUTE; i++) {
+            final Boolean didMove = ((motionMask.get() >> i) & 1) == 1;
+            result.add(didMove);
+        }
+
+        return result;
+    }
+
+    public DateTime dateTimeUTC() {
+        return new DateTime(timestamp, DateTimeZone.UTC);
     }
 
     public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
