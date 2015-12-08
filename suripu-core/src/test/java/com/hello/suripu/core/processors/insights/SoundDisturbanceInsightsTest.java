@@ -70,7 +70,7 @@ public class SoundDisturbanceInsightsTest {
 
         final DateTime queryDate = DateTime.parse("2015-01-01").withHourOfDay(10);
 
-        final DateTime queryEndTime = SoundDisturbance.getDeviceDataHelper(queryDate);
+        final DateTime queryEndTime = SoundDisturbance.getDeviceDataQueryDate(queryDate);
         final DateTime expectedResult = queryDate.minusDays(1).withHourOfDay(12);
 
         assertThat(queryEndTime, is(expectedResult));
@@ -82,7 +82,7 @@ public class SoundDisturbanceInsightsTest {
 
         final DateTime queryDate = DateTime.parse("2015-01-01").withHourOfDay(20);
 
-        final DateTime queryEndTime = SoundDisturbance.getDeviceDataHelper(queryDate);
+        final DateTime queryEndTime = SoundDisturbance.getDeviceDataQueryDate(queryDate);
         final DateTime expectedResult = queryDate.withHourOfDay(12);
 
         assertThat(queryEndTime, is(expectedResult));

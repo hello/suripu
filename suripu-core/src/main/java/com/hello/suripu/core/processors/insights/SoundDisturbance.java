@@ -48,7 +48,7 @@ public class SoundDisturbance {
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
         final DateTime nowTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset));
-        final DateTime queryEndTime = getDeviceDataHelper(nowTime);
+        final DateTime queryEndTime = getDeviceDataQueryDate(nowTime);
 
         final List<DeviceData> deviceDatas = getDeviceData(accountId, deviceId, deviceDataDAO, queryEndTime, timeZoneOffset);
         if (deviceDatas.isEmpty()) {
@@ -89,7 +89,7 @@ public class SoundDisturbance {
     }
 
     @VisibleForTesting
-    public static final DateTime getDeviceDataHelper(final DateTime queryDate) {
+    public static final DateTime getDeviceDataQueryDate(final DateTime date) {
 /*
     We want to get "last night's" data so if we are in a current night bucket (haven't finished the night) we get *last* night by doing minusDays(1), whereas if we did finish the night, we do not need to do minusDays()
 
@@ -107,13 +107,13 @@ er
             minus day                              do not subtract day
   */
 
-        final Integer queryHour = queryDate.hourOfDay().get();
+        final Integer queryHour = date.hourOfDay().get();
 
         if (queryHour <= 12) {
-            return queryDate.minusDays(1).withHourOfDay(DATA_END_HOUR_LOCAL);
+            return date.minusDays(1).withHourOfDay(DATA_END_HOUR_LOCAL);
         }
 
-        return queryDate.withHourOfDay(DATA_END_HOUR_LOCAL);
+        return date.withHourOfDay(DATA_END_HOUR_LOCAL);
     }
 
     private static final List<DeviceData> getDeviceData(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataDAO, final DateTime queryEndTime, final Integer timeZoneOffset) {
