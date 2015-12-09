@@ -22,6 +22,7 @@ import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
@@ -60,7 +61,7 @@ public class InsightsDAODynamoDB {
     public static final String IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME = "phone_image_3x";
     private static final int MAX_CALL_COUNT = 5;
 
-
+    private static final String S3_BUCKET_PATH = "https://s3.amazonaws.com/hello-data/insights_images/";
 
     public static final String DEFAULT_SCORE_TYPE = "sleep";
 
@@ -267,6 +268,15 @@ public class InsightsDAODynamoDB {
         return item;
     }
 
+    private static MultiDensityImage generateImageUrlBasedOnCategory(InsightCard.Category category) {
+        final String image1x = String.format(S3_BUCKET_PATH + "%s.png", category.name().toLowerCase());
+        final String image2x = String.format(S3_BUCKET_PATH + "%s@2x.png", category.name().toLowerCase());
+        final String image3x = String.format(S3_BUCKET_PATH + "%s@3x.png", category.name().toLowerCase());
+        return new MultiDensityImage(Optional.fromNullable(image1x),
+                Optional.fromNullable(image2x),
+                Optional.fromNullable(image3x));
+    }
+
     private InsightCard createInsightCard(Map<String, AttributeValue> item) {
         final InsightCard.Category category = InsightCard.Category.fromInteger(Integer.valueOf(item.get(CATEGORY_ATTRIBUTE_NAME).getN()));
         final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.fromString(item.get(TIME_PERIOD_ATTRIBUTE_NAME).getS());
@@ -300,6 +310,20 @@ public class InsightsDAODynamoDB {
                 Optional.<String>absent(),
                 image
         );
+    }
+
+    /**
+     * Backfill images based on card category
+     * @param cards
+     * @return
+     */
+    public static List<InsightCard> backfillImagesBasedOnCategory(final List<InsightCard> cards) {
+        // TODO: make this nicer with Java8
+        final List<InsightCard> cardsWithImages = Lists.newArrayListWithCapacity(cards.size());
+        for(final InsightCard card : cards) {
+            cardsWithImages.add(InsightCard.withImage(card, generateImageUrlBasedOnCategory(card.category)));
+        }
+        return cardsWithImages;
     }
 
 }

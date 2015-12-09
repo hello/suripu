@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 
 /**
@@ -163,6 +164,17 @@ public class InsightCard implements Comparable<InsightCard> {
                 this.timestamp,
                 infoPreview,
                 this.image);
+    }
+
+    /**
+     * Returns copy of insight card with image added
+     * @param card
+     * @param image
+     * @return
+     */
+    public static InsightCard withImage(final InsightCard card, @NotNull final MultiDensityImage image) {
+        return new InsightCard(card.accountId.get(), card.title, card.message, card.category,
+                card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image));
     }
 
 }
