@@ -31,6 +31,7 @@ import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.PartnerMotionInsight;
 import com.hello.suripu.core.processors.insights.SleepMotion;
+import com.hello.suripu.core.processors.insights.SoundDisturbance;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.processors.insights.WakeVariance;
@@ -155,9 +156,6 @@ public class InsightProcessor {
                 categoryToGenerate = InsightCard.Category.TEMPERATURE;
                 break;
             case 3:
-                categoryToGenerate = InsightCard.Category.SOUND;
-                break;
-            case 4:
                 categoryToGenerate = InsightCard.Category.SLEEP_QUALITY;
                 break;
             default:
@@ -334,35 +332,38 @@ public class InsightProcessor {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
+            case AIR_QUALITY:
+                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
+                break;
+            case BED_LIGHT_DURATION:
+                insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                break;
+            case BED_LIGHT_INTENSITY_RATIO:
+                insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                break;
+            case HUMIDITY:
+                insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                break;
             case LIGHT:
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
+                break;
+            case PARTNER_MOTION:
+                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
+                break;
+            case SLEEP_QUALITY:
+                insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
+                break;
+            case SOUND:
+                insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
                 break;
             case TEMPERATURE:
                 final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
                 final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, tempPref, tempUnit, sleepStatsDAODynamoDB);
                 break;
-            case SLEEP_QUALITY:
-                insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
-                break;
             case WAKE_VARIANCE:
                 final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
-                break;
-            case BED_LIGHT_DURATION:
-                insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
-                break;
-            case HUMIDITY:
-                insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
-                break;
-            case BED_LIGHT_INTENSITY_RATIO:
-                insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
-                break;
-            case AIR_QUALITY:
-                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
-                break;
-            case PARTNER_MOTION:
-                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
                 break;
         }
 
