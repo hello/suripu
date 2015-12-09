@@ -33,7 +33,7 @@ public class SoundDisturbanceInsightsTest {
     
     @Test
     public void test_processData_high() {
-        final Optional<InsightCard> result = SoundDisturbance.processData(FAKE_ACCOUNT_ID, 15000);
+        final Optional<InsightCard> result = SoundDisturbance.processData(FAKE_ACCOUNT_ID, 1500);
         final String title = result.get().title;
         final String expectedTitle = SoundDisturbanceMsgEN.getHighSumDisturbance().title;
 
@@ -42,7 +42,7 @@ public class SoundDisturbanceInsightsTest {
 
     @Test
     public void test_processData_veryHigh() {
-        final Optional<InsightCard> result = SoundDisturbance.processData(FAKE_ACCOUNT_ID, 25000);
+        final Optional<InsightCard> result = SoundDisturbance.processData(FAKE_ACCOUNT_ID, 2500);
         final String title = result.get().title;
         final String expectedTitle = SoundDisturbanceMsgEN.getVeryHighSumDisturbance().title;
 

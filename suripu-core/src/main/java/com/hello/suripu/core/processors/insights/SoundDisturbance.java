@@ -29,8 +29,9 @@ import java.util.List;
 public class SoundDisturbance {
     private static final Logger LOGGER = LoggerFactory.getLogger(SoundDisturbance.class);
 
-    private static final Integer NORMAL_SUM_DISTURBANCE = 10000;
-    private static final Integer HIGH_SUM_DISTURBANCE = 20000;
+    //See https://github.com/hello/research/tree/master/Jingyun_LabBooks/Book10
+    private static final Integer NORMAL_SUM_DISTURBANCE = 1000;
+    private static final Integer HIGH_SUM_DISTURBANCE = 2000;
 
     private static final Integer DATA_START_HOUR_LOCAL = 16;
     private static final Integer DATA_END_HOUR_LOCAL = 12;
