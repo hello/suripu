@@ -269,9 +269,10 @@ public class InsightsDAODynamoDB {
     }
 
     private static MultiDensityImage generateImageUrlBasedOnCategory(InsightCard.Category category) {
-        final String image1x = String.format(S3_BUCKET_PATH + "%s.png", category.name().toLowerCase());
-        final String image2x = String.format(S3_BUCKET_PATH + "%s@2x.png", category.name().toLowerCase());
-        final String image3x = String.format(S3_BUCKET_PATH + "%s@3x.png", category.name().toLowerCase());
+        final String categoryName = category.name().toLowerCase();
+        final String image1x = String.format(S3_BUCKET_PATH + "%s.png", categoryName);
+        final String image2x = String.format(S3_BUCKET_PATH + "%s@2x.png", categoryName);
+        final String image3x = String.format(S3_BUCKET_PATH + "%s@3x.png", categoryName);
         return new MultiDensityImage(Optional.fromNullable(image1x),
                 Optional.fromNullable(image2x),
                 Optional.fromNullable(image3x));
