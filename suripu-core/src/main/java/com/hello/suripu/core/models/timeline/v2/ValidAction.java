@@ -27,6 +27,9 @@ public enum ValidAction {
             case LIGHTS_OUT:
             case MOTION:
             case PARTNER_MOTION:
+            case NOISE:
+            case SNORING:
+            case SLEEP_TALK:
                 return Lists.newArrayList(VERIFY, INCORRECT);
             default:
                 return Lists.newArrayList();
