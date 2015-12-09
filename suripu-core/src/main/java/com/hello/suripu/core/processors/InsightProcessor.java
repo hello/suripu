@@ -153,6 +153,9 @@ public class InsightProcessor {
                 categoryToGenerate = InsightCard.Category.LIGHT;
                 break;
             case 2:
+                categoryToGenerate = InsightCard.Category.TEMPERATURE;
+                break;
+            case 3:
                 categoryToGenerate = InsightCard.Category.SLEEP_QUALITY;
                 break;
             default:
