@@ -459,6 +459,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final InsightProcessor insightProcessor = insightBuilder.build();
 
         environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB, insightProcessor));
+        environment.addResource(new com.hello.suripu.app.v2.InsightsResource(accountDAO, insightsDAODynamoDB, insightProcessor));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 

@@ -83,6 +83,7 @@ public class InsightsResource extends BaseResource {
      */
     @Timed
     @GET
+    @Deprecated
     @Produces(MediaType.APPLICATION_JSON)
     public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
 
@@ -226,6 +227,7 @@ public class InsightsResource extends BaseResource {
      * @param insightCards: an array of insight card without info preview titles
      * @return List of InsightCard objects that contain info preview titles
      */
+    @Deprecated
     private List<InsightCard> insightCardsWithInfoPreview(final List<InsightCard> insightCards) {
         final List<InsightCard> cardsWithPreview = new ArrayList<>();
         for (InsightCard card : insightCards) {

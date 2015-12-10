@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
@@ -20,12 +21,11 @@ import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
-
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
-import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
+import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
@@ -397,6 +397,17 @@ public class InsightProcessor {
             }
         }
         return Optional.fromNullable(insightInfoPreview.get(category.toCategoryString()));
+    }
+
+    public ImmutableMap<InsightCard.Category, String> catgegoryNames() {
+        final Map<InsightCard.Category, String> categoryNames = Maps.newHashMap();
+
+        final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
+
+        for (final InfoInsightCards card : infoInsightCards) {
+            categoryNames.put(card.category, card.categoryName);
+        }
+        return ImmutableMap.copyOf(categoryNames);
     }
 
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
