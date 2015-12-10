@@ -332,3 +332,7 @@ VALUES
 
  Satisfaction with your relationship is simultaneously impacted by and affects sleep quality. In addition to managing personal sleep disruptions such as sleep apnea and snoring, you and your partner can encourage each other to keep good sleep habits. Go to bed and wake up at a consistent time, keep distracting electronics out of the bedroom, and if possible, you and your partner should try to go to bed at the same time.'
  );
+
+
+ --jakepic1 12/10/2015 category_name column
+ ALTER TABLE info_insight_cards ADD COLUMN category_name VARCHAR (255);
