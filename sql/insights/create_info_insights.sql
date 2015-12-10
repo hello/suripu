@@ -336,3 +336,12 @@ VALUES
 
  --jakepic1 12/10/2015 category_name column
  ALTER TABLE info_insight_cards ADD COLUMN category_name VARCHAR (255);
+
+ UPDATE info_insight_cards SET category_name='Light' WHERE category='light';
+ UPDATE info_insight_cards SET category_name='Noise' WHERE category='sound';
+ UPDATE info_insight_cards SET category_name='Temperature' WHERE category='temperature';
+ UPDATE info_insight_cards SET category_name='Air Quality' WHERE category='air_quality';
+ UPDATE info_insight_cards SET category_name='Sleep Quality' WHERE category='sleep_quality';
+ UPDATE info_insight_cards SET category_name='Wake Variance' WHERE category='wake_variance';
+ UPDATE info_insight_cards SET category_name='Light' WHERE category='bed_light_duration';
+ UPDATE info_insight_cards SET category_name='Light Balance' WHERE category='bed_light_intensity_ratio';
