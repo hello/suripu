@@ -27,7 +27,6 @@ import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.MultiDensityImage;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -318,11 +317,12 @@ public class InsightsDAODynamoDB {
      * @param cards
      * @return
      */
-    public static List<InsightCard> backfillImagesBasedOnCategory(final List<InsightCard> cards) {
+    public static List<InsightCard> backfillImagesBasedOnCategory(final List<InsightCard> cards, final Map<InsightCard.Category, String> categoryNames) {
         // TODO: make this nicer with Java8
         final List<InsightCard> cardsWithImages = Lists.newArrayListWithCapacity(cards.size());
         for(final InsightCard card : cards) {
-            cardsWithImages.add(InsightCard.withImage(card, generateImageUrlBasedOnCategory(card.category)));
+            final String categoryName = categoryNames.containsKey(card.category) ? categoryNames.get(card.category) : "";
+            cardsWithImages.add(InsightCard.withImageAndCategory(card, generateImageUrlBasedOnCategory(card.category), categoryName));
         }
         return cardsWithImages;
     }

@@ -23,17 +23,22 @@ public class InfoInsightCardsMapper implements ResultSetMapper<Optional<InfoInsi
         final String categoryString = r.getString("category");
 
         try {
-            InsightCard.Category category = InsightCard.Category.fromString(categoryString);
-
-            return Optional.of(new InfoInsightCards(r.getInt("id"),
+            final InsightCard.Category category = InsightCard.Category.fromString(categoryString);
+            final InfoInsightCards card = InfoInsightCards.create(
+                    r.getInt("id"),
                     category,
                     r.getString("title"),
                     r.getString("text"),
-                    r.getString("image_url")));
+                    r.getString("image_url"),
+                    r.getString("category_name")
+            );
+
+            return Optional.of(card);
 
         } catch (IllegalArgumentException exception) {
             LOGGER.debug("Illegal argument {} found in info_insight_cards", categoryString);
         }
+
         return Optional.absent();
     }
 }

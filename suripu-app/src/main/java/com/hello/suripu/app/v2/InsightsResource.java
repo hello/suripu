@@ -2,7 +2,6 @@ package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.models.Account;
@@ -24,6 +23,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v2/insights")
 public class InsightsResource {
@@ -75,11 +75,8 @@ public class InsightsResource {
      * @return List of InsightCard objects that contain info preview titles
      */
     private List<InsightCard> insightCardsWithInfoPreviewAndMissingImages(final List<InsightCard> insightCards) {
-        final List<InsightCard> cardsWithPreview = Lists.newArrayListWithExpectedSize(insightCards.size());
-        for (InsightCard card : insightCards) {
-            cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category)));
-        }
-        return InsightsDAODynamoDB.backfillImagesBasedOnCategory(cardsWithPreview);
+        final Map<InsightCard.Category, String> categoryNames = insightProcessor.catgegoryNames();
+        return InsightsDAODynamoDB.backfillImagesBasedOnCategory(insightCards, categoryNames);
     }
 
 
