@@ -345,3 +345,4 @@ VALUES
  UPDATE info_insight_cards SET category_name='Wake Variance' WHERE category='wake_variance';
  UPDATE info_insight_cards SET category_name='Light' WHERE category='bed_light_duration';
  UPDATE info_insight_cards SET category_name='Light Balance' WHERE category='bed_light_intensity_ratio';
+ UPDATE info_insight_cards SET category_name='Humidity' WHERE category='humidity';
