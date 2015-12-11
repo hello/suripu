@@ -348,3 +348,4 @@ VALUES
  UPDATE info_insight_cards SET category_name='Humidity' WHERE category='humidity';
  UPDATE info_insight_cards SET category_name='Sleep Tips' WHERE category='sleep_duration';
  UPDATE info_insight_cards SET category_name='Sleep Tips' WHERE category='sleep_hygiene';
+ UPDATE info_insight_cards SET category_name='' WHERE category_name IS NULL;
