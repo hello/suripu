@@ -354,8 +354,8 @@ UPDATE info_insight_cards SET category_name='' WHERE category_name IS NULL;
 
 
 --- Jake and Jingyun 2015-12-11
-INSERT INTO info_insight_cards (category, title, image_url, text) VALUES
-('generic', 'Welcome to Sense', 'sense.png',
+INSERT INTO info_insight_cards (category, title, text) VALUES
+('generic', 'Welcome to Sense',
 'The Insights you''ll see here are tailored just for you, based on Sense''s analysis of your sleep patterns and bedroom environment. Over time, these Insights will become even more personalized as Sense learns about your sleep habits.
 
 Occasionally, you''ll see Questions here as well. Answering these questions helps Sense learn more about you, which means your Insights will become more detailed and accurate in the future.
@@ -384,9 +384,6 @@ UPDATE info_insight_cards SET title=
 WHERE category='sleep_hygiene';
 
 
-UPDATE info_insight_cards SET image_url='sleep_hygiene.png' WHERE category='sleep_hygiene';
-
-
 UPDATE info_insight_cards SET text=
 'While everybody is different, most healthy adults need between 7.5 to 9 hours of good sleep per night to function at their best. That said, try not to worry if it isn''t possible to get a full night''s sleep on occasion. Instead, focus on making the most out of the sleep you can get.
 
@@ -398,19 +395,4 @@ UPDATE info_insight_cards SET title=
 'A Better Night''s Sleep'
 WHERE category='sleep_duration';
 
-
-UPDATE info_insight_cards SET image_url='light.png' WHERE category='light';
-UPDATE info_insight_cards SET image_url='sound.png' WHERE category='sound';
-UPDATE info_insight_cards SET image_url='temperature.png' WHERE category='temperature';
-UPDATE info_insight_cards SET image_url='humidity.png' WHERE category='humidity';
-UPDATE info_insight_cards SET image_url='air_quality.png' WHERE category='air_quality';
-
-UPDATE info_insight_cards SET image_url='sleep_quality.png' WHERE category='sleep_quality';
-UPDATE info_insight_cards SET image_url='wake_variance.png' WHERE category='wake_variance';
-UPDATE info_insight_cards SET image_url='associating.png' WHERE category='bed_light_duration';
-UPDATE info_insight_cards SET image_url='bed_light_intensity.png' WHERE category='bed_light_intensity_ratio';
-UPDATE info_insight_cards SET image_url='sleep_duration.png' WHERE category='sleep_duration';
-UPDATE info_insight_cards SET image_url='sleep_hygiene.png' WHERE category='sleep_hygiene';
-
-UPDATE info_insight_cards SET image_url='partner_motion.png' WHERE category='partner_motion';
 UPDATE info_insight_cards SET category_name='Sleep Quality' WHERE category='partner_motion';
