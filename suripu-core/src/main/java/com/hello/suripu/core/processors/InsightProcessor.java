@@ -37,6 +37,7 @@ import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.processors.insights.WakeVariance;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
@@ -399,7 +400,7 @@ public class InsightProcessor {
         return Optional.fromNullable(insightInfoPreview.get(category.toCategoryString()));
     }
 
-    public ImmutableMap<InsightCard.Category, String> catgegoryNames() {
+    public ImmutableMap<InsightCard.Category, String> categoryNames() {
         final Map<InsightCard.Category, String> categoryNames = Maps.newHashMap();
 
         final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
