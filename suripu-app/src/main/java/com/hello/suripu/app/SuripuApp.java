@@ -132,6 +132,7 @@ import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
@@ -459,7 +460,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final InsightProcessor insightProcessor = insightBuilder.build();
 
         environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB, insightProcessor));
-        environment.addResource(new com.hello.suripu.app.v2.InsightsResource(accountDAO, insightsDAODynamoDB, insightProcessor));
+        environment.addResource(new com.hello.suripu.app.v2.InsightsResource(accountDAO, insightsDAODynamoDB, trendsInsightsDAO, insightProcessor));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
