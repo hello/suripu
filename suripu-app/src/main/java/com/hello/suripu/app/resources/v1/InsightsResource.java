@@ -94,14 +94,8 @@ public class InsightsResource extends BaseResource {
                 queryDate, chronological, MAX_INSIGHTS_NUM);
 
         if (cards.size() == 0) {
-            // no insights generated yet, probably a new user, send introduction card
-            final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
-            int userAgeInYears = 0;
-            if (optionalAccount.isPresent()) {
-                userAgeInYears = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
-            }
-
-            final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId, userAgeInYears);
+            // no insights generated yet, probably a new user, send introduction cards
+            final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId);
             this.insightsDAODynamoDB.insertListOfInsights(introCards);
             return insightCardsWithInfoPreview(introCards);
         } else {

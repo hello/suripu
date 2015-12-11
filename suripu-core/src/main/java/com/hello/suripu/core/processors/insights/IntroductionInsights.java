@@ -14,11 +14,11 @@ import java.util.List;
  */
 public class IntroductionInsights {
 
-    public static List<InsightCard> getIntroCards(final Long accountId, final int userAgeInYears) {
+    public static List<InsightCard> getIntroCards(final Long accountId) {
         final List<InsightCard> cards = new ArrayList<>();
         cards.add(getIntroductionCard(accountId));
         cards.add(getIntroSleepTipsCard(accountId));
-        cards.add(getIntroSleepDurationCard(accountId, userAgeInYears));
+        cards.add(getIntroSleepDurationCard(accountId));
         return cards;
     }
 
@@ -32,11 +32,9 @@ public class IntroductionInsights {
         return new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_HYGIENE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC));
     }
 
-    public static InsightCard getIntroSleepDurationCard(final Long accountId, final int userAgeInYears) {
-        final SleepDuration.recommendation recommendation = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
+    public static InsightCard getIntroSleepDurationCard(final Long accountId) {
 
-        final Text text = IntroductionMsgEn.getSleepDurationMessage(recommendation.minHours, recommendation.maxHours,
-                recommendation.absoluteMinHours, recommendation.absoluteMaxHours);
+        final Text text = IntroductionMsgEn.getSleepDurationMessage();
 
         return new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_DURATION, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC).plusMillis(10));
     }
