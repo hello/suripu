@@ -346,3 +346,5 @@ VALUES
  UPDATE info_insight_cards SET category_name='Light' WHERE category='bed_light_duration';
  UPDATE info_insight_cards SET category_name='Light Balance' WHERE category='bed_light_intensity_ratio';
  UPDATE info_insight_cards SET category_name='Humidity' WHERE category='humidity';
+ UPDATE info_insight_cards SET category_name='Sleep Tips' WHERE category='sleep_duration';
+ UPDATE info_insight_cards SET category_name='Sleep Tips' WHERE category='sleep_hygiene';

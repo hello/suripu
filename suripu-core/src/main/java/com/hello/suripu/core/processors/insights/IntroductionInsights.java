@@ -22,14 +22,17 @@ public class IntroductionInsights {
         return cards;
     }
 
+    // TODO Pull all of these from DB
     public static InsightCard getIntroductionCard(final Long accountId) {
         final Text text = IntroductionMsgEn.getWelcomeMessage();
-        return new InsightCard(accountId, text.title, text.message, InsightCard.Category.GENERIC, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC).plusMillis(50));
+        final String categoryName = "Sense";
+        return new InsightCard(accountId, text.title, text.message, InsightCard.Category.GENERIC, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC).plusMillis(50), categoryName);
     }
 
     public static InsightCard getIntroSleepTipsCard(final Long accountId) {
         final Text text = IntroductionMsgEn.getSleepTipsMessage();
-        return new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_HYGIENE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC));
+        final String categoryName = "Sleep Tips";
+        return new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_HYGIENE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName);
     }
 
     public static InsightCard getIntroSleepDurationCard(final Long accountId, final int userAgeInYears) {
@@ -38,7 +41,9 @@ public class IntroductionInsights {
         final Text text = IntroductionMsgEn.getSleepDurationMessage(recommendation.minHours, recommendation.maxHours,
                 recommendation.absoluteMinHours, recommendation.absoluteMaxHours);
 
-        return new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_DURATION, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC).plusMillis(10));
+        final String categoryName = "Sleep Tips";
+
+        return new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_DURATION, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC).plusMillis(10), categoryName);
     }
 
 }

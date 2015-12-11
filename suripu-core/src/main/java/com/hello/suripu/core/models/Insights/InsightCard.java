@@ -138,6 +138,13 @@ public class InsightCard implements Comparable<InsightCard> {
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                       final String categoryName) {
+        this(accountId, title, message, category, timePeriod, timestamp,
+                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName);
+    }
+
+    public InsightCard(final Long accountId, final String title, final String message,
+                       final Category category, final TimePeriod timePeriod, final DateTime timestamp,
                        final Optional<String> infoPreview, final Optional<MultiDensityImage> image) {
         this(accountId, title, message, category, timePeriod, timestamp, infoPreview, image, "");
     }
