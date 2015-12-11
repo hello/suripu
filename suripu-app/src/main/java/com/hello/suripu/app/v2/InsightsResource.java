@@ -36,11 +36,11 @@ import javax.ws.rs.core.Response;
 public class InsightsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
+    private static final int MAX_INSIGHTS_NUM = 20;
 
-    private static int MAX_INSIGHTS_NUM = 20;
-    final AccountDAO accountDAO;
-    final InsightsDAODynamoDB insightsDAODynamoDB;
-    final TrendsInsightsDAO trendsInsightsDAO;
+    private final AccountDAO accountDAO;
+    private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final TrendsInsightsDAO trendsInsightsDAO;
     private final InsightProcessor insightProcessor;
 
     public InsightsResource(final AccountDAO accountDAO,
@@ -103,7 +103,7 @@ public class InsightsResource {
      * @return List of InsightCard objects that contain info preview titles
      */
     private List<InsightCard> insightCardsWithInfoPreviewAndMissingImages(final List<InsightCard> insightCards) {
-        final Map<InsightCard.Category, String> categoryNames = insightProcessor.catgegoryNames();
+        final Map<InsightCard.Category, String> categoryNames = insightProcessor.categoryNames();
         return InsightsDAODynamoDB.backfillImagesBasedOnCategory(insightCards, categoryNames);
     }
 
