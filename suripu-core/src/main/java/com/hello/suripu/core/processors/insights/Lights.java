@@ -20,6 +20,9 @@ public class Lights {
     private static final int NIGHT_START_HOUR = 18; // 6pm
     private static final int NIGHT_END_HOUR = 1; // 1am
 
+    private static final int LIGHT_ON_LEVEL_RAW = 2621; //raw ambient_light corresponding to 1.0 lux
+
+    //TODO: move the below somewhere else because its not used in this insight
     public static final float LIGHT_LEVEL_WARNING = 2.0f;  // in lux
     public static final float LIGHT_LEVEL_ALERT = 8.0f;  // in lux
 
@@ -29,8 +32,8 @@ public class Lights {
         final DateTime queryEndTime = DateTime.now(DateTimeZone.UTC).withHourOfDay(NIGHT_START_HOUR); // today 6pm
         final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS);
 
-        // get light data > 0 between the hour of 6pm to 1am
-        final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, 0, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);
+        // get light data > 1 lux between the hour of 6pm to 1am
+        final List<DeviceData> rows = deviceDataDAO.getLightByBetweenHourDate(accountId, deviceId, LIGHT_ON_LEVEL_RAW, queryStartTime, queryEndTime, NIGHT_START_HOUR, NIGHT_END_HOUR);
 
         final Optional<InsightCard> card = processLightData(accountId, rows, lightData);
         return card;
