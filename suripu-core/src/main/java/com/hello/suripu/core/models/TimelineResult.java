@@ -32,7 +32,7 @@ public class TimelineResult {
     }
 
     @JsonIgnore
-    public final boolean notEnoughData;
+    public final DataCompleteness dataCompleteness;
 
     @JsonCreator
     public static TimelineResult create(@JsonProperty("timelines") final List<Timeline> timelines,
@@ -41,46 +41,44 @@ public class TimelineResult {
 
         if (log == null || log.equals("")) {
             //older record.... the v2 information will not be there
-            return new TimelineResult(ImmutableList.copyOf(timelines),Optional.<TimelineLog>absent(),false);
+            return new TimelineResult(ImmutableList.copyOf(timelines),Optional.<TimelineLog>absent(), DataCompleteness.ENOUGH_DATA);
         }
 
-        return new TimelineResult(ImmutableList.copyOf(timelines), TimelineLog.createFromProtobuf(log),false);
+        return new TimelineResult(ImmutableList.copyOf(timelines), TimelineLog.createFromProtobuf(log), DataCompleteness.ENOUGH_DATA);
 
     }
 
     public static TimelineResult create(final List<Timeline> timelines,
                                         final TimelineLog log) {
-        return new TimelineResult(ImmutableList.copyOf(timelines),Optional.of(log),false);
+        return new TimelineResult(ImmutableList.copyOf(timelines),Optional.of(log), DataCompleteness.ENOUGH_DATA);
     }
 
 
     static public TimelineResult createEmpty() {
         final Timeline timeline = Timeline.createEmpty();
         final List<Timeline> timelines = Lists.newArrayList(timeline);
-        return new TimelineResult(ImmutableList.copyOf(timelines), Optional.<TimelineLog>absent(),false);
+        return new TimelineResult(ImmutableList.copyOf(timelines), Optional.<TimelineLog>absent(), DataCompleteness.ENOUGH_DATA);
     }
 
     static public TimelineResult createEmpty(final TimelineLog logV2) {
         final Timeline timeline = Timeline.createEmpty();
         final List<Timeline> timelines = Lists.newArrayList(timeline);
-        return new TimelineResult(ImmutableList.copyOf(timelines),Optional.of(logV2),false);
+        return new TimelineResult(ImmutableList.copyOf(timelines),Optional.of(logV2),DataCompleteness.ENOUGH_DATA);
     }
 
     static public TimelineResult createEmpty(final TimelineLog logV2, final String message) {
-        final Timeline timeline = Timeline.createEmpty(message);
-        final List<Timeline> timelines = Lists.newArrayList(timeline);
-        return new TimelineResult(ImmutableList.copyOf(timelines), Optional.of(logV2),false);
+        return createEmpty(logV2, message, DataCompleteness.ENOUGH_DATA);
     }
 
-    static public TimelineResult createEmpty(final TimelineLog logV2,final String message,final boolean notEnoughData) {
+    static public TimelineResult createEmpty(final TimelineLog logV2, final String message, final DataCompleteness dataCompleteness) {
         final Timeline timeline = Timeline.createEmpty(message);
         final List<Timeline> timelines = Lists.newArrayList(timeline);
-        return new TimelineResult(ImmutableList.copyOf(timelines), Optional.of(logV2),notEnoughData);
+        return new TimelineResult(ImmutableList.copyOf(timelines), Optional.of(logV2), dataCompleteness);
     }
 
-    private TimelineResult(final ImmutableList<Timeline> timelines,final Optional<TimelineLog> log,final boolean notEnoughData) {
+    private TimelineResult(final ImmutableList<Timeline> timelines,final Optional<TimelineLog> log, final DataCompleteness completeness) {
         this.timelines = timelines;
         this.logV2 = log;
-        this.notEnoughData = notEnoughData;
+        this.dataCompleteness = completeness;
     }
 }

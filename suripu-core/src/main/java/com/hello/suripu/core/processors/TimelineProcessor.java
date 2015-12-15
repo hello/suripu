@@ -27,6 +27,7 @@ import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
+import com.hello.suripu.core.models.DataCompleteness;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.Event;
@@ -211,7 +212,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
             log.addMessage(TimelineError.NO_DATA);
-            return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, true);
+            return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, DataCompleteness.NO_DATA);
         }
 
 
@@ -222,27 +223,27 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             case TIMESPAN_TOO_SHORT:
                 log.addMessage(discardReason);
                 LOGGER.info("Tracker motion span too short for account_id = {} and day = {}", accountId, targetDate);
-                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
 
             case NOT_ENOUGH_DATA:
                 log.addMessage(discardReason);
                 LOGGER.info("Not enough tracker motion seen for account_id = {} and day = {}", accountId, targetDate);
-                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
 
             case NO_DATA:
                 log.addMessage(discardReason);
                 LOGGER.info("No tracker motion data for account_id = {} and day = {}", accountId, targetDate);
-                return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, true);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, DataCompleteness.NO_DATA);
 
             case LOW_AMP_DATA:
                 log.addMessage(discardReason);
                 LOGGER.info("tracker motion did not exceed minimum threshold for account_id = {} and day = {}", accountId, targetDate);
-                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
 
             case PARTNER_FILTER_REJECTED_DATA:
                 log.addMessage(discardReason);
                 LOGGER.info("tracker motion was discarded because of partner filter account_id = {} and day = {}", accountId, targetDate);
-                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
 
 
             default:
@@ -411,7 +412,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             if (!populateTimelines.isValidSleepScore) {
                 log.addMessage(TimelineError.INVALID_SLEEP_SCORE);
                 LOGGER.warn("invalid sleep score");
-                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, true);
+                return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
             }
 
             return TimelineResult.create(populateTimelines.timelines, log);
