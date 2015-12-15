@@ -26,6 +26,7 @@ import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
 import com.hello.suripu.core.processors.insights.Humidity;
+import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
@@ -132,7 +133,7 @@ public class InsightProcessor {
         }
 
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
-            this.generateNewUserInsights(accountId, deviceId, accountAge, deviceDataInsightQueryDAO);
+            this.generateNewUserInsights(accountId, accountAge);
             return;
         }
 
@@ -140,41 +141,41 @@ public class InsightProcessor {
     }
 
     /**
-     * for new users, first 7 days
+     * for new users, first 4 days
      * @param accountId
      * @param accountAge
      */
-    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final DeviceId deviceId, final int accountAge, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO) {
-
+    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge) {
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+        return generateNewUserInsights(accountId, accountAge, recentCategories);
+    }
 
-        InsightCard.Category categoryToGenerate;
+    @VisibleForTesting
+    public Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final Set<InsightCard.Category> recentCategories) {
+
+        InsightCard card;
         switch (accountAge) {
             case 1:
-                categoryToGenerate = InsightCard.Category.LIGHT;
+                card = IntroductionInsights.getIntroductionCard(accountId);
                 break;
             case 2:
-                categoryToGenerate = InsightCard.Category.TEMPERATURE;
+                card = IntroductionInsights.getIntroSleepTipsCard(accountId);
                 break;
             case 3:
-                categoryToGenerate = InsightCard.Category.SLEEP_QUALITY;
+                card = IntroductionInsights.getIntroSleepDurationCard(accountId);
                 break;
             default:
                 return Optional.absent();
         }
 
-        if (recentCategories.contains(categoryToGenerate)) {
+        if (recentCategories.contains(card.category)) {
             return Optional.absent();
         }
 
-        LOGGER.debug("Trying to generate {} category insight for new user accountId {}", categoryToGenerate, accountId);
-        final Optional<InsightCard.Category> generatedNewUserCategory = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, categoryToGenerate);
-        if (generatedNewUserCategory.isPresent()) {
-            LOGGER.debug("Successfully generated {} category insight for new user accountId {}", generatedNewUserCategory.get(), accountId);
-            return generatedNewUserCategory;
-        }
-
-        return Optional.absent();
+        //insert to DynamoDB
+        LOGGER.debug("Inserting {} new user insight for accountId {}", card.category, accountId);
+        this.insightsDAODynamoDB.insertInsight(card);
+        return Optional.of(card.category);
     }
 
     private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final RolloutClient featureFlipper) {
