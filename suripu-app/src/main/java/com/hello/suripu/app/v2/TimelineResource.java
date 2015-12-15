@@ -268,7 +268,7 @@ public class TimelineResource extends BaseResource {
         final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,newFeedback);
 
         //GET THE V2 RESULT
-        final Timeline timeline = Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
+        final Timeline timeline = Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.dataCompleteness);
 
         //SEND LOG TO KINESIS
         if (timelineResult.logV2.isPresent()) {
