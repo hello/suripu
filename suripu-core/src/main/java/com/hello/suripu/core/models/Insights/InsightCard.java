@@ -67,6 +67,7 @@ public class InsightCard implements Comparable<InsightCard> {
 
     }
 
+    public static final int ONE_DAY = 1;
     public static final int RECENT_DAYS = 3;
     public static final int PAST_WEEK = 7;
 

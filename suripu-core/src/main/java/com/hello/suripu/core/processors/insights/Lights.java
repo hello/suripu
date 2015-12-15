@@ -11,7 +11,6 @@ import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.LightMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -25,6 +24,9 @@ public class Lights {
     private static final int NIGHT_START_HOUR = 18; // 6pm
     private static final int NIGHT_END_HOUR = 1; // 1am
 
+    private static final int LIGHT_LEVEL_ON_RAW = 524; //corresponds to 1.0 lux
+
+    //TODO: move the below public variables somewhere else
     public static final float LIGHT_LEVEL_WARNING = 2.0f;  // in lux
     public static final float LIGHT_LEVEL_ALERT = 8.0f;  // in lux
 
@@ -37,16 +39,16 @@ public class Lights {
         }
         final Integer timeZoneOffset = timeZoneOffsetOptional.get();
 
-        // get light data for last three days, filter by time
+        // get light data for last day, filter by time
         final DateTime queryEndTime = DateTime.now(DateTimeZone.forOffsetMillis(timeZoneOffset)).withHourOfDay(NIGHT_START_HOUR);
-        final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.RECENT_DAYS);
+        final DateTime queryStartTime = queryEndTime.minusDays(InsightCard.ONE_DAY);
 
         final DateTime queryEndTimeLocal = queryEndTime.plusMillis(timeZoneOffset);
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         // get light data > 0 between the hour of 6pm to 1am
         final List<DeviceData> rows;
-        final DeviceDataResponse response = deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, 0, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
+        final DeviceDataResponse response = deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, LIGHT_LEVEL_ON_RAW, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
         if (response.status == Response.Status.SUCCESS) {
             rows = response.data;
         } else {
@@ -63,34 +65,32 @@ public class Lights {
             return Optional.absent();
         }
 
-        // compute median value
-        final DescriptiveStatistics stats = new DescriptiveStatistics();
+        // compute mean value
+        int sum = 0;
         for (final DeviceData deviceData : data) {
-            stats.addValue(deviceData.ambientLight);
+            sum += deviceData.ambientLight;
         }
 
-        int medianLight = 0;
-        if (stats.getSum() > 0) {
-            medianLight = (int) stats.getPercentile(50); // median
-        }
+        int n = data.size();
 
-        final int percentile = lightData.getLightPercentile(medianLight);
+        final int meanLight = (int) ((float) sum / (float) n);
+        final int percentile = lightData.getLightPercentile( meanLight);
 
         // see: http://en.wikipedia.org/wiki/Lux and http://www.greenbusinesslight.com/page/119/lux-lumens-and-watts
-        // todo: refine levels
+        // TODO: refine levels
         Text text;
-        if (medianLight <= 1) {
-            text = LightMsgEN.getLightDark(medianLight, percentile);
-        } else if (medianLight <= 4) {
-            text = LightMsgEN.getLightNotDarkEnough(medianLight, percentile);
-        } else if (medianLight <= 20) {
-            text = LightMsgEN.getLightALittleBright(medianLight, percentile);
-        } else if (medianLight <= 40) {
-            text = LightMsgEN.getLightQuiteBright(medianLight, percentile);
-        } else if (medianLight <= 100) {
-            text = LightMsgEN.getLightTooBright(medianLight, percentile);
+        if (meanLight <= 2) {
+            text = LightMsgEN.getLightDark(meanLight, percentile);
+        } else if (meanLight <= 5) {
+            text = LightMsgEN.getLightNotDarkEnough(meanLight, percentile);
+        } else if (meanLight <= 20) {
+            text = LightMsgEN.getLightALittleBright(meanLight, percentile);
+        } else if (meanLight <= 40) {
+            text = LightMsgEN.getLightQuiteBright(meanLight, percentile);
+        } else if (meanLight <= 100) {
+            text = LightMsgEN.getLightTooBright(meanLight, percentile);
         } else {
-            text = LightMsgEN.getLightWayTooBright(medianLight, percentile);
+            text = LightMsgEN.getLightWayTooBright(meanLight, percentile);
         }
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
