@@ -112,10 +112,10 @@ public class MultiObsHmmIntegrationTest {
     public void testLabelMaker() {
         final LabelMaker labelMaker = new LabelMaker(Optional.<UUID>absent());
 
-        final TimelineFeedback inbed = TimelineFeedback.create("1970-01-01","22:00","22:00",Event.Type.IN_BED,42L);
-        final TimelineFeedback sleep = TimelineFeedback.create("1970-01-01","23:00","23:00",Event.Type.SLEEP,42L);
-        final TimelineFeedback wake = TimelineFeedback.create("1970-01-01","07:00","07:00",Event.Type.WAKE_UP,42L);
-        final TimelineFeedback outofbed = TimelineFeedback.create("1970-01-01","08:00","08:00",Event.Type.OUT_OF_BED,42L);
+        final TimelineFeedback inbed = TimelineFeedback.createMarkedCorrect("1970-01-01","22:00",Event.Type.IN_BED,42L);
+        final TimelineFeedback sleep = TimelineFeedback.createMarkedCorrect("1970-01-01","23:00",Event.Type.SLEEP,42L);
+        final TimelineFeedback wake = TimelineFeedback.createMarkedCorrect("1970-01-01","07:00",Event.Type.WAKE_UP,42L);
+        final TimelineFeedback outofbed = TimelineFeedback.createMarkedCorrect("1970-01-01","08:00",Event.Type.OUT_OF_BED,42L);
 
         final List<TimelineFeedback> partialSleep = Lists.newArrayList(sleep);
         final List<TimelineFeedback> partialWake = Lists.newArrayList(wake);
