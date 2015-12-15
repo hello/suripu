@@ -11,7 +11,6 @@ import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.LightMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
