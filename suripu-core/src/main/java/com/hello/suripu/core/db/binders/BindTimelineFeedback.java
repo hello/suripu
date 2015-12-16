@@ -29,6 +29,7 @@ public @interface BindTimelineFeedback{
                     q.bind("old_time", arg.oldTimeOfEvent);
                     q.bind("new_time", arg.newTimeOfEvent);
                     q.bind("created", arg.created);
+                    q.bind("is_correct", arg.isNewTimeCorrect);
                 }
             };
         }

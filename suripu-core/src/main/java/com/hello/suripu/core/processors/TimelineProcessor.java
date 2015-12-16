@@ -1260,7 +1260,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         // TODO: tim
         final DateTime nightOfUTC = new DateTime(nightOf.getYear(),
                 nightOf.getMonthOfYear(), nightOf.getDayOfMonth(), 0, 0, 0, DateTimeZone.UTC);
-        return feedbackDAO.getForNight(accountId, nightOfUTC);
+        return feedbackDAO.getCorrectedForNight(accountId, nightOfUTC);
     }
 
 }

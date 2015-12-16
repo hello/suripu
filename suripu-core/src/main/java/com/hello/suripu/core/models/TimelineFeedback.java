@@ -29,15 +29,23 @@ public class TimelineFeedback {
     @JsonProperty("id")
     public final Optional<Long> id;
 
+    @JsonProperty("is_correct")
+    public final Boolean isNewTimeCorrect;
+
     //public for testing purposes
-    public TimelineFeedback(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Optional<Long> accountId, final Optional<Long> created, final Long id) {
+    private TimelineFeedback(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent,
+                             final Event.Type eventType, final Optional<Long> accountId, final Optional<Long> created,
+                             final Long id, final Boolean isNewTimeCorrect) {
         this.dateOfNight= dateOfNight;
         this.oldTimeOfEvent = oldTimeOfEvent;
         this.newTimeOfEvent = newTimeOfEvent;
         this.eventType = eventType;
         this.accountId = accountId;
-        this.created = created; //when inserting, this happens automatically (ergo you can make this field absent).  When querying, this field will be populated.
+        //when inserting, this happens automatically (ergo you can make this field absent).
+        //When querying, this field will be populated.
+        this.created = created;
         this.id = Optional.fromNullable(id);
+        this.isNewTimeCorrect = isNewTimeCorrect;
     }
 
     @JsonCreator
@@ -50,23 +58,27 @@ public class TimelineFeedback {
         final DateTime date = DateTime.parse(dateOfNight);
         final DateTime realDate = new DateTime(date.getMillis(), DateTimeZone.UTC).withTimeAtStartOfDay();
         final Event.Type eventType = Event.Type.fromString(eventTypeString);
-        return new TimelineFeedback(realDate, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent(),Optional.<Long>absent(), null);
+        return new TimelineFeedback(realDate, oldTimeOfEvent, newTimeOfEvent, eventType, Optional.<Long>absent(),Optional.<Long>absent(), null, Boolean.TRUE);
     }
 
-    public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType) {
-        return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.<Long>absent(),Optional.<Long>absent(), null);
-    }
-
-    public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId, final Long created) {
-        return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.of(created), null);
-    }
-
-    public static TimelineFeedback create(final String dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId) {
+    private static TimelineFeedback create(final String dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId, final Boolean isNewTimeCorrect) {
         final DateTime realDate = new DateTime(DateTime.parse(dateOfNight), DateTimeZone.UTC).withTimeAtStartOfDay();
-        return new TimelineFeedback(realDate, oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.<Long>absent(), null);
+        return new TimelineFeedback(realDate, oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.<Long>absent(), null, isNewTimeCorrect);
     }
 
-    public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId, final Long created, final Long id) {
-        return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.of(created), id);
+    public static TimelineFeedback create(final DateTime dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId, final Long created, final Long id, final Boolean isNewTimeCorrect) {
+        return new TimelineFeedback(dateOfNight,oldTimeOfEvent,newTimeOfEvent,eventType,Optional.of(accountId),Optional.of(created), id, isNewTimeCorrect);
+    }
+
+    public static TimelineFeedback createTimeAmendedFeedback(final String dateOfNight, final String oldTimeOfEvent, final String newTimeOfEvent, final Event.Type eventType, final Long accountId) {
+        return create(dateOfNight, oldTimeOfEvent, newTimeOfEvent, eventType, accountId, Boolean.TRUE);
+    }
+
+    public static TimelineFeedback createMarkedIncorrect(final String dateOfNight, final String oldTimeOfEvent, final Event.Type eventType, final Long accountId) {
+        return create(dateOfNight, oldTimeOfEvent, oldTimeOfEvent, eventType, accountId, Boolean.FALSE);
+    }
+
+    public static TimelineFeedback createMarkedCorrect(final String dateOfNight, final String oldTimeOfEvent, final Event.Type eventType, final Long accountId) {
+        return create(dateOfNight, oldTimeOfEvent, oldTimeOfEvent, eventType, accountId, Boolean.TRUE);
     }
 }
