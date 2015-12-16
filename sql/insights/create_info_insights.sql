@@ -396,3 +396,15 @@ UPDATE info_insight_cards SET title=
 WHERE category='sleep_duration';
 
 UPDATE info_insight_cards SET category_name='Sleep Quality' WHERE category='partner_motion';
+
+--- Jake & jyfan markdown spacing update 2015-12-15
+
+UPDATE info_insight_cards SET text=
+'Everyone''s sleep is different, but there are some general guidelines that can help anyone get better sleep:
+
+* Taking a midday nap can sometimes be tempting, but it can throw off your natural sleep cycle and make it much harder to fall asleep at night.
+* Stay away from stimulants such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, your sleep might be disrupted during the night after the effect has worn off.
+* Regular exercise has been shown to promote good sleep, but vigorous exercise close to bedtime may amp you up and make it harder to sleep. If the only time you have to exercise is late at night before bed, try a more gentle exercise like yoga.
+
+While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns'
+WHERE category='sleep_hygiene';
