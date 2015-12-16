@@ -95,7 +95,7 @@ public class InsightsResource extends BaseResource {
 
         if (cards.size() == 0) {
             // no insights generated yet, probably a new user, send introduction cards
-            final List<InsightCard> introCards = Lists.newArrayList(IntroductionInsights.getIntroductionCard(accessToken.accountId));
+            final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId);
             this.insightsDAODynamoDB.insertListOfInsights(introCards);
             return insightCardsWithInfoPreview(introCards);
         } else {

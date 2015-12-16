@@ -14,6 +14,14 @@ import java.util.List;
  */
 public class IntroductionInsights {
 
+    public static List<InsightCard> getIntroCards(final Long accountId) {
+        final List<InsightCard> cards = new ArrayList<>();
+        cards.add(getIntroductionCard(accountId));
+        cards.add(getIntroSleepTipsCard(accountId));
+        cards.add(getIntroSleepDurationCard(accountId));
+        return cards;
+    }
+
     // TODO Pull all of these from DB
     public static InsightCard getIntroductionCard(final Long accountId) {
         final Text text = IntroductionMsgEn.getWelcomeMessage();
