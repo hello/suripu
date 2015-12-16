@@ -166,6 +166,57 @@ public class InsightProcessorTest {
     }
 
     @Test
+    public void test_generateNewUserInsights() {
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        //actually simulating recent categories
+        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+
+        final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 1, recentCategories);
+        assertThat(something.get(), is(InsightCard.Category.GENERIC));
+    }
+
+    @Test
+    public void test_generateNewUserInsights_2() {
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        //actually simulating recent categories
+        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+        recentCategories.add(InsightCard.Category.GENERIC);
+
+        final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 1, recentCategories);
+        assertThat(something.isPresent(), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void test_generateNewUserInsights_3() {
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        //actually simulating recent categories
+        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+        recentCategories.add(InsightCard.Category.GENERIC);
+
+        final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 2, recentCategories);
+        assertThat(something.get(), is(InsightCard.Category.SLEEP_HYGIENE));
+    }
+
+    @Test
+    public void test_generateNewUserInsights_4() {
+        final InsightProcessor insightProcessor = setUp();
+        final InsightProcessor spyInsightProcessor = Mockito.spy(insightProcessor);
+
+        //actually simulating recent categories
+        final Set<InsightCard.Category> recentCategories = new HashSet<>();
+        recentCategories.add(InsightCard.Category.GENERIC);
+
+        final Optional<InsightCard.Category> something = spyInsightProcessor.generateNewUserInsights(FAKE_ACCOUNT_ID, 3, recentCategories);
+        assertThat(something.get(), is(InsightCard.Category.SLEEP_DURATION));
+    }
+
+    @Test
     public void test_generateGeneralInsights() {
 
         final RolloutClient mockFeatureFlipper = featureFlipOff();

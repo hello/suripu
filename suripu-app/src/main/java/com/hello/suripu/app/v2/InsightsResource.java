@@ -2,6 +2,7 @@ package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
@@ -66,7 +67,7 @@ public class InsightsResource {
 
         if (cards.isEmpty()) {
             // no insights generated yet, probably a new user, send introduction cards
-            final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId);
+            final List<InsightCard> introCards = Lists.newArrayList(IntroductionInsights.getIntroductionCard(accessToken.accountId));
             this.insightsDAODynamoDB.insertListOfInsights(introCards);
             return insightCardsWithInfoPreviewAndMissingImages(introCards);
         }
