@@ -28,8 +28,8 @@ public class WifiInfo {
         }
 
         public static Condition fromRssi(final Integer rssi) {
-            if (rssi == RSSI_NONE) {
-                return Condition.NONE;
+            if (rssi.equals(RSSI_NONE)) {
+                return Condition.GOOD;  // special exception until Texas Instrument bug is fixed
             }
             else if (rssi <= RSSI_LOW_CEILING) {
                 return Condition.BAD;

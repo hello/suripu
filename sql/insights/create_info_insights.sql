@@ -332,3 +332,79 @@ VALUES
 
  Satisfaction with your relationship is simultaneously impacted by and affects sleep quality. In addition to managing personal sleep disruptions such as sleep apnea and snoring, you and your partner can encourage each other to keep good sleep habits. Go to bed and wake up at a consistent time, keep distracting electronics out of the bedroom, and if possible, you and your partner should try to go to bed at the same time.'
  );
+
+
+ --jakepic1 12/10/2015 category_name column
+ALTER TABLE info_insight_cards ADD COLUMN category_name VARCHAR (255);
+
+UPDATE info_insight_cards SET category_name='Light' WHERE category='light';
+UPDATE info_insight_cards SET category_name='Noise' WHERE category='sound';
+UPDATE info_insight_cards SET category_name='Temperature' WHERE category='temperature';
+UPDATE info_insight_cards SET category_name='Air Quality' WHERE category='air_quality';
+UPDATE info_insight_cards SET category_name='Sleep Quality' WHERE category='sleep_quality';
+UPDATE info_insight_cards SET category_name='Wake Variance' WHERE category='wake_variance';
+UPDATE info_insight_cards SET category_name='Light' WHERE category='bed_light_duration';
+UPDATE info_insight_cards SET category_name='Light Balance' WHERE category='bed_light_intensity_ratio';
+UPDATE info_insight_cards SET category_name='Humidity' WHERE category='humidity';
+UPDATE info_insight_cards SET category_name='Sleep Tips' WHERE category='sleep_duration';
+UPDATE info_insight_cards SET category_name='Sleep Tips' WHERE category='sleep_hygiene';
+UPDATE info_insight_cards SET category_name='Sleep Quality' WHERE category='partner_motion';
+UPDATE info_insight_cards SET category_name='' WHERE category_name IS NULL;
+
+
+
+--- Jake and Jingyun 2015-12-11
+INSERT INTO info_insight_cards (category, title, text) VALUES
+('generic', 'Welcome to Sense',
+'The Insights you''ll see here are tailored just for you, based on Sense''s analysis of your sleep patterns and bedroom environment. Over time, these Insights will become even more personalized as Sense learns about your sleep habits.
+
+Occasionally, you''ll see Questions here as well. Answering these questions helps Sense learn more about you, which means your Insights will become more detailed and accurate in the future.
+
+That''s it for now. There''s no need to tell Sense you''re ready for bed — all you need to do is sleep. Check back in a few days for more Insights in this space.');
+
+
+UPDATE info_insight_cards SET category_name='Sense' WHERE category='generic';
+
+
+UPDATE info_insight_cards SET text=
+'Everyone''s sleep is different, but there are some general guidelines that can help anyone get better sleep:
+
+* Taking a midday nap can sometimes be tempting, but it can throw off your natural sleep cycle and make it much harder to fall asleep at night.
+
+* Stay away from stimulants such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, your sleep might be disrupted during the night after the effect has worn off.
+
+* Regular exercise has been shown to promote good sleep, but vigorous exercise close to bedtime may amp you up and make it harder to sleep. If the only time you have to exercise is late at night before bed, try a more gentle exercise like yoga.
+
+While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns'
+WHERE category='sleep_hygiene';
+
+
+UPDATE info_insight_cards SET title=
+'Healthy Sleep Habits'
+WHERE category='sleep_hygiene';
+
+
+UPDATE info_insight_cards SET text=
+'While everybody is different, most healthy adults need between 7.5 to 9 hours of good sleep per night to function at their best. That said, try not to worry if it isn''t possible to get a full night''s sleep on occasion. Instead, focus on making the most out of the sleep you can get.
+
+Use the Insights provided by Sense to better understand how you can improve your sleep, and remember to answer the Questions asked here to help Sense learn more about your sleep. The more you use Sense, and the more Questions you answer, the more detailed and accurate your Insights will be.'
+WHERE category='sleep_duration';
+
+
+UPDATE info_insight_cards SET title=
+'A Better Night''s Sleep'
+WHERE category='sleep_duration';
+
+UPDATE info_insight_cards SET category_name='Sleep Quality' WHERE category='partner_motion';
+
+--- Jake & jyfan markdown spacing update 2015-12-15
+
+UPDATE info_insight_cards SET text=
+'Everyone''s sleep is different, but there are some general guidelines that can help anyone get better sleep:
+
+* Taking a midday nap can sometimes be tempting, but it can throw off your natural sleep cycle and make it much harder to fall asleep at night.
+* Stay away from stimulants such as nicotine and alcohol. While you may feel sleepy after consuming alcohol, your sleep might be disrupted during the night after the effect has worn off.
+* Regular exercise has been shown to promote good sleep, but vigorous exercise close to bedtime may amp you up and make it harder to sleep. If the only time you have to exercise is late at night before bed, try a more gentle exercise like yoga.
+
+While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns'
+WHERE category='sleep_hygiene';

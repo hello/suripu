@@ -3,6 +3,7 @@ package com.hello.suripu.core.processors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.CalibrationDAO;
@@ -20,22 +21,24 @@ import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
-
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
-import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
+import com.hello.suripu.core.processors.insights.Humidity;
+import com.hello.suripu.core.processors.insights.IntroductionInsights;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.PartnerMotionInsight;
 import com.hello.suripu.core.processors.insights.SleepMotion;
+import com.hello.suripu.core.processors.insights.SoundDisturbance;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.processors.insights.WakeVariance;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
@@ -130,7 +133,7 @@ public class InsightProcessor {
         }
 
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
-            this.generateNewUserInsights(accountId, deviceId, accountAge, deviceDataInsightQueryDAO);
+            this.generateNewUserInsights(accountId, accountAge);
             return;
         }
 
@@ -138,44 +141,41 @@ public class InsightProcessor {
     }
 
     /**
-     * for new users, first 7 days
+     * for new users, first 4 days
      * @param accountId
      * @param accountAge
      */
-    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final DeviceId deviceId, final int accountAge, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO) {
-
+    private Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge) {
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+        return generateNewUserInsights(accountId, accountAge, recentCategories);
+    }
 
-        InsightCard.Category categoryToGenerate;
+    @VisibleForTesting
+    public Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final Set<InsightCard.Category> recentCategories) {
+
+        InsightCard card;
         switch (accountAge) {
             case 1:
-                categoryToGenerate = InsightCard.Category.LIGHT;
+                card = IntroductionInsights.getIntroductionCard(accountId);
                 break;
             case 2:
-                categoryToGenerate = InsightCard.Category.TEMPERATURE;
+                card = IntroductionInsights.getIntroSleepTipsCard(accountId);
                 break;
             case 3:
-                categoryToGenerate = InsightCard.Category.SOUND;
-                break;
-            case 4:
-                categoryToGenerate = InsightCard.Category.SLEEP_QUALITY;
+                card = IntroductionInsights.getIntroSleepDurationCard(accountId);
                 break;
             default:
                 return Optional.absent();
         }
 
-        if (recentCategories.contains(categoryToGenerate)) {
+        if (recentCategories.contains(card.category)) {
             return Optional.absent();
         }
 
-        LOGGER.debug("Trying to generate {} category insight for new user accountId {}", categoryToGenerate, accountId);
-        final Optional<InsightCard.Category> generatedNewUserCategory = this.generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, categoryToGenerate);
-        if (generatedNewUserCategory.isPresent()) {
-            LOGGER.debug("Successfully generated {} category insight for new user accountId {}", generatedNewUserCategory.get(), accountId);
-            return generatedNewUserCategory;
-        }
-
-        return Optional.absent();
+        //insert to DynamoDB
+        LOGGER.debug("Inserting {} new user insight for accountId {}", card.category, accountId);
+        this.insightsDAODynamoDB.insertInsight(card);
+        return Optional.of(card.category);
     }
 
     private Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final RolloutClient featureFlipper) {
@@ -285,6 +285,14 @@ public class InsightProcessor {
                     return Optional.absent();
                 }
                 return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+            case 29:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_AIR_QUALITY, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.AIR_QUALITY)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.AIR_QUALITY);
             default:
                 return Optional.absent();
         }
@@ -334,35 +342,38 @@ public class InsightProcessor {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
+            case AIR_QUALITY:
+                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
+                break;
+            case BED_LIGHT_DURATION:
+                insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                break;
+            case BED_LIGHT_INTENSITY_RATIO:
+                insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                break;
+            case HUMIDITY:
+                insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                break;
             case LIGHT:
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
+                break;
+            case PARTNER_MOTION:
+                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
+                break;
+            case SLEEP_QUALITY:
+                insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
+                break;
+            case SOUND:
+                insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
                 break;
             case TEMPERATURE:
                 final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
                 final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
                 insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, tempPref, tempUnit, sleepStatsDAODynamoDB);
                 break;
-            case SLEEP_QUALITY:
-                insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
-                break;
             case WAKE_VARIANCE:
                 final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
-                break;
-            case BED_LIGHT_DURATION:
-                insightCardOptional = BedLightDuration.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
-                break;
-            case HUMIDITY:
-                insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
-                break;
-            case BED_LIGHT_INTENSITY_RATIO:
-                insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
-                break;
-            case AIR_QUALITY:
-                insightCardOptional = Particulates.getInsights(accountId, deviceId, sleepStatsDAODynamoDB, deviceDataInsightQueryDAO, calibrationDAO);
-                break;
-            case PARTNER_MOTION:
-                insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
                 break;
         }
 
@@ -388,6 +399,17 @@ public class InsightProcessor {
             }
         }
         return Optional.fromNullable(insightInfoPreview.get(category.toCategoryString()));
+    }
+
+    public ImmutableMap<InsightCard.Category, String> categoryNames() {
+        final Map<InsightCard.Category, String> categoryNames = Maps.newHashMap();
+
+        final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
+
+        for (final InfoInsightCards card : infoInsightCards) {
+            categoryNames.put(card.category, card.categoryName);
+        }
+        return ImmutableMap.copyOf(categoryNames);
     }
 
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {

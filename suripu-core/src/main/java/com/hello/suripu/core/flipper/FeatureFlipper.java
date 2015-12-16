@@ -46,6 +46,7 @@ public class FeatureFlipper {
     public final static String INSIGHTS_BED_LIGHT_INTENSITY_RATIO = "insights_bed_light_intensity_ratio";
     public final static String INSIGHTS_HUMIDITY = "insights_humidity";
     public final static String INSIGHTS_WAKE_VARIANCE = "insights_wake_variance";
+    public final static String INSIGHTS_AIR_QUALITY = "insights_air_quality";
 
     public final static String MISSING_DATA_DEFAULT_VALUE = "missing_data_default_value";
 

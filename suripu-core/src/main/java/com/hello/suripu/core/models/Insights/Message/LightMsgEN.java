@@ -12,7 +12,7 @@ public class LightMsgEN {
     }
 
     public static Text getLightNotDarkEnough(final int medianLight, final int percentile) {
-        return new Text("Hello, Darkness",
+        return new Text("Hello, Almost Darkness",
                 String.format("Your bedroom light level of %d lux is close to ideal, ", medianLight) +
                         String.format("it is **dimmer than** %d%% of all Sense users.", 100 - percentile));
     }
@@ -26,7 +26,7 @@ public class LightMsgEN {
     }
 
     public static Text getLightQuiteBright(final int medianLight, final int percentile) {
-        return new Text("It's Too Bright",
+        return new Text("It's Quite Bright",
                 String.format("Your bedroom is too bright (%d lux) for ideal sleep conditions, ", medianLight) +
                         String.format("it is **brighter than** %d%% of all Sense users.", percentile) +
                         "\n\nBlackout curtains might help block some outside light.");
@@ -40,7 +40,7 @@ public class LightMsgEN {
     }
 
     public static Text getLightWayTooBright(final int medianLight, final int percentile) {
-        return new Text("It's Too Bright",
+        return new Text("It's Way Too Bright",
                 String.format("Your bedroom light level of %d lux is as bright as an office room! ", medianLight) +
                         String.format("It's **brighter than** %d%% of all Sense users.", percentile) +
                         "\n\nMake sure the lights in your bedroom are turned down 15 minutes before sleep.");

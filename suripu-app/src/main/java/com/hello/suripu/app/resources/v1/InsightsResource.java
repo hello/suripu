@@ -83,6 +83,7 @@ public class InsightsResource extends BaseResource {
      */
     @Timed
     @GET
+    @Deprecated
     @Produces(MediaType.APPLICATION_JSON)
     public List<InsightCard> getInsights(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken) {
 
@@ -93,14 +94,8 @@ public class InsightsResource extends BaseResource {
                 queryDate, chronological, MAX_INSIGHTS_NUM);
 
         if (cards.size() == 0) {
-            // no insights generated yet, probably a new user, send introduction card
-            final Optional<Account> optionalAccount = accountDAO.getById(accessToken.accountId);
-            int userAgeInYears = 0;
-            if (optionalAccount.isPresent()) {
-                userAgeInYears = DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365;
-            }
-
-            final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId, userAgeInYears);
+            // no insights generated yet, probably a new user, send introduction cards
+            final List<InsightCard> introCards = IntroductionInsights.getIntroCards(accessToken.accountId);
             this.insightsDAODynamoDB.insertListOfInsights(introCards);
             return insightCardsWithInfoPreview(introCards);
         } else {
@@ -226,6 +221,7 @@ public class InsightsResource extends BaseResource {
      * @param insightCards: an array of insight card without info preview titles
      * @return List of InsightCard objects that contain info preview titles
      */
+    @Deprecated
     private List<InsightCard> insightCardsWithInfoPreview(final List<InsightCard> insightCards) {
         final List<InsightCard> cardsWithPreview = new ArrayList<>();
         for (InsightCard card : insightCards) {

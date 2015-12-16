@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Resources;
+import com.hello.suripu.core.models.DataCompleteness;
 import com.hello.suripu.core.models.timeline.v2.ScoreCondition;
 import com.hello.suripu.core.models.timeline.v2.Timeline;
 import com.hello.suripu.core.translations.English;
@@ -47,7 +48,7 @@ public class TimelineTest {
     @Test
     public void fromV1() throws Exception {
         final com.hello.suripu.core.models.Timeline timelineV1 = timelineV1();
-        final Timeline converted = Timeline.fromV1(timelineV1, false);
+        final Timeline converted = Timeline.fromV1(timelineV1, DataCompleteness.ENOUGH_DATA);
 
         assertThat(converted.dateNight, is(timelineV1.date));
         assertThat(converted.message, is(timelineV1.message));
@@ -63,7 +64,7 @@ public class TimelineTest {
     @Test
     public void fromV1WithNotEnoughData() throws Exception {
         final com.hello.suripu.core.models.Timeline timelineV1 = com.hello.suripu.core.models.Timeline.createEmpty(English.TIMELINE_NOT_ENOUGH_SLEEP_DATA);
-        final Timeline converted = Timeline.fromV1(timelineV1, true);
+        final Timeline converted = Timeline.fromV1(timelineV1, DataCompleteness.NOT_ENOUGH_DATA);
 
         assertThat(converted.dateNight, is(timelineV1.date));
         assertThat(converted.message, is(timelineV1.message));
@@ -71,6 +72,22 @@ public class TimelineTest {
         assertThat(converted.score.isPresent(), is(true));
         assertThat(converted.score.get(), is(timelineV1.score));
         assertThat(converted.scoreCondition, CoreMatchers.is(ScoreCondition.INCOMPLETE));
+
+        assertThat(converted.events, is(empty()));
+        assertThat(converted.metrics, is(empty()));
+    }
+
+    @Test
+    public void fromV1WithNoData() throws Exception {
+        final com.hello.suripu.core.models.Timeline timelineV1 = com.hello.suripu.core.models.Timeline.createEmpty(English.TIMELINE_NO_SLEEP_DATA);
+        final Timeline converted = Timeline.fromV1(timelineV1, DataCompleteness.NO_DATA);
+
+        assertThat(converted.dateNight, is(timelineV1.date));
+        assertThat(converted.message, is(timelineV1.message));
+
+        assertThat(converted.score.isPresent(), is(true));
+        assertThat(converted.score.get(), is(timelineV1.score));
+        assertThat(converted.scoreCondition, CoreMatchers.is(ScoreCondition.NO_DATA));
 
         assertThat(converted.events, is(empty()));
         assertThat(converted.metrics, is(empty()));

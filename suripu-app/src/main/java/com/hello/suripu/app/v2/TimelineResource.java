@@ -110,7 +110,7 @@ public class TimelineResource extends BaseResource {
         final String hourMinute = oldEventDateTime.toString(DateTimeFormat.forPattern("HH:mm"));
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
 
-        final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
+        final TimelineFeedback timelineFeedback = TimelineFeedback.createTimeAmendedFeedback(date, hourMinute, timeAmendment.newEventTime, eventType, accessToken.accountId);
 
         //make sure the feedback event order and times make sense
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback, offsetMillis);
@@ -138,6 +138,17 @@ public class TimelineResource extends BaseResource {
                                 @PathParam("type") String type,
                                 @PathParam("timestamp") long timestamp) {
 
+        final Integer offsetMillis = getOffsetMillis(accessToken.accountId, date, timestamp);
+
+        final DateTime incorrectEvent = new DateTime(timestamp, DateTimeZone.UTC).plusMillis(offsetMillis);
+        final String hourMinute = incorrectEvent.toString(DateTimeFormat.forPattern("HH:mm"));
+        final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
+
+        final TimelineFeedback timelineFeedback = TimelineFeedback.createMarkedIncorrect(date, hourMinute, eventType, accessToken.accountId);
+        checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback,offsetMillis);
+
+        feedbackDAO.insertTimelineFeedback(accessToken.accountId, timelineFeedback);
+
         //TODO in the future, if we delete an intermediate event (bathroom break at night), we will have to change the internal API to let retrieveTimelinesFast know that an event was removed
         return Response.status(Response.Status.ACCEPTED)
                        .entity(getTimelineForNightInternal(accessToken.accountId, date, Optional.<TimelineFeedback>absent()))
@@ -162,7 +173,7 @@ public class TimelineResource extends BaseResource {
         final Event.Type eventType = Event.Type.fromInteger(EventType.fromString(type).value);
 
         // Correct event means feedback = prediction
-        final TimelineFeedback timelineFeedback = TimelineFeedback.create(date, hourMinute, hourMinute, eventType, accessToken.accountId);
+        final TimelineFeedback timelineFeedback = TimelineFeedback.createMarkedCorrect(date, hourMinute, eventType, accessToken.accountId);
         checkValidFeedbackOrThrow(accessToken.accountId,timelineFeedback,offsetMillis);
 
         //recalculate with feedback and check
@@ -225,7 +236,7 @@ public class TimelineResource extends BaseResource {
         }
 
         final FeedbackUtils feedbackUtils = new FeedbackUtils();
-        final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getForNight(accountId,timelineFeedback.dateOfNight);
+        final ImmutableList<TimelineFeedback> existingFeedbacks = feedbackDAO.getCorrectedForNight(accountId,timelineFeedback.dateOfNight);
 
         //proposed event is valid
         if (!feedbackUtils.checkEventValidity(timelineFeedback,offsetMillis)) {
@@ -268,7 +279,7 @@ public class TimelineResource extends BaseResource {
         final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(accountId, targetDate,newFeedback);
 
         //GET THE V2 RESULT
-        final Timeline timeline = Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.notEnoughData);
+        final Timeline timeline = Timeline.fromV1(timelineResult.timelines.get(0), timelineResult.dataCompleteness);
 
         //SEND LOG TO KINESIS
         if (timelineResult.logV2.isPresent()) {

@@ -20,6 +20,7 @@ public class TimelineFeedbackMapper implements ResultSetMapper<TimelineFeedback>
         final Long created = r.getTimestamp("created").getTime();
         final Event.Type eventType = Event.Type.fromInteger(r.getInt("event_type"));
         final Long id = r.getLong("id");
+        final Boolean isCorrect = r.getBoolean("is_correct");
 
         return TimelineFeedback.create(
                 dateOfNight,
@@ -28,7 +29,9 @@ public class TimelineFeedbackMapper implements ResultSetMapper<TimelineFeedback>
                 eventType,
                 accountId,
                 created,
-                id
+                id,
+                isCorrect
+
         );
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 
 /**
@@ -66,6 +67,7 @@ public class InsightCard implements Comparable<InsightCard> {
 
     }
 
+    public static final int ONE_DAY = 1;
     public static final int RECENT_DAYS = 3;
     public static final int PAST_WEEK = 7;
 
@@ -122,6 +124,14 @@ public class InsightCard implements Comparable<InsightCard> {
     @JsonProperty("image")
     public final Optional<MultiDensityImage> image;
 
+    @JsonIgnore
+    public final String categoryName;
+
+    @JsonProperty("category_name")
+    public String categoryName() {
+        return categoryName.isEmpty() ? category.name().toLowerCase() : categoryName;
+    }
+
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
         this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent(), Optional.<MultiDensityImage>absent());
@@ -129,7 +139,21 @@ public class InsightCard implements Comparable<InsightCard> {
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                       final String categoryName) {
+        this(accountId, title, message, category, timePeriod, timestamp,
+                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName);
+    }
+
+    public InsightCard(final Long accountId, final String title, final String message,
+                       final Category category, final TimePeriod timePeriod, final DateTime timestamp,
                        final Optional<String> infoPreview, final Optional<MultiDensityImage> image) {
+        this(accountId, title, message, category, timePeriod, timestamp, infoPreview, image, "");
+    }
+
+    private InsightCard(final Long accountId, final String title, final String message,
+                       final Category category, final TimePeriod timePeriod, final DateTime timestamp,
+                       final Optional<String> infoPreview, final Optional<MultiDensityImage> image,
+                       final String categoryName) {
         this.accountId = Optional.fromNullable(accountId);
         this.title = title;
         this.message = message;
@@ -138,6 +162,7 @@ public class InsightCard implements Comparable<InsightCard> {
         this.timestamp = timestamp;
         this.infoPreview = infoPreview;
         this.image = image;
+        this.categoryName = categoryName;
     }
 
     @Override
@@ -163,6 +188,30 @@ public class InsightCard implements Comparable<InsightCard> {
                 this.timestamp,
                 infoPreview,
                 this.image);
+    }
+
+    /**
+     * Returns copy of insight card with image added
+     * @param card
+     * @param image
+     * @return
+     */
+    public static InsightCard withImage(final InsightCard card, @NotNull final MultiDensityImage image) {
+        return new InsightCard(card.accountId.get(), card.title, card.message, card.category,
+                card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image));
+    }
+
+
+    /**
+     * Returns copy of insight card with image and category name
+     * @param card
+     * @param image
+     * @param categoryName
+     * @return
+     */
+    public static InsightCard withImageAndCategory(final InsightCard card, @NotNull final MultiDensityImage image, @NotNull String categoryName) {
+        return new InsightCard(card.accountId.get(), card.title, card.message, card.category,
+                card.timePeriod, card.timestamp, card.infoPreview, Optional.of(image), categoryName);
     }
 
 }
