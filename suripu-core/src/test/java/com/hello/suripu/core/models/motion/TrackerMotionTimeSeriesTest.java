@@ -113,15 +113,6 @@ public class TrackerMotionTimeSeriesTest {
 
     }
 
-
-    private void printBits(final Long x) {
-        final StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 63; i >= 0; i--) {
-            stringBuilder.append(((x >> i) & 1) == 1 ? 1 : 0);
-        }
-        System.out.println(stringBuilder.toString());
-    }
-
     @Test
     public void testCreate() {
         final DateTime startTime = new DateTime(2015, 01, 01, 00, 00, 02, DateTimeZone.UTC); // 2 seconds after midnight

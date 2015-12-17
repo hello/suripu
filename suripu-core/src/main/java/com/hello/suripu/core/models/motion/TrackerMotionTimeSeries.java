@@ -52,7 +52,6 @@ public class TrackerMotionTimeSeries {
     static TrackerMotionTimeSeries create(final List<TrackerMotion> trackerMotions,
                                           final DateTime start,
                                           final DateTime end) {
-        final Long mask = 0x0FFFFFFFFFFFFFFFL;
         final long[] alignedMotionMasks = new long[Minutes.minutesBetween(start, end).getMinutes()];
 
         DateTime currMotionTime;
@@ -63,10 +62,10 @@ public class TrackerMotionTimeSeries {
 
             currMotionTime = trackerMotion.dateTimeUTC();
             final int secondsOff = currMotionTime.getSecondOfMinute();
-            final int currIndex = Minutes.minutesBetween(start, currMotionTime).getMinutes() - 1;
+            final int currIndex = Minutes.minutesBetween(start, currMotionTime).getMinutes();
 
-            alignedMotionMasks[currIndex] |= (trackerMotion.motionMask.get() << secondsOff) & mask;
-            alignedMotionMasks[currIndex + 1] |= trackerMotion.motionMask.get() >> (60 - secondsOff);
+            alignedMotionMasks[currIndex - 1] |= MaskUtils.maskForPreviousMinuteWithOffset(trackerMotion.motionMask.get(), secondsOff);
+            alignedMotionMasks[currIndex] |= MaskUtils.maskForCurrentMinuteWithOffset(trackerMotion.motionMask.get(), secondsOff);
         }
 
         final List<Long> asList = Lists.newArrayListWithCapacity(alignedMotionMasks.length);
@@ -92,8 +91,14 @@ public class TrackerMotionTimeSeries {
         final List<MotionAtSecond> result = Lists.newArrayListWithExpectedSize(60 * trackerMotions.size());
         DateTime latestDateTime = start.minusMinutes(1); // Guaranteed to be before any trackerMotion time to start
         for (final TrackerMotion trackerMotion : trackerMotions) {
+
+            if (!trackerMotion.motionMask.isPresent()) {
+                // Don't include TrackerMotions that don't have the motion mask (older firmware)
+                continue;
+            }
+
             final DateTime trackerMotionDateTime = trackerMotion.dateTimeUTC();
-            final List<Boolean> motionsForSeconds = trackerMotion.motionsForSeconds();
+            final List<Boolean> motionsForSeconds = MaskUtils.toBooleans(trackerMotion.motionMask.get());
             for (int i = 0; i < motionsForSeconds.size(); i++) {
                 final DateTime currSecondDateTime = trackerMotionDateTime.minusSeconds(60 - i);
                 if (!currSecondDateTime.isAfter(latestDateTime)) {
@@ -155,7 +160,7 @@ public class TrackerMotionTimeSeries {
     public Boolean didMoveAtSecond(final DateTime dateTime) {
         final int index = indexOfMinute(dateTime);
         final int secondOffset = dateTime.getSecondOfMinute();
-        final Boolean didMove = ((alignedMotionMasks.get(index) >> secondOffset) & 1) == 1;
+        final Boolean didMove = MaskUtils.getBit(alignedMotionMasks.get(index), secondOffset);
         return didMove;
     }
 

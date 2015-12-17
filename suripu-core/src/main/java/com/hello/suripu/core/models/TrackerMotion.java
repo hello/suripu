@@ -123,25 +123,6 @@ public class TrackerMotion {
         this.motionMask = motionMask;
     }
 
-    public List<Boolean> motionsForSeconds() {
-        final int SECONDS_IN_MINUTE = 60;
-        final List<Boolean> result = Lists.newArrayListWithExpectedSize(SECONDS_IN_MINUTE);
-
-        if (!motionMask.isPresent()) {
-            for (int i = 0; i < SECONDS_IN_MINUTE; i++) {
-                result.add(Boolean.FALSE);
-            }
-            return result;
-        }
-
-        for (int i = 0; i < SECONDS_IN_MINUTE; i++) {
-            final Boolean didMove = ((motionMask.get() >> i) & 1) == 1;
-            result.add(didMove);
-        }
-
-        return result;
-    }
-
     public DateTime dateTimeUTC() {
         return new DateTime(timestamp, DateTimeZone.UTC);
     }
