@@ -1,12 +1,12 @@
 package com.hello.suripu.core.processors.insights;
 
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.IntroductionMsgEn;
 import com.hello.suripu.core.models.Insights.Message.Text;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,10 +15,9 @@ import java.util.List;
 public class IntroductionInsights {
 
     public static List<InsightCard> getIntroCards(final Long accountId) {
-        final List<InsightCard> cards = new ArrayList<>();
-        cards.add(getIntroductionCard(accountId));
-        cards.add(getIntroSleepTipsCard(accountId));
-        cards.add(getIntroSleepDurationCard(accountId));
+        final List<InsightCard> cards = ImmutableList.of(getIntroductionCard(accountId),
+                getIntroSleepTipsCard(accountId),
+                getIntroSleepDurationCard(accountId));
         return cards;
     }
 
