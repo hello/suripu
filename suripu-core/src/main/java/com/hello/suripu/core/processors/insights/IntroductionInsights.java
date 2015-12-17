@@ -7,7 +7,6 @@ import com.hello.suripu.core.models.Insights.Message.Text;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
