@@ -37,7 +37,7 @@ public class MaskUtils {
     static void printBits(final Long x) {
         final StringBuilder stringBuilder = new StringBuilder();
         for (int i = 63; i >= 0; i--) {
-            stringBuilder.append(((x >> i) & 1) == 1 ? 1 : 0);
+            stringBuilder.append((x >> i) & 1);
         }
         System.out.println(stringBuilder.toString());
     }
