@@ -76,6 +76,21 @@ public class TrackerMotionTimeSeries {
         return new TrackerMotionTimeSeries(trackerMotions, asList, start);
     }
 
+    static List<MotionAtSecond> trackerMotionToMotionAtSeconds(final TrackerMotion trackerMotion) {
+        final List<MotionAtSecond> result = Lists.newArrayListWithExpectedSize(60);
+
+        final DateTime trackerMotionDateTime = trackerMotion.dateTimeUTC();
+        final List<Boolean> motionsForSeconds = MaskUtils.toBooleans(trackerMotion.motionMask.get());
+
+        for (int i = 0; i < motionsForSeconds.size(); i++) {
+            final DateTime currSecondDateTime = trackerMotionDateTime.minusSeconds(60 - i);
+            final Boolean didMove = motionsForSeconds.get(i);
+            final MotionAtSecond mas = new MotionAtSecond(trackerMotion, currSecondDateTime, didMove);
+            result.add(mas);
+        }
+
+        return result;
+    }
 
     /**
      * Get a sparse list of MotionAtSecond objects for each second covered by this time series.
@@ -97,18 +112,13 @@ public class TrackerMotionTimeSeries {
                 continue;
             }
 
-            final DateTime trackerMotionDateTime = trackerMotion.dateTimeUTC();
-            final List<Boolean> motionsForSeconds = MaskUtils.toBooleans(trackerMotion.motionMask.get());
-            for (int i = 0; i < motionsForSeconds.size(); i++) {
-                final DateTime currSecondDateTime = trackerMotionDateTime.minusSeconds(60 - i);
-                if (!currSecondDateTime.isAfter(latestDateTime)) {
+            for (final MotionAtSecond mas : trackerMotionToMotionAtSeconds(trackerMotion)) {
+                final DateTime currSecondDateTime = mas.dateTime;
+                if (currSecondDateTime.isAfter(latestDateTime)) {
                     // Only take the first TrackerMotion for a given second if they overlap
-                    continue;
+                    result.add(mas);
+                    latestDateTime = currSecondDateTime;
                 }
-                final Boolean didMove = motionsForSeconds.get(i);
-                final MotionAtSecond mas = new MotionAtSecond(trackerMotion, currSecondDateTime, didMove);
-                result.add(mas);
-                latestDateTime = currSecondDateTime;
             }
         }
         return result;
