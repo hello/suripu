@@ -9,6 +9,7 @@ import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.UnsignedBytes;
 import com.google.common.primitives.UnsignedInts;
 import com.hello.suripu.api.ble.SenseCommandProtos;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.crypto.Cipher;
@@ -119,6 +120,10 @@ public class TrackerMotion {
         this.externalTrackerId = externalTrackerId;
         this.cosTheta = cosTheta;
         this.motionMask = motionMask;
+    }
+
+    public DateTime dateTimeUTC() {
+        return new DateTime(timestamp, DateTimeZone.UTC);
     }
 
     public static TrackerMotion create(final SenseCommandProtos.pill_data pill_data, final DeviceAccountPair accountPair, final DateTimeZone timeZone, final byte[] encryptionKey) throws InvalidEncryptedPayloadException{
