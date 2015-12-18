@@ -405,7 +405,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 trackerMotionDAO,
                 pillDataDAODynamoDB,
                 deviceDAO,
-                deviceDataDAO,
                 deviceDataDAODynamoDB,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,

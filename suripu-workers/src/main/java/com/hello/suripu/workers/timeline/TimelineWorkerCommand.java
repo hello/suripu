@@ -22,7 +22,6 @@ import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleFromS3;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
@@ -101,7 +100,6 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final DeviceReadDAO deviceDAO = commonDB.onDemand(DeviceReadDAO.class);
         final FeedbackReadDAO feedbackDAO = commonDB.onDemand(FeedbackReadDAO.class);
 
-        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -194,7 +192,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
 
         final TimelineProcessor timelineProcessor =
                 TimelineProcessor.createTimelineProcessor(trackerMotionDAO, pillDataDAODynamoDB,
-                deviceDAO, deviceDataDAO, deviceDataDAODynamoDB,
+                deviceDAO, deviceDataDAODynamoDB,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,
                 sleepHmmDAODynamoDB,

@@ -11,7 +11,6 @@ import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
@@ -82,7 +81,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final PillDataDAODynamoDB pillDataDAODynamoDB;
     private final DeviceReadDAO deviceDAO;
-    private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
     private final FeedbackReadDAO feedbackDAO;
@@ -118,7 +116,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     static public TimelineProcessor createTimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                                                             final PillDataDAODynamoDB pillDataDAODynamoDB,
                                                             final DeviceReadDAO deviceDAO,
-                                                            final DeviceDataDAO deviceDataDAO,
                                                             final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                                                             final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                                                             final FeedbackReadDAO feedbackDAO,
@@ -133,7 +130,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(trackerMotionDAO, pillDataDAODynamoDB,
-                deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
+                deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO, featureExtractionModelsDAO,
                 Optional.<UUID>absent(), calibrationDAO,defaultModelEnsembleDAO);
@@ -141,7 +138,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(trackerMotionDAO, pillDataDAODynamoDB, deviceDAO,deviceDataDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO);
+        return new TimelineProcessor(trackerMotionDAO, pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO);
     }
 
     //private SessionLogDebug(final String)
@@ -149,7 +146,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private TimelineProcessor(final TrackerMotionDAO trackerMotionDAO,
                               final PillDataDAODynamoDB pillDataDAODynamoDB,
                               final DeviceReadDAO deviceDAO,
-                              final DeviceDataDAO deviceDataDAO,
                               final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                               final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
                               final FeedbackReadDAO feedbackDAO,
@@ -165,7 +161,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
-        this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.ringTimeHistoryDAODynamoDB = ringTimeHistoryDAODynamoDB;
         this.feedbackDAO = feedbackDAO;
@@ -538,24 +533,15 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final Optional<Calibration> calibrationOptional = this.hasCalibrationEnabled(externalDeviceId) ? calibrationDAO.getStrict(externalDeviceId) : Optional.<Calibration>absent();
 
-        AllSensorSampleList allSensorSampleList;
         // query dates in utc_ts (table has an index for this)
         LOGGER.debug("Query all sensors with utc ts for account {}", accountId);
 
-        if (hasDeviceDataDynamoDBTimelineEnabled(accountId)) {
-            allSensorSampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
-                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
-                    endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, externalDeviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
-            );
-            LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
-        } else {
-            allSensorSampleList = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
-                    targetDate.minusMillis(tzOffsetMillis).getMillis(),
-                    endDate.minusMillis(tzOffsetMillis).getMillis(),
-                    accountId, deviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId), optionalColor, calibrationOptional
-            );
-        }
+        final AllSensorSampleList allSensorSampleList = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
+                targetDate.minusMillis(tzOffsetMillis).getMillis(),
+                endDate.minusMillis(tzOffsetMillis).getMillis(),
+                accountId, externalDeviceId, SLOT_DURATION_MINUTES, missingDataDefaultValue(accountId),optionalColor, calibrationOptional
+        );
+        LOGGER.info("Sensor data for timeline generated by DynamoDB for account {}", accountId);
 
         if (allSensorSampleList.isEmpty()) {
             LOGGER.debug("No sense sensor data ID for account_id = {} and day = {}", accountId, targetDate);
