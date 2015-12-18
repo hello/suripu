@@ -57,7 +57,6 @@ import com.hello.suripu.core.db.CalibrationDynamoDB;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleFromS3;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
@@ -102,12 +101,8 @@ import com.hello.suripu.core.passwordreset.PasswordResetDB;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDynamoDB;
-import com.hello.suripu.core.processors.AccountInfoProcessor;
-import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.QuestionProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
-import com.hello.suripu.core.processors.insights.LightData;
-import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.provision.PillProvisionDAO;
 import com.hello.suripu.core.store.StoreFeedbackDAO;
 import com.hello.suripu.core.support.SupportDAO;
@@ -195,7 +190,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final SupportDAO supportDAO = commonDB.onDemand(SupportDAO.class);
 
-        final DeviceDataDAO deviceDataDAO = sensorsDB.onDemand(DeviceDataDAO.class);
         final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
         final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
@@ -435,31 +429,12 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new AppCheckinResource(2015000000));
 
         // data science resource stuff
-        final AccountInfoProcessor.Builder builder = new AccountInfoProcessor.Builder()
-                .withQuestionResponseDAO(questionResponseDAO)
-                .withMapping(questionResponseDAO);
-        final AccountInfoProcessor accountInfoProcessor = builder.build();
-
         final AmazonDynamoDB prefsClient = dynamoDBClientFactory.getForEndpoint(configuration.getPreferencesDBConfiguration().getEndpoint());
         final AccountPreferencesDAO accountPreferencesDAO = AccountPreferencesDynamoDB.create(prefsClient, configuration.getPreferencesDBConfiguration().getTableName());
         environment.addResource(new AccountPreferencesResource(accountPreferencesDAO));
 
-        final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
-                .withSenseDAOs(deviceDataDAO, deviceDataDAODynamoDB, deviceDAO)
-                .withTrackerMotionDAO(trackerMotionDAO)
-                .withInsightsDAO(trendsInsightsDAO)
-                .withDynamoDBDAOs(aggregateSleepScoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB)
-                .withPreferencesDAO(accountPreferencesDAO)
-                .withAccountInfoProcessor(accountInfoProcessor)
-                .withWakeStdDevData(new WakeStdDevData())
-                .withLightData(new LightData())
-                .withCalibrationDAO(calibrationDAO);
-
-
-        final InsightProcessor insightProcessor = insightBuilder.build();
-
-        environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, aggregateSleepScoreDAODynamoDB, trackerMotionDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB, insightProcessor));
-        environment.addResource(new com.hello.suripu.app.v2.InsightsResource(accountDAO, insightsDAODynamoDB, trendsInsightsDAO, insightProcessor));
+        environment.addResource(new InsightsResource(accountDAO, trendsInsightsDAO, insightsDAODynamoDB, sleepStatsDAODynamoDB));
+        environment.addResource(new com.hello.suripu.app.v2.InsightsResource(insightsDAODynamoDB, trendsInsightsDAO));
 
         LOGGER.debug("{}", DateTime.now(DateTimeZone.UTC).getMillis());
 
