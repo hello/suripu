@@ -14,7 +14,7 @@ public class HumidityMsgEN {
 
     public static Text getIdealHumidity() {
         return new Text("Temperate Zone",
-                "Your bedroom has the **ideal humidity level**. Read on to learn how humidity impacts your sleep.");
+                "Your bedroom has the **ideal humidity level**.");
     }
 
     public static Text getHighHumidity() {
