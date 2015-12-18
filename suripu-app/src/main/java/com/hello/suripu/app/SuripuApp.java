@@ -393,7 +393,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO));
-        environment.addProvider(new RoomConditionsResource(accountDAO, deviceDataDAO, deviceDataDAODynamoDB, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
+        environment.addProvider(new RoomConditionsResource(deviceDataDAODynamoDB, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
         environment.addResource(new DeviceResources(deviceDAO, deviceDataDAO, trackerMotionDAO, mergedUserInfoDynamoDB, pillHeartBeatDAO, sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB));
 
         final S3BucketConfiguration provisionKeyConfiguration = configuration.getProvisionKeyConfiguration();
@@ -472,7 +472,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
         final DeviceProcessor deviceProcessor = new DeviceProcessor.Builder()
                 .withDeviceDAO(deviceDAO)
-                .withDeviceDataDAO(deviceDataDAO)
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
                 .withTrackerMotionDAO(trackerMotionDAO)

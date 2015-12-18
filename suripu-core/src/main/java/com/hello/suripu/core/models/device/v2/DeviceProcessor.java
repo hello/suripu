@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -39,7 +38,6 @@ public class DeviceProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceProcessor.class);
 
     private final DeviceDAO deviceDAO;
-    private final DeviceDataDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
@@ -49,9 +47,8 @@ public class DeviceProcessor {
 
 
 
-    private DeviceProcessor(final DeviceDAO deviceDAO, final DeviceDataDAO deviceDataDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO) {
+    private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO) {
         this.deviceDAO = deviceDAO;
-        this.deviceDataDAO = deviceDataDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
@@ -201,17 +198,17 @@ public class DeviceProcessor {
         final Map<String, Optional<WifiInfo>> wifiInfoMap = retrieveWifiInfoMap(senseAccountPairs);
         final Optional<Pill.Color> pillColorOptional = retrievePillColor(deviceQueryInfo.accountId, senseAccountPairs);
 
-        final List<Sense> senses = getSenses(deviceQueryInfo, senseAccountPairs, wifiInfoMap);
+        final List<Sense> senses = getSenses(senseAccountPairs, wifiInfoMap);
         final List<Pill> pills = getPills(pillAccountPairs, pillColorOptional);
 
         return new Devices(senses, pills);
     }
 
-    private List<Sense> getSenses(final DeviceQueryInfo deviceQueryInfo, final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
+    private List<Sense> getSenses(final List<DeviceAccountPair> senseAccountPairs, final Map<String, Optional<WifiInfo>> wifiInfoMap) {
         final List<Sense> senses = Lists.newArrayList();
 
         for (final DeviceAccountPair senseAccountPair : senseAccountPairs) {
-            final Optional<DeviceStatus> senseStatusOptional = retrieveSenseStatus(senseAccountPair, deviceQueryInfo.isLastSeenDBEnabled, deviceQueryInfo.isSensorsDBUnavailable);
+            final Optional<DeviceStatus> senseStatusOptional = retrieveSenseStatus(senseAccountPair);
             final Optional<WifiInfo> wifiInfoOptional = wifiInfoMap.get(senseAccountPair.externalDeviceId);
             final Optional<Sense.Color> senseColorOptional = senseColorDAO.get(senseAccountPair.externalDeviceId);
             senses.add(Sense.create(senseAccountPair, senseStatusOptional, senseColorOptional, wifiInfoOptional));
@@ -230,23 +227,8 @@ public class DeviceProcessor {
 
 
     @VisibleForTesting
-    public Optional<DeviceStatus> retrieveSenseStatus(final DeviceAccountPair senseAccountPair, final Boolean isLastSeenDBEnabled, final Boolean isSensorsDBUnavailable) {
-        // First attempt: get it from last seen record in dynamo db
-        if (isLastSeenDBEnabled) {
-            return sensorsViewsDynamoDB.senseStatus(senseAccountPair.externalDeviceId, senseAccountPair.accountId, senseAccountPair.internalDeviceId);
-        }
-
-        if (isSensorsDBUnavailable) {
-            return Optional.absent();
-        }
-        // Second attempt: get it from sensor db with assumption that such sense has been active since an hour ago
-        Optional<DeviceStatus> senseStatusOptional = deviceDataDAO.senseStatusLastHour(senseAccountPair.internalDeviceId);
-
-        // Third attempt: get if from sensor db with assumption that such sense has been active since a week ago
-        if (!senseStatusOptional.isPresent()) {
-            senseStatusOptional = deviceDataDAO.senseStatusLastWeek(senseAccountPair.internalDeviceId);
-        }
-        return senseStatusOptional;
+    public Optional<DeviceStatus> retrieveSenseStatus(final DeviceAccountPair senseAccountPair) {
+        return sensorsViewsDynamoDB.senseStatus(senseAccountPair.externalDeviceId, senseAccountPair.accountId, senseAccountPair.internalDeviceId);
     }
 
 
@@ -302,7 +284,6 @@ public class DeviceProcessor {
 
     public static class Builder {
         private DeviceDAO deviceDAO;
-        private DeviceDataDAO deviceDataDAO;
         private MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
         private SensorsViewsDynamoDB sensorsViewsDynamoDB;
         private TrackerMotionDAO trackerMotionDAO;
@@ -312,11 +293,6 @@ public class DeviceProcessor {
 
         public Builder withDeviceDAO(final DeviceDAO deviceDAO) {
             this.deviceDAO = deviceDAO;
-            return this;
-        }
-
-        public Builder withDeviceDataDAO(final DeviceDataDAO deviceDataDAO) {
-            this.deviceDataDAO = deviceDataDAO;
             return this;
         }
 
@@ -352,7 +328,7 @@ public class DeviceProcessor {
         }
 
         public DeviceProcessor build() {
-            return new DeviceProcessor(deviceDAO, deviceDataDAO, mergedUserInfoDynamoDB, sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB, trackerMotionDAO, wifiInfoDAO, senseColorDAO);
+            return new DeviceProcessor(deviceDAO, mergedUserInfoDynamoDB, sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB, trackerMotionDAO, wifiInfoDAO, senseColorDAO);
         }
     }
 
