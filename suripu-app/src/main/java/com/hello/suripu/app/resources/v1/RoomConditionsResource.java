@@ -4,10 +4,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDAO;
-import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -48,8 +46,6 @@ public class RoomConditionsResource extends BaseResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(RoomConditionsResource.class);
     private final static ImmutableSet<String> hiddenSensors = ImmutableSet.copyOf(Sets.newHashSet("light_variance", "light_peakiness", "dust_min", "dust_max", "dust_variance"));
 
-    private final AccountDAO accountDAO;
-    private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceDAO deviceDAO;
     private final long allowedRangeInSeconds;
@@ -58,10 +54,9 @@ public class RoomConditionsResource extends BaseResource {
 
 
     public RoomConditionsResource(
-            final AccountDAO accountDAO, final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
-            final DeviceDAO deviceDAO, final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO, final CalibrationDAO calibrationDAO) {
-        this.accountDAO = accountDAO;
-        this.deviceDataDAO = deviceDataDAO;
+            final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceDAO deviceDAO,
+            final long allowedRangeInSeconds,final SenseColorDAO senseColorDAO,
+            final CalibrationDAO calibrationDAO) {
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.allowedRangeInSeconds = allowedRangeInSeconds;
@@ -100,14 +95,10 @@ public class RoomConditionsResource extends BaseResource {
             mostRecentLookBackMinutes = 120;
         }
 
-        final Optional<DeviceData> data;
         final DateTime maxDT = DateTime.now(DateTimeZone.UTC).plusMinutes(2);
         final DateTime minDT = DateTime.now(DateTimeZone.UTC).minusMinutes(mostRecentLookBackMinutes);
-        if (hasDeviceDataDynamoDBEnabled(token.accountId)) {
-            data = deviceDataDAODynamoDB.getMostRecent(token.accountId, deviceIdPair.get().externalDeviceId, maxDT, minDT);
-        } else {
-            data = deviceDataDAO.getMostRecent(token.accountId, deviceIdPair.get().internalDeviceId, maxDT, minDT);
-        }
+        final Optional<DeviceData> data = deviceDataDAODynamoDB.getMostRecent(
+                token.accountId, deviceIdPair.get().externalDeviceId, maxDT, minDT);
 
 
         if(!data.isPresent()) {
@@ -194,14 +185,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final List<Sample> timeSeries;
-        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
-            timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        } else {
-            timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        }
+        final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }
@@ -242,16 +228,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData;
-        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
-            sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        } else {
-            sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        }
+        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
+            accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
+            missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -297,16 +276,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData;
-        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
-            sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        } else {
-            sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                    missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        }
+        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
+                queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
+                slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -388,16 +360,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
-        final List<Sample> timeSeries;
-        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
-            timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-                    sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        } else {
-            timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                    sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        }
+        final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                queryStartTimeInUTC, queryEndTimestampInUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
         return adjustTimeSeries(timeSeries, sensor, deviceName);
     }
@@ -440,16 +405,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceName);
 
-        final List<Sample> timeSeries;
-        if (hasDeviceDataDynamoDBEnabled(accessToken.accountId)) {
-            timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-                    sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        } else {
-            timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeUTC, queryEndTimestampUTC,
-                    accessToken.accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                    sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
-        }
+        final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
 
 
         return adjustTimeSeries(timeSeries, sensor, deviceName);
@@ -508,16 +466,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final List<Sample> timeSeries;
-        if (hasDeviceDataDynamoDBEnabled(accountId)) {
-            timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                    accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, sensor,
-                    missingDataDefaultValue(accountId), color, calibrationOptional);
-        } else {
-            timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                    accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, sensor,
-                    missingDataDefaultValue(accountId), color, calibrationOptional);
-        }
+        final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
 
@@ -557,23 +508,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        List<Sample> timeSeries;
-        if (hasDeviceDataDynamoDBEnabled(accountId)) {
-            try {
-                timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                        accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-                        sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
-            } catch (IllegalArgumentException e) {
-                LOGGER.warn("Caught exception while attempting to get time series from DynamoDB: {}.\n");
-                timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                        accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                        sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
-            }
-        } else {
-             timeSeries = deviceDataDAO.generateTimeSeriesByUTCTime(queryStartTimeInUTC, queryEndTimestampInUTC,
-                     accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes,
-                     sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
-        }
+        final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
+                queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }
@@ -610,14 +547,9 @@ public class RoomConditionsResource extends BaseResource {
 
         final Optional<Calibration> calibrationOptional = getCalibrationStrict(deviceIdPair.get().externalDeviceId);
 
-        final AllSensorSampleList sensorData;
-        if (hasDeviceDataDynamoDBEnabled(accountId)) {
-            sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                    accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
-        } else {
-            sensorData = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeInUTC, queryEndTimestampInUTC,
-                    accountId, deviceIdPair.get().internalDeviceId, slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
-        }
+        final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
+                queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
+                slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
