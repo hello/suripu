@@ -1,6 +1,8 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import org.slf4j.Logger;
@@ -19,6 +21,20 @@ public class DataUtils{
     private static final int TEMPERATURE_CALIBRATION_FACTOR_IN_CELSIUS = 389; // 389 => 7ºF, previous 278 => 5ºF;
     public static final float PEAK_DISTURBANCE_NOISE_FLOOR = 40.0f;
 
+    public static final ImmutableSet<Integer> BLACKLISTED_FIRMWARE = ImmutableSet.of(
+        601215661, //0.4.0
+        1104455110, //0.8.31
+        1558757421, //0.9.21
+        1530439804, //0.9.22_rc7
+        1358218663, //0.9.22_rc8
+        1086645417, //0.11.18
+        1035743552, //0.11.22
+        750155781, //0.11.23
+        1954620455, //0.11.26
+        1142580827, //prepservicepack-v2
+        482148662, //1.0.1
+        710812107 //1.0.5
+    );
 
     /**
      * Dust count calibration & conversion
@@ -127,8 +143,15 @@ public class DataUtils{
         return valueFromDB / FLOAT_2_INT_MULTIPLIER;
     }
 
-    public static float calibrateAudio(final float backgroundDB, final float peakDB) {
-        return (peakDB - 40) + 25;
+    public static float calibrateAudio(final float backgroundDB, final float peakDB, final Integer firmwareVersion) {
+        final float removedNoiseFloor = peakDB - 40.0f;
+        final float artificialNoiseFloor = 25.0f;
+
+        //Don't allow devices on older firmware to see calibrated audio without the trim
+        if (!BLACKLISTED_FIRMWARE.contains(firmwareVersion)) {
+            return removedNoiseFloor + artificialNoiseFloor;
+        }
+        return Math.max(removedNoiseFloor, 0) + artificialNoiseFloor;
     }
 
     private static double computeDewPoint(final double temperature, final double humidity) {
