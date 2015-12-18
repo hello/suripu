@@ -473,7 +473,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PasswordResetDB passwordResetDB = PasswordResetDB.create(passwordResetDynamoDBClient, configuration.getPasswordResetDBConfiguration().getTableName());
         final DeviceProcessor deviceProcessor = new DeviceProcessor.Builder()
                 .withDeviceDAO(deviceDAO)
-                .withDeviceDataDAO(deviceDataDAO)
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
                 .withTrackerMotionDAO(trackerMotionDAO)
