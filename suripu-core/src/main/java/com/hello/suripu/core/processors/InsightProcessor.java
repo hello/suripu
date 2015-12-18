@@ -389,7 +389,9 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    public Optional<String> getInsightPreviewForCategory(final InsightCard.Category category) {
+    public static Optional<String> getInsightPreviewForCategory(final InsightCard.Category category,
+                                                                final TrendsInsightsDAO trendsInsightsDAO)
+    {
         final Map<String, String> insightInfoPreview = Maps.newHashMap();
         final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
 
@@ -403,7 +405,11 @@ public class InsightProcessor {
         return Optional.fromNullable(insightInfoPreview.get(category.toCategoryString()));
     }
 
-    public ImmutableMap<InsightCard.Category, String> categoryNames() {
+    public Optional<String> getInsightPreviewForCategory(final InsightCard.Category category) {
+        return getInsightPreviewForCategory(category, trendsInsightsDAO);
+    }
+
+    public static ImmutableMap<InsightCard.Category, String> categoryNames(final TrendsInsightsDAO trendsInsightsDAO) {
         final Map<InsightCard.Category, String> categoryNames = Maps.newHashMap();
 
         final ImmutableList<InfoInsightCards> infoInsightCards = trendsInsightsDAO.getAllGenericInsightCards();
@@ -412,6 +418,10 @@ public class InsightProcessor {
             categoryNames.put(card.category, card.categoryName);
         }
         return ImmutableMap.copyOf(categoryNames);
+    }
+
+    public ImmutableMap<InsightCard.Category, String> categoryNames() {
+        return categoryNames(trendsInsightsDAO);
     }
 
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {

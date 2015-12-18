@@ -4,10 +4,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
-import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
@@ -42,6 +40,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -57,25 +56,19 @@ public class InsightsResource extends BaseResource {
 
     private final AccountDAO accountDAO;
     private final TrendsInsightsDAO trendsInsightsDAO;
-    private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
-    private final TrackerMotionDAO trackerMotionDAO;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
-    private final InsightProcessor insightProcessor;
 
     @Inject
     RolloutClient feature;
 
-    public InsightsResource(final AccountDAO accountDAO, final TrendsInsightsDAO trendsInsightsDAO, final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
-                            final TrackerMotionDAO trackerMotionDAO, InsightsDAODynamoDB insightsDAODynamoDB,
-                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final InsightProcessor insightProcessor) {
+    public InsightsResource(final AccountDAO accountDAO, final TrendsInsightsDAO trendsInsightsDAO,
+                            InsightsDAODynamoDB insightsDAODynamoDB,
+                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         this.accountDAO = accountDAO;
         this.trendsInsightsDAO = trendsInsightsDAO;
-        this.scoreDAODynamoDB = scoreDAODynamoDB;
-        this.trackerMotionDAO = trackerMotionDAO;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
-        this.insightProcessor = insightProcessor;
     }
 
     /**
@@ -225,7 +218,7 @@ public class InsightsResource extends BaseResource {
     private List<InsightCard> insightCardsWithInfoPreview(final List<InsightCard> insightCards) {
         final List<InsightCard> cardsWithPreview = new ArrayList<>();
         for (InsightCard card : insightCards) {
-            cardsWithPreview.add(card.withInfoPreview(insightProcessor.getInsightPreviewForCategory(card.category)));
+            cardsWithPreview.add(card.withInfoPreview(InsightProcessor.getInsightPreviewForCategory(card.category, trendsInsightsDAO)));
         }
         return cardsWithPreview;
     }

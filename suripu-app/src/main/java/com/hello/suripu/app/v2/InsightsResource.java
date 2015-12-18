@@ -1,12 +1,9 @@
 package com.hello.suripu.app.v2;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
-import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.oauth.AccessToken;
@@ -14,7 +11,6 @@ import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.processors.InsightProcessor;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
-import com.hello.suripu.core.util.DateTimeUtil;
 import com.yammer.metrics.annotation.Timed;
 
 import org.joda.time.DateTime;
@@ -39,19 +35,13 @@ public class InsightsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(InsightsResource.class);
     private static final int MAX_INSIGHTS_NUM = 20;
 
-    private final AccountDAO accountDAO;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
     private final TrendsInsightsDAO trendsInsightsDAO;
-    private final InsightProcessor insightProcessor;
 
-    public InsightsResource(final AccountDAO accountDAO,
-                            final InsightsDAODynamoDB insightsDAODynamoDB,
-                            final TrendsInsightsDAO trendsInsightsDAO,
-                            final InsightProcessor insightProcessor) {
-        this.accountDAO = accountDAO;
+    public InsightsResource(final InsightsDAODynamoDB insightsDAODynamoDB,
+                            final TrendsInsightsDAO trendsInsightsDAO) {
         this.insightsDAODynamoDB = insightsDAODynamoDB;
         this.trendsInsightsDAO = trendsInsightsDAO;
-        this.insightProcessor = insightProcessor;
     }
 
     @Timed
@@ -98,10 +88,8 @@ public class InsightsResource {
      * @return List of InsightCard objects that contain info preview titles
      */
     private List<InsightCard> insightCardsWithInfoPreviewAndMissingImages(final List<InsightCard> insightCards) {
-        final Map<InsightCard.Category, String> categoryNames = insightProcessor.categoryNames();
+        final Map<InsightCard.Category, String> categoryNames = InsightProcessor.categoryNames(trendsInsightsDAO);
         return InsightsDAODynamoDB.backfillImagesBasedOnCategory(insightCards, categoryNames);
     }
-
-
 
 }
