@@ -120,24 +120,26 @@ public class InsightProcessor {
             return;
         }
 
-        final Long internalDeviceId = deviceIdOptional.get();
-
-        final DeviceId deviceId = DeviceId.create(internalDeviceId);
-
-        final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO;
-        if (featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_INSIGHTS, accountId, Collections.EMPTY_LIST)) {
-            LOGGER.info("Generating insights with DynamoDB for account {}", accountId);
-            deviceDataInsightQueryDAO = deviceDataDAODynamoDB;
-        } else {
-            deviceDataInsightQueryDAO = deviceDataDAO;
-        }
-
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
             this.generateNewUserInsights(accountId, accountAge);
             return;
         }
 
-        this.generateGeneralInsights(accountId, deviceId, deviceDataInsightQueryDAO, featureFlipper);
+        final Long internalDeviceId = deviceIdOptional.get();
+
+        final DeviceId deviceId = DeviceId.create(internalDeviceId);
+
+        if (featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_INSIGHTS, accountId, Collections.EMPTY_LIST)) {
+            LOGGER.info("Generating insights with DynamoDB for account {}", accountId);
+            try {
+                this.generateGeneralInsights(accountId, deviceId, deviceDataDAODynamoDB, featureFlipper);
+                return;
+            } catch (Exception ex) {
+                LOGGER.error("Caught exception generating insight for account using DynamoDB {}. {}", accountId, ex);
+            }
+        }
+
+        this.generateGeneralInsights(accountId, deviceId, deviceDataDAO, featureFlipper);
     }
 
     /**
