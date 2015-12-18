@@ -52,28 +52,19 @@ public class DeviceResources extends BaseResource {
     private static final Integer PILL_BATTERY_ALERT_THRESHOLD = 10;
 
     private final DeviceDAO deviceDAO;
-    private final DeviceDataDAO deviceDataDAO;
-    private final TrackerMotionDAO trackerMotionDAO;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
-    private final PillHeartBeatDAO pillHeartBeatDAO;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
 
     @Inject
     RolloutClient feature;
 
     public DeviceResources(final DeviceDAO deviceDAO,
-                           final DeviceDataDAO deviceDataDAO,
-                           final TrackerMotionDAO trackerMotionDAO,
                            final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                           final PillHeartBeatDAO pillHeartBeatDAO,
                            final SensorsViewsDynamoDB sensorsViewsDynamoDB,
                            final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
-        this.deviceDataDAO = deviceDataDAO;
-        this.trackerMotionDAO = trackerMotionDAO;
-        this.pillHeartBeatDAO = pillHeartBeatDAO;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
     }
@@ -220,22 +211,8 @@ public class DeviceResources extends BaseResource {
 
 
         for (final DeviceAccountPair sense : senses) {
-            if (isSenseLastSeenDynamoDBReadEnabled(accountId)) {
-                final Optional<DeviceStatus> senseStatusOptional = sensorsViewsDynamoDB.senseStatus(sense.externalDeviceId, sense.accountId, sense.internalDeviceId);
-                devices.add(senseDeviceStatusToSenseDevice(sense, senseStatusOptional));
-            } else if(isSensorsDBUnavailable(accountId)){
-                LOGGER.warn("SENSORS DB UNAVAILABLE FOR USER {}", accountId);
-                devices.add(senseDeviceStatusToSenseDevice(sense, Optional.<DeviceStatus>absent())); // TODO: grab Sense color from Serial Number
-            } else {
-                // Try to limit the search to the last 1h first, to guarantee table index scan lower bound
-                // !!! we mutate senseStatusOptional
-                Optional<DeviceStatus> senseStatusOptional = this.deviceDataDAO.senseStatusLastHour(sense.internalDeviceId);
-                if (!senseStatusOptional.isPresent()) {
-                    LOGGER.warn("No data in the last hour for device id = {} (external id = {}) for account_id = {}", sense.internalDeviceId, sense.externalDeviceId, sense.accountId);
-                    senseStatusOptional = this.deviceDataDAO.senseStatusLastWeek(sense.internalDeviceId);
-                }
-                devices.add(senseDeviceStatusToSenseDevice(sense, senseStatusOptional));
-            }
+            final Optional<DeviceStatus> senseStatusOptional = sensorsViewsDynamoDB.senseStatus(sense.externalDeviceId, sense.accountId, sense.internalDeviceId);
+            devices.add(senseDeviceStatusToSenseDevice(sense, senseStatusOptional));
         }
 
         devices.addAll(pillStatuses(pills, pillColor, accountId));
