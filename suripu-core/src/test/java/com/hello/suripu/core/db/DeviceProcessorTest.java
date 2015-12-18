@@ -78,11 +78,6 @@ public class DeviceProcessorTest {
         when(trackerMotionDAO.pillStatus(pillAccountPairTrackerMotion.internalDeviceId, pillAccountPairTrackerMotion.accountId)).thenReturn(Optional.of(pillStatusTrackerMotion));
         when(trackerMotionDAO.pillStatus(pillAccountPairNoStatus.internalDeviceId, pillAccountPairNoStatus.accountId)).thenReturn(Optional.<DeviceStatus>absent());
 
-        final DeviceDataDAO deviceDataDAO = mock(DeviceDataDAO.class);
-        when(deviceDataDAO.senseStatusLastHour(senseAccountPairLastHour.internalDeviceId)).thenReturn(Optional.of(senseStatusLastHour));
-        when(deviceDataDAO.senseStatusLastHour(senseAccountPairLastWeek.internalDeviceId)).thenReturn(Optional.<DeviceStatus>absent());
-        when(deviceDataDAO.senseStatusLastWeek(senseAccountPairLastWeek.internalDeviceId)).thenReturn(Optional.of(senseStatusLastWeek));
-
         final SenseColorDAO senseColorDAO = mock(SenseColorDAO.class);
         when(senseColorDAO.get(senseAccountPairSenseColor.externalDeviceId)).thenReturn(Optional.of(Sense.Color.BLACK));
 
@@ -110,7 +105,6 @@ public class DeviceProcessorTest {
 
         deviceProcessor = new DeviceProcessor.Builder()
                 .withDeviceDAO(deviceDAO)
-                .withDeviceDataDAO(deviceDataDAO)
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
                 .withPillHeartbeatDAO(pillHeartBeatDAO)
                 .withSenseColorDAO(senseColorDAO)
@@ -127,39 +121,6 @@ public class DeviceProcessorTest {
         assertThat(wifiInfoMapOptional.get(senseAccountPairWifi.externalDeviceId).isPresent(), is(true));
         final WifiInfo wifiInfo = wifiInfoMapOptional.get(senseAccountPairWifi.externalDeviceId).get();
         assertThat(wifiInfo, equalTo(expectedWifiInfo));
-    }
-
-    @Test
-    public void testGetSenseStatusFromLastSeen() {
-        final Optional<DeviceStatus> deviceStatusOptional = deviceProcessor.retrieveSenseStatus(senseAccountPairLastSeen, true, false);
-        assertThat(deviceStatusOptional.isPresent(), is(true));
-        assertThat(deviceStatusOptional.get(), equalTo(senseStatusLastSeen));
-    }
-
-    @Test
-    public void testGetSenseStatusFromLastHour() {
-        final Optional<DeviceStatus> deviceStatusOptional = deviceProcessor.retrieveSenseStatus(senseAccountPairLastHour, false, false);
-        assertThat(deviceStatusOptional.isPresent(), is(true));
-        assertThat(deviceStatusOptional.get(), equalTo(senseStatusLastHour));
-    }
-
-    @Test
-    public void testGetSenseStatusFromLastWeek() {
-        final Optional<DeviceStatus> deviceStatusOptional = deviceProcessor.retrieveSenseStatus(senseAccountPairLastWeek, false, false);
-        assertThat(deviceStatusOptional.isPresent(), is(true));
-        assertThat(deviceStatusOptional.get(), equalTo(senseStatusLastWeek));
-    }
-
-    @Test
-    public void testGetSenseStatusFeatureFlipperUnavailable() {
-        final Optional<DeviceStatus> deviceStatusOptional = deviceProcessor.retrieveSenseStatus(senseAccountPairLastWeek, false, true);
-        assertThat(deviceStatusOptional.isPresent(), is(false));
-    }
-
-    @Test
-    public void testGetSenseStatusDataUnavailable() {
-        final Optional<DeviceStatus> deviceStatusOptional = deviceProcessor.retrieveSenseStatus(senseAccountPairNoStatus, false, true);
-        assertThat(deviceStatusOptional.isPresent(), is(false));
     }
 
     @Test
