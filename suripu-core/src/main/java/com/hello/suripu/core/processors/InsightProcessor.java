@@ -415,11 +415,11 @@ public class InsightProcessor {
     }
 
     private Set<InsightCard.Category> getRecentInsightsCategories(final Long accountId) {
-        // get all insights from the past week
-        final DateTime aWeekAgo = DateTime.now(DateTimeZone.UTC).minusDays(6);
+        // get all insights from the two weeks
+        final DateTime twoWeeksAgo = DateTime.now(DateTimeZone.UTC).minusDays(13);
         final Boolean chronological = true;
 
-        final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, aWeekAgo, chronological, RECENT_DAYS);
+        final List<InsightCard> cards = this.insightsDAODynamoDB.getInsightsByDate(accountId, twoWeeksAgo, chronological, RECENT_DAYS);
 
         final Set<InsightCard.Category> seenCategories = new HashSet<>();
         for (InsightCard card : cards) {
