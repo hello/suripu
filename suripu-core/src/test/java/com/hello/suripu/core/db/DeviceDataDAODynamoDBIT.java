@@ -958,4 +958,29 @@ public class DeviceDataDAODynamoDBIT {
         }
     }
 
+    @Test
+    public void testGetAverageDustForLast10Days() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime endTime = new DateTime(2015, 11, 1, 0, 0, 0, DateTimeZone.UTC);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        final DeviceData.Builder builder = new DeviceData.Builder()
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId);
+        data.add(builder.withDateTimeUTC(endTime.minusDays(12)).withAmbientAirQualityRaw(1000).build()); // Nope
+        data.add(builder.withDateTimeUTC(endTime.minusDays(11)).withAmbientAirQualityRaw(-5000).build()); // Nope
+        data.add(builder.withDateTimeUTC(endTime.minusDays(9)).withAmbientAirQualityRaw(2).build());
+        data.add(builder.withDateTimeUTC(endTime.minusDays(7)).withAmbientAirQualityRaw(3).build());
+        data.add(builder.withDateTimeUTC(endTime.minusDays(5)).withAmbientAirQualityRaw(4).build());
+        data.add(builder.withDateTimeUTC(endTime.plusDays(1)).withAmbientAirQualityRaw(0).build()); // Nope
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final Integer average = deviceDataDAODynamoDB.getAverageDustForLast10Days(accountId, deviceId, endTime);
+        assertThat(average, is(3));
+    }
+
 }
