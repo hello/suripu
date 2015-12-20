@@ -16,6 +16,7 @@ public class DeviceId {
         this.externalDeviceId = externalDeviceId;
     }
 
+    //What's the best way for not confusing the below two different "types" of DeviceId?
     public static DeviceId create(@NotNull final Long internalDeviceId) {
         return new DeviceId(Optional.of(internalDeviceId), Optional.<String>absent());
     }

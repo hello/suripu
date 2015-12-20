@@ -131,6 +131,7 @@ public class InsightProcessor {
 
         if (featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_INSIGHTS, accountId, Collections.EMPTY_LIST)) {
             LOGGER.info("Generating insights with DynamoDB for account {}", accountId);
+            //This try never succeeds because deviceId was created with internalDeviceId above, and the below requires the externalId type of deviceId
             try {
                 this.generateGeneralInsights(accountId, deviceId, deviceDataDAODynamoDB, featureFlipper);
                 return;
