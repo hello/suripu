@@ -64,7 +64,7 @@ public class InsightProcessor {
     private static final int RECENT_DAYS = 7; // last 7 days
     private static final int NEW_ACCOUNT_THRESHOLD = 4;
     private static final int DAYS_ONE_WEEK = 7;
-    private static final int NUM_INSIGHTS_ALLOWED_PER_WEEK = 2;
+    private static final int NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK = 4;
 
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
@@ -206,7 +206,7 @@ public class InsightProcessor {
             //else try to generate an old Random Insight
         }
 
-        if (recentCategories.size() > NUM_INSIGHTS_ALLOWED_PER_WEEK) {
+        if (recentCategories.size() > NUM_INSIGHTS_ALLOWED_PER_TWO_WEEK) {
             return Optional.absent();
         }
 
