@@ -329,7 +329,7 @@ public class InsightProcessor {
                 break;
             case 21:
                 if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
-                    return Optional.of(InsightCard.Category.TEMPERATURE);
+                    return Optional.of(InsightCard.Category.SLEEP_QUALITY);
                 }
                 break;
             default:
