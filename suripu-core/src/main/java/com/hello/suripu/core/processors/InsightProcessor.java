@@ -222,7 +222,7 @@ public class InsightProcessor {
         }
 
         //logic for generating old random insight
-        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime);
+        final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime, featureFlipper);
         if (!toGenerateRandomCategory.isPresent()) {
             return Optional.absent();
         }
@@ -258,50 +258,12 @@ public class InsightProcessor {
     @VisibleForTesting
     public Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
-        //Generate high priority Insights based on day of month
-        final Integer dayOfMonth = currentTime.getDayOfMonth();
-        LOGGER.debug("The day of the month is {}", dayOfMonth);
-
-        switch (dayOfMonth) {
-            case 1:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_HUMIDITY, accountId, Collections.EMPTY_LIST)) {
-                    return Optional.absent();
-                }
-                if (recentCategories.contains(InsightCard.Category.HUMIDITY)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.HUMIDITY);
-            case 14:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
-                    return Optional.absent();
-                }
-                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
-            case 21:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_INTENSITY_RATIO, accountId, Collections.EMPTY_LIST)) {
-                    return Optional.absent();
-                }
-                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
-            case 29:
-                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_AIR_QUALITY, accountId, Collections.EMPTY_LIST)) {
-                    return Optional.absent();
-                }
-                if (recentCategories.contains(InsightCard.Category.AIR_QUALITY)) {
-                    return Optional.absent();
-                }
-                return Optional.of(InsightCard.Category.AIR_QUALITY);
-            default:
-                return Optional.absent();
-        }
+        //TODO: Read category to generate off of an external file to allow for most flexibility
+        return Optional.absent();
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         /* randomly select a card that hasn't been generated recently - TODO when we have all categories
         final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
@@ -318,24 +280,54 @@ public class InsightProcessor {
 
         switch (dayOfMonth) {
             case 1:
-                if (!recentCategories.contains(InsightCard.Category.LIGHT)) {
-                    return Optional.of(InsightCard.Category.LIGHT);
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_HUMIDITY, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
                 }
-                break;
-            case 14:
-                if (!recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
-                    return Optional.of(InsightCard.Category.TEMPERATURE);
+                if (recentCategories.contains(InsightCard.Category.HUMIDITY)) {
+                    return Optional.absent();
                 }
-                break;
-            case 21:
-                if (!recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
-                    return Optional.of(InsightCard.Category.SLEEP_QUALITY);
+                return Optional.of(InsightCard.Category.HUMIDITY);
+            case 4:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_DURATION, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
                 }
-                break;
-            default:
-                return Optional.absent();
-        }
+                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_DURATION)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.BED_LIGHT_DURATION);
+            case 7:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_BED_LIGHT_INTENSITY_RATIO, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.BED_LIGHT_INTENSITY_RATIO);
+            case 10:
+                if (!featureFlipper.userFeatureActive(FeatureFlipper.INSIGHTS_AIR_QUALITY, accountId, Collections.EMPTY_LIST)) {
+                    return Optional.absent();
+                }
+                if (recentCategories.contains(InsightCard.Category.AIR_QUALITY)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.AIR_QUALITY);
 
+            case 13:
+                if (recentCategories.contains(InsightCard.Category.LIGHT)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.LIGHT);
+            case 16:
+                if (recentCategories.contains(InsightCard.Category.TEMPERATURE)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.TEMPERATURE);
+            case 19:
+                if (recentCategories.contains(InsightCard.Category.SLEEP_QUALITY)) {
+                    return Optional.absent();
+                }
+                return Optional.of(InsightCard.Category.SLEEP_QUALITY);
+        }
         return Optional.absent();
     }
 
