@@ -652,6 +652,43 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
     //endregion
 
 
+    private DynamoDBItemAggregator aggregatorForAttribute(final Long accountId,
+                                                          final String externalDeviceId,
+                                                          final DateTime startTime,
+                                                          final DateTime endTime,
+                                                          final DeviceDataAttribute attribute)
+    {
+        final Expression keyConditionExp = Expressions.and(
+                Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
+        final ImmutableSet<Attribute> attributes = ImmutableSet.<Attribute>builder()
+                .add(attribute)
+                .addAll(BASE_ATTRIBUTES)
+                .build();
+        final DynamoDBResponse response = queryTables(getTableNames(startTime, endTime), keyConditionExp, attributes);
+        return new DynamoDBItemAggregator(response.data);
+    }
+
+    private Integer getAverageForTimeRange(final Long accountId,
+                                           final String externalDeviceId,
+                                           final DateTime startTime,
+                                           final DateTime endTime,
+                                           final DeviceDataAttribute attribute)
+    {
+        final DynamoDBItemAggregator aggregator = aggregatorForAttribute(accountId, externalDeviceId, startTime, endTime, attribute);
+        return ((int) aggregator.roundedMean(attribute.name));
+    }
+
+    public Integer getAverageDustForLast10Days(final Long accountId,
+                                               final String externalDeviceId,
+                                               final DateTime endTime)
+    {
+        final DateTime startTime = endTime.minusDays(10);
+        final DeviceDataAttribute attribute = DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW;
+        return getAverageForTimeRange(accountId, externalDeviceId, startTime, endTime, attribute);
+    }
+
+
     //region DeviceDataInsightQueryDAO implementation
     /**
      *
