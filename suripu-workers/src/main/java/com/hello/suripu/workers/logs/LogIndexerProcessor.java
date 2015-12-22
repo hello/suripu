@@ -6,7 +6,6 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
-import com.flaptor.indextank.apiclient.IndexTankClient;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.OnBoardingLogDAO;
@@ -15,7 +14,6 @@ import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPool;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -24,35 +22,25 @@ public class LogIndexerProcessor implements IRecordProcessor {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(LogIndexerProcessor.class);
 
-    private final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> senseStructuredLogsIndexer;
     private final LogIndexer<LoggingProtos.BatchLogMessage> onBoardingLogIndexer;
 
-    private final Meter senseLogs;
     private final Meter structuredLogs;
     private final Meter onboardingLogs;
 
-    private LogIndexerProcessor(final LogIndexer<LoggingProtos.BatchLogMessage> senseIndexer,
+    private LogIndexerProcessor(
                                 final LogIndexer<LoggingProtos.BatchLogMessage> senseStructuredLogsIndexer,
                                 final LogIndexer<LoggingProtos.BatchLogMessage> onBoardingLogIndexer) {
-        this.senseIndexer = senseIndexer;
         this.senseStructuredLogsIndexer = senseStructuredLogsIndexer;
         this.onBoardingLogIndexer = onBoardingLogIndexer;
 
-        this.senseLogs= Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "sense-logs", "sense-processed", TimeUnit.SECONDS);
         this.structuredLogs = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "structured-logs", "structured-processed", TimeUnit.SECONDS);
         this.onboardingLogs  = Metrics.defaultRegistry().newMeter(LogIndexerProcessor.class, "onboarding-logs", "onboarding-processed", TimeUnit.SECONDS);
     }
 
-    public static LogIndexerProcessor create(final IndexTankClient indexTankClient,
-                                             final String senseLogIndexPrefix,
-                                             final IndexTankClient.Index senseLogBackupIndex,
-                                             final SenseEventsDAO senseEventsDAO,
-                                             final OnBoardingLogDAO onBoardingLogDAO,
-                                             final JedisPool jedisPool,
-                                             final Integer searchifyBulkSize) {
+    public static LogIndexerProcessor create(final SenseEventsDAO senseEventsDAO,
+                                             final OnBoardingLogDAO onBoardingLogDAO) {
         return new LogIndexerProcessor(
-                new SenseLogIndexer(indexTankClient, senseLogIndexPrefix, senseLogBackupIndex, jedisPool, searchifyBulkSize),
                 new SenseStructuredLogIndexer(senseEventsDAO),
                 new OnBoardingLogIndexer(onBoardingLogDAO)
         );
@@ -70,11 +58,6 @@ public class LogIndexerProcessor implements IRecordProcessor {
                 final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.parseFrom(record.getData().array());
                 if(batchLogMessage.hasLogType()) {
                     switch (batchLogMessage.getLogType()) {
-
-                        case SENSE_LOG:
-                            senseIndexer.collect(batchLogMessage);
-                            break;
-
                         case STRUCTURED_SENSE_LOG:
                             senseStructuredLogsIndexer.collect(batchLogMessage);
                             break;
@@ -89,18 +72,15 @@ public class LogIndexerProcessor implements IRecordProcessor {
         }
 
         try {
-            final Integer senseLogsCount = senseIndexer.index();
             final Integer eventsCount = senseStructuredLogsIndexer.index();
             final Integer onBoardingLogCount = this.onBoardingLogIndexer.index();
 
-            senseLogs.mark(senseLogsCount);
             structuredLogs.mark(eventsCount);
             onboardingLogs.mark(onBoardingLogCount);
 
             iRecordProcessorCheckpointer.checkpoint();
-            LOGGER.info("Checkpointing {} records ({} sense logs, {} kv logs and {} onboarding logs.)",
+            LOGGER.info("Checkpointing {} records ({} kv logs and {} onboarding logs.)",
                     records.size(),
-                    senseLogsCount,
                     eventsCount,
                     onBoardingLogCount);
         } catch (ShutdownException e) {
