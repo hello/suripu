@@ -171,37 +171,28 @@ public class SenseLastSeenProcessor extends HelloBaseRecordProcessor {
     private void collectWifiInfo (final DataInputProtos.batched_periodic_data batchedPeriodicData) {
         final String connectedSSID = batchedPeriodicData.hasConnectedSsid() ? batchedPeriodicData.getConnectedSsid() : "unknown_ssid";
         final String senseId = batchedPeriodicData.getDeviceId();
-        for (final DataInputProtos.batched_periodic_data.wifi_access_point wifiAccessPoint : batchedPeriodicData.getScanList()) {
-            final String scannedSSID = wifiAccessPoint.getSsid();
+        final Integer rssi = WifiInfo.RSSI_NONE; // FW is no longer giving us the proper RSSI
 
-            // Scans return all seen networks, we want to only grab info of the connected one
-            if (!connectedSSID.equals(scannedSSID) || connectedSSID.isEmpty()) {
-                continue;
+        // If we have persisted wifi info for a sense since the worker started, then consider skipping if ...
+        if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).ssid.equals(connectedSSID)) {
+
+            // If the corresponding feature is not turned on, skip writing as we assume rssi won't change
+            if (!hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
+                LOGGER.trace("Skip writing because of {}'s unchanged network {}", senseId, connectedSSID);
+                return;
             }
 
-            final Integer rssi = wifiAccessPoint.hasRssi() ? wifiAccessPoint.getRssi() : WifiInfo.RSSI_NONE;
-
-            // If we have persisted wifi info for a sense since the worker started, then consider skipping if ...
-            if (wifiInfoHistory.containsKey(senseId) && wifiInfoHistory.get(senseId).ssid.equals(connectedSSID)) {
-
-                // If the corresponding feature is not turned on, skip writing as we assume rssi won't change
-                if (!hasPersistSignificantWifiRssiChangeEnabled(senseId)) {
-                    LOGGER.trace("Skip writing because of {}'s unchanged network {}", senseId, connectedSSID);
-                    continue;
-                }
-
-                // If the corresponding feature is turned on, skip writing unless rssi has changed significantly
-                if (!hasSignificantRssiChange(wifiInfoHistory, senseId, rssi)) {
-                    LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
-                    continue;
-                }
+            // If the corresponding feature is turned on, skip writing unless rssi has changed significantly
+            if (!hasSignificantRssiChange(wifiInfoHistory, senseId, rssi)) {
+                LOGGER.trace("Skip writing because there is no significant wifi info change for {}'s network {}", senseId, connectedSSID);
+                return;
             }
-
-            // Otherwise, persist new wifi info and memorize it in history for next iteration reference
-            final WifiInfo wifiInfo = WifiInfo.create(senseId, connectedSSID, rssi, new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC));
-            wifiInfoPerBatch.put(senseId, wifiInfo);
-            wifiInfoHistory.put(senseId, wifiInfo);
         }
+
+        // Otherwise, persist new wifi info and memorize it in history for next iteration reference
+        final WifiInfo wifiInfo = WifiInfo.create(senseId, connectedSSID, rssi, new DateTime(batchedPeriodicData.getData(0).getUnixTime() * 1000L, DateTimeZone.UTC));
+        wifiInfoPerBatch.put(senseId, wifiInfo);
+        wifiInfoHistory.put(senseId, wifiInfo);
     }
 
     private Optional<DeviceData> getSenseData(final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker) {
