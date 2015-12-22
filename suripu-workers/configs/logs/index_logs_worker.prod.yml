@@ -9,11 +9,6 @@ graphite:
 
 max_records: 50
 
-sense_logs:
-  private_url : http://:G3KvEnaw2bDdQc@d7q83.api.searchify.com/
-  index_prefix : sense-logs-
-  backup_index_name : sense-logs-backup
-
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
@@ -63,7 +58,3 @@ common_db:
 
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
-
-redis:
-  host: stats.xoe7je.0001.use1.cache.amazonaws.com
-  port: 6379
