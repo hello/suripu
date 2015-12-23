@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.DeviceId;
@@ -14,6 +15,7 @@ import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.Message.ParticulatesAnomalyMsgEN;
 import com.hello.suripu.core.models.Insights.Message.ParticulatesLevelMsgEN;
 import com.hello.suripu.core.models.Insights.Message.Text;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.util.DataUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.joda.time.DateTime;
@@ -33,13 +35,13 @@ public class Particulates {
 
     private static final Integer NUM_DAYS = 7;
 
-    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
+    public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {
 
-        final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
-        if (!timeZoneOffsetOptional.isPresent()) {
+        final List<TimeZoneHistory> timeZoneHistories = timeZoneHistoryDAODynamoDB.getTimeZoneHistory(accountId, DateTime.now(DateTimeZone.UTC), DateTime.now(DateTimeZone.UTC).minusDays(7), 1);
+        if (timeZoneHistories.isEmpty()) {
             return Optional.absent(); //cannot compute insight without timezone info
         }
-        final Integer timeZoneOffset = timeZoneOffsetOptional.get();
+        final Integer timeZoneOffset = timeZoneHistories.get(0).offsetMillis;
 
         final List<Float> dustList = getAvgAirQualityList(accountId, deviceId, NUM_DAYS, timeZoneOffset, deviceDataDAO, calibrationDAO);
         if (dustList.isEmpty()) {

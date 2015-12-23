@@ -12,6 +12,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
@@ -181,6 +182,9 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
         final AmazonDynamoDB deviceDataDAODynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.DEVICE_DATA, DeviceDataDAODynamoDB.class);
         final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(deviceDataDAODynamoDBClient, tableNames.get(DynamoDBTableName.DEVICE_DATA));
 
+        final AmazonDynamoDB timeZoneHistoryDAODynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.TIMEZONE_HISTORY, TimeZoneHistoryDAODynamoDB.class);
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = new TimeZoneHistoryDAODynamoDB(timeZoneHistoryDAODynamoDBClient, tableNames.get(DynamoDBTableName.TIMEZONE_HISTORY));
+
         final WorkerRolloutModule workerRolloutModule = new WorkerRolloutModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(workerRolloutModule);
 
@@ -193,6 +197,7 @@ public class InsightsGeneratorWorkerCommand extends WorkerEnvironmentCommand<Ins
                 deviceDataDAO,
                 deviceDataDAODynamoDB,
                 deviceDAO,
+                timeZoneHistoryDAODynamoDB,
                 trackerMotionDAO,
                 aggregateSleepScoreDAODynamoDB,
                 insightsDAODynamoDB,

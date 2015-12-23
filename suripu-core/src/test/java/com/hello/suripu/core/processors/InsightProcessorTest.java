@@ -10,6 +10,7 @@ import com.hello.suripu.core.db.DeviceDataDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.responses.DeviceDataResponse;
@@ -88,6 +89,7 @@ public class InsightProcessorTest {
         final DeviceDataDAODynamoDB deviceDataDAODynamoDB = Mockito.mock(DeviceDataDAODynamoDB.class);
         final DeviceDAO deviceDAO = Mockito.mock(DeviceDAO.class);
         Mockito.when(deviceDAO.getMostRecentSenseByAccountId(FAKE_ACCOUNT_ID)).thenReturn(Optional.of(FAKE_DEVICE_ID));
+        final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB = Mockito.mock(TimeZoneHistoryDAODynamoDB.class);
         final TrendsInsightsDAO trendsInsightsDAO = Mockito.mock(TrendsInsightsDAO.class);
         final TrackerMotionDAO trackerMotionDAO = Mockito.mock(TrackerMotionDAO.class);
         final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB = Mockito.mock(AggregateSleepScoreDAODynamoDB.class);
@@ -145,7 +147,10 @@ public class InsightProcessorTest {
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.HUMIDITY, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
 
         //Initialize InsightProcessor
-        final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceDAO,
+        final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAO,
+                deviceDataDAODynamoDB,
+                deviceDAO,
+                timeZoneHistoryDAODynamoDB,
                 trendsInsightsDAO,
                 trackerMotionDAO,
                 scoreDAODynamoDB,

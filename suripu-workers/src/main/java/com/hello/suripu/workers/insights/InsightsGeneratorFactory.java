@@ -14,6 +14,7 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.QuestionResponseReadDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
@@ -31,6 +32,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
     private final DeviceDataDAO deviceDataDAO;
     private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
     private final DeviceReadDAO deviceDAO;
+    private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
@@ -46,6 +48,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
                                     final DeviceDataDAO deviceDataDAO,
                                     final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                                     final DeviceDAO deviceDAO,
+                                    final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB,
                                     final TrackerMotionDAO trackerMotionDAO,
                                     final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                                     final InsightsDAODynamoDB insightsDAODynamoDB,
@@ -60,6 +63,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
+        this.timeZoneHistoryDAODynamoDB = timeZoneHistoryDAODynamoDB;
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
@@ -81,6 +85,7 @@ public class InsightsGeneratorFactory implements IRecordProcessorFactory {
 
         final InsightProcessor.Builder insightBuilder = new InsightProcessor.Builder()
                 .withSenseDAOs(deviceDataDAO, deviceDataDAODynamoDB, deviceDAO)
+                .withTimeZoneHistoryDAO(timeZoneHistoryDAODynamoDB)
                 .withTrackerMotionDAO(trackerMotionDAO)
                 .withInsightsDAO(trendsInsightsDAO)
                 .withDynamoDBDAOs(scoreDAODynamoDB, insightsDAODynamoDB, sleepStatsDAODynamoDB)
