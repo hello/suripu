@@ -255,8 +255,7 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    @VisibleForTesting
-    public Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+    private Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         //TODO: Read category to generate off of an external file to allow for most flexibility
         return Optional.absent();

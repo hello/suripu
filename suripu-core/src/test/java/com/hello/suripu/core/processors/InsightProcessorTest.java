@@ -238,9 +238,6 @@ public class InsightProcessorTest {
         assertThat(wakeCardCategory.isPresent(), is(Boolean.FALSE));
 
         //look for high priority Insight - get nothing
-        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
-        Optional<InsightCard.Category> expectedHighPriority = insightProcessor.selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
-        assertThat(expectedHighPriority.isPresent(), is(Boolean.FALSE));
 
         //look for random old Insight - get nothing b/c wrong date
         Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
@@ -272,7 +269,6 @@ public class InsightProcessorTest {
         assertThat(wakeCardCategory.isPresent(), is(Boolean.FALSE));
 
         //look for high priority Insight - get nothing b/c feature wrong date
-        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
 
         //look for random old Insight - get nothing b/c wrong date
         Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_SATURDAY, mockFeatureFlipper);
@@ -303,7 +299,6 @@ public class InsightProcessorTest {
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
-        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
         //look for random old Insight, do not try to generate humidity b/c featureFlip Off
         Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
@@ -332,7 +327,6 @@ public class InsightProcessorTest {
         Mockito.verify(spyInsightProcessor, Mockito.never()).generateInsightsByCategory(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, deviceDataDAO, InsightCard.Category.WAKE_VARIANCE);
 
         //look for high priority Insight - get nothing
-        Mockito.verify(spyInsightProcessor).selectHighPriorityInsightToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
 
         //look for random old Insight, try to generate humidity
         Mockito.verify(spyInsightProcessor).selectRandomOldInsightsToGenerate(FAKE_ACCOUNT_ID, recentCategories, FAKE_DATE_1, mockFeatureFlipper);
