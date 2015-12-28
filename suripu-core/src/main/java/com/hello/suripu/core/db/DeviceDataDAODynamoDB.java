@@ -714,6 +714,8 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                                                             final int startHour,
                                                             final int endHour)
     {
+        //TODO: deviceId.externalDeviceId may be absent - catch here or refactor DeviceId itself and pass in a different object?
+
         final String externalDeviceId = deviceId.externalDeviceId.get();
 
         final Expression filterExp = Expressions.and(
