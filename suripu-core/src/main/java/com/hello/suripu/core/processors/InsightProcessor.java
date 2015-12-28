@@ -17,6 +17,7 @@ import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
+import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
@@ -115,31 +116,30 @@ public class InsightProcessor {
             return; // not slept one night yet
         }
 
-        final Optional<Long> deviceIdOptional = deviceReadDAO.getMostRecentSenseByAccountId(accountId);
-        if (!deviceIdOptional.isPresent()) {
-            return;
-        }
-
         if (accountAge <= NEW_ACCOUNT_THRESHOLD) {
             this.generateNewUserInsights(accountId, accountAge);
             return;
         }
 
-        final Long internalDeviceId = deviceIdOptional.get();
+        final Optional<DeviceAccountPair> deviceAccountPairOptional = deviceReadDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceAccountPairOptional.isPresent()) {
+            return;
+        }
 
-        final DeviceId deviceId = DeviceId.create(internalDeviceId);
+        final Long internalDeviceId = deviceAccountPairOptional.get().internalDeviceId;
 
         if (featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA_INSIGHTS, accountId, Collections.EMPTY_LIST)) {
             LOGGER.info("Generating insights with DynamoDB for account {}", accountId);
             try {
-                this.generateGeneralInsights(accountId, deviceId, deviceDataDAODynamoDB, featureFlipper);
+                final String externalDeviceId = deviceAccountPairOptional.get().externalDeviceId;
+                this.generateGeneralInsights(accountId, DeviceId.create(externalDeviceId), deviceDataDAODynamoDB, featureFlipper);
                 return;
             } catch (Exception ex) {
                 LOGGER.error("Caught exception generating insight for account using DynamoDB {}. {}", accountId, ex);
             }
         }
 
-        this.generateGeneralInsights(accountId, deviceId, deviceDataDAO, featureFlipper);
+        this.generateGeneralInsights(accountId, DeviceId.create(internalDeviceId), deviceDataDAO, featureFlipper);
     }
 
     /**
