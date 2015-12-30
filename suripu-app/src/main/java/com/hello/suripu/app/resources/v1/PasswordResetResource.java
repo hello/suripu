@@ -38,7 +38,7 @@ import java.util.UUID;
 @Path("/v1/password_reset")
 public class PasswordResetResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetResource.class);
 
     private final AccountDAO accountDAO;
     private final PasswordResetDB passwordResetDB;
@@ -71,9 +71,11 @@ public class PasswordResetResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(@Scope(OAuthScope.PASSWORD_RESET) final AccessToken accessToken, @Valid final PasswordResetRequest passwordResetRequest) {
-
-        final Optional<Account> accountOptional = accountDAO.getByEmail(passwordResetRequest.email.toLowerCase());
+        final String email = passwordResetRequest.email.toLowerCase();
+        LOGGER.info("email={} action=password-reset", email);
+        final Optional<Account> accountOptional = accountDAO.getByEmail(email);
         if(!accountOptional.isPresent()) {
+            LOGGER.warn("email={} action=password-reset result=account-not-found", email);
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(new JsonError(Response.Status.NOT_FOUND.getStatusCode(), "account not found")).build());
         }
 
