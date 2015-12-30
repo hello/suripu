@@ -34,7 +34,6 @@ import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -99,8 +98,6 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final AccountReadDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final DeviceReadDAO deviceDAO = commonDB.onDemand(DeviceReadDAO.class);
         final FeedbackReadDAO feedbackDAO = commonDB.onDemand(FeedbackReadDAO.class);
-
-        final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
@@ -191,7 +188,7 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
         final CalibrationDAO calibrationDAO = CalibrationDynamoDB.create(calibrationDynamoDBClient, configuration.getDynamoDBConfiguration().tables().get(DynamoDBTableName.CALIBRATION));
 
         final TimelineProcessor timelineProcessor =
-                TimelineProcessor.createTimelineProcessor(trackerMotionDAO, pillDataDAODynamoDB,
+                TimelineProcessor.createTimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO, deviceDataDAODynamoDB,
                 ringTimeHistoryDAODynamoDB,
                 feedbackDAO,

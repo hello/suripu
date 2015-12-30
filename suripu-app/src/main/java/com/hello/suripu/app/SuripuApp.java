@@ -396,7 +396,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         environment.addResource(new ProvisionResource(senseKeyStore, pillKeyStore, keyStoreUtils, pillProvisionDAO, amazonS3));
 
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
-                trackerMotionDAO,
                 pillDataDAODynamoDB,
                 deviceDAO,
                 deviceDataDAODynamoDB,
