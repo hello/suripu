@@ -9,12 +9,14 @@ import com.hello.suripu.core.models.Registration;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.resources.BaseResource;
 import com.hello.suripu.core.util.JsonError;
 import com.yammer.metrics.annotation.Timed;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -24,12 +26,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.regex.Matcher;
 
 @Path("/v1/account")
-public class AccountResource {
+public class AccountResource extends BaseResource {
+
+    @Context
+    HttpServletRequest request;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
     private final AccountDAO accountDAO;
@@ -115,6 +121,12 @@ public class AccountResource {
             final JsonError error = new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), "pre condition failed");
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
                     .entity(error).build());
+        }
+
+        if (account.hasLocation()) {
+            // save location
+            final String ip = getIpAddress(request);
+
         }
 
         return optionalAccount.get();
