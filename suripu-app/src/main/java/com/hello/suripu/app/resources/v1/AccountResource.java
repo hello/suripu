@@ -2,6 +2,7 @@ package com.hello.suripu.app.resources.v1;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountDAO;
+import com.hello.suripu.core.db.AccountLocationDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.PasswordUpdate;
@@ -39,9 +40,11 @@ public class AccountResource extends BaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountResource.class);
     private final AccountDAO accountDAO;
+    private final AccountLocationDAO accountLocationDAO;
 
-    public AccountResource(final AccountDAO accountDAO) {
+    public AccountResource(final AccountDAO accountDAO, final AccountLocationDAO accountLocationDAO) {
         this.accountDAO = accountDAO;
+        this.accountLocationDAO = accountLocationDAO;
     }
 
     @GET
@@ -123,14 +126,18 @@ public class AccountResource extends BaseResource {
                     .entity(error).build());
         }
 
+        // save location if exists
         if (account.hasLocation()) {
-            // save location
-            final String ip = getIpAddress(request);
-
+            try {
+                final String ip = getIpAddress(request);
+                LOGGER.debug("Insert new account location for account: {}, lat: {}, long: {}, IP: {}", accessToken.accountId, account.latitude, account.longitude, ip);
+                accountLocationDAO.insertNewAccountLatLongIP(accessToken.accountId, ip, account.latitude, account.longitude);
+            } catch (UnableToExecuteStatementException exception) {
+                LOGGER.error("Unable to insert new account location for account: {}", accessToken.accountId);
+            }
         }
 
         return optionalAccount.get();
-
     }
 
     @POST
