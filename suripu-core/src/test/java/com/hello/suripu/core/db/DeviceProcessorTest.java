@@ -10,6 +10,7 @@ import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.core.models.device.v2.DeviceProcessor;
@@ -40,27 +41,35 @@ public class DeviceProcessorTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceProcessorTest.class);
     private DeviceProcessor deviceProcessor;
 
-    private final DeviceAccountPair senseAccountPairLastSeen = new DeviceAccountPair(123L, 9L, "sense9", new DateTime(1431457194000L));
-    private final DeviceAccountPair senseAccountPairLastHour = new DeviceAccountPair(123L, 1L, "sense1", new DateTime(1431457194000L));
-    private final DeviceAccountPair senseAccountPairLastWeek = new DeviceAccountPair(123L, 2L, "sense2", new DateTime(1431457194000L));
-    private final DeviceStatus senseStatusLastSeen = new DeviceStatus(9L, 9L, "sense-fw-9", 0, new DateTime(1431457194000L), 60000);
-    private final DeviceStatus senseStatusLastHour = new DeviceStatus(1L, 1L, "sense-fw-1", 0, new DateTime(1431457194000L), 60000);
-    private final DeviceStatus senseStatusLastWeek = new DeviceStatus(2L, 2L, "sense-fw-2", 0, new DateTime(1431457194000L), 60000);
-    private final DeviceAccountPair pillAccountPairHeartbeat = new DeviceAccountPair(123L, 1L, "pill1", new DateTime(1431457194000L));
+    private final Long timestamp = 1431457194000L;
 
-    private final PillHeartBeat pillHeartBeat = PillHeartBeat.create("abc", 1, 70, 60000, new DateTime(1431457194000L));
-    private final DeviceAccountPair senseAccountPairSenseColor = new DeviceAccountPair(123L, 3L, "sense3", new DateTime(1431457194000L));
-    private final DeviceAccountPair pillAccountPairTrackerMotion = new DeviceAccountPair(123L, 2L, "pill2", new DateTime(1431457194000L));
-    private final DeviceStatus pillStatusTrackerMotion = new DeviceStatus(2L, 2L, "3", 90, new DateTime(1431457194000L), 60000);
+    private final DateTime now = new DateTime(2016, 1, 1, 0, 0, 0, DateTimeZone.UTC);
+
+    private final DeviceAccountPair senseAccountPairLastSeen = new DeviceAccountPair(123L, 9L, "sense9", new DateTime(timestamp));
+    private final DeviceAccountPair senseAccountPairLastHour = new DeviceAccountPair(123L, 1L, "sense1", new DateTime(timestamp));
+    private final DeviceAccountPair senseAccountPairLastWeek = new DeviceAccountPair(123L, 2L, "sense2", new DateTime(timestamp));
+    private final DeviceStatus senseStatusLastSeen = new DeviceStatus(9L, 9L, "sense-fw-9", 0, new DateTime(timestamp), 60000);
+    private final DeviceStatus senseStatusLastHour = new DeviceStatus(1L, 1L, "sense-fw-1", 0, new DateTime(timestamp), 60000);
+    private final DeviceStatus senseStatusLastWeek = new DeviceStatus(2L, 2L, "sense-fw-2", 0, new DateTime(timestamp), 60000);
+    private final DeviceAccountPair pillAccountPairHeartbeat = new DeviceAccountPair(123L, 1L, "pill1", new DateTime(timestamp));
+
+    private final PillHeartBeat pillHeartBeat = PillHeartBeat.create("abc", 1, 70, 60000, new DateTime(timestamp));
+    private final DeviceAccountPair senseAccountPairSenseColor = new DeviceAccountPair(123L, 3L, "sense3", new DateTime(timestamp));
+    private final DeviceAccountPair pillAccountPairTrackerMotion = new DeviceAccountPair(123L, 2L, "pill2", new DateTime(timestamp));
+    private final DeviceStatus pillStatusTrackerMotion = new DeviceStatus(2L, 2L, "3", 90, new DateTime(timestamp), 60000);
+    private final TrackerMotion trackerMotion = new TrackerMotion.Builder()
+            .withExternalTrackerId(pillAccountPairTrackerMotion.externalDeviceId)
+            .withTimestampMillis(timestamp)
+            .build();
 
 
-    private final DeviceAccountPair senseAccountPairWifi = new DeviceAccountPair(123L, 4L, "sense4", new DateTime(1431457194000L));
-    private final DeviceAccountPair senseAccountPairPillColor = new DeviceAccountPair(123L, 4L, "sense4", new DateTime(1431457194000L));
-    private final DeviceAccountPair senseAccountPairNoStatus = new DeviceAccountPair(666L, 77L, "sense88", new DateTime(1431457194000L));
-    private final DeviceAccountPair pillAccountPairNoStatus = new DeviceAccountPair(555L, 88L, "pill99", new DateTime(1431457194000L));
-    private final PillHeartBeat pillHeartBeatNoStatus = PillHeartBeat.create("abc", 2, 88, 60000, new DateTime(1431457194000L));
+    private final DeviceAccountPair senseAccountPairWifi = new DeviceAccountPair(123L, 4L, "sense4", new DateTime(timestamp));
+    private final DeviceAccountPair senseAccountPairPillColor = new DeviceAccountPair(123L, 4L, "sense4", new DateTime(timestamp));
+    private final DeviceAccountPair senseAccountPairNoStatus = new DeviceAccountPair(666L, 77L, "sense88", new DateTime(timestamp));
+    private final DeviceAccountPair pillAccountPairNoStatus = new DeviceAccountPair(555L, 88L, "pill99", new DateTime(timestamp));
+    private final PillHeartBeat pillHeartBeatNoStatus = PillHeartBeat.create("abc", 2, 88, 60000, new DateTime(timestamp));
 
-    private final WifiInfo expectedWifiInfo = WifiInfo.create(senseAccountPairWifi.externalDeviceId, "hello", -98, new DateTime(1431457194000L));
+    private final WifiInfo expectedWifiInfo = WifiInfo.create(senseAccountPairWifi.externalDeviceId, "hello", -98, new DateTime(timestamp));
 
 
 
@@ -74,9 +83,11 @@ public class DeviceProcessorTest {
         when(pillHeartBeatDAO.get(pillAccountPairTrackerMotion.externalDeviceId)).thenReturn(Optional.<PillHeartBeat>absent());
         when(pillHeartBeatDAO.get(pillHeartBeatNoStatus.pillId)).thenReturn(Optional.<PillHeartBeat>absent());
 
-        final TrackerMotionDAO trackerMotionDAO = mock(TrackerMotionDAO.class);
-        when(trackerMotionDAO.pillStatus(pillAccountPairTrackerMotion.internalDeviceId, pillAccountPairTrackerMotion.accountId)).thenReturn(Optional.of(pillStatusTrackerMotion));
-        when(trackerMotionDAO.pillStatus(pillAccountPairNoStatus.internalDeviceId, pillAccountPairNoStatus.accountId)).thenReturn(Optional.<DeviceStatus>absent());
+        final PillDataDAODynamoDB pillDataDAODynamoDB = mock(PillDataDAODynamoDB.class);
+        when(pillDataDAODynamoDB.getMostRecent(pillAccountPairTrackerMotion.externalDeviceId, pillAccountPairTrackerMotion.accountId, now))
+                .thenReturn(Optional.of(trackerMotion));
+        when(pillDataDAODynamoDB.getMostRecent(pillAccountPairNoStatus.externalDeviceId, pillAccountPairNoStatus.accountId, now))
+                .thenReturn(Optional.<TrackerMotion>absent());
 
         final SenseColorDAO senseColorDAO = mock(SenseColorDAO.class);
         when(senseColorDAO.get(senseAccountPairSenseColor.externalDeviceId)).thenReturn(Optional.of(Sense.Color.BLACK));
@@ -108,9 +119,9 @@ public class DeviceProcessorTest {
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
                 .withPillHeartbeatDAO(pillHeartBeatDAO)
                 .withSenseColorDAO(senseColorDAO)
-                .withTrackerMotionDAO(trackerMotionDAO)
                 .withWifiInfoDAO(wifiInfoDAO)
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
+                .withPillDataDAODynamoDB(pillDataDAODynamoDB)
                 .build();
     }
 
@@ -125,14 +136,14 @@ public class DeviceProcessorTest {
 
     @Test
     public void testGetPillStatusHeartbeat() {
-        final Optional<PillHeartBeat> pillHeartBeatOptional = deviceProcessor.retrievePillHeartBeat(pillAccountPairHeartbeat);
+        final Optional<PillHeartBeat> pillHeartBeatOptional = deviceProcessor.retrievePillHeartBeat(pillAccountPairHeartbeat, now);
         assertThat(pillHeartBeatOptional.isPresent(), is(true));
         assertThat(pillHeartBeatOptional.get(), equalTo(pillHeartBeat));
     }
 
     @Test
     public void testGetPillStatusTrackerMotion() {
-        final Optional<PillHeartBeat> pillHeartBeatOptional = deviceProcessor.retrievePillHeartBeat(pillAccountPairTrackerMotion);
+        final Optional<PillHeartBeat> pillHeartBeatOptional = deviceProcessor.retrievePillHeartBeat(pillAccountPairTrackerMotion, now);
         assertThat(pillHeartBeatOptional.isPresent(), is(true));
 //        assertThat(pillHeartBeatOptional.get(), equalTo(pillHeartBeatTrackerMotion));
     }

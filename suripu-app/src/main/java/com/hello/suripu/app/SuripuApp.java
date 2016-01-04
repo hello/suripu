@@ -448,7 +448,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 .withDeviceDAO(deviceDAO)
                 .withMergedUserInfoDynamoDB(mergedUserInfoDynamoDB)
                 .withSensorsViewDynamoDB(sensorsViewsDynamoDB)
-                .withTrackerMotionDAO(trackerMotionDAO)
+                .withPillDataDAODynamoDB(pillDataDAODynamoDB)
                 .withWifiInfoDAO(wifiInfoDAO)
                 .withSenseColorDAO(senseColorDAO)
                 .withPillHeartbeatDAO(pillHeartBeatDAODynamoDB)
