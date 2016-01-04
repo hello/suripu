@@ -606,9 +606,8 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         final Optional<Map<String, AttributeValue>> result = getLatest(tableNames, keyConditionExpression, filterExpression, attributes);
         if (result.isPresent()) {
             return Optional.of(attributeMapToDeviceData(result.get()));
-        } else {
-            return Optional.absent();
         }
+        return Optional.absent();
     }
     //endregion
 

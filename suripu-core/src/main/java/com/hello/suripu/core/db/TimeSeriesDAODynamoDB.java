@@ -344,8 +344,7 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 .withLimit(1);
 
         final DynamoDBResponse response = query(queryRequest);
-        if (response.status == Response.Status.FAILURE ||
-                response.data.isEmpty()) {
+        if (response.status == Response.Status.FAILURE || response.data.isEmpty()) {
             return Optional.absent();
         }
 
