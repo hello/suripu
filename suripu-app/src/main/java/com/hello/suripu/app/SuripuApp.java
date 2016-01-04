@@ -78,7 +78,6 @@ import com.hello.suripu.core.db.TeamStore;
 import com.hello.suripu.core.db.TeamStoreDAO;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
 import com.hello.suripu.core.db.WifiInfoDAO;
@@ -161,14 +160,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
     public void run(final SuripuAppConfiguration configuration, final Environment environment) throws Exception {
 
         final DBIFactory factory = new DBIFactory();
-        final DBI sensorsDB = factory.build(environment, configuration.getSensorsDB(), "postgresql");
         final DBI commonDB = factory.build(environment, configuration.getCommonDB(), "postgresql");
         final DBI insightsDB = factory.build(environment, configuration.getInsightsDB(), "postgresql");
 
-        sensorsDB.registerArgumentFactory(new JodaArgumentFactory());
-        sensorsDB.registerContainerFactory(new OptionalContainerFactory());
-        sensorsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
-        
         commonDB.registerArgumentFactory(new JodaArgumentFactory());
         commonDB.registerContainerFactory(new OptionalContainerFactory());
         commonDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
@@ -190,7 +184,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PillHeartBeatDAO pillHeartBeatDAO = commonDB.onDemand(PillHeartBeatDAO.class);
         final SupportDAO supportDAO = commonDB.onDemand(SupportDAO.class);
 
-        final TrackerMotionDAO trackerMotionDAO = sensorsDB.onDemand(TrackerMotionDAO.class);
         final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
         final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
         final NotificationSubscriptionsDAO notificationSubscriptionsDAO = commonDB.onDemand(NotificationSubscriptionsDAO.class);
