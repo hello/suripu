@@ -248,34 +248,18 @@ public abstract class TimeSeriesDAODynamoDB<T> {
 
 
     //region Query
-    private DynamoDBResponse query(final String tableName,
-                                   final String keyConditionExpression,
-                                   final Collection<? extends Attribute> targetAttributes,
-                                   final Optional<String> filterExpression,
-                                   final Map<String, AttributeValue> filterAttributeValues)
-    {
+    private DynamoDBResponse query(final QueryRequest originalQueryRequest) {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
         int numAttempts = 0;
         boolean keepTrying = true;
 
-        final Map<String, String> expressionAttributeNames = Expressions.expressionAttributeNames(targetAttributes);
-        final String projectionExpression = Expressions.projectionExpression(targetAttributes);
-
         do {
             numAttempts++;
-            final QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(tableName)
-                    .withProjectionExpression(projectionExpression)
-                    .withExpressionAttributeNames(expressionAttributeNames)
-                    .withKeyConditionExpression(keyConditionExpression)
-                    .withExpressionAttributeValues(filterAttributeValues)
+            final QueryRequest queryRequest = originalQueryRequest
+                    .clone()
                     .withExclusiveStartKey(lastEvaluatedKey);
-
-            if (filterExpression.isPresent()) {
-                queryRequest.setFilterExpression(filterExpression.get());
-            }
 
             final QueryResult queryResult;
             try {
@@ -288,7 +272,9 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 continue;
             } catch (ResourceNotFoundException rnfe) {
                 // Invalid table name
-                logger().error("Got ResourceNotFoundException while attempting to read from table {}; {}", tableName, rnfe);
+                logger().error("Got ResourceNotFoundException while attempting to read from table {}; {}",
+                        queryRequest.getTableName(),
+                        rnfe);
                 return new DynamoDBResponse(results, Response.Status.FAILURE, Optional.of(rnfe));
             }
             final List<Map<String, AttributeValue>> items = queryResult.getItems();
@@ -316,6 +302,77 @@ public abstract class TimeSeriesDAODynamoDB<T> {
         return new DynamoDBResponse(results, status, Optional.<Exception>absent());
     }
 
+    private DynamoDBResponse query(final String tableName,
+                                   final String keyConditionExpression,
+                                   final Collection<? extends Attribute> targetAttributes,
+                                   final Optional<String> filterExpression,
+                                   final Map<String, AttributeValue> filterAttributeValues)
+    {
+        final Map<String, String> expressionAttributeNames = Expressions.expressionAttributeNames(targetAttributes);
+        final String projectionExpression = Expressions.projectionExpression(targetAttributes);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(tableName)
+                .withProjectionExpression(projectionExpression)
+                .withExpressionAttributeNames(expressionAttributeNames)
+                .withKeyConditionExpression(keyConditionExpression)
+                .withExpressionAttributeValues(filterAttributeValues);
+
+        if (filterExpression.isPresent()) {
+            queryRequest.setFilterExpression(filterExpression.get());
+        }
+
+        return query(queryRequest);
+    }
+
+    private Optional<Map<String, AttributeValue>> getLatest(final String tableName,
+                                                            final Expression keyConditionExpression,
+                                                            final Expression filterExpression,
+                                                            final Collection<? extends Attribute> attributes)
+    {
+        final Map<String, String> expressionAttributeNames = Expressions.expressionAttributeNames(attributes);
+        final String projectionExpression = Expressions.projectionExpression(attributes);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(tableName)
+                .withProjectionExpression(projectionExpression)
+                .withExpressionAttributeNames(expressionAttributeNames)
+                .withKeyConditionExpression(keyConditionExpression.expressionString())
+                .withExpressionAttributeValues(getAllAttributeValues(keyConditionExpression, filterExpression))
+                .withScanIndexForward(false)
+                .withFilterExpression(filterExpression.expressionString())
+                .withLimit(1);
+
+        final DynamoDBResponse response = query(queryRequest);
+        if (response.status == Response.Status.FAILURE || response.data.isEmpty()) {
+            return Optional.absent();
+        }
+
+        return Optional.of(response.data.get(0));
+    }
+
+    /**
+     * Get the latest item matching the given filters, if it exists.
+     * @param tableNames - List of table names sorted in ascending order.
+     * @param keyConditionExpression
+     * @param filterExpression
+     * @param attributes
+     */
+    protected Optional<Map<String, AttributeValue>> getLatest(final List<String> tableNames,
+                                                              final Expression keyConditionExpression,
+                                                              final Expression filterExpression,
+                                                              final Collection<? extends Attribute> attributes)
+    {
+        for (final String table: Lists.reverse(tableNames)) {
+            final Optional<Map<String, AttributeValue>> response = getLatest(table, keyConditionExpression, filterExpression, attributes);
+            if (response.isPresent()) {
+                return response;
+            }
+        }
+
+        return Optional.absent();
+    }
+
     protected DynamoDBResponse queryTables(final Iterable<String> tableNames,
                                            final Expression keyConditionExpression,
                                            final Collection<? extends Attribute> attributes)
@@ -333,6 +390,15 @@ public abstract class TimeSeriesDAODynamoDB<T> {
         return new DynamoDBResponse(results, Response.Status.SUCCESS, Optional.<Exception>absent());
     }
 
+    private ImmutableMap<String,AttributeValue> getAllAttributeValues(final Expression keyConditionExpression,
+                                                                      final Expression filterExpression)
+    {
+        return new ImmutableMap.Builder<String, AttributeValue>()
+                .putAll(keyConditionExpression.expressionAttributeValues())
+                .putAll(filterExpression.expressionAttributeValues())
+                .build();
+    }
+
     protected DynamoDBResponse queryTables(final Iterable<String> tableNames,
                                            final Expression keyConditionExpression,
                                            final Expression filterExpression,
@@ -341,10 +407,7 @@ public abstract class TimeSeriesDAODynamoDB<T> {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
         final String keyCondition = keyConditionExpression.expressionString();
         final String filterCondition = filterExpression.expressionString();
-        final Map<String,AttributeValue> attributeValues = new ImmutableMap.Builder<String, AttributeValue>()
-                .putAll(keyConditionExpression.expressionAttributeValues())
-                .putAll(filterExpression.expressionAttributeValues())
-                .build();
+        final Map<String,AttributeValue> attributeValues = getAllAttributeValues(keyConditionExpression, filterExpression);
         for (final String table: tableNames) {
             final DynamoDBResponse response = query(table, keyCondition, attributes, Optional.of(filterCondition), attributeValues);
             if (response.status == Response.Status.SUCCESS) {
