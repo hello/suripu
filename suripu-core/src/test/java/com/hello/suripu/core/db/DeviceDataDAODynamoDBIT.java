@@ -380,8 +380,8 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetBetweenByAbsoluteTimeAggregateBySlotDurationMultipleSenseIds() {
         final Long accountId = new Long(1);
-        final String deviceId1 = "2";
-        final String deviceId2 = "3";
+        final String deviceId1 = "id2";
+        final String deviceId2 = "id3";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
@@ -400,7 +400,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetBetweenByAbsoluteTimeAggregateBySlotDuration5And60Minutes() {
         final Long accountId = new Long(1);
-        final String deviceId = "2";
+        final String deviceId = "id2";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
@@ -577,31 +577,6 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(sampleList.get(Sensor.HUMIDITY).size(), is(11));
     }
 
-    @Test
-    public void testGetMostRecentByAccountId() {
-        final Long accountId = new Long(1);
-        final String deviceId = "2";
-        final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
-
-        final List<DeviceData> inserted = addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
-        final DeviceData mostRecent = deviceDataDAODynamoDB.getMostRecent(accountId, firstTime).get();
-        assertThat(mostRecent.dateTimeUTC, is(inserted.get(inserted.size() - 1).dateTimeUTC));
-    }
-
-    @Test
-    public void testGetMostRecentByAccountIdNotPresent() {
-        final Long accountId = new Long(1);
-        final String deviceId = "2";
-        final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
-
-        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
-
-        assertThat(deviceDataDAODynamoDB.getMostRecent(accountId, firstTime.plusMonths(1)).isPresent(), is(false));
-        assertThat(deviceDataDAODynamoDB.getMostRecent(2L, firstTime).isPresent(), is(false));
-    }
-
     private DeviceData last(final List<DeviceData> list) {
         return list.get(list.size() - 1);
     }
@@ -609,8 +584,8 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetMostRecentByAccountAndDeviceId() {
         final Long accountId = new Long(1);
-        final String deviceId1 = "2";
-        final String deviceId2 = "3";
+        final String deviceId1 = "id2";
+        final String deviceId2 = "id3";
         final Integer offsetMillis = 0;
         final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
 
@@ -658,7 +633,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetLightByBetweenHourDateByTS() {
         final Long accountId = new Long(1);
-        final String deviceId = "2";
+        final String deviceId = "id2";
         final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
         final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
         final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
@@ -722,7 +697,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetBetweenLocalTime() {
         final Long accountId = new Long(1);
-        final String deviceId = "2";
+        final String deviceId = "id2";
         final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
         final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
         final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
@@ -762,7 +737,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetBetweenHourDateByTSSameDay() {
         final Long accountId = new Long(1);
-        final String deviceId = "2";
+        final String deviceId = "id2";
         final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
         final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
         final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
@@ -806,7 +781,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetBetweenHourDateByTS() {
         final Long accountId = new Long(1);
-        final String deviceId = "2";
+        final String deviceId = "id2";
         final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
         final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
         final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
@@ -850,7 +825,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetBetweenByLocalHourAggregateBySlotDuration() {
         final Long accountId = new Long(1);
-        final String deviceId = "2";
+        final String deviceId = "id2";
         final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
         final Integer slotDuration = 5;
         final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
@@ -895,7 +870,7 @@ public class DeviceDataDAODynamoDBIT {
     @Test
     public void testGetAirQualityRawList() {
         final Long accountId = new Long(1);
-        final String deviceId = "2";
+        final String deviceId = "id2";
         final Integer offsetMillis = 1000 * 60 * 60 * 8; // 8 hours
         final DateTime firstUTCTime = new DateTime(2015, 10, 1, 10, 0, DateTimeZone.UTC).minusMillis(offsetMillis);
         final DateTime minLocalTime = new DateTime(2015, 10, 1, 10, 1, DateTimeZone.forOffsetMillis(offsetMillis));
