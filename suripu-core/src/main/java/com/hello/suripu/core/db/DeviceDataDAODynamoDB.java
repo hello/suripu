@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Expressions;
-import com.hello.suripu.core.db.dynamo.expressions.BinaryExpression;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.DynamoDBResponse;
@@ -240,10 +239,6 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         return new AttributeValue(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + senseId);
     }
 
-    private static AttributeValue toAttributeValue(final String value) {
-        return new AttributeValue().withS(value);
-    }
-
     private static AttributeValue toAttributeValue(final Integer value) {
         return new AttributeValue().withN(String.valueOf(value));
     }
@@ -366,11 +361,16 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         final Expression keyConditionExpression = Expressions.and(
                 Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(start, externalDeviceId), getRangeKey(endExclusive, externalDeviceId)));
-        final Expression filterExpression = Expressions.contains(DeviceDataAttribute.RANGE_KEY, toAttributeValue(externalDeviceId));
 
-        final DynamoDBResponse results = queryTables(getTableNames(start, endExclusive), keyConditionExpression, filterExpression, targetAttributes);
+        final DynamoDBResponse results = queryTables(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes);
+        final List<Map<String, AttributeValue>> filteredResults = Lists.newLinkedList();
+        for (final Map<String, AttributeValue> item : results.data) {
+            if (externalDeviceIdFromDDBItem(item).equals(externalDeviceId)) {
+                filteredResults.add(item);
+            }
+        }
 
-        final List<DeviceData> aggregated = aggregateDynamoDBItemsToDeviceData(results.data, slotDuration);
+        final List<DeviceData> aggregated = aggregateDynamoDBItemsToDeviceData(filteredResults, slotDuration);
 
         return new DeviceDataResponse(ImmutableList.copyOf(aggregated), results.status, results.exception);
     }
@@ -587,6 +587,44 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
     //region Most recent
     /**
+     * Get the most recent DeviceData for the accountId, in the same shard as now.
+     * @param accountId
+     * @param now
+     * @return Optional of the latest DeviceData, or Optional.absent() if data not present or query fails.
+     */
+    public Optional<DeviceData> getMostRecent(final Long accountId, final DateTime now) {
+        final Expression keyConditionExpression = Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId));
+        final Collection<DeviceDataAttribute> attributes = ALL_ATTRIBUTES;
+        final String tableName = getTableName(now);
+
+        final QueryRequest queryRequest = new QueryRequest()
+                .withTableName(tableName)
+                .withKeyConditionExpression(keyConditionExpression.expressionString())
+                .withProjectionExpression(Expressions.projectionExpression(attributes))
+                .withExpressionAttributeNames(Expressions.expressionAttributeNames(attributes))
+                .withExpressionAttributeValues(keyConditionExpression.expressionAttributeValues())
+                .withScanIndexForward(false)
+                .withLimit(1);
+
+        int numAttempts = 0;
+        Optional<QueryResult> queryResultOptional = Optional.absent();
+        while ((numAttempts < maxQueryAttempts()) && !queryResultOptional.isPresent()) {
+            numAttempts++;
+            queryResultOptional = queryWithBackoff(queryRequest, numAttempts);
+        }
+
+        if (queryResultOptional.isPresent()) {
+            final List<Map<String, AttributeValue>> items = queryResultOptional.get().getItems();
+            if (!items.isEmpty()) {
+                final DeviceData deviceData = attributeMapToDeviceData(items.get(0));
+                return Optional.of(deviceData);
+            }
+        }
+
+        return Optional.absent();
+    }
+
+    /**
      * Get the most recent DeviceData for the given accountId and externalDeviceId.
      *
      * The query will only search from minTsLimit to maxTsLimit, so these are used to bound the search.
@@ -596,17 +634,19 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                                               final DateTime maxTsLimit,
                                               final DateTime minTsLimit)
     {
-        final Expression keyConditionExpression = Expressions.and(
-            Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
-            Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(minTsLimit, externalDeviceId), getRangeKey(maxTsLimit, externalDeviceId)));
-        final Expression filterExpression = Expressions.contains(DeviceDataAttribute.RANGE_KEY, toAttributeValue(externalDeviceId));
-        final Collection<DeviceDataAttribute> attributes = ALL_ATTRIBUTES;
-        final List<String> tableNames = getTableNames(minTsLimit, maxTsLimit);
-
-        final Optional<Map<String, AttributeValue>> result = getLatest(tableNames, keyConditionExpression, filterExpression, attributes);
-        if (result.isPresent()) {
-            return Optional.of(attributeMapToDeviceData(result.get()));
+        final Optional<DeviceData> mostRecentDeviceDataByAccountId = getMostRecent(accountId, maxTsLimit);
+        if (mostRecentDeviceDataByAccountId.isPresent() && mostRecentDeviceDataByAccountId.get().externalDeviceId == externalDeviceId) {
+            return mostRecentDeviceDataByAccountId;
         }
+
+        // Failed to get only the absolute latest value, so do a range query from minTsLimit to maxTsLimit
+        // This isn't the most efficient way to do it, but it does make the code simpler.
+        final List<DeviceData> deviceDataList = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, minTsLimit, maxTsLimit, 1).data;
+        if (!deviceDataList.isEmpty()) {
+            // They're sorted in chronological order, so get the last one
+            return Optional.of(deviceDataList.get(deviceDataList.size() - 1));
+        }
+
         return Optional.absent();
     }
     //endregion
@@ -678,8 +718,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
         final Expression filterExp = Expressions.and(
                 Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime)),
-                Expressions.compare(DeviceDataAttribute.AMBIENT_LIGHT, ">", toAttributeValue(minLightLevel)),
-                Expressions.contains(DeviceDataAttribute.RANGE_KEY, toAttributeValue(externalDeviceId)));
+                Expressions.compare(DeviceDataAttribute.AMBIENT_LIGHT, ">", toAttributeValue(minLightLevel)));
         final Expression keyConditionExp = Expressions.and(
                 Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
@@ -689,7 +728,8 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         for (final Map<String, AttributeValue> result : response.data) {
             final DeviceData data = attributeMapToDeviceData(result);
             final int hourOfDay = data.localTime().getHourOfDay();
-            if (hourOfDay >= startHour || hourOfDay < endHour) {
+            if (data.externalDeviceId.equals(externalDeviceId) &&
+                    (hourOfDay >= startHour || hourOfDay < endHour)) {
                 results.add(data);
             }
         }
@@ -711,12 +751,17 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         final Expression keyConditionExpression = Expressions.and(
                 Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startUTCTime, externalDeviceId), getRangeKey(endUTCTime, externalDeviceId)));
-        final Expression filterExpression = Expressions.and(
-                Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime)),
-                Expressions.contains(DeviceDataAttribute.RANGE_KEY, toAttributeValue(externalDeviceId)));
+        final Expression filterExpression = Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime));
 
+        final List<Map<String, AttributeValue>> results = Lists.newArrayList();
         final DynamoDBResponse response = queryTables(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, filterExpression, attributes);
-        return response;
+        for (final Map<String, AttributeValue> result : response.data) {
+            if (externalDeviceIdFromDDBItem(result).equals(externalDeviceId)) {
+                results.add(result);
+            }
+        }
+
+        return new DynamoDBResponse(results, response.status, response.exception);
     }
 
     /**
