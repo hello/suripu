@@ -437,10 +437,6 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
     }
 
     //region TODO
-    public Optional<DeviceStatus> pillStatus(final Long pillId, final Long accountId) {
-        return Optional.absent();
-    }
-
     public ImmutableList<TrackerMotion> getBetweenGrouped(final long accountId,
                                                           final DateTime startLocalTime,
                                                           final DateTime endLocalTime,
@@ -461,6 +457,23 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
     //endregion TODO
 
     //endregion
+
+    public Optional<TrackerMotion> getMostRecent(final String externalPillId, final Long accountId, final DateTime now) {
+        final DateTime startTime = now.minusDays(15);
+        final Expression keyConditionExpression = Expressions.and(
+                Expressions.equals(PillDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(PillDataAttribute.TS_PILL_ID, getRangeKey(startTime, externalPillId), getRangeKey(now, externalPillId)));
+        final Expression filterExpression = Expressions.contains(PillDataAttribute.TS_PILL_ID, new AttributeValue().withS(externalPillId));
+
+        final Optional<Map<String, AttributeValue>> latest = getLatest(getTableNames(startTime, now),
+                keyConditionExpression, filterExpression, TARGET_ATTRIBUTES);
+
+        if (latest.isPresent()) {
+            return Optional.of(fromDynamoDBItem(latest.get()));
+        }
+
+        return Optional.absent();
+    }
 
 
     @Override
