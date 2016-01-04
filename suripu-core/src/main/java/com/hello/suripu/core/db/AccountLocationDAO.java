@@ -8,6 +8,7 @@ import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
 
 /**
  * Created by kingshy on 12/30/15.
@@ -17,7 +18,7 @@ public abstract class AccountLocationDAO {
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_location (account_id, ip, latitude, longitude) VALUES " +
-            "(:account_id, :ip, :latitude, :longitude")
+            "(:account_id, :ip, :latitude, :longitude)")
     public abstract long insertNewAccountLatLongIP(@Bind("account_id") final Long accountId,
                                                    @Bind("ip") final String ip,
                                                    @Bind("latitude") final Double latitude,
@@ -31,5 +32,6 @@ public abstract class AccountLocationDAO {
                                             @Bind("country_code") final String countryCode);
 
     @SqlQuery("SELECT * FROM account_location WHERE account_id = :account_id ORDER BY created DESC LIMIT 1")
+    @SingleValueResult(AccountLocation.class)
     public abstract Optional<AccountLocation> getLastLocationByAccountId(@Bind("account_id") final Long accountId);
 }
