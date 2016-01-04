@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.WifiInfoDAO;
@@ -17,14 +16,11 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceStatus;
 import com.hello.suripu.core.models.PairingInfo;
-import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.models.WifiInfo;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 import com.hello.suripu.core.util.PillColorUtil;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -45,22 +41,18 @@ public class DeviceProcessor {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
-    private final PillDataDAODynamoDB pillDataDAODynamoDB;
+    private final TrackerMotionDAO trackerMotionDAO;
     private final WifiInfoDAO wifiInfoDAO;
     private final SenseColorDAO senseColorDAO;
 
 
 
-    private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
-                            final SensorsViewsDynamoDB sensorsViewsDynamoDB,
-                            final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB,
-                            final PillDataDAODynamoDB pillDataDAODynamoDB,
-                            final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO) {
+    private DeviceProcessor(final DeviceDAO deviceDAO, final MergedUserInfoDynamoDB mergedUserInfoDynamoDB, final SensorsViewsDynamoDB sensorsViewsDynamoDB, final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB, final TrackerMotionDAO trackerMotionDAO, final WifiInfoDAO wifiInfoDAO, final SenseColorDAO senseColorDAO) {
         this.deviceDAO = deviceDAO;
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
-        this.pillDataDAODynamoDB = pillDataDAODynamoDB;
+        this.trackerMotionDAO = trackerMotionDAO;
         this.wifiInfoDAO = wifiInfoDAO;
         this.senseColorDAO = senseColorDAO;
     }
@@ -241,7 +233,7 @@ public class DeviceProcessor {
 
 
     @VisibleForTesting
-    public Optional<PillHeartBeat> retrievePillHeartBeat(final DeviceAccountPair pillAccountPair, final DateTime now) {
+    public Optional<PillHeartBeat> retrievePillHeartBeat(final DeviceAccountPair pillAccountPair) {
         // First attempt: get it from heartbeat
         final Optional<PillHeartBeat> pillHeartBeatOptional = this.pillHeartBeatDAODynamoDB.get(pillAccountPair.externalDeviceId);
 
@@ -251,22 +243,15 @@ public class DeviceProcessor {
 
         LOGGER.warn("No pill heartbeat for pill {} in dynamoDB", pillAccountPair.externalDeviceId);
 
-        final Optional<TrackerMotion> trackerMotionOptional = this.pillDataDAODynamoDB.getMostRecent(
-                pillAccountPair.externalDeviceId,
-                pillAccountPair.accountId,
-                now);
-
-        if(trackerMotionOptional.isPresent()) {
-            return Optional.of(PillHeartBeat.fromTrackerMotion(trackerMotionOptional.get()));
+        final Optional<DeviceStatus> pillStatusOptional = this.trackerMotionDAO.pillStatus(pillAccountPair.internalDeviceId, pillAccountPair.accountId);
+        if(pillStatusOptional.isPresent()) {
+            return Optional.of(PillHeartBeat.fromDeviceStatus(pillAccountPair.externalDeviceId, pillStatusOptional.get()));
         }
 
         LOGGER.warn("No pill heartbeat for pill {} in trackerMotionDAO", pillAccountPair.externalDeviceId);
         return Optional.absent();
     }
 
-    private Optional<PillHeartBeat> retrievePillHeartBeat(final DeviceAccountPair pillAccountPair) {
-        return retrievePillHeartBeat(pillAccountPair, DateTime.now(DateTimeZone.UTC));
-    }
 
     @VisibleForTesting
     public Optional<Pill.Color> retrievePillColor(final Long accountId, final List<DeviceAccountPair> senseAccountPairs) {
@@ -301,7 +286,7 @@ public class DeviceProcessor {
         private DeviceDAO deviceDAO;
         private MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
         private SensorsViewsDynamoDB sensorsViewsDynamoDB;
-        private PillDataDAODynamoDB pillDataDAODynamoDB;
+        private TrackerMotionDAO trackerMotionDAO;
         private WifiInfoDAO wifiInfoDAO;
         private SenseColorDAO senseColorDAO;
         private PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
@@ -321,8 +306,9 @@ public class DeviceProcessor {
             return this;
         }
 
-        public Builder withPillDataDAODynamoDB(final PillDataDAODynamoDB pillDataDAODynamoDB) {
-            this.pillDataDAODynamoDB = pillDataDAODynamoDB;
+
+        public Builder withTrackerMotionDAO(final TrackerMotionDAO trackerMotionDAO) {
+            this.trackerMotionDAO = trackerMotionDAO;
             return this;
         }
 
@@ -342,9 +328,7 @@ public class DeviceProcessor {
         }
 
         public DeviceProcessor build() {
-            return new DeviceProcessor(deviceDAO, mergedUserInfoDynamoDB,
-                    sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB,
-                    pillDataDAODynamoDB, wifiInfoDAO, senseColorDAO);
+            return new DeviceProcessor(deviceDAO, mergedUserInfoDynamoDB, sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB, trackerMotionDAO, wifiInfoDAO, senseColorDAO);
         }
     }
 
