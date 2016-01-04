@@ -3,6 +3,7 @@ package com.hello.suripu.app.v2;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrackerMotionDAO;
@@ -62,7 +63,7 @@ public class TimelineResource extends BaseResource {
     private final TimelineDAODynamoDB timelineDAODynamoDB;
     private final TimelineLogDAO timelineLogDAO;
     private final FeedbackDAO feedbackDAO;
-    private final TrackerMotionDAO trackerMotionDAO;
+    private final PillDataDAODynamoDB pillDataDAODynamoDB;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final DataLogger timelineLogDAOV2;
 
@@ -70,14 +71,14 @@ public class TimelineResource extends BaseResource {
                             final TimelineProcessor timelineProcessor,
                             final TimelineLogDAO timelineLogDAO,
                             final FeedbackDAO feedbackDAO,
-                            final TrackerMotionDAO trackerMotionDAO,
+                            final PillDataDAODynamoDB pillDataDAODynamoDB,
                             final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                             final DataLogger timelineLogDAOV2) {
         this.timelineProcessor = timelineProcessor;
         this.timelineDAODynamoDB = timelineDAODynamoDB;
         this.timelineLogDAO = timelineLogDAO;
         this.feedbackDAO = feedbackDAO;
-        this.trackerMotionDAO = trackerMotionDAO;
+        this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.timelineLogDAOV2 = timelineLogDAOV2;
     }
@@ -201,7 +202,7 @@ public class TimelineResource extends BaseResource {
         final DateTime startDateTime = DateTimeUtil.ymdStringToDateTime(date);
         final DateTime endDateTime = startDateTime.plusHours(48);
 
-        final List<TrackerMotion> trackerMotionList = trackerMotionDAO.getBetween(accountId, startDateTime, endDateTime);
+        final List<TrackerMotion> trackerMotionList = pillDataDAODynamoDB.getBetween(accountId, startDateTime, endDateTime);
         if(trackerMotionList.isEmpty()) {
             LOGGER.error("No tracker motion data");
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(new JsonError(404, "Not found")).build());
