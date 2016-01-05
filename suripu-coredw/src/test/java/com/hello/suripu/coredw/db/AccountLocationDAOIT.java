@@ -2,18 +2,24 @@ package com.hello.suripu.coredw.db;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.db.AccountLocationDAO;
-import com.hello.suripu.core.db.mappers.AccountLocationMapper;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.AccountLocation;
+import com.yammer.dropwizard.db.DatabaseConfiguration;
+import com.yammer.dropwizard.db.ManagedDataSource;
+import com.yammer.dropwizard.db.ManagedDataSourceFactory;
+import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
+import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
-import org.h2.jdbcx.JdbcDataSource;
+import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Handle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -21,41 +27,35 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by kingshy on 1/4/16.
  */
-public class AccountLocationDAOTest {
+public class AccountLocationDAOIT {
+    private final static Logger LOGGER = LoggerFactory.getLogger(AccountLocationDAOIT.class);
 
-    private Handle handle;
+    private DatabaseConfiguration commonDB;
     private AccountLocationDAO accountLocationDAO;
 
     @Before
-    public void setUp() throws Exception
-    {
-        final String createQuery = "CREATE TABLE account_location(\n" +
-                "id SERIAL PRIMARY KEY,\n" +
-                "account_id BIGINT,\n" +
-                "ip VARCHAR(20),\n" +
-                "latitude DOUBLE PRECISION,\n" +
-                "longitude DOUBLE PRECISION,\n" +
-                "city VARCHAR(255),\n" +
-                "state VARCHAR(255),\n" +
-                "country_code CHAR(2) NOT NULL DEFAULT '',\n" +
-                "created TIMESTAMP default current_timestamp);\n" +
-                " CREATE UNIQUE INDEX uniq_account_location_created_idx ON account_location(account_id, created);";
+    public void setUp() {
+        this.commonDB = this.getCommonDB();
+        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
+        final ManagedDataSource dataSource;
+        try {
+            dataSource = managedDataSourceFactory.build(commonDB);
+            final DBI jdbi = new DBI(dataSource);
+            jdbi.registerArgumentFactory(new OptionalArgumentFactory(commonDB.getDriverClass()));
+            jdbi.registerContainerFactory(new ImmutableListContainerFactory());
+            jdbi.registerContainerFactory(new ImmutableSetContainerFactory());
+            jdbi.registerContainerFactory(new OptionalContainerFactory());
+            jdbi.registerArgumentFactory(new JodaArgumentFactory());
 
-        final JdbcDataSource ds = new JdbcDataSource();
-        ds.setURL("jdbc:h2:mem:" + UUID.randomUUID());
-        final DBI dbi = new DBI(ds);
-        dbi.registerMapper(new AccountLocationMapper());
-        dbi.registerArgumentFactory(new JodaArgumentFactory());
-        dbi.registerContainerFactory(new OptionalContainerFactory());
-        handle = dbi.open();
-        handle.execute(createQuery);
-        accountLocationDAO = dbi.onDemand(AccountLocationDAO.class);
+            this.accountLocationDAO = jdbi.onDemand(AccountLocationDAO.class);
+        } catch (ClassNotFoundException e) {
+            LOGGER.error("No driver found for database:{}", e.getMessage());
+        }
+
     }
 
     @After
     public void tearDown() throws Exception {
-        handle.execute("DROP TABLE account_location IF EXISTS");
-        handle.close();
     }
 
     @Test
@@ -96,10 +96,34 @@ public class AccountLocationDAOTest {
         assertThat(optional.get().city.toLowerCase(), equalTo(city.toLowerCase()));
         assertThat(optional.get().countryCode.toUpperCase(), equalTo(country.toUpperCase()));
 
-        accountLocationDAO.insertNewAccountLatLongIP(accountId, "66.66.66.66", 81.483083, -45.942446);
+        final String newIP = "66.66.66.66";
+        accountLocationDAO.insertNewAccountLatLongIP(accountId, newIP, 81.483083, -45.942446);
         final Optional<AccountLocation> secondOptional = accountLocationDAO.getLastLocationByAccountId(accountId);
         assertThat(secondOptional.isPresent(), is(true));
         assertThat(secondOptional.get().ip, not(ip));
-        assertThat(secondOptional.get().countryCode, equalTo(""));
+        assertThat(secondOptional.get().ip, is(newIP));
+        assertThat((secondOptional.get().countryCode == null), is(true));
     }
+
+    private DatabaseConfiguration getCommonDB() {
+
+        final DatabaseConfiguration commonDB = new DatabaseConfiguration();
+
+        commonDB.setDriverClass("org.postgresql.Driver");
+
+        commonDB.setUser("ingress_user");
+        commonDB.setPassword("hello ingress user");
+        commonDB.setUrl("jdbc:postgresql://localhost:5432/common");
+
+        final Map<String, String> property = new HashMap<>();
+        property.put("charSet", "UTF-8");
+        commonDB.setProperties(property);
+
+        commonDB.setMinSize(2);
+        commonDB.setMaxSize(8);
+        commonDB.setCheckConnectionWhileIdle(false);
+
+        return commonDB;
+    }
+
 }
