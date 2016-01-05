@@ -304,7 +304,7 @@ CREATE TABLE account_location(
     longitude DOUBLE PRECISION,
     city VARCHAR(255),
     state VARCHAR(255),
-    country_code CHAR(2) NOT NULL DEFAULT '', -- see https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+    country_code CHAR(2), -- see https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
     created TIMESTAMP default current_timestamp
 );
 
