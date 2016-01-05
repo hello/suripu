@@ -18,7 +18,7 @@ public abstract class AccountLocationDAO {
 
     @GetGeneratedKeys
     @SqlUpdate("INSERT INTO account_location (account_id, ip, latitude, longitude) VALUES " +
-            "(:account_id, :ip, :latitude, :longitude)")
+            "(:account_id, inet(:ip), :latitude, :longitude)")
     public abstract long insertNewAccountLatLongIP(@Bind("account_id") final Long accountId,
                                                    @Bind("ip") final String ip,
                                                    @Bind("latitude") final Double latitude,
