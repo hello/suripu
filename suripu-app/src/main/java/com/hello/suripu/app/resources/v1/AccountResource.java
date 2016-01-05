@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 import java.util.regex.Matcher;
 
 @Path("/v1/account")
-public class AccountResource extends BaseResource {
+public class AccountResource {
 
     @Context
     HttpServletRequest request;
@@ -124,7 +124,7 @@ public class AccountResource extends BaseResource {
 
         // save location if exists
         if (account.hasLocation()) {
-            final String ip = getIpAddress(request);
+            final String ip = BaseResource.getIpAddress(request);
             try {
                 LOGGER.debug("level=debug action=insert-account-location account_id={} latitude={} longitude={} ip={}",
                         accessToken.accountId, account.latitude, account.longitude, ip);
