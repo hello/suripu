@@ -1,6 +1,7 @@
-package com.hello.suripu.core.db;
+package com.hello.suripu.coredw.db;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.core.db.AccountLocationDAO;
 import com.hello.suripu.core.db.mappers.AccountLocationMapper;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.models.AccountLocation;
@@ -14,9 +15,7 @@ import org.skife.jdbi.v2.Handle;
 
 import java.util.UUID;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
