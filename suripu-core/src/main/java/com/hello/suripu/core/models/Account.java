@@ -77,6 +77,12 @@ public class Account {
     @JsonProperty("email_verified")
     public final Boolean emailVerified;
 
+    @JsonIgnore
+    public final Double latitude;
+
+    @JsonIgnore
+    public final Double longitude; // android
+
 
     /**
      *
@@ -103,7 +109,10 @@ public class Account {
                     final DateTime created,
                     final Long lastModified,
                     final DateTime DOB,
-                    final Boolean emailVerified) {
+                    final Boolean emailVerified,
+                    final Double latitude,
+                    final Double longitude
+    ) {
 
         this.id = id;
         this.email = email;
@@ -120,6 +129,9 @@ public class Account {
         this.lastModified = lastModified;
         this.DOB = DOB;
         this.emailVerified = emailVerified;
+
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     /**
@@ -131,9 +143,16 @@ public class Account {
     public static Account fromRegistration(final Registration registration, final Long id) {
         return new Account(Optional.fromNullable(id), registration.email, registration.password, registration.tzOffsetMillis,
                 registration.name, registration.gender, registration.height, registration.weight, registration.created,
-                registration.created.getMillis(), registration.DOB, Boolean.FALSE);
+                registration.created.getMillis(), registration.DOB, Boolean.FALSE,
+                registration.latitude, registration.longitude);
     }
 
+    public Boolean hasLocation() {
+        if (this.latitude == null || this.longitude == null) {
+            return false;
+        }
+        return true;
+    }
 
     public static class Builder {
         private Optional<Long> id;
@@ -148,6 +167,8 @@ public class Account {
         private Long lastModified;
         private DateTime DOB;
         private Boolean emailVerified;
+        private Double latitude;
+        private Double longitude;
 
         public Builder() {
             this.id = Optional.absent();
@@ -161,6 +182,8 @@ public class Account {
             this.lastModified = new DateTime(1970, 1 ,1, 0, 0, DateTimeZone.UTC).getMillis();
             this.DOB = new DateTime(1900,1,1,0,0, DateTimeZone.UTC);
             this.emailVerified = Boolean.FALSE;
+            this.latitude = null;
+            this.longitude = null;
         }
 
         public Builder(final Account account) {
@@ -176,6 +199,8 @@ public class Account {
             this.lastModified = account.lastModified;
             this.DOB = account.DOB;
             this.emailVerified = account.emailVerified;
+            this.latitude = account.latitude;
+            this.longitude = account.longitude;
         }
 
         @JsonProperty("name")
@@ -271,10 +296,28 @@ public class Account {
             return this;
         }
 
+        @JsonProperty("lat")
+        public Builder withLatitude(final Double latitude) {
+            this.latitude = latitude;
+            return this;
+        }
+
+        @JsonProperty("long")
+        public Builder withLongitude(final Double longitude) {
+            this.longitude = longitude;
+            return this;
+        }
+
+        @JsonProperty("lon")
+        public Builder withLongitudeLon(final Double longitudeLon) {
+            this.longitude = longitudeLon;
+            return this;
+        }
+
         public Account build() throws MyAccountCreationException {
             checkNotNull(id, "ID can not be null");
             checkNotNull(email, "Email can not be null");
-            return new Account(id, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB, emailVerified);
+            return new Account(id, email, password, tzOffsetMillis, name, gender, height, weight, created, lastModified, DOB, emailVerified, latitude, longitude);
         }
     }
 
@@ -326,7 +369,9 @@ public class Account {
                 account.created,
                 account.lastModified,
                 account.DOB,
-                account.emailVerified
+                account.emailVerified,
+                account.latitude,
+                account.longitude
         );
     }
 

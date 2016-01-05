@@ -47,6 +47,7 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.AccountDAOImpl;
+import com.hello.suripu.core.db.AccountLocationDAO;
 import com.hello.suripu.core.db.AggregateSleepScoreDAODynamoDB;
 import com.hello.suripu.core.db.AlarmDAODynamoDB;
 import com.hello.suripu.core.db.AppStatsDAO;
@@ -127,7 +128,6 @@ import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.DBI;
@@ -180,6 +180,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         insightsDB.registerArgumentFactory(new PostgresIntegerArrayArgumentFactory());
 
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
+        final AccountLocationDAO accountLocationDAO = commonDB.onDemand(AccountLocationDAO.class);
         final ApplicationsDAO applicationsDAO = commonDB.onDemand(ApplicationsDAO.class);
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
@@ -386,7 +387,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB = PillHeartBeatDAODynamoDB.create(pillHeartBeatDynamoDBClient, configuration.getPillHeartBeatConfiguration().getTableName());
 
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
-        environment.addResource(new AccountResource(accountDAO));
+        environment.addResource(new AccountResource(accountDAO, accountLocationDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAODynamoDB, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
         environment.addResource(new DeviceResources(deviceDAO, mergedUserInfoDynamoDB, sensorsViewsDynamoDB, pillHeartBeatDAODynamoDB));
 
