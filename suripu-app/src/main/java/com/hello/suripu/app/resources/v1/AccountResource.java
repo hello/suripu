@@ -83,8 +83,7 @@ public class AccountResource extends BaseResource {
         LOGGER.info("level=info action=email-after-encryption-and-normalizing email={}", securedRegistration.email);
 
         try {
-            final Account account = accountDAO.register(securedRegistration);
-            return account;
+            return accountDAO.register(securedRegistration);
         } catch (UnableToExecuteStatementException exception) {
 
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
@@ -110,13 +109,13 @@ public class AccountResource extends BaseResource {
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
 
-        LOGGER.warn("level=warning action=modify-account account={} last_modified={}", accessToken.accountId, account.lastModified);
+        LOGGER.warn("level=warning action=modify-account account_id={} last_modified={}", accessToken.accountId, account.lastModified);
 
         final Optional<Account> optionalAccount = accountDAO.update(account, accessToken.accountId);
 
 
         if(!optionalAccount.isPresent()) {
-            LOGGER.warn("level=warning error_message=last-modified-condition-did-not-match-DB-data account_id={} diff_last_modified={}",
+            LOGGER.warn("level=warning error_message=last-modified-condition-did-not-match-DB-data account_id={} last_modified={}",
                     accessToken.accountId, account.lastModified);
             final JsonError error = new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), "pre condition failed");
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
@@ -127,11 +126,11 @@ public class AccountResource extends BaseResource {
         if (account.hasLocation()) {
             final String ip = getIpAddress(request);
             try {
-                LOGGER.debug("level=debug action=insert-account-location account_id={} latitude={} longitude={} ip_addr={}",
+                LOGGER.debug("level=debug action=insert-account-location account_id={} latitude={} longitude={} ip={}",
                         accessToken.accountId, account.latitude, account.longitude, ip);
                 accountLocationDAO.insertNewAccountLatLongIP(accessToken.accountId, ip, account.latitude, account.longitude);
             } catch (UnableToExecuteStatementException exception) {
-                LOGGER.error("level=error error_message=fail-to-insert-account-location account_id={} latitude={} longitude={} ip_addr={}",
+                LOGGER.error("level=error error_message=fail-to-insert-account-location account_id={} latitude={} longitude={} ip={}",
                         accessToken.accountId, account.latitude, account.longitude, ip);
             }
         }
@@ -157,7 +156,7 @@ public class AccountResource extends BaseResource {
         final PasswordUpdate encrypted = PasswordUpdate.encrypt(passwordUpdate);
         if(!accountDAO.updatePassword(accessToken.accountId, encrypted)) {
             throw new WebApplicationException(Response.Status.CONFLICT);
-        };
+        }
         // TODO: remove all tokens for this user
     }
 
