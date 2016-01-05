@@ -7,7 +7,6 @@ import com.hello.suripu.core.db.dynamo.expressions.AndExpression;
 import com.hello.suripu.core.db.dynamo.expressions.BetweenExpression;
 import com.hello.suripu.core.db.dynamo.expressions.BinaryExpression;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
-import com.hello.suripu.core.db.dynamo.expressions.FunctionExpression;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,10 +58,6 @@ public class Expressions {
      */
     public static Expression between(final Attribute attribute, final AttributeValue lowerBound, final AttributeValue upperBound) {
         return new BetweenExpression(attribute, lowerBound, upperBound);
-    }
-
-    public static Expression contains(final Attribute attribute, final AttributeValue substring) {
-        return FunctionExpression.create("contains", attribute, substring);
     }
 
     /**
