@@ -52,14 +52,14 @@ public class AccountResource extends BaseResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Account getAccount(@Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken) {
 
-        LOGGER.debug("debug=get-account access_token={}", accessToken);
+        LOGGER.debug("level=debug action=get-account access_token={}", accessToken);
         final Optional<Account> account = accountDAO.getById(accessToken.accountId);
         if(!account.isPresent()) {
-            LOGGER.warn("warning=account-not-present account_id={}", accessToken.accountId);
+            LOGGER.warn("level=warning error_message=account-not-present account_id={}", accessToken.accountId);
             throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
 
-        LOGGER.info("info=last-modified last_modified={}", account.get().lastModified);
+        LOGGER.info("level=info action=show-last-modified last_modified={}", account.get().lastModified);
         return account.get();
     }
 
@@ -71,16 +71,16 @@ public class AccountResource extends BaseResource {
             @Valid final Registration registration,
             @QueryParam("sig") final String signature) {
 
-        LOGGER.info("info=attempt-to-register-account email={}", registration.email);
+        LOGGER.info("level=info action=attempt-to-register-account email={}", registration.email);
         final Optional<Registration.RegistrationError> error = Registration.validate(registration);
         if(error.isPresent()) {
-            LOGGER.error("error=registration-failed registration_fail_reason={}.", error.get());
+            LOGGER.error("level=error error_message=registration-failed registration_fail_reason={}.", error.get());
             throw new WebApplicationException(Response.status(400).entity(new JsonError(400, error.get().toString())).build());
         }
 
         // Overriding email address for kaytlin
         final Registration securedRegistration = Registration.secureAndNormalize(registration);
-        LOGGER.info("info=email-after-encryption-and-normalizing email={}", securedRegistration.email);
+        LOGGER.info("level=info action=email-after-encryption-and-normalizing email={}", securedRegistration.email);
 
         try {
             final Account account = accountDAO.register(securedRegistration);
@@ -90,12 +90,12 @@ public class AccountResource extends BaseResource {
             final Matcher matcher = MatcherPatternsDB.PG_UNIQ_PATTERN.matcher(exception.getMessage());
 
             if(matcher.find()) {
-                LOGGER.warn("warning=register-account-with-existing-email email={}", registration.email);
+                LOGGER.warn("level=warning error_message=register-account-with-existing-email email={}", registration.email);
                 throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                         .entity(new JsonError(409, "Account already exists.")).build());
             }
 
-            LOGGER.error("error=non-unique-email-exception email={}", registration.email);
+            LOGGER.error("level=error error_message=non-unique-email-exception email={}", registration.email);
             LOGGER.error(exception.getMessage());
         }
 
@@ -110,13 +110,13 @@ public class AccountResource extends BaseResource {
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
 
-        LOGGER.warn("warning=last-modified account={} last_modified={}", accessToken.accountId, account.lastModified);
+        LOGGER.warn("level=warning action=modify-account account={} last_modified={}", accessToken.accountId, account.lastModified);
 
         final Optional<Account> optionalAccount = accountDAO.update(account, accessToken.accountId);
 
 
         if(!optionalAccount.isPresent()) {
-            LOGGER.warn("warning=last-modified-condition-did-not-match-DB-data account_id={} diff_last_modified={}",
+            LOGGER.warn("level=warning error_message=last-modified-condition-did-not-match-DB-data account_id={} diff_last_modified={}",
                     accessToken.accountId, account.lastModified);
             final JsonError error = new JsonError(Response.Status.PRECONDITION_FAILED.getStatusCode(), "pre condition failed");
             throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
@@ -127,11 +127,11 @@ public class AccountResource extends BaseResource {
         if (account.hasLocation()) {
             final String ip = getIpAddress(request);
             try {
-                LOGGER.debug("debug=insert-account-location account_id={} latitude={} longitude={} ip_addr={}",
+                LOGGER.debug("level=debug action=insert-account-location account_id={} latitude={} longitude={} ip_addr={}",
                         accessToken.accountId, account.latitude, account.longitude, ip);
                 accountLocationDAO.insertNewAccountLatLongIP(accessToken.accountId, ip, account.latitude, account.longitude);
             } catch (UnableToExecuteStatementException exception) {
-                LOGGER.error("error=fail-to-insert-account-location account_id={} latitude={} longitude={} ip_addr={}",
+                LOGGER.error("level=error error_message=fail-to-insert-account-location account_id={} latitude={} longitude={} ip_addr={}",
                         accessToken.accountId, account.latitude, account.longitude, ip);
             }
         }
@@ -169,9 +169,9 @@ public class AccountResource extends BaseResource {
     public Account updateEmail(
             @Scope({OAuthScope.USER_EXTENDED}) final AccessToken accessToken,
             @Valid final Account account) {
-        LOGGER.info("info=new-email-input email={}", account.email);
+        LOGGER.info("level=info action=update-account-email email={}", account.email);
         final Account accountWithId = Account.normalizeWithId(account, accessToken.accountId);
-        LOGGER.info("info=new-email-after-normalizing email={}", accountWithId.email);
+        LOGGER.info("level=info action=new-email-after-normalizing email={}", accountWithId.email);
         final Optional<Registration.RegistrationError> error = Registration.validateEmail(accountWithId.email);
         if(error.isPresent()) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
