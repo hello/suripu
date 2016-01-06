@@ -564,7 +564,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .withExternalDeviceId(externalDeviceIdFromDDBItem(item))
                 .withOffsetMillis(DeviceDataAttribute.OFFSET_MILLIS.getInteger(item))
                 .withAmbientTemperature(DeviceDataAttribute.AMBIENT_TEMP.getInteger(item))
-                .withAmbientLight(DeviceDataAttribute.AMBIENT_LIGHT.getInteger(item))
+                .calibrateAmbientLight(DeviceDataAttribute.AMBIENT_LIGHT.getInteger(item))
                 .withAmbientLightVariance(DeviceDataAttribute.AMBIENT_LIGHT_VARIANCE.getInteger(item))
                 .withAmbientHumidity(DeviceDataAttribute.AMBIENT_HUMIDITY.getInteger(item))
                 .withWaveCount(DeviceDataAttribute.WAVE_COUNT.getInteger(item))
