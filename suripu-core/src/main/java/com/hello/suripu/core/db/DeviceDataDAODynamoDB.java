@@ -587,44 +587,6 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
     //region Most recent
     /**
-     * Get the most recent DeviceData for the accountId, in the same shard as now.
-     * @param accountId
-     * @param now
-     * @return Optional of the latest DeviceData, or Optional.absent() if data not present or query fails.
-     */
-    public Optional<DeviceData> getMostRecent(final Long accountId, final DateTime now) {
-        final Expression keyConditionExpression = Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId));
-        final Collection<DeviceDataAttribute> attributes = ALL_ATTRIBUTES;
-        final String tableName = getTableName(now);
-
-        final QueryRequest queryRequest = new QueryRequest()
-                .withTableName(tableName)
-                .withKeyConditionExpression(keyConditionExpression.expressionString())
-                .withProjectionExpression(Expressions.projectionExpression(attributes))
-                .withExpressionAttributeNames(Expressions.expressionAttributeNames(attributes))
-                .withExpressionAttributeValues(keyConditionExpression.expressionAttributeValues())
-                .withScanIndexForward(false)
-                .withLimit(1);
-
-        int numAttempts = 0;
-        Optional<QueryResult> queryResultOptional = Optional.absent();
-        while ((numAttempts < maxQueryAttempts()) && !queryResultOptional.isPresent()) {
-            numAttempts++;
-            queryResultOptional = queryWithBackoff(queryRequest, numAttempts);
-        }
-
-        if (queryResultOptional.isPresent()) {
-            final List<Map<String, AttributeValue>> items = queryResultOptional.get().getItems();
-            if (!items.isEmpty()) {
-                final DeviceData deviceData = attributeMapToDeviceData(items.get(0));
-                return Optional.of(deviceData);
-            }
-        }
-
-        return Optional.absent();
-    }
-
-    /**
      * Get the most recent DeviceData for the given accountId and externalDeviceId.
      *
      * The query will only search from minTsLimit to maxTsLimit, so these are used to bound the search.
@@ -634,17 +596,28 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                                               final DateTime maxTsLimit,
                                               final DateTime minTsLimit)
     {
-        final Optional<DeviceData> mostRecentDeviceDataByAccountId = getMostRecent(accountId, maxTsLimit);
-        if (mostRecentDeviceDataByAccountId.isPresent() && mostRecentDeviceDataByAccountId.get().externalDeviceId == externalDeviceId) {
-            return mostRecentDeviceDataByAccountId;
+        final Expression keyConditionExpression = Expressions.and(
+                Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(minTsLimit, externalDeviceId), getRangeKey(maxTsLimit, externalDeviceId)));
+        final Collection<DeviceDataAttribute> attributes = ALL_ATTRIBUTES;
+
+        final Optional<Map<String, AttributeValue>> result = getLatest(getTableName(maxTsLimit), keyConditionExpression, attributes);
+        if (result.isPresent()) {
+            final DeviceData deviceData = attributeMapToDeviceData(result.get());
+            if (deviceData.externalDeviceId.equals(externalDeviceId)) {
+                return Optional.of(deviceData);
+            }
         }
 
-        // Failed to get only the absolute latest value, so do a range query from minTsLimit to maxTsLimit
-        // This isn't the most efficient way to do it, but it does make the code simpler.
-        final List<DeviceData> deviceDataList = getBetweenByAbsoluteTimeAggregateBySlotDuration(accountId, externalDeviceId, minTsLimit, maxTsLimit, 1).data;
-        if (!deviceDataList.isEmpty()) {
-            // They're sorted in chronological order, so get the last one
-            return Optional.of(deviceDataList.get(deviceDataList.size() - 1));
+        // Getting the absolute most recent didn't work, so try querying relevant tables.
+        final DynamoDBResponse response = queryTables(getTableNames(minTsLimit, maxTsLimit), keyConditionExpression, attributes);
+
+        // Iterate through results in reverse order (most recent first)
+        for (final Map<String, AttributeValue> item: Lists.reverse(response.data)) {
+            final DeviceData deviceData = attributeMapToDeviceData(item);
+            if (deviceData.externalDeviceId.equals(externalDeviceId)) {
+                return Optional.of(deviceData);
+            }
         }
 
         return Optional.absent();
