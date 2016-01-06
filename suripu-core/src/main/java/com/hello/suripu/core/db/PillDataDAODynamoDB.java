@@ -437,10 +437,6 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
     }
 
     //region TODO
-    public Optional<DeviceStatus> pillStatus(final Long pillId, final Long accountId) {
-        return Optional.absent();
-    }
-
     public ImmutableList<TrackerMotion> getBetweenGrouped(final long accountId,
                                                           final DateTime startLocalTime,
                                                           final DateTime endLocalTime,
@@ -461,6 +457,35 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
     //endregion TODO
 
     //endregion
+
+    public Optional<TrackerMotion> getMostRecent(final String externalPillId, final Long accountId, final DateTime now) {
+        final DateTime startTime = now.minusDays(15);
+        final Expression keyConditionExpression = Expressions.and(
+                Expressions.equals(PillDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
+                Expressions.between(PillDataAttribute.TS_PILL_ID, getRangeKey(startTime, externalPillId), getRangeKey(now, externalPillId)));
+
+        final Optional<Map<String, AttributeValue>> latest = getLatest(getTableName(now), keyConditionExpression, TARGET_ATTRIBUTES);
+
+        if (latest.isPresent()) {
+            final TrackerMotion trackerMotion = fromDynamoDBItem(latest.get());
+            if (trackerMotion.externalTrackerId.equals(externalPillId)) {
+                return Optional.of(trackerMotion);
+            }
+        }
+
+        // Getting the absolute most recent didn't work, so try querying relevant tables.
+        final DynamoDBResponse response = queryTables(getTableNames(startTime, now), keyConditionExpression, TARGET_ATTRIBUTES);
+
+        // Iterate through results in reverse order (most recent first)
+        for (final Map<String, AttributeValue> item: Lists.reverse(response.data)) {
+            final TrackerMotion trackerMotion = fromDynamoDBItem(item);
+            if (trackerMotion.externalTrackerId.equals(externalPillId)) {
+                return Optional.of(trackerMotion);
+            }
+        }
+
+        return Optional.absent();
+    }
 
 
     @Override

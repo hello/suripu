@@ -3,6 +3,7 @@ package com.hello.suripu.core.pill.heartbeat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.hello.suripu.core.models.DeviceStatus;
+import com.hello.suripu.core.models.TrackerMotion;
 import org.joda.time.DateTime;
 
 public class PillHeartBeat {
@@ -48,6 +49,9 @@ public class PillHeartBeat {
         return new PillHeartBeat(pillId, deviceStatus.batteryLevel, Integer.parseInt(deviceStatus.firmwareVersion), deviceStatus.uptime, deviceStatus.lastSeen);
     }
 
+    public static PillHeartBeat fromTrackerMotion(final TrackerMotion trackerMotion) {
+        return new PillHeartBeat(trackerMotion.externalTrackerId, 100, 1, 0, trackerMotion.dateTimeUTC());
+    }
 
     @Override
     public boolean equals(Object obj) {
