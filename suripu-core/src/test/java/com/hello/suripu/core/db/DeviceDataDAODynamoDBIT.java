@@ -577,31 +577,6 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(sampleList.get(Sensor.HUMIDITY).size(), is(11));
     }
 
-    @Test
-    public void testGetMostRecentByAccountId() {
-        final Long accountId = new Long(1);
-        final String deviceId = "2";
-        final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
-
-        final List<DeviceData> inserted = addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
-        final DeviceData mostRecent = deviceDataDAODynamoDB.getMostRecent(accountId, firstTime).get();
-        assertThat(mostRecent.dateTimeUTC, is(inserted.get(inserted.size() - 1).dateTimeUTC));
-    }
-
-    @Test
-    public void testGetMostRecentByAccountIdNotPresent() {
-        final Long accountId = new Long(1);
-        final String deviceId = "2";
-        final Integer offsetMillis = 0;
-        final DateTime firstTime = new DateTime(2015, 10, 1, 7, 0, DateTimeZone.UTC);
-
-        addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
-
-        assertThat(deviceDataDAODynamoDB.getMostRecent(accountId, firstTime.plusMonths(1)).isPresent(), is(false));
-        assertThat(deviceDataDAODynamoDB.getMostRecent(2L, firstTime).isPresent(), is(false));
-    }
-
     private DeviceData last(final List<DeviceData> list) {
         return list.get(list.size() - 1);
     }
