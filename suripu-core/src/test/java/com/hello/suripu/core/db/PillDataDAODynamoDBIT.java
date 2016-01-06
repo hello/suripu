@@ -307,4 +307,57 @@ public class PillDataDAODynamoDBIT {
         final Integer dataCount = pillDataDAODynamoDB.getDataCountBetweenLocalUTC(accountId, queryStartLocalUTC, queryEndLocalUTC);
         assertThat(dataCount, is(numMinutes+1)); // inclusive, add one
     }
+
+    @Test
+    public void testGetMostRecent() {
+        final Long accountId = 1L;
+        final String id1 = "id1";
+        final String id2 = "id2";
+        final int offsetMillis = -28800000;
+        final DateTime firstTime = new DateTime(2015, 11, 1, 1, 0, DateTimeZone.UTC);
+        final List<TrackerMotion> trackerMotions = ImmutableList.of(
+                new TrackerMotion.Builder()
+                        .withAccountId(accountId)
+                        .withExternalTrackerId(id1)
+                        .withTimestampMillis(firstTime.getMillis())
+                        .withOffsetMillis(offsetMillis)
+                        .withValue(1)
+                        .build(),
+                new TrackerMotion.Builder()
+                        .withAccountId(accountId)
+                        .withExternalTrackerId(id2)
+                        .withTimestampMillis(firstTime.plusMinutes(1).getMillis())
+                        .withOffsetMillis(offsetMillis)
+                        .withValue(2)
+                        .build(),
+                new TrackerMotion.Builder()
+                        .withAccountId(accountId)
+                        .withExternalTrackerId(id1)
+                        .withTimestampMillis(firstTime.plusMinutes(2).getMillis())
+                        .withOffsetMillis(offsetMillis)
+                        .withValue(3)
+                        .build(),
+                new TrackerMotion.Builder()
+                        .withAccountId(accountId)
+                        .withExternalTrackerId(id2)
+                        .withTimestampMillis(firstTime.plusMinutes(3).getMillis())
+                        .withOffsetMillis(offsetMillis)
+                        .withValue(4)
+                        .build()
+        );
+
+        final int successfulInserts = pillDataDAODynamoDB.batchInsertTrackerMotionData(trackerMotions, trackerMotions.size());
+        assertThat(successfulInserts, is(trackerMotions.size()));
+
+        final TrackerMotion latestId2 = pillDataDAODynamoDB.getMostRecent(id2, accountId, firstTime.plusMinutes(5)).get();
+        assertThat(latestId2.externalTrackerId, is(id2));
+        assertThat(latestId2.dateTimeUTC(), is(firstTime.plusMinutes(3)));
+
+        final TrackerMotion latestId1 = pillDataDAODynamoDB.getMostRecent(id1, accountId, firstTime.plusMinutes(5)).get();
+        assertThat(latestId1.externalTrackerId, is(id1));
+        assertThat(latestId1.dateTimeUTC(), is(firstTime.plusMinutes(2)));
+
+        assertThat(pillDataDAODynamoDB.getMostRecent(id1, accountId, firstTime.minusMinutes(1)), is(Optional.<TrackerMotion>absent()));
+    }
+
 }
