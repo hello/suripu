@@ -11,25 +11,21 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.ObjectGraphRoot;
-import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.QueueName;
-import com.hello.suripu.core.db.*;
-import com.hello.suripu.core.db.util.JodaArgumentFactory;
+import com.hello.suripu.core.db.FeatureStore;
+import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
+import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
+import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.workers.framework.WorkerRolloutModule;
 import com.yammer.dropwizard.cli.ConfiguredCommand;
 import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.db.ManagedDataSource;
-import com.yammer.dropwizard.db.ManagedDataSourceFactory;
-import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
-import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
-import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
-import com.yammer.dropwizard.jdbi.args.OptionalArgumentFactory;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,21 +48,15 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
     @Override
     public void run(final Bootstrap<AlarmWorkerConfiguration> bootstrap, final Namespace namespace, final AlarmWorkerConfiguration configuration) throws Exception {
 
-
-        final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
-        final ManagedDataSource dataSource = managedDataSourceFactory.build(configuration.getSensorsDB());
-
-        final DBI sensorsDBI = new DBI(dataSource);
-        sensorsDBI.registerArgumentFactory(new OptionalArgumentFactory(configuration.getSensorsDB().getDriverClass()));
-        sensorsDBI.registerContainerFactory(new ImmutableListContainerFactory());
-        sensorsDBI.registerContainerFactory(new ImmutableSetContainerFactory());
-        sensorsDBI.registerContainerFactory(new OptionalContainerFactory());
-        sensorsDBI.registerArgumentFactory(new JodaArgumentFactory());
-
-        final TrackerMotionDAO trackerMotionDAO = sensorsDBI.onDemand(TrackerMotionDAO.class);
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
 
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider);
+
+        final AmazonDynamoDB pillDataDynamoDBClient = dynamoDBClientFactory.getForEndpoint(
+                configuration.getPillDataDynamoDBConfiguration().getEndpoint());
+        final PillDataDAODynamoDB pillDataDAODynamoDB = new PillDataDAODynamoDB(
+                pillDataDynamoDBClient,
+                configuration.getPillDataDynamoDBConfiguration().getTableName());
 
         final AmazonDynamoDB mergedUserInfoDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getAlarmDBConfiguration().getEndpoint());
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(mergedUserInfoDynamoDBClient,
@@ -129,7 +119,7 @@ public class AlarmWorkerCommand extends ConfiguredCommand<AlarmWorkerConfigurati
         final IRecordProcessorFactory factory = new AlarmRecordProcessorFactory(mergedUserInfoDynamoDB,
                 scheduledRingTimeHistoryDAODynamoDB,
                 smartAlarmLoggerDynamoDB,
-                trackerMotionDAO,
+                pillDataDAODynamoDB,
                 configuration,
                 senseIdLastProcessed);
         final Worker worker = new Worker(factory, kinesisConfig);
