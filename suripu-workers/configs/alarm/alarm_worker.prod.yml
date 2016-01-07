@@ -111,3 +111,8 @@ smart_alarm_log_db:
   endpoint : http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: prod_smart_alarm_log
+
+pill_data_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: prod_pill_data

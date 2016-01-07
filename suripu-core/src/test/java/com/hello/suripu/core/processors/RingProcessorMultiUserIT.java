@@ -13,9 +13,9 @@ import com.google.common.io.Resources;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -59,7 +59,7 @@ public class RingProcessorMultiUserIT {
     private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB = mock(SmartAlarmLoggerDynamoDB.class);
 
     private final DeviceDAO deviceDAO = mock(DeviceDAO.class);
-    private final TrackerMotionDAO trackerMotionDAO = mock(TrackerMotionDAO.class);
+    private final PillDataDAODynamoDB pillDataDAODynamoDB = mock(PillDataDAODynamoDB.class);
 
     private final String testDeviceId = "test morpheus";
     private final List<UserInfo> userInfoList = new ArrayList<>();
@@ -90,7 +90,7 @@ public class RingProcessorMultiUserIT {
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions));
 
         this.awsCredentials = new BasicAWSCredentials("FAKE_AWS_KEY", "FAKE_AWS_SECRET");
@@ -130,7 +130,7 @@ public class RingProcessorMultiUserIT {
         return RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.scheduledRingTimeHistoryDAODynamoDB,
                 this.smartAlarmLoggerDynamoDB,
-                this.trackerMotionDAO,
+                this.pillDataDAODynamoDB,
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
@@ -204,20 +204,20 @@ public class RingProcessorMultiUserIT {
         final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(2, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions2));
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
         final DateTime dataCollectionTimeLocalUTC1 = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC1 = dataCollectionTimeLocalUTC1.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(2, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
                 .thenReturn(ImmutableList.copyOf(motions2));
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
@@ -225,10 +225,10 @@ public class RingProcessorMultiUserIT {
         final DateTime dataCollectionTimeLocalUTC3 = new DateTime(2014, 9, 23, 8, 22, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC3 = dataCollectionTimeLocalUTC3.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(2, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
                 .thenReturn(ImmutableList.copyOf(motions2));
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
@@ -392,20 +392,20 @@ public class RingProcessorMultiUserIT {
         final DateTime dataCollectionTimeLocalUTC = new DateTime(2014, 9, 23, 8, 21, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(2, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions2));
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
         final DateTime dataCollectionTimeLocalUTC1 = new DateTime(2014, 9, 23, 8, 0, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC1 = dataCollectionTimeLocalUTC1.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(2, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
                 .thenReturn(ImmutableList.copyOf(motions2));
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC1, dataCollectionTimeLocalUTC1))
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
@@ -413,10 +413,10 @@ public class RingProcessorMultiUserIT {
         final DateTime dataCollectionTimeLocalUTC3 = new DateTime(2014, 9, 23, 8, 22, 0, 0, DateTimeZone.UTC);
         final DateTime startQueryTimeLocalUTC3 = dataCollectionTimeLocalUTC3.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(2, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
                 .thenReturn(ImmutableList.copyOf(motions2));
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC3, dataCollectionTimeLocalUTC3))
                 .thenReturn(ImmutableList.copyOf(motions1));
 
 
@@ -479,7 +479,7 @@ public class RingProcessorMultiUserIT {
         final DateTime dataCollectionTimeLocalUTCAfterSmartRing = new DateTime(actualRingTime.getYear(), actualRingTime.getMonthOfYear(),
                 actualRingTime.getDayOfMonth(), actualRingTime.getHourOfDay(),
                 actualRingTime.getMinuteOfHour() + 1, 0, 0, DateTimeZone.UTC);
-        when(this.trackerMotionDAO.getBetweenLocalUTC(2, dataCollectionTimeLocalUTCAfterSmartRing.minusHours(8),
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(2, dataCollectionTimeLocalUTCAfterSmartRing.minusHours(8),
                 dataCollectionTimeLocalUTCAfterSmartRing))
                 .thenReturn(ImmutableList.copyOf(motions1));
 

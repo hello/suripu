@@ -8,9 +8,9 @@ import com.hello.suripu.algorithm.core.DataSource;
 import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.event.SleepCycleAlgorithm;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.RingTime;
@@ -80,7 +80,7 @@ public class RingProcessor {
     public static RingTime updateAndReturnNextRingTimeForSense(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                                                final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                                                final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
-                                                               final TrackerMotionDAO trackerMotionDAO,
+                                                               final PillDataDAODynamoDB pillDataDAODynamoDB,
                                                                final String morpheusId,
                                                                final DateTime currentTimeNotAligned,
                                                                final int smartAlarmProcessAheadInMinutes,
@@ -125,7 +125,7 @@ public class RingProcessor {
                             slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                             nextRingTimeFromWorker, nextRingTimeFromTemplate,
                             userInfo,
-                            trackerMotionDAO,
+                            pillDataDAODynamoDB,
                             mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB,
                             feature);
 
@@ -141,7 +141,7 @@ public class RingProcessor {
                         slidingWindowSizeInMinutes, lightSleepThreshold, smartAlarmProcessAheadInMinutes,
                         nextRingTimeFromWorker, nextRingTimeFromTemplate,
                         userInfo,
-                        trackerMotionDAO,
+                        pillDataDAODynamoDB,
                         mergedUserInfoDynamoDB, smartAlarmLoggerDynamoDB,
                         feature);
 
@@ -202,10 +202,10 @@ public class RingProcessor {
     protected static Optional<RingTime> getProgressiveRingTime(final long accountId,
                                                                final DateTime nowAlignedToStartOfMinute,
                                                                final RingTime nextRingTimeFromWorker,
-                                                               final TrackerMotionDAO trackerMotionDAO){
+                                                               final PillDataDAODynamoDB pillDataDAODynamoDB){
         final DateTime dataCollectionBeginTime = nowAlignedToStartOfMinute.minusMinutes(PROGRESSIVE_MOTION_WINDOW_MIN);
 
-        final List<TrackerMotion> motionWithinProgressiveWindow = trackerMotionDAO.getBetween(accountId,
+        final List<TrackerMotion> motionWithinProgressiveWindow = pillDataDAODynamoDB.getBetween(accountId,
                 dataCollectionBeginTime, nowAlignedToStartOfMinute.plusMinutes(1));
 
         if(motionWithinProgressiveWindow.isEmpty()){
@@ -237,7 +237,7 @@ public class RingProcessor {
                                                                    final RingTime nextRingTimeFromWorker,
                                                                    final RingTime nextRingTimeFromTemplate,
                                                                    final UserInfo userInfo,
-                                                                   final TrackerMotionDAO trackerMotionDAO,
+                                                                   final PillDataDAODynamoDB pillDataDAODynamoDB,
                                                                    final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                                                    final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                                                    final RolloutClient feature){
@@ -251,7 +251,7 @@ public class RingProcessor {
                 final Optional<RingTime> progressiveRingTimeOptional = getProgressiveRingTime(userInfo.accountId,
                         currentTimeAlignedToStartOfMinute,
                         nextRingTimeFromWorker,
-                        trackerMotionDAO);
+                        pillDataDAODynamoDB);
                 if(progressiveRingTimeOptional.isPresent()){
                     mergedUserInfoDynamoDB.setRingTime(userInfo.deviceId, userInfo.accountId, progressiveRingTimeOptional.get());
                     smartAlarmLoggerDynamoDB.log(userInfo.accountId, new DateTime(0, DateTimeZone.UTC),
@@ -333,7 +333,7 @@ public class RingProcessor {
                     userInfo.timeZone.get(),
                     nextRingTimeFromTemplate,
                     slidingWindowSizeInMinutes, lightSleepThreshold,
-                    trackerMotionDAO,
+                    pillDataDAODynamoDB,
                     smartAlarmLoggerDynamoDB,
                     feature);
 
@@ -424,7 +424,7 @@ public class RingProcessor {
                                                            final RingTime nextRegularRingTime,
                                                            final int slidingWindowSizeInMinutes,
                                                            final float lightSleepThreshold,
-                                                           final TrackerMotionDAO trackerMotionDAO,
+                                                           final PillDataDAODynamoDB pillDataDAODynamoDB,
                                                            final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
                                                            final RolloutClient feature){
         final DateTime dataCollectionTime = new DateTime(now, timeZone);
@@ -440,7 +440,7 @@ public class RingProcessor {
 
         // Get the end time for pill data select.
         final DateTime selectStartTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
-        final List<TrackerMotion> pillData = trackerMotionDAO.getBetweenLocalUTC(accountId, selectStartTimeLocalUTC, dataCollectionTimeLocalUTC);
+        final List<TrackerMotion> pillData = pillDataDAODynamoDB.getBetweenLocalUTC(accountId, selectStartTimeLocalUTC, dataCollectionTimeLocalUTC);
         long nextRingTimeMillis;
 
         if (pillData.size() == 0) {

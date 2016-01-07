@@ -37,15 +37,6 @@ public class AlarmWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("sensors_db")
-    private DatabaseConfiguration sensorsDB = new DatabaseConfiguration();
-
-    public DatabaseConfiguration getSensorsDB() {
-        return sensorsDB;
-    }
-
-    @Valid
-    @NotNull
     @JsonProperty("light_sleep_init_threshold")
     private Float lightSleepThreshold;
 
@@ -111,6 +102,12 @@ public class AlarmWorkerConfiguration extends WorkerConfiguration {
     public DynamoDBConfiguration getFeaturesDynamoDBConfiguration(){
         return this.featuresDynamoDBConfiguration;
     }
+
+    @Valid
+    @NotNull
+    @JsonProperty("pill_data_db")
+    private DynamoDBConfiguration pillDataDynamoDBConfiguration;
+    public DynamoDBConfiguration getPillDataDynamoDBConfiguration() { return this.pillDataDynamoDBConfiguration; }
 
 
     @Valid

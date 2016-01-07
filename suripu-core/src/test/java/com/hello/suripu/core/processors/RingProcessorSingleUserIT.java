@@ -12,9 +12,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.hello.suripu.api.output.OutputProtos;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.models.Alarm;
 import com.hello.suripu.core.models.AlarmSound;
 import com.hello.suripu.core.models.RingTime;
@@ -55,7 +55,7 @@ public class RingProcessorSingleUserIT {
     private AmazonDynamoDBClient amazonDynamoDBClient;
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = mock(MergedUserInfoDynamoDB.class);
 
-    private final TrackerMotionDAO trackerMotionDAO = mock(TrackerMotionDAO.class);
+    private final PillDataDAODynamoDB pillDataDAODynamoDB = mock(PillDataDAODynamoDB.class);
 
     private final String testDeviceId = "test morpheus";
     private final String ringTimeTableName = "ringtime_test2";
@@ -101,7 +101,7 @@ public class RingProcessorSingleUserIT {
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(motions));
     }
 
@@ -175,7 +175,7 @@ public class RingProcessorSingleUserIT {
         return RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                 this.scheduledRingTimeHistoryDAODynamoDB,
                 this.smartAlarmLoggerDynamoDB,
-                this.trackerMotionDAO,
+                this.pillDataDAODynamoDB,
                 this.testDeviceId,
                 dataCollectionTime,
                 20,
@@ -192,7 +192,7 @@ public class RingProcessorSingleUserIT {
             last5MinsMotion.add(new TrackerMotion(0, 1L, 1L, currentTime.getMillis(), 7000, 0, 0L, 0L, 0L));
             currentTime = currentTime.minusMinutes(1);
         }
-        when(trackerMotionDAO.getBetween(1L, queryStart, queryEnd.plusMinutes(1))).thenReturn(ImmutableList.copyOf(last5MinsMotion));
+        when(pillDataDAODynamoDB.getBetween(1L, queryStart, queryEnd.plusMinutes(1))).thenReturn(ImmutableList.copyOf(last5MinsMotion));
     }
 
     @Test
@@ -505,7 +505,7 @@ public class RingProcessorSingleUserIT {
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(Collections.<TrackerMotion>emptyList()));
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
@@ -660,7 +660,7 @@ public class RingProcessorSingleUserIT {
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(Collections.<TrackerMotion>emptyList()));
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
@@ -710,7 +710,7 @@ public class RingProcessorSingleUserIT {
         final DateTime dataCollectionTimeLocalUTC = alarmDeadlineLocalUTC.minusMinutes(20);
         final DateTime startQueryTimeLocalUTC = dataCollectionTimeLocalUTC.minusHours(8);
 
-        when(this.trackerMotionDAO.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
+        when(this.pillDataDAODynamoDB.getBetweenLocalUTC(1, startQueryTimeLocalUTC, dataCollectionTimeLocalUTC))
                 .thenReturn(ImmutableList.copyOf(Collections.<TrackerMotion>emptyList()));
 
         final DateTime deadline = new DateTime(2014, 9, 23, 8, 20, DateTimeZone.forID("America/Los_Angeles"));
