@@ -20,6 +20,7 @@ import com.hello.suripu.app.cli.MigrateDeviceDataCommand;
 import com.hello.suripu.app.cli.MigratePillHeartbeatCommand;
 import com.hello.suripu.app.cli.MovePillDataToDynamoDBCommand;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
+import com.hello.suripu.app.cli.SQSWorkerCommand;
 import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
 import com.hello.suripu.app.modules.RolloutAppModule;
@@ -154,6 +155,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         bootstrap.addCommand(new MigratePillHeartbeatCommand());
         bootstrap.addCommand(new MigrateDeviceDataCommand());
         bootstrap.addCommand(new MovePillDataToDynamoDBCommand());
+        bootstrap.addCommand(new SQSWorkerCommand());
     }
 
     @Override
