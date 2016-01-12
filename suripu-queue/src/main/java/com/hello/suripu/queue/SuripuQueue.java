@@ -18,12 +18,6 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
         new SuripuQueue().run(args);
     }
 
-//    @Override
-//    public void initialize(final Bootstrap<SuripuQueueConfiguration> bootstrap) {
-//
-//        bootstrap.addCommand(new TimelineQueueWorkerCommand());
-//    }
-
     @Override
     public void initialize(Bootstrap<SuripuQueueConfiguration> bootstrap) {
         bootstrap.addCommand(new TimelineQueueWorkerCommand(this, "timeline_generator", "generate timeline"));

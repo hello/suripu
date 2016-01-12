@@ -22,11 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Random;
 
-/**
- * Created by kingshy on 1/11/16.
- */
 public class TimelineQueueProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineQueueProcessor.class);
 
@@ -65,14 +61,17 @@ public class TimelineQueueProcessor {
     }
 
 
-    public void sendMessages(final long accountId, final int numMessage) {
+    /**
+     * Add last numdays from now to the queue
+     * @param accountId user
+     * @param numDays no. of days to generate
+     */
+    public void sendMessages(final long accountId, final int numDays) {
         final TimelineQueue.SQSMessage.Builder messageBuilder = TimelineQueue.SQSMessage.newBuilder();
         final DateTime now = DateTime.now().withTimeAtStartOfDay();
-        final Random rnd = new Random();
 
-        for (int i = 0; i < numMessage; i++) {
-            final int randomInt = rnd.nextInt(60); // last 60 days
-            final DateTime targetDate = now.minusDays(randomInt);
+        for (int i = 2; i <= numDays; i++) {
+            final DateTime targetDate = now.minusDays(i);
             final String date = DateTimeUtil.dateToYmdString(targetDate);
             LOGGER.debug("action=add-message num={} target_date={}", i, date);
 

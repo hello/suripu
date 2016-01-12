@@ -56,9 +56,8 @@ public class SuripuQueueConfiguration extends Configuration {
     @NotNull
     @JsonProperty("sleep_stats_version")
     private String sleepStatsVersion;
-    public String getSleepStatsVersion() {
-        return this.sleepStatsVersion;
-    }
+    public String getSleepStatsVersion() { return this.sleepStatsVersion; }
+
     @Valid
     @NotNull
     @JsonProperty("timeline_model_ensembles")

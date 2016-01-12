@@ -23,9 +23,6 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("sensors_db")
     private DatabaseConfiguration sensorsDB = new DatabaseConfiguration();
 
-    public SuripuAppConfiguration() {
-    }
-
     public DatabaseConfiguration getSensorsDB() {
         return sensorsDB;
     }
