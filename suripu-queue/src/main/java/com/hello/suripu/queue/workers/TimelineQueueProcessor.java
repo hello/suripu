@@ -13,7 +13,7 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hello.suripu.api.sqs.TimelineQueue;
+import com.hello.suripu.api.queue.TimelineQueueProtos;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.queue.configuration.SQSConfiguration;
 import org.apache.commons.codec.binary.Base64;
@@ -62,27 +62,30 @@ public class TimelineQueueProcessor {
 
 
     /**
-     * Add last numdays from now to the queue
+     * Add last numdays from now to the queue -- used for debugging
      * @param accountId user
      * @param numDays no. of days to generate
      */
     public void sendMessages(final long accountId, final int numDays) {
-        final TimelineQueue.SQSMessage.Builder messageBuilder = TimelineQueue.SQSMessage.newBuilder();
+        final TimelineQueueProtos.Message.Builder messageBuilder = TimelineQueueProtos.Message.newBuilder();
         final DateTime now = DateTime.now().withTimeAtStartOfDay();
 
         for (int i = 2; i <= numDays; i++) {
             final DateTime targetDate = now.minusDays(i);
             final String date = DateTimeUtil.dateToYmdString(targetDate);
             LOGGER.debug("action=add-message num={} target_date={}", i, date);
-
-            final TimelineQueue.SQSMessage SQSMessage = messageBuilder
-                    .setAccountId(accountId)
-                    .setTargetDate(date)
-                    .setTimestamp(DateTime.now().getMillis()).build();
-
-            final String message = encodeMessage(SQSMessage);
-            sqsClient.sendMessage(new SendMessageRequest(sqsQueueUrl, message));
+            sendMessage(accountId, date);
         }
+    }
+
+    public void sendMessage(final Long accountId, final String targetDate) {
+        final TimelineQueueProtos.Message queueMessage = TimelineQueueProtos.Message.newBuilder()
+                .setAccountId(accountId)
+                .setTargetDate(targetDate)
+                .setTimestamp(DateTime.now().getMillis()).build();
+
+        final String message = encodeMessage(queueMessage);
+        sqsClient.sendMessage(new SendMessageRequest(sqsQueueUrl, message));
     }
 
     public List<TimelineMessage> receiveMessages() {
@@ -105,12 +108,12 @@ public class TimelineQueueProcessor {
             LOGGER.debug("action=get-sqs-message-info id={}", messageId);
 
             // decode message
-            final Optional<TimelineQueue.SQSMessage> optionalMsg = decodeMessage(message.getBody());
+            final Optional<TimelineQueueProtos.Message> optionalMsg = decodeMessage(message.getBody());
 
             if (optionalMsg.isPresent()) {
-                final TimelineQueue.SQSMessage sqsMsg = optionalMsg.get();
-                final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(sqsMsg.getTargetDate());
-                final Long accountId = sqsMsg.getAccountId();
+                final TimelineQueueProtos.Message msg = optionalMsg.get();
+                final DateTime targetDate = DateTimeUtil.ymdStringToDateTime(msg.getTargetDate());
+                final Long accountId = msg.getAccountId();
                 LOGGER.debug("action=decode-protobuf-message account_id={}, date={}", accountId, targetDate);
 
                 final TimelineMessage timelineMessage = new TimelineMessage(accountId, targetDate, messageId, messageReceiptHandle);
@@ -143,17 +146,16 @@ public class TimelineQueueProcessor {
         this.sqsClient.deleteMessageBatch(new DeleteMessageBatchRequest(sqsQueueUrl, processedMessages));
     }
 
-    private static String encodeMessage(final TimelineQueue.SQSMessage message) {
+    private static String encodeMessage(final TimelineQueueProtos.Message message) {
         final byte [] bytes = message.toByteArray();
         return Base64.encodeBase64URLSafeString(bytes);
     }
 
-    private static Optional<TimelineQueue.SQSMessage> decodeMessage(final String message) {
-        final TimelineQueue.SQSMessage sqsMessage;
+    private static Optional<TimelineQueueProtos.Message> decodeMessage(final String message) {
         try {
-            sqsMessage = TimelineQueue.SQSMessage.parseFrom(Base64.decodeBase64(message));
+            final TimelineQueueProtos.Message decodedMessage = TimelineQueueProtos.Message.parseFrom(Base64.decodeBase64(message));
             // LOGGER.debug("action=print-decoded-message value={}", sqsMessage.toString());
-            return Optional.of(sqsMessage);
+            return Optional.of(decodedMessage);
         } catch (InvalidProtocolBufferException pbe) {
             LOGGER.error(pbe.getMessage());
         }
