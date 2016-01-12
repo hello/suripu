@@ -2,7 +2,6 @@ package com.hello.suripu.app.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.core.configuration.PushNotificationsConfiguration;
 import com.hello.suripu.coredw.configuration.DynamoDBConfiguration;
 import com.hello.suripu.coredw.configuration.EmailConfiguration;
@@ -437,45 +436,4 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("provision_key")
     private S3BucketConfiguration provisionKeyConfiguration = S3BucketConfiguration.create("hello-secure", "hello-pvt.pem");
     public S3BucketConfiguration getProvisionKeyConfiguration() { return provisionKeyConfiguration; }
-
-    @Valid
-    @JsonProperty("sqs_queue")
-    private String sqsQueueName;
-    public String getSqsQueueName() { return this.sqsQueueName; }
-
-    @Valid
-    @JsonProperty("sqs_max_connections")
-    private int sqsMaxConnections;
-    public int getSqsMaxConnections() { return this.sqsMaxConnections; }
-
-    @Valid
-    @JsonProperty("sqs_max_messages_read")
-    private int sqsMaxMessage;
-    public int getSqsMaxMessage() { return this.sqsMaxMessage; }
-
-    @Valid
-    @JsonProperty("sqs_wait_time_seconds")
-    private int sqsWaitTimeSeconds;
-    public int getSqsWaitTimeSeconds() { return this.sqsWaitTimeSeconds; }
-
-    @Valid
-    @JsonProperty("sqs_visibility_timeout_seconds")
-    private int sqsVisibilityTimeoutSeconds;
-    public int getSqsVisibilityTimeoutSeconds() { return this.sqsVisibilityTimeoutSeconds; }
-
-    @Valid
-    @JsonProperty("sqs_sleep_stats_version")
-    private String sqsSleepStatsVersion;
-    public String getSqsSleepStatsVersion() {
-        return this.sqsSleepStatsVersion;
-    }
-
-    @Valid
-    @NotNull
-    @JsonProperty("sqs_dynamodb")
-    private NewDynamoDBConfiguration dynamoDBConfiguration;
-    public NewDynamoDBConfiguration dynamoDBConfiguration(){
-        return dynamoDBConfiguration;
-    }
-
 }
