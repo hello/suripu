@@ -96,7 +96,7 @@ GRANT ALL PRIVILEGES ON SEQUENCE oauth_tokens_id_seq TO ingress_user;
 
 
 --
--- SCORES
+-- SCORES -- not in common as of 01/13/2016
 --
 
 CREATE TABLE account_scores(
@@ -185,20 +185,6 @@ CREATE TABLE sleep_feedback(
 GRANT ALL PRIVILEGES ON sleep_feedback TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sleep_feedback_id_seq TO ingress_user;
 
-CREATE TABLE account_location (
-    id SERIAL PRIMARY KEY,
-    account_id BIGINT NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    latitude DOUBLE PRECISION NOT NULL,
-    ip_address INET,
-    city varchar(100),
-    country varchar(2), -- see http://en.wikipedia.org/wiki/ISO_3166-1
-    created TIMESTAMP default current_timestamp
-);
-
-GRANT ALL PRIVILEGES ON account_location TO ingress_user;
-GRANT ALL PRIVILEGES ON SEQUENCE account_location_id_seq TO ingress_user;
-
 -- for data science-y stuff
 
 CREATE TYPE USER_LABEL_TYPE AS ENUM ('make_bed', 'went_to_bed', 'fall_asleep',
@@ -255,10 +241,16 @@ GRANT ALL PRIVILEGES ON sense_colors TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE sense_colors_id_seq TO ingress_user;
 
 
+-- not in common as of 01/13/2016
+CREATE TABLE tracking (id SERIAL PRIMARY KEY,
+  sense_id VARCHAR(255),
+  internal_sense_id BIGINT,
+  account_id BIGINT,
+  category SMALLINT,
+  created_at TIMESTAMP
+);
 
-CREATE TABLE tracking (id SERIAL PRIMARY KEY, sense_id VARCHAR(255), internal_sense_id BIGINT, account_id BIGINT, category SMALLINT, created_at TIMESTAMP);
 CREATE UNIQUE index tracking_uniq_device_id_category on tracking(internal_sense_id, category);
-
 
 GRANT ALL PRIVILEGES ON tracking TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE tracking_id_seq TO ingress_user;

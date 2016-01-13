@@ -1,6 +1,37 @@
-
+-- NOTE!!! Put all updates to questions related tables here
 -- changes to current tables.
--- create_questions will have the latest for one-time deploy to prod
+
+
+
+----- Example to create new question
+
+--INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+--VALUES (
+--  'No! Try not. Do, or do not. There is no try.', -- text
+--  'EN', -- lang
+--  'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+--  'choice', -- response_type
+--  '{"OK Jedi Master!", "I have a bad feeling about this."}', -- text responses
+--  null, -- dependency
+--  'anytime' -- ask_time
+--);
+
+---- insert the response text into response_choices
+
+--INSERT INTO response_choices (question_id, response_text) (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 1));
+
+---- update questions with the right response_ids
+
+--UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+--  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+--  FROM response_choices where question_id IN
+--  (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
+--WHERE questions.id = S.question_id;
+
+----- END Example
+
+
+
 
 CREATE TYPE ACCOUNT_INFO_TYPE AS ENUM(
     'sleep_temperature',
@@ -102,3 +133,5 @@ responses_ids = '{29, 30, 31, 32, 33}' WHERE id = 9;
 -- grammar!!
 update questions SET question_text = 'Have you ever woken up gasping for breath?' where id = 13;
 update questions set question_text = 'Have you been diagnosed with any sleep disorders?' where id = 12;
+
+

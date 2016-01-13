@@ -1,3 +1,7 @@
+-- Keeping track of trackers for each users
+-- Normally should only be one / account
+-- but might want to support multiple for debug/admin purposes
+
 CREATE TABLE account_tracker_map(
     id BIGSERIAL PRIMARY KEY,
     account_id BIGINT,
