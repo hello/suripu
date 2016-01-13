@@ -16,7 +16,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.SingleValueResult;
  */
 
 
-public abstract class UserTimelineTestGroupDAOImpl {
+public abstract class UserTimelineTestGroupDAOImpl implements UserTimelineTestGroupDAO {
 
     @SingleValueResult(Long.class)
     @SqlQuery("SELECT group_id FROM user_timeline_test_group WHERE account_id = :account_id AND utc_ts < :time_to_query_utc ORDER BY utc_ts DESC limit 1;")
