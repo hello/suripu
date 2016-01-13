@@ -81,6 +81,18 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 .nargs("?")
                 .required(true)
                 .help("task to perform, send or process queue messages");
+
+        // for sending messages
+        subparser.addArgument("--num_msg")
+                .nargs("?")
+                .required(false)
+                .help("number of messages to send");
+
+        subparser.addArgument("--account")
+                .nargs("?")
+                .required(false)
+                .help("number of messages to send");
+
     }
 
     @Override
@@ -109,10 +121,24 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
 
         final TimelineQueueProcessor queueProcessor = new TimelineQueueProcessor(sqsQueueUrl, sqs, sqsConfiguration);
 
+
         if (task.equalsIgnoreCase("send")) {
             // producer -- debugging, create 10 messages for testing
-            queueProcessor.sendMessages(1310L, 20);
+            Integer numMessages = 30;
+            Long accountId = 1310L;
+
+            if (namespace.getString("num_msg") != null) {
+                numMessages = Integer.valueOf(namespace.getString("num_msg"));
+            }
+
+            if (namespace.getString("account") != null) {
+                accountId = Long.valueOf(namespace.getString("account"));
+            }
+
+            queueProcessor.sendMessages(accountId, numMessages);
+
         } else {
+
             // consumer
             final int numGeneratorThreads = config.getNumGeneratorThreads();
             executor = environment.managedExecutorService("timeline_queue", numGeneratorThreads, numGeneratorThreads, 2, TimeUnit.SECONDS);

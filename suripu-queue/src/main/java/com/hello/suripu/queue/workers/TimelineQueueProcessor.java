@@ -70,7 +70,7 @@ public class TimelineQueueProcessor {
         final TimelineQueueProtos.Message.Builder messageBuilder = TimelineQueueProtos.Message.newBuilder();
         final DateTime now = DateTime.now().withTimeAtStartOfDay();
 
-        for (int i = 2; i <= numDays; i++) {
+        for (int i = 2; i <= numDays+1; i++) {
             final DateTime targetDate = now.minusDays(i);
             final String date = DateTimeUtil.dateToYmdString(targetDate);
             LOGGER.debug("action=add-message num={} target_date={}", i, date);

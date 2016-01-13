@@ -87,7 +87,7 @@ public class SuripuQueueConfiguration extends Configuration {
 
     @JsonProperty("num_generator_threads")
     @Max(10)
-    @Min(2)
+    @Min(1)
     private int numGeneratorThreads = 5;
     public int getNumGeneratorThreads() { return this.numGeneratorThreads; }
 }
