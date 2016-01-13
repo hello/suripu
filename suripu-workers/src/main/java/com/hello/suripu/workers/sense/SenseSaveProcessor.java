@@ -47,7 +47,7 @@ public class SenseSaveProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseSaveProcessor.class);
 
     public final static Integer CLOCK_SKEW_TOLERATED_IN_HOURS = 2;
-    private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 12 * 3600;
+    private final static Integer MIN_UPTIME_IN_SECONDS_FOR_CACHING = 6 * 3600;
     private final DeviceReadDAO deviceDAO;
     private final DeviceDataIngestDAO deviceDataDAO;
     private final MergedUserInfoDynamoDB mergedInfoDynamoDB;
