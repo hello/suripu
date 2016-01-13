@@ -743,13 +743,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
-        if (!this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
-            //ORIGINAL BEHAVIOR
-            if (sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
-                LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
-                sleepScore = 0;
-            }
+        //if there is no feedback, we have a "natural" timeline
+        //check if this natural timeline makes sense.  If not, set sleep score to zero.
+        if (feedbackList.isEmpty() && sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
+            LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
+            sleepScore = 0;
         }
+
 
         boolean isValidSleepScore = sleepScore > 0;
 
