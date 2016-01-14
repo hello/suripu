@@ -10,6 +10,7 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -85,7 +86,8 @@ public class TimelineQueueProcessor {
                 .setTimestamp(DateTime.now().getMillis()).build();
 
         final String message = encodeMessage(queueMessage);
-        sqsClient.sendMessage(new SendMessageRequest(sqsQueueUrl, message));
+        final SendMessageResult result = sqsClient.sendMessage(new SendMessageRequest(sqsQueueUrl, message));
+        LOGGER.debug("Sent Message Id: {}", result.getMessageId());
     }
 
     public List<TimelineMessage> receiveMessages() {

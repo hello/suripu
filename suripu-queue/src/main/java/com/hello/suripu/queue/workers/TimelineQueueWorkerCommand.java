@@ -67,6 +67,8 @@ import java.util.concurrent.TimeUnit;
 public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineQueueWorkerCommand.class);
 
+    private static int NUM_EMPTY_ITERATIONS_BEFORE_DYING = 100;
+
     private Boolean isRunning = false;
     private ExecutorService executor;
 
@@ -105,7 +107,7 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
 
         final SQSConfiguration sqsConfiguration = config.getSqsConfiguration();
         final int maxConnections = sqsConfiguration.getSqsMaxConnections();
-        final AmazonSQSAsync sqsAsync = new AmazonSQSAsyncClient(provider, new ClientConfiguration().withMaxConnections(maxConnections));
+        final AmazonSQSAsync sqsAsync = new AmazonSQSAsyncClient(provider, new ClientConfiguration().withMaxConnections(maxConnections).withConnectionTimeout(500));
         final AmazonSQSAsync sqs = new AmazonSQSBufferedAsyncClient(sqsAsync);
 
         final Region region = Region.getRegion(Regions.US_EAST_1);
@@ -161,29 +163,41 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         ObjectGraphRoot.getInstance().init(module);
 
         final TimelineProcessor timelineProcessor = createTimelineProcessor(provider, config);
+        int numEmptyQueueIterations = 0;
 
         do {
             final List<TimelineQueueProcessor.TimelineMessage> messages = queueProcessor.receiveMessages();
 
             final List<Future<Optional<TimelineQueueProcessor.TimelineMessage>>> futures = Lists.newArrayListWithCapacity(messages.size());
 
-            for (final TimelineQueueProcessor.TimelineMessage message: messages) {
-                final TimelineGenerator generator = new TimelineGenerator(timelineProcessor, message);
-                final Future<Optional<TimelineQueueProcessor.TimelineMessage>> future = executor.submit(generator);
-                futures.add(future);
-            }
-
-            final List<DeleteMessageBatchRequestEntry> processedHandlers = Lists.newArrayList();
-            for (final Future<Optional<TimelineQueueProcessor.TimelineMessage>> future: futures) {
-                final Optional<TimelineQueueProcessor.TimelineMessage> processed = future.get();
-                if (processed.isPresent()) {
-                    processedHandlers.add(new DeleteMessageBatchRequestEntry(processed.get().messageId, processed.get().messageHandler));
+            if (!messages.isEmpty()) {
+                for (final TimelineQueueProcessor.TimelineMessage message : messages) {
+                    final TimelineGenerator generator = new TimelineGenerator(timelineProcessor, message);
+                    final Future<Optional<TimelineQueueProcessor.TimelineMessage>> future = executor.submit(generator);
+                    futures.add(future);
                 }
-            }
 
-            if (!processedHandlers.isEmpty()) {
-                LOGGER.debug("action=delete-messages num={}", processedHandlers.size());
-                queueProcessor.deleteMessages(processedHandlers);
+                final List<DeleteMessageBatchRequestEntry> processedHandlers = Lists.newArrayList();
+                for (final Future<Optional<TimelineQueueProcessor.TimelineMessage>> future : futures) {
+                    final Optional<TimelineQueueProcessor.TimelineMessage> processed = future.get();
+                    if (processed.isPresent()) {
+                        processedHandlers.add(new DeleteMessageBatchRequestEntry(processed.get().messageId, processed.get().messageHandler));
+                    }
+                }
+
+                if (!processedHandlers.isEmpty()) {
+                    LOGGER.debug("action=delete-messages num={}", processedHandlers.size());
+                    queueProcessor.deleteMessages(processedHandlers);
+                }
+
+                numEmptyQueueIterations = 0;
+
+            } else {
+                numEmptyQueueIterations++;
+                LOGGER.debug("action=empty-iteration value={}", numEmptyQueueIterations);
+                if (numEmptyQueueIterations > NUM_EMPTY_ITERATIONS_BEFORE_DYING ) {
+                    isRunning = false;
+                }
             }
 
         } while (isRunning);
@@ -206,7 +220,13 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
 
-        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(provider, config.dynamoDBConfiguration());
+        final ClientConfiguration clientConfig = new ClientConfiguration()
+                .withConnectionTimeout(1000)
+                .withMaxErrorRetry(5);
+
+        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(provider,
+                clientConfig, config.dynamoDBConfiguration());
+
         final ImmutableMap<DynamoDBTableName, String> tableNames = config.dynamoDBConfiguration().tables();
 
         final AmazonDynamoDB pillDataDAODynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_DATA);
@@ -246,10 +266,6 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         /* Default model ensemble for all users  */
         final S3BucketConfiguration timelineModelEnsemblesConfig = config.getTimelineModelEnsemblesConfiguration();
         final S3BucketConfiguration seedModelConfig = config.getTimelineSeedModelConfiguration();
-
-        final ClientConfiguration clientConfig = new ClientConfiguration()
-                .withConnectionTimeout(200)
-                .withMaxErrorRetry(1);
 
         final AmazonS3 amazonS3 = new AmazonS3Client(provider, clientConfig);
         final DefaultModelEnsembleDAO defaultModelEnsembleDAO = DefaultModelEnsembleFromS3.create(amazonS3,
