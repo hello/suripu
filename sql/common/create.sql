@@ -318,7 +318,7 @@ CREATE TABLE user_timeline_test_group(
     id SERIAL PRIMARY KEY,
     account_id BIGINT,
     utc_ts TIMESTAMP,
-    group_id BIGINT);
+    group_id BIGINT NOT NULL DEFAULT 0);
 
 CREATE INDEX user_test_group_account_id_idx on user_timeline_test_group(account_id);
 

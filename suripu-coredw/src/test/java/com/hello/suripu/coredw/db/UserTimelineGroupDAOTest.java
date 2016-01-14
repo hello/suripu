@@ -39,7 +39,7 @@ public class UserTimelineGroupDAOTest {
                 "    id SERIAL PRIMARY KEY,\n" +
                 "    account_id BIGINT,\n" +
                 "    utc_ts TIMESTAMP,\n" +
-                "    group_id BIGINT);\n" +
+                "    group_id BIGINT NOT NULL DEFAULT 0);\n" +
                 "\n" +
                 "CREATE INDEX user_test_group_account_id_idx on user_timeline_test_group(account_id);";
 
