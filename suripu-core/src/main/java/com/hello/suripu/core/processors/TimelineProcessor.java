@@ -229,7 +229,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Long testGroup = getTestGroup(accountId,targetDate,sensorData.timezoneOffsetMillis);
 
         //create log with test grup
-        final TimelineLog log = new TimelineLog(accountId,targetDate.withZone(DateTimeZone.UTC).getMillis(),testGroup);
+        final TimelineLog log = new TimelineLog(accountId,targetDate.withZone(DateTimeZone.UTC).getMillis(),DateTime.now(DateTimeZone.UTC).getMillis(),testGroup);
 
 
 
