@@ -5,8 +5,6 @@ graphite:
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
   reporting_interval_in_seconds: 30
   include_metrics:
-    - org.skife
-    - xx-responses
     - com.hello
 
 

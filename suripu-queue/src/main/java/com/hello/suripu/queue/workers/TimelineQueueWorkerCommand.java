@@ -12,6 +12,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -39,6 +40,7 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
+import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
@@ -52,6 +54,9 @@ import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
 import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Meter;
+import com.yammer.metrics.reporting.GraphiteReporter;
 import net.sourceforge.argparse4j.inf.Namespace;
 import net.sourceforge.argparse4j.inf.Subparser;
 import org.skife.jdbi.v2.DBI;
@@ -98,14 +103,14 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
     }
 
     @Override
-    protected void run(Environment environment, Namespace namespace, SuripuQueueConfiguration config) throws Exception {
+    protected void run(Environment environment, Namespace namespace, SuripuQueueConfiguration configuration) throws Exception {
 
         final String task = namespace.getString("task");
 
         // setup SQS connection
         final AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
 
-        final SQSConfiguration sqsConfiguration = config.getSqsConfiguration();
+        final SQSConfiguration sqsConfiguration = configuration.getSqsConfiguration();
         final int maxConnections = sqsConfiguration.getSqsMaxConnections();
         final AmazonSQSAsync sqsAsync = new AmazonSQSAsyncClient(provider, new ClientConfiguration().withMaxConnections(maxConnections).withConnectionTimeout(500));
         final AmazonSQSAsync sqs = new AmazonSQSBufferedAsyncClient(sqsAsync);
@@ -142,31 +147,67 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         } else {
 
             // consumer
-            final int numGeneratorThreads = config.getNumGeneratorThreads();
+            final int numGeneratorThreads = configuration.getNumGeneratorThreads();
             executor = environment.managedExecutorService("timeline_queue", numGeneratorThreads, numGeneratorThreads, 2, TimeUnit.SECONDS);
             isRunning = true;
-            processMessages(queueProcessor, provider, config);
+            processMessages(queueProcessor, provider, configuration);
         }
     }
 
 
+    /**
+     * Main queue worker function
+     * @param queueProcessor - send, receive, encode and decode queue messages
+     * @param provider - aws credentials
+     * @param configuration - config object
+     * @throws Exception
+     */
+
     private void processMessages(final TimelineQueueProcessor queueProcessor,
                                  final AWSCredentialsProvider provider,
-                                 final SuripuQueueConfiguration config) throws Exception {
+                                 final SuripuQueueConfiguration configuration) throws Exception {
         // setup rollout module
-        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(provider, config.dynamoDBConfiguration());
+        final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(provider, configuration.dynamoDBConfiguration());
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
         final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient,
-                config.dynamoDBConfiguration().tables().get(DynamoDBTableName.FEATURES), "prod");
+                configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.FEATURES), "prod");
 
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
-        final TimelineProcessor timelineProcessor = createTimelineProcessor(provider, config);
+        // set up metrics
+        if (configuration.getMetricsEnabled()) {
+            final String graphiteHostName = configuration.getGraphite().getHost();
+            final String apiKey = configuration.getGraphite().getApiKey();
+            final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
+
+            final String env = (configuration.getDebug()) ? "dev" : "prod";
+            final String prefix = String.format("%s.%s.suripu-queue", apiKey, env);
+
+            final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
+            final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
+            final Joiner joiner = Joiner.on(", ");
+            LOGGER.info("Logging the following metrics: {}", joiner.join(metrics));
+            GraphiteReporter.enable(Metrics.defaultRegistry(), interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix, predicate);
+
+            LOGGER.info("Metrics enabled.");
+        } else {
+            LOGGER.warn("Metrics not enabled.");
+        }
+
+        final Meter messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "messages", "messages-processed", TimeUnit.SECONDS);
+        final Meter messagesReceived = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "messages", "messages-received", TimeUnit.SECONDS);
+        final Meter validSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "sleep-score", "valid", TimeUnit.SECONDS);
+        final Meter invalidSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "sleep-score", "invalid", TimeUnit.SECONDS);
+        final Meter noTimeline = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "timeline", "not-created", TimeUnit.SECONDS);
+
+        final TimelineProcessor timelineProcessor = createTimelineProcessor(provider, configuration);
         int numEmptyQueueIterations = 0;
 
         do {
             final List<TimelineQueueProcessor.TimelineMessage> messages = queueProcessor.receiveMessages();
+
+            messagesReceived.mark(messages.size());
 
             final List<Future<Optional<TimelineQueueProcessor.TimelineMessage>>> futures = Lists.newArrayListWithCapacity(messages.size());
 
@@ -180,13 +221,23 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 final List<DeleteMessageBatchRequestEntry> processedHandlers = Lists.newArrayList();
                 for (final Future<Optional<TimelineQueueProcessor.TimelineMessage>> future : futures) {
                     final Optional<TimelineQueueProcessor.TimelineMessage> processed = future.get();
-                    if (processed.isPresent()) {
-                        processedHandlers.add(new DeleteMessageBatchRequestEntry(processed.get().messageId, processed.get().messageHandler));
+
+                    if (!processed.isPresent()) {
+                        noTimeline.mark();
+                        continue;
+                    }
+
+                    processedHandlers.add(new DeleteMessageBatchRequestEntry(processed.get().messageId, processed.get().messageHandler));
+                    if (processed.get().sleepScore > 0) {
+                        validSleepScore.mark();
+                    } else {
+                        invalidSleepScore.mark();
                     }
                 }
 
                 if (!processedHandlers.isEmpty()) {
                     LOGGER.debug("action=delete-messages num={}", processedHandlers.size());
+                    messagesProcessed.mark(processedHandlers.size());
                     queueProcessor.deleteMessages(processedHandlers);
                 }
 

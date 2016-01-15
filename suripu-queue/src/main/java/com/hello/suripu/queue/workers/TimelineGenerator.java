@@ -36,6 +36,7 @@ public class TimelineGenerator implements Callable<Optional<TimelineQueueProcess
             } else {
                 LOGGER.debug("account {}, date {}, NO SCORE!", message.accountId, message.targetDate);
             }
+            message.setScore(timeline.score);
             return Optional.of(message);
         }
         return Optional.absent();

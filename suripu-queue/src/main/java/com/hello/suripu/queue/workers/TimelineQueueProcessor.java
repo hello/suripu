@@ -27,30 +27,37 @@ import java.util.List;
 public class TimelineQueueProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineQueueProcessor.class);
 
-    final private String sqsQueueUrl;
+    private final String sqsQueueUrl;
 
-    final private AmazonSQSAsync sqsClient;
+    private final AmazonSQSAsync sqsClient;
 
-    final private int maxMessages;
-    final private int visibilityTimeoutSeconds;
-    final private int waitTimeSeconds;
+    private final int maxMessages;
+    private final int visibilityTimeoutSeconds;
+    private final int waitTimeSeconds;
 
 
     public static class TimelineMessage {
+        public static Integer DEFAULT_SLEEP_SCORE = 0;
+
         public Long accountId;
         public DateTime targetDate;
         public String messageHandler;
         public String messageId;
+        public Integer sleepScore;
 
         public TimelineMessage(final Long accountId,
                                final DateTime targetDate,
                                final String messageId,
-                               final String messageHandler) {
+                               final String messageHandler,
+                               final Integer sleepScore) {
             this.accountId = accountId;
             this.targetDate = targetDate;
             this.messageId = messageId;
             this.messageHandler = messageHandler;
+            this.sleepScore = sleepScore;
         }
+
+        public void setScore(final Integer score) { this.sleepScore = score; }
     }
 
     public TimelineQueueProcessor(final String sqsQueueUrl, final AmazonSQSAsync sqsClient, final SQSConfiguration config) {
@@ -118,8 +125,11 @@ public class TimelineQueueProcessor {
                 final Long accountId = msg.getAccountId();
                 LOGGER.debug("action=decode-protobuf-message account_id={}, date={}", accountId, targetDate);
 
-                final TimelineMessage timelineMessage = new TimelineMessage(accountId, targetDate, messageId, messageReceiptHandle);
-                decodedMessages.add(timelineMessage);
+                decodedMessages.add(new TimelineMessage(accountId,
+                        targetDate,
+                        messageId,
+                        messageReceiptHandle,
+                        TimelineMessage.DEFAULT_SLEEP_SCORE));
             }
         }
         return decodedMessages;
