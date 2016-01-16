@@ -55,7 +55,6 @@ public class TemperatureHumidity {
 
     public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId,
                                                     final DeviceDataInsightQueryDAO deviceDataDAO,
-                                                    final AccountInfo.SleepTempType tempPref,
                                                     final TemperatureUnit tempUnit, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
@@ -81,12 +80,11 @@ public class TemperatureHumidity {
             sensorData = Lists.newArrayList();
         }
 
-        final Optional<InsightCard> card = processData(accountId, sensorData, tempPref, tempUnit);
+        final Optional<InsightCard> card = processData(accountId, sensorData, tempUnit);
         return card;
     }
 
     public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data,
-                                                    final AccountInfo.SleepTempType tempPref,
                                                     final TemperatureUnit tempUnit) {
 
         if (data.isEmpty()) {

@@ -369,9 +369,8 @@ public class InsightProcessor {
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
                 break;
             case TEMPERATURE:
-                final AccountInfo.SleepTempType tempPref = this.accountInfoProcessor.checkTemperaturePreference(accountId);
                 final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
-                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, tempPref, tempUnit, sleepStatsDAODynamoDB);
+                insightCardOptional = TemperatureHumidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, tempUnit, sleepStatsDAODynamoDB);
                 break;
             case WAKE_VARIANCE:
                 final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
