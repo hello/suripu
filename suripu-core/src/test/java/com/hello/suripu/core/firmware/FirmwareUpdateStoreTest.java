@@ -1,6 +1,8 @@
 package com.hello.suripu.core.firmware;
 
 
+import com.google.common.base.Optional;
+
 import com.hello.suripu.api.output.OutputProtos;
 
 import java.util.ArrayList;
@@ -51,5 +53,55 @@ public class FirmwareUpdateStoreTest {
         now.setTime(futureSecs * 1001);
         assertThat(FirmwareUpdateStore.isExpiredPresignedUrl(validUrl, now), is(true));
         assertThat(FirmwareUpdateStore.isExpiredPresignedUrl(validUrl, null), is(true));
+    }
+
+    @Test
+    public void testGetFirmwareFromBuildInfo() {
+        final String oldFirmwareBuildInfo = "version: 2ea40f21\n" +
+            "last_tag: 1.0.5.3.4\n" +
+            "travis_branch: 1.0.5.3.4\n" +
+            "travis_tag: 1.0.5.3.4\n" +
+            "travis_build_id: 19787387\n" +
+            "travis_build_number: 3278\n" +
+            "travis_job_id: 30690259\n" +
+            "travis_job_number: 3278.1";
+        final String newFirmwareBuildInfo = "version: 3300\n" +
+            "last_tag: 1.0.5.3.3\n" +
+            "travis_branch: alphas\n" +
+            "travis_tag: \n" +
+            "travis_build_id: 19896757\n" +
+            "travis_build_number: 3300\n" +
+            "travis_job_id: 30867510\n" +
+            "travis_job_number: 3300.1";
+        final String newFirmwareBadBuildInfo = "version: 3300\n" +
+            "last_tag: 1.0.5.3.3\n" +
+            "travis_branch: alphas\n" +
+            "travis_tag: \n" +
+            "travis_build_id: 19896757\n" +
+            "travis_build_number: 9999\n" +
+            "travis_job_id: 30867510\n" +
+            "travis_job_number: 3300.1";
+        final String badBuildInfo = "last_tag: 1.0.5.3.3\n" +
+            "travis_branch: alphas\n" +
+            "travis_tag: \n" +
+            "travis_build_id: 19896757\n" +
+            "travis_build_number: 9999\n" +
+            "travis_job_id: 30867510\n" +
+            "travis_job_number: 3300.1";
+
+        Optional<Integer> fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(oldFirmwareBuildInfo);
+        assertThat(fwVersion.isPresent(), is(true));
+        assertThat(fwVersion.get(), is(782503713));
+
+        fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(newFirmwareBuildInfo);
+        assertThat(fwVersion.isPresent(), is(true));
+        assertThat(fwVersion.get(), is(3300));
+
+        fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(newFirmwareBadBuildInfo);
+        assertThat(fwVersion.isPresent(), is(true));
+        assertThat(fwVersion.get(), is(13056));
+
+        fwVersion = FirmwareUpdateStore.getFirmwareVersionFromBuildInfo(badBuildInfo);
+        assertThat(fwVersion.isPresent(), is(false));
     }
 }

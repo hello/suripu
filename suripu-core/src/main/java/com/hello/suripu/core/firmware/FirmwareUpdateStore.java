@@ -13,6 +13,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
 import com.google.protobuf.ByteString;
@@ -142,15 +143,13 @@ public class FirmwareUpdateStore {
                     }
                 }
 
-                final Iterable<String> strings = Splitter.on("\n").split(text);
-                final String firstLine = strings.iterator().next();
-                String[] parts = firstLine.split(":");
-                try {
-                    firmwareVersion = Integer.parseInt(parts[1].trim(), 16);
-                } catch (NumberFormatException nfe) {
+                final Optional<Integer> fwVersion = getFirmwareVersionFromBuildInfo(text);
+                if (!fwVersion.isPresent()) {
                     LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", objectKey);
                     return emptyPair;
                 }
+
+                firmwareVersion = fwVersion.get();
             }
         }
 
@@ -473,6 +472,38 @@ public class FirmwareUpdateStore {
             this.fwVersion = fwVersion;
             this.groupName = groupName;
             this.deviceId = deviceId;
+        }
+    }
+
+    static Optional<Integer> getFirmwareVersionFromBuildInfo(final String buildInfoText) {
+        final Iterable<String> strings = Splitter.on("\n").split(buildInfoText);
+        final Map<String, String> buildInfo = Maps.newHashMap();
+
+        for (final String line : strings) {
+            if (line.contains(":")) {
+                final String[] parts = line.split(":");
+                buildInfo.put(parts[0].trim(), parts[1].trim());
+            }
+        }
+
+        if (!buildInfo.containsKey("version")) {
+            return Optional.absent();
+        }
+
+        if (buildInfo.get("version").isEmpty()) {
+            return Optional.absent();
+        }
+
+        try {
+            if (buildInfo.get("version").equals(buildInfo.get("travis_build_number"))) {
+                //version number is already dec
+                return Optional.of(Integer.parseInt(buildInfo.get("version"), 10));
+            } else {
+                //Assume version is stored as hex
+                return Optional.of(Integer.parseInt(buildInfo.get("version"), 16));
+            }
+        } catch (NumberFormatException nfe) {
+            return Optional.absent();
         }
     }
 }
