@@ -111,20 +111,6 @@ public class TemperatureHumidity {
 
         LOGGER.debug("Temp for account {}: min {}, max {}", accountId, minTempF, maxTempF);
 
-        // adjust ideal range depending on user's response to hot/cold sleeper question
-        int idealMinF = IDEAL_TEMP_MIN;
-        int idealMaxF = IDEAL_TEMP_MAX;
-        String sleeperMsg = TemperatureMsgEN.TEMP_SLEEPER_MSG_NONE;
-        if (tempPref == AccountInfo.SleepTempType.COLD) {
-            idealMinF -= COLD_TEMP_ADJUST;
-            idealMaxF -= COLD_TEMP_ADJUST;
-            sleeperMsg = TemperatureMsgEN.TEMP_SLEEPER_MSG_COLD;
-        } else if (tempPref == AccountInfo.SleepTempType.HOT) {
-            idealMinF += HOT_TEMP_ADJUST;
-            idealMaxF += HOT_TEMP_ADJUST;
-            sleeperMsg = TemperatureMsgEN.TEMP_SLEEPER_MSG_HOT;
-        }
-
         /* Possible cases
                     min                       max
                     |------ ideal range ------|
@@ -138,38 +124,40 @@ public class TemperatureHumidity {
          */
 
         // todo: edits
+        // Unit conversion for passing into TemperatureMsgEN
         int minTemp = minTempF;
         int maxTemp = maxTempF;
-        int idealMin = idealMinF;
-        int idealMax = idealMaxF;
+        int idealMin = IDEAL_TEMP_MIN;
+        int idealMax = IDEAL_TEMP_MAX;
         if (tempUnit == TemperatureUnit.CELSIUS) {
             minTemp = fahrenheitToCelsius((double) minTempF);
             maxTemp = fahrenheitToCelsius((double) maxTempF);
-            idealMin = fahrenheitToCelsius((double) idealMinF);
-            idealMax = fahrenheitToCelsius((double) idealMaxF);
+            idealMin = IDEAL_TEMP_MIN_CELSIUS;
+            idealMax = IDEAL_TEMP_MAX_CELSIUS;
         }
 
         Text text;
         final String commonMsg = TemperatureMsgEN.getCommonMsg(minTemp, maxTemp, tempUnit.toString());
 
-        if (idealMinF <= minTempF && maxTempF <= idealMaxF) {
-            text = TemperatureMsgEN.getTempMsgPerfect(commonMsg, sleeperMsg);
+        //careful: comparisons are only done in Fahrenheit, but TemperatureMsgEN gets passed the units of the user!
+        if (IDEAL_TEMP_MIN <= minTempF && maxTempF <= IDEAL_TEMP_MAX) {
+            text = TemperatureMsgEN.getTempMsgPerfect(commonMsg);
 
-        } else if (maxTempF < idealMinF) {
+        } else if (maxTempF < IDEAL_TEMP_MIN) {
             text = TemperatureMsgEN.getTempMsgTooCold(commonMsg, idealMin, tempUnit.toString());
 
-        } else if (minTempF > idealMaxF) {
+        } else if (minTempF > IDEAL_TEMP_MAX) {
             text = TemperatureMsgEN.getTempMsgTooHot(commonMsg, idealMax, tempUnit.toString());
 
-        } else if (minTempF < idealMinF && maxTempF <= idealMaxF) {
+        } else if (minTempF < IDEAL_TEMP_MIN && maxTempF <= IDEAL_TEMP_MAX) {
             text = TemperatureMsgEN.getTempMsgCool(commonMsg);
 
-        } else if (minTempF > idealMinF && maxTempF > idealMaxF) {
+        } else if (minTempF > IDEAL_TEMP_MIN && maxTempF > IDEAL_TEMP_MAX) {
             text = TemperatureMsgEN.getTempMsgWarm(commonMsg);
 
         } else {
             // both min and max are outside of ideal range
-            text = TemperatureMsgEN.getTempMsgBad(commonMsg, sleeperMsg, idealMin, idealMax, tempUnit.toString());
+            text = TemperatureMsgEN.getTempMsgBad(commonMsg, idealMin, idealMax, tempUnit.toString());
         }
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
@@ -178,9 +166,9 @@ public class TemperatureHumidity {
     }
 
     private static int celsiusToFahrenheit(final double value) {
-        //Multiply by 9, then divide by 5, then add 32
         return (int) Math.round((value * 9.0) / 5.0) + 32;
     }
+
     private static int fahrenheitToCelsius(final double value) {
         return (int) ((value - 32.0) * (5.0/9.0));
     }

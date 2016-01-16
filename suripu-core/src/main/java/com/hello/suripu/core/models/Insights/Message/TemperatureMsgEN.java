@@ -12,17 +12,13 @@ public class TemperatureMsgEN {
     public static final String DEGREE_C = "\u00b0C";
     public static final String DEGREE_F = "\u00b0F";
 
-    public static final String TEMP_SLEEPER_MSG_NONE = "for a good night's sleep";
-    public static final String TEMP_SLEEPER_MSG_COLD = "for a cold sleeper";
-    public static final String TEMP_SLEEPER_MSG_HOT = "for a warm sleeper";
-
     public static final String getCommonMsg(final int minTemp, final int maxTemp, final String unit) {
         return String.format("Your bedroom's temperature during your sleep ranges from %d°%s to %d°%s. ", minTemp, unit, maxTemp, unit);
     }
 
-    public static Text getTempMsgPerfect(final String commonMsg, final String sleeperMsg) {
+    public static Text getTempMsgPerfect(final String commonMsg) {
         return new Text("Perfect Temperature", commonMsg +
-                "Your bedroom is the **perfect** temperature " + sleeperMsg + ".\n\n" +
+                "Your bedroom is the **perfect** temperature for a good night's sleep.\n\n" +
                 "Sense will continue to monitor your sleeping temperature and alert you of any changes.");
     }
 
@@ -52,11 +48,9 @@ public class TemperatureMsgEN {
                 "Try to cool the bedroom a little before going to bed.");
     }
 
-    public static Text getTempMsgBad(final String commonMsg, final String sleeperMsg,
-                                     final int minTemp, final int maxTemp, final String unit) {
+    public static Text getTempMsgBad(final String commonMsg, final int minTemp, final int maxTemp, final String unit) {
         return new Text("Hot and Cold", commonMsg +
-                "The **temperature swing** in your bedroom is too large. The ideal temperature " +
-                sleeperMsg + " is between " +
+                "The **temperature swing** in your bedroom is too large. The ideal temperature for a good night's sleep is between " +
                 String.format("%d°%s to %d°%s.", minTemp, unit, maxTemp, unit));
     }
 }
