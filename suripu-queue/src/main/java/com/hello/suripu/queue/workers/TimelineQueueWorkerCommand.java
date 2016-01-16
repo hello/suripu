@@ -195,11 +195,12 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
             LOGGER.warn("Metrics not enabled.");
         }
 
-        final Meter messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "messages", "messages-processed", TimeUnit.SECONDS);
-        final Meter messagesReceived = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "messages", "messages-received", TimeUnit.SECONDS);
-        final Meter validSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "sleep-score", "valid", TimeUnit.SECONDS);
-        final Meter invalidSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "sleep-score", "invalid", TimeUnit.SECONDS);
-        final Meter noTimeline = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "timeline", "not-created", TimeUnit.SECONDS);
+        final Meter messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "processed", "messages-processed", TimeUnit.SECONDS);
+        final Meter messagesReceived = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "received", "messages-received", TimeUnit.SECONDS);
+        final Meter messagesDeleted = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "deleted", "messages-deleted", TimeUnit.SECONDS);
+        final Meter validSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "ok-sleep-score", "valid-score", TimeUnit.SECONDS);
+        final Meter invalidSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "invalid-sleep-score", "invalid-score", TimeUnit.SECONDS);
+        final Meter noTimeline = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "timeline-fail", "fail-to-created", TimeUnit.SECONDS);
 
         final TimelineProcessor timelineProcessor = createTimelineProcessor(provider, configuration);
         int numEmptyQueueIterations = 0;
@@ -238,7 +239,8 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 if (!processedHandlers.isEmpty()) {
                     LOGGER.debug("action=delete-messages num={}", processedHandlers.size());
                     messagesProcessed.mark(processedHandlers.size());
-                    queueProcessor.deleteMessages(processedHandlers);
+                    final int deleted = queueProcessor.deleteMessages(processedHandlers);
+                    messagesDeleted.mark(deleted);
                 }
 
                 numEmptyQueueIterations = 0;

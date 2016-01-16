@@ -6,6 +6,7 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
@@ -154,8 +155,10 @@ public class TimelineQueueProcessor {
     }
 
 
-    public void deleteMessages(final List<DeleteMessageBatchRequestEntry> processedMessages) {
-        this.sqsClient.deleteMessageBatch(new DeleteMessageBatchRequest(sqsQueueUrl, processedMessages));
+    public int deleteMessages(final List<DeleteMessageBatchRequestEntry> processedMessages) {
+        final DeleteMessageBatchResult result = this.sqsClient.deleteMessageBatch(
+                new DeleteMessageBatchRequest(sqsQueueUrl, processedMessages));
+        return result.getSuccessful().size();
     }
 
     private static String encodeMessage(final TimelineQueueProtos.Message message) {
