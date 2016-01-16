@@ -475,7 +475,7 @@ public class FirmwareUpdateStore {
         }
     }
 
-    public static Optional<Integer> getFirmwareVersionFromBuildInfo(final String buildInfoText) {
+    static Optional<Integer> getFirmwareVersionFromBuildInfo(final String buildInfoText) {
         final Iterable<String> strings = Splitter.on("\n").split(buildInfoText);
         final Map<String, String> buildInfo = Maps.newHashMap();
 
@@ -484,6 +484,10 @@ public class FirmwareUpdateStore {
                 final String[] parts = line.split(":");
                 buildInfo.put(parts[0].trim(), parts[1].trim());
             }
+        }
+
+        if (!buildInfo.containsKey("version")) {
+            return Optional.absent();
         }
 
         if (buildInfo.get("version").isEmpty()) {
