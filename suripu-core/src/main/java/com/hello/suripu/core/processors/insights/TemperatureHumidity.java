@@ -91,7 +91,8 @@ public class TemperatureHumidity {
             return Optional.absent();
         }
 
-        // TODO if location is available, compare with users from the same city
+        // TODO: if location is available, compare with users from the same city
+        // TODO: adjust ideal range based on question response on preference for cold/hot. Implemented before by KSG, but removed for simplicity for now.
 
         // get min, max and average
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -106,8 +107,20 @@ public class TemperatureHumidity {
         final double tmpMaxValue = stats.getMax();
         final int maxTempC = (int) tmpMaxValue;
         final int maxTempF = celsiusToFahrenheit(tmpMaxValue);
-
         LOGGER.debug("Temp for account {}: min {}, max {}", accountId, minTempF, maxTempF);
+
+        // TODO: edits
+        // Units for passing into TemperatureMsgEN
+        int minTemp = minTempC;
+        int maxTemp = maxTempC;
+        int idealMin = IDEAL_TEMP_MIN_CELSIUS;
+        int idealMax = IDEAL_TEMP_MAX_CELSIUS;
+        if (tempUnit == TemperatureUnit.FAHRENHEIT) {
+            minTemp = minTempF;
+            maxTemp = maxTempF;
+            idealMin = IDEAL_TEMP_MIN;
+            idealMax = IDEAL_TEMP_MAX;
+        }
 
         /* Possible cases
                     min                       max
@@ -120,19 +133,6 @@ public class TemperatureHumidity {
 
                 |-------- way out of range! -------|
          */
-
-        // todo: edits
-        // Unit conversion for passing into TemperatureMsgEN
-        int minTemp = minTempF;
-        int maxTemp = maxTempF;
-        int idealMin = IDEAL_TEMP_MIN;
-        int idealMax = IDEAL_TEMP_MAX;
-        if (tempUnit == TemperatureUnit.CELSIUS) {
-            minTemp = fahrenheitToCelsius((double) minTempF);
-            maxTemp = fahrenheitToCelsius((double) maxTempF);
-            idealMin = IDEAL_TEMP_MIN_CELSIUS;
-            idealMax = IDEAL_TEMP_MAX_CELSIUS;
-        }
 
         Text text;
         final String commonMsg = TemperatureMsgEN.getCommonMsg(minTemp, maxTemp, tempUnit.toString());
