@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 
 public class TimelineFeedback {
 
@@ -80,5 +82,26 @@ public class TimelineFeedback {
 
     public static TimelineFeedback createMarkedCorrect(final String dateOfNight, final String oldTimeOfEvent, final Event.Type eventType, final Long accountId) {
         return create(dateOfNight, oldTimeOfEvent, oldTimeOfEvent, eventType, accountId, Boolean.TRUE);
+    }
+
+    public int getDelta() {
+        final DateTime oldDateTime  = DateTime.parse(oldTimeOfEvent, DateTimeFormat.forPattern("HH:mm")).plusDays(1);
+        final DateTime newDateTime  = DateTime.parse(newTimeOfEvent, DateTimeFormat.forPattern("HH:mm")).plusDays(1);
+
+        int delta = (int) (newDateTime.getMillis() - oldDateTime.getMillis());
+
+        // t1          t2
+        //23:59 ---> 00:00 should be +60000
+        if (delta > DateTimeConstants.MILLIS_PER_DAY / 2) {
+            delta = delta - DateTimeConstants.MILLIS_PER_DAY;
+        }
+
+        //  t1         t2
+        // 00:00 ---> 23:59  should be -1
+        if (delta < -DateTimeConstants.MILLIS_PER_DAY / 2) {
+            delta = DateTimeConstants.MILLIS_PER_DAY + delta;
+        }
+
+        return delta;
     }
 }

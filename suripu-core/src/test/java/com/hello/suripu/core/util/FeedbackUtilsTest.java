@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -305,5 +306,27 @@ public class FeedbackUtilsTest {
         final TimelineFeedback feedback = TimelineFeedback.create("2015-02-03", "23:00", "16:00", Event.Type.SLEEP.name());
         final Optional<DateTime> optional = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback, 0);
         assertThat(optional.isPresent(), is(false));
+    }
+
+    @Test
+    public void testInsertConversion() {
+        //delta of -7 hours
+        final TimelineFeedback feedback1 = TimelineFeedback.create("2015-02-03", "23:00", "16:00", Event.Type.SLEEP.name());
+
+        //delta of -2 min
+        final TimelineFeedback feedback2 = TimelineFeedback.create("2015-02-03", "00:00", "23:58", Event.Type.SLEEP.name());
+
+        //delta of +3 min
+        final TimelineFeedback feedback3 = TimelineFeedback.create("2015-02-03", "23:59", "00:02", Event.Type.SLEEP.name());
+
+        final int delta1 = feedback1.getDelta();
+        final int delta2 = feedback2.getDelta();
+        final int delta3 = feedback3.getDelta();
+
+        TestCase.assertEquals(delta1, DateTimeConstants.MILLIS_PER_HOUR * -7);
+        TestCase.assertEquals(delta2, DateTimeConstants.MILLIS_PER_MINUTE * -2);
+        TestCase.assertEquals(delta3, DateTimeConstants.MILLIS_PER_MINUTE * +3);
+
+
     }
 }

@@ -22,14 +22,19 @@ public @interface BindTimelineFeedback{
     public static class BindTimelineFeedbackFactory implements BinderFactory {
         public Binder build(Annotation annotation) {
 
+
             return new Binder<BindTimelineFeedback, TimelineFeedback>() {
                 public void bind(SQLStatement q, BindTimelineFeedback bind, TimelineFeedback arg) {
+
+                    final Integer delta = arg.getDelta();
+
                     q.bind("date_of_night", arg.dateOfNight);
                     q.bind("event_type", arg.eventType.getValue());
                     q.bind("old_time", arg.oldTimeOfEvent);
                     q.bind("new_time", arg.newTimeOfEvent);
                     q.bind("created", arg.created);
                     q.bind("is_correct", arg.isNewTimeCorrect);
+                    q.bind("adjustment_delta_millis",delta);
                 }
             };
         }
