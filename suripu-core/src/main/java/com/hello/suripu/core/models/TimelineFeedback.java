@@ -85,19 +85,19 @@ public class TimelineFeedback {
     }
 
     public int getDelta() {
-        final DateTime oldDateTime  = DateTime.parse(oldTimeOfEvent, DateTimeFormat.forPattern("HH:mm")).plusDays(1);
-        final DateTime newDateTime  = DateTime.parse(newTimeOfEvent, DateTimeFormat.forPattern("HH:mm")).plusDays(1);
+        final DateTime oldDateTime  = DateTime.parse(oldTimeOfEvent, DateTimeFormat.forPattern("HH:mm"));
+        final DateTime newDateTime  = DateTime.parse(newTimeOfEvent, DateTimeFormat.forPattern("HH:mm"));
 
         int delta = (int) (newDateTime.getMillis() - oldDateTime.getMillis());
 
         // t1          t2
-        //23:59 ---> 00:00 should be +60000
+        // 00:00 ---> 23:59 == 23:59 - 00:00 should be -1 min
         if (delta > DateTimeConstants.MILLIS_PER_DAY / 2) {
             delta = delta - DateTimeConstants.MILLIS_PER_DAY;
         }
 
         //  t1         t2
-        // 00:00 ---> 23:59  should be -1
+        //23:59 ---> 00:00 == 00:00 - 23:59 should be +1 min
         if (delta < -DateTimeConstants.MILLIS_PER_DAY / 2) {
             delta = DateTimeConstants.MILLIS_PER_DAY + delta;
         }
