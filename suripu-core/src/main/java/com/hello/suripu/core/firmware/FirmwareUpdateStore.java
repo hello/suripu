@@ -146,6 +146,7 @@ public class FirmwareUpdateStore {
                 final Optional<Integer> fwVersion = getFirmwareVersionFromBuildInfo(text);
                 if (!fwVersion.isPresent()) {
                     LOGGER.error("Firmware version in {} is not a valid firmware version. Ignoring this update", objectKey);
+                    return emptyPair;
                 }
 
                 firmwareVersion = fwVersion.get();
