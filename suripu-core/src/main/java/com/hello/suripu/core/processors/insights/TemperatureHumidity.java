@@ -137,20 +137,20 @@ public class TemperatureHumidity {
         Text text;
         final String commonMsg = TemperatureMsgEN.getCommonMsg(minTemp, maxTemp, tempUnit.toString());
 
-        //careful: comparisons are only done in Fahrenheit, but TemperatureMsgEN gets passed the units of the user!
-        if (IDEAL_TEMP_MIN <= minTempF && maxTempF <= IDEAL_TEMP_MAX) {
+        //careful: comparisons are done in user's own units, TemperatureMsgEN also gets passed user's own units.
+        if (idealMin <= minTemp && maxTemp <= idealMax) {
             text = TemperatureMsgEN.getTempMsgPerfect(commonMsg);
 
-        } else if (maxTempF < IDEAL_TEMP_MIN) {
+        } else if (maxTemp < idealMin) {
             text = TemperatureMsgEN.getTempMsgTooCold(commonMsg, idealMin, tempUnit.toString());
 
-        } else if (minTempF > IDEAL_TEMP_MAX) {
+        } else if (minTemp > idealMax) {
             text = TemperatureMsgEN.getTempMsgTooHot(commonMsg, idealMax, tempUnit.toString());
 
-        } else if (minTempF < IDEAL_TEMP_MIN && maxTempF <= IDEAL_TEMP_MAX) {
+        } else if (minTemp < idealMin && maxTemp <= idealMax) {
             text = TemperatureMsgEN.getTempMsgCool(commonMsg);
 
-        } else if (minTempF > IDEAL_TEMP_MIN && maxTempF > IDEAL_TEMP_MAX) {
+        } else if (minTemp > idealMin && maxTemp > idealMax) {
             text = TemperatureMsgEN.getTempMsgWarm(commonMsg);
 
         } else {
