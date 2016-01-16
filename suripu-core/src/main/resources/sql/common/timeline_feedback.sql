@@ -27,3 +27,8 @@ CREATE TABLE timeline_feedback(
 
 -- 2015-12-14 Jake adds a column to determine if feedback was "correct" time or not.
 ALTER TABLE timeline_feedback ADD COLUMN is_correct boolean DEFAULT TRUE;
+
+-- UPDATES TO timeline_feedback TABLE 2016-01-15
+--on purpose, default value is null, we are going to go in an back-populate
+ALTER TABLE timeline_feedback ADD COLUMN adjustment_delta_millis INTEGER;
+Status API Training Shop Blog About Pricing
