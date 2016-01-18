@@ -81,6 +81,8 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.db.TimelineLogDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.db.UserLabelDAO;
+import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
+import com.hello.suripu.core.db.UserTimelineTestGroupDAOImpl;
 import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
@@ -179,6 +181,7 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AccessTokenDAO accessTokenDAO = commonDB.onDemand(AccessTokenDAO.class);
         final DeviceDAO deviceDAO = commonDB.onDemand(DeviceDAO.class);
         final PillProvisionDAO pillProvisionDAO = commonDB.onDemand(PillProvisionDAO.class);
+        final UserTimelineTestGroupDAO userTimelineTestGroupDAO = commonDB.onDemand(UserTimelineTestGroupDAOImpl.class);
 
         final UserLabelDAO userLabelDAO = commonDB.onDemand(UserLabelDAO.class);
         final TrendsInsightsDAO trendsInsightsDAO = insightsDB.onDemand(TrendsInsightsDAO.class);
@@ -402,7 +405,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 onlineHmmModelsDAO,
                 featureExtractionDAO,
                 calibrationDAO,
-                defaultModelEnsembleDAO);
+                defaultModelEnsembleDAO,
+                userTimelineTestGroupDAO);
                 
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO,timelineLogger, timelineProcessor));

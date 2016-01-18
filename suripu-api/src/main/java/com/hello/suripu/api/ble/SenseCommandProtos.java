@@ -71,12 +71,48 @@ public final class SenseCommandProtos {
     NO_ENDPOINT_IN_RANGE(7, 7),
     /**
      * <code>WLAN_CONNECTION_ERROR = 8;</code>
+     *
+     * <pre>
+     *factory reset failed to remove stored wifi endpoint
+     * </pre>
      */
     WLAN_CONNECTION_ERROR(8, 8),
     /**
      * <code>FAIL_TO_OBTAIN_IP = 9;</code>
      */
     FAIL_TO_OBTAIN_IP(9, 9),
+    /**
+     * <code>WLAN_ENDPOINT_DELETE_FAILED = 10;</code>
+     */
+    WLAN_ENDPOINT_DELETE_FAILED(10, 10),
+    /**
+     * <code>INVALID_ACCOUNT_ID = 11;</code>
+     *
+     * <pre>
+     *pair device command doesn't contain a valid account ID
+     * </pre>
+     */
+    INVALID_ACCOUNT_ID(11, 11),
+    /**
+     * <code>FORCE_DATA_PUSH_FAILED = 12;</code>
+     *
+     * <pre>
+     *error from pushing data after MORPHEUS_COMMAND_PUSH_DATA_AFTER_SET_TIMEZONE
+     * </pre>
+     */
+    FORCE_DATA_PUSH_FAILED(12, 12),
+    /**
+     * <code>PROTOBUF_ENCODE_FAILED = 13;</code>
+     */
+    PROTOBUF_ENCODE_FAILED(13, 13),
+    /**
+     * <code>PROTOBUF_DECODE_FAILED = 14;</code>
+     */
+    PROTOBUF_DECODE_FAILED(14, 14),
+    /**
+     * <code>SERVER_CONNECTION_TIMEOUT = 15;</code>
+     */
+    SERVER_CONNECTION_TIMEOUT(15, 15),
     ;
 
     /**
@@ -137,12 +173,48 @@ public final class SenseCommandProtos {
     public static final int NO_ENDPOINT_IN_RANGE_VALUE = 7;
     /**
      * <code>WLAN_CONNECTION_ERROR = 8;</code>
+     *
+     * <pre>
+     *factory reset failed to remove stored wifi endpoint
+     * </pre>
      */
     public static final int WLAN_CONNECTION_ERROR_VALUE = 8;
     /**
      * <code>FAIL_TO_OBTAIN_IP = 9;</code>
      */
     public static final int FAIL_TO_OBTAIN_IP_VALUE = 9;
+    /**
+     * <code>WLAN_ENDPOINT_DELETE_FAILED = 10;</code>
+     */
+    public static final int WLAN_ENDPOINT_DELETE_FAILED_VALUE = 10;
+    /**
+     * <code>INVALID_ACCOUNT_ID = 11;</code>
+     *
+     * <pre>
+     *pair device command doesn't contain a valid account ID
+     * </pre>
+     */
+    public static final int INVALID_ACCOUNT_ID_VALUE = 11;
+    /**
+     * <code>FORCE_DATA_PUSH_FAILED = 12;</code>
+     *
+     * <pre>
+     *error from pushing data after MORPHEUS_COMMAND_PUSH_DATA_AFTER_SET_TIMEZONE
+     * </pre>
+     */
+    public static final int FORCE_DATA_PUSH_FAILED_VALUE = 12;
+    /**
+     * <code>PROTOBUF_ENCODE_FAILED = 13;</code>
+     */
+    public static final int PROTOBUF_ENCODE_FAILED_VALUE = 13;
+    /**
+     * <code>PROTOBUF_DECODE_FAILED = 14;</code>
+     */
+    public static final int PROTOBUF_DECODE_FAILED_VALUE = 14;
+    /**
+     * <code>SERVER_CONNECTION_TIMEOUT = 15;</code>
+     */
+    public static final int SERVER_CONNECTION_TIMEOUT_VALUE = 15;
 
 
     public final int getNumber() { return value; }
@@ -159,6 +231,12 @@ public final class SenseCommandProtos {
         case 7: return NO_ENDPOINT_IN_RANGE;
         case 8: return WLAN_CONNECTION_ERROR;
         case 9: return FAIL_TO_OBTAIN_IP;
+        case 10: return WLAN_ENDPOINT_DELETE_FAILED;
+        case 11: return INVALID_ACCOUNT_ID;
+        case 12: return FORCE_DATA_PUSH_FAILED;
+        case 13: return PROTOBUF_ENCODE_FAILED;
+        case 14: return PROTOBUF_DECODE_FAILED;
+        case 15: return SERVER_CONNECTION_TIMEOUT;
         default: return null;
       }
     }
@@ -231,6 +309,38 @@ public final class SenseCommandProtos {
      * <code>IP_RETRIEVED = 3;</code>
      */
     IP_RETRIEVED(3, 3),
+    /**
+     * <code>DNS_RESOLVED = 4;</code>
+     */
+    DNS_RESOLVED(4, 4),
+    /**
+     * <code>SOCKET_CONNECTED = 5;</code>
+     */
+    SOCKET_CONNECTED(5, 5),
+    /**
+     * <code>REQUEST_SENT = 6;</code>
+     */
+    REQUEST_SENT(6, 6),
+    /**
+     * <code>CONNECTED = 7;</code>
+     */
+    CONNECTED(7, 7),
+    /**
+     * <code>SSL_FAIL = 8;</code>
+     */
+    SSL_FAIL(8, 8),
+    /**
+     * <code>HELLO_KEY_FAIL = 9;</code>
+     */
+    HELLO_KEY_FAIL(9, 9),
+    /**
+     * <code>DNS_FAILED = 10;</code>
+     */
+    DNS_FAILED(10, 10),
+    /**
+     * <code>CONNECT_FAILED = 11;</code>
+     */
+    CONNECT_FAILED(11, 11),
     ;
 
     /**
@@ -249,6 +359,38 @@ public final class SenseCommandProtos {
      * <code>IP_RETRIEVED = 3;</code>
      */
     public static final int IP_RETRIEVED_VALUE = 3;
+    /**
+     * <code>DNS_RESOLVED = 4;</code>
+     */
+    public static final int DNS_RESOLVED_VALUE = 4;
+    /**
+     * <code>SOCKET_CONNECTED = 5;</code>
+     */
+    public static final int SOCKET_CONNECTED_VALUE = 5;
+    /**
+     * <code>REQUEST_SENT = 6;</code>
+     */
+    public static final int REQUEST_SENT_VALUE = 6;
+    /**
+     * <code>CONNECTED = 7;</code>
+     */
+    public static final int CONNECTED_VALUE = 7;
+    /**
+     * <code>SSL_FAIL = 8;</code>
+     */
+    public static final int SSL_FAIL_VALUE = 8;
+    /**
+     * <code>HELLO_KEY_FAIL = 9;</code>
+     */
+    public static final int HELLO_KEY_FAIL_VALUE = 9;
+    /**
+     * <code>DNS_FAILED = 10;</code>
+     */
+    public static final int DNS_FAILED_VALUE = 10;
+    /**
+     * <code>CONNECT_FAILED = 11;</code>
+     */
+    public static final int CONNECT_FAILED_VALUE = 11;
 
 
     public final int getNumber() { return value; }
@@ -259,6 +401,14 @@ public final class SenseCommandProtos {
         case 1: return WLAN_CONNECTING;
         case 2: return WLAN_CONNECTED;
         case 3: return IP_RETRIEVED;
+        case 4: return DNS_RESOLVED;
+        case 5: return SOCKET_CONNECTED;
+        case 6: return REQUEST_SENT;
+        case 7: return CONNECTED;
+        case 8: return SSL_FAIL;
+        case 9: return HELLO_KEY_FAIL;
+        case 10: return DNS_FAILED;
+        case 11: return CONNECT_FAILED;
         default: return null;
       }
     }
@@ -1230,12 +1380,30 @@ public final class SenseCommandProtos {
     // required uint64 timestamp = 6;
     /**
      * <code>required uint64 timestamp = 6;</code>
+     *
+     * <pre>
+     * In seconds
+     * </pre>
      */
     boolean hasTimestamp();
     /**
      * <code>required uint64 timestamp = 6;</code>
+     *
+     * <pre>
+     * In seconds
+     * </pre>
      */
     long getTimestamp();
+
+    // optional int32 rssi = 7;
+    /**
+     * <code>optional int32 rssi = 7;</code>
+     */
+    boolean hasRssi();
+    /**
+     * <code>optional int32 rssi = 7;</code>
+     */
+    int getRssi();
   }
   /**
    * Protobuf type {@code pill_data}
@@ -1316,6 +1484,11 @@ public final class SenseCommandProtos {
             case 48: {
               bitField0_ |= 0x00000020;
               timestamp_ = input.readUInt64();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              rssi_ = input.readInt32();
               break;
             }
           }
@@ -1470,15 +1643,39 @@ public final class SenseCommandProtos {
     private long timestamp_;
     /**
      * <code>required uint64 timestamp = 6;</code>
+     *
+     * <pre>
+     * In seconds
+     * </pre>
      */
     public boolean hasTimestamp() {
       return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>required uint64 timestamp = 6;</code>
+     *
+     * <pre>
+     * In seconds
+     * </pre>
      */
     public long getTimestamp() {
       return timestamp_;
+    }
+
+    // optional int32 rssi = 7;
+    public static final int RSSI_FIELD_NUMBER = 7;
+    private int rssi_;
+    /**
+     * <code>optional int32 rssi = 7;</code>
+     */
+    public boolean hasRssi() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional int32 rssi = 7;</code>
+     */
+    public int getRssi() {
+      return rssi_;
     }
 
     private void initFields() {
@@ -1488,6 +1685,7 @@ public final class SenseCommandProtos {
       motionDataEntrypted_ = com.google.protobuf.ByteString.EMPTY;
       firmwareVersion_ = 0;
       timestamp_ = 0L;
+      rssi_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1527,6 +1725,9 @@ public final class SenseCommandProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeUInt64(6, timestamp_);
       }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt32(7, rssi_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1559,6 +1760,10 @@ public final class SenseCommandProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(6, timestamp_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, rssi_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1688,6 +1893,8 @@ public final class SenseCommandProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         timestamp_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000020);
+        rssi_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -1740,6 +1947,10 @@ public final class SenseCommandProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.timestamp_ = timestamp_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.rssi_ = rssi_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1775,6 +1986,9 @@ public final class SenseCommandProtos {
         }
         if (other.hasTimestamp()) {
           setTimestamp(other.getTimestamp());
+        }
+        if (other.hasRssi()) {
+          setRssi(other.getRssi());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2024,18 +2238,30 @@ public final class SenseCommandProtos {
       private long timestamp_ ;
       /**
        * <code>required uint64 timestamp = 6;</code>
+       *
+       * <pre>
+       * In seconds
+       * </pre>
        */
       public boolean hasTimestamp() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>required uint64 timestamp = 6;</code>
+       *
+       * <pre>
+       * In seconds
+       * </pre>
        */
       public long getTimestamp() {
         return timestamp_;
       }
       /**
        * <code>required uint64 timestamp = 6;</code>
+       *
+       * <pre>
+       * In seconds
+       * </pre>
        */
       public Builder setTimestamp(long value) {
         bitField0_ |= 0x00000020;
@@ -2045,10 +2271,47 @@ public final class SenseCommandProtos {
       }
       /**
        * <code>required uint64 timestamp = 6;</code>
+       *
+       * <pre>
+       * In seconds
+       * </pre>
        */
       public Builder clearTimestamp() {
         bitField0_ = (bitField0_ & ~0x00000020);
         timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 rssi = 7;
+      private int rssi_ ;
+      /**
+       * <code>optional int32 rssi = 7;</code>
+       */
+      public boolean hasRssi() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 rssi = 7;</code>
+       */
+      public int getRssi() {
+        return rssi_;
+      }
+      /**
+       * <code>optional int32 rssi = 7;</code>
+       */
+      public Builder setRssi(int value) {
+        bitField0_ |= 0x00000040;
+        rssi_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 rssi = 7;</code>
+       */
+      public Builder clearRssi() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        rssi_ = 0;
         onChanged();
         return this;
       }
@@ -2192,31 +2455,13 @@ public final class SenseCommandProtos {
     com.google.protobuf.ByteString
         getWifiPasswordBytes();
 
-    // optional int32 batteryLevel = 9;
-    /**
-     * <code>optional int32 batteryLevel = 9;</code>
-     */
-    boolean hasBatteryLevel();
-    /**
-     * <code>optional int32 batteryLevel = 9;</code>
-     */
-    int getBatteryLevel();
-
-    // optional int32 uptime = 10;
-    /**
-     * <code>optional int32 uptime = 10;</code>
-     */
-    boolean hasUptime();
-    /**
-     * <code>optional int32 uptime = 10;</code>
-     */
-    int getUptime();
-
     // optional int32 firmwareVersion = 13;
     /**
      * <code>optional int32 firmwareVersion = 13;</code>
      *
      * <pre>
+     * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+     * optional int32 uptime = 10;       // Removed field, dont reuse
      * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
      * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
      * </pre>
@@ -2226,6 +2471,8 @@ public final class SenseCommandProtos {
      * <code>optional int32 firmwareVersion = 13;</code>
      *
      * <pre>
+     * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+     * optional int32 uptime = 10;       // Removed field, dont reuse
      * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
      * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
      * </pre>
@@ -2290,6 +2537,101 @@ public final class SenseCommandProtos {
      * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
      */
     com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state getWifiConnectionState();
+
+    // optional int32 ble_bond_count = 18;
+    /**
+     * <code>optional int32 ble_bond_count = 18;</code>
+     */
+    boolean hasBleBondCount();
+    /**
+     * <code>optional int32 ble_bond_count = 18;</code>
+     */
+    int getBleBondCount();
+
+    // optional string country_code = 19;
+    /**
+     * <code>optional string country_code = 19;</code>
+     */
+    boolean hasCountryCode();
+    /**
+     * <code>optional string country_code = 19;</code>
+     */
+    java.lang.String getCountryCode();
+    /**
+     * <code>optional string country_code = 19;</code>
+     */
+    com.google.protobuf.ByteString
+        getCountryCodeBytes();
+
+    // optional bytes aes_key = 20;
+    /**
+     * <code>optional bytes aes_key = 20;</code>
+     */
+    boolean hasAesKey();
+    /**
+     * <code>optional bytes aes_key = 20;</code>
+     */
+    com.google.protobuf.ByteString getAesKey();
+
+    // optional string top_version = 21;
+    /**
+     * <code>optional string top_version = 21;</code>
+     */
+    boolean hasTopVersion();
+    /**
+     * <code>optional string top_version = 21;</code>
+     */
+    java.lang.String getTopVersion();
+    /**
+     * <code>optional string top_version = 21;</code>
+     */
+    com.google.protobuf.ByteString
+        getTopVersionBytes();
+
+    // optional uint32 server_ip = 22;
+    /**
+     * <code>optional uint32 server_ip = 22;</code>
+     */
+    boolean hasServerIp();
+    /**
+     * <code>optional uint32 server_ip = 22;</code>
+     */
+    int getServerIp();
+
+    // optional uint32 socket_error_code = 23;
+    /**
+     * <code>optional uint32 socket_error_code = 23;</code>
+     */
+    boolean hasSocketErrorCode();
+    /**
+     * <code>optional uint32 socket_error_code = 23;</code>
+     */
+    int getSocketErrorCode();
+
+    // optional string http_response_code = 24;
+    /**
+     * <code>optional string http_response_code = 24;</code>
+     */
+    boolean hasHttpResponseCode();
+    /**
+     * <code>optional string http_response_code = 24;</code>
+     */
+    java.lang.String getHttpResponseCode();
+    /**
+     * <code>optional string http_response_code = 24;</code>
+     */
+    com.google.protobuf.ByteString
+        getHttpResponseCodeBytes();
+
+    // optional int32 app_version = 25;
+    /**
+     * <code>optional int32 app_version = 25;</code>
+     */
+    boolean hasAppVersion();
+    /**
+     * <code>optional int32 app_version = 25;</code>
+     */
+    int getAppVersion();
   }
   /**
    * Protobuf type {@code MorpheusCommand}
@@ -2394,25 +2736,15 @@ public final class SenseCommandProtos {
               wifiPassword_ = input.readBytes();
               break;
             }
-            case 72: {
-              bitField0_ |= 0x00000100;
-              batteryLevel_ = input.readInt32();
-              break;
-            }
-            case 80: {
-              bitField0_ |= 0x00000200;
-              uptime_ = input.readInt32();
-              break;
-            }
             case 104: {
-              bitField0_ |= 0x00000400;
+              bitField0_ |= 0x00000100;
               firmwareVersion_ = input.readInt32();
               break;
             }
             case 114: {
-              if (!((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
                 wifiScanResult_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint>();
-                mutable_bitField0_ |= 0x00000800;
+                mutable_bitField0_ |= 0x00000200;
               }
               wifiScanResult_.add(input.readMessage(com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.PARSER, extensionRegistry));
               break;
@@ -2423,14 +2755,14 @@ public final class SenseCommandProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(15, rawValue);
               } else {
-                bitField0_ |= 0x00000800;
+                bitField0_ |= 0x00000200;
                 securityType_ = value;
               }
               break;
             }
             case 130: {
               com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder subBuilder = null;
-              if (((bitField0_ & 0x00001000) == 0x00001000)) {
+              if (((bitField0_ & 0x00000400) == 0x00000400)) {
                 subBuilder = pillData_.toBuilder();
               }
               pillData_ = input.readMessage(com.hello.suripu.api.ble.SenseCommandProtos.pill_data.PARSER, extensionRegistry);
@@ -2438,7 +2770,7 @@ public final class SenseCommandProtos {
                 subBuilder.mergeFrom(pillData_);
                 pillData_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00001000;
+              bitField0_ |= 0x00000400;
               break;
             }
             case 136: {
@@ -2447,9 +2779,49 @@ public final class SenseCommandProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(17, rawValue);
               } else {
-                bitField0_ |= 0x00002000;
+                bitField0_ |= 0x00000800;
                 wifiConnectionState_ = value;
               }
+              break;
+            }
+            case 144: {
+              bitField0_ |= 0x00001000;
+              bleBondCount_ = input.readInt32();
+              break;
+            }
+            case 154: {
+              bitField0_ |= 0x00002000;
+              countryCode_ = input.readBytes();
+              break;
+            }
+            case 162: {
+              bitField0_ |= 0x00004000;
+              aesKey_ = input.readBytes();
+              break;
+            }
+            case 170: {
+              bitField0_ |= 0x00008000;
+              topVersion_ = input.readBytes();
+              break;
+            }
+            case 176: {
+              bitField0_ |= 0x00010000;
+              serverIp_ = input.readUInt32();
+              break;
+            }
+            case 184: {
+              bitField0_ |= 0x00020000;
+              socketErrorCode_ = input.readUInt32();
+              break;
+            }
+            case 194: {
+              bitField0_ |= 0x00040000;
+              httpResponseCode_ = input.readBytes();
+              break;
+            }
+            case 200: {
+              bitField0_ |= 0x00080000;
+              appVersion_ = input.readInt32();
               break;
             }
           }
@@ -2460,7 +2832,7 @@ public final class SenseCommandProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+        if (((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
           wifiScanResult_ = java.util.Collections.unmodifiableList(wifiScanResult_);
         }
         this.unknownFields = unknownFields.build();
@@ -2595,6 +2967,58 @@ public final class SenseCommandProtos {
        * <code>MORPHEUS_COMMAND_SYNC_DEVICE_ID = 22;</code>
        */
       MORPHEUS_COMMAND_SYNC_DEVICE_ID(22, 22),
+      /**
+       * <code>MORPHEUS_COMMAND_PHONE_BLE_CONNECTED = 23;</code>
+       */
+      MORPHEUS_COMMAND_PHONE_BLE_CONNECTED(23, 23),
+      /**
+       * <code>MORPHEUS_COMMAND_PHONE_BLE_BONDED = 24;</code>
+       */
+      MORPHEUS_COMMAND_PHONE_BLE_BONDED(24, 24),
+      /**
+       * <code>MORPHEUS_COMMAND_LED_BUSY = 25;</code>
+       */
+      MORPHEUS_COMMAND_LED_BUSY(25, 25),
+      /**
+       * <code>MORPHEUS_COMMAND_LED_TRIPPY = 26;</code>
+       */
+      MORPHEUS_COMMAND_LED_TRIPPY(26, 26),
+      /**
+       * <code>MORPHEUS_COMMAND_LED_OPERATION_FAILED = 27;</code>
+       */
+      MORPHEUS_COMMAND_LED_OPERATION_FAILED(27, 27),
+      /**
+       * <code>MORPHEUS_COMMAND_SCAN_WIFI = 28;</code>
+       */
+      MORPHEUS_COMMAND_SCAN_WIFI(28, 28),
+      /**
+       * <code>MORPHEUS_COMMAND_GET_NEXT_WIFI_AP = 29;</code>
+       */
+      MORPHEUS_COMMAND_GET_NEXT_WIFI_AP(29, 29),
+      /**
+       * <code>MORPHEUS_COMMAND_LED_OPERATION_SUCCESS = 30;</code>
+       */
+      MORPHEUS_COMMAND_LED_OPERATION_SUCCESS(30, 30),
+      /**
+       * <code>MORPHEUS_COMMAND_PUSH_DATA_AFTER_SET_TIMEZONE = 31;</code>
+       */
+      MORPHEUS_COMMAND_PUSH_DATA_AFTER_SET_TIMEZONE(31, 31),
+      /**
+       * <code>MORPHEUS_COMMAND_SET_COUNTRY_CODE = 32;</code>
+       */
+      MORPHEUS_COMMAND_SET_COUNTRY_CODE(32, 32),
+      /**
+       * <code>MORPHEUS_COMMAND_SET_SERVER_IP = 33;</code>
+       */
+      MORPHEUS_COMMAND_SET_SERVER_IP(33, 33),
+      /**
+       * <code>MORPHEUS_COMMAND_CONNECTION_STATE = 34;</code>
+       */
+      MORPHEUS_COMMAND_CONNECTION_STATE(34, 34),
+      /**
+       * <code>MORPHEUS_COMMAND_PILL_PROX_DATA = 35;</code>
+       */
+      MORPHEUS_COMMAND_PILL_PROX_DATA(35, 35),
       ;
 
       /**
@@ -2693,6 +3117,58 @@ public final class SenseCommandProtos {
        * <code>MORPHEUS_COMMAND_SYNC_DEVICE_ID = 22;</code>
        */
       public static final int MORPHEUS_COMMAND_SYNC_DEVICE_ID_VALUE = 22;
+      /**
+       * <code>MORPHEUS_COMMAND_PHONE_BLE_CONNECTED = 23;</code>
+       */
+      public static final int MORPHEUS_COMMAND_PHONE_BLE_CONNECTED_VALUE = 23;
+      /**
+       * <code>MORPHEUS_COMMAND_PHONE_BLE_BONDED = 24;</code>
+       */
+      public static final int MORPHEUS_COMMAND_PHONE_BLE_BONDED_VALUE = 24;
+      /**
+       * <code>MORPHEUS_COMMAND_LED_BUSY = 25;</code>
+       */
+      public static final int MORPHEUS_COMMAND_LED_BUSY_VALUE = 25;
+      /**
+       * <code>MORPHEUS_COMMAND_LED_TRIPPY = 26;</code>
+       */
+      public static final int MORPHEUS_COMMAND_LED_TRIPPY_VALUE = 26;
+      /**
+       * <code>MORPHEUS_COMMAND_LED_OPERATION_FAILED = 27;</code>
+       */
+      public static final int MORPHEUS_COMMAND_LED_OPERATION_FAILED_VALUE = 27;
+      /**
+       * <code>MORPHEUS_COMMAND_SCAN_WIFI = 28;</code>
+       */
+      public static final int MORPHEUS_COMMAND_SCAN_WIFI_VALUE = 28;
+      /**
+       * <code>MORPHEUS_COMMAND_GET_NEXT_WIFI_AP = 29;</code>
+       */
+      public static final int MORPHEUS_COMMAND_GET_NEXT_WIFI_AP_VALUE = 29;
+      /**
+       * <code>MORPHEUS_COMMAND_LED_OPERATION_SUCCESS = 30;</code>
+       */
+      public static final int MORPHEUS_COMMAND_LED_OPERATION_SUCCESS_VALUE = 30;
+      /**
+       * <code>MORPHEUS_COMMAND_PUSH_DATA_AFTER_SET_TIMEZONE = 31;</code>
+       */
+      public static final int MORPHEUS_COMMAND_PUSH_DATA_AFTER_SET_TIMEZONE_VALUE = 31;
+      /**
+       * <code>MORPHEUS_COMMAND_SET_COUNTRY_CODE = 32;</code>
+       */
+      public static final int MORPHEUS_COMMAND_SET_COUNTRY_CODE_VALUE = 32;
+      /**
+       * <code>MORPHEUS_COMMAND_SET_SERVER_IP = 33;</code>
+       */
+      public static final int MORPHEUS_COMMAND_SET_SERVER_IP_VALUE = 33;
+      /**
+       * <code>MORPHEUS_COMMAND_CONNECTION_STATE = 34;</code>
+       */
+      public static final int MORPHEUS_COMMAND_CONNECTION_STATE_VALUE = 34;
+      /**
+       * <code>MORPHEUS_COMMAND_PILL_PROX_DATA = 35;</code>
+       */
+      public static final int MORPHEUS_COMMAND_PILL_PROX_DATA_VALUE = 35;
 
 
       public final int getNumber() { return value; }
@@ -2722,6 +3198,19 @@ public final class SenseCommandProtos {
           case 20: return MORPHEUS_COMMAND_FACTORY_RESET;
           case 21: return MORPHEUS_COMMAND_PILL_SHAKES;
           case 22: return MORPHEUS_COMMAND_SYNC_DEVICE_ID;
+          case 23: return MORPHEUS_COMMAND_PHONE_BLE_CONNECTED;
+          case 24: return MORPHEUS_COMMAND_PHONE_BLE_BONDED;
+          case 25: return MORPHEUS_COMMAND_LED_BUSY;
+          case 26: return MORPHEUS_COMMAND_LED_TRIPPY;
+          case 27: return MORPHEUS_COMMAND_LED_OPERATION_FAILED;
+          case 28: return MORPHEUS_COMMAND_SCAN_WIFI;
+          case 29: return MORPHEUS_COMMAND_GET_NEXT_WIFI_AP;
+          case 30: return MORPHEUS_COMMAND_LED_OPERATION_SUCCESS;
+          case 31: return MORPHEUS_COMMAND_PUSH_DATA_AFTER_SET_TIMEZONE;
+          case 32: return MORPHEUS_COMMAND_SET_COUNTRY_CODE;
+          case 33: return MORPHEUS_COMMAND_SET_SERVER_IP;
+          case 34: return MORPHEUS_COMMAND_CONNECTION_STATE;
+          case 35: return MORPHEUS_COMMAND_PILL_PROX_DATA;
           default: return null;
         }
       }
@@ -3057,38 +3546,6 @@ public final class SenseCommandProtos {
       }
     }
 
-    // optional int32 batteryLevel = 9;
-    public static final int BATTERYLEVEL_FIELD_NUMBER = 9;
-    private int batteryLevel_;
-    /**
-     * <code>optional int32 batteryLevel = 9;</code>
-     */
-    public boolean hasBatteryLevel() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
-    }
-    /**
-     * <code>optional int32 batteryLevel = 9;</code>
-     */
-    public int getBatteryLevel() {
-      return batteryLevel_;
-    }
-
-    // optional int32 uptime = 10;
-    public static final int UPTIME_FIELD_NUMBER = 10;
-    private int uptime_;
-    /**
-     * <code>optional int32 uptime = 10;</code>
-     */
-    public boolean hasUptime() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
-    }
-    /**
-     * <code>optional int32 uptime = 10;</code>
-     */
-    public int getUptime() {
-      return uptime_;
-    }
-
     // optional int32 firmwareVersion = 13;
     public static final int FIRMWAREVERSION_FIELD_NUMBER = 13;
     private int firmwareVersion_;
@@ -3096,17 +3553,21 @@ public final class SenseCommandProtos {
      * <code>optional int32 firmwareVersion = 13;</code>
      *
      * <pre>
+     * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+     * optional int32 uptime = 10;       // Removed field, dont reuse
      * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
      * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
      * </pre>
      */
     public boolean hasFirmwareVersion() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000100) == 0x00000100);
     }
     /**
      * <code>optional int32 firmwareVersion = 13;</code>
      *
      * <pre>
+     * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+     * optional int32 uptime = 10;       // Removed field, dont reuse
      * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
      * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
      * </pre>
@@ -3158,7 +3619,7 @@ public final class SenseCommandProtos {
      * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
      */
     public boolean hasSecurityType() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00000200) == 0x00000200);
     }
     /**
      * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
@@ -3174,7 +3635,7 @@ public final class SenseCommandProtos {
      * <code>optional .pill_data pill_data = 16;</code>
      */
     public boolean hasPillData() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00000400) == 0x00000400);
     }
     /**
      * <code>optional .pill_data pill_data = 16;</code>
@@ -3196,13 +3657,222 @@ public final class SenseCommandProtos {
      * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
      */
     public boolean hasWifiConnectionState() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00000800) == 0x00000800);
     }
     /**
      * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
      */
     public com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state getWifiConnectionState() {
       return wifiConnectionState_;
+    }
+
+    // optional int32 ble_bond_count = 18;
+    public static final int BLE_BOND_COUNT_FIELD_NUMBER = 18;
+    private int bleBondCount_;
+    /**
+     * <code>optional int32 ble_bond_count = 18;</code>
+     */
+    public boolean hasBleBondCount() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional int32 ble_bond_count = 18;</code>
+     */
+    public int getBleBondCount() {
+      return bleBondCount_;
+    }
+
+    // optional string country_code = 19;
+    public static final int COUNTRY_CODE_FIELD_NUMBER = 19;
+    private java.lang.Object countryCode_;
+    /**
+     * <code>optional string country_code = 19;</code>
+     */
+    public boolean hasCountryCode() {
+      return ((bitField0_ & 0x00002000) == 0x00002000);
+    }
+    /**
+     * <code>optional string country_code = 19;</code>
+     */
+    public java.lang.String getCountryCode() {
+      java.lang.Object ref = countryCode_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          countryCode_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string country_code = 19;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCountryCodeBytes() {
+      java.lang.Object ref = countryCode_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        countryCode_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bytes aes_key = 20;
+    public static final int AES_KEY_FIELD_NUMBER = 20;
+    private com.google.protobuf.ByteString aesKey_;
+    /**
+     * <code>optional bytes aes_key = 20;</code>
+     */
+    public boolean hasAesKey() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    /**
+     * <code>optional bytes aes_key = 20;</code>
+     */
+    public com.google.protobuf.ByteString getAesKey() {
+      return aesKey_;
+    }
+
+    // optional string top_version = 21;
+    public static final int TOP_VERSION_FIELD_NUMBER = 21;
+    private java.lang.Object topVersion_;
+    /**
+     * <code>optional string top_version = 21;</code>
+     */
+    public boolean hasTopVersion() {
+      return ((bitField0_ & 0x00008000) == 0x00008000);
+    }
+    /**
+     * <code>optional string top_version = 21;</code>
+     */
+    public java.lang.String getTopVersion() {
+      java.lang.Object ref = topVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          topVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string top_version = 21;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTopVersionBytes() {
+      java.lang.Object ref = topVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        topVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional uint32 server_ip = 22;
+    public static final int SERVER_IP_FIELD_NUMBER = 22;
+    private int serverIp_;
+    /**
+     * <code>optional uint32 server_ip = 22;</code>
+     */
+    public boolean hasServerIp() {
+      return ((bitField0_ & 0x00010000) == 0x00010000);
+    }
+    /**
+     * <code>optional uint32 server_ip = 22;</code>
+     */
+    public int getServerIp() {
+      return serverIp_;
+    }
+
+    // optional uint32 socket_error_code = 23;
+    public static final int SOCKET_ERROR_CODE_FIELD_NUMBER = 23;
+    private int socketErrorCode_;
+    /**
+     * <code>optional uint32 socket_error_code = 23;</code>
+     */
+    public boolean hasSocketErrorCode() {
+      return ((bitField0_ & 0x00020000) == 0x00020000);
+    }
+    /**
+     * <code>optional uint32 socket_error_code = 23;</code>
+     */
+    public int getSocketErrorCode() {
+      return socketErrorCode_;
+    }
+
+    // optional string http_response_code = 24;
+    public static final int HTTP_RESPONSE_CODE_FIELD_NUMBER = 24;
+    private java.lang.Object httpResponseCode_;
+    /**
+     * <code>optional string http_response_code = 24;</code>
+     */
+    public boolean hasHttpResponseCode() {
+      return ((bitField0_ & 0x00040000) == 0x00040000);
+    }
+    /**
+     * <code>optional string http_response_code = 24;</code>
+     */
+    public java.lang.String getHttpResponseCode() {
+      java.lang.Object ref = httpResponseCode_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          httpResponseCode_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string http_response_code = 24;</code>
+     */
+    public com.google.protobuf.ByteString
+        getHttpResponseCodeBytes() {
+      java.lang.Object ref = httpResponseCode_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        httpResponseCode_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int32 app_version = 25;
+    public static final int APP_VERSION_FIELD_NUMBER = 25;
+    private int appVersion_;
+    /**
+     * <code>optional int32 app_version = 25;</code>
+     */
+    public boolean hasAppVersion() {
+      return ((bitField0_ & 0x00080000) == 0x00080000);
+    }
+    /**
+     * <code>optional int32 app_version = 25;</code>
+     */
+    public int getAppVersion() {
+      return appVersion_;
     }
 
     private void initFields() {
@@ -3214,13 +3884,19 @@ public final class SenseCommandProtos {
       wifiName_ = "";
       wifiSSID_ = "";
       wifiPassword_ = "";
-      batteryLevel_ = 0;
-      uptime_ = 0;
       firmwareVersion_ = 0;
       wifiScanResult_ = java.util.Collections.emptyList();
       securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
       pillData_ = com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance();
       wifiConnectionState_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.NO_WLAN_CONNECTED;
+      bleBondCount_ = 0;
+      countryCode_ = "";
+      aesKey_ = com.google.protobuf.ByteString.EMPTY;
+      topVersion_ = "";
+      serverIp_ = 0;
+      socketErrorCode_ = 0;
+      httpResponseCode_ = "";
+      appVersion_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3279,25 +3955,43 @@ public final class SenseCommandProtos {
         output.writeBytes(8, getWifiPasswordBytes());
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
-        output.writeInt32(9, batteryLevel_);
-      }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
-        output.writeInt32(10, uptime_);
-      }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeInt32(13, firmwareVersion_);
       }
       for (int i = 0; i < wifiScanResult_.size(); i++) {
         output.writeMessage(14, wifiScanResult_.get(i));
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeEnum(15, securityType_.getNumber());
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeMessage(16, pillData_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeEnum(17, wifiConnectionState_.getNumber());
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeInt32(18, bleBondCount_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        output.writeBytes(19, getCountryCodeBytes());
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeBytes(20, aesKey_);
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        output.writeBytes(21, getTopVersionBytes());
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        output.writeUInt32(22, serverIp_);
+      }
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+        output.writeUInt32(23, socketErrorCode_);
+      }
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+        output.writeBytes(24, getHttpResponseCodeBytes());
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        output.writeInt32(25, appVersion_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -3342,31 +4036,55 @@ public final class SenseCommandProtos {
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(9, batteryLevel_);
-      }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(10, uptime_);
-      }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
-        size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(13, firmwareVersion_);
       }
       for (int i = 0; i < wifiScanResult_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(14, wifiScanResult_.get(i));
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(15, securityType_.getNumber());
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(16, pillData_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(17, wifiConnectionState_.getNumber());
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(18, bleBondCount_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(19, getCountryCodeBytes());
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(20, aesKey_);
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(21, getTopVersionBytes());
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(22, serverIp_);
+      }
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(23, socketErrorCode_);
+      }
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(24, getHttpResponseCodeBytes());
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(25, appVersion_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3502,28 +4220,40 @@ public final class SenseCommandProtos {
         bitField0_ = (bitField0_ & ~0x00000040);
         wifiPassword_ = "";
         bitField0_ = (bitField0_ & ~0x00000080);
-        batteryLevel_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000100);
-        uptime_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000200);
         firmwareVersion_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00000100);
         if (wifiScanResultBuilder_ == null) {
           wifiScanResult_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000800);
+          bitField0_ = (bitField0_ & ~0x00000200);
         } else {
           wifiScanResultBuilder_.clear();
         }
         securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
-        bitField0_ = (bitField0_ & ~0x00001000);
+        bitField0_ = (bitField0_ & ~0x00000400);
         if (pillDataBuilder_ == null) {
           pillData_ = com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance();
         } else {
           pillDataBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00002000);
+        bitField0_ = (bitField0_ & ~0x00000800);
         wifiConnectionState_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.NO_WLAN_CONNECTED;
+        bitField0_ = (bitField0_ & ~0x00001000);
+        bleBondCount_ = 0;
+        bitField0_ = (bitField0_ & ~0x00002000);
+        countryCode_ = "";
         bitField0_ = (bitField0_ & ~0x00004000);
+        aesKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00008000);
+        topVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00010000);
+        serverIp_ = 0;
+        bitField0_ = (bitField0_ & ~0x00020000);
+        socketErrorCode_ = 0;
+        bitField0_ = (bitField0_ & ~0x00040000);
+        httpResponseCode_ = "";
+        bitField0_ = (bitField0_ & ~0x00080000);
+        appVersion_ = 0;
+        bitField0_ = (bitField0_ & ~0x00100000);
         return this;
       }
 
@@ -3587,40 +4317,64 @@ public final class SenseCommandProtos {
         if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
           to_bitField0_ |= 0x00000100;
         }
-        result.batteryLevel_ = batteryLevel_;
-        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
-          to_bitField0_ |= 0x00000200;
-        }
-        result.uptime_ = uptime_;
-        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
-          to_bitField0_ |= 0x00000400;
-        }
         result.firmwareVersion_ = firmwareVersion_;
         if (wifiScanResultBuilder_ == null) {
-          if (((bitField0_ & 0x00000800) == 0x00000800)) {
+          if (((bitField0_ & 0x00000200) == 0x00000200)) {
             wifiScanResult_ = java.util.Collections.unmodifiableList(wifiScanResult_);
-            bitField0_ = (bitField0_ & ~0x00000800);
+            bitField0_ = (bitField0_ & ~0x00000200);
           }
           result.wifiScanResult_ = wifiScanResult_;
         } else {
           result.wifiScanResult_ = wifiScanResultBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
-          to_bitField0_ |= 0x00000800;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000200;
         }
         result.securityType_ = securityType_;
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
-          to_bitField0_ |= 0x00001000;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000400;
         }
         if (pillDataBuilder_ == null) {
           result.pillData_ = pillData_;
         } else {
           result.pillData_ = pillDataBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.wifiConnectionState_ = wifiConnectionState_;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        result.bleBondCount_ = bleBondCount_;
         if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
           to_bitField0_ |= 0x00002000;
         }
-        result.wifiConnectionState_ = wifiConnectionState_;
+        result.countryCode_ = countryCode_;
+        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        result.aesKey_ = aesKey_;
+        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+          to_bitField0_ |= 0x00008000;
+        }
+        result.topVersion_ = topVersion_;
+        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+          to_bitField0_ |= 0x00010000;
+        }
+        result.serverIp_ = serverIp_;
+        if (((from_bitField0_ & 0x00040000) == 0x00040000)) {
+          to_bitField0_ |= 0x00020000;
+        }
+        result.socketErrorCode_ = socketErrorCode_;
+        if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
+          to_bitField0_ |= 0x00040000;
+        }
+        result.httpResponseCode_ = httpResponseCode_;
+        if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+          to_bitField0_ |= 0x00080000;
+        }
+        result.appVersion_ = appVersion_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3671,12 +4425,6 @@ public final class SenseCommandProtos {
           wifiPassword_ = other.wifiPassword_;
           onChanged();
         }
-        if (other.hasBatteryLevel()) {
-          setBatteryLevel(other.getBatteryLevel());
-        }
-        if (other.hasUptime()) {
-          setUptime(other.getUptime());
-        }
         if (other.hasFirmwareVersion()) {
           setFirmwareVersion(other.getFirmwareVersion());
         }
@@ -3684,7 +4432,7 @@ public final class SenseCommandProtos {
           if (!other.wifiScanResult_.isEmpty()) {
             if (wifiScanResult_.isEmpty()) {
               wifiScanResult_ = other.wifiScanResult_;
-              bitField0_ = (bitField0_ & ~0x00000800);
+              bitField0_ = (bitField0_ & ~0x00000200);
             } else {
               ensureWifiScanResultIsMutable();
               wifiScanResult_.addAll(other.wifiScanResult_);
@@ -3697,7 +4445,7 @@ public final class SenseCommandProtos {
               wifiScanResultBuilder_.dispose();
               wifiScanResultBuilder_ = null;
               wifiScanResult_ = other.wifiScanResult_;
-              bitField0_ = (bitField0_ & ~0x00000800);
+              bitField0_ = (bitField0_ & ~0x00000200);
               wifiScanResultBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getWifiScanResultFieldBuilder() : null;
@@ -3714,6 +4462,36 @@ public final class SenseCommandProtos {
         }
         if (other.hasWifiConnectionState()) {
           setWifiConnectionState(other.getWifiConnectionState());
+        }
+        if (other.hasBleBondCount()) {
+          setBleBondCount(other.getBleBondCount());
+        }
+        if (other.hasCountryCode()) {
+          bitField0_ |= 0x00004000;
+          countryCode_ = other.countryCode_;
+          onChanged();
+        }
+        if (other.hasAesKey()) {
+          setAesKey(other.getAesKey());
+        }
+        if (other.hasTopVersion()) {
+          bitField0_ |= 0x00010000;
+          topVersion_ = other.topVersion_;
+          onChanged();
+        }
+        if (other.hasServerIp()) {
+          setServerIp(other.getServerIp());
+        }
+        if (other.hasSocketErrorCode()) {
+          setSocketErrorCode(other.getSocketErrorCode());
+        }
+        if (other.hasHttpResponseCode()) {
+          bitField0_ |= 0x00080000;
+          httpResponseCode_ = other.httpResponseCode_;
+          onChanged();
+        }
+        if (other.hasAppVersion()) {
+          setAppVersion(other.getAppVersion());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4277,89 +5055,27 @@ public final class SenseCommandProtos {
         return this;
       }
 
-      // optional int32 batteryLevel = 9;
-      private int batteryLevel_ ;
-      /**
-       * <code>optional int32 batteryLevel = 9;</code>
-       */
-      public boolean hasBatteryLevel() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
-      }
-      /**
-       * <code>optional int32 batteryLevel = 9;</code>
-       */
-      public int getBatteryLevel() {
-        return batteryLevel_;
-      }
-      /**
-       * <code>optional int32 batteryLevel = 9;</code>
-       */
-      public Builder setBatteryLevel(int value) {
-        bitField0_ |= 0x00000100;
-        batteryLevel_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int32 batteryLevel = 9;</code>
-       */
-      public Builder clearBatteryLevel() {
-        bitField0_ = (bitField0_ & ~0x00000100);
-        batteryLevel_ = 0;
-        onChanged();
-        return this;
-      }
-
-      // optional int32 uptime = 10;
-      private int uptime_ ;
-      /**
-       * <code>optional int32 uptime = 10;</code>
-       */
-      public boolean hasUptime() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
-      }
-      /**
-       * <code>optional int32 uptime = 10;</code>
-       */
-      public int getUptime() {
-        return uptime_;
-      }
-      /**
-       * <code>optional int32 uptime = 10;</code>
-       */
-      public Builder setUptime(int value) {
-        bitField0_ |= 0x00000200;
-        uptime_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int32 uptime = 10;</code>
-       */
-      public Builder clearUptime() {
-        bitField0_ = (bitField0_ & ~0x00000200);
-        uptime_ = 0;
-        onChanged();
-        return this;
-      }
-
       // optional int32 firmwareVersion = 13;
       private int firmwareVersion_ ;
       /**
        * <code>optional int32 firmwareVersion = 13;</code>
        *
        * <pre>
+       * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+       * optional int32 uptime = 10;       // Removed field, dont reuse
        * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
        * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
        * </pre>
        */
       public boolean hasFirmwareVersion() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00000100) == 0x00000100);
       }
       /**
        * <code>optional int32 firmwareVersion = 13;</code>
        *
        * <pre>
+       * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+       * optional int32 uptime = 10;       // Removed field, dont reuse
        * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
        * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
        * </pre>
@@ -4371,12 +5087,14 @@ public final class SenseCommandProtos {
        * <code>optional int32 firmwareVersion = 13;</code>
        *
        * <pre>
+       * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+       * optional int32 uptime = 10;       // Removed field, dont reuse
        * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
        * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
        * </pre>
        */
       public Builder setFirmwareVersion(int value) {
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00000100;
         firmwareVersion_ = value;
         onChanged();
         return this;
@@ -4385,12 +5103,14 @@ public final class SenseCommandProtos {
        * <code>optional int32 firmwareVersion = 13;</code>
        *
        * <pre>
+       * optional int32 batteryLevel = 9;  // Removed field, dont reuse
+       * optional int32 uptime = 10;       // Removed field, dont reuse
        * optional int32 motionData = 11;   // This field is removed, to make thing explicit, please DONOT remove the line
        * optional bytes motionDataEntrypted = 12;   // This field is removed, to make thing explicit, please DONOT remove the line
        * </pre>
        */
       public Builder clearFirmwareVersion() {
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00000100);
         firmwareVersion_ = 0;
         onChanged();
         return this;
@@ -4400,9 +5120,9 @@ public final class SenseCommandProtos {
       private java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint> wifiScanResult_ =
         java.util.Collections.emptyList();
       private void ensureWifiScanResultIsMutable() {
-        if (!((bitField0_ & 0x00000800) == 0x00000800)) {
+        if (!((bitField0_ & 0x00000200) == 0x00000200)) {
           wifiScanResult_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint>(wifiScanResult_);
-          bitField0_ |= 0x00000800;
+          bitField0_ |= 0x00000200;
          }
       }
 
@@ -4551,7 +5271,7 @@ public final class SenseCommandProtos {
       public Builder clearWifiScanResult() {
         if (wifiScanResultBuilder_ == null) {
           wifiScanResult_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000800);
+          bitField0_ = (bitField0_ & ~0x00000200);
           onChanged();
         } else {
           wifiScanResultBuilder_.clear();
@@ -4628,7 +5348,7 @@ public final class SenseCommandProtos {
           wifiScanResultBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.Builder, com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpointOrBuilder>(
                   wifiScanResult_,
-                  ((bitField0_ & 0x00000800) == 0x00000800),
+                  ((bitField0_ & 0x00000200) == 0x00000200),
                   getParentForChildren(),
                   isClean());
           wifiScanResult_ = null;
@@ -4642,7 +5362,7 @@ public final class SenseCommandProtos {
        * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
        */
       public boolean hasSecurityType() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
@@ -4657,7 +5377,7 @@ public final class SenseCommandProtos {
         if (value == null) {
           throw new NullPointerException();
         }
-        bitField0_ |= 0x00001000;
+        bitField0_ |= 0x00000400;
         securityType_ = value;
         onChanged();
         return this;
@@ -4666,7 +5386,7 @@ public final class SenseCommandProtos {
        * <code>optional .wifi_endpoint.sec_type security_type = 15;</code>
        */
       public Builder clearSecurityType() {
-        bitField0_ = (bitField0_ & ~0x00001000);
+        bitField0_ = (bitField0_ & ~0x00000400);
         securityType_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_endpoint.sec_type.SL_SCAN_SEC_TYPE_OPEN;
         onChanged();
         return this;
@@ -4680,7 +5400,7 @@ public final class SenseCommandProtos {
        * <code>optional .pill_data pill_data = 16;</code>
        */
       public boolean hasPillData() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional .pill_data pill_data = 16;</code>
@@ -4705,7 +5425,7 @@ public final class SenseCommandProtos {
         } else {
           pillDataBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00002000;
+        bitField0_ |= 0x00000800;
         return this;
       }
       /**
@@ -4719,7 +5439,7 @@ public final class SenseCommandProtos {
         } else {
           pillDataBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00002000;
+        bitField0_ |= 0x00000800;
         return this;
       }
       /**
@@ -4727,7 +5447,7 @@ public final class SenseCommandProtos {
        */
       public Builder mergePillData(com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
         if (pillDataBuilder_ == null) {
-          if (((bitField0_ & 0x00002000) == 0x00002000) &&
+          if (((bitField0_ & 0x00000800) == 0x00000800) &&
               pillData_ != com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance()) {
             pillData_ =
               com.hello.suripu.api.ble.SenseCommandProtos.pill_data.newBuilder(pillData_).mergeFrom(value).buildPartial();
@@ -4738,7 +5458,7 @@ public final class SenseCommandProtos {
         } else {
           pillDataBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00002000;
+        bitField0_ |= 0x00000800;
         return this;
       }
       /**
@@ -4751,14 +5471,14 @@ public final class SenseCommandProtos {
         } else {
           pillDataBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00002000);
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
       /**
        * <code>optional .pill_data pill_data = 16;</code>
        */
       public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder getPillDataBuilder() {
-        bitField0_ |= 0x00002000;
+        bitField0_ |= 0x00000800;
         onChanged();
         return getPillDataFieldBuilder().getBuilder();
       }
@@ -4795,7 +5515,7 @@ public final class SenseCommandProtos {
        * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
        */
       public boolean hasWifiConnectionState() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
+        return ((bitField0_ & 0x00001000) == 0x00001000);
       }
       /**
        * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
@@ -4810,7 +5530,7 @@ public final class SenseCommandProtos {
         if (value == null) {
           throw new NullPointerException();
         }
-        bitField0_ |= 0x00004000;
+        bitField0_ |= 0x00001000;
         wifiConnectionState_ = value;
         onChanged();
         return this;
@@ -4819,8 +5539,398 @@ public final class SenseCommandProtos {
        * <code>optional .wifi_connection_state wifi_connection_state = 17;</code>
        */
       public Builder clearWifiConnectionState() {
-        bitField0_ = (bitField0_ & ~0x00004000);
+        bitField0_ = (bitField0_ & ~0x00001000);
         wifiConnectionState_ = com.hello.suripu.api.ble.SenseCommandProtos.wifi_connection_state.NO_WLAN_CONNECTED;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 ble_bond_count = 18;
+      private int bleBondCount_ ;
+      /**
+       * <code>optional int32 ble_bond_count = 18;</code>
+       */
+      public boolean hasBleBondCount() {
+        return ((bitField0_ & 0x00002000) == 0x00002000);
+      }
+      /**
+       * <code>optional int32 ble_bond_count = 18;</code>
+       */
+      public int getBleBondCount() {
+        return bleBondCount_;
+      }
+      /**
+       * <code>optional int32 ble_bond_count = 18;</code>
+       */
+      public Builder setBleBondCount(int value) {
+        bitField0_ |= 0x00002000;
+        bleBondCount_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 ble_bond_count = 18;</code>
+       */
+      public Builder clearBleBondCount() {
+        bitField0_ = (bitField0_ & ~0x00002000);
+        bleBondCount_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string country_code = 19;
+      private java.lang.Object countryCode_ = "";
+      /**
+       * <code>optional string country_code = 19;</code>
+       */
+      public boolean hasCountryCode() {
+        return ((bitField0_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional string country_code = 19;</code>
+       */
+      public java.lang.String getCountryCode() {
+        java.lang.Object ref = countryCode_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          countryCode_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string country_code = 19;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCountryCodeBytes() {
+        java.lang.Object ref = countryCode_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          countryCode_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string country_code = 19;</code>
+       */
+      public Builder setCountryCode(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00004000;
+        countryCode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string country_code = 19;</code>
+       */
+      public Builder clearCountryCode() {
+        bitField0_ = (bitField0_ & ~0x00004000);
+        countryCode_ = getDefaultInstance().getCountryCode();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string country_code = 19;</code>
+       */
+      public Builder setCountryCodeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00004000;
+        countryCode_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bytes aes_key = 20;
+      private com.google.protobuf.ByteString aesKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes aes_key = 20;</code>
+       */
+      public boolean hasAesKey() {
+        return ((bitField0_ & 0x00008000) == 0x00008000);
+      }
+      /**
+       * <code>optional bytes aes_key = 20;</code>
+       */
+      public com.google.protobuf.ByteString getAesKey() {
+        return aesKey_;
+      }
+      /**
+       * <code>optional bytes aes_key = 20;</code>
+       */
+      public Builder setAesKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00008000;
+        aesKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes aes_key = 20;</code>
+       */
+      public Builder clearAesKey() {
+        bitField0_ = (bitField0_ & ~0x00008000);
+        aesKey_ = getDefaultInstance().getAesKey();
+        onChanged();
+        return this;
+      }
+
+      // optional string top_version = 21;
+      private java.lang.Object topVersion_ = "";
+      /**
+       * <code>optional string top_version = 21;</code>
+       */
+      public boolean hasTopVersion() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      /**
+       * <code>optional string top_version = 21;</code>
+       */
+      public java.lang.String getTopVersion() {
+        java.lang.Object ref = topVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          topVersion_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string top_version = 21;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTopVersionBytes() {
+        java.lang.Object ref = topVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          topVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string top_version = 21;</code>
+       */
+      public Builder setTopVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00010000;
+        topVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string top_version = 21;</code>
+       */
+      public Builder clearTopVersion() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        topVersion_ = getDefaultInstance().getTopVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string top_version = 21;</code>
+       */
+      public Builder setTopVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00010000;
+        topVersion_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 server_ip = 22;
+      private int serverIp_ ;
+      /**
+       * <code>optional uint32 server_ip = 22;</code>
+       */
+      public boolean hasServerIp() {
+        return ((bitField0_ & 0x00020000) == 0x00020000);
+      }
+      /**
+       * <code>optional uint32 server_ip = 22;</code>
+       */
+      public int getServerIp() {
+        return serverIp_;
+      }
+      /**
+       * <code>optional uint32 server_ip = 22;</code>
+       */
+      public Builder setServerIp(int value) {
+        bitField0_ |= 0x00020000;
+        serverIp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 server_ip = 22;</code>
+       */
+      public Builder clearServerIp() {
+        bitField0_ = (bitField0_ & ~0x00020000);
+        serverIp_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 socket_error_code = 23;
+      private int socketErrorCode_ ;
+      /**
+       * <code>optional uint32 socket_error_code = 23;</code>
+       */
+      public boolean hasSocketErrorCode() {
+        return ((bitField0_ & 0x00040000) == 0x00040000);
+      }
+      /**
+       * <code>optional uint32 socket_error_code = 23;</code>
+       */
+      public int getSocketErrorCode() {
+        return socketErrorCode_;
+      }
+      /**
+       * <code>optional uint32 socket_error_code = 23;</code>
+       */
+      public Builder setSocketErrorCode(int value) {
+        bitField0_ |= 0x00040000;
+        socketErrorCode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 socket_error_code = 23;</code>
+       */
+      public Builder clearSocketErrorCode() {
+        bitField0_ = (bitField0_ & ~0x00040000);
+        socketErrorCode_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string http_response_code = 24;
+      private java.lang.Object httpResponseCode_ = "";
+      /**
+       * <code>optional string http_response_code = 24;</code>
+       */
+      public boolean hasHttpResponseCode() {
+        return ((bitField0_ & 0x00080000) == 0x00080000);
+      }
+      /**
+       * <code>optional string http_response_code = 24;</code>
+       */
+      public java.lang.String getHttpResponseCode() {
+        java.lang.Object ref = httpResponseCode_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          httpResponseCode_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string http_response_code = 24;</code>
+       */
+      public com.google.protobuf.ByteString
+          getHttpResponseCodeBytes() {
+        java.lang.Object ref = httpResponseCode_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          httpResponseCode_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string http_response_code = 24;</code>
+       */
+      public Builder setHttpResponseCode(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00080000;
+        httpResponseCode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string http_response_code = 24;</code>
+       */
+      public Builder clearHttpResponseCode() {
+        bitField0_ = (bitField0_ & ~0x00080000);
+        httpResponseCode_ = getDefaultInstance().getHttpResponseCode();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string http_response_code = 24;</code>
+       */
+      public Builder setHttpResponseCodeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00080000;
+        httpResponseCode_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 app_version = 25;
+      private int appVersion_ ;
+      /**
+       * <code>optional int32 app_version = 25;</code>
+       */
+      public boolean hasAppVersion() {
+        return ((bitField0_ & 0x00100000) == 0x00100000);
+      }
+      /**
+       * <code>optional int32 app_version = 25;</code>
+       */
+      public int getAppVersion() {
+        return appVersion_;
+      }
+      /**
+       * <code>optional int32 app_version = 25;</code>
+       */
+      public Builder setAppVersion(int value) {
+        bitField0_ |= 0x00100000;
+        appVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 app_version = 25;</code>
+       */
+      public Builder clearAppVersion() {
+        bitField0_ = (bitField0_ & ~0x00100000);
+        appVersion_ = 0;
         onChanged();
         return this;
       }
@@ -4878,6 +5988,31 @@ public final class SenseCommandProtos {
      */
     com.google.protobuf.ByteString
         getDeviceIdBytes();
+
+    // repeated .pill_data prox = 3;
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> 
+        getProxList();
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    com.hello.suripu.api.ble.SenseCommandProtos.pill_data getProx(int index);
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    int getProxCount();
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
+        getProxOrBuilderList();
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getProxOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code batched_pill_data}
@@ -4943,6 +6078,14 @@ public final class SenseCommandProtos {
               deviceId_ = input.readBytes();
               break;
             }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                prox_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.pill_data>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              prox_.add(input.readMessage(com.hello.suripu.api.ble.SenseCommandProtos.pill_data.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4953,6 +6096,9 @@ public final class SenseCommandProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           pills_ = java.util.Collections.unmodifiableList(pills_);
+        }
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          prox_ = java.util.Collections.unmodifiableList(prox_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -5065,9 +6211,46 @@ public final class SenseCommandProtos {
       }
     }
 
+    // repeated .pill_data prox = 3;
+    public static final int PROX_FIELD_NUMBER = 3;
+    private java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> prox_;
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> getProxList() {
+      return prox_;
+    }
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    public java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
+        getProxOrBuilderList() {
+      return prox_;
+    }
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    public int getProxCount() {
+      return prox_.size();
+    }
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    public com.hello.suripu.api.ble.SenseCommandProtos.pill_data getProx(int index) {
+      return prox_.get(index);
+    }
+    /**
+     * <code>repeated .pill_data prox = 3;</code>
+     */
+    public com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getProxOrBuilder(
+        int index) {
+      return prox_.get(index);
+    }
+
     private void initFields() {
       pills_ = java.util.Collections.emptyList();
       deviceId_ = "";
+      prox_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5080,6 +6263,12 @@ public final class SenseCommandProtos {
       }
       for (int i = 0; i < getPillsCount(); i++) {
         if (!getPills(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      for (int i = 0; i < getProxCount(); i++) {
+        if (!getProx(i).isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -5097,6 +6286,9 @@ public final class SenseCommandProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBytes(2, getDeviceIdBytes());
       }
+      for (int i = 0; i < prox_.size(); i++) {
+        output.writeMessage(3, prox_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -5113,6 +6305,10 @@ public final class SenseCommandProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, getDeviceIdBytes());
+      }
+      for (int i = 0; i < prox_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, prox_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5223,6 +6419,7 @@ public final class SenseCommandProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getPillsFieldBuilder();
+          getProxFieldBuilder();
         }
       }
       private static Builder create() {
@@ -5239,6 +6436,12 @@ public final class SenseCommandProtos {
         }
         deviceId_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (proxBuilder_ == null) {
+          prox_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          proxBuilder_.clear();
+        }
         return this;
       }
 
@@ -5280,6 +6483,15 @@ public final class SenseCommandProtos {
           to_bitField0_ |= 0x00000001;
         }
         result.deviceId_ = deviceId_;
+        if (proxBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            prox_ = java.util.Collections.unmodifiableList(prox_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.prox_ = prox_;
+        } else {
+          result.prox_ = proxBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5327,6 +6539,32 @@ public final class SenseCommandProtos {
           deviceId_ = other.deviceId_;
           onChanged();
         }
+        if (proxBuilder_ == null) {
+          if (!other.prox_.isEmpty()) {
+            if (prox_.isEmpty()) {
+              prox_ = other.prox_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureProxIsMutable();
+              prox_.addAll(other.prox_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.prox_.isEmpty()) {
+            if (proxBuilder_.isEmpty()) {
+              proxBuilder_.dispose();
+              proxBuilder_ = null;
+              prox_ = other.prox_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              proxBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getProxFieldBuilder() : null;
+            } else {
+              proxBuilder_.addAllMessages(other.prox_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -5338,6 +6576,12 @@ public final class SenseCommandProtos {
         }
         for (int i = 0; i < getPillsCount(); i++) {
           if (!getPills(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        for (int i = 0; i < getProxCount(); i++) {
+          if (!getProx(i).isInitialized()) {
             
             return false;
           }
@@ -5678,6 +6922,246 @@ public final class SenseCommandProtos {
         return this;
       }
 
+      // repeated .pill_data prox = 3;
+      private java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> prox_ =
+        java.util.Collections.emptyList();
+      private void ensureProxIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          prox_ = new java.util.ArrayList<com.hello.suripu.api.ble.SenseCommandProtos.pill_data>(prox_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> proxBuilder_;
+
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data> getProxList() {
+        if (proxBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(prox_);
+        } else {
+          return proxBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public int getProxCount() {
+        if (proxBuilder_ == null) {
+          return prox_.size();
+        } else {
+          return proxBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data getProx(int index) {
+        if (proxBuilder_ == null) {
+          return prox_.get(index);
+        } else {
+          return proxBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder setProx(
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
+        if (proxBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureProxIsMutable();
+          prox_.set(index, value);
+          onChanged();
+        } else {
+          proxBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder setProx(
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder builderForValue) {
+        if (proxBuilder_ == null) {
+          ensureProxIsMutable();
+          prox_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          proxBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder addProx(com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
+        if (proxBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureProxIsMutable();
+          prox_.add(value);
+          onChanged();
+        } else {
+          proxBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder addProx(
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data value) {
+        if (proxBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureProxIsMutable();
+          prox_.add(index, value);
+          onChanged();
+        } else {
+          proxBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder addProx(
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder builderForValue) {
+        if (proxBuilder_ == null) {
+          ensureProxIsMutable();
+          prox_.add(builderForValue.build());
+          onChanged();
+        } else {
+          proxBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder addProx(
+          int index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder builderForValue) {
+        if (proxBuilder_ == null) {
+          ensureProxIsMutable();
+          prox_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          proxBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder addAllProx(
+          java.lang.Iterable<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_data> values) {
+        if (proxBuilder_ == null) {
+          ensureProxIsMutable();
+          super.addAll(values, prox_);
+          onChanged();
+        } else {
+          proxBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder clearProx() {
+        if (proxBuilder_ == null) {
+          prox_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          proxBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public Builder removeProx(int index) {
+        if (proxBuilder_ == null) {
+          ensureProxIsMutable();
+          prox_.remove(index);
+          onChanged();
+        } else {
+          proxBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder getProxBuilder(
+          int index) {
+        return getProxFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder getProxOrBuilder(
+          int index) {
+        if (proxBuilder_ == null) {
+          return prox_.get(index);  } else {
+          return proxBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public java.util.List<? extends com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
+           getProxOrBuilderList() {
+        if (proxBuilder_ != null) {
+          return proxBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(prox_);
+        }
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder addProxBuilder() {
+        return getProxFieldBuilder().addBuilder(
+            com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder addProxBuilder(
+          int index) {
+        return getProxFieldBuilder().addBuilder(
+            index, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .pill_data prox = 3;</code>
+       */
+      public java.util.List<com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder> 
+           getProxBuilderList() {
+        return getProxFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder> 
+          getProxFieldBuilder() {
+        if (proxBuilder_ == null) {
+          proxBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              com.hello.suripu.api.ble.SenseCommandProtos.pill_data, com.hello.suripu.api.ble.SenseCommandProtos.pill_data.Builder, com.hello.suripu.api.ble.SenseCommandProtos.pill_dataOrBuilder>(
+                  prox_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          prox_ = null;
+        }
+        return proxBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:batched_pill_data)
     }
 
@@ -5724,54 +7208,79 @@ public final class SenseCommandProtos {
       ".sec_type\"t\n\010sec_type\022\031\n\025SL_SCAN_SEC_TYP" +
       "E_OPEN\020\000\022\030\n\024SL_SCAN_SEC_TYPE_WEP\020\001\022\030\n\024SL" +
       "_SCAN_SEC_TYPE_WPA\020\002\022\031\n\025SL_SCAN_SEC_TYPE" +
-      "_WPA2\020\003\"\221\001\n\tpill_data\022\021\n\tdevice_id\030\001 \002(\t" +
+      "_WPA2\020\003\"\237\001\n\tpill_data\022\021\n\tdevice_id\030\001 \002(\t" +
       "\022\025\n\rbattery_level\030\002 \001(\005\022\016\n\006uptime\030\003 \001(\005\022" +
       "\035\n\025motion_data_entrypted\030\004 \001(\014\022\030\n\020firmwa" +
-      "re_version\030\005 \001(\005\022\021\n\ttimestamp\030\006 \002(\004\"\203\n\n\017",
-      "MorpheusCommand\022\017\n\007version\030\001 \002(\005\022*\n\004type" +
-      "\030\002 \002(\0162\034.MorpheusCommand.CommandType\022\020\n\010" +
-      "deviceId\030\003 \001(\t\022\021\n\taccountId\030\004 \001(\t\022\031\n\005err" +
-      "or\030\005 \001(\0162\n.ErrorType\022\020\n\010wifiName\030\006 \001(\t\022\020" +
-      "\n\010wifiSSID\030\007 \001(\t\022\024\n\014wifiPassword\030\010 \001(\t\022\024" +
-      "\n\014batteryLevel\030\t \001(\005\022\016\n\006uptime\030\n \001(\005\022\027\n\017" +
-      "firmwareVersion\030\r \001(\005\022(\n\020wifi_scan_resul" +
-      "t\030\016 \003(\0132\016.wifi_endpoint\022.\n\rsecurity_type" +
-      "\030\017 \001(\0162\027.wifi_endpoint.sec_type\022\035\n\tpill_" +
-      "data\030\020 \001(\0132\n.pill_data\0225\n\025wifi_connectio",
-      "n_state\030\021 \001(\0162\026.wifi_connection_state\"\311\006" +
-      "\n\013CommandType\022\035\n\031MORPHEUS_COMMAND_SET_TI" +
-      "ME\020\000\022\035\n\031MORPHEUS_COMMAND_GET_TIME\020\001\022&\n\"M" +
-      "ORPHEUS_COMMAND_SET_WIFI_ENDPOINT\020\002\022&\n\"M" +
-      "ORPHEUS_COMMAND_GET_WIFI_ENDPOINT\020\003\022\037\n\033M" +
-      "ORPHEUS_COMMAND_SET_ALARMS\020\004\022\037\n\033MORPHEUS" +
-      "_COMMAND_GET_ALARMS\020\005\022+\n\'MORPHEUS_COMMAN" +
-      "D_SWITCH_TO_PAIRING_MODE\020\006\022*\n&MORPHEUS_C" +
-      "OMMAND_SWITCH_TO_NORMAL_MODE\020\007\022#\n\037MORPHE" +
-      "US_COMMAND_START_WIFISCAN\020\010\022\"\n\036MORPHEUS_",
-      "COMMAND_STOP_WIFISCAN\020\t\022\"\n\036MORPHEUS_COMM" +
-      "AND_GET_DEVICE_ID\020\n\022\'\n#MORPHEUS_COMMAND_" +
-      "ERASE_PAIRED_PHONE\020\013\022\036\n\032MORPHEUS_COMMAND" +
-      "_PAIR_PILL\020\014\022\032\n\026MORPHEUS_COMMAND_ERROR\020\r" +
-      "\022\037\n\033MORPHEUS_COMMAND_PAIR_SENSE\020\016\022 \n\034MOR" +
-      "PHEUS_COMMAND_UNPAIR_PILL\020\017\022\'\n#MORPHEUS_" +
-      "COMMAND_MORPHEUS_DFU_BEGIN\020\020\022\036\n\032MORPHEUS" +
-      "_COMMAND_PILL_DATA\020\021\022#\n\037MORPHEUS_COMMAND" +
-      "_PILL_HEARTBEAT\020\022\022#\n\037MORPHEUS_COMMAND_PI" +
-      "LL_DFU_BEGIN\020\023\022\"\n\036MORPHEUS_COMMAND_FACTO",
-      "RY_RESET\020\024\022 \n\034MORPHEUS_COMMAND_PILL_SHAK" +
-      "ES\020\025\022#\n\037MORPHEUS_COMMAND_SYNC_DEVICE_ID\020" +
-      "\026\"A\n\021batched_pill_data\022\031\n\005pills\030\001 \003(\0132\n." +
-      "pill_data\022\021\n\tdevice_id\030\002 \002(\t*\373\001\n\tErrorTy" +
-      "pe\022\014\n\010TIME_OUT\020\000\022\021\n\rNETWORK_ERROR\020\001\022\031\n\025D" +
-      "EVICE_ALREADY_PAIRED\020\002\022\027\n\023INTERNAL_DATA_" +
-      "ERROR\020\003\022\030\n\024DEVICE_DATABASE_FULL\020\004\022\024\n\020DEV" +
-      "ICE_NO_MEMORY\020\005\022\035\n\031INTERNAL_OPERATION_FA" +
-      "ILED\020\006\022\030\n\024NO_ENDPOINT_IN_RANGE\020\007\022\031\n\025WLAN" +
-      "_CONNECTION_ERROR\020\010\022\025\n\021FAIL_TO_OBTAIN_IP",
-      "\020\t*i\n\025wifi_connection_state\022\025\n\021NO_WLAN_C" +
-      "ONNECTED\020\000\022\023\n\017WLAN_CONNECTING\020\001\022\022\n\016WLAN_" +
-      "CONNECTED\020\002\022\020\n\014IP_RETRIEVED\020\003B.\n\030com.hel" +
-      "lo.suripu.api.bleB\022SenseCommandProtos"
+      "re_version\030\005 \001(\005\022\021\n\ttimestamp\030\006 \002(\004\022\014\n\004r",
+      "ssi\030\007 \001(\005\"\211\017\n\017MorpheusCommand\022\017\n\007version" +
+      "\030\001 \002(\005\022*\n\004type\030\002 \002(\0162\034.MorpheusCommand.C" +
+      "ommandType\022\020\n\010deviceId\030\003 \001(\t\022\021\n\taccountI" +
+      "d\030\004 \001(\t\022\031\n\005error\030\005 \001(\0162\n.ErrorType\022\020\n\010wi" +
+      "fiName\030\006 \001(\t\022\020\n\010wifiSSID\030\007 \001(\t\022\024\n\014wifiPa" +
+      "ssword\030\010 \001(\t\022\027\n\017firmwareVersion\030\r \001(\005\022(\n" +
+      "\020wifi_scan_result\030\016 \003(\0132\016.wifi_endpoint\022" +
+      ".\n\rsecurity_type\030\017 \001(\0162\027.wifi_endpoint.s" +
+      "ec_type\022\035\n\tpill_data\030\020 \001(\0132\n.pill_data\0225" +
+      "\n\025wifi_connection_state\030\021 \001(\0162\026.wifi_con",
+      "nection_state\022\026\n\016ble_bond_count\030\022 \001(\005\022\024\n" +
+      "\014country_code\030\023 \001(\t\022\017\n\007aes_key\030\024 \001(\014\022\023\n\013" +
+      "top_version\030\025 \001(\t\022\021\n\tserver_ip\030\026 \001(\r\022\031\n\021" +
+      "socket_error_code\030\027 \001(\r\022\032\n\022http_response" +
+      "_code\030\030 \001(\t\022\023\n\013app_version\030\031 \001(\005\"\302\n\n\013Com" +
+      "mandType\022\035\n\031MORPHEUS_COMMAND_SET_TIME\020\000\022" +
+      "\035\n\031MORPHEUS_COMMAND_GET_TIME\020\001\022&\n\"MORPHE" +
+      "US_COMMAND_SET_WIFI_ENDPOINT\020\002\022&\n\"MORPHE" +
+      "US_COMMAND_GET_WIFI_ENDPOINT\020\003\022\037\n\033MORPHE" +
+      "US_COMMAND_SET_ALARMS\020\004\022\037\n\033MORPHEUS_COMM",
+      "AND_GET_ALARMS\020\005\022+\n\'MORPHEUS_COMMAND_SWI" +
+      "TCH_TO_PAIRING_MODE\020\006\022*\n&MORPHEUS_COMMAN" +
+      "D_SWITCH_TO_NORMAL_MODE\020\007\022#\n\037MORPHEUS_CO" +
+      "MMAND_START_WIFISCAN\020\010\022\"\n\036MORPHEUS_COMMA" +
+      "ND_STOP_WIFISCAN\020\t\022\"\n\036MORPHEUS_COMMAND_G" +
+      "ET_DEVICE_ID\020\n\022\'\n#MORPHEUS_COMMAND_ERASE" +
+      "_PAIRED_PHONE\020\013\022\036\n\032MORPHEUS_COMMAND_PAIR" +
+      "_PILL\020\014\022\032\n\026MORPHEUS_COMMAND_ERROR\020\r\022\037\n\033M" +
+      "ORPHEUS_COMMAND_PAIR_SENSE\020\016\022 \n\034MORPHEUS" +
+      "_COMMAND_UNPAIR_PILL\020\017\022\'\n#MORPHEUS_COMMA",
+      "ND_MORPHEUS_DFU_BEGIN\020\020\022\036\n\032MORPHEUS_COMM" +
+      "AND_PILL_DATA\020\021\022#\n\037MORPHEUS_COMMAND_PILL" +
+      "_HEARTBEAT\020\022\022#\n\037MORPHEUS_COMMAND_PILL_DF" +
+      "U_BEGIN\020\023\022\"\n\036MORPHEUS_COMMAND_FACTORY_RE" +
+      "SET\020\024\022 \n\034MORPHEUS_COMMAND_PILL_SHAKES\020\025\022" +
+      "#\n\037MORPHEUS_COMMAND_SYNC_DEVICE_ID\020\026\022(\n$" +
+      "MORPHEUS_COMMAND_PHONE_BLE_CONNECTED\020\027\022%" +
+      "\n!MORPHEUS_COMMAND_PHONE_BLE_BONDED\020\030\022\035\n" +
+      "\031MORPHEUS_COMMAND_LED_BUSY\020\031\022\037\n\033MORPHEUS" +
+      "_COMMAND_LED_TRIPPY\020\032\022)\n%MORPHEUS_COMMAN",
+      "D_LED_OPERATION_FAILED\020\033\022\036\n\032MORPHEUS_COM" +
+      "MAND_SCAN_WIFI\020\034\022%\n!MORPHEUS_COMMAND_GET" +
+      "_NEXT_WIFI_AP\020\035\022*\n&MORPHEUS_COMMAND_LED_" +
+      "OPERATION_SUCCESS\020\036\0221\n-MORPHEUS_COMMAND_" +
+      "PUSH_DATA_AFTER_SET_TIMEZONE\020\037\022%\n!MORPHE" +
+      "US_COMMAND_SET_COUNTRY_CODE\020 \022\"\n\036MORPHEU" +
+      "S_COMMAND_SET_SERVER_IP\020!\022%\n!MORPHEUS_CO" +
+      "MMAND_CONNECTION_STATE\020\"\022#\n\037MORPHEUS_COM" +
+      "MAND_PILL_PROX_DATA\020#\"[\n\021batched_pill_da" +
+      "ta\022\031\n\005pills\030\001 \003(\0132\n.pill_data\022\021\n\tdevice_",
+      "id\030\002 \002(\t\022\030\n\004prox\030\003 \003(\0132\n.pill_data*\247\003\n\tE" +
+      "rrorType\022\014\n\010TIME_OUT\020\000\022\021\n\rNETWORK_ERROR\020" +
+      "\001\022\031\n\025DEVICE_ALREADY_PAIRED\020\002\022\027\n\023INTERNAL" +
+      "_DATA_ERROR\020\003\022\030\n\024DEVICE_DATABASE_FULL\020\004\022" +
+      "\024\n\020DEVICE_NO_MEMORY\020\005\022\035\n\031INTERNAL_OPERAT" +
+      "ION_FAILED\020\006\022\030\n\024NO_ENDPOINT_IN_RANGE\020\007\022\031" +
+      "\n\025WLAN_CONNECTION_ERROR\020\010\022\025\n\021FAIL_TO_OBT" +
+      "AIN_IP\020\t\022\037\n\033WLAN_ENDPOINT_DELETE_FAILED\020" +
+      "\n\022\026\n\022INVALID_ACCOUNT_ID\020\013\022\032\n\026FORCE_DATA_" +
+      "PUSH_FAILED\020\014\022\032\n\026PROTOBUF_ENCODE_FAILED\020",
+      "\r\022\032\n\026PROTOBUF_DECODE_FAILED\020\016\022\035\n\031SERVER_" +
+      "CONNECTION_TIMEOUT\020\017*\370\001\n\025wifi_connection" +
+      "_state\022\025\n\021NO_WLAN_CONNECTED\020\000\022\023\n\017WLAN_CO" +
+      "NNECTING\020\001\022\022\n\016WLAN_CONNECTED\020\002\022\020\n\014IP_RET" +
+      "RIEVED\020\003\022\020\n\014DNS_RESOLVED\020\004\022\024\n\020SOCKET_CON" +
+      "NECTED\020\005\022\020\n\014REQUEST_SENT\020\006\022\r\n\tCONNECTED\020" +
+      "\007\022\014\n\010SSL_FAIL\020\010\022\022\n\016HELLO_KEY_FAIL\020\t\022\016\n\nD" +
+      "NS_FAILED\020\n\022\022\n\016CONNECT_FAILED\020\013B.\n\030com.h" +
+      "ello.suripu.api.bleB\022SenseCommandProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5789,19 +7298,19 @@ public final class SenseCommandProtos {
           internal_static_pill_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_pill_data_descriptor,
-              new java.lang.String[] { "DeviceId", "BatteryLevel", "Uptime", "MotionDataEntrypted", "FirmwareVersion", "Timestamp", });
+              new java.lang.String[] { "DeviceId", "BatteryLevel", "Uptime", "MotionDataEntrypted", "FirmwareVersion", "Timestamp", "Rssi", });
           internal_static_MorpheusCommand_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_MorpheusCommand_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_MorpheusCommand_descriptor,
-              new java.lang.String[] { "Version", "Type", "DeviceId", "AccountId", "Error", "WifiName", "WifiSSID", "WifiPassword", "BatteryLevel", "Uptime", "FirmwareVersion", "WifiScanResult", "SecurityType", "PillData", "WifiConnectionState", });
+              new java.lang.String[] { "Version", "Type", "DeviceId", "AccountId", "Error", "WifiName", "WifiSSID", "WifiPassword", "FirmwareVersion", "WifiScanResult", "SecurityType", "PillData", "WifiConnectionState", "BleBondCount", "CountryCode", "AesKey", "TopVersion", "ServerIp", "SocketErrorCode", "HttpResponseCode", "AppVersion", });
           internal_static_batched_pill_data_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_batched_pill_data_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_batched_pill_data_descriptor,
-              new java.lang.String[] { "Pills", "DeviceId", });
+              new java.lang.String[] { "Pills", "DeviceId", "Prox", });
           return null;
         }
       };

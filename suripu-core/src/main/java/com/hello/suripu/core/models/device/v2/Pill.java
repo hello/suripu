@@ -12,9 +12,12 @@ public class Pill {
     public static final Color DEFAULT_COLOR = Color.BLUE;
     private static final Integer MIN_IDEAL_BATTERY_LEVEL = 15;
 
+    // These should match the colors in `PillColorUtil`
     public enum Color {
         BLUE("BLUE"),
-        RED("RED");
+        RED("RED"),
+        AQUA("AQUA"),
+        YELLOW("YELLOW");
 
         private final String value;
         Color(final String value) {

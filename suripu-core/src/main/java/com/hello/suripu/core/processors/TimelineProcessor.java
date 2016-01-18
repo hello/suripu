@@ -20,6 +20,7 @@ import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
+import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
 import com.hello.suripu.core.models.Account;
@@ -96,6 +97,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private final Optional<UUID> uuidOptional;
     private final CalibrationDAO calibrationDAO;
     private final DefaultModelEnsembleDAO defaultModelEnsembleDAO;
+    private final UserTimelineTestGroupDAO userTimelineTestGroupDAO;
 
     final private static int SLOT_DURATION_MINUTES = 1;
     public final static int MIN_TRACKER_MOTION_COUNT = 20;
@@ -123,19 +125,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                                                             final OnlineHmmModelsDAO priorsDAO,
                                                             final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                                                             final CalibrationDAO calibrationDAO,
-                                                            final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
+                                                            final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
+                                                            final UserTimelineTestGroupDAO userTimelineTestGroupDAO) {
 
         final LoggerWithSessionId logger = new LoggerWithSessionId(STATIC_LOGGER);
         return new TimelineProcessor(pillDataDAODynamoDB,
                 deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,
                 feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,
                 senseColorDAO,priorsDAO, featureExtractionModelsDAO,
-                Optional.<UUID>absent(), calibrationDAO,defaultModelEnsembleDAO);
+                Optional.<UUID>absent(), calibrationDAO,defaultModelEnsembleDAO,userTimelineTestGroupDAO);
     }
 
     public TimelineProcessor copyMeWithNewUUID(final UUID uuid) {
 
-        return new TimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO);
+        return new TimelineProcessor(pillDataDAODynamoDB, deviceDAO,deviceDataDAODynamoDB,ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAODynamoDB,senseColorDAO,priorsDAO,featureExtractionModelsDAO,Optional.of(uuid),calibrationDAO,defaultModelEnsembleDAO,userTimelineTestGroupDAO);
     }
 
     //private SessionLogDebug(final String)
@@ -153,7 +156,8 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                               final FeatureExtractionModelsDAO featureExtractionModelsDAO,
                               final Optional<UUID> uuid,
                               final CalibrationDAO calibrationDAO,
-                              final DefaultModelEnsembleDAO defaultModelEnsembleDAO) {
+                              final DefaultModelEnsembleDAO defaultModelEnsembleDAO,
+                              final UserTimelineTestGroupDAO userTimelineTestGroupDAO) {
         this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.deviceDAO = deviceDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -167,6 +171,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         this.featureExtractionModelsDAO = featureExtractionModelsDAO;
         this.calibrationDAO = calibrationDAO;
         this.defaultModelEnsembleDAO = defaultModelEnsembleDAO;
+        this.userTimelineTestGroupDAO = userTimelineTestGroupDAO;
 
         if (uuid.isPresent()) {
             this.LOGGER = new LoggerWithSessionId(STATIC_LOGGER, uuid.get());
@@ -186,27 +191,49 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         uuidOptional = uuid;
     }
 
+    private Long getTestGroup(final Long accountId, final DateTime targetDateLocalUTC, final int timezoneOffsetMillis) {
+
+        final DateTime dateOfNightUTC = targetDateLocalUTC.withZone(DateTimeZone.UTC).minusMillis(timezoneOffsetMillis);
+
+        //find out user test group
+        final Optional<Long> groupIdOptional = userTimelineTestGroupDAO.getUserGestGroup(accountId,dateOfNightUTC);
+
+        if (groupIdOptional.isPresent()) {
+            return groupIdOptional.get();
+        }
+
+        return TimelineLog.DEFAULT_TEST_GROUP;
+    }
+
     public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime date, final Optional<TimelineFeedback> newFeedback) {
         final DateTime targetDate = date.withTimeAtStartOfDay().withHourOfDay(DateTimeUtil.DAY_STARTS_AT_HOUR);
         final DateTime endDate = date.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
         final DateTime  currentTime = DateTime.now().withZone(DateTimeZone.UTC);
 
-        final TimelineLog log = new TimelineLog(accountId,targetDate.withZone(DateTimeZone.UTC).getMillis());
         LOGGER.debug("Target date: {}", targetDate);
         LOGGER.debug("End date: {}", endDate);
-
 
 
         final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, endDate,currentTime.getMillis(),newFeedback);
 
         if (!sensorDataOptional.isPresent()) {
             LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, targetDate);
+            final TimelineLog log = new TimelineLog(accountId,targetDate.withZone(DateTimeZone.UTC).getMillis());
             log.addMessage(TimelineError.NO_DATA);
             return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, DataCompleteness.NO_DATA);
         }
 
-
         final OneDaysSensorData sensorData = sensorDataOptional.get();
+
+        //get test group of user, will be default if no entries exist in database
+        final Long testGroup = getTestGroup(accountId,targetDate,sensorData.timezoneOffsetMillis);
+
+        //create log with test grup
+        final TimelineLog log = new TimelineLog(accountId,targetDate.withZone(DateTimeZone.UTC).getMillis(),DateTime.now(DateTimeZone.UTC).getMillis(),testGroup);
+
+
+
+        //check to see if there's an issue with the data
         final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions,sensorData.trackerMotions);
 
         switch (discardReason){
@@ -743,13 +770,13 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         Integer sleepScore = computeAndMaybeSaveScore(trackerMotions, numSoundEvents, allSensorSampleList, targetDate, accountId, sleepStats);
 
-        if (!this.hasInvalidSleepScoreFromFeedbackChecking(accountId)) {
-            //ORIGINAL BEHAVIOR
-            if (sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
-                LOGGER.warn("Score for account id {} was set to zero because sleep duration is too short ({} min)", accountId, sleepStats.sleepDurationInMinutes);
-                sleepScore = 0;
-            }
+        //if there is no feedback, we have a "natural" timeline
+        //check if this natural timeline makes sense.  If not, set sleep score to zero.
+        if (feedbackList.isEmpty() && sleepStats.sleepDurationInMinutes < TimelineSafeguards.MINIMUM_SLEEP_DURATION_MINUTES) {
+            LOGGER.warn("action=zeroing-score account_id={} reason=sleep-duration-too-short sleep_duration={}", accountId, sleepStats.sleepDurationInMinutes);
+            sleepScore = 0;
         }
+
 
         boolean isValidSleepScore = sleepScore > 0;
 

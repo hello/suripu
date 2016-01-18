@@ -31,7 +31,7 @@ public class TimelineLog {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineLog.class);
 
-    private static final long DEFAULT_TEST_GROUP = 0L;
+    public static final long DEFAULT_TEST_GROUP = 0L;
 
     private final LoggingProtos.BatchLogMessage.Builder builder; //mutable, but only to add timeline log messages
     private final long dateOfNight;

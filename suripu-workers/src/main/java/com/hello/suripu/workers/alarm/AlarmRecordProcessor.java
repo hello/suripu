@@ -8,9 +8,9 @@ import com.amazonaws.services.kinesis.model.Record;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.ScheduledRingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SmartAlarmLoggerDynamoDB;
-import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.processors.RingProcessor;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
@@ -34,7 +34,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     private final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB;
     private final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB;
 
-    private final TrackerMotionDAO trackerMotionDAO;
+    private final PillDataDAODynamoDB pillDataDAODynamoDB;
     private final AlarmWorkerConfiguration configuration;
 
     private final Histogram recordAgesMinutes;
@@ -45,13 +45,13 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
     public AlarmRecordProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final ScheduledRingTimeHistoryDAODynamoDB scheduledRingTimeHistoryDAODynamoDB,
                                 final SmartAlarmLoggerDynamoDB smartAlarmLoggerDynamoDB,
-                                final TrackerMotionDAO trackerMotionDAO,
+                                final PillDataDAODynamoDB pillDataDAODynamoDB,
                                 final AlarmWorkerConfiguration configuration,
                                 final Map<String, DateTime> senseIdLastProcessed){
 
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.scheduledRingTimeHistoryDAODynamoDB = scheduledRingTimeHistoryDAODynamoDB;
-        this.trackerMotionDAO = trackerMotionDAO;
+        this.pillDataDAODynamoDB = pillDataDAODynamoDB;
         this.smartAlarmLoggerDynamoDB = smartAlarmLoggerDynamoDB;
 
         this.configuration = configuration;
@@ -121,7 +121,7 @@ public class AlarmRecordProcessor extends HelloBaseRecordProcessor {
                 RingProcessor.updateAndReturnNextRingTimeForSense(this.mergedUserInfoDynamoDB,
                         this.scheduledRingTimeHistoryDAODynamoDB,
                         this.smartAlarmLoggerDynamoDB,
-                        this.trackerMotionDAO,
+                        this.pillDataDAODynamoDB,
                         senseId,
                         DateTime.now(),
                         this.configuration.getProcessAheadTimeInMinutes(),
