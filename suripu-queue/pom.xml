@@ -30,11 +30,6 @@
             <version>0.6.26-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.hello.suripu</groupId>
-            <artifactId>suripu-app</artifactId>
-            <version>0.6.26-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.2-1004-jdbc4</version>
@@ -43,18 +38,6 @@
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
             <version>2.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hello.dropwizard</groupId>
-            <artifactId>dropwizard-mikkusu</artifactId>
-            <version>0.0.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.yammer.dropwizard</groupId>
-                    <artifactId>dropwizard-core</artifactId>
-                </exclusion>
-            </exclusions>
-
         </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>

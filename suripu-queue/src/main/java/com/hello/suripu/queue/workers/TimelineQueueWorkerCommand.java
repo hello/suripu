@@ -16,7 +16,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.db.AccountDAO;
@@ -47,6 +46,7 @@ import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
 import com.hello.suripu.queue.configuration.SQSConfiguration;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
+import com.hello.suripu.queue.modules.RolloutQueueModule;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.cli.EnvironmentCommand;
 import com.yammer.dropwizard.config.Environment;
@@ -172,7 +172,7 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient,
                 configuration.dynamoDBConfiguration().tables().get(DynamoDBTableName.FEATURES), "prod");
 
-        final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
+        final RolloutQueueModule module = new RolloutQueueModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
         // set up metrics
