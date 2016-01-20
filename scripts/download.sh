@@ -20,6 +20,8 @@ s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/tim
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/push-notifications.staging.yml . --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/sense_last_seen.staging.yml . --force
 s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_logs.staging.yml . --force
+s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-queue/$VERSION/suripu-queue.staging.yml . --force
 
 s3cmd get s3://hello-maven/release/com/hello/suripu/suripu-app/$VERSION/suripu-app-$VERSION.jar . --force
 s3cmd get s3://hello-maven/release/com/hello/suripu/suripu-workers/$VERSION/suripu-workers-$VERSION.jar . --force
+s3cmd get s3://hello-maven/release/com/hello/suripu/suripu-queue/$VERSION/suripu-queue-$VERSION.jar . --force

@@ -65,14 +65,27 @@ cp init-scripts/suripu-workers-sense-last-seen.conf $TEMP_DIR/etc/init/
 cp init-scripts/suripu-workers-smartalarm.conf $TEMP_DIR/etc/init/                                                               
 cp init-scripts/suripu-workers-timeline.conf $TEMP_DIR/etc/init/
 
-
-
 fpm --force -s dir -C $TEMP_DIR -t deb --name "suripu-workers" --version $VERSION --config-files etc/hello .
 
 
+TEMP_DIR="/tmp/suripu-queue"
+mkdir -p $TEMP_DIR/opt/hello
+mkdir -p $TEMP_DIR/etc/hello
+mkdir -p $TEMP_DIR/etc/init/
+
+s3cmd get s3://hello-deploy/configs/com/hello/suripu/suripu-queue/$VERSION/suripu-queue.prod.yml $TEMP_DIR/etc/hello/suripu-queue.yml --force
+s3cmd get s3://hello-maven/release/com/hello/suripu/suripu-queue/$VERSION/suripu-queue-$VERSION.jar $TEMP_DIR/opt/hello/suripu-queue.jar --force
+
+cp init-scripts/suripu-queue-timeline.conf $TEMP_DIR/etc/init/
+
+fpm --force -s dir -C $TEMP_DIR -t deb --name "suripu-queue" --version $VERSION --config-files etc/hello .
 
 
+## upload debian package to S3
 
 #s3cmd put suripu-service_${VERSION}_amd64.deb s3://hello-deploy/pkg/suripu-service/suripu-service_${VERSION}_amd64.deb
 s3cmd put suripu-app_${VERSION}_amd64.deb s3://hello-deploy/pkg/suripu-app/suripu-app_${VERSION}_amd64.deb
 s3cmd put suripu-workers_${VERSION}_amd64.deb s3://hello-deploy/pkg/suripu-workers/suripu-workers_${VERSION}_amd64.deb
+s3cmd put suripu-queue_${VERSION}_amd64.deb s3://hello-deploy/pkg/suripu-queue/suripu-queue_${VERSION}_amd64.deb
+
+
