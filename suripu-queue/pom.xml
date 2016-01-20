@@ -4,6 +4,7 @@
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
         <version>0.6.35-SNAPSHOT</version>
+        <relativePath></relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -38,11 +39,6 @@
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
             <version>2.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
-            <version>${dropwizard.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.dagger</groupId>

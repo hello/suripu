@@ -35,7 +35,6 @@
             <artifactId>RoaringBitmap</artifactId>
             <version>0.3.3</version>
         </dependency>
-        <!-- used for its cli commands -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
