@@ -30,7 +30,7 @@ public class TemperatureMsgTest {
         assertThat(contains, is(true));
 
         Text text;
-        text = TemperatureMsgEN.getTempMsgPerfect(message, "for a king");
+        text = TemperatureMsgEN.getTempMsgPerfect(message);
         contains = text.message.contains(unit);
         LOGGER.debug("perfect msg: {}", text.message);
         assertThat(contains, is(true));
@@ -45,7 +45,7 @@ public class TemperatureMsgTest {
         LOGGER.debug("too hot msg: {}", text.message);
         assertThat(contains, is(true));
 
-        text = TemperatureMsgEN.getTempMsgBad(message, "for a king", 16, 20, unit);
+        text = TemperatureMsgEN.getTempMsgBad(message, 16, 20, unit);
         contains = text.message.contains(unit);
         LOGGER.debug("too hot msg: {}", text.message);
         assertThat(contains, is(true));
