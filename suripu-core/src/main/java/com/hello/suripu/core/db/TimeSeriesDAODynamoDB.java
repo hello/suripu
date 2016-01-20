@@ -266,6 +266,8 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 queryResult = this.dynamoDBClient.query(queryRequest);
             } catch (ProvisionedThroughputExceededException ptee) {
                 if (numAttempts >= maxQueryAttempts()) {
+                    logger().warn("Got ProvisionedThroughputExceededException while querying. Query: {}",
+                            queryRequest.getExpressionAttributeValues());
                     return new DynamoDBResponse(results, Response.Status.PARTIAL_RESULTS, Optional.of(ptee));
                 }
                 backoff(numAttempts);
