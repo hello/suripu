@@ -304,7 +304,7 @@ public class OnlineHmmTest {
         AllSensorSampleList senseData = getTypicalDayOfSense(startTime, endTime, 0);
         ImmutableList<TrackerMotion> pillData = getTypicalDayOfPill(startTime, endTime, 0);
 
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, ImmutableList.copyOf(Collections.EMPTY_LIST), ImmutableList.copyOf(Collections.EMPTY_LIST), 0);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData, pillData, ImmutableList.copyOf(Collections.EMPTY_LIST), ImmutableList.copyOf(Collections.EMPTY_LIST),date,startTime,endTime,endTime,0);
 
 
         final DateTime currentTime = endTime.minusHours(7);
@@ -339,7 +339,7 @@ public class OnlineHmmTest {
         AllSensorSampleList senseData = getTypicalDayOfSense(startTime,endTime,0);
         ImmutableList<TrackerMotion> pillData = getTypicalDayOfPill(startTime,endTime,0);
 
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),0);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),date,startTime,endTime,endTime,0);
 
         ////--------------------
         //step 1) make sure we DO NOT save a model on first day
@@ -370,7 +370,7 @@ public class OnlineHmmTest {
         timelineFeedbacks.add(feedbackForNight2);
         timelineFeedbacks.add(feedbackForNight2bed);
         timelineFeedbacks.add(feedbackForNight2Wake);
-        final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),0);
+        final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),date,startTime,endTime,endTime,0);
 
         //////////////////////////////////////
         // since there is feedback for this day,
@@ -403,7 +403,7 @@ public class OnlineHmmTest {
         endTime = endTime.plusDays(1);
         senseData = getTypicalDayOfSense(startTime,endTime,0);
         pillData = getTypicalDayOfPill(startTime,endTime,0);
-        final OneDaysSensorData oneDaysSensorData3 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),0);
+        final OneDaysSensorData oneDaysSensorData3 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),date,startTime,endTime,endTime,0);
 
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData3,false,false);
 
@@ -449,7 +449,7 @@ public class OnlineHmmTest {
         pillData = getTypicalDayOfPill(startTime,endTime,0);
         final TimelineFeedback feedbackForNight4 = TimelineFeedback.create(date,"00:00","23:00", Event.Type.SLEEP,0L,endTime.getMillis(), null, true);
 
-        final OneDaysSensorData oneDaysSensorData4 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Lists.newArrayList(feedbackForNight4)),0);
+        final OneDaysSensorData oneDaysSensorData4 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Lists.newArrayList(feedbackForNight4)),date,startTime,endTime,endTime,0);
 
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData4,true,false);
 
@@ -478,7 +478,7 @@ public class OnlineHmmTest {
         AllSensorSampleList senseData = getTypicalDayOfSense(startTime,endTime,0);
         ImmutableList<TrackerMotion> pillData = getTypicalDayOfPill(startTime,endTime,0);
 
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),0);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),date,startTime,endTime,endTime,0);
 
         ////--------------------
         //step 1) make sure we save off default model on first day
@@ -498,7 +498,7 @@ public class OnlineHmmTest {
         final List<TimelineFeedback> timelineFeedbacks = Lists.newArrayList();
         final TimelineFeedback feedbackForNight2 = TimelineFeedback.create(date,"00:00","23:00", Event.Type.SLEEP,0L,endTime.plusDays(1).getMillis(), null, true);
         timelineFeedbacks.add(feedbackForNight2);
-        final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),0);
+        final OneDaysSensorData oneDaysSensorData2 = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(timelineFeedbacks),date,startTime,endTime,endTime,0);
 
         onlineHmm.predictAndUpdateWithLabels(0, date,startTime,endTime,endTime,oneDaysSensorData2,true,false);
 

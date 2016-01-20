@@ -30,11 +30,20 @@ public class TimelineSafeguards {
     private final Logger LOGGER;
 
     public TimelineSafeguards(final UUID uuid) {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+        this(Optional.of(uuid));
     }
 
     public TimelineSafeguards() {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        this(Optional.<UUID>absent());
+    }
+
+    public  TimelineSafeguards(final Optional<UUID> uuid) {
+        if (uuid.isPresent()) {
+            LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid.get());
+        }
+        else {
+            LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        }
     }
 
     public boolean checkEventOrdering(SleepEvents<Optional<Event>> sleepEvents, ImmutableList<Event> extraEvents) {

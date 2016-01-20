@@ -52,7 +52,7 @@ public class OnlineHmmTortureTest {
         final AllSensorSampleList senseData = OnlineHmmTest.getTypicalDayOfSense(startTime, endTime, 0);
         final ImmutableList<TrackerMotion> pillData = OnlineHmmTest.getTypicalDayOfPill(startTime, endTime, 0);
 
-        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),0);
+        final OneDaysSensorData oneDaysSensorData = new OneDaysSensorData(senseData,pillData,ImmutableList.copyOf(Collections.EMPTY_LIST),ImmutableList.copyOf(Collections.EMPTY_LIST),date,startTime,endTime,endTime,0);
 
         ////--------------------
         //step 1) make sure we save off default model on first day

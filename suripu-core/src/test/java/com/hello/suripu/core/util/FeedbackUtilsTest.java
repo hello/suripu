@@ -135,7 +135,7 @@ public class FeedbackUtilsTest {
 
         TestCase.assertTrue(newEvents.mainEvents.size() == 2);
 
-        for (final Event event : newEvents.mainEvents) {
+        for (final Event event : newEvents.mainEvents.values()) {
             if (event.getType().equals(Event.Type.SLEEP)) {
                 final long mysleeptime = event.getStartTimestamp();
                 TestCase.assertEquals(expectedTime, mysleeptime);
@@ -177,7 +177,7 @@ public class FeedbackUtilsTest {
         final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
-        final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
+        final long mysleeptime = newEvents.mainEvents.values().asList().get(0).getStartTimestamp();
 
         TestCase.assertEquals(expectedTime, mysleeptime);
 
@@ -232,7 +232,7 @@ public class FeedbackUtilsTest {
         Map<String,Event> newEventMap = Maps.newHashMap();
         Map<String,Event> extraEventMap = Maps.newHashMap();
 
-        for (Event event : newEvents.mainEvents) {
+        for (Event event : newEvents.mainEvents.values()) {
             newEventMap.put(event.getDescription(),event);
         }
 
