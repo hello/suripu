@@ -1,5 +1,5 @@
-metrics_enabled: true
-debug: false
+metrics_enabled: false
+debug: true
 graphite:
   host: carbon.hostedgraphite.com
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
@@ -10,9 +10,11 @@ graphite:
 
 common_db:
   driverClass: org.postgresql.Driver
-  user: common
-  password: hello-common
-  url: jdbc:postgresql://common.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/common
+
+  user: [enter your local sql user name]
+  password: [user password]
+  url: jdbc:postgresql://localhost:5432/[your-local-database]
+
   properties:
     hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 
@@ -40,7 +42,6 @@ common_db:
 
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
-
 
 http:
   # The port on which the HTTP server listens for service requests.
@@ -76,7 +77,7 @@ timeline_seed_model:
 
 
 SQS_configuration:
-    sqs_queue_name: prod_timeline_queue
+    sqs_queue_name: timeline_queue
     sqs_max_connections: 50
     sqs_max_messages_read: 10
     sqs_wait_time_seconds: 10
@@ -86,26 +87,26 @@ dynamodb:
   region: us-east-1
   tables:
     features: features
-    sense_prefix : prod_sense # not used at the moment but we need it here
-    calibration: prod_calibration
-    device_data: prod_sense_data
-    pill_data: prod_pill_data
-    online_hmm_models: prod_online_hmm_models
-    feature_extraction_models: prod_feature_extraction_models
-    ring_time_history: prod_ring_history_by_account
-    sleep_hmm: prod_sleephmm
-    sleep_stats: prod_sleep_stats
+    sense_prefix : prod_sense #not used at the moment but we need it here
+    calibration: calibration
+    device_data: sense_data
+    pill_data: pill_data
+    online_hmm_models: online_hmm_models
+    feature_extraction_models: feature_extraction_models
+    ring_time_history: ring_history_by_account
+    sleep_hmm: sleephmm
+    sleep_stats: sleep_stats
   endpoints:
     features : http://dynamodb.us-east-1.amazonaws.com
-    sense_prefix: http://dynamodb.us-east-1.amazonaws.com
-    sense_last_seen : http://dynamodb.us-east-1.amazonaws.com
-    calibration : http://dynamodb.us-east-1.amazonaws.com
-    device_data: http://dynamodb.us-east-1.amazonaws.com
-    pill_data: http://dynamodb.us-east-1.amazonaws.com
-    online_hmm_models: http://dynamodb.us-east-1.amazonaws.com
-    feature_extraction_models: http://dynamodb.us-east-1.amazonaws.com
-    ring_time_history: http://dynamodb.us-east-1.amazonaws.com
-    sleep_hmm: http://dynamodb.us-east-1.amazonaws.com
-    sleep_stats: http://dynamodb.us-east-1.amazonaws.com
+    sense_prefix: http://localhost:7777
+    sense_last_seen : http://localhost:7777
+    calibration : http://localhost:7777
+    device_data: http://localhost:7777
+    pill_data: http://localhost:7777
+    online_hmm_models: http://localhost:7777
+    feature_extraction_models: http://localhost:7777
+    ring_time_history: http://localhost:7777
+    sleep_hmm: http://localhost:7777
+    sleep_stats: http://localhost:7777
 
-num_generator_threads: 10
+num_generator_threads: 2

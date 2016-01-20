@@ -5,8 +5,6 @@ graphite:
   api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
   reporting_interval_in_seconds: 30
   include_metrics:
-    - org.skife
-    - xx-responses
     - com.hello
 
 
@@ -64,7 +62,7 @@ logging:
   # Logger-specific levels.
   loggers:
     # Sets the level for 'com.example.app' to DEBUG.
-    com.hello.suripu: ALL
+    com.hello.suripu: DEBUG
 
 
 sleep_stats_version: v_0_2
@@ -111,4 +109,4 @@ dynamodb:
     sleep_hmm: http://dynamodb.us-east-1.amazonaws.com
     sleep_stats: http://dynamodb.us-east-1.amazonaws.com
 
-num_generator_threads: 5
+num_generator_threads: 2
