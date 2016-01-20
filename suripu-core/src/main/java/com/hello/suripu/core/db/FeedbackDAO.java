@@ -10,7 +10,10 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 @RegisterMapper(TimelineFeedbackMapper.class)
 public abstract class FeedbackDAO extends FeedbackReadDAO {
-    
+    @Deprecated
+    @SqlUpdate("INSERT INTO sleep_feedback (account_id, day, hour, correct) VALUES(:account_id, :day, :hour, :correct)")
+    abstract void insert(@Bind("account_id") final Long accountId, @Bind("day") final String day, @Bind("hour") String hour, @Bind("correct") final Boolean correct);
+
     //update timeline_feedback set new_time='07:15' where account_id=1012 and date_of$
 
     /* update if the passed object's old_time,account_id,night,type == database object's new_time,account_id,night,type
@@ -33,6 +36,14 @@ public abstract class FeedbackDAO extends FeedbackReadDAO {
     /* Update new_time=old_time by Row ID   */
     @SqlUpdate("UPDATE timeline_feedback SET new_time=old_time, adjustment_delta_minutes=0 WHERE id=:id")
     public abstract int undoFeedbackUpdate(@Bind("id") final Long id);
+
+    @Deprecated
+    public void insert(SleepFeedback feedback) {
+        if(feedback.accountId.isPresent()) {
+            insert(feedback.accountId.get(), feedback.day, feedback.hour, feedback.correct);
+        }
+
+    }
 
     public void insertTimelineFeedback(final long accountId,final TimelineFeedback feedback) {
 
