@@ -84,7 +84,7 @@ public class TimelineFeedback {
         return create(dateOfNight, oldTimeOfEvent, oldTimeOfEvent, eventType, accountId, Boolean.TRUE);
     }
 
-    public int getDelta() {
+    public int getDeltaInMinutes() {
         final DateTime oldDateTime  = DateTime.parse(oldTimeOfEvent, DateTimeFormat.forPattern("HH:mm"));
         final DateTime newDateTime  = DateTime.parse(newTimeOfEvent, DateTimeFormat.forPattern("HH:mm"));
 
@@ -102,6 +102,6 @@ public class TimelineFeedback {
             delta = DateTimeConstants.MILLIS_PER_DAY + delta;
         }
 
-        return delta;
+        return delta / DateTimeConstants.MILLIS_PER_MINUTE;
     }
 }

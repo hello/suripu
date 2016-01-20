@@ -327,4 +327,4 @@ GRANT ALL PRIVILEGES ON SEQUENCE user_timeline_test_group_id_seq TO ingress_user
 
 -- UPDATES TO timeline_feedback TABLE 2016-01-15
 --on purpose, default value is null, we are going to go in an back-populate
-ALTER TABLE timeline_feedback ADD COLUMN adjustment_delta_millis INTEGER;
+ALTER TABLE timeline_feedback ADD COLUMN adjustment_delta_minutes INTEGER;

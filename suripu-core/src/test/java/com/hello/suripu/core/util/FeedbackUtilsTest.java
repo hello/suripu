@@ -319,13 +319,13 @@ public class FeedbackUtilsTest {
         //delta of +3 min
         final TimelineFeedback feedback3 = TimelineFeedback.create("2015-02-03", "23:59", "00:02", Event.Type.SLEEP.name());
 
-        final int delta1 = feedback1.getDelta();
-        final int delta2 = feedback2.getDelta();
-        final int delta3 = feedback3.getDelta();
+        final int delta1 = feedback1.getDeltaInMinutes();
+        final int delta2 = feedback2.getDeltaInMinutes();
+        final int delta3 = feedback3.getDeltaInMinutes();
 
-        TestCase.assertEquals(delta1, DateTimeConstants.MILLIS_PER_HOUR * -7);
-        TestCase.assertEquals(delta2, DateTimeConstants.MILLIS_PER_MINUTE * -2);
-        TestCase.assertEquals(delta3, DateTimeConstants.MILLIS_PER_MINUTE * +3);
+        TestCase.assertEquals(delta1, DateTimeConstants.MINUTES_PER_HOUR * -7);
+        TestCase.assertEquals(delta2,  -2);
+        TestCase.assertEquals(delta3,  +3);
 
 
     }

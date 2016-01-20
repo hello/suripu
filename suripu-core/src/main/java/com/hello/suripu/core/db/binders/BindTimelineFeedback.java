@@ -26,7 +26,7 @@ public @interface BindTimelineFeedback{
             return new Binder<BindTimelineFeedback, TimelineFeedback>() {
                 public void bind(SQLStatement q, BindTimelineFeedback bind, TimelineFeedback arg) {
 
-                    final Integer delta = arg.getDelta();
+                    final Integer delta = arg.getDeltaInMinutes();
 
                     q.bind("date_of_night", arg.dateOfNight);
                     q.bind("event_type", arg.eventType.getValue());
@@ -34,7 +34,7 @@ public @interface BindTimelineFeedback{
                     q.bind("new_time", arg.newTimeOfEvent);
                     q.bind("created", arg.created);
                     q.bind("is_correct", arg.isNewTimeCorrect);
-                    q.bind("adjustment_delta_millis",delta);
+                    q.bind("adjustment_delta_minutes",delta);
                 }
             };
         }
