@@ -7,7 +7,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>suripu-workers</artifactId>
+    <artifactId>suripu-queue</artifactId>
+
+    <properties>
+        <dropwizard.version>0.6.2</dropwizard.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -26,16 +30,6 @@
             <version>0.6.37-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>amazon-kinesis-client</artifactId>
-            <version>1.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.roaringbitmap</groupId>
-            <artifactId>RoaringBitmap</artifactId>
-            <version>0.3.3</version>
-        </dependency>
-        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.2-1004-jdbc4</version>
@@ -44,11 +38,6 @@
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
             <version>2.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-db</artifactId>
-            <version>0.6.2</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.dagger</groupId>
@@ -60,16 +49,6 @@
             <artifactId>dagger-compiler</artifactId>
             <version>1.2.2</version>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>2.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.indextank</groupId>
-            <artifactId>indextank-java</artifactId>
-            <version>1.0.9</version>
         </dependency>
     </dependencies>
     <build>
@@ -101,7 +80,7 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.hello.suripu.workers.HelloWorker</mainClass>
+                                    <mainClass>com.hello.suripu.queue.SuripuQueue</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
