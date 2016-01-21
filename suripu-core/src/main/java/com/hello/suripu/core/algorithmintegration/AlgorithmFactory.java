@@ -1,6 +1,7 @@
 package com.hello.suripu.core.algorithmintegration;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
@@ -19,7 +20,7 @@ import java.util.UUID;
  */
 public class AlgorithmFactory {
 
-    private final Map<AlgorithmType,TimelineAlgorithm> algorithmMap;
+    private final ImmutableMap<AlgorithmType,TimelineAlgorithm> algorithmMap;
 
     public static AlgorithmFactory create(final SleepHmmDAO sleepHmmDAO, final OnlineHmmModelsDAO priorsDAO, final DefaultModelEnsembleDAO defaultModelEnsembleDAO, final FeatureExtractionModelsDAO featureExtractionModelsDAO, final Optional<UUID> uuid) {
         final Map<AlgorithmType,TimelineAlgorithm> algorithmMap = Maps.newHashMap();
@@ -33,7 +34,7 @@ public class AlgorithmFactory {
 
 
     private AlgorithmFactory(final Map<AlgorithmType,TimelineAlgorithm> algorithmMap) {
-        this.algorithmMap = algorithmMap;
+        this.algorithmMap = ImmutableMap.copyOf(algorithmMap);
     }
 
     public AlgorithmFactory cloneWithNewUUID(final Optional<UUID> uuid) {
