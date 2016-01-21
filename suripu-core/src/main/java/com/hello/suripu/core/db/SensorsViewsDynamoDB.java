@@ -253,7 +253,6 @@ public class SensorsViewsDynamoDB {
         return Optional.absent();
     }
 
-    @Deprecated
     public Optional<List<FirmwareInfo>> lastSeenFirmwareBatch(final Set<String> deviceIds) {
 
         if (deviceIds.size() > MAX_LAST_SEEN_DEVICES) {
