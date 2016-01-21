@@ -130,3 +130,15 @@ echo "restarting last seen"
 restart suripuworkers-last-seen
 sleep 1
 
+
+#echo "Updating symlink for suripu-queue"
+#rm /home/build/build/suripu-queue.jar
+#ln -s /home/build/build/suripu-queue-$1.jar /home/build/build/suripu-queue.jar
+
+#echo "Moving configs to /etc/"
+#cp /home/build/build/suripu-queue.staging.yml /etc/suripu-queue.prod.yml
+
+#echo "restarting..."
+#restart suripu-queue-timeline
+#sleep 1
+
