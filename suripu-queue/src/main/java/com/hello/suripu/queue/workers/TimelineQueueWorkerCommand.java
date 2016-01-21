@@ -36,6 +36,7 @@ import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
+import com.hello.suripu.core.db.UserTimelineTestGroupDAOImpl;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
@@ -273,7 +274,7 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         final FeedbackReadDAO feedbackDAO = commonDB.onDemand(FeedbackReadDAO.class);
         final AccountDAO accountDAO = commonDB.onDemand(AccountDAOImpl.class);
         final SenseColorDAO senseColorDAO = commonDB.onDemand(SenseColorDAOSQLImpl.class);
-        final UserTimelineTestGroupDAO userTimelineTestGroupDAO = commonDB.onDemand(UserTimelineTestGroupDAO.class);
+        final UserTimelineTestGroupDAO userTimelineTestGroupDAO = commonDB.onDemand(UserTimelineTestGroupDAOImpl.class);
 
         final ClientConfiguration clientConfig = new ClientConfiguration()
                 .withConnectionTimeout(1000)
