@@ -3,30 +3,23 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hello.suripu.algorithm.core.Segment;
 import com.hello.suripu.algorithm.sleep.SleepEvents;
-import com.hello.suripu.algorithm.utils.MotionFeatures;
 import com.hello.suripu.core.algorithmintegration.AlgorithmFactory;
 import com.hello.suripu.core.algorithmintegration.OneDaysSensorData;
-import com.hello.suripu.core.algorithmintegration.OnlineHmm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithm;
 import com.hello.suripu.core.algorithmintegration.TimelineAlgorithmResult;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
-import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
 import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
-import com.hello.suripu.core.db.DeviceReadForTimelineDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
-import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.PillDataReadDAO;
 import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
-import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.logging.LoggerWithSessionId;
@@ -56,16 +49,13 @@ import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.MultiLightOutUtils;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
-import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.hello.suripu.core.util.SleepScoreUtils;
 import com.hello.suripu.core.util.TimelineError;
 import com.hello.suripu.core.util.TimelineRefactored;
 import com.hello.suripu.core.util.TimelineSafeguards;
 import com.hello.suripu.core.util.TimelineUtils;
-import com.hello.suripu.core.util.VotingSleepEvents;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -86,7 +76,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public static final String VERSION = "0.0.2";
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
     private final PillDataReadDAO pillDataDAODynamoDB;
-    private final DeviceReadForTimelineDAO deviceDAO;
+    private final DeviceReadDAO deviceDAO;
     private final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB;
     private final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB;
     private final FeedbackReadDAO feedbackDAO;
@@ -119,7 +109,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
 
     static public TimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
-                                                            final DeviceReadForTimelineDAO deviceDAO,
+                                                            final DeviceReadDAO deviceDAO,
                                                             final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
                                                             final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
                                                             final FeedbackReadDAO feedbackDAO,
@@ -155,7 +145,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     //private SessionLogDebug(final String)
 
     private TimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
-                              final DeviceReadForTimelineDAO deviceDAO,
+                              final DeviceReadDAO deviceDAO,
                               final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
                               final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
                               final FeedbackReadDAO feedbackDAO,

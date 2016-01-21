@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Booleans;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.ObjectGraphRoot;
@@ -12,9 +11,8 @@ import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
-import com.hello.suripu.core.db.DeviceReadForTimelineDAO;
+import com.hello.suripu.core.db.DeviceReadDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
-import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
@@ -23,7 +21,6 @@ import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
-import com.hello.suripu.core.flipper.DynamoDBAdapter;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
@@ -46,13 +43,13 @@ import com.hello.suripu.core.util.SleepHmmWithInterpretation;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
 import dagger.Module;
-import dagger.ObjectGraph;
 import dagger.Provides;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
+import org.skife.jdbi.v2.sqlobject.Bind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -293,7 +290,8 @@ public class TimelineProcessorTest {
         }
     };
 
-    final DeviceReadForTimelineDAO deviceReadForTimelineDAO = new DeviceReadForTimelineDAO() {
+    /*
+    final DeviceReadDAO deviceReadForTimelineDAO = new DeviceReadForTimelineDAO() {
         @Override
         public ImmutableList<DeviceAccountPair> getSensesForAccountId(Long accountId) {
             return null;
@@ -307,6 +305,64 @@ public class TimelineProcessorTest {
         @Override
         public Optional<Long> getPartnerAccountId(Long accountId) {
             return Optional.absent();
+        }
+    };
+    */
+
+    final DeviceReadDAO deviceReadDAO = new DeviceReadDAO() {
+        @Override
+        public Optional<Long> getDeviceForAccountId(@Bind("account_id") Long accountId, @Bind("device_id") String deviceName) {
+            return null;
+        }
+
+        @Override
+        public ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId) {
+            return null;
+        }
+
+        @Override
+        public Optional<Long> getMostRecentSenseByAccountId(@Bind("account_id") Long accountId) {
+            return null;
+        }
+
+        @Override
+        public Optional<DeviceAccountPair> getMostRecentSensePairByAccountId(@Bind("account_id") Long accountId) {
+            return Optional.of(new DeviceAccountPair(0L,0L,"foobars",new DateTime(0L)));
+        }
+
+        @Override
+        public ImmutableList<DeviceAccountPair> getAccountIdsForDeviceId(@Bind("device_name") String deviceName) {
+            return null;
+        }
+
+        @Override
+        public Optional<Long> getIdForAccountIdDeviceId(@Bind("account_id") Long accountId, @Bind("device_name") String deviceName) {
+            return null;
+        }
+
+        @Override
+        public Optional<Long> getPartnerAccountId(@Bind("account_id") Long accountId) {
+            return Optional.absent();
+        }
+
+        @Override
+        public ImmutableList<DeviceAccountPair> getPillsForAccountId(@Bind("account_id") Long accountId) {
+            return null;
+        }
+
+        @Override
+        public ImmutableList<DeviceAccountPair> getLinkedAccountFromPillId(@Bind("pill_id") String deviceId) {
+            return null;
+        }
+
+        @Override
+        public ImmutableList<DeviceAccountPair> getAllPills(@Bind("is_active") Boolean isActive) {
+            return null;
+        }
+
+        @Override
+        public Optional<DeviceAccountPair> getInternalPillId(@Bind("pill_id") String pillId) {
+            return null;
         }
     };
 
@@ -379,7 +435,7 @@ public class TimelineProcessorTest {
     final List<LoggingProtos.TimelineLog> getLogsFromTimeline() {
 
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
-                pillDataReadDAO,deviceReadForTimelineDAO,deviceDataReadAllSensorsDAO,
+                pillDataReadDAO,deviceReadDAO,deviceDataReadAllSensorsDAO,
                 ringTimeHistoryDAODynamoDB,feedbackDAO,sleepHmmDAO,accountDAO,sleepStatsDAO,
                 senseColorDAO,priorsDAO,featureExtractionModelsDAO,calibrationDAO,
                 defaultModelEnsembleDAO,userTimelineTestGroupDAO);
