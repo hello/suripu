@@ -17,6 +17,8 @@ import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -247,6 +249,23 @@ public abstract class TimeSeriesDAODynamoDB<T> {
     //endregion
 
 
+    /**
+     * Convert String:AttributeValue map to key=val formatted log string.
+     * Only works for String or Number AttributeValues.
+     */
+    @VisibleForTesting
+    static String attributeValueMapToLogString(final Map<String, AttributeValue> attributeValueMap) {
+        final List<String> entries = Lists.newArrayList();
+        for (final Map.Entry<String, AttributeValue> entry: attributeValueMap.entrySet()) {
+            if (entry.getValue().getN() != null) {
+                entries.add(entry.getKey() + "=" + entry.getValue().getN());
+            } else if (entry.getValue().getS() != null) {
+                entries.add(entry.getKey() + "=" + entry.getValue().getS());
+            }
+        }
+        return Joiner.on(" ").join(entries);
+    }
+
     //region Query
     private DynamoDBResponse query(final QueryRequest originalQueryRequest) {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
@@ -266,9 +285,9 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 queryResult = this.dynamoDBClient.query(queryRequest);
             } catch (ProvisionedThroughputExceededException ptee) {
                 if (numAttempts >= maxQueryAttempts()) {
-                    logger().warn("exception=dynamodb-read-throughput method=query table={} expressionAttributeValues={}",
+                    logger().warn("exception=ProvisionedThroughputExceededException method=query table={} {}",
                             queryRequest.getTableName(),
-                            queryRequest.getExpressionAttributeValues());
+                            attributeValueMapToLogString(queryRequest.getExpressionAttributeValues()));
                     return new DynamoDBResponse(results, Response.Status.PARTIAL_RESULTS, Optional.of(ptee));
                 }
                 backoff(numAttempts);
