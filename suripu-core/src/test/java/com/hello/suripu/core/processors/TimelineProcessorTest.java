@@ -71,12 +71,12 @@ public class TimelineProcessorTest {
 
     final FeedbackReadDAO feedbackDAO = new FeedbackReadDAO() {
         @Override
-        public ImmutableList<TimelineFeedback> getCorrectedForNight(@Bind("account_id") Long accountId, @Bind("date_of_night") DateTime dateOfNight) {
+        public ImmutableList<TimelineFeedback> getCorrectedForNight(Long accountId,DateTime dateOfNight) {
             return null;
         }
 
         @Override
-        public ImmutableList<TimelineFeedback> getForTimeRange(@Bind("start_time") Long tstartUTC, @Bind("stop_time") Long tstopUTC) {
+        public ImmutableList<TimelineFeedback> getForTimeRange(Long tstartUTC, Long tstopUTC) {
             return null;
         }
     };
@@ -272,17 +272,17 @@ public class TimelineProcessorTest {
 
     final DeviceReadForTimelineDAO deviceReadForTimelineDAO = new DeviceReadForTimelineDAO() {
         @Override
-        public ImmutableList<DeviceAccountPair> getSensesForAccountId(@Bind("account_id") Long accountId) {
+        public ImmutableList<DeviceAccountPair> getSensesForAccountId(Long accountId) {
             return null;
         }
 
         @Override
-        public Optional<DeviceAccountPair> getMostRecentSensePairByAccountId(@Bind("account_id") Long accountId) {
+        public Optional<DeviceAccountPair> getMostRecentSensePairByAccountId(Long accountId) {
             return null;
         }
 
         @Override
-        public Optional<Long> getPartnerAccountId(@Bind("account_id") Long accountId) {
+        public Optional<Long> getPartnerAccountId(Long accountId) {
             return null;
         }
     };
