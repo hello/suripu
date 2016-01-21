@@ -63,7 +63,7 @@ import java.util.Set;
  * See http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GuidelinesForTables.html#GuidelinesForTables.TimeSeriesDataAccessPatterns
  * and http://stackoverflow.com/a/30200359
  */
-public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> implements DeviceDataIngestDAO, DeviceDataInsightQueryDAO {
+public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> implements DeviceDataIngestDAO, DeviceDataInsightQueryDAO, DeviceDataReadAllSensorsDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAODynamoDB.class);
 
     public enum DeviceDataAttribute implements Attribute {
@@ -468,6 +468,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
     }
 
+    @Override
     public AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(
             final Long queryStartTimestampInUTC,
             final Long queryEndTimestampInUTC,

@@ -44,7 +44,7 @@ import java.util.Set;
 /**
  * Created by pangwu on 2/26/15.
  */
-public class RingTimeHistoryDAODynamoDB {
+public class RingTimeHistoryDAODynamoDB implements RingTimeHistoryReadDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(AlarmDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
     private final String tableName;
@@ -135,6 +135,7 @@ public class RingTimeHistoryDAODynamoDB {
 
     }
 
+    @Override
     public List<RingTime> getRingTimesBetween(final String senseId, final Long accountId,
                                               final DateTime startTime,
                                               final DateTime endTime) {

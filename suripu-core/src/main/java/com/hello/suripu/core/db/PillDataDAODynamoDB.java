@@ -49,7 +49,7 @@ import java.util.Set;
  * od       (on_duration, N)
  * see https://hello.hackpad.com/Pill-Data-Explained-wgXcyalTFcq
  */
-public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> implements PillDataIngestDAO {
+public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> implements PillDataIngestDAO, PillDataReadDAO {
     private final static Logger LOGGER = LoggerFactory.getLogger(PillDataDAODynamoDB.class);
 
     public PillDataDAODynamoDB(AmazonDynamoDB dynamoDBClient, String tablePrefix) {
@@ -422,6 +422,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         return ImmutableList.copyOf(attributeMapsToPillDataList(response.data));
     }
 
+    @Override
     public ImmutableList<TrackerMotion>  getBetweenLocalUTC(final long accountId,
                                                             final DateTime startLocalTime,
                                                             final DateTime endLocalTime) {

@@ -15,13 +15,17 @@ import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDataDAODynamoDB;
+import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadDAO;
+import com.hello.suripu.core.db.DeviceReadForTimelineDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
-import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.PillDataReadDAO;
+import com.hello.suripu.core.db.RingTimeHistoryReadDAO;
 import com.hello.suripu.core.db.SleepHmmDAO;
+import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
@@ -81,14 +85,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     public static final String VERSION = "0.0.2";
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(TimelineProcessor.class);
-    private final PillDataDAODynamoDB pillDataDAODynamoDB;
-    private final DeviceReadDAO deviceDAO;
-    private final DeviceDataDAODynamoDB deviceDataDAODynamoDB;
-    private final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB;
+    private final PillDataReadDAO pillDataDAODynamoDB;
+    private final DeviceReadForTimelineDAO deviceDAO;
+    private final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB;
+    private final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB;
     private final FeedbackReadDAO feedbackDAO;
     private final SleepHmmDAO sleepHmmDAO;
     private final AccountReadDAO accountDAO;
-    private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
+    private final SleepStatsDAO sleepStatsDAODynamoDB;
     private final Logger LOGGER;
     private final TimelineUtils timelineUtils;
     private final TimelineSafeguards timelineSafeguards;
@@ -114,14 +118,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public final static String VERSION_BACKUP = "wupang_backup_for_hmm"; //let us know the HMM had some issues
 
 
-    static public TimelineProcessor createTimelineProcessor(final PillDataDAODynamoDB pillDataDAODynamoDB,
-                                                            final DeviceReadDAO deviceDAO,
-                                                            final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
-                                                            final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+    static public TimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
+                                                            final DeviceReadForTimelineDAO deviceDAO,
+                                                            final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                                                            final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
                                                             final FeedbackReadDAO feedbackDAO,
                                                             final SleepHmmDAO sleepHmmDAO,
                                                             final AccountReadDAO accountDAO,
-                                                            final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                                                            final SleepStatsDAO sleepStatsDAODynamoDB,
                                                             final SenseColorDAO senseColorDAO,
                                                             final OnlineHmmModelsDAO priorsDAO,
                                                             final FeatureExtractionModelsDAO featureExtractionModelsDAO,
@@ -150,14 +154,14 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     //private SessionLogDebug(final String)
 
-    private TimelineProcessor(final PillDataDAODynamoDB pillDataDAODynamoDB,
-                              final DeviceReadDAO deviceDAO,
-                              final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
-                              final RingTimeHistoryDAODynamoDB ringTimeHistoryDAODynamoDB,
+    private TimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
+                              final DeviceReadForTimelineDAO deviceDAO,
+                              final DeviceDataReadAllSensorsDAO deviceDataDAODynamoDB,
+                              final RingTimeHistoryReadDAO ringTimeHistoryDAODynamoDB,
                               final FeedbackReadDAO feedbackDAO,
                               final SleepHmmDAO sleepHmmDAO,
                               final AccountReadDAO accountDAO,
-                              final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
+                              final SleepStatsDAO sleepStatsDAODynamoDB,
                               final SenseColorDAO senseColorDAO,
                               final Optional<UUID> uuid,
                               final CalibrationDAO calibrationDAO,
