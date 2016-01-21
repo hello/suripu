@@ -2,12 +2,16 @@ package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.hello.suripu.api.logging.LoggingProtos;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.AccountReadDAO;
 import com.hello.suripu.core.db.CalibrationDAO;
 import com.hello.suripu.core.db.DefaultModelEnsembleDAO;
 import com.hello.suripu.core.db.DeviceDataReadAllSensorsDAO;
 import com.hello.suripu.core.db.DeviceReadForTimelineDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
+import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackReadDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.PillDataReadDAO;
@@ -16,6 +20,7 @@ import com.hello.suripu.core.db.SleepHmmDAO;
 import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
+import com.hello.suripu.core.flipper.DynamoDBAdapter;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -34,9 +39,19 @@ import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.device.v2.Sense;
 import com.hello.suripu.core.util.FeatureExtractionModelData;
 import com.hello.suripu.core.util.SleepHmmWithInterpretation;
+import com.librato.rollout.RolloutAdapter;
+import com.librato.rollout.RolloutClient;
+import dagger.Module;
+import dagger.ObjectGraph;
+import dagger.Provides;
+import junit.framework.TestCase;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,11 +61,13 @@ import java.util.UUID;
  * Created by benjo on 1/21/16.
  */
 public class TimelineProcessorTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineProcessorTest.class);
 
     final PillDataReadDAO pillDataReadDAO = new PillDataReadDAO() {
         @Override
         public ImmutableList<TrackerMotion> getBetweenLocalUTC(long accountId, DateTime startLocalTime, DateTime endLocalTime) {
-            return null;
+
+            return OnlineHmmTest.getTypicalDayOfPill(startLocalTime,endLocalTime,0);
         }
     };
 
@@ -58,7 +75,7 @@ public class TimelineProcessorTest {
     final DeviceDataReadAllSensorsDAO deviceDataReadAllSensorsDAO = new DeviceDataReadAllSensorsDAO() {
         @Override
         public AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(Long queryStartTimestampInUTC, Long queryEndTimestampInUTC, Long accountId, String externalDeviceId, int slotDurationInMinutes, Integer missingDataDefaultValue, Optional<Device.Color> color, Optional<Calibration> calibrationOptional) {
-            return null;
+            return OnlineHmmTest.getTypicalDayOfSense(new DateTime(queryStartTimestampInUTC).withZone(DateTimeZone.UTC),new DateTime(queryEndTimestampInUTC).withZone(DateTimeZone.UTC),0);
         }
     };
 
@@ -84,14 +101,15 @@ public class TimelineProcessorTest {
     final SleepHmmDAO sleepHmmDAO = new SleepHmmDAO() {
         @Override
         public Optional<SleepHmmWithInterpretation> getLatestModelForDate(long accountId, long timeOfInterestMillis) {
-            return null;
+            return Optional.absent();
         }
     };
 
     final AccountReadDAO accountDAO = new AccountReadDAO() {
         @Override
         public Optional<Account> getById(Long id) {
-            return null;
+            final Account account = new Account.Builder().withDOB("1980-01-01").build();
+            return Optional.of(account);
         }
 
         @Override
@@ -124,7 +142,7 @@ public class TimelineProcessorTest {
     final SleepStatsDAO sleepStatsDAO = new SleepStatsDAO() {
         @Override
         public Boolean updateStat(Long accountId, DateTime date, Integer sleepScore, MotionScore motionScore, SleepStats stats, Integer offsetMillis) {
-            return null;
+            return Boolean.TRUE;
         }
 
         @Override
@@ -151,7 +169,7 @@ public class TimelineProcessorTest {
     final SenseColorDAO senseColorDAO = new SenseColorDAO() {
         @Override
         public Optional<Device.Color> getColorForSense(String senseId) {
-            return null;
+            return Optional.absent();
         }
 
         @Override
@@ -249,19 +267,19 @@ public class TimelineProcessorTest {
     final DefaultModelEnsembleDAO defaultModelEnsembleDAO = new DefaultModelEnsembleDAO() {
         @Override
         public OnlineHmmPriors getDefaultModelEnsemble() {
-            return null;
+            return OnlineHmmPriors.createEmpty();
         }
 
         @Override
         public OnlineHmmPriors getSeedModel() {
-            return null;
+            return OnlineHmmPriors.createEmpty();
         }
     };
 
     final UserTimelineTestGroupDAO userTimelineTestGroupDAO = new UserTimelineTestGroupDAO() {
         @Override
         public Optional<Long> getUserGestGroup(Long accountId, DateTime timeToQueryUTC) {
-            return null;
+            return Optional.absent();
         }
 
         @Override
@@ -278,17 +296,52 @@ public class TimelineProcessorTest {
 
         @Override
         public Optional<DeviceAccountPair> getMostRecentSensePairByAccountId(Long accountId) {
-            return null;
+            return Optional.of(new DeviceAccountPair(0L,0L,"foobars",new DateTime(0L)));
         }
 
         @Override
         public Optional<Long> getPartnerAccountId(Long accountId) {
-            return null;
+            return Optional.absent();
         }
     };
 
+    final RolloutAdapter rolloutAdapter = new RolloutAdapter() {
+        @Override
+        public boolean userFeatureActive(String feature, long userId, List<String> userGroups) {
+            boolean hasFeature = false;
+            LOGGER.info("userFeatureActive {}={}",feature,hasFeature);
+            return hasFeature;
+        }
+
+        @Override
+        public boolean deviceFeatureActive(String feature, String deviceId, List<String> userGroups) {
+            boolean hasFeature = false;
+            LOGGER.info("deviceFeatureActive {}={}",feature,hasFeature);
+            return false;
+        }
+    };
+
+    @Module(
+            injects = TimelineProcessor.class,
+            library = true
+    )
+    class RolloutLocalModule {
+        @Provides @Singleton
+        RolloutAdapter providesRolloutAdapter() {
+            return rolloutAdapter;
+        }
+
+        @Provides @Singleton
+        RolloutClient providesRolloutClient(RolloutAdapter adapter) {
+            return new RolloutClient(adapter);
+        }
+
+    }
+
     @Test
     public void testTimelineProcessorSimple() {
+
+        ObjectGraphRoot.getInstance().init(new RolloutLocalModule());
 
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 pillDataReadDAO,deviceReadForTimelineDAO,deviceDataReadAllSensorsDAO,
@@ -298,5 +351,24 @@ public class TimelineProcessorTest {
 
 
         final TimelineResult timelineResult = timelineProcessor.retrieveTimelinesFast(0L,DateTime.now(),Optional.<TimelineFeedback>absent());
+
+        TestCase.assertTrue(timelineResult.timelines.size() > 0);
+        TestCase.assertTrue(timelineResult.logV2.isPresent());
+
+        try {
+            final LoggingProtos.BatchLogMessage batchLogMessage = LoggingProtos.BatchLogMessage.newBuilder().mergeFrom(timelineResult.logV2.get().toProtoBuf()).build();
+
+            final List<LoggingProtos.TimelineLog> logs = batchLogMessage.getTimelineLogList();
+
+            TestCase.assertFalse(logs.isEmpty());
+
+            final LoggingProtos.TimelineLog lastLog = logs.get(logs.size()-1);
+
+            TestCase.assertTrue(lastLog.getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
+
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+        }
+
     }
 }

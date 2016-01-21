@@ -276,7 +276,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
 
         for (final AlgorithmType alg : algorithmChain) {
-            final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(AlgorithmType.ONLINE_HMM);
+            final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
 
             if (!timelineAlgorithm.isPresent()) {
                 LOGGER.warn("factory failed to create algorithm {}",alg);
