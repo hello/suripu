@@ -2,6 +2,9 @@ package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Booleans;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.ObjectGraphRoot;
@@ -21,6 +24,7 @@ import com.hello.suripu.core.db.SleepStatsDAO;
 import com.hello.suripu.core.db.UserTimelineTestGroupDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.AllSensorSampleList;
@@ -47,6 +51,7 @@ import dagger.Provides;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -305,19 +310,46 @@ public class TimelineProcessorTest {
         }
     };
 
-    final RolloutAdapter rolloutAdapter = new RolloutAdapter() {
+    public final Map<String,Boolean> features = Maps.newHashMap();
+
+    public void setFeature(final String feat,boolean on) {
+        if (features.containsKey(feat) && !on) {
+            features.remove(feat);
+        }
+
+        if (on) {
+            features.put(feat,true);
+        }
+    }
+
+    public void clear() {
+    }
+
+    final public  RolloutAdapter rolloutAdapter = new RolloutAdapter() {
+
+
         @Override
         public boolean userFeatureActive(String feature, long userId, List<String> userGroups) {
-            boolean hasFeature = false;
+            Boolean hasFeature = features.get(feature);
+
+            if (hasFeature == null) {
+                hasFeature = Boolean.FALSE;
+            }
+
             LOGGER.info("userFeatureActive {}={}",feature,hasFeature);
             return hasFeature;
         }
 
         @Override
         public boolean deviceFeatureActive(String feature, String deviceId, List<String> userGroups) {
-            boolean hasFeature = false;
+            Boolean hasFeature = features.get(feature);
+
+            if (hasFeature == null) {
+                hasFeature = Boolean.FALSE;
+            }
+
             LOGGER.info("deviceFeatureActive {}={}",feature,hasFeature);
-            return false;
+            return hasFeature;
         }
     };
 
@@ -338,10 +370,13 @@ public class TimelineProcessorTest {
 
     }
 
-    @Test
-    public void testTimelineProcessorSimple() {
-
+    @Before
+    public void setup() {
         ObjectGraphRoot.getInstance().init(new RolloutLocalModule());
+        features.clear();
+    }
+
+    final List<LoggingProtos.TimelineLog> getLogsFromTimeline() {
 
         final TimelineProcessor timelineProcessor = TimelineProcessor.createTimelineProcessor(
                 pillDataReadDAO,deviceReadForTimelineDAO,deviceDataReadAllSensorsDAO,
@@ -360,14 +395,39 @@ public class TimelineProcessorTest {
 
             final List<LoggingProtos.TimelineLog> logs = batchLogMessage.getTimelineLogList();
 
-            TestCase.assertFalse(logs.isEmpty());
+            return logs;
 
-            final LoggingProtos.TimelineLog lastLog = logs.get(logs.size()-1);
-
-            TestCase.assertTrue(lastLog.getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
 
         } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
+        }
+
+        return Lists.newArrayList();
+
+    }
+
+    @Test
+    public void testTimelineProcessorSimple() {
+
+        {
+            final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline();
+
+            TestCase.assertTrue(logs.size() >= 2);
+
+            //HMM first, fail, then VOTING
+            TestCase.assertTrue(logs.get(0).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.HMM));
+            TestCase.assertTrue(logs.get(1).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
+        }
+
+        features.put(FeatureFlipper.ONLINE_HMM_ALGORITHM,true);
+
+        {
+            final List<LoggingProtos.TimelineLog> logs = getLogsFromTimeline();
+            TestCase.assertTrue(logs.size() >= 3);
+
+            TestCase.assertTrue(logs.get(0).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.ONLINE_HMM));
+            TestCase.assertTrue(logs.get(1).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.HMM));
+            TestCase.assertTrue(logs.get(2).getAlgorithm().equals(LoggingProtos.TimelineLog.AlgType.VOTING));
         }
 
     }
