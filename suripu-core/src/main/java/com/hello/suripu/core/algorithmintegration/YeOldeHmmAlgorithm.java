@@ -28,7 +28,7 @@ import java.util.UUID;
 /**
  * Created by benjo on 1/20/16.
  */
-public class YeOldeHmmAlgorithm implements TimelineAlgorithm{
+class YeOldeHmmAlgorithm implements TimelineAlgorithm{
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(YeOldeHmmAlgorithm.class);
 
     final TimelineUtils timelineUtils;
