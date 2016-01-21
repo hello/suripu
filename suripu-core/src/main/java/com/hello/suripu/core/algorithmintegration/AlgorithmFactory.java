@@ -49,13 +49,7 @@ public class AlgorithmFactory {
     }
 
     public Optional<TimelineAlgorithm> get(final AlgorithmType alg) {
-        final TimelineAlgorithm algorithm = algorithmMap.get(alg);
-
-        if (algorithm == null) {
-            return Optional.absent();
-        }
-
-        return Optional.of(algorithm);
+        return Optional.fromNullable(algorithmMap.get(alg));
     }
 
 
