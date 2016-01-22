@@ -44,6 +44,8 @@ public class VotingAlgorithm implements TimelineAlgorithm {
     @Override
     public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData, final TimelineLog log, final long accountId, final boolean feedbackChanged) {
 
+        LOGGER.info("algorithm=VOTING account_id={} date={}",accountId,sensorData.date.toDate());
+
         try {
             //reset state
             final Optional<VotingSleepEvents> votingSleepEventsOptional = fromVotingAlgorithm(sensorData.trackerMotions,
@@ -52,7 +54,7 @@ public class VotingAlgorithm implements TimelineAlgorithm {
                     sensorData.allSensorSampleList.get(Sensor.WAVE_COUNT));
 
             if (!votingSleepEventsOptional.isPresent()) {
-                LOGGER.warn("voting algorithm did not produce ANY events");
+                LOGGER.info("alg_status={} account_id={} date={}","no-events",accountId,sensorData.date.toDate());
                 log.addMessage(AlgorithmType.VOTING, TimelineError.UNEXEPECTED, "optional.absent from fromVotingAlgorithm");
                 return Optional.absent();
             }
@@ -61,17 +63,15 @@ public class VotingAlgorithm implements TimelineAlgorithm {
                     ImmutableList.copyOf(Collections.EMPTY_LIST),
                     ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
 
-
+            LOGGER.info("alg_status={} account_id={} date={}",timelineError,accountId,sensorData.date.toDate());
 
             //data gap errors are ignored, these are the only two I care about
             if (timelineError.equals(TimelineError.EVENTS_OUT_OF_ORDER) ) {
-                LOGGER.warn("voting events out of order");
                 log.addMessage(AlgorithmType.VOTING,timelineError);
                 return Optional.absent();
             }
 
             if (timelineError.equals(TimelineError.MISSING_KEY_EVENTS)) {
-                LOGGER.warn("missing a key event from voting");
                 log.addMessage(AlgorithmType.VOTING,timelineError);
                 return Optional.absent();
             }
@@ -81,12 +81,10 @@ public class VotingAlgorithm implements TimelineAlgorithm {
             log.addMessage(AlgorithmType.VOTING, events);
 
             return Optional.of(new TimelineAlgorithmResult(events));
-
-
         }
         catch (Exception e) {
+            LOGGER.error("alg_status={} account_id={} date={}","exception",accountId,sensorData.date.toDate());
             log.addMessage(AlgorithmType.VOTING, TimelineError.UNEXEPECTED);
-            LOGGER.error(e.getMessage());
         }
 
         return Optional.absent();
@@ -113,18 +111,15 @@ public class VotingAlgorithm implements TimelineAlgorithm {
 
         final List<DateTime> lightOutTimes = MultiLightOutUtils.getLightOutTimes(lightOuts);
 
-        // A day starts with 8pm local time and ends with 4pm local time next day
-        try {
-            Optional<DateTime> wakeUpWaveTimeOptional = timelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
-                    trackerMotions.get(trackerMotions.size() - 1).timestamp,
-                    rawWave);
-            votingSleepEventsOptional = timelineUtils.getSleepEventsFromVoting(trackerMotions,
-                    rawSound,
-                    lightOutTimes,
-                    wakeUpWaveTimeOptional);
-        }catch (Exception ex){ //TODO : catch a more specific exception
-            LOGGER.error("Generate sleep period from Voting Algorithm failed: {}", ex.getMessage());
-        }
+
+        Optional<DateTime> wakeUpWaveTimeOptional = timelineUtils.getFirstAwakeWaveTime(trackerMotions.get(0).timestamp,
+                trackerMotions.get(trackerMotions.size() - 1).timestamp,
+                rawWave);
+        votingSleepEventsOptional = timelineUtils.getSleepEventsFromVoting(trackerMotions,
+                rawSound,
+                lightOutTimes,
+                wakeUpWaveTimeOptional);
+
 
         return  votingSleepEventsOptional;
     }

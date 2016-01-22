@@ -56,9 +56,11 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
     }
 
     @Override
-    public Optional<TimelineAlgorithmResult> getTimelinePrediction(OneDaysSensorData sensorData, TimelineLog log, long accountId, boolean feedbackChanged) {
+    public Optional<TimelineAlgorithmResult> getTimelinePrediction(final OneDaysSensorData sensorData,final TimelineLog log,final long accountId,final boolean feedbackChanged) {
+
+        LOGGER.info("algorithm=HMM account_id={}",accountId);
+
         try {
-            LOGGER.info("TRYING THE OLD HMM");
 
             final Optional<HmmAlgorithmResults> results = fromHmm(accountId, sensorData.currentTimeUTC, sensorData.startTimeLocalUTC, sensorData.endTimeLocalUTC,
                     sensorData.trackerMotions,
@@ -75,9 +77,10 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
                     ImmutableList.copyOf(results.get().allTheOtherWakesAndSleeps.asList()),
                     ImmutableList.copyOf(sensorData.allSensorSampleList.get(Sensor.LIGHT)));
 
+            LOGGER.info("alg_status={} account_id={} date={}",error,accountId,sensorData.date.toDate());
+
             if (!error.equals(TimelineError.NO_ERROR)) {
                 log.addMessage(AlgorithmType.HMM, error);
-                LOGGER.info("Ye olden HMM error {}",error);
                 return Optional.absent();
             }
 
@@ -90,7 +93,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
         }
         catch (Exception e) {
             log.addMessage(AlgorithmType.HMM, TimelineError.UNEXEPECTED);
-            LOGGER.error(e.getMessage());
+            LOGGER.error("alg_status={} account_id={} date={}","exception",accountId,sensorData.date.toDate());
         }
 
         return Optional.absent();

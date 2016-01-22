@@ -206,14 +206,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final DateTime endTimeLocalUTC = targetDate.withTimeAtStartOfDay().plusDays(1).withHourOfDay(DateTimeUtil.DAY_ENDS_AT_HOUR);
         final DateTime currentTimeUTC = DateTime.now().withZone(DateTimeZone.UTC);
 
-        LOGGER.debug("Target date: {}", startTimeLocalUTC);
-        LOGGER.debug("End date: {}", endTimeLocalUTC);
-
+        LOGGER.info("action=get_timeline date={} account_id={} start_time={} end_time={}", targetDate.toDate(),accountId,startTimeLocalUTC,endTimeLocalUTC);
 
         final Optional<OneDaysSensorData> sensorDataOptional = getSensorData(accountId, targetDate, startTimeLocalUTC, endTimeLocalUTC, currentTimeUTC, newFeedback);
 
         if (!sensorDataOptional.isPresent()) {
-            LOGGER.debug("returning empty timeline for account_id = {} and day = {}", accountId, startTimeLocalUTC);
+            LOGGER.info("account_id = {} and day = {}", accountId, startTimeLocalUTC);
             final TimelineLog log = new TimelineLog(accountId, startTimeLocalUTC.withZone(DateTimeZone.UTC).getMillis());
             log.addMessage(TimelineError.NO_DATA);
             return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, DataCompleteness.NO_DATA);
@@ -231,32 +229,30 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         //check to see if there's an issue with the data
         final TimelineError discardReason = isValidNight(accountId, sensorData.originalTrackerMotions, sensorData.trackerMotions);
 
+        if (!discardReason.equals(TimelineError.NO_ERROR)) {
+            LOGGER.info("action=discard_timeline reason={} account_id={} date={}", discardReason,accountId, targetDate.toDate());
+        }
+
         switch (discardReason) {
             case TIMESPAN_TOO_SHORT:
                 log.addMessage(discardReason);
-                LOGGER.info("Tracker motion span too short for account_id = {} and day = {}", accountId, startTimeLocalUTC);
                 return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
 
             case NOT_ENOUGH_DATA:
                 log.addMessage(discardReason);
-                LOGGER.info("Not enough tracker motion seen for account_id = {} and day = {}", accountId, startTimeLocalUTC);
                 return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
 
             case NO_DATA:
                 log.addMessage(discardReason);
-                LOGGER.info("No tracker motion data for account_id = {} and day = {}", accountId, startTimeLocalUTC);
                 return TimelineResult.createEmpty(log, English.TIMELINE_NO_SLEEP_DATA, DataCompleteness.NO_DATA);
 
             case LOW_AMP_DATA:
                 log.addMessage(discardReason);
-                LOGGER.info("tracker motion did not exceed minimum threshold for account_id = {} and day = {}", accountId, startTimeLocalUTC);
                 return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
 
             case PARTNER_FILTER_REJECTED_DATA:
                 log.addMessage(discardReason);
-                LOGGER.info("tracker motion was discarded because of partner filter account_id = {} and day = {}", accountId, startTimeLocalUTC);
                 return TimelineResult.createEmpty(log, English.TIMELINE_NOT_ENOUGH_SLEEP_DATA, DataCompleteness.NOT_ENOUGH_DATA);
-
 
             default:
                 break;
@@ -269,7 +265,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             final Optional<TimelineAlgorithm> timelineAlgorithm = algorithmFactory.get(alg);
 
             if (!timelineAlgorithm.isPresent()) {
-                LOGGER.warn("factory failed to create algorithm {}",alg);
+                //assume error reporting is happening in alg, no need to report it here
                 continue;
             }
 
@@ -284,7 +280,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         //did events get produced, and did one of the algorithms work?  If not, poof, we are done.
         if (!resultOptional.isPresent()) {
-            LOGGER.error("returning empty timeline for account_id = {} and day = {}", accountId, startTimeLocalUTC);
+            LOGGER.info("action=discard_timeline reason={} account_id={} date={}", "no-successful-algorithms",accountId, targetDate.toDate());
             log.addMessage(AlgorithmType.NONE,TimelineError.UNEXEPECTED,"no successful algorithms");
             return TimelineResult.createEmpty(log);
         }
@@ -292,13 +288,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final TimelineAlgorithmResult result = resultOptional.get();
         List<Event> extraEvents = result.extraEvents;
 
-
             /* FEATURE FLIP EXTRA EVENTS */
         if (!this.hasExtraEventsEnabled(accountId)) {
-            LOGGER.info("not using {} extra events", extraEvents.size());
             extraEvents = Collections.EMPTY_LIST;
         }
-
 
         final PopulatedTimelines populateTimelines = populateTimeline(accountId,targetDate,startTimeLocalUTC,endTimeLocalUTC, result, sensorData);
 
@@ -487,15 +480,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         }
 
-        if(lightOutTimeOptional.isPresent()){
-            LOGGER.info("Light out at {}", lightOutTimeOptional.get());
-        } else {
-            LOGGER.info("No light out");
-        }
-
-
         //MOVE EVENTS BASED ON FEEDBACK
         FeedbackUtils.ReprocessedEvents reprocessedEvents = null;
+
+        LOGGER.info("action=apply_feedback num_items={} account_id={} date={}", feedbackList.size(),accountId,sensorData.date.toDate());
 
         if (this.hasTimelineOrderEnforcement(accountId)) {
             reprocessedEvents = feedbackUtils.reprocessEventsBasedOnFeedback(feedbackList, result.mainEvents.values(), result.extraEvents, sensorData.timezoneOffsetMillis);
@@ -566,10 +554,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             }
         }
 
-        /* add sleep/wake events  */
+        /* add main events  */
         for (final Event event : reprocessedEvents.mainEvents.values()) {
             timelineEvents.put(event.getStartTimestamp(), event);
-            LOGGER.debug("Adding feedback type {}, time {}", event.getType(), event.getStartTimestamp());
         }
 
         /*  add "additional" events -- which is wake/sleep/get up to pee events */
@@ -578,11 +565,11 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
 
-        /*  Benjo: 100% sure that his is responsible for sorting events in proper order,
-            and does some other stuff that only Pang knew about  */
+        /*  Benjo says: I am 100% sure that his is responsible for sorting events in proper order,
+            plus some other shit that only Pang knew about.  Embrace the mystery!  */
         final List<Event> eventsWithSleepEvents = TimelineRefactored.mergeEvents(timelineEvents);
 
-        /*  Benjo: what does this do? Fuuuck comments? */
+        /*  Benjo asks: what does this do? Fuuuck no comments? The fuck. */
         final List<Event> smoothedEvents = timelineUtils.smoothEvents(eventsWithSleepEvents);
 
 
@@ -636,7 +623,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         final String timeLineMessage = timelineUtils.generateMessage(sleepStats, numPartnerMotion, numSoundEvents);
 
-        LOGGER.debug("Score for account_id = {} is {}", accountId, sleepScore);
+        LOGGER.info("action=compute_sleep_score score={} account_id={}", sleepScore,accountId);
 
 
         final List<Insight> insights;
