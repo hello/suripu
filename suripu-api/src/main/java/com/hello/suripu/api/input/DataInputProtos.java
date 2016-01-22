@@ -2162,6 +2162,15 @@ public final class DataInputProtos {
      */
     com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_pointOrBuilder getScanOrBuilder(
         int index);
+
+    /**
+     * <code>optional int32 messages_in_queue = 11;</code>
+     */
+    boolean hasMessagesInQueue();
+    /**
+     * <code>optional int32 messages_in_queue = 11;</code>
+     */
+    int getMessagesInQueue();
   }
   /**
    * Protobuf type {@code batched_periodic_data}
@@ -2251,6 +2260,11 @@ public final class DataInputProtos {
                 mutable_bitField0_ |= 0x00000020;
               }
               scan_.add(input.readMessage(com.hello.suripu.api.input.DataInputProtos.batched_periodic_data.wifi_access_point.PARSER, extensionRegistry));
+              break;
+            }
+            case 88: {
+              bitField0_ |= 0x00000010;
+              messagesInQueue_ = input.readInt32();
               break;
             }
           }
@@ -3253,6 +3267,21 @@ public final class DataInputProtos {
       return scan_.get(index);
     }
 
+    public static final int MESSAGES_IN_QUEUE_FIELD_NUMBER = 11;
+    private int messagesInQueue_;
+    /**
+     * <code>optional int32 messages_in_queue = 11;</code>
+     */
+    public boolean hasMessagesInQueue() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional int32 messages_in_queue = 11;</code>
+     */
+    public int getMessagesInQueue() {
+      return messagesInQueue_;
+    }
+
     private void initFields() {
       data_ = java.util.Collections.emptyList();
       deviceId_ = "";
@@ -3260,6 +3289,7 @@ public final class DataInputProtos {
       uptimeInSecond_ = 0;
       connectedSsid_ = "";
       scan_ = java.util.Collections.emptyList();
+      messagesInQueue_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3300,6 +3330,9 @@ public final class DataInputProtos {
       for (int i = 0; i < scan_.size(); i++) {
         output.writeMessage(10, scan_.get(i));
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(11, messagesInQueue_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -3332,6 +3365,10 @@ public final class DataInputProtos {
       for (int i = 0; i < scan_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(10, scan_.get(i));
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(11, messagesInQueue_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3472,6 +3509,8 @@ public final class DataInputProtos {
         } else {
           scanBuilder_.clear();
         }
+        messagesInQueue_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -3534,6 +3573,10 @@ public final class DataInputProtos {
         } else {
           result.scan_ = scanBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.messagesInQueue_ = messagesInQueue_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3617,6 +3660,9 @@ public final class DataInputProtos {
               scanBuilder_.addAllMessages(other.scan_);
             }
           }
+        }
+        if (other.hasMessagesInQueue()) {
+          setMessagesInQueue(other.getMessagesInQueue());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4483,6 +4529,38 @@ public final class DataInputProtos {
         return scanBuilder_;
       }
 
+      private int messagesInQueue_ ;
+      /**
+       * <code>optional int32 messages_in_queue = 11;</code>
+       */
+      public boolean hasMessagesInQueue() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 messages_in_queue = 11;</code>
+       */
+      public int getMessagesInQueue() {
+        return messagesInQueue_;
+      }
+      /**
+       * <code>optional int32 messages_in_queue = 11;</code>
+       */
+      public Builder setMessagesInQueue(int value) {
+        bitField0_ |= 0x00000040;
+        messagesInQueue_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 messages_in_queue = 11;</code>
+       */
+      public Builder clearMessagesInQueue() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        messagesInQueue_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:batched_periodic_data)
     }
 
@@ -5122,22 +5200,32 @@ public final class DataInputProtos {
         int index);
 
     /**
-     * <code>optional int32 firmware_middle_version = 6;</code>
+     * <code>optional string firmware_middle_version = 6;</code>
      */
     boolean hasFirmwareMiddleVersion();
     /**
-     * <code>optional int32 firmware_middle_version = 6;</code>
+     * <code>optional string firmware_middle_version = 6;</code>
      */
-    int getFirmwareMiddleVersion();
+    java.lang.String getFirmwareMiddleVersion();
+    /**
+     * <code>optional string firmware_middle_version = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getFirmwareMiddleVersionBytes();
 
     /**
-     * <code>optional int32 firmware_top_version = 7;</code>
+     * <code>optional string firmware_top_version = 7;</code>
      */
     boolean hasFirmwareTopVersion();
     /**
-     * <code>optional int32 firmware_top_version = 7;</code>
+     * <code>optional string firmware_top_version = 7;</code>
      */
-    int getFirmwareTopVersion();
+    java.lang.String getFirmwareTopVersion();
+    /**
+     * <code>optional string firmware_top_version = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getFirmwareTopVersionBytes();
   }
   /**
    * Protobuf type {@code BatchPeriodicDataWorker}
@@ -5228,14 +5316,16 @@ public final class DataInputProtos {
               timezones_.add(input.readMessage(com.hello.suripu.api.input.DataInputProtos.AccountMetadata.PARSER, extensionRegistry));
               break;
             }
-            case 48: {
+            case 50: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000010;
-              firmwareMiddleVersion_ = input.readInt32();
+              firmwareMiddleVersion_ = bs;
               break;
             }
-            case 56: {
+            case 58: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000020;
-              firmwareTopVersion_ = input.readInt32();
+              firmwareTopVersion_ = bs;
               break;
             }
           }
@@ -5410,33 +5500,87 @@ public final class DataInputProtos {
     }
 
     public static final int FIRMWARE_MIDDLE_VERSION_FIELD_NUMBER = 6;
-    private int firmwareMiddleVersion_;
+    private java.lang.Object firmwareMiddleVersion_;
     /**
-     * <code>optional int32 firmware_middle_version = 6;</code>
+     * <code>optional string firmware_middle_version = 6;</code>
      */
     public boolean hasFirmwareMiddleVersion() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional int32 firmware_middle_version = 6;</code>
+     * <code>optional string firmware_middle_version = 6;</code>
      */
-    public int getFirmwareMiddleVersion() {
-      return firmwareMiddleVersion_;
+    public java.lang.String getFirmwareMiddleVersion() {
+      java.lang.Object ref = firmwareMiddleVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          firmwareMiddleVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string firmware_middle_version = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getFirmwareMiddleVersionBytes() {
+      java.lang.Object ref = firmwareMiddleVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        firmwareMiddleVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int FIRMWARE_TOP_VERSION_FIELD_NUMBER = 7;
-    private int firmwareTopVersion_;
+    private java.lang.Object firmwareTopVersion_;
     /**
-     * <code>optional int32 firmware_top_version = 7;</code>
+     * <code>optional string firmware_top_version = 7;</code>
      */
     public boolean hasFirmwareTopVersion() {
       return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
-     * <code>optional int32 firmware_top_version = 7;</code>
+     * <code>optional string firmware_top_version = 7;</code>
      */
-    public int getFirmwareTopVersion() {
-      return firmwareTopVersion_;
+    public java.lang.String getFirmwareTopVersion() {
+      java.lang.Object ref = firmwareTopVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          firmwareTopVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string firmware_top_version = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getFirmwareTopVersionBytes() {
+      java.lang.Object ref = firmwareTopVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        firmwareTopVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     private void initFields() {
@@ -5445,8 +5589,8 @@ public final class DataInputProtos {
       receivedAt_ = 0L;
       uptimeInSecond_ = 0;
       timezones_ = java.util.Collections.emptyList();
-      firmwareMiddleVersion_ = 0;
-      firmwareTopVersion_ = 0;
+      firmwareMiddleVersion_ = "";
+      firmwareTopVersion_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5483,10 +5627,10 @@ public final class DataInputProtos {
         output.writeMessage(5, timezones_.get(i));
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt32(6, firmwareMiddleVersion_);
+        output.writeBytes(6, getFirmwareMiddleVersionBytes());
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeInt32(7, firmwareTopVersion_);
+        output.writeBytes(7, getFirmwareTopVersionBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -5519,11 +5663,11 @@ public final class DataInputProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(6, firmwareMiddleVersion_);
+          .computeBytesSize(6, getFirmwareMiddleVersionBytes());
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(7, firmwareTopVersion_);
+          .computeBytesSize(7, getFirmwareTopVersionBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5662,9 +5806,9 @@ public final class DataInputProtos {
         } else {
           timezonesBuilder_.clear();
         }
-        firmwareMiddleVersion_ = 0;
+        firmwareMiddleVersion_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
-        firmwareTopVersion_ = 0;
+        firmwareTopVersion_ = "";
         bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
@@ -5788,10 +5932,14 @@ public final class DataInputProtos {
           }
         }
         if (other.hasFirmwareMiddleVersion()) {
-          setFirmwareMiddleVersion(other.getFirmwareMiddleVersion());
+          bitField0_ |= 0x00000020;
+          firmwareMiddleVersion_ = other.firmwareMiddleVersion_;
+          onChanged();
         }
         if (other.hasFirmwareTopVersion()) {
-          setFirmwareTopVersion(other.getFirmwareTopVersion());
+          bitField0_ |= 0x00000040;
+          firmwareTopVersion_ = other.firmwareTopVersion_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -6322,66 +6470,154 @@ public final class DataInputProtos {
         return timezonesBuilder_;
       }
 
-      private int firmwareMiddleVersion_ ;
+      private java.lang.Object firmwareMiddleVersion_ = "";
       /**
-       * <code>optional int32 firmware_middle_version = 6;</code>
+       * <code>optional string firmware_middle_version = 6;</code>
        */
       public boolean hasFirmwareMiddleVersion() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional int32 firmware_middle_version = 6;</code>
+       * <code>optional string firmware_middle_version = 6;</code>
        */
-      public int getFirmwareMiddleVersion() {
-        return firmwareMiddleVersion_;
+      public java.lang.String getFirmwareMiddleVersion() {
+        java.lang.Object ref = firmwareMiddleVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            firmwareMiddleVersion_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>optional int32 firmware_middle_version = 6;</code>
+       * <code>optional string firmware_middle_version = 6;</code>
        */
-      public Builder setFirmwareMiddleVersion(int value) {
-        bitField0_ |= 0x00000020;
+      public com.google.protobuf.ByteString
+          getFirmwareMiddleVersionBytes() {
+        java.lang.Object ref = firmwareMiddleVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          firmwareMiddleVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string firmware_middle_version = 6;</code>
+       */
+      public Builder setFirmwareMiddleVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
         firmwareMiddleVersion_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 firmware_middle_version = 6;</code>
+       * <code>optional string firmware_middle_version = 6;</code>
        */
       public Builder clearFirmwareMiddleVersion() {
         bitField0_ = (bitField0_ & ~0x00000020);
-        firmwareMiddleVersion_ = 0;
+        firmwareMiddleVersion_ = getDefaultInstance().getFirmwareMiddleVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string firmware_middle_version = 6;</code>
+       */
+      public Builder setFirmwareMiddleVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        firmwareMiddleVersion_ = value;
         onChanged();
         return this;
       }
 
-      private int firmwareTopVersion_ ;
+      private java.lang.Object firmwareTopVersion_ = "";
       /**
-       * <code>optional int32 firmware_top_version = 7;</code>
+       * <code>optional string firmware_top_version = 7;</code>
        */
       public boolean hasFirmwareTopVersion() {
         return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
-       * <code>optional int32 firmware_top_version = 7;</code>
+       * <code>optional string firmware_top_version = 7;</code>
        */
-      public int getFirmwareTopVersion() {
-        return firmwareTopVersion_;
+      public java.lang.String getFirmwareTopVersion() {
+        java.lang.Object ref = firmwareTopVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            firmwareTopVersion_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>optional int32 firmware_top_version = 7;</code>
+       * <code>optional string firmware_top_version = 7;</code>
        */
-      public Builder setFirmwareTopVersion(int value) {
-        bitField0_ |= 0x00000040;
+      public com.google.protobuf.ByteString
+          getFirmwareTopVersionBytes() {
+        java.lang.Object ref = firmwareTopVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          firmwareTopVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string firmware_top_version = 7;</code>
+       */
+      public Builder setFirmwareTopVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
         firmwareTopVersion_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 firmware_top_version = 7;</code>
+       * <code>optional string firmware_top_version = 7;</code>
        */
       public Builder clearFirmwareTopVersion() {
         bitField0_ = (bitField0_ & ~0x00000040);
-        firmwareTopVersion_ = 0;
+        firmwareTopVersion_ = getDefaultInstance().getFirmwareTopVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string firmware_top_version = 7;</code>
+       */
+      public Builder setFirmwareTopVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        firmwareTopVersion_ = value;
         onChanged();
         return this;
       }
@@ -6442,25 +6678,25 @@ public final class DataInputProtos {
       "e_count\030\020 \001(\005\022\022\n\nhold_count\030\021 \001(\005\022\036\n\026aud" +
       "io_num_disturbances\030\022 \001(\005\022(\n audio_peak_",
       "disturbance_energy_db\030\023 \001(\005\022\'\n\037audio_pea" +
-      "k_background_energy_db\030\024 \001(\005\"\346\002\n\025batched" +
+      "k_background_energy_db\030\024 \001(\005\"\201\003\n\025batched" +
       "_periodic_data\022\034\n\004data\030\001 \003(\0132\016.periodic_" +
       "data\022\021\n\tdevice_id\030\002 \002(\t\022\030\n\020firmware_vers" +
       "ion\030\003 \002(\005\022\030\n\020uptime_in_second\030\004 \001(\005\022\026\n\016c" +
       "onnected_ssid\030\007 \001(\t\0226\n\004scan\030\n \003(\0132(.batc" +
-      "hed_periodic_data.wifi_access_point\032\227\001\n\021" +
-      "wifi_access_point\022\014\n\004ssid\030\001 \001(\t\022\014\n\004rssi\030" +
-      "\002 \001(\005\022E\n\007antenna\030\003 \001(\01624.batched_periodi" +
-      "c_data.wifi_access_point.AntennaType\"\037\n\013",
-      "AntennaType\022\007\n\003IFA\020\001\022\007\n\003PCB\020\002\"7\n\017Account" +
-      "Metadata\022\022\n\naccount_id\030\001 \001(\003\022\020\n\010timezone" +
-      "\030\002 \001(\t\"\346\001\n\027BatchPeriodicDataWorker\022$\n\004da" +
-      "ta\030\001 \001(\0132\026.batched_periodic_data\022\022\n\nip_a" +
-      "ddress\030\002 \001(\t\022\023\n\013received_at\030\003 \001(\003\022\030\n\020upt" +
-      "ime_in_second\030\004 \001(\005\022#\n\ttimezones\030\005 \003(\0132\020" +
-      ".AccountMetadata\022\037\n\027firmware_middle_vers" +
-      "ion\030\006 \001(\005\022\034\n\024firmware_top_version\030\007 \001(\005B" +
-      "-\n\032com.hello.suripu.api.inputB\017DataInput" +
-      "Protos"
+      "hed_periodic_data.wifi_access_point\022\031\n\021m" +
+      "essages_in_queue\030\013 \001(\005\032\227\001\n\021wifi_access_p" +
+      "oint\022\014\n\004ssid\030\001 \001(\t\022\014\n\004rssi\030\002 \001(\005\022E\n\007ante" +
+      "nna\030\003 \001(\01624.batched_periodic_data.wifi_a",
+      "ccess_point.AntennaType\"\037\n\013AntennaType\022\007" +
+      "\n\003IFA\020\001\022\007\n\003PCB\020\002\"7\n\017AccountMetadata\022\022\n\na" +
+      "ccount_id\030\001 \001(\003\022\020\n\010timezone\030\002 \001(\t\"\346\001\n\027Ba" +
+      "tchPeriodicDataWorker\022$\n\004data\030\001 \001(\0132\026.ba" +
+      "tched_periodic_data\022\022\n\nip_address\030\002 \001(\t\022" +
+      "\023\n\013received_at\030\003 \001(\003\022\030\n\020uptime_in_second" +
+      "\030\004 \001(\005\022#\n\ttimezones\030\005 \003(\0132\020.AccountMetad" +
+      "ata\022\037\n\027firmware_middle_version\030\006 \001(\t\022\034\n\024" +
+      "firmware_top_version\030\007 \001(\tB-\n\032com.hello." +
+      "suripu.api.inputB\017DataInputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -6485,7 +6721,7 @@ public final class DataInputProtos {
     internal_static_batched_periodic_data_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_batched_periodic_data_descriptor,
-        new java.lang.String[] { "Data", "DeviceId", "FirmwareVersion", "UptimeInSecond", "ConnectedSsid", "Scan", });
+        new java.lang.String[] { "Data", "DeviceId", "FirmwareVersion", "UptimeInSecond", "ConnectedSsid", "Scan", "MessagesInQueue", });
     internal_static_batched_periodic_data_wifi_access_point_descriptor =
       internal_static_batched_periodic_data_descriptor.getNestedTypes().get(0);
     internal_static_batched_periodic_data_wifi_access_point_fieldAccessorTable = new
