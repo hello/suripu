@@ -41,8 +41,8 @@ public class SenseProcessorUtils {
 
     public static Integer getFirmwareVersion(final DataInputProtos.BatchPeriodicDataWorker batchPeriodicDataWorker, final DataInputProtos.periodic_data periodicData) {
         // Grab FW version from Batch or periodic data for EVT units
-        final Integer firmwareVersion =  batchPeriodicDataWorker.hasFirmwareMiddleVersion()
-                ? batchPeriodicDataWorker.getFirmwareMiddleVersion()
+        final Integer firmwareVersion =  batchPeriodicDataWorker.getData().hasFirmwareVersion()
+                ? batchPeriodicDataWorker.getData().getFirmwareVersion()
                 : periodicData.getFirmwareVersion();
         return firmwareVersion;
     }
