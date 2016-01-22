@@ -650,6 +650,9 @@ UPDATE questions SET dependency_response=(SELECT ARRAY_AGG(id) FROM response_cho
 -- jyfan update question category for daily question for prioritization
 UPDATE questions SET category='daily' WHERE question_text='How was your sleep last night?';
 
+-- jyfan 2016-06-08 copy editing
+UPDATE questions SET question_text='Did you consume any of these within 3 hours of going to bed?' WHERE question_text='Did you consume any of these within 3 hours of going to bed? (Check all that applies)';
+
 
 
 
