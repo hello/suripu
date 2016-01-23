@@ -42,6 +42,7 @@ import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.app.v2.DeviceResource;
 import com.hello.suripu.app.v2.StoreFeedbackResource;
+import com.hello.suripu.app.v2.TrendsResource;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.AccessTokenDAO;
@@ -94,6 +95,7 @@ import com.hello.suripu.core.logging.DataLogger;
 import com.hello.suripu.core.logging.KinesisLoggerFactory;
 import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.models.device.v2.DeviceProcessor;
+import com.hello.suripu.core.trends.v2.TrendsProcessor;
 import com.hello.suripu.core.notifications.MobilePushNotificationProcessor;
 import com.hello.suripu.core.notifications.NotificationSubscriptionDAOWrapper;
 import com.hello.suripu.core.notifications.NotificationSubscriptionsDAO;
@@ -461,5 +463,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         StoreFeedbackDAO storeFeedbackDAO = commonDB.onDemand(StoreFeedbackDAO.class);
         environment.addResource(new StoreFeedbackResource(storeFeedbackDAO));
         environment.addResource(new AppStatsResource(appStatsDAO, insightsDAODynamoDB, questionProcessor, accountDAO, timeZoneHistoryDAODynamoDB));
+
+        final TrendsProcessor trendsProcessor = new TrendsProcessor(sleepStatsDAODynamoDB, accountDAO, timeZoneHistoryDAODynamoDB);
+        environment.addResource(new TrendsResource(trendsProcessor));
     }
 }
