@@ -40,7 +40,7 @@ public class TrendsResource extends BaseResource {
     @Timed
     @Path("/{time_scale}")
     @Produces(MediaType.APPLICATION_JSON)
-    public TrendsResult getTrends(@Scope(OAuthScope.SENSORS_BASIC) final AccessToken accessToken,
+    public TrendsResult getTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
                                       @PathParam("time_scale") String timeScaleString) {
 
         final TimeScale timeScale = TimeScale.fromString(timeScaleString);
