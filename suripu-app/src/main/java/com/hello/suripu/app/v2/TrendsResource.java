@@ -1,12 +1,13 @@
 package com.hello.suripu.app.v2;
 
-import com.hello.suripu.core.trends.v2.TimeScale;
-import com.hello.suripu.core.trends.v2.TrendsProcessor;
-import com.hello.suripu.core.trends.v2.TrendsResult;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
 import com.hello.suripu.core.resources.BaseResource;
+import com.hello.suripu.core.trends.v2.TimeScale;
+import com.hello.suripu.core.trends.v2.TrendsProcessor;
+import com.hello.suripu.core.trends.v2.TrendsResult;
+import com.hello.suripu.core.util.JsonError;
 import com.librato.rollout.RolloutClient;
 import com.yammer.metrics.annotation.Timed;
 import org.slf4j.Logger;
@@ -43,11 +44,16 @@ public class TrendsResource extends BaseResource {
     public TrendsResult getTrends(@Scope(OAuthScope.INSIGHTS_READ) final AccessToken accessToken,
                                       @PathParam("time_scale") String timeScaleString) {
 
-        final TimeScale timeScale = TimeScale.fromString(timeScaleString);
-        final TrendsResult result = trendsProcessor.getAllTrends(accessToken.accountId, timeScale);
-        if (result.graphs.isEmpty()) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        try {
+            final TimeScale timeScale = TimeScale.fromString(timeScaleString);
+            final TrendsResult result = trendsProcessor.getAllTrends(accessToken.accountId, timeScale);
+            if (result.graphs.isEmpty()) {
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            }
+            return result;
+        } catch (IllegalArgumentException iae) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), iae.getMessage())).build());
         }
-        return result;
     }
 }

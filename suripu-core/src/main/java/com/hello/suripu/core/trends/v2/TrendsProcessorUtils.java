@@ -90,13 +90,15 @@ public class TrendsProcessorUtils {
         for (final List<Float> oneWeek : Lists.partition(dayOfWeekData, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
             if (weeks == 1) {
-                sections.add(new GraphSection(oneWeek, Optional.of(title), Collections.<Integer>emptyList(), today));
+                sections.add(new GraphSection(oneWeek, Optional.of(title), Collections.<Integer>emptyList(), Optional.of(today)));
             } else {
-                int highlightValue = 0;
+                final List<Integer> highlightedValues = Lists.newArrayList();
                 if (weeks == numWeeks) {
-                    highlightValue = today - 1;
+                    if (today > 0) {
+                        highlightedValues.add(today - 1); // today should always be > 0
+                    }
                 }
-                sections.add(new GraphSection(oneWeek, Optional.<List<String>>absent(), Collections.<Integer>emptyList(), highlightValue));
+                sections.add(new GraphSection(oneWeek, Optional.<List<String>>absent(), highlightedValues, Optional.<Integer>absent()));
             }
 
         }

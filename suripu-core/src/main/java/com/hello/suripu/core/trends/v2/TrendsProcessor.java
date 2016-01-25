@@ -12,7 +12,7 @@ import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Duration;
+import org.joda.time.Days;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int MIN_DATA_SIZE = 7; // don't show annotation if less than this number of datapoints
+    private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of datapoints
 
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -40,7 +40,7 @@ public class TrendsProcessor {
     public TrendsResult getAllTrends(final Long accountId, final TimeScale timescale) {
 
         // get data
-        final List<AggregateSleepStats> data = getRawData(accountId, TimeScale.TIMESCALE_MAP.get(timescale));
+        final List<AggregateSleepStats> data = getRawData(accountId, timescale.getDays());
 
         if (data.isEmpty()) {
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
@@ -85,7 +85,7 @@ public class TrendsProcessor {
 
         // computing averages
         TrendsProcessorUtils.AnnotationStats annotationStats = new TrendsProcessorUtils.AnnotationStats();
-        final Boolean hasAnnotation = (data.size() >= MIN_DATA_SIZE);
+        final Boolean hasAnnotation = (data.size() >= MIN_ANNOTATION_DATA_SIZE);
 
         final List<Float> validData = Lists.newArrayList();
         float minValue = 100.0f;
@@ -104,9 +104,9 @@ public class TrendsProcessor {
             // fill in missing gaps
             if (currentIndex > 0) {
                 final DateTime previousDateTime = data.get(currentIndex - 1).dateTime;
-                final Duration diff = new Duration(previousDateTime, currentDateTime);
-                if (diff.getStandardDays() > 1) {
-                    for (int day = 1; day < diff.getStandardDays(); day++) {
+                final Days diffDays = Days.daysBetween(previousDateTime, currentDateTime);
+                if (diffDays.getDays() > 1) {
+                    for (int day = 1; day < diffDays.getDays(); day++) {
                         final int missingDay = previousDateTime.plusDays(day).getDayOfWeek();
                         validData.add(GraphSection.MISSING_VALUE);
                     }
@@ -132,7 +132,7 @@ public class TrendsProcessor {
         }
 
         final DateTime today = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
-        final List<Float> sectionData = padSectionData(validData, today, data.get(0).dateTime, currentDateTime, TimeScale.TIMESCALE_MAP.get(timeScale));
+        final List<Float> sectionData = padSectionData(validData, today, data.get(0).dateTime, currentDateTime, timeScale.getDays());
 
 
         final List<GraphSection> sections = TrendsProcessorUtils.getSections(sectionData, DataType.SCORES, timeScale, today.getDayOfWeek());
@@ -164,9 +164,9 @@ public class TrendsProcessor {
 
         // fill in missing days first
         final DateTime firstDate = today.minusDays(numDays);
-        final int missingDays = (int) new Duration(firstDate, firstDataDateTime).getStandardDays();
-        if (missingDays > 0) {
-            for (int day = 0; day < missingDays; day ++) {
+        final Days missingDays = Days.daysBetween(firstDate, firstDataDateTime);
+        if (missingDays.getDays() > 0) {
+            for (int day = 0; day < missingDays.getDays(); day ++) {
                 sectionData.add(GraphSection.MISSING_VALUE);
             }
         }
@@ -182,9 +182,9 @@ public class TrendsProcessor {
         // add missing values at the end
         final int lastDataDOW = lastDataDateTime.getDayOfWeek();
 
-        final int endMissingDays = (int) new Duration(lastDataDateTime, today.minusDays(1)).getStandardDays();
-        if (endMissingDays > 0) {
-            for (int day = 0; day < endMissingDays; day ++) {
+        final Days endMissingDays = Days.daysBetween(lastDataDateTime, today.minusDays(1));
+        if (endMissingDays.getDays() > 0) {
+            for (int day = 0; day < endMissingDays.getDays(); day ++) {
                 sectionData.add(GraphSection.MISSING_VALUE);
             }
         }
@@ -214,8 +214,8 @@ public class TrendsProcessor {
 
         if (accountOptional.isPresent()) {
             final int accountAge = DateTimeUtil.getDateDiffFromNowInDays(accountOptional.get().created);
-            for (final TimeScale scale : TimeScale.TIMESCALE_MAP.keySet()) {
-                if (accountAge >= TimeScale.TIMESCALE_MAP.get(scale)) {
+            for (final TimeScale scale : TimeScale.values()) {
+                if (accountAge >= scale.getDays()) {
                     timeScales.add(scale);
                 }
             }

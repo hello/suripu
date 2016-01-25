@@ -1,24 +1,25 @@
 package com.hello.suripu.core.trends.v2;
 
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
-import java.util.Map;
-
 public enum TimeScale {
-    LAST_WEEK("LAST_WEEK"),
-    LAST_MONTH("LAST_MONTH"),
-    LAST_THREE_MONTHS("LAST_3_MONTHS");
 
-    public final static Map<TimeScale, Integer> TIMESCALE_MAP;
-    static {
-        final Map<TimeScale, Integer> map = Maps.newLinkedHashMap();
-        map.put(TimeScale.LAST_WEEK, 7);
-        map.put(TimeScale.LAST_MONTH, 30);
-        map.put(TimeScale.LAST_THREE_MONTHS, 90);
-        TIMESCALE_MAP = ImmutableMap.copyOf(map);
-    }
+    LAST_WEEK("LAST_WEEK") {
+        public final int getDays() {
+            return 7;
+        }
+    },
+
+    LAST_MONTH("LAST_MONTH") {
+        public final int getDays() {
+            return 30;
+        }
+    },
+
+    LAST_THREE_MONTHS("LAST_3_MONTHS") {
+        public final int getDays() {
+            return 90;
+        }
+    };
 
     private String value;
 
@@ -34,7 +35,9 @@ public enum TimeScale {
                 }
             }
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Invalid time-scale.");
     }
+
+    abstract public int getDays();
 
 }

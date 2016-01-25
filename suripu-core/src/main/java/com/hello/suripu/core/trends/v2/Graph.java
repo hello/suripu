@@ -27,10 +27,10 @@ public class Graph {
     public final GraphType graphType;
 
     @JsonProperty("min_value")
-    public final Float minValue;
+    public final float minValue;
 
     @JsonProperty("max_value")
-    public final Float maxValue;
+    public final float maxValue;
 
     @JsonProperty("sections")
     public final List<GraphSection> sections;
@@ -43,7 +43,7 @@ public class Graph {
 
     public Graph(final TimeScale timeScale, final String title,
                  final DataType dataType, final GraphType graphType,
-                 final Float minValue, final Float maxValue,
+                 final float minValue, final float maxValue,
                  final List<GraphSection> sections,
                  final Optional<List<ConditionRange>> conditionRanges,
                  final Optional<List<Annotation>> annotations) {
