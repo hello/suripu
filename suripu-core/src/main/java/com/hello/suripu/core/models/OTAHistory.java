@@ -9,11 +9,11 @@ import org.joda.time.DateTime;
 public class OTAHistory {
     public final String deviceId;
     public final DateTime eventTime;
-    public final Integer currentFWVersion;
-    public final Integer newFWVersion;
+    public final String currentFWVersion;
+    public final String newFWVersion;
     public final List<String> fileList;
 
-    public OTAHistory(final String deviceId, final DateTime eventTime, final Integer currentFW, final Integer newFW, final List<String> urlList) {
+    public OTAHistory(final String deviceId, final DateTime eventTime, final String currentFW, final String newFW, final List<String> urlList) {
         this.deviceId = deviceId;
         this.eventTime = eventTime;
         this.currentFWVersion = currentFW;
