@@ -49,7 +49,6 @@ import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
-import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
 import com.hello.suripu.core.util.SleepScoreUtils;
@@ -101,9 +100,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     public final static int MIN_DURATION_OF_TRACKER_MOTION_IN_HOURS = 5;
     public final static int MIN_DURATION_OF_FILTERED_MOTION_IN_HOURS = 3;
     public final static int MIN_MOTION_AMPLITUDE = 1000;
-    final static long OUTLIER_GUARD_DURATION = DateTimeConstants.MILLIS_PER_HOUR * 4; //min spacing between motion groups
-    final static long DOMINANT_GROUP_DURATION = DateTimeConstants.MILLIS_PER_HOUR * 5; //num hours in a motion group to be considered the dominant one
 
+    public final static String ALGORITHM_NAME_REGULAR = "wupang";
+    public final static String ALGORITHM_NAME_VOTING = "voting";
+    public final static String ALGORITHM_NAME_BAYESNET = "bayesnet";
+    public final static String ALGORITHM_NAME_HMM = "hmm";
+    public final static String VERSION_BACKUP = "wupang_backup_for_hmm"; //let us know the HMM had some issues
 
 
     static public TimelineProcessor createTimelineProcessor(final PillDataReadDAO pillDataDAODynamoDB,
@@ -257,7 +259,6 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
 
-        /*  GET THE TIMELINE! */
         Optional<TimelineAlgorithmResult> resultOptional = Optional.absent();
 
         for (final AlgorithmType alg : algorithmChain) {
@@ -347,31 +348,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
         // get partner tracker motion, if available
         final List<TrackerMotion> originalPartnerMotions = getPartnerTrackerMotion(accountId, starteTimeLocalUTC, endTimeLocalUTC);
+        final List<TrackerMotion> trackerMotions = new ArrayList<>();
 
-
-        List<TrackerMotion> filteredOriginalMotions = originalTrackerMotions;
-        List<TrackerMotion> filteredOriginalPartnerMotions = originalPartnerMotions;
-
-        if (this.hasOutlierFilterEnabled(accountId)) {
-            filteredOriginalMotions = OutlierFilter.removeOutliers(originalTrackerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-            filteredOriginalPartnerMotions = OutlierFilter.removeOutliers(originalPartnerMotions,OUTLIER_GUARD_DURATION,DOMINANT_GROUP_DURATION);
-        }
-
-
-        final List<TrackerMotion> trackerMotions = Lists.newArrayList();
-
-        if (!filteredOriginalPartnerMotions.isEmpty()) {
+        if (!originalPartnerMotions.isEmpty()) {
 
             final int tzOffsetMillis = originalTrackerMotions.get(0).offsetMillis;
 
             if (this.hasPartnerFilterEnabled(accountId)) {
                 LOGGER.info("using original partner filter");
                 try {
-                    PartnerDataUtils.PartnerMotions motions = partnerDataUtils.getMyMotion(filteredOriginalMotions, filteredOriginalPartnerMotions);
+                    PartnerDataUtils.PartnerMotions motions = partnerDataUtils.getMyMotion(originalTrackerMotions, originalPartnerMotions);
                     trackerMotions.addAll(motions.myMotions);
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
-                    trackerMotions.addAll(filteredOriginalMotions);
+                    trackerMotions.addAll(originalTrackerMotions);
                 }
             }
             else if (this.hasHmmPartnerFilterEnabled(accountId)) {
@@ -381,20 +371,20 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
                             partnerDataUtils.partnerFilterWithDurationsDiffHmm(
                                     starteTimeLocalUTC.minusMillis(tzOffsetMillis),
                                     endTimeLocalUTC.minusMillis(tzOffsetMillis),
-                                    ImmutableList.copyOf(filteredOriginalMotions),
-                                    ImmutableList.copyOf(filteredOriginalPartnerMotions)));
+                                    ImmutableList.copyOf(originalTrackerMotions),
+                                    ImmutableList.copyOf(originalPartnerMotions)));
 
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
-                    trackerMotions.addAll(filteredOriginalMotions);
+                    trackerMotions.addAll(originalTrackerMotions);
                 }
             }
             else {
-                trackerMotions.addAll(filteredOriginalMotions);
+                trackerMotions.addAll(originalTrackerMotions);
             }
         }
         else {
-            trackerMotions.addAll(filteredOriginalMotions);
+            trackerMotions.addAll(originalTrackerMotions);
         }
 
         if (trackerMotions.isEmpty()) {
@@ -445,9 +435,9 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         }
 
         return Optional.of(new OneDaysSensorData(allSensorSampleList,
-                ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
+                ImmutableList.copyOf(trackerMotions),ImmutableList.copyOf(originalPartnerMotions),
                 ImmutableList.copyOf(feedbackList),
-                ImmutableList.copyOf(filteredOriginalMotions),ImmutableList.copyOf(filteredOriginalPartnerMotions),
+                ImmutableList.copyOf(originalTrackerMotions),ImmutableList.copyOf(originalPartnerMotions),
                 date,starteTimeLocalUTC,endTimeLocalUTC,currentTimeUTC,
                 tzOffsetMillis));
 

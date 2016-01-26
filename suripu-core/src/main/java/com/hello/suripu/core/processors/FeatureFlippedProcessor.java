@@ -122,8 +122,4 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_PILL_DATA_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
 
-    protected Boolean hasOutlierFilterEnabled(final long accountId) {
-        return featureFlipper.userFeatureActive(FeatureFlipper.OUTLIER_FILTER,accountId,Collections.EMPTY_LIST);
-    }
-
 }
