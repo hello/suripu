@@ -165,7 +165,7 @@ public class FirmwareUpgradePathDAO {
 
         final Condition byRange = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ.toString())
-                .withAttributeValueList(new AttributeValue().withS(fromFWVersion));
+                .withAttributeValueList(new AttributeValue().withN(fromFWVersion));
 
         final Map<String, Condition> queryConditions = new HashMap<>();
         queryConditions.put(GROUP_NAME_ATTRIBUTE_NAME, byGroupName);
