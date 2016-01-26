@@ -10,6 +10,8 @@ public enum GraphType {
     BUBBLES("BUBBLES");
 
     private String value;
-    private GraphType(final String value) { this.value = value; }
 
+    private GraphType(final String value) {
+        this.value = value;
+    }
 }

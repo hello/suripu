@@ -142,7 +142,7 @@ public class TrendsProcessor {
             annotations = TrendsProcessorUtils.getAnnotations(annotationStats, DataType.SCORES);
         }
 
-        // TODO: Condition Range
+        Optional<List<ConditionRange>> conditionRanges = ConditionRange.getSleepScoreConditionRanges(minValue, maxValue);
 
         final Graph graph = new Graph(
                 timeScale,
@@ -152,9 +152,9 @@ public class TrendsProcessor {
                 minValue,
                 maxValue,
                 sections,
-                Optional.<List<ConditionRange>>absent(),
+                conditionRanges,
                 annotations
-                );
+        );
 
         return Optional.of(graph);
     }

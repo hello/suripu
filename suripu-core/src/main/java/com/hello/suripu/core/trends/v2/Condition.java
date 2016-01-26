@@ -12,5 +12,4 @@ public enum Condition {
     private String value;
 
     private Condition(final String value) { this.value = value; }
-
 }
