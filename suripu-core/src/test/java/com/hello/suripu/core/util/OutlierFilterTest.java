@@ -38,20 +38,31 @@ public class OutlierFilterTest {
             separatedTrackerMotions.add(new TrackerMotion(0L,0L,0L,t0 + i*DateTimeConstants.MILLIS_PER_HOUR +  2*DateTimeConstants.MILLIS_PER_DAY,5002,0,0L,0L,3L));
         }
 
+        for (int i = 0; i < 2; i++) {
+            separatedTrackerMotions.add(new TrackerMotion(0L,0L,0L,t0 + i*DateTimeConstants.MILLIS_PER_HOUR +  3*DateTimeConstants.MILLIS_PER_DAY,5002,0,0L,0L,3L));
+        }
 
-        final List<TrackerMotion> motionsNominal = OutlierFilter.removeOutliers(nominalTrackerMotion,DateTimeConstants.MILLIS_PER_HOUR*5,DateTimeConstants.MILLIS_PER_HOUR*3);
+        final long dominantGroupDuration = DateTimeConstants.MILLIS_PER_HOUR*5;
+        final long gapDuration = DateTimeConstants.MILLIS_PER_HOUR*3;
+
+        final List<TrackerMotion> motionsNominal = OutlierFilter.removeOutliers(nominalTrackerMotion,dominantGroupDuration,gapDuration);
         TestCase.assertTrue(motionsNominal.size() == 8);
 
-        final List<TrackerMotion> motionsSeparated = OutlierFilter.removeOutliers(separatedTrackerMotions,DateTimeConstants.MILLIS_PER_HOUR*5,DateTimeConstants.MILLIS_PER_HOUR*3);
-        TestCase.assertTrue(motionsSeparated.size() == 9);
-        for (int i = 0; i < 9; i++) {
+        final List<TrackerMotion> motionsSeparated = OutlierFilter.removeOutliers(separatedTrackerMotions,dominantGroupDuration,gapDuration);
+        TestCase.assertTrue(motionsSeparated.size() == 13);
+        for (int i = 0; i < 4; i++) {
+            TestCase.assertTrue(motionsSeparated.get(i).value == 5000);
+        }
+
+        for (int i = 4; i < 13; i++) {
             TestCase.assertTrue(motionsSeparated.get(i).value == 5001);
         }
 
 
+        //ignore the weak motion
         separatedTrackerMotions.add(new TrackerMotion(0L,0L,0L,t0 -DateTimeConstants.MILLIS_PER_HOUR  + DateTimeConstants.MILLIS_PER_DAY,100,0,0L,0L,1L));
-        final List<TrackerMotion> motionsSeparated2 = OutlierFilter.removeOutliers(separatedTrackerMotions,DateTimeConstants.MILLIS_PER_HOUR*5,DateTimeConstants.MILLIS_PER_HOUR*3);
-        TestCase.assertTrue(motionsSeparated.size() == 9);
+        final List<TrackerMotion> motionsSeparated2 = OutlierFilter.removeOutliers(separatedTrackerMotions,dominantGroupDuration,gapDuration);
+        TestCase.assertTrue(motionsSeparated.size() == 13);
 
     }
 

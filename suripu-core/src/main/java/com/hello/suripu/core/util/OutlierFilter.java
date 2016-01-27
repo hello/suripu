@@ -15,7 +15,7 @@ import java.util.List;
 public class OutlierFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OutlierFilter.class);
-    final public static long MIN_MOTION = 1L;
+    final public static long MIN_MOTION = 2L;
     final public static int MIN_MOTION_MAGNITUDE = 300;
 
     protected static class MotionGroupsWithDuration implements  Comparable<MotionGroupsWithDuration> {
@@ -61,7 +61,8 @@ public class OutlierFilter {
         for (final Iterator<TrackerMotion> it = trackerMotions.iterator(); it.hasNext(); ) {
             final TrackerMotion m = it.next();
 
-            if (m.onDurationInSeconds > MIN_MOTION || m.value > MIN_MOTION_MAGNITUDE) {
+            //if it passes ANY of these criteria, keep the point
+            if (m.onDurationInSeconds >= MIN_MOTION || m.value > MIN_MOTION_MAGNITUDE) {
                 realPoints.add(m);
             }
 
@@ -72,58 +73,61 @@ public class OutlierFilter {
             return Lists.newArrayList();
         }
 
-        final List<List<TrackerMotion>> groups = Lists.newArrayList();
 
-        List<TrackerMotion> currentGroup = Lists.newArrayList();
+        List<TrackerMotion> currentGroupMotions = Lists.newArrayList();
 
         TrackerMotion prev = null;
+        final List<MotionGroupsWithDuration> groupsWithDurations = Lists.newArrayList();
+
         for (final Iterator<TrackerMotion> it = realPoints.iterator(); it.hasNext(); ) {
             final TrackerMotion m = it.next();
-
-
 
             if (prev != null) {
                 final long tdiff = m.timestamp - prev.timestamp;
 
                 if (tdiff  > outlierGuardDurationMillis) {
-                    groups.add(currentGroup);
-                    currentGroup = Lists.newArrayList();
+                    groupsWithDurations.add(new MotionGroupsWithDuration(currentGroupMotions));
+                    currentGroupMotions = Lists.newArrayList();
                 }
-
             }
 
             prev = m;
-            currentGroup.add(m);
+            currentGroupMotions.add(m);
 
         }
 
-        groups.add(currentGroup);
+        groupsWithDurations.add(new MotionGroupsWithDuration(currentGroupMotions));
 
-        //sort groups
-        List<MotionGroupsWithDuration> groupsWithDurations = Lists.newArrayList();
 
-        for (final List<TrackerMotion> motions : groups) {
-            groupsWithDurations.add(new MotionGroupsWithDuration(motions));
-        }
+        //find max group
+        long maxDuration = 0;
+        int maxIdx = 0;
+        for (int i = 0; i < groupsWithDurations.size(); i++) {
+            final long duration = groupsWithDurations.get(i).duration;
 
-        Collections.sort(groupsWithDurations);
-
-        //THE RULE IS -- IF YOU HAVE A GROUP WITH DURATION > N HOURS as the longest duration, discard the rest.
-        if (groupsWithDurations.size() > 1) {
-            if (groupsWithDurations.get(0).duration > dominantGroupDuration) {
-
-                int pointcount = 0;
-
-                for (int i = 1; i < groupsWithDurations.size(); i++) {
-                    pointcount += groupsWithDurations.get(i).motions.size();
-                }
-
-                LOGGER.info("action=discard_my_tracker_motion num_points={}",pointcount);
-
-                return groupsWithDurations.get(0).motions;
+            if (duration > maxDuration) {
+                maxIdx = i;
+                maxDuration = duration;
             }
         }
 
-        return trackerMotions;
+
+        List<TrackerMotion> returnedPoints = trackerMotions;
+
+        //THE RULE IS -- IF YOU HAVE A GROUP WITH DURATION > N HOURS as the longest duration, discard what comes after
+        //unless the group that comes after is too large
+        if (maxDuration > dominantGroupDuration) {
+            //add everything before and including the dominant group -- only discarding on the tail end
+            final List<TrackerMotion> motions = Lists.newArrayList();
+            for (int i = 0; i <= maxIdx; i++) {
+                motions.addAll(groupsWithDurations.get(i).motions);
+            }
+
+            returnedPoints = motions;
+        }
+
+        LOGGER.info("action=discard_pill_points num_points={} num_groups={}",trackerMotions.size() - returnedPoints.size(),groupsWithDurations.size() - maxIdx - 1);
+
+        return returnedPoints;
     }
 }
