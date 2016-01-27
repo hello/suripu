@@ -3,7 +3,7 @@ package com.hello.suripu.core.trends.v2;
 import com.hello.suripu.core.models.SleepScore;
 
 /**
- * Created by kingshy on 1/21/16.
+ * Created by ksg on 01/21/16
  */
 public enum Condition {
     UNKNOWN("UNKNOWN"),

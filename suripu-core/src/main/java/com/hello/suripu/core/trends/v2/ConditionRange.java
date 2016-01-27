@@ -8,8 +8,9 @@ import com.hello.suripu.core.models.SleepScore;
 import java.util.List;
 
 /**
- * Created by kingshy on 1/21/16.
+ * Created by ksg on 01/21/16
  */
+
 public class ConditionRange {
     @JsonProperty("min_value")
     public final float minValue;
@@ -68,10 +69,5 @@ public class ConditionRange {
         }
 
         return Optional.of(ranges);
-    }
-
-    public static Optional<List<ConditionRange>> getSleepDurationConditionRanges(final float minValue, final float maxValue) {
-        // TODO
-        return Optional.absent();
     }
 }

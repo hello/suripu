@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 import java.util.List;
 
 /**
- * Created by kingshy on 1/21/16.
+ * Created by ksg on 01/21/16
  */
 public class GraphSection {
 

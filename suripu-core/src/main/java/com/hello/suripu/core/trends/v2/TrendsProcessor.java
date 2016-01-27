@@ -9,6 +9,7 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.TimeZoneHistory;
+import com.hello.suripu.core.models.timeline.v2.SleepState;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -25,7 +26,9 @@ public class TrendsProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
     private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of data-points
-
+    private static final int MIN_DEPTH_DATA_SIZE = 7;
+    private static final int MIN_SCORE_DATA_SIZE = 3;
+    private static final int MIN_DURATION_DATA_SIZE = 7;
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final AccountDAO accountDAO;
@@ -45,27 +48,34 @@ public class TrendsProcessor {
         final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
+            LOGGER.debug("debug=no-trends-data, account={}", accountId);
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
 
         final List<Graph> graphs = Lists.newArrayList();
 
         // sleep-score grid graph
-        final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, Graph.TITLE_SLEEP_SCORE, localToday); //getSleepScoreGraph(data, timescale);
-        if (sleepScoreGraph.isPresent()) {
-            graphs.add(sleepScoreGraph.get());
+        if (data.size() >= MIN_SCORE_DATA_SIZE) {
+            final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, Graph.TITLE_SLEEP_SCORE, localToday);
+            if (sleepScoreGraph.isPresent()) {
+                graphs.add(sleepScoreGraph.get());
+            }
         }
 
         // sleep duration bar graph
-        final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, Graph.TITLE_SLEEP_DURATION, localToday);
-        if (durationGraph.isPresent()) {
-            graphs.add(durationGraph.get());
+        if (data.size() >= MIN_DURATION_DATA_SIZE) {
+            final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, Graph.TITLE_SLEEP_DURATION, localToday);
+            if (durationGraph.isPresent()) {
+                graphs.add(durationGraph.get());
+            }
         }
 
         // sleep depth bubbles
-        final Optional<Graph> depthGraph = getSleepDepthGraph(data);
-        if (depthGraph.isPresent()) {
-            graphs.add(depthGraph.get());
+        if (data.size() >= MIN_DEPTH_DATA_SIZE) {
+            final Optional<Graph> depthGraph = getSleepDepthGraph(data, timescale);
+            if (depthGraph.isPresent()) {
+                graphs.add(depthGraph.get());
+            }
         }
 
         // check account-age to determine available time-scale
@@ -75,12 +85,55 @@ public class TrendsProcessor {
     }
 
 
-    private Optional<Graph> getSleepDepthGraph(List<AggregateSleepStats> data) {
-        return Optional.absent();
+    private Optional<Graph> getSleepDepthGraph(final List<AggregateSleepStats> data, final TimeScale timeScale) {
+        float totalSleep = 0.0f;
+        float totalLightSleep = 0.0f;
+        float totalSoundSleep = 0.0f;
+        float totalMediumSleep = 0.0f;
+        for (final AggregateSleepStats stat : data) {
+            final float light = stat.sleepStats.lightSleepDurationInMinutes;
+            totalLightSleep += light;
+
+            final float sound = stat.sleepStats.soundSleepDurationInMinutes;
+            totalSoundSleep += sound;
+
+            final float medium = stat.sleepStats.sleepDurationInMinutes - light - sound;
+            totalMediumSleep += medium;
+
+            totalSleep += (light + sound + medium);
+        }
+
+        final List<GraphSection> sections = Lists.newArrayList();
+        if (totalSleep > 0.0f) {
+            final List<Float> sectionValues = Lists.newArrayList(
+                    totalLightSleep/totalSleep,
+                    totalMediumSleep/totalSleep,
+                    totalSoundSleep/totalSleep);
+
+            final List<String> title = Lists.newArrayList(SleepState.LIGHT.toString(),
+                    SleepState.MEDIUM.toString(),
+                    SleepState.SOUND.toString());
+
+            sections.add(new GraphSection(sectionValues, Optional.of(title), Collections.<Integer>emptyList(), Optional.<Integer>absent()));
+        }
+
+        final Graph graph = new Graph(
+                timeScale,
+                Graph.TITLE_SLEEP_DEPTH,
+                DataType.PERCENTS,
+                GraphType.BUBBLES,
+                0.0f,
+                1.0f,
+                sections,
+                Optional.<List<ConditionRange>>absent(),
+                Optional.<List<Annotation>>absent()
+        );
+
+        return Optional.of(graph);
     }
 
     /**
-     * Get graphs where x-axis are days
+     * Get graphs where x-axis are days (Score and Sleep-Duration only)
      * @param data aggregate sleep-stats
      * @param timeScale look back days
      * @param graphType grid, bar or bubbles
@@ -88,7 +141,7 @@ public class TrendsProcessor {
      * @param graphTitle name of the graph
      * @return Optional graph
      */
-    private Optional<Graph> getDaysGraph(List<AggregateSleepStats> data,
+    private Optional<Graph> getDaysGraph(final List<AggregateSleepStats> data,
                                      final TimeScale timeScale,
                                      final GraphType graphType,
                                      final DataType dataType,
@@ -148,18 +201,17 @@ public class TrendsProcessor {
 
         final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays());
 
-        final List<GraphSection> sections = TrendsProcessorUtils.getSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
+        final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
 
         Optional<List<Annotation>> annotations = Optional.absent();
         if (hasAnnotation) {
             annotations = TrendsProcessorUtils.getAnnotations(annotationStats, dataType);
         }
 
-        Optional<List<ConditionRange>> conditionRanges;
+        Optional<List<ConditionRange>> conditionRanges = Optional.absent();
         if (graphTitle.equals(Graph.TITLE_SLEEP_SCORE)) {
+            // only score has condition ranges for now
             conditionRanges = ConditionRange.getSleepScoreConditionRanges(minValue, maxValue);
-        } else {
-            conditionRanges = ConditionRange.getSleepDurationConditionRanges(minValue, maxValue);
         }
 
         final Graph graph = new Graph(

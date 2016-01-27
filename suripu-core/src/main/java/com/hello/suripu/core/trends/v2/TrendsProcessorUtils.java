@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by kingshy on 1/22/16.
+ * Created by ksg on 01/22/2016
  */
 
 public class TrendsProcessorUtils {
@@ -49,17 +49,19 @@ public class TrendsProcessorUtils {
         DOW_DAY_MAP = ImmutableMap.copyOf(dowMap);
     }
 
-    public final static String getMonthName(int month){
+    public static String getMonthName(int month){
         String[] monthNames = {"NON", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
         return monthNames[month];
     }
 
     public static Optional<List<Annotation>> getAnnotations(final AnnotationStats stats, final DataType dataType) {
         final List<Annotation> annotations = Lists.newArrayList();
+
         if (stats.numDays > 0.0f) { // Average
-            String title = "TOTAL AVERAGE";
             final float avg = stats.sumValues/stats.numDays;
-            Optional<Condition> condition = Optional.<Condition>absent();
+
+            String title = "TOTAL AVERAGE";
+            Optional<Condition> condition = Optional.absent();
             if (dataType.equals(DataType.SCORES)) {
                 title = "AVERAGE SCORE";
                 condition = Optional.of(Condition.getScoreCondition(avg));
@@ -70,7 +72,7 @@ public class TrendsProcessorUtils {
 
         if (stats.numWeekdays > 0.0f) {
             final float avg = stats.sumWeekdayValues/stats.numWeekdays;
-            Optional<Condition> condition = Optional.<Condition>absent();
+            Optional<Condition> condition = Optional.absent();
             if (dataType.equals(DataType.SCORES)) {
                 condition = Optional.of(Condition.getScoreCondition(avg));
             }
@@ -79,7 +81,7 @@ public class TrendsProcessorUtils {
 
         if (stats.numWeekends > 0.0f) {
             final float avg = stats.sumWeekendValues/stats.numWeekends;
-            Optional<Condition> condition = Optional.<Condition>absent();
+            Optional<Condition> condition = Optional.absent();
             if (dataType.equals(DataType.SCORES)) {
                 condition = Optional.of(Condition.getScoreCondition(avg));
             }
@@ -93,45 +95,37 @@ public class TrendsProcessorUtils {
         return Optional.absent();
     }
 
-    public static List<GraphSection> getSections(final List<Float> data,
+
+    public static List<GraphSection> getScoreDurationSections(final List<Float> data,
                                                  final float minValue, final float maxValue,
                                                  final DataType dataType,
                                                  final TimeScale timeScale,
                                                  final DateTime today) {
-
         if (dataType.equals(DataType.SCORES)) {
-            // sleep score
             if (!timeScale.equals(TimeScale.LAST_THREE_MONTHS)) {
                 return getScoreWeekSections(data, today); // last_week & last_month
             }
+            return getScoreMonthSections(data, today); // last_3_months
 
-            // last_3_months
-            return getScoreMonthSections(data, today);
-
-        } else if (dataType.equals(DataType.HOURS)) {
-            // sleep duration
-            if (timeScale.equals(TimeScale.LAST_WEEK)) {
-                return getDurationWeekSection(data, minValue, maxValue, today); // last_week
-            }
-
-            // last_month & last_3_months
-            return getDurationMonthSections(data, minValue, maxValue, timeScale, today);
-
-        } else {
-            // sleep depth bubbles
         }
 
-        return Collections.<GraphSection>emptyList();
+        // sleep duration
+        if (timeScale.equals(TimeScale.LAST_WEEK)) {
+            return getDurationWeekSection(data, minValue, maxValue, today); // last_week
+        }
+        // last_month & last_3_months
+        return getDurationMonthSections(data, minValue, maxValue, timeScale, today);
     }
 
-    private static List<GraphSection> getScoreWeekSections(final List<Float> dayOfWeekData, final DateTime today) {
+
+    private static List<GraphSection> getScoreWeekSections(final List<Float> data, final DateTime today) {
         final List<GraphSection> sections = Lists.newArrayList();
         final List<String> title = Lists.newArrayList(DOW_DAY_MAP.values());
-        final int numWeeks = dayOfWeekData.size() / DateTimeConstants.DAYS_PER_WEEK;
+        final int numWeeks = data.size() / DateTimeConstants.DAYS_PER_WEEK;
 
         final int todayDOW = today.getDayOfWeek();
         int weeks = 0;
-        for (final List<Float> oneWeek : Lists.partition(dayOfWeekData, DateTimeConstants.DAYS_PER_WEEK)) {
+        for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
             if (weeks == 1) {
                 sections.add(new GraphSection(oneWeek, Optional.of(title), Collections.<Integer>emptyList(), Optional.of(todayDOW)));
@@ -142,6 +136,7 @@ public class TrendsProcessorUtils {
                         highlightedValues.add(todayDOW - 1); // today should always be > 0
                     }
                 }
+                // no titles for subsequent sections
                 sections.add(new GraphSection(oneWeek, Optional.<List<String>>absent(), highlightedValues, Optional.<Integer>absent()));
             }
 
@@ -149,7 +144,7 @@ public class TrendsProcessorUtils {
         return sections;
     }
 
-    private static List<GraphSection> getScoreMonthSections(final List<Float> dayOfWeekData, final DateTime today) {
+    private static List<GraphSection> getScoreMonthSections(final List<Float> data, final DateTime today) {
         // TODO
         return Collections.<GraphSection>emptyList();
     }
@@ -194,71 +189,75 @@ public class TrendsProcessorUtils {
                                                                final float minValue, final float maxValue,
                                                                final TimeScale timeScale,
                                                                final DateTime today) {
-
         // compile values
         int index = 0;
+        int minIndex = -1;
+        int maxIndex = -1;
         final List<Float> sectionValues = Lists.newArrayList();
-        int minHighlightIndex = -1;
-        int maxHighlightIndex = -1;
         for(final Float value: data) {
-            if (value == null) {
-                continue;
-            }
+            if (value != null) {
+                if (value == minValue) {
+                    minIndex = index; // highlight last min value
+                } else if (maxIndex == -1 && value == maxValue) {
+                    maxIndex = index; // highlight first max
+                }
 
-            // highlight these values
-            if (value == minValue) {
-                minHighlightIndex = index;
-            } else if (maxHighlightIndex == -1 && value == maxValue) {
-                maxHighlightIndex = index;
+                index++;
+                sectionValues.add(value);
             }
-
-            index++;
-            sectionValues.add(value);
         }
+
+        if (minIndex == maxIndex) {
+            minIndex = -1; // just in case
+        }
+
+        // create the sections
+        final List<GraphSection> sections = Lists.newArrayList();
 
         final DateTime firstDate = today.minusDays(timeScale.getDays());
         String title = getMonthName(firstDate.getMonthOfYear());
-        final List<GraphSection> sections = Lists.newArrayList();
         int sectionFirstIndex = 0;
 
         for (int day = 0; day < timeScale.getDays(); day ++) {
-            final String currentMonth = getMonthName(firstDate.plusDays(day).getMonthOfYear());
-            if (!title.equals(currentMonth)) {
+            final String monthName = getMonthName(firstDate.plusDays(day).getMonthOfYear());
+            if (!title.equals(monthName)) {
 
                 final List<Integer> highlightValues = Lists.newArrayList();
-                if (minHighlightIndex > 0 && minHighlightIndex < day) {
-                    highlightValues.add(minHighlightIndex);
-                    minHighlightIndex = -1; // reset
+                if (minIndex > 0 && minIndex < day) {
+                    highlightValues.add(minIndex - sectionFirstIndex); // position within current section
+                    minIndex = -1; // reset
                 }
 
-                if (maxHighlightIndex > 0 && maxHighlightIndex < day) {
-                    highlightValues.add(maxHighlightIndex);
-                    maxHighlightIndex = -1;
+                if (maxIndex > 0 && maxIndex < day) {
+                    highlightValues.add(maxIndex - sectionFirstIndex);
+                    maxIndex = -1;
                 }
 
-                sections.add(new GraphSection(sectionValues.subList(sectionFirstIndex, day),
+                sections.add(new GraphSection(
+                                sectionValues.subList(sectionFirstIndex, day),
                                 Optional.<List<String>>of(Lists.newArrayList(title)),
                                 highlightValues,
                                 Optional.<Integer>absent())
                 );
                 sectionFirstIndex = day;
-                title = currentMonth;
+                title = monthName;
             }
         }
 
+        // add remaining data
         final int lastDay = timeScale.getDays() - 1;
         if (sectionFirstIndex != lastDay) {
-
             final List<Integer> highlightValues = Lists.newArrayList();
-            if (minHighlightIndex > 0 && minHighlightIndex <= lastDay) {
-                highlightValues.add(minHighlightIndex);
+            if (minIndex > 0 && minIndex <= lastDay) {
+                highlightValues.add(minIndex - sectionFirstIndex);
             }
 
-            if (maxHighlightIndex > 0 && maxHighlightIndex <= lastDay) {
-                highlightValues.add(maxHighlightIndex);
+            if (maxIndex > 0 && maxIndex <= lastDay) {
+                highlightValues.add(maxIndex - sectionFirstIndex);
             }
 
-            sections.add(new GraphSection(sectionValues.subList(sectionFirstIndex, lastDay + 1),
+            sections.add(new GraphSection(
+                            sectionValues.subList(sectionFirstIndex, lastDay + 1),
                             Optional.<List<String>>of(Lists.newArrayList(title)),
                             highlightValues,
                             Optional.<Integer>absent())
@@ -291,8 +290,6 @@ public class TrendsProcessorUtils {
         sectionData.addAll(data);
 
         // add missing values at the end
-        final int lastDataDOW = lastDataDateTime.getDayOfWeek();
-
         final Days endMissingDays = Days.daysBetween(lastDataDateTime, today.minusDays(1));
         if (endMissingDays.getDays() > 0) {
             for (int day = 0; day < endMissingDays.getDays(); day ++) {
