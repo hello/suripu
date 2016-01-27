@@ -35,7 +35,7 @@ public class Graph {
     @JsonProperty("sections")
     public final List<GraphSection> sections;
 
-    @JsonProperty("conditional_ranges")
+    @JsonProperty("condition_ranges")
     public final Optional<List<ConditionRange>> conditionRanges;
 
     @JsonProperty("annotations")

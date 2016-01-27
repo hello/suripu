@@ -8,6 +8,7 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
+import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -23,7 +24,7 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of datapoints
+    private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of data-points
 
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -40,7 +41,8 @@ public class TrendsProcessor {
     public TrendsResult getAllTrends(final Long accountId, final TimeScale timescale) {
 
         // get data
-        final List<AggregateSleepStats> data = getRawData(accountId, timescale.getDays());
+        final DateTime localToday = getLocalToday(accountId);
+        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
@@ -49,13 +51,13 @@ public class TrendsProcessor {
         final List<Graph> graphs = Lists.newArrayList();
 
         // sleep-score grid graph
-        final Optional<Graph> sleepScoreGraph = getSleepScoreGraph(data, timescale);
+        final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, Graph.TITLE_SLEEP_SCORE, localToday); //getSleepScoreGraph(data, timescale);
         if (sleepScoreGraph.isPresent()) {
             graphs.add(sleepScoreGraph.get());
         }
 
         // sleep duration bar graph
-        final Optional<Graph> durationGraph = getSleepDurationGraph(data);
+        final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, Graph.TITLE_SLEEP_DURATION, localToday);
         if (durationGraph.isPresent()) {
             graphs.add(durationGraph.get());
         }
@@ -77,78 +79,94 @@ public class TrendsProcessor {
         return Optional.absent();
     }
 
-    private Optional<Graph> getSleepDurationGraph(List<AggregateSleepStats> data) {
-        return Optional.absent();
-    }
+    /**
+     * Get graphs where x-axis are days
+     * @param data aggregate sleep-stats
+     * @param timeScale look back days
+     * @param graphType grid, bar or bubbles
+     * @param dataType score, hours or percent
+     * @param graphTitle name of the graph
+     * @return Optional graph
+     */
+    private Optional<Graph> getDaysGraph(List<AggregateSleepStats> data,
+                                     final TimeScale timeScale,
+                                     final GraphType graphType,
+                                     final DataType dataType,
+                                     final String graphTitle,
+                                     final DateTime localToday) {
 
-    private Optional<Graph> getSleepScoreGraph(final List<AggregateSleepStats> data, final TimeScale timeScale) {
-
-        // computing averages
         TrendsProcessorUtils.AnnotationStats annotationStats = new TrendsProcessorUtils.AnnotationStats();
         final Boolean hasAnnotation = (data.size() >= MIN_ANNOTATION_DATA_SIZE);
 
+        // computing averages
         final List<Float> validData = Lists.newArrayList();
         float minValue = 100.0f;
         float maxValue = 0.0f;
-        int dayOfWeek = 0;
         DateTime currentDateTime = data.get(0).dateTime;
 
-
         for (final AggregateSleepStats stat: data) {
-            final float score = (float) stat.sleepScore;
-            currentDateTime = stat.dateTime;
-            dayOfWeek = currentDateTime.getDayOfWeek();
+            float statValue;
+            if (graphTitle.equals(Graph.TITLE_SLEEP_DURATION)) {
+                statValue = (float) stat.sleepStats.sleepDurationInMinutes / 60.0f; // convert to hours
+            } else {
+                statValue = (float) stat.sleepScore;
+            }
 
-            final int currentIndex = data.indexOf(stat);
+            currentDateTime = stat.dateTime;
+            final int dayOfWeek = currentDateTime.getDayOfWeek();
 
             // fill in missing gaps
+            final int currentIndex = data.indexOf(stat);
             if (currentIndex > 0) {
                 final DateTime previousDateTime = data.get(currentIndex - 1).dateTime;
                 final Days diffDays = Days.daysBetween(previousDateTime, currentDateTime);
                 if (diffDays.getDays() > 1) {
                     for (int day = 1; day < diffDays.getDays(); day++) {
-                        final int missingDay = previousDateTime.plusDays(day).getDayOfWeek();
                         validData.add(GraphSection.MISSING_VALUE);
                     }
                 }
             }
 
-            validData.add(score);
+            validData.add(statValue);
 
             if (hasAnnotation) {
                 if (dayOfWeek <= DateTimeConstants.FRIDAY) {
-                    annotationStats.sumWeekdayValues += score;
+                    annotationStats.sumWeekdayValues += statValue;
                     annotationStats.numWeekdays++;
                 } else {
-                    annotationStats.sumWeekendValues += score;
+                    annotationStats.sumWeekendValues += statValue;
                     annotationStats.numWeekends++;
                 }
-                annotationStats.sumValues += score;
+                annotationStats.sumValues += statValue;
+                annotationStats.numDays++;
             }
 
-            minValue = minValue < score ? minValue : score;
-            maxValue = maxValue > score ? maxValue : score;
+            minValue = minValue < statValue ? minValue : statValue;
+            maxValue = maxValue > statValue ? maxValue : statValue;
 
         }
 
-        final DateTime today = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
-        final List<Float> sectionData = padSectionData(validData, today, data.get(0).dateTime, currentDateTime, timeScale.getDays());
+        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays());
 
-
-        final List<GraphSection> sections = TrendsProcessorUtils.getSections(sectionData, DataType.SCORES, timeScale, today.getDayOfWeek());
+        final List<GraphSection> sections = TrendsProcessorUtils.getSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
 
         Optional<List<Annotation>> annotations = Optional.absent();
         if (hasAnnotation) {
-            annotations = TrendsProcessorUtils.getAnnotations(annotationStats, DataType.SCORES);
+            annotations = TrendsProcessorUtils.getAnnotations(annotationStats, dataType);
         }
 
-        Optional<List<ConditionRange>> conditionRanges = ConditionRange.getSleepScoreConditionRanges(minValue, maxValue);
+        Optional<List<ConditionRange>> conditionRanges;
+        if (graphTitle.equals(Graph.TITLE_SLEEP_SCORE)) {
+            conditionRanges = ConditionRange.getSleepScoreConditionRanges(minValue, maxValue);
+        } else {
+            conditionRanges = ConditionRange.getSleepDurationConditionRanges(minValue, maxValue);
+        }
 
         final Graph graph = new Graph(
                 timeScale,
-                Graph.TITLE_SLEEP_SCORE,
-                DataType.SCORES,
-                GraphType.GRID,
+                graphTitle,
+                dataType,
+                graphType,
                 minValue,
                 maxValue,
                 sections,
@@ -159,53 +177,21 @@ public class TrendsProcessor {
         return Optional.of(graph);
     }
 
-    private List<Float> padSectionData(final List<Float> data, final DateTime today, final DateTime firstDataDateTime, final DateTime lastDataDateTime, final int numDays) {
-        final List<Float> sectionData = Lists.newArrayList();
-
-        // fill in missing days first
-        final DateTime firstDate = today.minusDays(numDays);
-        final Days missingDays = Days.daysBetween(firstDate, firstDataDateTime);
-        if (missingDays.getDays() > 0) {
-            for (int day = 0; day < missingDays.getDays(); day ++) {
-                sectionData.add(GraphSection.MISSING_VALUE);
-            }
-        }
-
-        // pad front with nulls
-        final int firstDateDOW = firstDate.getDayOfWeek();
-        for (int day = 0; day < firstDateDOW; day ++) {
-            sectionData.add(0, null);
-        }
-
-        sectionData.addAll(data);
-
-        // add missing values at the end
-        final int lastDataDOW = lastDataDateTime.getDayOfWeek();
-
-        final Days endMissingDays = Days.daysBetween(lastDataDateTime, today.minusDays(1));
-        if (endMissingDays.getDays() > 0) {
-            for (int day = 0; day < endMissingDays.getDays(); day ++) {
-                sectionData.add(GraphSection.MISSING_VALUE);
-            }
-        }
-
-        // pad ends with nulls
-        final int todayDOW = today.getDayOfWeek();
-        if (todayDOW < DateTimeConstants.SUNDAY) {
-            for (int day = todayDOW; day < DateTimeConstants.SUNDAY; day++) {
-                sectionData.add(null);
-            }
-        }
-        return sectionData;
-    }
-
-    private List<AggregateSleepStats> getRawData(final Long accountId, final int days) {
-        final DateTime queryEnd = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
-        final DateTime queryStart = queryEnd.minusDays(days);
+    private List<AggregateSleepStats> getRawData(final Long accountId, final DateTime localToday, final int days) {
+        final DateTime queryStart = localToday.minusDays(days);
 
         return sleepStatsDAODynamoDB.getBatchStats(accountId,
                 DateTimeUtil.dateToYmdString(queryStart),
-                DateTimeUtil.dateToYmdString(queryEnd));
+                DateTimeUtil.dateToYmdString(localToday));
+    }
+
+    private DateTime getLocalToday(final Long accountId) {
+        final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        if (optionalTimeZone.isPresent()) {
+            final int offsetMillis = optionalTimeZone.get().offsetMillis;
+            return DateTime.now(DateTimeZone.UTC).plusMillis(offsetMillis).withTimeAtStartOfDay();
+        }
+        return DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
     }
 
     private List<TimeScale> computeAvailableTimeScales(final Long accountId) {

@@ -31,7 +31,7 @@ public class ConditionRange {
 
         if (maxValue < SleepScore.WARNING_SCORE_THRESHOLD ) {
             // all scores are in the ALERT range
-            ranges.add(new ConditionRange(SleepScore.ALERT_SCORE_THRESHOLD, SleepScore.NO_SCORE, Condition.ALERT));
+            ranges.add(new ConditionRange(SleepScore.ALERT_SCORE_THRESHOLD, SleepScore.WARNING_SCORE_THRESHOLD - 1, Condition.ALERT));
             return Optional.of(ranges);
         }
 
@@ -60,8 +60,18 @@ public class ConditionRange {
             ranges.add(new ConditionRange(SleepScore.WARNING_SCORE_THRESHOLD, SleepScore.IDEAL_SCORE_THRESHOLD - 1, Condition.WARNING));
         } else {
             // min score below the WARNING range
-            ranges.add(new ConditionRange(SleepScore.ALERT_SCORE_THRESHOLD, SleepScore.NO_SCORE, Condition.ALERT));
+            ranges.add(new ConditionRange(SleepScore.ALERT_SCORE_THRESHOLD, SleepScore.WARNING_SCORE_THRESHOLD - 1, Condition.ALERT));
         }
+
+        if (ranges.isEmpty()) {
+            return Optional.absent();
+        }
+
         return Optional.of(ranges);
+    }
+
+    public static Optional<List<ConditionRange>> getSleepDurationConditionRanges(final float minValue, final float maxValue) {
+        // TODO
+        return Optional.absent();
     }
 }
