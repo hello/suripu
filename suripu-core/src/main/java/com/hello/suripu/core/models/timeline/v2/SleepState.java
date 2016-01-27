@@ -1,5 +1,9 @@
 package com.hello.suripu.core.models.timeline.v2;
 
+/**
+ * Created by ksg on 01/21/16
+ */
+
 public enum  SleepState {
     AWAKE,
     SOUND,

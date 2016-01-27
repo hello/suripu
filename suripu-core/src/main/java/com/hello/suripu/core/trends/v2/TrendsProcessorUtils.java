@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Days;
+import org.joda.time.Months;
 
 import java.util.Collections;
 import java.util.List;
@@ -105,13 +106,13 @@ public class TrendsProcessorUtils {
             if (!timeScale.equals(TimeScale.LAST_THREE_MONTHS)) {
                 return getScoreWeekSections(data, today); // last_week & last_month
             }
-            return getScoreMonthSections(data, today); // last_3_months
+            return getScoreMonthSections(data, timeScale, today); // special-case: last_3_months
 
         }
 
         // sleep duration
         if (timeScale.equals(TimeScale.LAST_WEEK)) {
-            return getDurationWeekSection(data, minValue, maxValue, today); // last_week
+            return getDurationWeekSection(data, minValue, maxValue, today); // special-case: last_week
         }
         // last_month & last_3_months
         return getDurationMonthSections(data, minValue, maxValue, timeScale, today);
@@ -128,7 +129,7 @@ public class TrendsProcessorUtils {
         for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
             if (weeks == 1) {
-                sections.add(new GraphSection(oneWeek, Optional.of(title), Collections.<Integer>emptyList(), Optional.of(todayDOW)));
+                sections.add(new GraphSection(oneWeek, Optional.of(title), Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
             } else {
                 final List<Integer> highlightedValues = Lists.newArrayList();
                 if (weeks == numWeeks) {
@@ -142,11 +143,6 @@ public class TrendsProcessorUtils {
 
         }
         return sections;
-    }
-
-    private static List<GraphSection> getScoreMonthSections(final List<Float> data, final DateTime today) {
-        // TODO
-        return Collections.<GraphSection>emptyList();
     }
 
     private static List<GraphSection> getDurationWeekSection(final List<Float> data, final float minValue, final float maxValue, final DateTime today) {
@@ -267,10 +263,73 @@ public class TrendsProcessorUtils {
         return sections;
     }
 
-    public static List<Float> padSectionData(final List<Float> data, final DateTime today, final DateTime firstDataDateTime, final DateTime lastDataDateTime, final int numDays) {
+    private static List<GraphSection> getScoreMonthSections(final List<Float> data, final TimeScale timeScale, final DateTime today) {
         final List<Float> sectionData = Lists.newArrayList();
 
-        // fill in missing days first
+        // pad first month starting from the 1st
+        final DateTime firstDate = today.minusDays(timeScale.getDays());
+        if (firstDate.getDayOfMonth() != 1) {
+            for (int day = 0; day < firstDate.getDayOfMonth() - 1; day++) { // firstDate already padded
+                sectionData.add(null);
+            }
+        }
+
+        sectionData.addAll(data);
+
+        // pad current month till the last day
+        final DateTime lastDate = today.dayOfMonth().withMaximumValue();
+        if (today.getDayOfMonth() != lastDate.getDayOfMonth()) {
+            final int numExtraDays = lastDate.getDayOfMonth() - today.getDayOfMonth();
+            for (int day = 0; day <= numExtraDays; day++) {
+                sectionData.add(null);
+            }
+        }
+
+        final List<GraphSection> sections = Lists.newArrayList();
+
+        final int numMonthsInData = Months.monthsBetween(firstDate, lastDate).getMonths() + 1;
+        int sectionFirstIndex = 0;
+        boolean highlighted = false;
+
+        for (int month = 0; month < numMonthsInData; month++) {
+            final DateTime currentMonth = firstDate.plusMonths(month);
+
+            List<Integer> highlightedValues = Lists.newArrayList();
+            Optional<Integer> highlightTitle = Optional.absent();
+
+            if (!highlighted && (month == (numMonthsInData - 1) ||
+                    (today.getDayOfMonth() == 1 && month == (numMonthsInData-2)))) {
+                // highlights only appear in the last month
+                final int yesterday = today.minusDays(1).getDayOfMonth();
+                highlightedValues.add(yesterday - 1);
+                highlightTitle = Optional.of(0);
+                highlighted = true;
+            }
+
+            final String title = getMonthName(currentMonth.getMonthOfYear());
+            final int maxDays = currentMonth.dayOfMonth().getMaximumValue();
+
+            sections.add(new GraphSection(
+                    sectionData.subList(sectionFirstIndex, sectionFirstIndex + maxDays),
+                    Optional.<List<String>>of(Lists.newArrayList(title)),
+                    highlightedValues,
+                    highlightTitle
+            ));
+            sectionFirstIndex += maxDays;
+        }
+
+        return sections;
+    }
+
+
+    public static List<Float> padSectionData(final List<Float> data,
+                                             final DateTime today,
+                                             final DateTime firstDataDateTime, final DateTime lastDataDateTime,
+                                             final int numDays,
+                                             final boolean padDayOfWeek) {
+        final List<Float> sectionData = Lists.newArrayList();
+
+        // fill in missing days first, include firstDate
         final DateTime firstDate = today.minusDays(numDays);
         final Days missingDays = Days.daysBetween(firstDate, firstDataDateTime);
         if (missingDays.getDays() > 0) {
@@ -280,10 +339,12 @@ public class TrendsProcessorUtils {
         }
 
         // pad front with nulls
-        final int firstDateDOW = firstDate.getDayOfWeek();
-        if (firstDateDOW < DateTimeConstants.SUNDAY) {
-            for (int day = 0; day < firstDateDOW; day++) {
-                sectionData.add(0, null);
+        if (padDayOfWeek) {
+            final int firstDateDOW = firstDate.getDayOfWeek();
+            if (firstDateDOW < DateTimeConstants.SUNDAY) {
+                for (int day = 0; day < firstDateDOW; day++) {
+                    sectionData.add(0, null);
+                }
             }
         }
 
@@ -298,10 +359,12 @@ public class TrendsProcessorUtils {
         }
 
         // pad ends with nulls
-        final int todayDOW = today.getDayOfWeek();
-        if (todayDOW < DateTimeConstants.SUNDAY) {
-            for (int day = todayDOW; day < DateTimeConstants.SUNDAY; day++) {
-                sectionData.add(null);
+        if (padDayOfWeek) {
+            final int todayDOW = today.getDayOfWeek();
+            if (todayDOW < DateTimeConstants.SUNDAY) {
+                for (int day = todayDOW; day < DateTimeConstants.SUNDAY; day++) {
+                    sectionData.add(null);
+                }
             }
         }
         return sectionData;

@@ -1,5 +1,8 @@
 package com.hello.suripu.core.trends.v2;
 
+/**
+ * Created by ksg on 01/21/16
+ */
 
 public enum TimeScale {
 

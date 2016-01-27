@@ -21,6 +21,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Created by ksg on 01/21/16
+ */
+
 public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
@@ -199,7 +203,12 @@ public class TrendsProcessor {
 
         }
 
-        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays());
+        boolean padDayOfWeek = false;
+        if (timeScale.equals(TimeScale.LAST_WEEK) || (dataType.equals(DataType.SCORES) && timeScale.equals(TimeScale.LAST_MONTH))) {
+            padDayOfWeek = true;
+        }
+
+        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays(), padDayOfWeek);
 
         final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
 

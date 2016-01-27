@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
- * Created by kingshy on 1/21/16.
+ * Created by ksg on 01/21/16
  */
 public class TrendsResult {
     @JsonProperty("available_time_scales")
