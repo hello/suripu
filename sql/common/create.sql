@@ -328,3 +328,16 @@ GRANT ALL PRIVILEGES ON SEQUENCE user_timeline_test_group_id_seq TO ingress_user
 -- UPDATES TO timeline_feedback TABLE 2016-01-15
 --on purpose, default value is null, we are going to go in an back-populate
 ALTER TABLE timeline_feedback ADD COLUMN adjustment_delta_minutes INTEGER;
+
+
+-- save unsubscribe email 2016-01-27
+CREATE TABLE unsubscribe_email (
+     id SERIAL PRIMARY KEY,
+     email VARCHAR(255),
+     created TIMESTAMP default current_timestamp
+);
+
+CREATE UNIQUE INDEX uniq_unsubscribe_email on unsubscribe_email(email);
+
+GRANT ALL PRIVILEGES ON unsubscribe_email TO ingress_user;
+GRANT ALL PRIVILEGES ON SEQUENCE unsubscribe_email_id_seq TO ingress_user;
