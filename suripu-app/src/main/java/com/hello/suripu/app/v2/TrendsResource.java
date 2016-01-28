@@ -46,11 +46,7 @@ public class TrendsResource extends BaseResource {
 
         try {
             final TimeScale timeScale = TimeScale.fromString(timeScaleString);
-            final TrendsResult result = trendsProcessor.getAllTrends(accessToken.accountId, timeScale);
-            if (result.graphs.isEmpty()) {
-                throw new WebApplicationException(Response.Status.NOT_FOUND);
-            }
-            return result;
+            return trendsProcessor.getAllTrends(accessToken.accountId, timeScale);
         } catch (IllegalArgumentException iae) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                     .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), iae.getMessage())).build());
