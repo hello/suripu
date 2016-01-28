@@ -15,7 +15,9 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillDataIngestDAO;
+import com.hello.suripu.core.db.PillProxDataDAODynamoDB;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.PillProxData;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.models.UserInfo;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
@@ -38,6 +40,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
     private final static Logger LOGGER = LoggerFactory.getLogger(SavePillDataProcessor.class);
 
     private final PillDataIngestDAO pillDataIngestDAO;
+    private final PillProxDataDAODynamoDB pillProxDataDAODynamoDB;
     private final int batchSize;
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
@@ -54,6 +57,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                                  final DeviceDAO deviceDAO,
                                  final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                  final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB,
+                                 final PillProxDataDAODynamoDB pillProxDataDAODynamoDB,
                                  final Boolean savePillHeartbeat) {
         this.pillDataIngestDAO = pillDataIngestDAO;
         this.batchSize = batchSize;
@@ -62,6 +66,7 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
         this.savePillHeartbeat = savePillHeartbeat;
+        this.pillProxDataDAODynamoDB = pillProxDataDAODynamoDB;
 
         this.messagesProcessed = Metrics.defaultRegistry().newMeter(pillDataIngestDAO.name(), "messages", "messages-processed", TimeUnit.SECONDS);
         this.batchSaved = Metrics.defaultRegistry().newMeter(pillDataIngestDAO.name(), "batch", "batch-saved", TimeUnit.SECONDS);
@@ -87,6 +92,8 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
 
         final Map<String, String> pillIdToSenseId = Maps.newHashMap();
 
+        final List<SenseCommandProtos.pill_data> proxData = Lists.newArrayList();
+        final List<PillProxData> pillProxDataList = Lists.newArrayList();
 
         for (final Record record : records) {
             try {
@@ -97,6 +104,11 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                     pillIds.add(data.getDeviceId());
                     pillIdToSenseId.put(data.getDeviceId(), batched_pill_data.getDeviceId());
                 }
+
+                for(final SenseCommandProtos.pill_data data: batched_pill_data.getProxList()) {
+                    proxData.add(data);
+                }
+
             } catch (InvalidProtocolBufferException e) {
                 LOGGER.error("Failed to decode protobuf: {}", e.getMessage());
             } catch (IllegalArgumentException e) {
@@ -175,6 +187,23 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 }
             }
 
+
+            for(final SenseCommandProtos.pill_data proxPacket: proxData) {
+                if (proxPacket.hasMotionDataEntrypted()) {
+                    final Optional<DeviceAccountPair> pair = pairs.get(proxPacket.getDeviceId());
+                    final Optional<byte[]> key = keys.get(proxPacket.getDeviceId());
+                    if(pair.isPresent() && key.isPresent()) {
+                        final PillProxData pillProxData = PillProxData.fromEncryptedData(
+                                pair.get().accountId,
+                                proxPacket.getMotionDataEntrypted().toByteArray(),
+                                key.get()
+                                );
+
+                        pillProxDataList.add(pillProxData);
+                    }
+                }
+            }
+
             // only write heartbeat for postgres worker
             if (this.savePillHeartbeat) {
                 // Loop again for HeartBeat
@@ -215,6 +244,12 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
             final Set<PillHeartBeat> unproccessed = this.pillHeartBeatDAODynamoDB.put(pillHeartBeats);
             final float perc = ((float) unproccessed.size() / (float) pillHeartBeats.size()) * 100.0f;
             LOGGER.info("Finished dynamo batch insert: {} heartbeats, {} {}% unprocessed", pillHeartBeats.size(), unproccessed.size(), perc);
+        }
+
+
+        if(!pillProxDataList.isEmpty()) {
+            final int proxInsertedCount = pillProxDataDAODynamoDB.batchInsert(pillProxDataList);
+            LOGGER.info("action=insert-prox-data count={}", proxInsertedCount);
         }
 
         if(!trackerData.isEmpty() || !pillHeartBeats.isEmpty()) {

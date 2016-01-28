@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.PillDataIngestDAO;
+import com.hello.suripu.core.db.PillProxDataDAODynamoDB;
 import com.hello.suripu.core.pill.heartbeat.PillHeartBeatDAODynamoDB;
 
 public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
@@ -16,6 +17,7 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
     private final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB;
+    private final PillProxDataDAODynamoDB pillProxDataDAODynamoDB;
     private final Boolean savePillHeartBeat;
 
     public SavePillDataProcessorFactory(
@@ -25,6 +27,7 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
             final KeyStore pillKeyStore,
             final DeviceDAO deviceDAO,
             final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB,
+            final PillProxDataDAODynamoDB pillProxDataDAODynamoDB,
             final Boolean savePillHeartBeat) {
         this.pillDataIngestDAO = pillDataIngestDAO;
         this.batchSize = batchSize;
@@ -32,11 +35,13 @@ public class SavePillDataProcessorFactory implements IRecordProcessorFactory {
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.pillHeartBeatDAODynamoDB = pillHeartBeatDAODynamoDB;
+        this.pillProxDataDAODynamoDB = pillProxDataDAODynamoDB;
         this.savePillHeartBeat = savePillHeartBeat;
+
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return new SavePillDataProcessor(pillDataIngestDAO, batchSize, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, pillHeartBeatDAODynamoDB, savePillHeartBeat);
+        return new SavePillDataProcessor(pillDataIngestDAO, batchSize, pillKeyStore, deviceDAO, mergedUserInfoDynamoDB, pillHeartBeatDAODynamoDB, null, savePillHeartBeat);
     }
 }
