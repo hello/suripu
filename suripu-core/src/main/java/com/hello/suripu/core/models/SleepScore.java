@@ -5,6 +5,12 @@ package com.hello.suripu.core.models;
  */
 public class SleepScore {
 
+    public static final int MAX_SCORE = 100;
+    public static final int IDEAL_SCORE_THRESHOLD = 80;
+    public static final int WARNING_SCORE_THRESHOLD = 60;
+    public static final int ALERT_SCORE_THRESHOLD = 0;
+    public static final int NO_SCORE = 0;
+
     public final MotionScore motionScore;
     public final Integer sleepDurationScore;
     public final Integer environmentalScore;
