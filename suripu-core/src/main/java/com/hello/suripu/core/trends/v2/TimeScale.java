@@ -6,29 +6,21 @@ package com.hello.suripu.core.trends.v2;
 
 public enum TimeScale {
 
-    LAST_WEEK("LAST_WEEK") {
-        public final int getDays() {
-            return 7;
-        }
-    },
-
-    LAST_MONTH("LAST_MONTH") {
-        public final int getDays() {
-            return 30;
-        }
-    },
-
-    LAST_THREE_MONTHS("LAST_3_MONTHS") {
-        public final int getDays() {
-            return 90;
-        }
-    };
+    LAST_WEEK("LAST_WEEK", 7),
+    LAST_MONTH("LAST_MONTH", 30),
+    LAST_THREE_MONTHS("LAST_3_MONTHS", 90);
 
     private String value;
+    private final int days;
 
-    private TimeScale(final String value) { this.value = value; }
+    private TimeScale(final String value, final int days) {
+        this.value = value;
+        this.days = days;
+    }
 
     public String getValue() { return this.value; }
+
+    public int getDays() { return this.days; }
 
     public static TimeScale fromString(final String text) {
         if (text != null) {
@@ -40,7 +32,4 @@ public enum TimeScale {
         }
         throw new IllegalArgumentException("Invalid time-scale.");
     }
-
-    abstract public int getDays();
-
 }

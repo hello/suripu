@@ -1,7 +1,9 @@
 package com.hello.suripu.core.trends.v2;
 
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -10,6 +12,7 @@ import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.TimeZoneHistory;
 import com.hello.suripu.core.models.timeline.v2.SleepState;
+import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -60,7 +63,7 @@ public class TrendsProcessor {
 
         // sleep-score grid graph
         if (data.size() >= MIN_SCORE_DATA_SIZE) {
-            final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, Graph.TITLE_SLEEP_SCORE, localToday);
+            final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday);
             if (sleepScoreGraph.isPresent()) {
                 graphs.add(sleepScoreGraph.get());
             }
@@ -68,7 +71,7 @@ public class TrendsProcessor {
 
         // sleep duration bar graph
         if (data.size() >= MIN_DURATION_DATA_SIZE) {
-            final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, Graph.TITLE_SLEEP_DURATION, localToday);
+            final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, English.GRAPH_TITLE_SLEEP_DURATION, localToday);
             if (durationGraph.isPresent()) {
                 graphs.add(durationGraph.get());
             }
@@ -123,7 +126,7 @@ public class TrendsProcessor {
 
         final Graph graph = new Graph(
                 timeScale,
-                Graph.TITLE_SLEEP_DEPTH,
+                English.GRAPH_TITLE_SLEEP_DEPTH,
                 DataType.PERCENTS,
                 GraphType.BUBBLES,
                 0.0f,
@@ -152,7 +155,7 @@ public class TrendsProcessor {
                                      final String graphTitle,
                                      final DateTime localToday) {
 
-        TrendsProcessorUtils.AnnotationStats annotationStats = new TrendsProcessorUtils.AnnotationStats();
+        final TrendsProcessorUtils.AnnotationStats annotationStats = new TrendsProcessorUtils.AnnotationStats();
         final Boolean hasAnnotation = (data.size() >= MIN_ANNOTATION_DATA_SIZE);
 
         // computing averages
@@ -162,8 +165,8 @@ public class TrendsProcessor {
         DateTime currentDateTime = data.get(0).dateTime;
 
         for (final AggregateSleepStats stat: data) {
-            float statValue;
-            if (graphTitle.equals(Graph.TITLE_SLEEP_DURATION)) {
+            final float statValue;
+            if (dataType.equals(DataType.HOURS)) {
                 statValue = (float) stat.sleepStats.sleepDurationInMinutes / 60.0f; // convert to hours
             } else {
                 statValue = (float) stat.sleepScore;
@@ -198,15 +201,12 @@ public class TrendsProcessor {
                 annotationStats.numDays++;
             }
 
-            minValue = minValue < statValue ? minValue : statValue;
-            maxValue = maxValue > statValue ? maxValue : statValue;
+            minValue = Math.min(minValue, statValue);
+            maxValue = Math.max(maxValue, statValue);
 
         }
 
-        boolean padDayOfWeek = false;
-        if (timeScale.equals(TimeScale.LAST_WEEK) || (dataType.equals(DataType.SCORES) && timeScale.equals(TimeScale.LAST_MONTH))) {
-            padDayOfWeek = true;
-        }
+        final boolean padDayOfWeek = (timeScale.equals(TimeScale.LAST_WEEK) || (dataType.equals(DataType.SCORES) && timeScale.equals(TimeScale.LAST_MONTH)));
 
         final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays(), padDayOfWeek);
 
@@ -218,7 +218,7 @@ public class TrendsProcessor {
         }
 
         Optional<List<ConditionRange>> conditionRanges = Optional.absent();
-        if (graphTitle.equals(Graph.TITLE_SLEEP_SCORE)) {
+        if (dataType.equals(DataType.SCORES)) {
             // only score has condition ranges for now
             conditionRanges = ConditionRange.getSleepScoreConditionRanges(minValue, maxValue);
         }
@@ -248,11 +248,30 @@ public class TrendsProcessor {
 
     private DateTime getLocalToday(final Long accountId) {
         final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        final DateTime now = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
         if (optionalTimeZone.isPresent()) {
-            final int offsetMillis = optionalTimeZone.get().offsetMillis;
-            return DateTime.now(DateTimeZone.UTC).plusMillis(offsetMillis).withTimeAtStartOfDay();
+            return now.plusMillis(optionalTimeZone.get().offsetMillis);
         }
-        return DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+        return now;
+    }
+
+    // DO NOT DELETE THIS!!
+    private DateTime reallyFancyGetLocalToday(final Long accountId) {
+        final Optional<TimeZoneHistory> timeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
+        final Optional<DateTime> nowForUser = timeZone.transform(new Function<TimeZoneHistory, DateTime>() {
+            @Override
+            public DateTime apply(TimeZoneHistory history) {
+                return DateTime.now(DateTimeZone.UTC)
+                        .plusMillis(history.offsetMillis)
+                        .withTimeAtStartOfDay();
+            }
+        });
+        return nowForUser.or(new Supplier<DateTime>() {
+            @Override
+            public DateTime get() {
+                return DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+            }
+        });
     }
 
     private List<TimeScale> computeAvailableTimeScales(final Long accountId) {

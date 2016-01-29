@@ -1,9 +1,7 @@
 package com.hello.suripu.core.trends.v2;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Days;
@@ -11,7 +9,6 @@ import org.joda.time.Months;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ksg on 01/22/2016
@@ -37,18 +34,7 @@ public class TrendsProcessorUtils {
         }
     }
 
-    public final static Map<Integer, String> DOW_DAY_MAP;
-    static {
-        final Map<Integer, String> dowMap = Maps.newLinkedHashMap();
-        dowMap.put(7, "SUN");
-        dowMap.put(1, "MON");
-        dowMap.put(2, "TUE");
-        dowMap.put(3, "WED");
-        dowMap.put(4, "THU");
-        dowMap.put(5, "FRI");
-        dowMap.put(6, "SAT");
-        DOW_DAY_MAP = ImmutableMap.copyOf(dowMap);
-    }
+    public final static List<String> DAY_OF_WEEK_NAMES = Lists.newArrayList("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT");
 
     public static String getMonthName(int month){
         String[] monthNames = {"NON", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
@@ -121,7 +107,6 @@ public class TrendsProcessorUtils {
 
     private static List<GraphSection> getScoreWeekSections(final List<Float> data, final DateTime today) {
         final List<GraphSection> sections = Lists.newArrayList();
-        final List<String> title = Lists.newArrayList(DOW_DAY_MAP.values());
         final int numWeeks = data.size() / DateTimeConstants.DAYS_PER_WEEK;
 
         final int todayDOW = today.getDayOfWeek();
@@ -129,7 +114,7 @@ public class TrendsProcessorUtils {
         for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
             if (weeks == 1) {
-                sections.add(new GraphSection(oneWeek, Optional.of(title), Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
+                sections.add(new GraphSection(oneWeek, Optional.of(DAY_OF_WEEK_NAMES), Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
             } else {
                 final List<Integer> highlightedValues = Lists.newArrayList();
                 if (weeks == numWeeks) {
@@ -151,7 +136,9 @@ public class TrendsProcessorUtils {
         final List<String> title = Lists.newArrayList();
         for (int day = 1; day <= DateTimeConstants.DAYS_PER_WEEK; day++) {
             final int dayOfWeek = today.minusDays(day).getDayOfWeek();
-            title.add(DOW_DAY_MAP.get(dayOfWeek));
+            final DateTime currentTime = today.minusDays(day);
+            //title.add(DOW_DAY_MAP.get(dayOfWeek));
+            title.add(currentTime.dayOfWeek().getAsShortText());
         }
 
         // populate values

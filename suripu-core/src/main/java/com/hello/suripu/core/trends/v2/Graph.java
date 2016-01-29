@@ -10,10 +10,6 @@ import java.util.List;
  */
 public class Graph {
 
-    public static final String TITLE_SLEEP_SCORE = "Sleep Score";
-    public static final String TITLE_SLEEP_DEPTH = "Sleep Depth";
-    public static final String TITLE_SLEEP_DURATION = "Sleep Duration";
-
     @JsonProperty("time_scale")
     public final TimeScale timeScale;
 
