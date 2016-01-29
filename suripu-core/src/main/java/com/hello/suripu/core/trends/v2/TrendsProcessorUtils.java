@@ -2,6 +2,7 @@ package com.hello.suripu.core.trends.v2;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.hello.suripu.core.translations.English;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Days;
@@ -34,23 +35,16 @@ public class TrendsProcessorUtils {
         }
     }
 
-    public final static List<String> DAY_OF_WEEK_NAMES = Lists.newArrayList("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT");
-
-    public static String getMonthName(int month){
-        String[] monthNames = {"NON", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-        return monthNames[month];
-    }
-
     public static Optional<List<Annotation>> getAnnotations(final AnnotationStats stats, final DataType dataType) {
         final List<Annotation> annotations = Lists.newArrayList();
 
         if (stats.numDays > 0.0f) { // Average
             final float avg = stats.sumValues/stats.numDays;
 
-            String title = "TOTAL AVERAGE";
+            String title = English.ANNOTATION_TOTAL_AVERAGE;
             Optional<Condition> condition = Optional.absent();
             if (dataType.equals(DataType.SCORES)) {
-                title = "AVERAGE SCORE";
+                title = English.ANNOTATION_AVERAGE_SCORE;
                 condition = Optional.of(Condition.getScoreCondition(avg));
             }
 
@@ -63,7 +57,7 @@ public class TrendsProcessorUtils {
             if (dataType.equals(DataType.SCORES)) {
                 condition = Optional.of(Condition.getScoreCondition(avg));
             }
-            annotations.add(new Annotation("WEEKDAYS", avg, dataType, condition));
+            annotations.add(new Annotation(English.ANNOTATION_WEEKDAYS, avg, dataType, condition));
         }
 
         if (stats.numWeekends > 0.0f) {
@@ -72,7 +66,7 @@ public class TrendsProcessorUtils {
             if (dataType.equals(DataType.SCORES)) {
                 condition = Optional.of(Condition.getScoreCondition(avg));
             }
-            annotations.add(new Annotation("WEEKENDS", avg, dataType, condition));
+            annotations.add(new Annotation(English.ANNOTATION_WEEKENDS, avg, dataType, condition));
         }
 
         if (!annotations.isEmpty()) {
@@ -114,7 +108,7 @@ public class TrendsProcessorUtils {
         for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
             if (weeks == 1) {
-                sections.add(new GraphSection(oneWeek, Optional.of(DAY_OF_WEEK_NAMES), Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
+                sections.add(new GraphSection(oneWeek, Optional.of(English.DAY_OF_WEEK_NAMES), Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
             } else {
                 final List<Integer> highlightedValues = Lists.newArrayList();
                 if (weeks == numWeeks) {
@@ -136,9 +130,7 @@ public class TrendsProcessorUtils {
         final List<String> title = Lists.newArrayList();
         for (int day = 1; day <= DateTimeConstants.DAYS_PER_WEEK; day++) {
             final int dayOfWeek = today.minusDays(day).getDayOfWeek();
-            final DateTime currentTime = today.minusDays(day);
-            //title.add(DOW_DAY_MAP.get(dayOfWeek));
-            title.add(currentTime.dayOfWeek().getAsShortText());
+            title.add(English.DAY_OF_WEEK_NAMES.get(dayOfWeek - 1));
         }
 
         // populate values
@@ -198,11 +190,11 @@ public class TrendsProcessorUtils {
         final List<GraphSection> sections = Lists.newArrayList();
 
         final DateTime firstDate = today.minusDays(timeScale.getDays());
-        String title = getMonthName(firstDate.getMonthOfYear());
+        String title = English.MONTH_OF_YEAR_NAMES.get(firstDate.getMonthOfYear() - 1);
         int sectionFirstIndex = 0;
 
         for (int day = 0; day < timeScale.getDays(); day ++) {
-            final String monthName = getMonthName(firstDate.plusDays(day).getMonthOfYear());
+            final String monthName = English.MONTH_OF_YEAR_NAMES.get(firstDate.plusDays(day).getMonthOfYear() - 1);
             if (!title.equals(monthName)) {
 
                 final List<Integer> highlightValues = Lists.newArrayList();
@@ -293,7 +285,7 @@ public class TrendsProcessorUtils {
                 highlighted = true;
             }
 
-            final String title = getMonthName(currentMonth.getMonthOfYear());
+            final String title = English.MONTH_OF_YEAR_NAMES.get(currentMonth.getMonthOfYear() - 1);
             final int maxDays = currentMonth.dayOfMonth().getMaximumValue();
 
             sections.add(new GraphSection(

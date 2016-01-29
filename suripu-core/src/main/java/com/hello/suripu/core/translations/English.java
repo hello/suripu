@@ -1,6 +1,10 @@
 package com.hello.suripu.core.translations;
 
 
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
 public class English {
 
     /* BEGIN Events Declaration */
@@ -191,8 +195,16 @@ public class English {
 
     public final static String ERROR_CLOCK_OUT_OF_SYNC = "Your device's time is significantly different from our reference time. From your device's Settings app, please enable automatic Date & Time, or enter the correct time manually.";
 
-    // Trends V2 graph titles
-    public static final String GRAPH_TITLE_SLEEP_SCORE = "Sleep Score";
-    public static final String GRAPH_TITLE_SLEEP_DEPTH = "Sleep Depth";
-    public static final String GRAPH_TITLE_SLEEP_DURATION = "Sleep Duration";
+    // Trends V2 graph
+    public final static String GRAPH_TITLE_SLEEP_SCORE = "Sleep Score";
+    public final static String GRAPH_TITLE_SLEEP_DEPTH = "Sleep Depth";
+    public final static String GRAPH_TITLE_SLEEP_DURATION = "Sleep Duration";
+
+    public final static List<String> DAY_OF_WEEK_NAMES = Lists.newArrayList("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT");
+    public final static List<String> MONTH_OF_YEAR_NAMES = Lists.newArrayList("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC");
+
+    public final static String ANNOTATION_AVERAGE_SCORE = "AVERAGE_SCORE";
+    public final static String ANNOTATION_TOTAL_AVERAGE = "TOTAL_AVERAGE";
+    public final static String ANNOTATION_WEEKDAYS = "WEEKDAYS";
+    public final static String ANNOTATION_WEEKENDS = "WEEKENDS";
 }
