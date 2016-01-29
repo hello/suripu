@@ -333,6 +333,7 @@ ALTER TABLE timeline_feedback ADD COLUMN adjustment_delta_minutes INTEGER;
 -- save unsubscribe email 2016-01-27
 CREATE TABLE unsubscribe_email (
      id SERIAL PRIMARY KEY,
+     account_id BIGINT default 0,
      email VARCHAR(255),
      created TIMESTAMP default current_timestamp
 );
