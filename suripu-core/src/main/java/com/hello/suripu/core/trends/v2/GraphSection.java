@@ -16,7 +16,7 @@ public class GraphSection {
     public final List<Float> values;
 
     @JsonProperty("titles")
-    public final Optional<List<String>> titles;
+    public final List<String> titles;
 
     @JsonProperty("highlighted_values")
     public final List<Integer> highlightedValues;
@@ -25,7 +25,7 @@ public class GraphSection {
     public final Optional<Integer> highlightedTitle;
 
 
-    public GraphSection(final List<Float> values, final Optional<List<String>> titles,
+    public GraphSection(final List<Float> values, final List<String> titles,
                         final List<Integer> highlightedValues, final Optional<Integer> highlightedTitle) {
         this.values = values;
         this.titles = titles;

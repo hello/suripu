@@ -121,7 +121,7 @@ public class TrendsProcessor {
                     SleepState.MEDIUM.toString(),
                     SleepState.SOUND.toString());
 
-            sections.add(new GraphSection(sectionValues, Optional.of(title), Collections.<Integer>emptyList(), Optional.<Integer>absent()));
+            sections.add(new GraphSection(sectionValues, title, Collections.<Integer>emptyList(), Optional.<Integer>absent()));
         }
 
         final Graph graph = new Graph(
@@ -132,8 +132,8 @@ public class TrendsProcessor {
                 0.0f,
                 1.0f,
                 sections,
-                Optional.<List<ConditionRange>>absent(),
-                Optional.<List<Annotation>>absent()
+                Collections.<ConditionRange>emptyList(),
+                Collections.<Annotation>emptyList()
         );
 
         return Optional.of(graph);
@@ -212,15 +212,15 @@ public class TrendsProcessor {
 
         final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
 
-        Optional<List<Annotation>> annotations = Optional.absent();
+        List<Annotation> annotations = Lists.newArrayList();
         if (hasAnnotation) {
             annotations = TrendsProcessorUtils.getAnnotations(annotationStats, dataType);
         }
 
-        Optional<List<ConditionRange>> conditionRanges = Optional.absent();
+        final List<ConditionRange> conditionRanges = Lists.newArrayList();
         if (dataType.equals(DataType.SCORES)) {
             // only score has condition ranges for now
-            conditionRanges = ConditionRange.getSleepScoreConditionRanges(minValue, maxValue);
+            conditionRanges.addAll(ConditionRange.getSleepScoreConditionRanges(minValue, maxValue));
         }
 
         final Graph graph = new Graph(

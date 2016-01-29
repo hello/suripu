@@ -1,7 +1,6 @@
 package com.hello.suripu.core.trends.v2;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.models.SleepScore;
 
@@ -27,25 +26,25 @@ public class ConditionRange {
         this.condition = condition;
     }
 
-    public static Optional<List<ConditionRange>> getSleepScoreConditionRanges(final float minValue, final float maxValue) {
+    public static List<ConditionRange> getSleepScoreConditionRanges(final float minValue, final float maxValue) {
         final List<ConditionRange> ranges = Lists.newArrayList();
 
         if (maxValue < SleepScore.WARNING_SCORE_THRESHOLD ) {
             // all scores are in the ALERT range
             ranges.add(new ConditionRange(SleepScore.ALERT_SCORE_THRESHOLD, SleepScore.WARNING_SCORE_THRESHOLD - 1, Condition.ALERT));
-            return Optional.of(ranges);
+            return ranges;
         }
 
         if (minValue >= SleepScore.IDEAL_SCORE_THRESHOLD) {
             // All scores are in the IDEAL range
             ranges.add(new ConditionRange(SleepScore.IDEAL_SCORE_THRESHOLD, SleepScore.MAX_SCORE, Condition.IDEAL));
-            return Optional.of(ranges);
+            return ranges;
         }
 
         if (minValue >= SleepScore.WARNING_SCORE_THRESHOLD && maxValue < SleepScore.IDEAL_SCORE_THRESHOLD) {
             // all scores are in the WARNING range
             ranges.add(new ConditionRange(SleepScore.WARNING_SCORE_THRESHOLD, SleepScore.IDEAL_SCORE_THRESHOLD - 1, Condition.WARNING));
-            return Optional.of(ranges);
+            return ranges;
         }
 
         if (maxValue >= SleepScore.IDEAL_SCORE_THRESHOLD) {
@@ -64,10 +63,6 @@ public class ConditionRange {
             ranges.add(new ConditionRange(SleepScore.ALERT_SCORE_THRESHOLD, SleepScore.WARNING_SCORE_THRESHOLD - 1, Condition.ALERT));
         }
 
-        if (ranges.isEmpty()) {
-            return Optional.absent();
-        }
-
-        return Optional.of(ranges);
+        return ranges;
     }
 }

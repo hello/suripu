@@ -1,7 +1,6 @@
 package com.hello.suripu.core.trends.v2;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import java.util.List;
 
@@ -32,17 +31,17 @@ public class Graph {
     public final List<GraphSection> sections;
 
     @JsonProperty("condition_ranges")
-    public final Optional<List<ConditionRange>> conditionRanges;
+    public final List<ConditionRange> conditionRanges;
 
     @JsonProperty("annotations")
-    public final Optional<List<Annotation>> annotations;
+    public final List<Annotation> annotations;
 
     public Graph(final TimeScale timeScale, final String title,
                  final DataType dataType, final GraphType graphType,
                  final float minValue, final float maxValue,
                  final List<GraphSection> sections,
-                 final Optional<List<ConditionRange>> conditionRanges,
-                 final Optional<List<Annotation>> annotations) {
+                 final List<ConditionRange> conditionRanges,
+                 final List<Annotation> annotations) {
 
         this.timeScale = timeScale;
         this.title = title;

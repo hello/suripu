@@ -35,7 +35,7 @@ public class TrendsProcessorUtils {
         }
     }
 
-    public static Optional<List<Annotation>> getAnnotations(final AnnotationStats stats, final DataType dataType) {
+    public static List<Annotation> getAnnotations(final AnnotationStats stats, final DataType dataType) {
         final List<Annotation> annotations = Lists.newArrayList();
 
         if (stats.numDays > 0.0f) { // Average
@@ -69,11 +69,7 @@ public class TrendsProcessorUtils {
             annotations.add(new Annotation(English.ANNOTATION_WEEKENDS, avg, dataType, condition));
         }
 
-        if (!annotations.isEmpty()) {
-            return Optional.of(annotations);
-        }
-
-        return Optional.absent();
+        return annotations;
     }
 
 
@@ -108,7 +104,7 @@ public class TrendsProcessorUtils {
         for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
             if (weeks == 1) {
-                sections.add(new GraphSection(oneWeek, Optional.of(English.DAY_OF_WEEK_NAMES), Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
+                sections.add(new GraphSection(oneWeek, English.DAY_OF_WEEK_NAMES, Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
             } else {
                 final List<Integer> highlightedValues = Lists.newArrayList();
                 if (weeks == numWeeks) {
@@ -117,7 +113,7 @@ public class TrendsProcessorUtils {
                     }
                 }
                 // no titles for subsequent sections
-                sections.add(new GraphSection(oneWeek, Optional.<List<String>>absent(), highlightedValues, Optional.<Integer>absent()));
+                sections.add(new GraphSection(oneWeek, Collections.<String>emptyList(), highlightedValues, Optional.<Integer>absent()));
             }
 
         }
@@ -153,7 +149,7 @@ public class TrendsProcessorUtils {
 
         return Lists.newArrayList(
                 new GraphSection(sectionValues,
-                        Optional.of(title),
+                        title,
                         highlights,
                         Optional.of(DateTimeConstants.DAYS_PER_WEEK - 1)) // highlight title is always yesterday, last element
         );
@@ -210,7 +206,7 @@ public class TrendsProcessorUtils {
 
                 sections.add(new GraphSection(
                                 sectionValues.subList(sectionFirstIndex, day),
-                                Optional.<List<String>>of(Lists.newArrayList(title)),
+                                Lists.newArrayList(title),
                                 highlightValues,
                                 Optional.<Integer>absent())
                 );
@@ -233,7 +229,7 @@ public class TrendsProcessorUtils {
 
             sections.add(new GraphSection(
                             sectionValues.subList(sectionFirstIndex, lastDay + 1),
-                            Optional.<List<String>>of(Lists.newArrayList(title)),
+                            Lists.newArrayList(title),
                             highlightValues,
                             Optional.<Integer>absent())
             );
@@ -290,7 +286,7 @@ public class TrendsProcessorUtils {
 
             sections.add(new GraphSection(
                     sectionData.subList(sectionFirstIndex, sectionFirstIndex + maxDays),
-                    Optional.<List<String>>of(Lists.newArrayList(title)),
+                    Lists.newArrayList(title),
                     highlightedValues,
                     highlightTitle
             ));
