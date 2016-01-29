@@ -82,7 +82,7 @@ public class TrendsProcessorUtils {
             if (!timeScale.equals(TimeScale.LAST_3_MONTHS)) {
                 return getScoreWeekSections(data, today); // last_week & last_month
             }
-            return getScoreMonthSections(data, timeScale, today); // special-case: last_3_months
+            return getScoreThreeMonthsSections(data, timeScale, today); // special-case: last_3_months
 
         }
 
@@ -238,7 +238,7 @@ public class TrendsProcessorUtils {
         return sections;
     }
 
-    private static List<GraphSection> getScoreMonthSections(final List<Float> data, final TimeScale timeScale, final DateTime today) {
+    private static List<GraphSection> getScoreThreeMonthsSections(final List<Float> data, final TimeScale timeScale, final DateTime today) {
         final List<Float> sectionData = Lists.newArrayList();
 
         // pad first month starting from the 1st
