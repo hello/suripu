@@ -79,7 +79,7 @@ public class TrendsProcessorUtils {
                                                  final TimeScale timeScale,
                                                  final DateTime today) {
         if (dataType.equals(DataType.SCORES)) {
-            if (!timeScale.equals(TimeScale.LAST_THREE_MONTHS)) {
+            if (!timeScale.equals(TimeScale.LAST_3_MONTHS)) {
                 return getScoreWeekSections(data, today); // last_week & last_month
             }
             return getScoreMonthSections(data, timeScale, today); // special-case: last_3_months

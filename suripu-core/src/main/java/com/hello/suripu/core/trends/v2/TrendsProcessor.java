@@ -33,9 +33,9 @@ public class TrendsProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
     private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of data-points
-    private static final int MIN_DEPTH_DATA_SIZE = 7;
+    private static final int MIN_DEPTH_DATA_SIZE = 5;
     private static final int MIN_SCORE_DATA_SIZE = 3;
-    private static final int MIN_DURATION_DATA_SIZE = 7;
+    private static final int MIN_DURATION_DATA_SIZE = 5;
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final AccountDAO accountDAO;

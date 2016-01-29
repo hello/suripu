@@ -8,7 +8,7 @@ public enum TimeScale {
 
     LAST_WEEK("LAST_WEEK", 7),
     LAST_MONTH("LAST_MONTH", 30),
-    LAST_THREE_MONTHS("LAST_3_MONTHS", 90);
+    LAST_3_MONTHS("LAST_3_MONTHS", 90);
 
     private String value;
     private final int days;
