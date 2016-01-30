@@ -377,3 +377,28 @@ WHERE questions.id = subquery.question_id;
 --  (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
 --WHERE questions.id = S.question_id;
 
+
+-- New question for Anomaly-detection results 2016-01-29
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+VALUES (
+  'We detected an unusual bright light event last night. Were you up in the middle of the night?', -- text
+  'EN', -- lang
+  'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+  'choice', -- response_type
+  '{"Yes", "No", "Don''t remember"}', -- text responses
+  null, -- dependency
+  'anytime' -- ask_time
+);
+
+---- insert the response text into response_choices
+
+INSERT INTO response_choices (question_id, response_text)
+    (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 1));
+
+---- update questions with the right response_ids
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
