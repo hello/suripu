@@ -86,3 +86,18 @@ GRANT ALL PRIVILEGES ON pill_status_id_seq TO ingress_user;
 
 ALTER TABLE pill_status ADD COLUMN uptime BIGINT;
 ALTER TABLE pill_status ADD COLUMN fw_version INTEGER;
+
+
+CREATE TABLE pill_classification (
+    id BIGSERIAL PRIMARY KEY,
+    internal_pill_id BIGINT,
+    pill_id VARCHAR(255),
+    last_24pt_window_ts TIMESTAMP,
+    last_72pt_window_ts TIMESTAMP,
+    last_update_batt INTEGER,
+    max_24hr_diff INTEGER,
+    max_72hr_diff INTEGER,
+    class INTEGER
+);
+CREATE INDEX pill_battery_monitor_id_status on pill_battery_monitor(internal_pill_id, last_update);
+CREATE UNIQUE INDEX pill_battery_monitor_id_unique on pill_battery_monitor(internal_pill_id);
