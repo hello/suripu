@@ -378,8 +378,24 @@ WHERE questions.id = subquery.question_id;
 --WHERE questions.id = S.question_id;
 
 
--- New question for Anomaly-detection results 2016-01-29
-INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time)
+-- Add new "category" field to question table to facilitate trigger-questions
+CREATE TYPE QUESTION_CATEGORY AS ENUM (
+  'none',
+  'onboarding',
+  'base',
+  'daily',
+  'trigger_light',
+  'trigger_sound',
+  'trigger_motion',
+  'trigger_temperature',
+  'trigger_dust'
+);
+
+ALTER TABLE questions ADD COLUMN category QUESTION_CATEGORY DEFAULT 'none';
+
+
+-- New question for light-anomaly-detection results 2016-01-29
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
 VALUES (
   'We detected an unusual bright light event last night. Were you up in the middle of the night?', -- text
   'EN', -- lang
@@ -387,7 +403,8 @@ VALUES (
   'choice', -- response_type
   '{"Yes", "No", "Don''t remember"}', -- text responses
   null, -- dependency
-  'anytime' -- ask_time
+  'anytime', -- ask_time
+  'trigger_light' -- trigger by light
 );
 
 ---- insert the response text into response_choices
@@ -402,17 +419,3 @@ UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
   FROM response_choices where question_id IN
   (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
 WHERE questions.id = S.question_id;
-
-CREATE TYPE QUESTION_CATEGORY AS ENUM (
-  'none',
-  'onboarding',
-  'base',
-  'daily',
-  'trigger_light',
-  'trigger_sound',
-  'trigger_motion',
-  'trigger_temperature',
-  'trigger_dust'
-);
-
-ALTER TABLE questions ADD COLUMN category QUESTION_CATEGORY DEFAULT 'none';
