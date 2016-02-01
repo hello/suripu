@@ -6,6 +6,7 @@ import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
+import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
 
 import org.joda.time.DateTime;
@@ -114,11 +115,12 @@ public class QuestionProcessorTest {
         choices.add(new Choice(2, "Cold", qid));
         choices.add(new Choice(3, "No Effect", qid));
         questions.add(new Question(qid, accountQId,
-                                   "Do you sleep hot or cold", "EN",
-                                   Question.Type.CHOICE,
-                                   Question.FREQUENCY.ONE_TIME,
-                                   Question.ASK_TIME.ANYTIME,
-                                   dependency, parentId, now, choices, AccountInfo.Type.NONE, now));
+                "Do you sleep hot or cold", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.ONE_TIME,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         List<Choice> choices2 = new ArrayList<>();
         qid = 2;
@@ -126,11 +128,12 @@ public class QuestionProcessorTest {
         choices2.add(new Choice(5, "Sleep-talk", qid));
         choices2.add(new Choice(6, "None", qid));
         questions.add(new Question(qid, accountQId,
-                                   "Do you snore or talk in your sleep", "EN",
-                                   Question.Type.CHOICE,
-                                   Question.FREQUENCY.ONE_TIME,
-                                   Question.ASK_TIME.ANYTIME,
-                                   dependency, parentId, now, choices2, AccountInfo.Type.NONE, now));
+                "Do you snore or talk in your sleep", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.ONE_TIME,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices2, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
 
         List<Choice> choices3 = new ArrayList<>();
@@ -139,11 +142,12 @@ public class QuestionProcessorTest {
         choices.add(new Choice(8, "Somewhat", qid));
         choices.add(new Choice(9, "No", qid));
         questions.add(new Question(qid, accountQId,
-                                   "Are you a light sleeper?", "EN",
-                                   Question.Type.CHOICE,
-                                   Question.FREQUENCY.ONE_TIME,
-                                   Question.ASK_TIME.ANYTIME,
-                                   dependency, parentId, now, choices3, AccountInfo.Type.NONE, now));
+                "Are you a light sleeper?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.ONE_TIME,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices3, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         List<Choice> choices4 = new ArrayList<>();
         qid = 4;
@@ -153,11 +157,12 @@ public class QuestionProcessorTest {
         choices4.add(new Choice(14, "others", qid));
         choices4.add(new Choice(15, "none", qid));
         questions.add(new Question(qid, accountQId,
-                                   "Do you drink caffeine?", "EN",
-                                   Question.Type.CHECKBOX,
-                                   Question.FREQUENCY.ONE_TIME,
-                                   Question.ASK_TIME.ANYTIME,
-                                   dependency, parentId, now, choices4, AccountInfo.Type.NONE, now));
+                "Do you drink caffeine?", "EN",
+                Question.Type.CHECKBOX,
+                Question.FREQUENCY.ONE_TIME,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices4, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
 
         List<Choice> choices5 = new ArrayList<>();
@@ -168,11 +173,12 @@ public class QuestionProcessorTest {
         choices5.add(new Choice(18, "once a week", qid));
         choices5.add(new Choice(19, "nope", qid));
         questions.add(new Question(qid, accountQId,
-                                   "Do you workout?", "EN",
-                                   Question.Type.CHOICE,
-                                   Question.FREQUENCY.ONE_TIME,
-                                   Question.ASK_TIME.ANYTIME,
-                                   dependency, parentId, now, choices5, AccountInfo.Type.NONE, now));
+                "Do you workout?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.ONE_TIME,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices5, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         List<Choice> choices6 = new ArrayList<>();
         qid = 10000;
@@ -180,22 +186,24 @@ public class QuestionProcessorTest {
         choices6.add(new Choice(24, "ok", qid));
         choices6.add(new Choice(25, "poor", qid));
         questions.add(new Question(qid, accountQId,
-                                   "How was your sleep?", "EN",
-                                   Question.Type.CHOICE,
-                                   Question.FREQUENCY.DAILY,
-                                   Question.ASK_TIME.MORNING,
-                                   dependency, parentId, now, choices6, AccountInfo.Type.NONE, now));
+                "How was your sleep?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.MORNING,
+                dependency, parentId, now, choices6, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         List<Choice> choices7 = new ArrayList<>();
         qid = 10002;
         choices7.add(new Choice(30, "yes", qid));
         choices7.add(new Choice(31, "no", qid));
         questions.add(new Question(qid, accountQId,
-                                   "Did you workout today?", "EN",
-                                   Question.Type.CHOICE,
-                                   Question.FREQUENCY.DAILY,
-                                   Question.ASK_TIME.ANYTIME,
-                                   5, parentId, now, choices7, AccountInfo.Type.NONE, now));
+                "Did you workout today?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.DAILY,
+                Question.ASK_TIME.ANYTIME,
+                5, parentId, now, choices7, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         List<Choice> choices8 = new ArrayList<>();
         qid = 10003;
@@ -203,11 +211,12 @@ public class QuestionProcessorTest {
         choices8.add(new Choice(33, "normal", qid));
         choices8.add(new Choice(34, "shitty", qid));
         questions.add(new Question(qid, accountQId,
-                                   "How are you feeling?", "EN",
-                                   Question.Type.CHOICE,
-                                   Question.FREQUENCY.OCCASIONALLY,
-                                   Question.ASK_TIME.ANYTIME,
-                                   dependency, parentId, now, choices8, AccountInfo.Type.NONE, now));
+                "How are you feeling?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.OCCASIONALLY,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices8, AccountInfo.Type.NONE, now,
+                QuestionCategory.NONE));
 
         return questions;
     }

@@ -402,3 +402,17 @@ UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
   FROM response_choices where question_id IN
   (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
 WHERE questions.id = S.question_id;
+
+CREATE TYPE QUESTION_CATEGORY AS ENUM (
+  'none',
+  'onboarding',
+  'base',
+  'daily',
+  'trigger_light',
+  'trigger_sound',
+  'trigger_motion',
+  'trigger_temperature',
+  'trigger_dust'
+);
+
+ALTER TABLE questions ADD COLUMN category QUESTION_CATEGORY DEFAULT 'none';
