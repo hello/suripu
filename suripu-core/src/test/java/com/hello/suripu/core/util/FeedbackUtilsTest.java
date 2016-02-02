@@ -329,4 +329,48 @@ public class FeedbackUtilsTest {
 
 
     }
+
+    @Test
+    public void testReallyBadFeedback() {
+        final List<Event> events = new ArrayList<>();
+
+        final long t1 = 1429134060000L; //Wed, 15 Apr 2015 21:41:00 GMT
+        final long t2 = t1 + 60000L;
+        final int offset = 3600000; // + 1 hour
+
+
+        events.add(Event.createFromType(Event.Type.IN_BED,t1 - DateTimeConstants.MILLIS_PER_HOUR,t2- DateTimeConstants.MILLIS_PER_HOUR,offset,Optional.of("IN_BEDszses"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+        events.add(Event.createFromType(Event.Type.SLEEP,t1,t2,offset,Optional.of("SLEEPS"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+        events.add(Event.createFromType(Event.Type.WAKE_UP,t1 + DateTimeConstants.MILLIS_PER_HOUR*8,t2 + DateTimeConstants.MILLIS_PER_HOUR*8,offset,Optional.of("WAKESZ"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+        events.add(Event.createFromType(Event.Type.OUT_OF_BED,t1+ DateTimeConstants.MILLIS_PER_HOUR*9,+ DateTimeConstants.MILLIS_PER_HOUR*9,offset,Optional.of("OUTSZ"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+
+        /*
+
+            @JsonProperty("date_of_night") final String dateOfNight,
+            @JsonProperty("old_time_of_event") final String oldTimeOfEvent,
+            @JsonProperty("new_time_of_event") final String newTimeOfEvent,
+            @JsonProperty("event_type") final String eventTypeString) {
+
+
+         */
+        final TimelineFeedback feedback = TimelineFeedback.create("2015-04-15","22:00","12:00",Event.Type.IN_BED.name());
+
+        final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
+        timelineFeedbacks.add(feedback);
+
+        final FeedbackUtils utils = new FeedbackUtils();
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
+
+
+        TestCase.assertTrue(newEvents.mainEvents.size() == 4);
+
+        final long refTime = 1429185600000L - DateTimeConstants.MILLIS_PER_HOUR;
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.IN_BED).getStartTimestamp() == refTime);
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.SLEEP).getStartTimestamp() == refTime + 1 * DateTimeConstants.MILLIS_PER_MINUTE);
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp() == refTime + 2 * DateTimeConstants.MILLIS_PER_MINUTE);
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.OUT_OF_BED).getStartTimestamp() == refTime+ 3 * DateTimeConstants.MILLIS_PER_MINUTE);
+
+
+
+    }
 }
