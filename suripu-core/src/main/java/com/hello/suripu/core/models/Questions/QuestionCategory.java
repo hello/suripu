@@ -8,11 +8,7 @@ public enum QuestionCategory {
     ONBOARDING("onboarding"),
     BASE("base"),
     DAILY("daily"),
-    TRIGGER_LIGHT("trigger_light"),
-    TRIGGER_SOUND("trigger_sound"),
-    TRIGGER_MOTION("trigger_motion"),
-    TRIGGER_TEMPERATURE("trigger_temperature"),
-    TRIGGER_DUST("trigger_dust");
+    ANOMALY_LIGHT("ANOMALY");
 
     private String value;
 

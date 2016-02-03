@@ -384,11 +384,7 @@ CREATE TYPE QUESTION_CATEGORY AS ENUM (
   'onboarding',
   'base',
   'daily',
-  'trigger_light',
-  'trigger_sound',
-  'trigger_motion',
-  'trigger_temperature',
-  'trigger_dust'
+  'anomaly_light'
 );
 
 ALTER TABLE questions ADD COLUMN category QUESTION_CATEGORY DEFAULT 'none';
