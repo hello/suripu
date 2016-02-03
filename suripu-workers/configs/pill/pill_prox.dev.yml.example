@@ -87,4 +87,3 @@ dynamodb:
   endpoints:
     features : http://localhost:7777
     pill_key_store : http://localhost:7777
-

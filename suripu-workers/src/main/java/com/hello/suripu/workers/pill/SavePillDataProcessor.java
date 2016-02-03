@@ -187,23 +187,6 @@ public class SavePillDataProcessor extends HelloBaseRecordProcessor {
                 }
             }
 
-
-            for(final SenseCommandProtos.pill_data proxPacket: proxData) {
-                if (proxPacket.hasMotionDataEntrypted()) {
-                    final Optional<DeviceAccountPair> pair = pairs.get(proxPacket.getDeviceId());
-                    final Optional<byte[]> key = keys.get(proxPacket.getDeviceId());
-                    if(pair.isPresent() && key.isPresent()) {
-                        final PillProxData pillProxData = PillProxData.fromEncryptedData(
-                                pair.get().accountId,
-                                proxPacket.getMotionDataEntrypted().toByteArray(),
-                                key.get()
-                                );
-
-                        pillProxDataList.add(pillProxData);
-                    }
-                }
-            }
-
             // only write heartbeat for postgres worker
             if (this.savePillHeartbeat) {
                 // Loop again for HeartBeat

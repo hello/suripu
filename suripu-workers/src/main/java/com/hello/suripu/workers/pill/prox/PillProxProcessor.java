@@ -21,6 +21,8 @@ import com.hello.suripu.core.pill.heartbeat.PillHeartBeat;
 import com.hello.suripu.workers.framework.HelloBaseRecordProcessor;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +70,6 @@ public class PillProxProcessor extends HelloBaseRecordProcessor {
         final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
         final Set<PillHeartBeat> pillHeartBeats = Sets.newHashSet(); // for dynamoDB writes
 
-        final List<SenseCommandProtos.pill_data> pillData = Lists.newArrayList();
         final Map<String, Optional<byte[]>> pillKeys = Maps.newHashMap();
         final Map<String, Optional<DeviceAccountPair>> pairs = Maps.newHashMap();
 
@@ -96,7 +97,7 @@ public class PillProxProcessor extends HelloBaseRecordProcessor {
         try {
             // Fetch data from Dynamo and DB
             if(pillIds.isEmpty()) {
-                LOGGER.warn("No valid prox pills");
+//                LOGGER.warn("No valid prox pills");
                 return;
             }
 
@@ -108,30 +109,33 @@ public class PillProxProcessor extends HelloBaseRecordProcessor {
 
             pillKeys.putAll(keys);
 
-            for (final SenseCommandProtos.pill_data data : pillData) {
-                final Optional<byte[]> decryptionKey = pillKeys.get(data.getDeviceId());
+
 
                 // The key should not be null
-                if (!decryptionKey.isPresent()) {
-                    LOGGER.error("Missing decryption key for pill: {}", data.getDeviceId());
-                    continue;
-                }
 
                 for (final SenseCommandProtos.pill_data proxPacket : proxData) {
+                    final Optional<byte[]> decryptionKey = pillKeys.get(proxPacket.getDeviceId());
+                    if (!decryptionKey.isPresent()) {
+                        LOGGER.error("Missing decryption key for pill: {}", proxPacket.getDeviceId());
+                        continue;
+                    }
+
                     if (proxPacket.hasMotionDataEntrypted()) {
-                        final Optional<DeviceAccountPair> pair = pairs.get(proxPacket.getDeviceId());
+//                        final Optional<DeviceAccountPair> pair = pairs.get(proxPacket.getDeviceId());
                         final Optional<byte[]> key = keys.get(proxPacket.getDeviceId());
-                        if (pair.isPresent() && key.isPresent()) {
+                        final Long accountId = 999L;
+                        final long ts = proxPacket.getTimestamp() * 1000L;
+                        if (key.isPresent()) {
                             final PillProxData pillProxData = PillProxData.fromEncryptedData(
-                                    pair.get().accountId,
+                                    proxPacket.getDeviceId(),
                                     proxPacket.getMotionDataEntrypted().toByteArray(),
-                                    key.get()
+                                    key.get(),
+                                    new DateTime(ts, DateTimeZone.UTC)
                             );
 
                             pillProxDataList.add(pillProxData);
                         }
                     }
-                }
             }
         } catch (Exception e) {
             LOGGER.error("Failed processing pill: {}", e.getMessage());

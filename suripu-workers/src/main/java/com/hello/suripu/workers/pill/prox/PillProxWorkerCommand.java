@@ -79,7 +79,7 @@ public class PillProxWorkerCommand extends WorkerEnvironmentCommand<PillProxWork
                 workerId);
         kinesisConfig.withMaxRecords(configuration.getMaxRecords());
         kinesisConfig.withKinesisEndpoint(configuration.getKinesisEndpoint());
-        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.TRIM_HORIZON);
+        kinesisConfig.withInitialPositionInStream(InitialPositionInStream.LATEST);
 
 
         final ClientConfiguration clientConfiguration = new ClientConfiguration().withMaxErrorRetry(9); // 3x the default value
