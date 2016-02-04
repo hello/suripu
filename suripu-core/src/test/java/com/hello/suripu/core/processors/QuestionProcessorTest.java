@@ -2,13 +2,15 @@ package com.hello.suripu.core.processors;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.models.AccountInfo;
+import com.hello.suripu.core.models.AccountQuestion;
+import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -27,8 +29,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Created by kingshy on 9/19/14.
+ * Created by ksg on 09/19/14
  */
+
 public class QuestionProcessorTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(QuestionProcessorTest.class);
 
@@ -46,7 +49,7 @@ public class QuestionProcessorTest {
 
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
 
-        when(questionResponseDAO.getAllQuestions()).thenReturn(ImmutableList.<Question>of().copyOf(questions));
+        when(questionResponseDAO.getAllQuestions()).thenReturn(ImmutableList.copyOf(questions));
 
         final Timestamp nextAskTimePass = new Timestamp(today.minusDays(2).getMillis());
         when(questionResponseDAO.getNextAskTime(ACCOUNT_ID_PASS)).thenReturn(Optional.fromNullable(nextAskTimePass));
@@ -63,6 +66,22 @@ public class QuestionProcessorTest {
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10002, today, today.plusDays(1))).thenReturn(16L);
         when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 10003, today, today.plusDays(1))).thenReturn(17L);
 
+        // anomaly question
+        when(questionResponseDAO.insertAccountQuestion(ACCOUNT_ID_PASS, 20000, today, today.plusDays(1))).thenReturn(18L);
+
+        final List<AccountQuestion> recentAnomalyQuestionsFail = Lists.newArrayList();
+        recentAnomalyQuestionsFail.add(new AccountQuestion(1000L, ACCOUNT_ID_FAIL, 20000,
+                today.minusDays(QuestionProcessor.DAYS_BETWEEN_ANOMALY_QUESTIONS - 2),
+                today.minusDays(QuestionProcessor.DAYS_BETWEEN_ANOMALY_QUESTIONS - 2).plusHours(3)));
+        when(questionResponseDAO.getRecentAskedQuestionByQuestionId(ACCOUNT_ID_FAIL, 20000, 1)).thenReturn(ImmutableList.copyOf(recentAnomalyQuestionsFail));
+
+        final List<AccountQuestion> recentAnomalyQuestionsPass = Lists.newArrayList();
+        recentAnomalyQuestionsPass.add(new AccountQuestion(1001L, ACCOUNT_ID_PASS, 20000,
+                today.minusDays(QuestionProcessor.DAYS_BETWEEN_ANOMALY_QUESTIONS + 2),
+                today.minusDays(QuestionProcessor.DAYS_BETWEEN_ANOMALY_QUESTIONS + 2).plusHours(3)));
+        when(questionResponseDAO.getRecentAskedQuestionByQuestionId(ACCOUNT_ID_PASS, 20000, 1)).thenReturn(ImmutableList.copyOf(recentAnomalyQuestionsPass));
+
+
         final List<Integer> answeredIds = new ArrayList<>();
         answeredIds.add(5);
         answeredIds.add(4);
@@ -71,16 +90,18 @@ public class QuestionProcessorTest {
         final DateTime oneWeekAgo = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().minusDays(7);
         when(questionResponseDAO.getBaseAndRecentAnsweredQuestionIds(ACCOUNT_ID_PASS, 10000, oneWeekAgo)).thenReturn(answeredIds);
 
-        when(questionResponseDAO.getLastFewResponses(ACCOUNT_ID_PASS, 5)).thenReturn(ImmutableList.<Response>of().copyOf(this.getSkippedResponses()));
+        when(questionResponseDAO.getLastFewResponses(ACCOUNT_ID_PASS, 5)).thenReturn(ImmutableList.copyOf(this.getSkippedResponses()));
 
         // get existing questions and response
-        when(questionResponseDAO.getQuestionsResponsesByDate(ACCOUNT_ID_PASS, today.plusDays(1))).thenReturn(ImmutableList.copyOf(Collections.EMPTY_LIST));
+        when(questionResponseDAO.getQuestionsResponsesByDate(ACCOUNT_ID_PASS, today.plusDays(1)))
+                .thenReturn(ImmutableList.copyOf(Collections.<AccountQuestionResponses>emptyList()));
         final QuestionProcessor.Builder builder = new QuestionProcessor.Builder()
                 .withQuestionResponseDAO(questionResponseDAO)
                 .withCheckSkipsNum(CHECK_SKIP_NUM)
                 .withQuestions(questionResponseDAO);
 
-        when(questionResponseDAO.getBaseAndRecentResponses(ACCOUNT_ID_PASS, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo)).thenReturn(ImmutableList.copyOf(Collections.EMPTY_LIST));
+        when(questionResponseDAO.getBaseAndRecentResponses(ACCOUNT_ID_PASS, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo))
+                .thenReturn(ImmutableList.copyOf(Collections.<Response>emptyList()));
         this.questionProcessor = builder.build();
     }
 
@@ -218,6 +239,19 @@ public class QuestionProcessorTest {
                 dependency, parentId, now, choices8, AccountInfo.Type.NONE, now,
                 QuestionCategory.NONE));
 
+        List<Choice> choices9 = new ArrayList<>();
+        qid = 20000;
+        choices9.add(new Choice(32, "Yep", qid));
+        choices9.add(new Choice(33, "No", qid));
+        choices9.add(new Choice(34, "wtf", qid));
+        questions.add(new Question(qid, accountQId,
+                "Too much light huh?", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.TRIGGER,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices9, AccountInfo.Type.NONE, now,
+                QuestionCategory.ANOMALY_LIGHT));
+
         return questions;
     }
 
@@ -244,11 +278,11 @@ public class QuestionProcessorTest {
 
         boolean foundBaseQ = false;
         boolean foundCalibrationQ = false;
-        for (int i = 0; i < questions.size(); i++) {
-            final Question.FREQUENCY qfreq = questions.get(i).frequency;
-            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+        for (Question question : questions) {
+            final Question.FREQUENCY questionFrequency = question.frequency;
+            if (questionFrequency == Question.FREQUENCY.ONE_TIME) {
                 foundBaseQ = true;
-            } else if (qfreq == Question.FREQUENCY.DAILY) {
+            } else if (questionFrequency == Question.FREQUENCY.DAILY) {
                 foundCalibrationQ = true;
             }
         }
@@ -261,11 +295,11 @@ public class QuestionProcessorTest {
         assertThat(questions.size(), is(numQ));
         int countBaseQ = 0;
         foundCalibrationQ = false;
-        for (int i = 0; i < questions.size(); i++) {
-            final Question.FREQUENCY qfreq = questions.get(i).frequency;
-            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+        for (Question question : questions) {
+            final Question.FREQUENCY questionFrequency = question.frequency;
+            if (questionFrequency == Question.FREQUENCY.ONE_TIME) {
                 countBaseQ++;
-            } else if (qfreq == Question.FREQUENCY.DAILY) {
+            } else if (questionFrequency == Question.FREQUENCY.DAILY) {
                 foundCalibrationQ = true;
             }
         }
@@ -278,13 +312,13 @@ public class QuestionProcessorTest {
         foundBaseQ = false;
         boolean foundOngoing = false;
         foundCalibrationQ = false;
-        for (int i = 0; i < questions.size(); i++) {
-            final Question.FREQUENCY qfreq = questions.get(i).frequency;
-            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+        for (Question question : questions) {
+            final Question.FREQUENCY questionFrequency = question.frequency;
+            if (questionFrequency == Question.FREQUENCY.ONE_TIME) {
                 foundBaseQ = true;
-            } else if (qfreq == Question.FREQUENCY.DAILY) {
+            } else if (questionFrequency == Question.FREQUENCY.DAILY) {
                 foundCalibrationQ = true;
-            } else if (qfreq == Question.FREQUENCY.OCCASIONALLY) {
+            } else if (questionFrequency == Question.FREQUENCY.OCCASIONALLY) {
                 foundOngoing = true;
             }
         }
@@ -302,11 +336,11 @@ public class QuestionProcessorTest {
 
         boolean foundBaseQ = false;
         boolean foundCalibrationQ = false;
-        for (int i = 0; i < questions.size(); i++) {
-            final Question.FREQUENCY qfreq = questions.get(i).frequency;
-            if (qfreq == Question.FREQUENCY.ONE_TIME) {
+        for (Question question : questions) {
+            final Question.FREQUENCY questionFrequency = question.frequency;
+            if (questionFrequency == Question.FREQUENCY.ONE_TIME) {
                 foundBaseQ = true;
-            } else if (qfreq == Question.FREQUENCY.DAILY) {
+            } else if (questionFrequency == Question.FREQUENCY.DAILY) {
                 foundCalibrationQ = true;
             }
         }
@@ -363,4 +397,24 @@ public class QuestionProcessorTest {
 
     }
 
+    @Test
+    public void failAnomalyQuestionRecentlyAsked() {
+        final DateTime nightDate = today.withTimeAtStartOfDay().minusDays(1);
+        final boolean result = this.questionProcessor.insertLightAnomalyQuestion(ACCOUNT_ID_FAIL, nightDate, today);
+        assertThat(result, is(false));
+    }
+
+    @Test
+    public void failAnomalyQuestionTooOld() {
+        final DateTime nightDate = today.withTimeAtStartOfDay().minusDays(QuestionProcessor.ANOMALY_TOO_OLD_THRESHOLD);
+        final boolean result = this.questionProcessor.insertLightAnomalyQuestion(ACCOUNT_ID_PASS, nightDate, today);
+        assertThat(result, is(false));
+    }
+
+    @Test
+    public void insertAnomalyQuestionSuccess() {
+        final DateTime nightDate = today.withTimeAtStartOfDay().minusDays(1);
+        final boolean result = this.questionProcessor.insertLightAnomalyQuestion(ACCOUNT_ID_PASS, nightDate, today);
+        assertThat(result, is(true));
+    }
 }
