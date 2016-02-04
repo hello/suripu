@@ -233,7 +233,7 @@ public class FeedbackUtils {
 
 
 
-    private static class EventWithTime {
+    public static class EventWithTime {
         enum Type {
             FEEDBACK,
             MAIN,
@@ -317,7 +317,7 @@ public class FeedbackUtils {
     public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableCollection<Event> algEvents, final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
 
 
-        /* get events by time  */
+        /* get feedback events by time  */
         final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(timelineFeedbackList, offsetMillis);
 
 
@@ -657,12 +657,14 @@ public class FeedbackUtils {
 
         //if I violated the sequence of the event that comes after, then place the propsoed event one minute before that event
         if (failHigh) {
-            return  Optional.of(highEntry.getValue() - MINUTE);
+            final int indexDiff = myOrder - highEntry.getKey();
+            return  Optional.of(highEntry.getValue() + indexDiff * MINUTE);
         }
 
         //as above, but for the event that comes before
         if (failLow) {
-            return Optional.of(lowerEntry.getValue() + MINUTE);
+            final int indexDiff = myOrder - lowerEntry.getKey();
+            return Optional.of(lowerEntry.getValue() + indexDiff*MINUTE);
         }
 
         //should also never get here either, but whatever
