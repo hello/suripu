@@ -95,13 +95,22 @@ public class InBedSearcher {
 
 
                 long newInBedTime = t0 + (i + 1) * MOTION_PERIOD_MILLIS;
-                final long numMillisToFallAsleep = numberOfMintesRequiredToFallAsleep*DateTimeConstants.MILLIS_PER_MINUTE;
+                final long numMillisToFallAsleep = (long)numberOfMintesRequiredToFallAsleep*(long)DateTimeConstants.MILLIS_PER_MINUTE;
                 if (sleep.getStartTimestamp() - newInBedTime < numMillisToFallAsleep) {
                     newInBedTime = sleep.getStartTimestamp() - numMillisToFallAsleep;
                 }
 
                 final long tdiff = inBed.getEndTimestamp() - inBed.getStartTimestamp();
-                return Event.createFromType(Event.Type.IN_BED,newInBedTime , newInBedTime + tdiff, inBed.getTimezoneOffset(), Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+
+
+
+                final Event newInBedEvent =  Event.createFromType(Event.Type.IN_BED,newInBedTime , newInBedTime + tdiff, inBed.getTimezoneOffset(), Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+
+                LOGGER.info("action=adjusted_in_bed new_time={} dt_minutes={}",
+                        new DateTime(newInBedEvent.getStartTimestamp()).withZone(DateTimeZone.forOffsetMillis(newInBedEvent.getTimezoneOffset())),
+                        (newInBedEvent.getStartTimestamp() - inBed.getStartTimestamp()) / DateTimeConstants.MILLIS_PER_MINUTE);
+
+                return newInBedEvent;
             }
 
         }
