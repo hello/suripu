@@ -126,4 +126,9 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.OUTLIER_FILTER,accountId,Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasInBedSearchEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.IN_BED_SEARCH,accountId,Collections.EMPTY_LIST);
+
+    }
+
 }

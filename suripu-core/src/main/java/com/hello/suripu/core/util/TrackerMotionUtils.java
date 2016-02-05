@@ -1,10 +1,13 @@
 package com.hello.suripu.core.util;
 
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.algorithm.core.AmplitudeData;
 import com.hello.suripu.core.models.TrackerMotion;
+import org.joda.time.DateTimeConstants;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -68,5 +71,50 @@ public class TrackerMotionUtils {
         uniqueValues.addAll(trackerMotionSet);
 
         return uniqueValues;
+    }
+
+    public static int getIndex(final Long timestamp, final Long t0,final Long period, final int max) {
+        int idx = (int) ((timestamp - t0) / period);
+        if (idx >= max || idx < 0) {
+            return -1;
+        }
+
+        return idx;
+
+    }
+
+    public static void fillBinsWithTrackerDurations(final Double [] bins, final Long t0, final Long period, final ImmutableList<TrackerMotion> data, int sign, boolean smear) {
+
+        Iterator<TrackerMotion> it = data.iterator();
+
+        while(it.hasNext()) {
+            final TrackerMotion m1 = it.next();
+
+            final int idx = getIndex(m1.timestamp,t0,period,bins.length);
+            double normalizer = 1.0;
+
+            if (smear) {
+                normalizer = 3.0;
+            }
+
+            if (idx >= 0) {
+                bins[idx] += (sign * m1.onDurationInSeconds) / normalizer;
+            }
+
+            if (smear) {
+
+                final int idx1 = getIndex(m1.timestamp - 1 * DateTimeConstants.MILLIS_PER_MINUTE,t0,period,bins.length);
+                final int idx2 = getIndex(m1.timestamp + 1 * DateTimeConstants.MILLIS_PER_MINUTE,t0,period,bins.length);
+
+                if (idx1 >= 0) {
+                    bins[idx1] += (sign * m1.onDurationInSeconds) / normalizer;
+
+                }
+
+                if (idx2 >= 0) {
+                    bins[idx2] += (sign * m1.onDurationInSeconds) / normalizer;
+                }
+            }
+        }
     }
 }
