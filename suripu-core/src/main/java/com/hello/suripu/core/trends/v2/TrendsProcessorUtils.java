@@ -124,9 +124,10 @@ public class TrendsProcessorUtils {
 
         // populate titles
         final List<String> title = Lists.newArrayList();
-        for (int day = 1; day <= DateTimeConstants.DAYS_PER_WEEK; day++) {
+        for (int day = DateTimeConstants.DAYS_PER_WEEK; day >= 1; day--) {
             final int dayOfWeek = today.minusDays(day).getDayOfWeek();
-            title.add(English.DAY_OF_WEEK_NAMES.get(dayOfWeek - 1));
+            final int dayOfWeekIndex = (dayOfWeek == DateTimeConstants.SUNDAY) ? 0 : dayOfWeek;
+            title.add(English.DAY_OF_WEEK_NAMES.get(dayOfWeekIndex));
         }
 
         // populate values
