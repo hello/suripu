@@ -220,7 +220,7 @@ public class TrendsProcessor {
         final List<ConditionRange> conditionRanges = Lists.newArrayList();
         if (dataType.equals(DataType.SCORES)) {
             // only score has condition ranges for now
-            conditionRanges.addAll(ConditionRange.getSleepScoreConditionRanges(minValue, maxValue));
+            conditionRanges.addAll(ConditionRange.SLEEP_SCORE_CONDITION_RANGES);
         }
 
         final Graph graph = new Graph(
