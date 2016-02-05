@@ -248,11 +248,11 @@ public class TrendsProcessor {
 
     private DateTime getLocalToday(final Long accountId) {
         final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        final DateTime now = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
         if (optionalTimeZone.isPresent()) {
-            return now.plusMillis(optionalTimeZone.get().offsetMillis);
+            return now.plusMillis(optionalTimeZone.get().offsetMillis).withTimeAtStartOfDay();
         }
-        return now;
+        return now.withTimeAtStartOfDay();
     }
 
     // DO NOT DELETE THIS!!
