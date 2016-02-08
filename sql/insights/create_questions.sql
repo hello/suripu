@@ -389,6 +389,11 @@ CREATE TYPE QUESTION_CATEGORY AS ENUM (
 
 ALTER TABLE questions ADD COLUMN category QUESTION_CATEGORY DEFAULT 'none';
 
+-- update category
+UPDATE questions SET category='onboarding' WHERE id = 1;
+UPDATE questions SET category='onboarding' WHERE id = 2;
+UPDATE questions SET category='onboarding' WHERE id = 3;
+
 
 -- New question for light-anomaly-detection results 2016-01-29
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
@@ -415,3 +420,4 @@ UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
   FROM response_choices where question_id IN
   (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
 WHERE questions.id = S.question_id;
+

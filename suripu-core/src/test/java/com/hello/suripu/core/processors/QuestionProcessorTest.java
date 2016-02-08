@@ -3,7 +3,10 @@ package com.hello.suripu.core.processors;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.QuestionResponseDAO;
+import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
@@ -11,6 +14,10 @@ import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 import com.hello.suripu.core.models.Questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
+import com.librato.rollout.RolloutAdapter;
+import com.librato.rollout.RolloutClient;
+import dagger.Module;
+import dagger.Provides;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -18,10 +25,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -41,10 +50,73 @@ public class QuestionProcessorTest {
     private final static Long ACCOUNT_ID_PASS = 1L;
     private final static Long ACCOUNT_ID_FAIL = 2L;
 
+    private static final int ANOMALY_QUESTION_ID = 20000;
+
     private QuestionProcessor questionProcessor;
+
+    public final Map<String, Boolean> features = Maps.newHashMap();
+    public void setFeature(final String feat,boolean on) {
+        if (features.containsKey(feat) && !on) {
+            features.remove(feat);
+        }
+
+        if (on) {
+            features.put(feat,true);
+        }
+    }
+
+    final public  RolloutAdapter rolloutAdapter = new RolloutAdapter() {
+
+        @Override
+        public boolean userFeatureActive(String feature, long userId, List<String> userGroups) {
+            Boolean hasFeature = features.get(feature);
+
+            if (hasFeature == null) {
+                hasFeature = Boolean.FALSE;
+            }
+
+            LOGGER.info("userFeatureActive {}={}",feature,hasFeature);
+            return hasFeature;
+        }
+
+        @Override
+        public boolean deviceFeatureActive(String feature, String deviceId, List<String> userGroups) {
+            Boolean hasFeature = features.get(feature);
+
+            if (hasFeature == null) {
+                hasFeature = Boolean.FALSE;
+            }
+
+            LOGGER.info("deviceFeatureActive {}={}",feature,hasFeature);
+            return hasFeature;
+        }
+    };
+
+    @Module(
+            injects = QuestionProcessor.class,
+            library = true
+    )
+
+    class RolloutLocalModule {
+        @Provides
+        @Singleton
+        RolloutAdapter providesRolloutAdapter() {
+            return rolloutAdapter;
+        }
+
+        @Provides @Singleton
+        RolloutClient providesRolloutClient(RolloutAdapter adapter) {
+            return new RolloutClient(adapter);
+        }
+
+    }
 
     @Before
     public void setUp() {
+
+        ObjectGraphRoot.getInstance().init(new RolloutLocalModule());
+        features.clear();
+
         final List<Question> questions = this.getMockQuestions();
 
         final QuestionResponseDAO questionResponseDAO = mock(QuestionResponseDAO.class);
@@ -102,6 +174,15 @@ public class QuestionProcessorTest {
 
         when(questionResponseDAO.getBaseAndRecentResponses(ACCOUNT_ID_PASS, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo))
                 .thenReturn(ImmutableList.copyOf(Collections.<Response>emptyList()));
+
+        // create an existing anomaly question to test feature flipper
+        final AccountQuestionResponses unansweredQuestion = new AccountQuestionResponses(1L, ACCOUNT_ID_PASS, ANOMALY_QUESTION_ID, today, false, today);
+        when(questionResponseDAO.getQuestionsResponsesByDate(ACCOUNT_ID_FAIL, today.plusDays(1)))
+                .thenReturn(ImmutableList.copyOf(Lists.newArrayList(unansweredQuestion)));
+
+        when(questionResponseDAO.getBaseAndRecentResponses(ACCOUNT_ID_FAIL, Question.FREQUENCY.ONE_TIME.toSQLString(), oneWeekAgo))
+                .thenReturn(ImmutableList.copyOf(Collections.<Response>emptyList()));
+
         this.questionProcessor = builder.build();
     }
 
@@ -141,7 +222,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.ONBOARDING));
 
         List<Choice> choices2 = new ArrayList<>();
         qid = 2;
@@ -154,7 +235,7 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices2, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.ONBOARDING));
 
 
         List<Choice> choices3 = new ArrayList<>();
@@ -168,10 +249,10 @@ public class QuestionProcessorTest {
                 Question.FREQUENCY.ONE_TIME,
                 Question.ASK_TIME.ANYTIME,
                 dependency, parentId, now, choices3, AccountInfo.Type.NONE, now,
-                QuestionCategory.NONE));
+                QuestionCategory.ONBOARDING));
 
         List<Choice> choices4 = new ArrayList<>();
-        qid = 4;
+        qid = 5;
         choices4.add(new Choice(10, "coffee", qid));
         choices4.add(new Choice(11, "tea", qid));
         choices4.add(new Choice(12, "red bull", qid));
@@ -187,7 +268,7 @@ public class QuestionProcessorTest {
 
 
         List<Choice> choices5 = new ArrayList<>();
-        qid = 5;
+        qid =6;
         choices5.add(new Choice(15, "everyday", qid));
         choices5.add(new Choice(16, ">4 times a week", qid));
         choices5.add(new Choice(17, ">2 times a week", qid));
@@ -240,7 +321,7 @@ public class QuestionProcessorTest {
                 QuestionCategory.NONE));
 
         List<Choice> choices9 = new ArrayList<>();
-        qid = 20000;
+        qid = ANOMALY_QUESTION_ID;
         choices9.add(new Choice(32, "Yep", qid));
         choices9.add(new Choice(33, "No", qid));
         choices9.add(new Choice(34, "wtf", qid));
@@ -252,6 +333,19 @@ public class QuestionProcessorTest {
                 dependency, parentId, now, choices9, AccountInfo.Type.NONE, now,
                 QuestionCategory.ANOMALY_LIGHT));
 
+        List<Choice> choices10 = new ArrayList<>();
+        qid = 4;
+        choices10.add(new Choice(32, "try", qid));
+        choices10.add(new Choice(33, "try not", qid));
+        choices10.add(new Choice(34, "go away", qid));
+        questions.add(new Question(qid, accountQId,
+                "Do you work on being a good person", "EN",
+                Question.Type.CHOICE,
+                Question.FREQUENCY.ONE_TIME,
+                Question.ASK_TIME.ANYTIME,
+                dependency, parentId, now, choices10, AccountInfo.Type.NONE, now,
+                QuestionCategory.ONBOARDING));
+
         return questions;
     }
 
@@ -260,7 +354,7 @@ public class QuestionProcessorTest {
         final int accountAge = 0; // zero-days
         final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_PASS, accountAge, this.today, 2, true);
 
-        assertThat(questions.size(), is(3));
+        assertThat(questions.size(), is(4));
 
         for (int i = 0; i < questions.size(); i++) {
             LOGGER.debug("Questions {}", questions.get(i));
@@ -383,7 +477,7 @@ public class QuestionProcessorTest {
 
         // test saving checkboxes
         choices.clear();
-        qid = 4;
+        qid = 5;
         choices.add(new Choice(10, "coffee", qid));
         choices.add(new Choice(11, "tea", qid));
         saved = this.questionProcessor.saveResponse(ACCOUNT_ID_PASS, qid, 3L, choices);
@@ -416,5 +510,19 @@ public class QuestionProcessorTest {
         final DateTime nightDate = today.withTimeAtStartOfDay().minusDays(1);
         final boolean result = this.questionProcessor.insertLightAnomalyQuestion(ACCOUNT_ID_PASS, nightDate, today);
         assertThat(result, is(true));
+    }
+
+    @Test
+    public void noAnomalyQuestions() {
+        setFeature(FeatureFlipper.QUESTION_ANOMALY_LIGHT_VISIBLE, false);
+        final List<Question> questions = this.questionProcessor.getQuestions(ACCOUNT_ID_FAIL, 20, today, 1, false);
+        boolean foundAnomaly = false;
+        for (final Question question : questions) {
+            if (question.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                foundAnomaly = true;
+                break;
+            }
+        }
+        assertThat(foundAnomaly, is(false));
     }
 }

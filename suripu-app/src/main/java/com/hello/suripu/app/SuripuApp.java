@@ -339,8 +339,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFeaturesDynamoDBConfiguration().getEndpoint());
         final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient, "features", namespace);
 
-
-
         final RolloutAppModule module = new RolloutAppModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 

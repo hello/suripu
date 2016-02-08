@@ -33,9 +33,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
- * Created by kingshy on 10/24/14.
+ * Created by ksg on 10/24/14
  */
-public class QuestionProcessor {
+public class QuestionProcessor extends FeatureFlippedProcessor{
     public static final int DEFAULT_NUM_QUESTIONS = 2;
     public static final int DEFAULT_NUM_MORE_QUESTIONS = 5;
 
@@ -88,7 +88,12 @@ public class QuestionProcessor {
                     // don't show these questions till dependency and asktime is implemented
                     continue;
                 }
-                this.availableQuestionIds.put(question.frequency, question.id);
+
+                // note: trigger questions should not be added to the pool
+                if (!question.frequency.equals(Question.FREQUENCY.TRIGGER)) {
+                    this.availableQuestionIds.put(question.frequency, question.id);
+                }
+
                 this.questionIdMap.put(question.id, question);
                 if (question.frequency == Question.FREQUENCY.ONE_TIME) {
                     baseQuestionIds.add(question.id);
@@ -166,7 +171,14 @@ public class QuestionProcessor {
                 final Integer qid = question.questionId;
                 if (!preGeneratedQuestions.containsKey(qid)) {
                     final Long accountQId = question.id;
-                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid),
+                    final Question questionTemplate = this.questionIdMap.get(qid);
+
+                    // if anomaly NOT enabled, SKIP
+                    if (!hasAnomalyLightQuestionEnabled(accountId) && questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                        continue;
+                    }
+
+                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
                                                                                   accountQId,
                                                                                   today,
                                                                                   question.questionCreationDate));
@@ -293,7 +305,7 @@ public class QuestionProcessor {
 
     public Boolean insertLightAnomalyQuestion(final Long accountId, final DateTime nightDate, final DateTime accountToday) {
 
-        // check if target data is too old
+        // check if target date is too old
         if (Days.daysBetween(nightDate, accountToday).getDays() >= ANOMALY_TOO_OLD_THRESHOLD) {
             return false;
         }
@@ -328,14 +340,10 @@ public class QuestionProcessor {
         final Set<Integer> answeredIds = new HashSet<>(this.questionResponseDAO.getAnsweredOnboardingQuestions(accountId));
 
         final List<Question> onboardingQs = new ArrayList<>();
-        if (!answeredIds.contains(1)) {
-            onboardingQs.add(questionIdMap.get(1));
-        }
-        if (!answeredIds.contains(2)) {
-            onboardingQs.add(questionIdMap.get(2));
-        }
-        if (!answeredIds.contains(3)) {
-            onboardingQs.add(questionIdMap.get(3));
+        for (final Integer qid : this.questionCategoryMap.get(QuestionCategory.ONBOARDING)) {
+            if (!answeredIds.contains(qid)) {
+                onboardingQs.add(questionIdMap.get(qid));
+            }
         }
 
         // None of questions has been answered, insert into DB
@@ -536,7 +544,7 @@ public class QuestionProcessor {
 
         final Set<Integer> uniqueIds = new HashSet<>();
         for (final Response response : recentResponses) {
-            if (newbie && response.questionId == newbieQuestionId) {
+            if (newbie && response.questionId.equals(newbieQuestionId)) {
                 // check that we haven't asked this daily question for this user yet
                 if (response.askTime.isBefore(today)) {
                     continue;
