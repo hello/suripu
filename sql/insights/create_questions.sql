@@ -398,14 +398,14 @@ UPDATE questions SET category='onboarding' WHERE id = 3;
 -- New question for light-anomaly-detection results 2016-01-29
 INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
 VALUES (
-  'We detected an unusual bright light event last night. Were you up in the middle of the night?', -- text
+  'Was the light in your bedroom different than normal last night?', -- text
   'EN', -- lang
   'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
   'choice', -- response_type
-  '{"Yes", "No", "Don''t remember"}', -- text responses
+  '{"Yes, it was different", "No, it wasn''t different", "I''m not sure"}', -- text responses
   null, -- dependency
   'anytime', -- ask_time
-  'trigger_light' -- trigger by light
+  'anomaly_light' -- trigger by light
 );
 
 ---- insert the response text into response_choices
