@@ -8,12 +8,13 @@ public enum QuestionCategory {
     ONBOARDING("onboarding"),
     BASE("base"),
     DAILY("daily"),
-    ANOMALY_LIGHT("ANOMALY");
+    ANOMALY_LIGHT("anomaly_light");
 
     private String value;
 
     private QuestionCategory(final String value) { this.value = value; }
 
+    public String getValue() { return this.value; }
 
     public static QuestionCategory fromString(final String text) {
         if (text != null) {
