@@ -12,7 +12,7 @@ import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
-import com.hello.suripu.core.models.Questions.QuestionCategory;
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

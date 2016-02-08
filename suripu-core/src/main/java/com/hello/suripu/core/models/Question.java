@@ -3,7 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.hello.suripu.core.models.Questions.QuestionCategory;
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import org.joda.time.DateTime;
 
 import java.util.List;

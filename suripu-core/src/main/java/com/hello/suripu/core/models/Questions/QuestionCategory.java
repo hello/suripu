@@ -1,4 +1,4 @@
-package com.hello.suripu.core.models.Questions;
+package com.hello.suripu.core.models.questions;
 
 /**
  * Created by ksg on 02/1/16
