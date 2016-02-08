@@ -387,6 +387,11 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withAlreadyCalibratedPeakEnergyDB(final Integer audioPeakEnergyDB) {
+            this.audioPeakEnergyDB = audioPeakEnergyDB;
+            return this;
+        }
+
         public Builder withAlreadyCalibratedAudioPeakDisturbancesDB(final Integer audioPeakDisturbancesDB) {
             this.audioPeakDisturbancesDB = audioPeakDisturbancesDB;
             return this;
