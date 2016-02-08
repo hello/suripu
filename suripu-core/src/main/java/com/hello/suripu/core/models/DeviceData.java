@@ -82,6 +82,9 @@ public class DeviceData {
     @JsonProperty("audio_peak_background_db")
     public final Integer audioPeakBackgroundDB; // already converted to decibels, multiplied by 1000
 
+    @JsonProperty("audio_peak_energy_db")
+    public final Integer audioPeakEnergyDB;
+
     public DateTime localTime() {
         return dateTimeUTC.plusMillis(offsetMillis);
     }
@@ -118,7 +121,8 @@ public class DeviceData {
                 holdCount,
                 audioNumDisturbances,
                 audioPeakDisturbancesDB,
-                audioPeakBackgroundDB);
+                audioPeakBackgroundDB,
+                audioPeakEnergyDB);
     }
 
     @Deprecated
@@ -143,7 +147,8 @@ public class DeviceData {
             final Integer holdCount,
             final Integer audioNumDisturbances,
             final Integer audioPeakDisturbancesDB,
-            final Integer audioPeakBackgroundDB) {
+            final Integer audioPeakBackgroundDB,
+            final Integer audioPeakEnergyDB) {
         this(accountId,
                 deviceId,
                 "",
@@ -165,7 +170,8 @@ public class DeviceData {
                 holdCount,
                 audioNumDisturbances,
                 audioPeakDisturbancesDB,
-                audioPeakBackgroundDB);
+                audioPeakBackgroundDB,
+                audioPeakEnergyDB);
     }
 
     public DeviceData(
@@ -190,7 +196,8 @@ public class DeviceData {
             final Integer holdCount,
             final Integer audioNumDisturbances,
             final Integer audioPeakDisturbancesDB,
-            final Integer audioPeakBackgroundDB) {
+            final Integer audioPeakBackgroundDB,
+            final Integer audioPeakEnergyDB) {
         this.accountId = accountId;
         this.deviceId = deviceId;
         this.externalDeviceId = externalDeviceId;
@@ -213,6 +220,7 @@ public class DeviceData {
         this.audioNumDisturbances = audioNumDisturbances;
         this.audioPeakBackgroundDB = audioPeakBackgroundDB;
         this.audioPeakDisturbancesDB = audioPeakDisturbancesDB;
+        this.audioPeakEnergyDB = audioPeakEnergyDB;
 
         checkNotNull(this.accountId, "Account id can not be null");
 //        checkNotNull(this.deviceId, "Device id can not be null");
@@ -245,6 +253,7 @@ public class DeviceData {
         private Integer audioNumDisturbances = 0;
         private Integer audioPeakDisturbancesDB = 0;
         private Integer audioPeakBackgroundDB = 0;
+        private Integer audioPeakEnergyDB = 0;
 
         public Builder withAccountId(final Long accountId){
             this.accountId = accountId;
@@ -367,6 +376,12 @@ public class DeviceData {
             return this;
         }
 
+        public Builder withAudioPeakEnergyDB(final Integer audioPeakEnergyDB) {
+            final float decibelValue = DataUtils.convertAudioRawToDB(audioPeakEnergyDB);
+            this.audioPeakEnergyDB = DataUtils.floatToDbIntAudioDecibels(decibelValue);
+            return this;
+        }
+
         public Builder withAlreadyCalibratedAudioPeakBackgroundDB(final Integer audioPeakBackgroundDB) {
             this.audioPeakBackgroundDB = audioPeakBackgroundDB;
             return this;
@@ -382,7 +397,7 @@ public class DeviceData {
                     this.ambientAirQuality, this.ambientAirQualityRaw, this.ambientDustVariance, this.ambientDustMin, this.ambientDustMax,
                     this.ambientLight,this.ambientLightFloat, this.ambientLightVariance, this.ambientLightPeakiness, this.dateTimeUTC, this.offsetMillis,
                     this.firmwareVersion, this.waveCount, this.holdCount,
-                    this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB);
+                    this.audioNumDisturbances, this.audioPeakDisturbancesDB, this.audioPeakBackgroundDB, this.audioPeakEnergyDB);
         }
 
     }
@@ -410,6 +425,7 @@ public class DeviceData {
                 .add("hold_count", holdCount)
                 .add(("audio_num_disturbances"), audioNumDisturbances)
                 .add(("audio_peak_disturbances_db"), audioPeakDisturbancesDB)
+                .add(("audio_peak_energy_db"), audioPeakEnergyDB)
                 .toString();
     }
 }

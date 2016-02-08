@@ -124,4 +124,5 @@ CREATE TRIGGER device_sensors_master_insert_trigger
   FOR EACH ROW
   EXECUTE PROCEDURE device_sensors_master_insert_function();
 
-
+-- add new sound column (2016-02-08 https://github.com/hello/bugs/issues/603)
+ALTER TABLE device_sensors_master ADD COLUMN audio_peak_energy_db INTEGER DEFAULT 0;

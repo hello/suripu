@@ -204,6 +204,15 @@ public final class DataInputProtos {
      * <code>optional int32 audio_peak_background_energy_db = 20;</code>
      */
     int getAudioPeakBackgroundEnergyDb();
+
+    /**
+     * <code>optional int32 audio_peak_energy_db = 21;</code>
+     */
+    boolean hasAudioPeakEnergyDb();
+    /**
+     * <code>optional int32 audio_peak_energy_db = 21;</code>
+     */
+    int getAudioPeakEnergyDb();
   }
   /**
    * Protobuf type {@code periodic_data}
@@ -352,6 +361,11 @@ public final class DataInputProtos {
             case 160: {
               bitField0_ |= 0x00040000;
               audioPeakBackgroundEnergyDb_ = input.readInt32();
+              break;
+            }
+            case 168: {
+              bitField0_ |= 0x00080000;
+              audioPeakEnergyDb_ = input.readInt32();
               break;
             }
           }
@@ -745,6 +759,21 @@ public final class DataInputProtos {
       return audioPeakBackgroundEnergyDb_;
     }
 
+    public static final int AUDIO_PEAK_ENERGY_DB_FIELD_NUMBER = 21;
+    private int audioPeakEnergyDb_;
+    /**
+     * <code>optional int32 audio_peak_energy_db = 21;</code>
+     */
+    public boolean hasAudioPeakEnergyDb() {
+      return ((bitField0_ & 0x00080000) == 0x00080000);
+    }
+    /**
+     * <code>optional int32 audio_peak_energy_db = 21;</code>
+     */
+    public int getAudioPeakEnergyDb() {
+      return audioPeakEnergyDb_;
+    }
+
     private void initFields() {
       unixTime_ = 0;
       light_ = 0;
@@ -765,6 +794,7 @@ public final class DataInputProtos {
       audioNumDisturbances_ = 0;
       audioPeakDisturbanceEnergyDb_ = 0;
       audioPeakBackgroundEnergyDb_ = 0;
+      audioPeakEnergyDb_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -835,6 +865,9 @@ public final class DataInputProtos {
       }
       if (((bitField0_ & 0x00040000) == 0x00040000)) {
         output.writeInt32(20, audioPeakBackgroundEnergyDb_);
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        output.writeInt32(21, audioPeakEnergyDb_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -920,6 +953,10 @@ public final class DataInputProtos {
       if (((bitField0_ & 0x00040000) == 0x00040000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(20, audioPeakBackgroundEnergyDb_);
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(21, audioPeakEnergyDb_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1076,6 +1113,8 @@ public final class DataInputProtos {
         bitField0_ = (bitField0_ & ~0x00020000);
         audioPeakBackgroundEnergyDb_ = 0;
         bitField0_ = (bitField0_ & ~0x00040000);
+        audioPeakEnergyDb_ = 0;
+        bitField0_ = (bitField0_ & ~0x00080000);
         return this;
       }
 
@@ -1180,6 +1219,10 @@ public final class DataInputProtos {
           to_bitField0_ |= 0x00040000;
         }
         result.audioPeakBackgroundEnergyDb_ = audioPeakBackgroundEnergyDb_;
+        if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
+          to_bitField0_ |= 0x00080000;
+        }
+        result.audioPeakEnergyDb_ = audioPeakEnergyDb_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1256,6 +1299,9 @@ public final class DataInputProtos {
         }
         if (other.hasAudioPeakBackgroundEnergyDb()) {
           setAudioPeakBackgroundEnergyDb(other.getAudioPeakBackgroundEnergyDb());
+        }
+        if (other.hasAudioPeakEnergyDb()) {
+          setAudioPeakEnergyDb(other.getAudioPeakEnergyDb());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2003,6 +2049,38 @@ public final class DataInputProtos {
       public Builder clearAudioPeakBackgroundEnergyDb() {
         bitField0_ = (bitField0_ & ~0x00040000);
         audioPeakBackgroundEnergyDb_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int audioPeakEnergyDb_ ;
+      /**
+       * <code>optional int32 audio_peak_energy_db = 21;</code>
+       */
+      public boolean hasAudioPeakEnergyDb() {
+        return ((bitField0_ & 0x00080000) == 0x00080000);
+      }
+      /**
+       * <code>optional int32 audio_peak_energy_db = 21;</code>
+       */
+      public int getAudioPeakEnergyDb() {
+        return audioPeakEnergyDb_;
+      }
+      /**
+       * <code>optional int32 audio_peak_energy_db = 21;</code>
+       */
+      public Builder setAudioPeakEnergyDb(int value) {
+        bitField0_ |= 0x00080000;
+        audioPeakEnergyDb_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 audio_peak_energy_db = 21;</code>
+       */
+      public Builder clearAudioPeakEnergyDb() {
+        bitField0_ = (bitField0_ & ~0x00080000);
+        audioPeakEnergyDb_ = 0;
         onChanged();
         return this;
       }
@@ -6667,7 +6745,7 @@ public final class DataInputProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\025periodic.server.proto\"\272\003\n\rperiodic_dat" +
+      "\n\025periodic.server.proto\"\330\003\n\rperiodic_dat" +
       "a\022\021\n\tunix_time\030\001 \001(\005\022\r\n\005light\030\002 \001(\005\022\023\n\013t" +
       "emperature\030\003 \001(\005\022\020\n\010humidity\030\004 \001(\005\022\014\n\004du" +
       "st\030\005 \001(\005\022\014\n\004name\030\006 \001(\t\022\013\n\003mac\030\007 \001(\014\022\031\n\021l" +
@@ -6678,25 +6756,26 @@ public final class DataInputProtos {
       "e_count\030\020 \001(\005\022\022\n\nhold_count\030\021 \001(\005\022\036\n\026aud" +
       "io_num_disturbances\030\022 \001(\005\022(\n audio_peak_",
       "disturbance_energy_db\030\023 \001(\005\022\'\n\037audio_pea" +
-      "k_background_energy_db\030\024 \001(\005\"\201\003\n\025batched" +
-      "_periodic_data\022\034\n\004data\030\001 \003(\0132\016.periodic_" +
-      "data\022\021\n\tdevice_id\030\002 \002(\t\022\030\n\020firmware_vers" +
-      "ion\030\003 \002(\005\022\030\n\020uptime_in_second\030\004 \001(\005\022\026\n\016c" +
-      "onnected_ssid\030\007 \001(\t\0226\n\004scan\030\n \003(\0132(.batc" +
-      "hed_periodic_data.wifi_access_point\022\031\n\021m" +
-      "essages_in_queue\030\013 \001(\005\032\227\001\n\021wifi_access_p" +
-      "oint\022\014\n\004ssid\030\001 \001(\t\022\014\n\004rssi\030\002 \001(\005\022E\n\007ante" +
-      "nna\030\003 \001(\01624.batched_periodic_data.wifi_a",
-      "ccess_point.AntennaType\"\037\n\013AntennaType\022\007" +
-      "\n\003IFA\020\001\022\007\n\003PCB\020\002\"7\n\017AccountMetadata\022\022\n\na" +
-      "ccount_id\030\001 \001(\003\022\020\n\010timezone\030\002 \001(\t\"\346\001\n\027Ba" +
-      "tchPeriodicDataWorker\022$\n\004data\030\001 \001(\0132\026.ba" +
-      "tched_periodic_data\022\022\n\nip_address\030\002 \001(\t\022" +
-      "\023\n\013received_at\030\003 \001(\003\022\030\n\020uptime_in_second" +
-      "\030\004 \001(\005\022#\n\ttimezones\030\005 \003(\0132\020.AccountMetad" +
-      "ata\022\037\n\027firmware_middle_version\030\006 \001(\t\022\034\n\024" +
-      "firmware_top_version\030\007 \001(\tB-\n\032com.hello." +
-      "suripu.api.inputB\017DataInputProtos"
+      "k_background_energy_db\030\024 \001(\005\022\034\n\024audio_pe" +
+      "ak_energy_db\030\025 \001(\005\"\201\003\n\025batched_periodic_" +
+      "data\022\034\n\004data\030\001 \003(\0132\016.periodic_data\022\021\n\tde" +
+      "vice_id\030\002 \002(\t\022\030\n\020firmware_version\030\003 \002(\005\022" +
+      "\030\n\020uptime_in_second\030\004 \001(\005\022\026\n\016connected_s" +
+      "sid\030\007 \001(\t\0226\n\004scan\030\n \003(\0132(.batched_period" +
+      "ic_data.wifi_access_point\022\031\n\021messages_in" +
+      "_queue\030\013 \001(\005\032\227\001\n\021wifi_access_point\022\014\n\004ss" +
+      "id\030\001 \001(\t\022\014\n\004rssi\030\002 \001(\005\022E\n\007antenna\030\003 \001(\0162",
+      "4.batched_periodic_data.wifi_access_poin" +
+      "t.AntennaType\"\037\n\013AntennaType\022\007\n\003IFA\020\001\022\007\n" +
+      "\003PCB\020\002\"7\n\017AccountMetadata\022\022\n\naccount_id\030" +
+      "\001 \001(\003\022\020\n\010timezone\030\002 \001(\t\"\346\001\n\027BatchPeriodi" +
+      "cDataWorker\022$\n\004data\030\001 \001(\0132\026.batched_peri" +
+      "odic_data\022\022\n\nip_address\030\002 \001(\t\022\023\n\013receive" +
+      "d_at\030\003 \001(\003\022\030\n\020uptime_in_second\030\004 \001(\005\022#\n\t" +
+      "timezones\030\005 \003(\0132\020.AccountMetadata\022\037\n\027fir" +
+      "mware_middle_version\030\006 \001(\t\022\034\n\024firmware_t" +
+      "op_version\030\007 \001(\tB-\n\032com.hello.suripu.api",
+      ".inputB\017DataInputProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -6715,7 +6794,7 @@ public final class DataInputProtos {
     internal_static_periodic_data_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_periodic_data_descriptor,
-        new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", "AudioNumDisturbances", "AudioPeakDisturbanceEnergyDb", "AudioPeakBackgroundEnergyDb", });
+        new java.lang.String[] { "UnixTime", "Light", "Temperature", "Humidity", "Dust", "Name", "Mac", "LightVariability", "LightTonality", "FirmwareVersion", "DeviceId", "DustVariability", "DustMax", "DustMin", "WaveCount", "HoldCount", "AudioNumDisturbances", "AudioPeakDisturbanceEnergyDb", "AudioPeakBackgroundEnergyDb", "AudioPeakEnergyDb", });
     internal_static_batched_periodic_data_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_batched_periodic_data_fieldAccessorTable = new
