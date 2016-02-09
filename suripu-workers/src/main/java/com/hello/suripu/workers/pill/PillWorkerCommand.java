@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.PillDataIngestDAO;
+import com.hello.suripu.core.db.PillProxDataDAODynamoDB;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
@@ -143,6 +144,8 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
             pillDataIngestDAO = sensorsDBI.onDemand(TrackerMotionDAO.class);
         }
 
+
+        final PillProxDataDAODynamoDB pillProxDataDAODynamoDB = new PillProxDataDAODynamoDB(pillDynamoDB, "dev_pill_prod_");
         final IRecordProcessorFactory factory = new SavePillDataProcessorFactory(
                 pillDataIngestDAO,
                 configuration.getBatchSize(),
@@ -150,6 +153,7 @@ public final class PillWorkerCommand extends WorkerEnvironmentCommand<PillWorker
                 pillKeyStore,
                 deviceDAO,
                 pillHeartBeatDAODynamoDB,
+                pillProxDataDAODynamoDB,
                 savePillHeartBeat
         );
         final Worker worker = new Worker(factory, kinesisConfig);
