@@ -409,7 +409,6 @@ VALUES (
 );
 
 ---- insert the response text into response_choices
-DeviceDataDAO
 INSERT INTO response_choices (question_id, response_text)
     (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 1));
 
