@@ -353,7 +353,7 @@ public class BedLightDurationInsightsTest {
         final Long mock_accountId = 9999L;
         final Long mock_deviceId = 9999L;
         final Integer offsetMillis = -28800000;
-        return new DeviceData(mock_accountId, mock_deviceId, 0, 0, 0, 0, 0, 0, 0, lightValue, lightValue, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0);
+        return new DeviceData(mock_accountId, mock_deviceId, 0, 0, 0, 0, 0, 0, 0, lightValue, lightValue, 0, 0, timestamp, offsetMillis, 1, 1, 1, 0, 0, 0, 0);
     }
 
 }

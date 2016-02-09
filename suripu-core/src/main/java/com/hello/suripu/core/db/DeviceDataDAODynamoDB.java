@@ -75,6 +75,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         AMBIENT_HUMIDITY ("hum", "N"),
         AMBIENT_AIR_QUALITY_RAW ("aqr", "N"),
         AUDIO_PEAK_BACKGROUND_DB ("apbg", "N"),
+        AUDIO_PEAK_ENERGY_DB ("apedb", "N"),
         AUDIO_PEAK_DISTURBANCES_DB ("apd", "N"),
         AUDIO_NUM_DISTURBANCES ("and", "N"),
         OFFSET_MILLIS ("om", "N"),
@@ -220,6 +221,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         item.put(DeviceDataAttribute.AMBIENT_HUMIDITY.name, toAttributeValue(data.ambientHumidity));
         item.put(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW.name, toAttributeValue(data.ambientAirQualityRaw));
         item.put(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB.name, toAttributeValue(data.audioPeakBackgroundDB));
+        item.put(DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB.name, toAttributeValue(data.audioPeakEnergyDB));
         item.put(DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB.name, toAttributeValue(data.audioPeakDisturbancesDB));
         item.put(DeviceDataAttribute.AUDIO_NUM_DISTURBANCES.name, toAttributeValue(data.audioNumDisturbances));
         item.put(DeviceDataAttribute.WAVE_COUNT.name, toAttributeValue(data.waveCount));
@@ -292,6 +294,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .withHoldCount((int) aggregator.sum(DeviceDataAttribute.HOLD_COUNT.name))
                 .withAudioNumDisturbances((int) aggregator.max(DeviceDataAttribute.AUDIO_NUM_DISTURBANCES.name))
                 .withAudioPeakBackgroundDB((int) aggregator.max(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB.name))
+                .withAudioPeakEnergyDB((int) aggregator.max(DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB.name))
                 .withAudioPeakDisturbancesDB((int) aggregator.max(DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB.name))
                 .withAmbientAirQualityRaw((int) aggregator.roundedMean(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW.name))
                 .build();
@@ -572,6 +575,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .withHoldCount(DeviceDataAttribute.HOLD_COUNT.getInteger(item))
                 .withAudioNumDisturbances(DeviceDataAttribute.AUDIO_NUM_DISTURBANCES.getInteger(item))
                 .withAudioPeakBackgroundDB(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB.getInteger(item))
+                .withAudioPeakEnergyDB(DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB.getInteger(item))
                 .withAudioPeakDisturbancesDB(DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB.getInteger(item))
                 .withAmbientAirQualityRaw(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW.getInteger(item))
                 .build();
@@ -916,6 +920,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         final Integer audioNum = DeviceDataAttribute.AUDIO_NUM_DISTURBANCES.getInteger(item);
         final Integer audioPeak = DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB.getInteger(item);
         final Integer audioBG = DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB.getInteger(item);
+        final Integer audioPeakEnergy = DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB.getInteger(item);
 
         return new DeviceData.Builder()
                 .withAccountId(Long.valueOf(DeviceDataAttribute.ACCOUNT_ID.get(item).getN()))
@@ -927,6 +932,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .withAmbientAirQualityRaw(dust)
                 .withAlreadyCalibratedAudioPeakBackgroundDB(audioBG)    // use data as-is
                 .withAlreadyCalibratedAudioPeakDisturbancesDB(audioPeak)
+                .withAlreadyCalibratedPeakEnergyDB(audioPeakEnergy)
                 .withAudioNumDisturbances(audioNum)
                 .withOffsetMillis(offsetMillis)
                 .withDateTimeUTC(dateTimeUTC)

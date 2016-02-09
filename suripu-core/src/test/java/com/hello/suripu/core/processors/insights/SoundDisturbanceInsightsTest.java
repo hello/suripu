@@ -55,9 +55,9 @@ public class SoundDisturbanceInsightsTest {
         final int numDisturbance = 2;
 
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, SF_OFFSET_MILLIS, 0, 0, 0, numDisturbance, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, SF_OFFSET_MILLIS, 0, 0, 0, numDisturbance, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, SF_OFFSET_MILLIS, 0, 0, 0, numDisturbance, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, SF_OFFSET_MILLIS, 0, 0, 0, numDisturbance, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, SF_OFFSET_MILLIS, 0, 0, 0, numDisturbance, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, SF_OFFSET_MILLIS, 0, 0, 0, numDisturbance, 0, 0, 0));
 
         final Integer result = SoundDisturbance.getSumDisturbance(data);
         final Integer expectedResult = 6;
