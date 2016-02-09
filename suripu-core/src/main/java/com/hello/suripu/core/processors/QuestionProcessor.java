@@ -175,6 +175,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
                     // if anomaly NOT enabled, SKIP
                     if (!hasAnomalyLightQuestionEnabled(accountId) && questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                        LOGGER.debug("key=anomaly-question value=not-enabled-for-{}", accountId);
                         continue;
                     }
 
@@ -307,6 +308,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         // check if target date is too old
         if (Days.daysBetween(nightDate, accountToday).getDays() >= ANOMALY_TOO_OLD_THRESHOLD) {
+            LOGGER.debug("key=skip-anomaly-light-too-old value=account-{}-night-{}", accountId, nightDate);
             return false;
         }
 
@@ -320,17 +322,18 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
             final DateTime now = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
             final Days lastAskedDays = Days.daysBetween(askedQuestions.get(0).created.withTimeAtStartOfDay(), now);
             if (lastAskedDays.getDays() <= DAYS_BETWEEN_ANOMALY_QUESTIONS) {
-                LOGGER.debug("key=skip-light-anomaly value=recent-asked days={}", lastAskedDays.getDays());
+                LOGGER.debug("key=skip-light-anomaly-recently-asked value=account-{}-days-{}", accountId, lastAskedDays.getDays());
                 return false;
             }
         }
 
         final Long savedID = this.saveGeneratedQuestion(accountId, lightAnomalyId, accountToday);
         if (savedID > 0L) {
-            LOGGER.debug("key=saved-light-anomaly-q value=account-{} date={}", accountId, accountToday);
+            LOGGER.debug("key=saved-question-anomaly-light value=account-{}-date-{}", accountId, accountToday);
             return true;
         }
 
+        LOGGER.debug("key=nothing-anomaly-light value=account-{}-night-{}", accountId, nightDate);
         return false;
     }
 
