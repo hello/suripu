@@ -42,7 +42,8 @@ public enum OAuthScope {
     SUPPORT(31),
     STORE_FEEDBACK(32),
     APP_STATS(33),
-    STORE_READ(34);  // for linking orders
+    STORE_READ(34),
+    ADMIN_QUESTIONS_WRITE(35);  // for linking orders
 
     private int value;
 

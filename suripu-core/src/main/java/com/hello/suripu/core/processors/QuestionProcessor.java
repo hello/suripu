@@ -4,15 +4,19 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
+import com.hello.suripu.core.models.AccountQuestion;
 import com.hello.suripu.core.models.AccountQuestionResponses;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import com.hello.suripu.core.models.Response;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +33,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
- * Created by kingshy on 10/24/14.
+ * Created by ksg on 10/24/14
  */
-public class QuestionProcessor {
+public class QuestionProcessor extends FeatureFlippedProcessor{
     public static final int DEFAULT_NUM_QUESTIONS = 2;
     public static final int DEFAULT_NUM_MORE_QUESTIONS = 5;
 
@@ -42,12 +46,16 @@ public class QuestionProcessor {
     private static final int NEW_USER_NUM_Q = 3; // no. of on-boarding questions
     private static final int OLD_ACCOUNT_AGE = 7; // older accounts are more than this many days
 
+    public static final int DAYS_BETWEEN_ANOMALY_QUESTIONS = 14; // no more than 1 every 2 weeks
+    public static final int ANOMALY_TOO_OLD_THRESHOLD = 2; // night date older than this number of days
+
     private final QuestionResponseDAO questionResponseDAO;
     private final int checkSkipsNum;
 
     private final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds = ArrayListMultimap.create();
     private final Map<Integer, Question> questionIdMap = new HashMap<>();
     private final Set<Integer> baseQuestionIds = new HashSet<>();
+    private final Map<QuestionCategory, List<Integer>> questionCategoryMap = new HashMap<>();
 
     public static class Builder {
         private QuestionResponseDAO questionResponseDAO;
@@ -55,6 +63,7 @@ public class QuestionProcessor {
         private ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds;
         private Map<Integer, Question> questionIdMap;
         private Set<Integer> baseQuestionIds;
+        private Map<QuestionCategory, List<Integer>> questionCategoryMap;
 
         public Builder withQuestionResponseDAO(final QuestionResponseDAO questionResponseDAO) {
             this.questionResponseDAO = questionResponseDAO;
@@ -70,6 +79,7 @@ public class QuestionProcessor {
             this.availableQuestionIds = ArrayListMultimap.create();
             this.questionIdMap = new HashMap<>();
             this.baseQuestionIds = new HashSet<>();
+            this.questionCategoryMap = Maps.newHashMap();
 
             final ImmutableList<Question> allQuestions = questionResponseDAO.getAllQuestions();
             for (final Question question : allQuestions) {
@@ -78,10 +88,21 @@ public class QuestionProcessor {
                     // don't show these questions till dependency and asktime is implemented
                     continue;
                 }
-                this.availableQuestionIds.put(question.frequency, question.id);
+
+                // note: trigger questions should not be added to the pool
+                if (!question.frequency.equals(Question.FREQUENCY.TRIGGER)) {
+                    this.availableQuestionIds.put(question.frequency, question.id);
+                }
+
                 this.questionIdMap.put(question.id, question);
                 if (question.frequency == Question.FREQUENCY.ONE_TIME) {
                     baseQuestionIds.add(question.id);
+                }
+
+                if (questionCategoryMap.containsKey(question.category)) {
+                    questionCategoryMap.get(question.category).add(question.id);
+                } else {
+                    questionCategoryMap.put(question.category, Lists.newArrayList(question.id));
                 }
             }
 
@@ -90,19 +111,22 @@ public class QuestionProcessor {
 
         public QuestionProcessor build() {
             return new QuestionProcessor(this.questionResponseDAO, this.checkSkipsNum,
-                    this.availableQuestionIds, this.questionIdMap, this.baseQuestionIds);
+                    this.availableQuestionIds, this.questionIdMap, this.baseQuestionIds,
+                    this.questionCategoryMap);
         }
     }
 
     public QuestionProcessor(final QuestionResponseDAO questionResponseDAO, final int checkSkipsNum,
                              final ListMultimap<Question.FREQUENCY, Integer> availableQuestionIds,
                              final Map<Integer, Question> questionIdMap,
-                             final Set<Integer> baseQuestionIds) {
+                             final Set<Integer> baseQuestionIds,
+                             final Map<QuestionCategory, List<Integer>> questionCategoryMap) {
         this.questionResponseDAO = questionResponseDAO;
         this.checkSkipsNum = checkSkipsNum;
         this.availableQuestionIds.putAll(availableQuestionIds);
         this.questionIdMap.putAll(questionIdMap);
         this.baseQuestionIds.addAll(baseQuestionIds);
+        this.questionCategoryMap.putAll(questionCategoryMap);
     }
     /**
      * Get a list of questions for the user, or pre-generate one
@@ -147,7 +171,15 @@ public class QuestionProcessor {
                 final Integer qid = question.questionId;
                 if (!preGeneratedQuestions.containsKey(qid)) {
                     final Long accountQId = question.id;
-                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(this.questionIdMap.get(qid),
+                    final Question questionTemplate = this.questionIdMap.get(qid);
+
+                    // if anomaly NOT enabled, SKIP
+                    if (!hasAnomalyLightQuestionEnabled(accountId) && questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                        LOGGER.debug("key=anomaly-question value=not-enabled-for-{}", accountId);
+                        continue;
+                    }
+
+                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
                                                                                   accountQId,
                                                                                   today,
                                                                                   question.questionCreationDate));
@@ -272,20 +304,49 @@ public class QuestionProcessor {
         return skippedIds;
     }
 
+    public Boolean insertLightAnomalyQuestion(final Long accountId, final DateTime nightDate, final DateTime accountToday) {
+
+        // check if target date is too old
+        if (Days.daysBetween(nightDate, accountToday).getDays() >= ANOMALY_TOO_OLD_THRESHOLD) {
+            LOGGER.debug("key=skip-anomaly-light-too-old value=account-{}-night-{}", accountId, nightDate);
+            return false;
+        }
+
+        // check how often we send this question to the user.
+        // For now, no more than 1 in 2 weeks
+        final Integer lightAnomalyId = this.questionCategoryMap.get(QuestionCategory.ANOMALY_LIGHT).get(0);
+        final ImmutableList<AccountQuestion> askedQuestions = questionResponseDAO.getRecentAskedQuestionByQuestionId(
+                accountId, lightAnomalyId, 1);
+
+        if (!askedQuestions.isEmpty()) {
+            final DateTime now = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+            final Days lastAskedDays = Days.daysBetween(askedQuestions.get(0).created.withTimeAtStartOfDay(), now);
+            if (lastAskedDays.getDays() <= DAYS_BETWEEN_ANOMALY_QUESTIONS) {
+                LOGGER.debug("key=skip-light-anomaly-recently-asked value=account-{}-days-{}", accountId, lastAskedDays.getDays());
+                return false;
+            }
+        }
+
+        final Long savedID = this.saveGeneratedQuestion(accountId, lightAnomalyId, accountToday);
+        if (savedID > 0L) {
+            LOGGER.debug("key=saved-question-anomaly-light value=account-{}-date-{}", accountId, accountToday);
+            return true;
+        }
+
+        LOGGER.debug("key=nothing-anomaly-light value=account-{}-night-{}", accountId, nightDate);
+        return false;
+    }
+
     private List<Question> getOnBoardingQuestions(Long accountId, DateTime today) {
 
         // check if user has already responded to any onboarding questions
         final Set<Integer> answeredIds = new HashSet<>(this.questionResponseDAO.getAnsweredOnboardingQuestions(accountId));
 
         final List<Question> onboardingQs = new ArrayList<>();
-        if (!answeredIds.contains(1)) {
-            onboardingQs.add(questionIdMap.get(1));
-        }
-        if (!answeredIds.contains(2)) {
-            onboardingQs.add(questionIdMap.get(2));
-        }
-        if (!answeredIds.contains(3)) {
-            onboardingQs.add(questionIdMap.get(3));
+        for (final Integer qid : this.questionCategoryMap.get(QuestionCategory.ONBOARDING)) {
+            if (!answeredIds.contains(qid)) {
+                onboardingQs.add(questionIdMap.get(qid));
+            }
         }
 
         // None of questions has been answered, insert into DB
@@ -486,7 +547,7 @@ public class QuestionProcessor {
 
         final Set<Integer> uniqueIds = new HashSet<>();
         for (final Response response : recentResponses) {
-            if (newbie && response.questionId == newbieQuestionId) {
+            if (newbie && response.questionId.equals(newbieQuestionId)) {
                 // check that we haven't asked this daily question for this user yet
                 if (response.askTime.isBefore(today)) {
                     continue;

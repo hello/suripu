@@ -3,6 +3,7 @@ package com.hello.suripu.core.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -141,12 +142,16 @@ public class Question {
     @JsonIgnore
     final public DateTime accountCreationDate; // UTC
 
+    @JsonIgnore
+    final public QuestionCategory category;
+
     public Question(final Integer id, final Long accountQuestionId, final String text, final String lang,
                     final Type type, final FREQUENCY frequency, final ASK_TIME askTime,
                     final int dependency, final int parentId,
                     final DateTime askLocalDate, final List<Choice> choiceList,
                     final AccountInfo.Type accountInfo,
-                    final DateTime accountCreationDate) {
+                    final DateTime accountCreationDate,
+                    final QuestionCategory category) {
         this.id = id;
         this.accountQuestionId = accountQuestionId;
         this.text = text;
@@ -160,6 +165,7 @@ public class Question {
         this.choiceList = choiceList;
         this.accountInfo = accountInfo;
         this.accountCreationDate = accountCreationDate;
+        this.category = category;
     }
 
     public static Question withAskTimeAccountQId(final Question question,
@@ -169,7 +175,7 @@ public class Question {
         return new Question(question.id, accountQuestionId, question.text, question.lang,
                             question.type, question.frequency, question.askTime,
                             question.dependency, question.parentId, askLocalTime, question.choiceList, question.accountInfo,
-                            created);
+                            created, question.category);
     }
 
 }

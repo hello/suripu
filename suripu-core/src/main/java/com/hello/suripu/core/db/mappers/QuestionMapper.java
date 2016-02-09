@@ -4,6 +4,7 @@ import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Question;
 
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
@@ -43,18 +44,20 @@ public class QuestionMapper implements ResultSetMapper<Question> {
         Long accountQuestionId = 0L; // for account_questions table id field
 
         final Question question = new Question(question_id,
-                                               accountQuestionId,
-                                               r.getString("question_text"),
-                                               r.getString("lang"),
-                                               Question.Type.fromString(r.getString("response_type")),
-                                               Question.FREQUENCY.fromString(r.getString("frequency")),
-                                               Question.ASK_TIME.fromString(r.getString("ask_time")),
-                                               r.getInt("dependency"),
-                                               r.getInt("parent_id"),
-                                               createdLocal,
-                                               choices,
-                                               AccountInfo.Type.fromString(r.getString("account_info")),
-                                               createdLocal);
+                accountQuestionId,
+                r.getString("question_text"),
+                r.getString("lang"),
+                Question.Type.fromString(r.getString("response_type")),
+                Question.FREQUENCY.fromString(r.getString("frequency")),
+                Question.ASK_TIME.fromString(r.getString("ask_time")),
+                r.getInt("dependency"),
+                r.getInt("parent_id"),
+                createdLocal,
+                choices,
+                AccountInfo.Type.fromString(r.getString("account_info")),
+                createdLocal,
+                QuestionCategory.fromString(r.getString("category"))
+        );
 
         return question;
     }
