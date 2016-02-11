@@ -34,9 +34,9 @@ public class HumidityInsightsTest {
         final int temp = 70;
 
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity + 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity - 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
 
 
         final Integer result = Humidity.getMedianHumidity(data);
@@ -54,8 +54,8 @@ public class HumidityInsightsTest {
         final int temp = 70;
 
         final List<DeviceData> data = Lists.newArrayList();
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
-        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
+        data.add(new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, temp, humidity + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, FAKE_TIMESTAMP, FAKE_OFFSET_MILLIS, 0, 0, 0, 0, 0, 0, 0));
 
 
         final Integer result = Humidity.getMedianHumidity(data);

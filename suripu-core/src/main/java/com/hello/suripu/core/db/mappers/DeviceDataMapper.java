@@ -24,6 +24,8 @@ public class DeviceDataMapper implements ResultSetMapper<DeviceData>{
             lux = (int)fLux;
         }
 
+        final Integer audioPeakEnergyDB = r.getInt("audio_peak_energy_db");
+
         final DeviceData deviceData = new DeviceData(
                 r.getLong("account_id"),
                 r.getLong("device_id"),
@@ -47,7 +49,8 @@ public class DeviceDataMapper implements ResultSetMapper<DeviceData>{
                 r.getInt("hold_count"),
                 r.getInt("audio_num_disturbances"),
                 r.getInt("audio_peak_disturbances_db"),
-                r.getInt("audio_peak_background_db")
+                r.getInt("audio_peak_background_db"),
+                audioPeakEnergyDB != null ? audioPeakEnergyDB : 0
         );
         return deviceData;
     }

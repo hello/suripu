@@ -103,4 +103,12 @@ public interface QuestionResponseReadDAO {
             "WHERE account_id = :account_id AND R.question_id = :question_id ORDER BY id DESC")
     ImmutableList<Response> getAccountResponseByQuestionId(@Bind("account_id") long account_id,
                                                            @Bind("question_id") int question_id);
+
+    @RegisterMapper(AccountQuestionMapper.class)
+    @SqlQuery("SELECT * FROM account_questions WHERE account_id = :account_id and question_id = :question_id ORDER BY id DESC LIMIT :limit")
+    ImmutableList<AccountQuestion> getRecentAskedQuestionByQuestionId (@Bind("account_id") final long account_id,
+                                                                       @Bind("question_id") final int question_id,
+                                                                       @Bind("limit") final int limit);
+
+
 }

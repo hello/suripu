@@ -19,6 +19,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.responses.DeviceDataResponse;
@@ -931,6 +932,53 @@ public class DeviceDataDAODynamoDBIT {
             final long end = System.nanoTime();
             LOGGER.debug("Time: {}", (end - start) / 1000000.0);
         }
+    }
+
+    @Test
+    public void testAggregateDynamoDBItemsToDeviceDataWithMissingColumns() {
+        final List<Map<String, AttributeValue>> items = Lists.newArrayList();
+        final Integer slotDuration = 1;
+        final DateTime firstTime = new DateTime(2015, 10, 10, 1, 1);
+        final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
+        final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
+        final int numData = 5;
+        for (int i = 0; i < numData; i++) {
+            final Map<String, AttributeValue> item = Maps.newHashMap();
+            final DateTime currTime = firstTime.plusMinutes(i);
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.ACCOUNT_ID.shortName(), new AttributeValue().withN("0"));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.LOCAL_UTC_TIMESTAMP.shortName(), new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER)));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.OFFSET_MILLIS.shortName(), new AttributeValue().withN("0"));
+            item.put(DeviceDataDAODynamoDB.DeviceDataAttribute.RANGE_KEY.shortName(), new AttributeValue().withS(currTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + "hi"));
+            items.add(item);
+        }
+
+        final List<DeviceData> deviceDataList = deviceDataDAODynamoDB.aggregateDynamoDBItemsToDeviceData(items, slotDuration);
+        assertThat(deviceDataList.size(), is(numData));
+        for (int i = 0; i < numData; i++) {
+            final DeviceData data = deviceDataList.get(i);
+            assertThat(data.audioPeakEnergyDB, is(0));
+        }
+    }
+
+    @Test
+    public void testAttributeMapToDeviceData() {
+        final DateTime dateTime = new DateTime(2015, 10, 10, 1, 1, DateTimeZone.UTC);
+        final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
+        final DateTimeFormatter DATE_TIME_WRITE_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
+        final Map<String, AttributeValue> item = ImmutableMap.of(
+                DeviceDataDAODynamoDB.DeviceDataAttribute.ACCOUNT_ID.shortName(), new AttributeValue().withN("0"),
+                DeviceDataDAODynamoDB.DeviceDataAttribute.LOCAL_UTC_TIMESTAMP.shortName(), new AttributeValue().withS(dateTime.toString(DATE_TIME_WRITE_FORMATTER)),
+                DeviceDataDAODynamoDB.DeviceDataAttribute.OFFSET_MILLIS.shortName(), new AttributeValue().withN("0"),
+                DeviceDataDAODynamoDB.DeviceDataAttribute.RANGE_KEY.shortName(), new AttributeValue().withS(dateTime.toString(DATE_TIME_WRITE_FORMATTER) + "|" + "hi"),
+                DeviceDataDAODynamoDB.DeviceDataAttribute.WAVE_COUNT.shortName(), new AttributeValue().withN("1")
+        );
+
+        final DeviceData deviceData = deviceDataDAODynamoDB.attributeMapToDeviceData(item);
+        assertThat(deviceData.accountId, is(0L));
+        assertThat(deviceData.dateTimeUTC, is(dateTime));
+        assertThat(deviceData.offsetMillis, is(0));
+        assertThat(deviceData.waveCount, is(1));
+        assertThat(deviceData.audioPeakEnergyDB, is(0));
     }
 
     @Test

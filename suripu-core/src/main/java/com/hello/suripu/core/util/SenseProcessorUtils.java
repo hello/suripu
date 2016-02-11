@@ -118,7 +118,8 @@ public class SenseProcessorUtils {
                 .withHoldCount(periodicData.hasHoldCount() ? periodicData.getHoldCount() : 0)
                 .withAudioNumDisturbances(periodicData.hasAudioNumDisturbances() ? periodicData.getAudioNumDisturbances() : 0)
                 .withAudioPeakDisturbancesDB(periodicData.hasAudioPeakDisturbanceEnergyDb() ? periodicData.getAudioPeakDisturbanceEnergyDb() : 0)
-                .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0);
+                .withAudioPeakBackgroundDB(periodicData.hasAudioPeakBackgroundEnergyDb() ? periodicData.getAudioPeakBackgroundEnergyDb() : 0)
+                .withAudioPeakEnergyDB(periodicData.hasAudioPeakEnergyDb() ? periodicData.getAudioPeakEnergyDb() : 0);
     }
 
 }

@@ -70,6 +70,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             "ROUND(MAX(audio_num_disturbances)) AS audio_num_disturbances," +
             "ROUND(MAX(audio_peak_disturbances_db)) AS audio_peak_disturbances_db," +
             "ROUND(MAX(audio_peak_background_db)) AS audio_peak_background_db," +
+            "ROUND(MAX(audio_peak_energy_db)) AS audio_peak_energy_db," +
             "date_trunc('hour', ts) + (CAST(date_part('minute', ts) AS integer) / :slot_duration) * :slot_duration * interval '1 min' AS ts_bucket ";
 
     // TODO: Add wave_count, hold_count into table.
@@ -77,24 +78,24 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
             "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, " +
             "firmware_version, wave_count, hold_count, " +
-            "audio_num_disturbances, audio_peak_disturbances_db, audio_peak_background_db) VALUES " +
+            "audio_num_disturbances, audio_peak_disturbances_db, audio_peak_background_db, audio_peak_energy_db) VALUES " +
             "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
             ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
             ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
             ":firmware_version, :wave_count, :hold_count, " +
-            ":audio_num_disturbances, :audio_peak_disturbances_db, :audio_peak_background_db)")
+            ":audio_num_disturbances, :audio_peak_disturbances_db, :audio_peak_background_db, :audio_peak_energy_db)")
     public abstract void insert(@BindDeviceData final DeviceData deviceData);
 
     @SqlBatch("INSERT INTO device_sensors_master (account_id, device_id, ts, local_utc_ts, offset_millis, " +
             "ambient_temp, ambient_light, ambient_light_variance, ambient_light_peakiness, ambient_humidity, " +
             "ambient_air_quality, ambient_air_quality_raw, ambient_dust_variance, ambient_dust_min, ambient_dust_max, " +
             "firmware_version, wave_count, hold_count, " +
-            "audio_num_disturbances, audio_peak_disturbances_db, audio_peak_background_db) VALUES " +
+            "audio_num_disturbances, audio_peak_disturbances_db, audio_peak_background_db, audio_peak_energy_db) VALUES " +
             "(:account_id, :device_id, :ts, :local_utc_ts, :offset_millis, " +
             ":ambient_temp, :ambient_light, :ambient_light_variance, :ambient_light_peakiness, :ambient_humidity, " +
             ":ambient_air_quality, :ambient_air_quality_raw, :ambient_dust_variance, :ambient_dust_min, :ambient_dust_max, " +
             ":firmware_version, :wave_count, :hold_count, " +
-            ":audio_num_disturbances, :audio_peak_disturbances_db, :audio_peak_background_db);")
+            ":audio_num_disturbances, :audio_peak_disturbances_db, :audio_peak_background_db, :audio_peak_energy_db);")
     public abstract void batchInsert(@BindDeviceData Iterator<DeviceData> deviceDataList);
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -634,6 +635,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             "ROUND(MAX(audio_num_disturbances)) AS audio_num_disturbances," +
             "ROUND(MAX(audio_peak_disturbances_db)) AS audio_peak_disturbances_db," +
             "ROUND(MAX(audio_peak_background_db)) AS audio_peak_background_db " +
+            "ROUND(MAX(audio_peak_energy_db)) AS audio_peak_energy_db " +
             "FROM device_sensors_master " +
             "WHERE account_id = :account_id " +
             "AND local_utc_ts >= :start_ts AND local_utc_ts < :end_ts;")

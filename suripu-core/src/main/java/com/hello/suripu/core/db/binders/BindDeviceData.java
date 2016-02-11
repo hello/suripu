@@ -45,6 +45,7 @@ public @interface BindDeviceData {
                     q.bind("audio_num_disturbances", model.audioNumDisturbances);
                     q.bind("audio_peak_disturbances_db", model.audioPeakDisturbancesDB);
                     q.bind("audio_peak_background_db", model.audioPeakBackgroundDB);
+                    q.bind("audio_peak_energy_db", model.audioPeakEnergyDB);
                 }
             };
         }
