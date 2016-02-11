@@ -203,8 +203,8 @@ public class English {
     public final static List<String> DAY_OF_WEEK_NAMES = Lists.newArrayList("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT");
     public final static List<String> MONTH_OF_YEAR_NAMES = Lists.newArrayList("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC");
 
-    public final static String ANNOTATION_AVERAGE_SCORE = "AVERAGE_SCORE";
-    public final static String ANNOTATION_TOTAL_AVERAGE = "TOTAL_AVERAGE";
+    public final static String ANNOTATION_AVERAGE_SCORE = "AVERAGE SCORE";
+    public final static String ANNOTATION_TOTAL_AVERAGE = "TOTAL AVERAGE";
     public final static String ANNOTATION_WEEKDAYS = "WEEKDAYS";
     public final static String ANNOTATION_WEEKENDS = "WEEKENDS";
 }
