@@ -262,7 +262,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         //chain of fail-overs of algorithm (i.e)
         AlgorithmType[] algorithmChain = new AlgorithmType[]{AlgorithmType.HMM, AlgorithmType.VOTING};
 
-        if (this.hasOnlineHmmAlgorithmEnabled(accountId) || true) {
+        if (this.hasOnlineHmmAlgorithmEnabled(accountId)) {
             algorithmChain = new AlgorithmType[]{AlgorithmType.ONLINE_HMM, AlgorithmType.HMM, AlgorithmType.VOTING};
         }
 
