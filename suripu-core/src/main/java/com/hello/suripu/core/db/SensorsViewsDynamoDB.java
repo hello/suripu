@@ -299,7 +299,7 @@ public class SensorsViewsDynamoDB {
             final Integer firmwareVersion = (item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME) ? Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()) : 0);
             final String updatedAt = (item.containsKey(UPDATED_AT_UTC_ATTRIBUTE_NAME) ? item.get(UPDATED_AT_UTC_ATTRIBUTE_NAME).getS(): "");
             final DateTime dateTime = DateTime.parse(updatedAt, DateTimeFormat.forPattern(DATETIME_FORMAT));
-            final FirmwareInfo latestFWInfo = new FirmwareInfo(firmwareVersion.toString(), deviceId, dateTime.getMillis());
+            final FirmwareInfo latestFWInfo = new FirmwareInfo(firmwareVersion.toString(), "0", deviceId, dateTime.getMillis());
             fwVersions.add(latestFWInfo);
         }
 
@@ -335,7 +335,7 @@ public class SensorsViewsDynamoDB {
 
         final String firmwareVersion = item.containsKey(FIRMWARE_VERSION_ATTRIBUTE_NAME)
                 ? Integer.toHexString(Integer.valueOf(item.get(FIRMWARE_VERSION_ATTRIBUTE_NAME).getN()))
-                : "-";
+            : "-";
 
         final DateTime dateTime = DateTime.parse(dateTimeUTC, DateTimeFormat.forPattern(DATETIME_FORMAT));
 

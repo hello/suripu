@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class SleepStatsDAODynamoDB {
+public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SleepStatsDAODynamoDB.class);
     private final AmazonDynamoDB dynamoDBClient;
@@ -107,6 +107,7 @@ public class SleepStatsDAODynamoDB {
         Collections.addAll(this.targetAttributes, IS_INBED_DURATION_ATTRIBUTE_NAME);
     }
 
+    @Override
     public Boolean updateStat(final Long accountId, final DateTime date, final Integer sleepScore, final MotionScore motionScore, final SleepStats stats, final Integer offsetMillis) {
         LOGGER.debug("Write single score: {}, {}, {}", accountId, date, sleepScore);
 
@@ -146,10 +147,12 @@ public class SleepStatsDAODynamoDB {
 
     }
 
+    @Override
     public Optional<Integer> getTimeZoneOffset(final Long accountId) {
         return this.getTimeZoneOffset(accountId, DateTime.now(DateTimeZone.UTC).minusDays(3)); //3 is min minus needed to "guarantee" sleep stats because of 1) timezone conversion 2) morning edge case
     }
 
+    @Override
     public Optional<Integer> getTimeZoneOffset(final Long accountId, final DateTime queryDate) {
         final String queryDateString = DateTimeUtil.dateToYmdString(queryDate);
         final Optional<AggregateSleepStats> sleepStats = this.getSingleStat(accountId, queryDateString);
@@ -162,6 +165,7 @@ public class SleepStatsDAODynamoDB {
         return Optional.absent();
     }
 
+    @Override
     public Optional<AggregateSleepStats> getSingleStat(final Long accountId, final String date) {
 
         final Map<String, AttributeValue> key = new HashMap<>();
@@ -191,6 +195,7 @@ public class SleepStatsDAODynamoDB {
     }
 
     
+    @Override
     public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId, final String startDate, final String endDate) {
 
         final Condition selectByAccountId = new Condition()

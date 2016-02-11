@@ -1,6 +1,7 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
@@ -32,12 +33,16 @@ public class PartnerDataUtils {
     private final Logger LOGGER;
     private static final Logger STATIC_LOGGER = LoggerFactory.getLogger(PartnerDataUtils.class);
 
-    public PartnerDataUtils(final UUID uuid) {
+    public PartnerDataUtils(final Optional<UUID> uuid) {
         LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
     public PartnerDataUtils() {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        this(Optional.<UUID>absent());
+    }
+
+    public PartnerDataUtils(final UUID uuid) {
+        this(Optional.of(uuid));
     }
 
     private static double [][] clone2D(double [][] x) {

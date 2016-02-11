@@ -139,6 +139,6 @@ public class BedLightIntensityInsightsTest {
         final Long FAKE_ACCOUNT_ID = 1999L;
         final Long FAKE_DEVICE_ID = 1998L;
         final Integer OFFSET_MILLIS_SF = -28800000;
-        return new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, lightValue, 0, 0, 0, timestamp, OFFSET_MILLIS_SF, 0, 0, 0, 0, 0, 0);
+        return new DeviceData(FAKE_ACCOUNT_ID, FAKE_DEVICE_ID, 0, 0, 0, 0, 0, 0, 0, lightValue, 0, 0, 0, timestamp, OFFSET_MILLIS_SF, 0, 0, 0, 0, 0, 0, 0);
     }
 }

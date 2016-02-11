@@ -10,12 +10,14 @@ public class AccountQuestion {
     final public long accountId;
     final public Integer questionId;
     final public DateTime askTime;
+    final public DateTime created;
 
 
-    public AccountQuestion(Long id, long accountId, Integer questionId, DateTime askTime) {
+    public AccountQuestion(final Long id, final long accountId, final Integer questionId, final DateTime askTime, final DateTime created) {
         this.id = id;
         this.accountId = accountId;
         this.questionId = questionId;
         this.askTime = askTime;
+        this.created = created;
     }
 }

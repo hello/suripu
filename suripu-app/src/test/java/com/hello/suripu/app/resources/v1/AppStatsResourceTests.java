@@ -14,10 +14,10 @@ import com.hello.suripu.core.models.AppUnreadStats;
 import com.hello.suripu.core.models.Choice;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Question;
+import com.hello.suripu.core.models.questions.QuestionCategory;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.processors.QuestionProcessor;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
 import org.joda.time.DateTimeZone;
@@ -25,11 +25,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import javax.ws.rs.core.Response;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -221,7 +220,7 @@ public class AppStatsResourceTests {
                                                                              nowUTC,
                                                                              Collections.<Choice>emptyList(),
                                                                              AccountInfo.Type.SLEEP_TEMPERATURE,
-                                                                             nowUTC));
+                                                                             nowUTC, QuestionCategory.NONE));
         doReturn(fakeQuestions)
                 .when(questionProcessor)
                 .getQuestions(eq(ACCOUNT_ID), eq(fakeAccount.getAgeInDays()), any(DateTime.class),
@@ -260,7 +259,7 @@ public class AppStatsResourceTests {
                                                                              nowUTC,
                                                                              Collections.<Choice>emptyList(),
                                                                              AccountInfo.Type.SLEEP_TEMPERATURE,
-                                                                             nowUTC.minusDays(1)));
+                                                                             nowUTC.minusDays(1), QuestionCategory.NONE));
         doReturn(fakeQuestions)
                 .when(questionProcessor)
                 .getQuestions(eq(ACCOUNT_ID), eq(fakeAccount.getAgeInDays()), any(DateTime.class),

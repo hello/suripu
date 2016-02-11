@@ -5,8 +5,10 @@ import com.hello.suripu.app.resources.v1.InsightsResource;
 import com.hello.suripu.app.resources.v1.RoomConditionsResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.app.v2.DeviceResource;
+import com.hello.suripu.app.v2.TrendsResource;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.flipper.DynamoDBAdapter;
+import com.hello.suripu.core.processors.QuestionProcessor;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.librato.rollout.RolloutAdapter;
 import com.librato.rollout.RolloutClient;
@@ -23,6 +25,8 @@ import javax.inject.Singleton;
         DeviceResources.class,
         com.hello.suripu.app.v2.TimelineResource.class,
         DeviceResource.class,
+        TrendsResource.class,
+        QuestionProcessor.class
 })
 public class RolloutAppModule {
     private final FeatureStore featureStore;

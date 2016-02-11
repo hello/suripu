@@ -59,6 +59,7 @@ public class FeatureFlipper {
     public final static String ONLINE_HMM_ALGORITHM = "online_hmm_algorithm";
     public final static String ONLINE_HMM_LEARNING = "online_hmm_learning";
     public final static String OTA_RELEASE = "release";
+    public final static String OUTLIER_FILTER = "outlier_filter";
 
     public final static String PARTNER_FILTER = "partner_filter";
     public final static String PCH_SPECIAL_OTA = "pch_special_ota";
@@ -68,6 +69,8 @@ public class FeatureFlipper {
     public final static String PRINT_RAW_PB = "print_raw_pb";
     public final static String PROGRESSIVE_SMART_ALARM = "progressive_smart_alarm";
     public final static String PUSH_NOTIFICATIONS_ENABLED = "push_notifications_enabled";
+
+    public final static String QUESTION_ANOMALY_LIGHT_VISIBLE = "question_anomaly_light_enabled";
 
     public final static String REBOOT_CLOCK_OUT_OF_SYNC_DEVICES = "reboot_clock_out_of_sync_devices";
     public final static String REDUCE_BATCH_UPLOAD_INTERVAL = "reduce_batch_upload_interval";

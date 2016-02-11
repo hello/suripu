@@ -18,7 +18,8 @@ public class AccountQuestionMapper implements ResultSetMapper<AccountQuestion> {
         return new AccountQuestion(r.getLong("id"),
                 r.getLong("account_id"),
                 r.getInt("question_id"),
-                new DateTime(r.getTimestamp("created_local_utc_ts"), DateTimeZone.UTC)
-                );
+                new DateTime(r.getTimestamp("created_local_utc_ts"), DateTimeZone.UTC),
+                new DateTime(r.getTimestamp("created"), DateTimeZone.UTC)
+        );
     }
 }

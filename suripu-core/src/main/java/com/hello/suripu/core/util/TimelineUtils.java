@@ -109,12 +109,24 @@ public class TimelineUtils {
     }
 
     public TimelineUtils(final UUID uuid) {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
+        this(Optional.of(uuid));
     }
 
     public TimelineUtils() {
-        LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        this(Optional.<UUID>absent());
     }
+
+    public TimelineUtils(final Optional<UUID> uuid) {
+        if (uuid.isPresent()) {
+            LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid.get());
+        }
+        else {
+            LOGGER = new LoggerWithSessionId(STATIC_LOGGER);
+        }
+    }
+
+
+
 
     /**
      * Harmonizes sleep depth into n buckets

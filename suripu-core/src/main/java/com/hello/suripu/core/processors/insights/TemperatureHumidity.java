@@ -55,7 +55,6 @@ public class TemperatureHumidity {
 
     public static Optional<InsightCard> getInsights(final Long accountId, final DeviceId deviceId,
                                                     final DeviceDataInsightQueryDAO deviceDataDAO,
-                                                    final AccountInfo.SleepTempType tempPref,
                                                     final TemperatureUnit tempUnit, final SleepStatsDAODynamoDB sleepStatsDAODynamoDB) {
         final Optional<Integer> timeZoneOffsetOptional = sleepStatsDAODynamoDB.getTimeZoneOffset(accountId);
         if (!timeZoneOffsetOptional.isPresent()) {
@@ -81,19 +80,19 @@ public class TemperatureHumidity {
             sensorData = Lists.newArrayList();
         }
 
-        final Optional<InsightCard> card = processData(accountId, sensorData, tempPref, tempUnit);
+        final Optional<InsightCard> card = processData(accountId, sensorData, tempUnit);
         return card;
     }
 
     public static Optional<InsightCard> processData(final Long accountId, final List<DeviceData> data,
-                                                    final AccountInfo.SleepTempType tempPref,
                                                     final TemperatureUnit tempUnit) {
 
         if (data.isEmpty()) {
             return Optional.absent();
         }
 
-        // TODO if location is available, compare with users from the same city
+        // TODO: if location is available, compare with users from the same city
+        // TODO: adjust ideal range based on question response on preference for cold/hot. Implemented before by KSG, but removed for simplicity for now.
 
         // get min, max and average
         final DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -108,21 +107,19 @@ public class TemperatureHumidity {
         final double tmpMaxValue = stats.getMax();
         final int maxTempC = (int) tmpMaxValue;
         final int maxTempF = celsiusToFahrenheit(tmpMaxValue);
-
         LOGGER.debug("Temp for account {}: min {}, max {}", accountId, minTempF, maxTempF);
 
-        // adjust ideal range depending on user's response to hot/cold sleeper question
-        int idealMinF = IDEAL_TEMP_MIN;
-        int idealMaxF = IDEAL_TEMP_MAX;
-        String sleeperMsg = TemperatureMsgEN.TEMP_SLEEPER_MSG_NONE;
-        if (tempPref == AccountInfo.SleepTempType.COLD) {
-            idealMinF -= COLD_TEMP_ADJUST;
-            idealMaxF -= COLD_TEMP_ADJUST;
-            sleeperMsg = TemperatureMsgEN.TEMP_SLEEPER_MSG_COLD;
-        } else if (tempPref == AccountInfo.SleepTempType.HOT) {
-            idealMinF += HOT_TEMP_ADJUST;
-            idealMaxF += HOT_TEMP_ADJUST;
-            sleeperMsg = TemperatureMsgEN.TEMP_SLEEPER_MSG_HOT;
+        // TODO: edits
+        // Units for passing into TemperatureMsgEN
+        int minTemp = minTempC;
+        int maxTemp = maxTempC;
+        int idealMin = IDEAL_TEMP_MIN_CELSIUS;
+        int idealMax = IDEAL_TEMP_MAX_CELSIUS;
+        if (tempUnit == TemperatureUnit.FAHRENHEIT) {
+            minTemp = minTempF;
+            maxTemp = maxTempF;
+            idealMin = IDEAL_TEMP_MIN;
+            idealMax = IDEAL_TEMP_MAX;
         }
 
         /* Possible cases
@@ -137,39 +134,28 @@ public class TemperatureHumidity {
                 |-------- way out of range! -------|
          */
 
-        // todo: edits
-        int minTemp = minTempF;
-        int maxTemp = maxTempF;
-        int idealMin = idealMinF;
-        int idealMax = idealMaxF;
-        if (tempUnit == TemperatureUnit.CELSIUS) {
-            minTemp = fahrenheitToCelsius((double) minTempF);
-            maxTemp = fahrenheitToCelsius((double) maxTempF);
-            idealMin = fahrenheitToCelsius((double) idealMinF);
-            idealMax = fahrenheitToCelsius((double) idealMaxF);
-        }
-
         Text text;
         final String commonMsg = TemperatureMsgEN.getCommonMsg(minTemp, maxTemp, tempUnit.toString());
 
-        if (idealMinF <= minTempF && maxTempF <= idealMaxF) {
-            text = TemperatureMsgEN.getTempMsgPerfect(commonMsg, sleeperMsg);
+        //careful: comparisons are done in user's own units, TemperatureMsgEN also gets passed user's own units.
+        if (idealMin <= minTemp && maxTemp <= idealMax) {
+            text = TemperatureMsgEN.getTempMsgPerfect(commonMsg);
 
-        } else if (maxTempF < idealMinF) {
+        } else if (maxTemp < idealMin) {
             text = TemperatureMsgEN.getTempMsgTooCold(commonMsg, idealMin, tempUnit.toString());
 
-        } else if (minTempF > idealMaxF) {
+        } else if (minTemp > idealMax) {
             text = TemperatureMsgEN.getTempMsgTooHot(commonMsg, idealMax, tempUnit.toString());
 
-        } else if (minTempF < idealMinF && maxTempF <= idealMaxF) {
+        } else if (minTemp < idealMin && maxTemp <= idealMax) {
             text = TemperatureMsgEN.getTempMsgCool(commonMsg);
 
-        } else if (minTempF > idealMinF && maxTempF > idealMaxF) {
+        } else if (minTemp > idealMin && maxTemp > idealMax) {
             text = TemperatureMsgEN.getTempMsgWarm(commonMsg);
 
         } else {
             // both min and max are outside of ideal range
-            text = TemperatureMsgEN.getTempMsgBad(commonMsg, sleeperMsg, idealMin, idealMax, tempUnit.toString());
+            text = TemperatureMsgEN.getTempMsgBad(commonMsg, idealMin, idealMax, tempUnit.toString());
         }
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
@@ -178,9 +164,9 @@ public class TemperatureHumidity {
     }
 
     private static int celsiusToFahrenheit(final double value) {
-        //Multiply by 9, then divide by 5, then add 32
         return (int) Math.round((value * 9.0) / 5.0) + 32;
     }
+
     private static int fahrenheitToCelsius(final double value) {
         return (int) ((value - 32.0) * (5.0/9.0));
     }

@@ -8,6 +8,7 @@ import com.hello.suripu.core.models.SleepSegment;
 import com.hello.suripu.core.models.TimelineFeedback;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -134,7 +135,7 @@ public class FeedbackUtilsTest {
 
         TestCase.assertTrue(newEvents.mainEvents.size() == 2);
 
-        for (final Event event : newEvents.mainEvents) {
+        for (final Event event : newEvents.mainEvents.values()) {
             if (event.getType().equals(Event.Type.SLEEP)) {
                 final long mysleeptime = event.getStartTimestamp();
                 TestCase.assertEquals(expectedTime, mysleeptime);
@@ -176,7 +177,7 @@ public class FeedbackUtilsTest {
         final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
 
 
-        final long mysleeptime = newEvents.mainEvents.get(0).getStartTimestamp();
+        final long mysleeptime = newEvents.mainEvents.values().asList().get(0).getStartTimestamp();
 
         TestCase.assertEquals(expectedTime, mysleeptime);
 
@@ -231,7 +232,7 @@ public class FeedbackUtilsTest {
         Map<String,Event> newEventMap = Maps.newHashMap();
         Map<String,Event> extraEventMap = Maps.newHashMap();
 
-        for (Event event : newEvents.mainEvents) {
+        for (Event event : newEvents.mainEvents.values()) {
             newEventMap.put(event.getDescription(),event);
         }
 
@@ -305,5 +306,71 @@ public class FeedbackUtilsTest {
         final TimelineFeedback feedback = TimelineFeedback.create("2015-02-03", "23:00", "16:00", Event.Type.SLEEP.name());
         final Optional<DateTime> optional = FeedbackUtils.convertFeedbackToDateTimeByNewTime(feedback, 0);
         assertThat(optional.isPresent(), is(false));
+    }
+
+    @Test
+    public void testInsertConversion() {
+        //delta of -7 hours
+        final TimelineFeedback feedback1 = TimelineFeedback.create("2015-02-03", "23:00", "16:00", Event.Type.SLEEP.name());
+
+        //delta of -2 min
+        final TimelineFeedback feedback2 = TimelineFeedback.create("2015-02-03", "00:00", "23:58", Event.Type.SLEEP.name());
+
+        //delta of +3 min
+        final TimelineFeedback feedback3 = TimelineFeedback.create("2015-02-03", "23:59", "00:02", Event.Type.SLEEP.name());
+
+        final int delta1 = feedback1.getDeltaInMinutes();
+        final int delta2 = feedback2.getDeltaInMinutes();
+        final int delta3 = feedback3.getDeltaInMinutes();
+
+        TestCase.assertEquals(delta1, DateTimeConstants.MINUTES_PER_HOUR * -7);
+        TestCase.assertEquals(delta2,  -2);
+        TestCase.assertEquals(delta3,  +3);
+
+
+    }
+
+    @Test
+    public void testReallyBadFeedback() {
+        final List<Event> events = new ArrayList<>();
+
+        final long t1 = 1429134060000L; //Wed, 15 Apr 2015 21:41:00 GMT
+        final long t2 = t1 + 60000L;
+        final int offset = 3600000; // + 1 hour
+
+
+        events.add(Event.createFromType(Event.Type.IN_BED,t1 - DateTimeConstants.MILLIS_PER_HOUR,t2- DateTimeConstants.MILLIS_PER_HOUR,offset,Optional.of("IN_BEDszses"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+        events.add(Event.createFromType(Event.Type.SLEEP,t1,t2,offset,Optional.of("SLEEPS"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+        events.add(Event.createFromType(Event.Type.WAKE_UP,t1 + DateTimeConstants.MILLIS_PER_HOUR*8,t2 + DateTimeConstants.MILLIS_PER_HOUR*8,offset,Optional.of("WAKESZ"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+        events.add(Event.createFromType(Event.Type.OUT_OF_BED,t1+ DateTimeConstants.MILLIS_PER_HOUR*9,+ DateTimeConstants.MILLIS_PER_HOUR*9,offset,Optional.of("OUTSZ"),Optional.<SleepSegment.SoundInfo>absent(),Optional.<Integer>absent()));
+
+        /*
+
+            @JsonProperty("date_of_night") final String dateOfNight,
+            @JsonProperty("old_time_of_event") final String oldTimeOfEvent,
+            @JsonProperty("new_time_of_event") final String newTimeOfEvent,
+            @JsonProperty("event_type") final String eventTypeString) {
+
+
+         */
+        final TimelineFeedback feedback = TimelineFeedback.create("2015-04-15","22:00","12:00",Event.Type.IN_BED.name());
+
+        final List<TimelineFeedback> timelineFeedbacks = new ArrayList<>();
+        timelineFeedbacks.add(feedback);
+
+        final FeedbackUtils utils = new FeedbackUtils();
+        final FeedbackUtils.ReprocessedEvents newEvents = utils.reprocessEventsBasedOnFeedback(ImmutableList.copyOf(timelineFeedbacks),ImmutableList.copyOf(events), ImmutableList.copyOf(Collections.EMPTY_LIST), offset);
+
+
+        TestCase.assertTrue(newEvents.mainEvents.size() == 4);
+
+        final long refTime = 1429185600000L - DateTimeConstants.MILLIS_PER_HOUR;
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.IN_BED).getStartTimestamp() == refTime);
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.SLEEP).getStartTimestamp() == refTime + 1 * DateTimeConstants.MILLIS_PER_MINUTE);
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.WAKE_UP).getStartTimestamp() == refTime + 2 * DateTimeConstants.MILLIS_PER_MINUTE);
+        TestCase.assertTrue(newEvents.mainEvents.get(Event.Type.OUT_OF_BED).getStartTimestamp() == refTime+ 3 * DateTimeConstants.MILLIS_PER_MINUTE);
+
+
+
     }
 }

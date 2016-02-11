@@ -122,4 +122,11 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_PILL_DATA_TIMELINE, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasOutlierFilterEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.OUTLIER_FILTER,accountId,Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasAnomalyLightQuestionEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ANOMALY_LIGHT_VISIBLE, accountId, Collections.EMPTY_LIST);
+    }
 }

@@ -25,6 +25,7 @@ s3cmd put suripu-workers/configs/logs/timeline_logs.prod.yml s3://hello-deploy/c
 s3cmd put suripu-workers/configs/insights/insights_generator.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/insights_generator.prod.yml
 s3cmd put suripu-workers/configs/timeline/timeline_worker.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_worker.prod.yml
 s3cmd put suripu-workers/configs/push/push-notifications.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/push-notifications.prod.yml
+s3cmd put suripu-queue/suripu-queue.prod.yml s3://hello-deploy/configs/com/hello/suripu/suripu-queue/$VERSION/suripu-queue.prod.yml
 
 
 # staging
@@ -41,3 +42,4 @@ s3cmd put suripu-workers/configs/logs/timeline_logs.staging.yml s3://hello-deplo
 s3cmd put suripu-workers/configs/insights/insights_generator.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/insights_generator.staging.yml
 s3cmd put suripu-workers/configs/timeline/timeline_worker.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/timeline_worker.staging.yml
 s3cmd put suripu-workers/configs/push/push-notifications.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-workers/$VERSION/push-notifications.staging.yml
+s3cmd put suripu-queue/suripu-queue.staging.yml s3://hello-deploy/configs/com/hello/suripu/suripu-queue/$VERSION/suripu-queue.staging.yml

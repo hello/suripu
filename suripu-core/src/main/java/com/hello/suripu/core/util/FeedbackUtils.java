@@ -2,7 +2,9 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -35,7 +37,7 @@ public class FeedbackUtils {
     private static int INVALID_EVENT_ORDER = -1;
     private final Logger LOGGER;
 
-    public FeedbackUtils(final UUID uuid) {
+    public FeedbackUtils(final Optional<UUID> uuid) {
         LOGGER = new LoggerWithSessionId(STATIC_LOGGER,uuid);
     }
 
@@ -212,11 +214,17 @@ public class FeedbackUtils {
     }
 
     public static class ReprocessedEvents {
-        final public ImmutableList<Event> mainEvents;
+        final public ImmutableMap<Event.Type,Event> mainEvents;
         final public ImmutableList<Event> extraEvents;
 
         public ReprocessedEvents(ImmutableList<Event> mainEvents, ImmutableList<Event> extraEvents) {
-            this.mainEvents = mainEvents;
+            final Map<Event.Type,Event> eventMap = Maps.newHashMap();
+
+            for (final Event event : mainEvents) {
+                eventMap.put(event.getType(),event);
+            }
+
+            this.mainEvents = ImmutableMap.copyOf(eventMap);
             this.extraEvents = extraEvents;
         }
     }
@@ -225,7 +233,7 @@ public class FeedbackUtils {
 
 
 
-    private static class EventWithTime {
+    public static class EventWithTime {
         enum Type {
             FEEDBACK,
             MAIN,
@@ -306,10 +314,10 @@ public class FeedbackUtils {
         return newEvent;
     }
 
-    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableList<Event> algEvents,final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
+    public ReprocessedEvents reprocessEventsBasedOnFeedback(final ImmutableList<TimelineFeedback> timelineFeedbackList, final ImmutableCollection<Event> algEvents, final ImmutableList<Event> extraEvents, final Integer offsetMillis) {
 
 
-        /* get events by time  */
+        /* get feedback events by time  */
         final Map<Event.Type,Event> eventsByType = getFeedbackAsEventsByType(timelineFeedbackList, offsetMillis);
 
 
@@ -649,12 +657,14 @@ public class FeedbackUtils {
 
         //if I violated the sequence of the event that comes after, then place the propsoed event one minute before that event
         if (failHigh) {
-            return  Optional.of(highEntry.getValue() - MINUTE);
+            final int indexDiff = myOrder - highEntry.getKey();
+            return  Optional.of(highEntry.getValue() + indexDiff * MINUTE);
         }
 
         //as above, but for the event that comes before
         if (failLow) {
-            return Optional.of(lowerEntry.getValue() + MINUTE);
+            final int indexDiff = myOrder - lowerEntry.getKey();
+            return Optional.of(lowerEntry.getValue() + indexDiff*MINUTE);
         }
 
         //should also never get here either, but whatever
