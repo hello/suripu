@@ -222,6 +222,3 @@ FROM (SELECT question_id,
     FROM response_choices WHERE question_id IN (SELECT id FROM questions)
     GROUP BY question_id) AS subquery
 WHERE questions.id = subquery.question_id;
-
-
-

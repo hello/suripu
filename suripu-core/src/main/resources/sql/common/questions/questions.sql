@@ -59,4 +59,46 @@ CREATE UNIQUE INDEX uniq_question_text_lang on questions(question_text, lang);
 GRANT ALL PRIVILEGES ON questions TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE questions_id_seq TO ingress_user;
 
+-- Add new "category" field to question table to facilitate trigger-questions
+CREATE TYPE QUESTION_CATEGORY AS ENUM (
+  'none',
+  'onboarding',
+  'base',
+  'daily',
+  'anomaly_light'
+);
+
+ALTER TABLE questions ADD COLUMN category QUESTION_CATEGORY DEFAULT 'none';
+
+-- update category
+UPDATE questions SET category='onboarding' WHERE id = 1;
+UPDATE questions SET category='onboarding' WHERE id = 2;
+UPDATE questions SET category='onboarding' WHERE id = 3;
+
+
+-- New question for light-anomaly-detection results 2016-01-29
+INSERT INTO questions (question_text, lang, frequency, response_type, responses, dependency, ask_time, category)
+VALUES (
+  'Was the light in your bedroom different than normal last night?', -- text
+  'EN', -- lang
+  'trigger', -- frequency (note, trigger is currently not implemented in QuestionProcessor)
+  'choice', -- response_type
+  '{"Yes, it was different", "No, it wasn''t different", "I''m not sure"}', -- text responses
+  null, -- dependency
+  'anytime', -- ask_time
+  'anomaly_light' -- trigger by light
+);
+
+---- insert the response text into response_choices
+INSERT INTO response_choices (question_id, response_text)
+    (SELECT id, UNNEST(responses) FROM questions WHERE id IN (SELECT id FROM questions ORDER BY id DESC LIMIT 1));
+
+---- update questions with the right response_ids
+
+UPDATE questions SET responses = S.texts, responses_ids = S.ids FROM (
+  SELECT question_id, ARRAY_AGG(id) AS ids, ARRAY_AGG(response_text) AS texts
+  FROM response_choices where question_id IN
+  (select id from questions order by id DESC LIMIT 1) GROUP BY question_id) AS S
+WHERE questions.id = S.question_id;
+
 
