@@ -12,7 +12,7 @@ public class Annotation {
     public final String title;
 
     @JsonProperty("value")
-    public final float value;
+        public final float value;
 
     @JsonProperty("data_type")
     public final DataType dataType;
