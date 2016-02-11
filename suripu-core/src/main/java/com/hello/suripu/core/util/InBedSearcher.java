@@ -25,9 +25,19 @@ import java.util.Iterator;
  * Created by benjo on 2/5/16.
  *
  *
- * General idea is this:  Given my sleep time, and my original on-bed time, my actualy on-bed time
- * may be somewhere between these two events.  Especially for the online HMM motion models--no movement can mean
- * not on bed, or on bed!  Anyway, the idea is to backtrack from sleep time to the beginning of the previous "motion cluster"
+ * Input: my sleep time, my original in-bed time, motion data
+ * Output: my actual in-bed time
+ *
+ * Example problem this solves:
+ * 9pm - user gets on bed, reads a book
+ * 10pm user leaves bed, go gets a burrito at Taco Bell
+ * 12am user comes back, and goes to bed in a burrito-induced coma.
+ *
+ * We say that the user went to bed at 9pm, which is wrong.
+ *
+ * So we take the motion data and find clusters of motion with a very simple HMM.
+ * The idea is to backtrack from sleep time to the beginning of the previous "motion cluster" and say that this was
+ * in-bed.
  *
  */
 public class InBedSearcher {

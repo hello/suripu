@@ -73,6 +73,9 @@ public class TrackerMotionUtils {
         return uniqueValues;
     }
 
+    //given a start time timestamp (t0)
+    //an interval (period)
+    //return the index of timestamp with relation to t0.
     public static int getIndex(final Long timestamp, final Long t0,final Long period, final int max) {
         int idx = (int) ((timestamp - t0) / period);
         if (idx >= max || idx < 0) {
@@ -83,6 +86,10 @@ public class TrackerMotionUtils {
 
     }
 
+    //given a list of tracker motion data,
+    //take the "on duration seconds" and add or subtract that to the appropriate time bin
+    //"smear" means smear the data out over adjacent minutes of data (so one second of "on duration" becomes 0.333 seconds in the previous bin, the current bin, and the next bin)
+    //sign determines if you are adding (1) or subtracting (-1)
     public static void fillBinsWithTrackerDurations(final Double [] bins, final Long t0, final Long period, final ImmutableList<TrackerMotion> data, int sign, boolean smear) {
 
         Iterator<TrackerMotion> it = data.iterator();

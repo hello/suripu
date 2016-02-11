@@ -193,7 +193,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId,final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult) {
 
         //return original if not enabled
-        if (!this.hasInBedSearchEnabled(accountId)) {
+        if (!this.hasInBedSearchEnabled(accountId) && false) {
             return origResult;
         }
 
@@ -262,7 +262,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         //chain of fail-overs of algorithm (i.e)
         AlgorithmType[] algorithmChain = new AlgorithmType[]{AlgorithmType.HMM, AlgorithmType.VOTING};
 
-        if (this.hasOnlineHmmAlgorithmEnabled(accountId)) {
+        if (this.hasOnlineHmmAlgorithmEnabled(accountId) || true) {
             algorithmChain = new AlgorithmType[]{AlgorithmType.ONLINE_HMM, AlgorithmType.HMM, AlgorithmType.VOTING};
         }
 
