@@ -1,7 +1,6 @@
 package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
-import com.hello.suripu.algorithm.sleep.InternalScore;
 import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.Sample;
 import com.hello.suripu.core.models.TrackerMotion;
@@ -21,20 +20,20 @@ import java.util.List;
 public class SleepScoreUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreUtils.class);
 
-    public static Integer DURATION_MAX_SCORE = 80;
-    public static Integer DURATION_MIN_SCORE = 10;
-    public static float MOTION_SCORE_MIN = 10.0f;
-    private static float MOTION_SCORE_RANGE = 80.0f; // max score is 90
-    private static float MIN_ASLEEP_MINUTES_REQUIRED = 60.0f; // need to be asleep for at least 60 minutes
+    public static final Integer DURATION_MAX_SCORE = 80;
+    public static final Integer DURATION_MIN_SCORE = 10;
+    public static final float MOTION_SCORE_MIN = 10.0f;
+    private static final float MOTION_SCORE_RANGE = 80.0f; // max score is 90
+    private static final float MIN_ASLEEP_MINUTES_REQUIRED = 60.0f; // need to be asleep for at least 60 minutes
 
     public static final int PENALTY_PER_SOUND_EVENT = 20;
     public static final int SENSOR_IDEAL_SCORE = 100;
     public static final int SENSOR_WARNING_SCORE = 75;
     public static final int SENSOR_ALERT_SCORE = 50;
 
-    public static Float DURATION_SCORE_SCALE = (float) (DURATION_MAX_SCORE - DURATION_MIN_SCORE);
-    public static Integer TOO_LITTLE_SLEEP_ALLOWANCE = 1;
-    public static Integer TOO_MUCH_SLEEP_ALLOWANCE = 4; // allow too much sleep recommendation to exceed by 4 hours
+    public static final Float DURATION_SCORE_SCALE = (float) (DURATION_MAX_SCORE - DURATION_MIN_SCORE);
+    public static final Integer TOO_LITTLE_SLEEP_ALLOWANCE = 1;
+    public static final Integer TOO_MUCH_SLEEP_ALLOWANCE = 4; // allow too much sleep recommendation to exceed by 4 hours
 
     public static final Integer DURATION_V2_MIN_SCORE_HOURS = 2;
     public static final Integer DURATION_TOO_MUCH_HOURS = 15;
@@ -100,14 +99,14 @@ public class SleepScoreUtils {
             // score is between 10 - 60
             // this awards the user 1 extra point for every ~5 minutes of sleep
             baseScore = (float) DURATION_MIN_SCORE;
-            topScore = 60.0f;
+            topScore = 70.0f;
             bucketTotalMinutes = idealHours.absoluteMinHours - DURATION_V2_MIN_SCORE_HOURS;
             diffMinutes = sleepDurationMinutes - (DURATION_V2_MIN_SCORE_HOURS * 60.0f);
         }
 
         else if (sleepDurationHours < idealHours.maxHours) {
             // between absolute min and ideal-max, score between 60 - 95
-            baseScore = 60.0f;
+            baseScore = 70.0f;
             topScore = 95.0f;
             bucketTotalMinutes = idealHours.maxHours - idealHours.absoluteMinHours;
             diffMinutes = sleepDurationMinutes - (idealHours.absoluteMinHours * 60.0f);
@@ -115,8 +114,8 @@ public class SleepScoreUtils {
 
         // between ideal-max and absolute max, score between 70 - 80
         else if (sleepDurationHours < idealHours.absoluteMaxHours) {
-            baseScore = 70.0f;
-            topScore = 80.0f;
+            baseScore = 90.0f;
+            topScore = 70.0f;
             bucketTotalMinutes = idealHours.absoluteMaxHours - idealHours.maxHours;
             diffMinutes = sleepDurationMinutes - (idealHours.maxHours * 60.0f);
         }
@@ -130,8 +129,7 @@ public class SleepScoreUtils {
         }
 
 
-        float score = baseScore + diffMinutes * ( (topScore - baseScore) / (bucketTotalMinutes * 60.0f));
-        return 0
+        return Math.round(baseScore + diffMinutes * ( (topScore - baseScore) / (bucketTotalMinutes * 60.0f)));
     }
 
         /**
