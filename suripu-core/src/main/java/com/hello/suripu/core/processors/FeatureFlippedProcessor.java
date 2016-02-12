@@ -129,4 +129,9 @@ public class FeatureFlippedProcessor {
     protected Boolean hasAnomalyLightQuestionEnabled(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ANOMALY_LIGHT_VISIBLE, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean hasSleepScoreDurationV2(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_V2, accountId, Collections.EMPTY_LIST);
+    }
+
 }

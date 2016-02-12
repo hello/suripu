@@ -66,10 +66,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public class TimelineProcessor extends FeatureFlippedProcessor {
@@ -875,8 +873,12 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
     private Integer computeSleepDurationScore(final Long accountId, final SleepStats sleepStats) {
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final int userAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().DOB) / 365 : 0;
-        final Integer durationScore = SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
-        return durationScore;
+
+        if (hasSleepScoreDurationV2(accountId)) {
+            return SleepScoreUtils.getSleepDurationScoreV2(userAge, sleepStats.sleepDurationInMinutes);
+        }
+
+        return SleepScoreUtils.getSleepDurationScore(userAge, sleepStats.sleepDurationInMinutes);
     }
 
     private Integer computeEnvironmentScore(final Long accountId,

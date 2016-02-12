@@ -48,8 +48,8 @@ public class SleepScore {
         public float environmental;
 
         public Weighting() {
-            this.motion = 0.7f;
-            this.duration = 0.2f;
+            this.motion = 0.5f;
+            this.duration = 0.4f;
             this.environmental = 0.1f;
         }
     }
@@ -57,8 +57,8 @@ public class SleepScore {
     public static class DurationHeavyWeighting extends Weighting {
 
         public DurationHeavyWeighting() {
-            this.motion = 0.5f;
-            this.duration = 0.4f;
+            this.motion = 0.4f;
+            this.duration = 0.5f;
         }
     }
 
