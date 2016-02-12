@@ -71,6 +71,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
     public static final String SLEEP_DURATION_ATTRIBUTE_NAME = "sleep_duration";
     public static final String IS_INBED_DURATION_ATTRIBUTE_NAME = "is_inbed_duration";
     public static final String LIGHT_SLEEP_ATTRIBUTE_NAME = "light_sleep";
+    public static final String MEDIUM_SLEEP_ATTRIBUTE_NAME = "medium_sleep";
     public static final String SOUND_SLEEP_ATTRIBUTE_NAME = "sound_sleep";
     public static final String ASLEEP_TIME_ATTRIBUTE_NAME = "fall_asleep_time";
     public static final String AWAKE_TIME_ATTRIBUTE_NAME = "awake_time";
@@ -96,6 +97,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                 AVG_MOTION_AMPLITUDE_ATTRIBUTE_NAME, MAX_MOTION_AMPLITUDE_ATTRIBUTE_NAME,
                 SLEEP_DURATION_ATTRIBUTE_NAME,
                 LIGHT_SLEEP_ATTRIBUTE_NAME,
+                MEDIUM_SLEEP_ATTRIBUTE_NAME,
                 SOUND_SLEEP_ATTRIBUTE_NAME,
                 ASLEEP_TIME_ATTRIBUTE_NAME,
                 AWAKE_TIME_ATTRIBUTE_NAME,
@@ -312,6 +314,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         // stats stuff
         item.put(SLEEP_DURATION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.sleepDurationInMinutes)));
         item.put(LIGHT_SLEEP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.lightSleepDurationInMinutes)));
+        item.put(MEDIUM_SLEEP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.mediumSleepDurationInMinutes)));
         item.put(SOUND_SLEEP_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.soundSleepDurationInMinutes)));
         item.put(ASLEEP_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(String.valueOf(stats.sleepTime)));
         item.put(AWAKE_TIME_ATTRIBUTE_NAME, new AttributeValue().withS(String.valueOf(stats.wakeTime)));
@@ -356,11 +359,20 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                 Integer.valueOf(item.get(MOTION_SCORE_ATTRIBUTE_NAME).getN())
         );
 
+        final Integer soundSleep = Integer.valueOf(item.get(SOUND_SLEEP_ATTRIBUTE_NAME).getN());
+        final Integer lightSleep = Integer.valueOf(item.get(LIGHT_SLEEP_ATTRIBUTE_NAME).getN());
+        final Integer sleepDuration = Integer.valueOf(item.get(SLEEP_DURATION_ATTRIBUTE_NAME).getN());
+        Integer mediumSleep = sleepDuration - soundSleep - lightSleep;
+
+        if (item.containsKey(MEDIUM_SLEEP_ATTRIBUTE_NAME)) {
+            mediumSleep = Integer.valueOf(item.get(MEDIUM_SLEEP_ATTRIBUTE_NAME).getN());
+        }
 
         final SleepStats stats = new SleepStats(
-                Integer.valueOf(item.get(SOUND_SLEEP_ATTRIBUTE_NAME).getN()),
-                Integer.valueOf(item.get(LIGHT_SLEEP_ATTRIBUTE_NAME).getN()),
-                Integer.valueOf(item.get(SLEEP_DURATION_ATTRIBUTE_NAME).getN()),
+                soundSleep,
+                mediumSleep,
+                lightSleep,
+                sleepDuration,
                 item.containsKey(IS_INBED_DURATION_ATTRIBUTE_NAME) ? item.get(IS_INBED_DURATION_ATTRIBUTE_NAME).getBOOL() : true,
                 Integer.valueOf(item.get(SLEEP_MOTION_COUNT_ATTRIBUTE_NAME).getN()),
                 Long.valueOf(item.get(ASLEEP_TIME_ATTRIBUTE_NAME).getS()),

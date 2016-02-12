@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * Created by kingshy on 2/25/15.
+ * Created by ksg on 02/25/15
  */
 public class SleepScoreUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreUtils.class);
@@ -44,8 +44,8 @@ public class SleepScoreUtils {
      * if duration is within recommended range, return max score
      * if duration is way out of the min/max + allowance recommended range, return min score
      * everything else is a linear decrease in score
-     * @param userAgeInYears
-     * @param sleepDurationMinutes
+     * @param userAgeInYears age
+     * @param sleepDurationMinutes sleep duration
      * @return duration score
      */
     public static Integer getSleepDurationScore(final int userAgeInYears, final Integer sleepDurationMinutes) {
@@ -61,8 +61,8 @@ public class SleepScoreUtils {
             return DURATION_MIN_SCORE;
         }
 
-        Float diffMinutes = 0.0f;
-        Float scaleMinutes = 0.0f;
+        Float diffMinutes;
+        Float scaleMinutes;
         if (sleepDurationHours < (float) idealHours.minHours) {
             // under-sleep
             diffMinutes = (float) (idealHours.minHours * 60  - sleepDurationMinutes);
@@ -81,7 +81,7 @@ public class SleepScoreUtils {
 
         float baseScore;
         float topScore;
-        float diffMinutes = 0.0f;
+        float diffMinutes;
         float bucketTotalMinutes;
 
         if (sleepDurationHours < DURATION_V2_MIN_SCORE_HOURS) {
@@ -121,25 +121,24 @@ public class SleepScoreUtils {
         }
 
         else {
-            //
+            // between absolute-max and way-too-much sleep, reduce score
             baseScore = 70.0f;
             topScore = DURATION_TOO_MUCH_SCORE;
             bucketTotalMinutes = DURATION_TOO_MUCH_HOURS - idealHours.absoluteMaxHours;
             diffMinutes = sleepDurationMinutes - (idealHours.absoluteMaxHours) * 60.0f;
         }
 
-
-        return Math.round(baseScore + diffMinutes * ( (topScore - baseScore) / (bucketTotalMinutes * 60.0f)));
+        return Math.round(baseScore + diffMinutes * ((topScore - baseScore) / (bucketTotalMinutes * 60.0f)));
     }
 
         /**
          * Compute motion score based on average number of agitation during sleep.
          * score ranges from 10 to 90. A ZERO score actually means no score is computed.
-         * @param targetDate
-         * @param trackerMotions
-         * @param fallAsleepTimestamp
-         * @param wakeUpTimestamp
-         * @return
+         * @param targetDate nightdate
+         * @param trackerMotions pill data
+         * @param fallAsleepTimestamp detected fell asleep time
+         * @param wakeUpTimestamp detected woke up time
+         * @return a score for motion during the night
          */
     public static MotionScore getSleepMotionScore(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         float numAgitations = 0.0f;

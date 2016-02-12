@@ -672,9 +672,11 @@ public class TimelineUtils {
      * @param segments
      * @return
      */
-    public SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold) {
+    public SleepStats computeStats(final List<SleepSegment> segments, final int lightSleepThreshold, final boolean hasMediumSleep) {
         Integer soundSleepDurationInSecs = 0;
+        Integer mediumSleepDurationInSecs = 0;
         Integer lightSleepDurationInSecs = 0;
+
         int sleepDurationInSecs = 0;
         int inBedDurationInSecs = 0;
         Integer numberOfMotionEvents = 0;
@@ -723,10 +725,25 @@ public class TimelineUtils {
             if(!sleepStarted){
                 continue;
             }
-            if (segment.getSleepDepth() >= lightSleepThreshold) {
-                soundSleepDurationInSecs += segment.getDurationInSeconds();
-            } else if(segment.getSleepDepth() >= 0 && segment.getSleepDepth() < lightSleepThreshold) {
-                lightSleepDurationInSecs += segment.getDurationInSeconds();
+
+            // compute sleep-state duration
+            final int sleepDepth = segment.getSleepDepth();
+            final int duration = segment.getDurationInSeconds();
+
+            if (hasMediumSleep) {
+                if (sleepDepth >= SleepStats.MEDIUM_SLEEP_DEPTH_THRESHOLD) {
+                    soundSleepDurationInSecs += duration;
+                } else if (sleepDepth >= SleepStats.LIGHT_SLEEP_DEPTH_THRESHOLD) {
+                    mediumSleepDurationInSecs += duration;
+                } else if (sleepDepth >= SleepStats.AWAKE_SLEEP_DEPTH_THRESHOLD) {
+                    lightSleepDurationInSecs += duration;
+                }
+            } else {
+                if (sleepDepth >= lightSleepThreshold) {
+                    soundSleepDurationInSecs += duration;
+                } else if (sleepDepth >= 0 && sleepDepth < lightSleepThreshold) {
+                    lightSleepDurationInSecs += duration;
+                }
             }
 
             if(segment.getType() == Event.Type.MOTION){
@@ -749,16 +766,18 @@ public class TimelineUtils {
             }
         }
 
-        final Integer soundSleepDurationInMinutes = Math.round(new Float(soundSleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
-        final Integer lightSleepDurationInMinutes = Math.round(new Float(lightSleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
-        final Integer sleepDurationInMinutes = Math.round(new Float(sleepDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
-        final Integer inBedDurationInMinutes = Math.round(new Float(inBedDurationInSecs) / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer soundSleepDurationInMinutes = Math.round((float) soundSleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer lightSleepDurationInMinutes = Math.round((float) lightSleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer sleepDurationInMinutes = Math.round((float) sleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer inBedDurationInMinutes = Math.round((float) inBedDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
 
         if (firstInBedTimestampMillis > 0 && firstInBedTimestampMillis < firstSleepTimestampMillis) {
             sleepOnsetTimeMinutes = (int) ((firstSleepTimestampMillis - firstInBedTimestampMillis)/MINUTE_IN_MILLIS);
         }
 
-        final SleepStats sleepStats = new SleepStats(soundSleepDurationInMinutes,
+        final SleepStats sleepStats = new SleepStats(
+                soundSleepDurationInMinutes,
+                mediumSleepDurationInSecs,
                 lightSleepDurationInMinutes,
                 sleepDurationInMinutes == 0 ? inBedDurationInMinutes : sleepDurationInMinutes,
                 sleepDurationInMinutes == 0,
@@ -780,7 +799,7 @@ public class TimelineUtils {
      */
     public String generateMessage(final SleepStats sleepStats, final int numPartnerMotion, final int numSoundEvents) {
 
-        final Integer percentageOfSoundSleep = Math.round(new Float(sleepStats.soundSleepDurationInMinutes) /sleepStats.sleepDurationInMinutes * 100);
+        final Integer percentageOfSoundSleep = Math.round((float) sleepStats.soundSleepDurationInMinutes /sleepStats.sleepDurationInMinutes * 100);
         final double sleepDurationInHours = sleepStats.sleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
         final double soundDurationInHours = sleepStats.soundSleepDurationInMinutes / (double)DateTimeConstants.MINUTES_PER_HOUR;
 

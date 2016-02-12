@@ -134,4 +134,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_V2, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasSleepStatMediumSleep(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_STATS_MEDIUM_SLEEP, accountId, Collections.EMPTY_LIST);
+    }
+
 }
