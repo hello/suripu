@@ -196,14 +196,14 @@ public class English {
     public final static String ERROR_CLOCK_OUT_OF_SYNC = "Your device's time is significantly different from our reference time. From your device's Settings app, please enable automatic Date & Time, or enter the correct time manually.";
 
     // Trends V2 graph
-    public final static String GRAPH_TITLE_SLEEP_SCORE = "Average Sleep Score";
-    public final static String GRAPH_TITLE_SLEEP_DEPTH = "Average Sleep Depth";
-    public final static String GRAPH_TITLE_SLEEP_DURATION = "Average Sleep Duration";
+    public final static String GRAPH_TITLE_SLEEP_SCORE = "Sleep Score";
+    public final static String GRAPH_TITLE_SLEEP_DEPTH = "Sleep Depth";
+    public final static String GRAPH_TITLE_SLEEP_DURATION = "Sleep Duration";
 
     public final static List<String> DAY_OF_WEEK_NAMES = Lists.newArrayList("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT");
     public final static List<String> MONTH_OF_YEAR_NAMES = Lists.newArrayList("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC");
 
-    public final static String ANNOTATION_AVERAGE = "OVERALL";
-    public final static String ANNOTATION_WEEKDAYS = "WEEKDAYS";
-    public final static String ANNOTATION_WEEKENDS = "WEEKENDS";
+    public final static String ANNOTATION_AVERAGE = "Avg. Overall";
+    public final static String ANNOTATION_WEEKDAYS = "Avg. Weekdays";
+    public final static String ANNOTATION_WEEKENDS = "Avg. Weekends";
 }
