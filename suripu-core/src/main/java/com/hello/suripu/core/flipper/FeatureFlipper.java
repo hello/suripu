@@ -13,6 +13,7 @@ public class FeatureFlipper {
     public final static String ATTEMPT_TO_CORRECT_SENSE_REPORTED_TIMESTAMP = "attempt_to_correct_sense_reported_timestamp";
     public final static String AUDIO_CAPTURE = "audio_capture";
     public final static String AUDIO_STORAGE = "audio_storage";
+    public final static String AUDIO_PEAK_ENERGY_DB = "audio_peak_energy_db";
 
     public final static String BYPASS_OTA_CHECKS = "bypass_ota_checks";
 

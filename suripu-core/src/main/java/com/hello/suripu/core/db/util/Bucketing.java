@@ -61,7 +61,9 @@ public class Bucketing {
      * @param sensorName
      * @return
      */
-    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,final Optional<Device.Color> optionalColor, final Optional<Calibration> calibrationOptional) {
+    public static Optional<Map<Long, Sample>> populateMap(final List<DeviceData> deviceDataList, final String sensorName,
+                                                          final Optional<Device.Color> optionalColor, final Optional<Calibration> calibrationOptional,
+                                                          final Boolean useAudioPeakEnergy) {
 
         if(deviceDataList == null) {
             LOGGER.error("deviceDataList is null for sensor {}", sensorName);
@@ -96,7 +98,13 @@ public class Bucketing {
             } else if (sensorName.equals("light")) {
                 sensorValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
             } else if (sensorName.equals("sound")) {
-                sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
+                final Integer audioPeakDB;
+                if (useAudioPeakEnergy && deviceData.audioPeakEnergyDB != 0) {
+                    audioPeakDB = deviceData.audioPeakEnergyDB;
+                } else {
+                    audioPeakDB = deviceData.audioPeakDisturbancesDB;
+                }
+                sensorValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(audioPeakDB));
             } else if(sensorName.equals("wave_count")) {
                 sensorValue = deviceData.waveCount;
             } else if(sensorName.equals("hold_count")) {
@@ -135,7 +143,8 @@ public class Bucketing {
 
 
 
-    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor, final Optional<Calibration> calibrationOptional) {
+    public static AllSensorSampleMap populateMapAll(@NotNull final List<DeviceData> deviceDataList,final Optional<Device.Color> optionalColor,
+                                                    final Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy) {
 
         final AllSensorSampleMap populatedMap = new AllSensorSampleMap();
 
@@ -154,7 +163,13 @@ public class Bucketing {
             final Long newKey = deviceData.dateTimeUTC.getMillis();
 
             final float lightValue = DataUtils.calibrateLight(deviceData.ambientLightFloat,color);
-            final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakDisturbancesDB));
+            final Integer audioPeakDB;
+            if (useAudioPeakEnergy && deviceData.audioPeakEnergyDB != 0) {
+                audioPeakDB = deviceData.audioPeakEnergyDB;
+            } else {
+                audioPeakDB = deviceData.audioPeakDisturbancesDB;
+            }
+            final float soundValue = DataUtils.calibrateAudio(DataUtils.dbIntToFloatAudioDecibels(deviceData.audioPeakBackgroundDB), DataUtils.dbIntToFloatAudioDecibels(audioPeakDB));
             final float humidityValue = DataUtils.calibrateHumidity(deviceData.ambientTemperature, deviceData.ambientHumidity);
             final float temperatureValue = DataUtils.calibrateTemperature(deviceData.ambientTemperature);
             final float particulatesValue = DataUtils.convertRawDustCountsToDensity(deviceData.ambientAirQualityRaw, calibrationOptional);

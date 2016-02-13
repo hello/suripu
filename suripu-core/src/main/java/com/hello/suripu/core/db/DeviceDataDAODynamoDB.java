@@ -128,7 +128,9 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             .put("temperature", ImmutableSet.of(DeviceDataAttribute.AMBIENT_TEMP))
             .put("particulates", ImmutableSet.of(DeviceDataAttribute.AMBIENT_AIR_QUALITY_RAW))
             .put("light", ImmutableSet.of(DeviceDataAttribute.AMBIENT_LIGHT))
-            .put("sound", ImmutableSet.of(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB, DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB))
+            .put("sound", ImmutableSet.of(DeviceDataAttribute.AUDIO_PEAK_BACKGROUND_DB,
+                                          DeviceDataAttribute.AUDIO_PEAK_DISTURBANCES_DB,
+                                          DeviceDataAttribute.AUDIO_PEAK_ENERGY_DB))
             .build();
 
     public final static ImmutableSet<DeviceDataAttribute> ALL_ATTRIBUTES = ImmutableSet.copyOf(DeviceDataAttribute.values());
@@ -417,7 +419,8 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             final String sensor,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) throws IllegalArgumentException {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean useAudioPeakEnergy) throws IllegalArgumentException {
 
         final DateTime queryEndTime = timestampToDateTimeUTC(queryEndTimestampInUTC);
         final DateTime queryStartTime = timestampToDateTimeUTC(queryStartTimestampInUTC);
@@ -454,7 +457,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
         LOGGER.trace("Map size = {}", map.size());
 
-        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor, color, calibrationOptional);
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor, color, calibrationOptional, useAudioPeakEnergy);
 
         if(!optionalPopulatedMap.isPresent()) {
             LOGGER.debug("Map not populated, returning empty list of samples.");
@@ -480,7 +483,8 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean useAudioPeakEnergy) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = timestampToDateTimeUTC(queryEndTimestampInUTC);
@@ -500,7 +504,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional, useAudioPeakEnergy);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;

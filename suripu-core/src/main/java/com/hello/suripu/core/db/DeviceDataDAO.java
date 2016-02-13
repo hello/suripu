@@ -384,7 +384,8 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             final String sensor,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean useAudioPeakEnergy) {
 
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
         final DateTime queryStartTime = new DateTime(queryStartTimestampInUTC, DateTimeZone.UTC);
@@ -419,7 +420,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
 
         LOGGER.trace("Map size = {}", map.size());
 
-        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor, color, calibrationOptional);
+        final Optional<Map<Long, Sample>> optionalPopulatedMap = Bucketing.populateMap(rows, sensor, color, calibrationOptional, useAudioPeakEnergy);
 
         if(!optionalPopulatedMap.isPresent()) {
             return Collections.EMPTY_LIST;
@@ -447,7 +448,8 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean useAudioPeakEnergy) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInLocalUTC, DateTimeZone.UTC);
@@ -465,7 +467,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows, color, calibrationOptional, useAudioPeakEnergy);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;
@@ -541,7 +543,8 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             final int slotDurationInMinutes,
             final Integer missingDataDefaultValue,
             final Optional<Device.Color> color,
-            final Optional<Calibration> calibrationOptional) {
+            final Optional<Calibration> calibrationOptional,
+            final Boolean useAudioPeakEnergy) {
 
         // queryEndTime is in UTC. If local now is 8:04pm in PDT, we create a utc timestamp in 8:04pm UTC
         final DateTime queryEndTime = new DateTime(queryEndTimestampInUTC, DateTimeZone.UTC);
@@ -560,7 +563,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
             return sensorDataResults;
         }
 
-        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibrationOptional);
+        final AllSensorSampleMap allSensorSampleMap = Bucketing.populateMapAll(rows,color, calibrationOptional, useAudioPeakEnergy);
 
         if(allSensorSampleMap.isEmpty()) {
             return sensorDataResults;

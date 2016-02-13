@@ -133,4 +133,8 @@ public class BaseResource {
     protected Boolean hasDeviceDataDynamoDBEnabled(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.DYNAMODB_DEVICE_DATA, accountId, Collections.EMPTY_LIST);
     }
+
+    protected Boolean useAudioPeakEnergy(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.AUDIO_PEAK_ENERGY_DB, accountId, Collections.EMPTY_LIST);
+    }
 }

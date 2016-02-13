@@ -35,7 +35,7 @@ public class BucketingTest {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(deviceData);
 
-        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature", Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")));
+        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature", Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")), false);
         return populatedMap.get();
     }
 
@@ -64,7 +64,7 @@ public class BucketingTest {
         final List<DeviceData> deviceDataList = new ArrayList<>();
         deviceDataList.add(deviceData);
 
-        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature", Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")));
+        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(deviceDataList, "temperature", Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")), false);
         assertThat(populatedMap.isPresent(), is(true));
 
         assertThat(populatedMap.get().size(), is(1));
@@ -78,17 +78,17 @@ public class BucketingTest {
 
         final List<DeviceData> deviceDataList = new ArrayList<>();
 
-        Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(new ArrayList<DeviceData>(), "temperature",Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")));
+        Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(new ArrayList<DeviceData>(), "temperature",Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")), false);
         assertThat(populatedMap.isPresent(), is(false));
 
-        populatedMap = Bucketing.populateMap(null, "temperature",Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")));
+        populatedMap = Bucketing.populateMap(null, "temperature",Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")), false);
         assertThat(populatedMap.isPresent(), is(false));
     }
 
     @Test
     public void testPopulateMapWrongSensor() {
 
-        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(Collections.EMPTY_LIST, "temp",Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")));
+        final Optional<Map<Long, Sample>> populatedMap = Bucketing.populateMap(Collections.EMPTY_LIST, "temp",Optional.<Device.Color>absent(), Optional.of(Calibration.createDefault("dummy-sense")), false);
         assertThat(populatedMap.isPresent(), is(false));
     }
 
