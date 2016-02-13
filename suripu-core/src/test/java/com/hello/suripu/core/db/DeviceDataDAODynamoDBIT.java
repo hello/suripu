@@ -1006,4 +1006,32 @@ public class DeviceDataDAODynamoDBIT {
         assertThat(average, is(3));
     }
 
+    @Test
+    public void testGenerateTimeSeriesByUTCTimeUsePeakEnergy() {
+        final Long accountId = new Long(1);
+        final String deviceId = "2";
+        final Integer offsetMillis = 0;
+        final DateTime endTime = new DateTime(2015, 11, 1, 0, 0, 0, DateTimeZone.UTC);
+
+        final List<DeviceData> data = Lists.newArrayList();
+        final DeviceData d = new DeviceData.Builder()
+                .withDateTimeUTC(endTime)
+                .withExternalDeviceId(deviceId)
+                .withOffsetMillis(offsetMillis)
+                .withAccountId(accountId)
+                .withAudioPeakEnergyDB(400000)
+                .withAudioPeakDisturbancesDB(1000)
+                .withAudioPeakBackgroundDB(1000)
+                .build();
+        data.add(d);
+
+        deviceDataDAODynamoDB.batchInsert(data);
+
+        final List<Sample> falseSample = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(endTime.minusMinutes(1).getMillis(), endTime.plusMinutes(1).getMillis(),
+                accountId, deviceId, 1, "sound", 0, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), false);
+        final List<Sample> trueSample = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(endTime.minusMinutes(1).getMillis(), endTime.plusMinutes(1).getMillis(),
+                accountId, deviceId, 1, "sound", 0, Optional.<Device.Color>absent(), Optional.<Calibration>absent(), true);
+        assertThat(trueSample.get(1).value > falseSample.get(1).value, is(true));
+    }
+
 }
