@@ -7,9 +7,9 @@ import com.google.common.base.Objects;
 
 public class SleepStats {
 
-    public static final int AWAKE_SLEEP_DEPTH_THRESHOLD = 5;
-    public static final int LIGHT_SLEEP_DEPTH_THRESHOLD = 10;
-    public static final int MEDIUM_SLEEP_DEPTH_THRESHOLD = 70;
+    public static final int AWAKE_SLEEP_DEPTH_THRESHOLD = 5; // awake state < 5
+    public static final int LIGHT_SLEEP_DEPTH_THRESHOLD = 10; // light < 10
+    public static final int MEDIUM_SLEEP_DEPTH_THRESHOLD = 70; // medium < 70, sound >= 70
 
     @JsonProperty("sound_sleep")
     final public Integer soundSleepDurationInMinutes;

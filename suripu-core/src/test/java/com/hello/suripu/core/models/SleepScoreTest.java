@@ -3,7 +3,10 @@ package com.hello.suripu.core.models;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * Created by jimmy on 7/21/15.
@@ -88,6 +91,5 @@ public class SleepScoreTest {
         assertThat(sleepScore.motionScore, is(fakeMotion));
         assertThat(sleepScore.sleepDurationScore, is(fakeDuration));
         assertThat(sleepScore.environmentalScore, is(fakeEnvironment));
-
     }
 }

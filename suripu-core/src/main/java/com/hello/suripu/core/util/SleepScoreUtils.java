@@ -79,10 +79,10 @@ public class SleepScoreUtils {
         final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
         final Float sleepDurationHours = (float) sleepDurationMinutes / 60.0f;
 
-        float baseScore;
-        float topScore;
-        float diffMinutes;
-        float bucketTotalMinutes;
+        final float baseScore;
+        final float topScore;
+        final float diffMinutes;
+        final float bucketTotalMinutes;
 
         if (sleepDurationHours < DURATION_V2_MIN_SCORE_HOURS) {
             // if you sleep less than 2 hours, you're doomed.

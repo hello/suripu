@@ -62,7 +62,6 @@ public class SleepScore {
         }
     }
 
-
     public static class DurationHeavyWeightingV2 extends Weighting {
 
         public DurationHeavyWeightingV2() {
