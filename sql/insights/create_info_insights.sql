@@ -408,3 +408,11 @@ UPDATE info_insight_cards SET text=
 
 While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns'
 WHERE category='sleep_hygiene';
+
+--- jyfan add indicator of layout on mobile
+CREATE TYPE INSIGHT_TYPE AS ENUM('default', 'generic');
+ALTER TABLE info_insight_cards ADD COLUMN insight_type INSIGHT_TYPE NOT NULL DEFAULT 'default';
+
+UPDATE info_insight_cards SET insight_type='generic' WHERE category='sleep_hygiene';
+UPDATE info_insight_cards SET insight_type='generic' WHERE category='sleep_duration';
+UPDATE info_insight_cards SET insight_type='generic' WHERE category='generic';
