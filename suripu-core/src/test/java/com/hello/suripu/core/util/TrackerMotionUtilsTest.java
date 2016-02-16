@@ -26,17 +26,24 @@ public class TrackerMotionUtilsTest {
         for (int i = - 20; i < max*periodInMinutes + 20; i++) {
             final long tstamp = t0 + i*DateTimeConstants.MILLIS_PER_MINUTE;
 
-            final int idx = TrackerMotionUtils.getIndex(tstamp,t0,period,max);
+            int idx = -2;
+
+            try {
+                idx = TrackerMotionUtils.getIndex(tstamp, t0, period, max);
+            }
+            catch (Exception e) {
+
+            }
 
             int refIdx = i / periodInMinutes;
 
             //invalid indicies should be a -1
             if (refIdx < 0) {
-                refIdx = -1;
+                refIdx = -2;
             }
 
             if (refIdx >= max) {
-                refIdx = -1;
+                refIdx = -2;
             }
 
             TestCase.assertEquals(refIdx,idx);

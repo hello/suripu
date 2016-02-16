@@ -49,80 +49,86 @@ public class InBedSearcher {
     public static Event getInBedPlausiblyBeforeSleep(final DateTime startTimeUTC, final DateTime endTimeUTC, final Event sleep, final Event inBed,final int numberOfMintesRequiredToFallAsleep, final ImmutableList<TrackerMotion> myTrackerMotion) {
 
 
-        //construct 5 minute bins of pill on-durations
-        final Long t0 = startTimeUTC.withZone(DateTimeZone.UTC).getMillis();
-        final Long tf = endTimeUTC.withZone(DateTimeZone.UTC).getMillis();
+        try {
+            //construct 5 minute bins of pill on-durations
+            final Long t0 = startTimeUTC.withZone(DateTimeZone.UTC).getMillis();
+            final Long tf = endTimeUTC.withZone(DateTimeZone.UTC).getMillis();
 
 
-        final int durationInIntervals = (int) ((tf - t0) / MOTION_PERIOD_MILLIS);
+            final int durationInIntervals = (int) ((tf - t0) / MOTION_PERIOD_MILLIS);
 
 
-        final Double myMotionsBinned [] = new Double[durationInIntervals];
-        Arrays.fill(myMotionsBinned,0.0);
+            final Double myMotionsBinned[] = new Double[durationInIntervals];
+            Arrays.fill(myMotionsBinned, 0.0);
 
-        TrackerMotionUtils.fillBinsWithTrackerDurations(myMotionsBinned,t0,MOTION_PERIOD_MILLIS,myTrackerMotion,1,true);
+            TrackerMotionUtils.fillBinsWithTrackerDurations(myMotionsBinned, t0, MOTION_PERIOD_MILLIS, myTrackerMotion, 1, true);
 
-        final int calculatedOnBedIndex = TrackerMotionUtils.getIndex(inBed.getStartTimestamp(),t0,MOTION_PERIOD_MILLIS,myMotionsBinned.length);
-        final int calculatedFallAsleepIndex = TrackerMotionUtils.getIndex(sleep.getStartTimestamp(),t0,MOTION_PERIOD_MILLIS,myMotionsBinned.length);
+            final int calculatedOnBedIndex = TrackerMotionUtils.getIndex(inBed.getStartTimestamp(), t0, MOTION_PERIOD_MILLIS, myMotionsBinned.length);
+            final int calculatedFallAsleepIndex = TrackerMotionUtils.getIndex(sleep.getStartTimestamp(), t0, MOTION_PERIOD_MILLIS, myMotionsBinned.length);
 
-        final double [] onDurationSeconds = Doubles.toArray(Arrays.asList(myMotionsBinned));
-        final double [][] x = {onDurationSeconds};
+            final double[] onDurationSeconds = Doubles.toArray(Arrays.asList(myMotionsBinned));
+            final double[][] x = {onDurationSeconds};
 
-        final double [][] A = {{0.99,0.01},{0.01,0.99}};
-        final double [] pi = {0.5,0.5};
-        final HmmPdfInterface [] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION,0),new PoissonPdf(POISSON_MEAN_FOR_MOTION,0)};
+            final double[][] A = {{0.99, 0.01}, {0.01, 0.99}};
+            final double[] pi = {0.5, 0.5};
+            final HmmPdfInterface[] obsModels = {new PoissonPdf(POISSON_MEAN_FOR_NO_MOTION, 0), new PoissonPdf(POISSON_MEAN_FOR_MOTION, 0)};
 
-        final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.LOGMATH,2,A,pi,obsModels,0);
-
-
-        final HmmDecodedResult result = hmm.decode(x,new Integer [] {0,1},1e-100);
-
-        //check to make sure it found a motion cluster SOMEWHERE
-        boolean valid = false;
-        for (final Iterator<Integer> it = result.bestPath.iterator(); it.hasNext(); ) {
-            if (it.next() == 1) {
-                valid = true;
-                break;
-            }
-        }
-
-        if (!valid) {
-            LOGGER.warn("action=return_default_on_bed");
-            return inBed;
-        }
+            final HiddenMarkovModelInterface hmm = HiddenMarkovModelFactory.create(HiddenMarkovModelFactory.HmmType.LOGMATH, 2, A, pi, obsModels, 0);
 
 
-        boolean foundCluster = false;
-        for (int i = calculatedFallAsleepIndex; i >= calculatedOnBedIndex; i--) {
-           final Integer state = result.bestPath.get(i);
+            final HmmDecodedResult result = hmm.decode(x, new Integer[]{0, 1}, 1e-100);
 
-            if (state.equals(1)) {
-                foundCluster = true;
-                continue;
+            //check to make sure it found a motion cluster SOMEWHERE
+            boolean valid = false;
+            for (final Iterator<Integer> it = result.bestPath.iterator(); it.hasNext(); ) {
+                if (it.next() == 1) {
+                    valid = true;
+                    break;
+                }
             }
 
-            if (state.equals(0) && foundCluster) {
+            if (!valid) {
+                LOGGER.warn("action=return_default_on_bed");
+                return inBed;
+            }
 
 
-                long newInBedTime = t0 + (i + 1) * MOTION_PERIOD_MILLIS;
-                final long numMillisToFallAsleep = (long)numberOfMintesRequiredToFallAsleep*(long)DateTimeConstants.MILLIS_PER_MINUTE;
-                if (sleep.getStartTimestamp() - newInBedTime < numMillisToFallAsleep) {
-                    newInBedTime = sleep.getStartTimestamp() - numMillisToFallAsleep;
+            boolean foundCluster = false;
+            for (int i = calculatedFallAsleepIndex; i >= calculatedOnBedIndex; i--) {
+                final Integer state = result.bestPath.get(i);
+
+                if (state.equals(1)) {
+                    foundCluster = true;
+                    continue;
                 }
 
-                final long tdiff = inBed.getEndTimestamp() - inBed.getStartTimestamp();
+                if (state.equals(0) && foundCluster) {
 
 
+                    long newInBedTime = t0 + (i + 1) * MOTION_PERIOD_MILLIS;
+                    final long numMillisToFallAsleep = (long) numberOfMintesRequiredToFallAsleep * (long) DateTimeConstants.MILLIS_PER_MINUTE;
+                    if (sleep.getStartTimestamp() - newInBedTime < numMillisToFallAsleep) {
+                        newInBedTime = sleep.getStartTimestamp() - numMillisToFallAsleep;
+                    }
 
-                final Event newInBedEvent =  Event.createFromType(Event.Type.IN_BED,newInBedTime , newInBedTime + tdiff, inBed.getTimezoneOffset(), Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+                    final long tdiff = inBed.getEndTimestamp() - inBed.getStartTimestamp();
 
-                LOGGER.info("action=adjusted_in_bed new_time={} dt_minutes={}",
-                        new DateTime(newInBedEvent.getStartTimestamp()).withZone(DateTimeZone.forOffsetMillis(newInBedEvent.getTimezoneOffset())),
-                        (newInBedEvent.getStartTimestamp() - inBed.getStartTimestamp()) / DateTimeConstants.MILLIS_PER_MINUTE);
 
-                return newInBedEvent;
+                    final Event newInBedEvent = Event.createFromType(Event.Type.IN_BED, newInBedTime, newInBedTime + tdiff, inBed.getTimezoneOffset(), Optional.of(English.IN_BED_MESSAGE), Optional.<SleepSegment.SoundInfo>absent(), Optional.<Integer>absent());
+
+                    LOGGER.info("action=adjusted_in_bed new_time={} dt_minutes={}",
+                            new DateTime(newInBedEvent.getStartTimestamp()).withZone(DateTimeZone.forOffsetMillis(newInBedEvent.getTimezoneOffset())),
+                            (newInBedEvent.getStartTimestamp() - inBed.getStartTimestamp()) / DateTimeConstants.MILLIS_PER_MINUTE);
+
+                    return newInBedEvent;
+                }
+
             }
 
+
+        }
+        catch (Exception e) {
+            LOGGER.error(e.getMessage());
         }
 
         return inBed;
