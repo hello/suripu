@@ -21,16 +21,20 @@ public class InfoInsightCardsMapper implements ResultSetMapper<Optional<InfoInsi
     public Optional<InfoInsightCards> map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 
         final String categoryString = r.getString("category");
+        final String insightTypeString = r.getString("insight_type");
 
         try {
             final InsightCard.Category category = InsightCard.Category.fromString(categoryString);
+            final InfoInsightCards.InsightType insightType = InfoInsightCards.InsightType.fromString(insightTypeString);
+
             final InfoInsightCards card = InfoInsightCards.create(
                     r.getInt("id"),
                     category,
                     r.getString("title"),
                     r.getString("text"),
                     r.getString("image_url"),
-                    r.getString("category_name")
+                    r.getString("category_name"),
+                    insightType
             );
 
             return Optional.of(card);
