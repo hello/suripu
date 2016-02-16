@@ -851,18 +851,26 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         final Integer durationScore = computeSleepDurationScore(accountId, sleepStats);
         final Integer environmentScore = computeEnvironmentScore(accountId, sleepStats, numberSoundEvents, sensors);
 
+        final Integer timesAwakePenalty;
+        if (this.hasTimesAwakeSleepScorePenalty(accountId)) {
+            timesAwakePenalty = SleepScoreUtils.calculateTimesAwakePenaltyScore(sleepStats.numberOfMotionEvents);
+        } else {
+            timesAwakePenalty = 0;
+        }
+
         // Calculate the sleep score based on the sub scores and weighting
         final SleepScore sleepScore = new SleepScore.Builder()
                 .withMotionScore(motionScore)
                 .withSleepDurationScore(durationScore)
                 .withEnvironmentalScore(environmentScore)
                 .withWeighting(sleepScoreWeighting(accountId))
+                .withTimesAwakePenaltyScore(timesAwakePenalty)
                 .build();
 
         // Always update stats and scores to Dynamo
         final Integer userOffsetMillis = trackerMotions.get(0).offsetMillis;
         final Boolean updatedStats = this.sleepStatsDAODynamoDB.updateStat(accountId,
-                targetDate.withTimeAtStartOfDay(), sleepScore.value, motionScore, sleepStats, userOffsetMillis);
+                targetDate.withTimeAtStartOfDay(), sleepScore.value, sleepScore, sleepStats, userOffsetMillis);
 
         LOGGER.debug("Updated Stats-score: status {}, account {}, score {}, stats {}",
                 updatedStats, accountId, sleepScore, sleepStats);

@@ -28,11 +28,11 @@ import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
 import com.hello.suripu.core.models.DeviceAccountPair;
-import com.hello.suripu.core.models.MotionScore;
 import com.hello.suripu.core.models.OnlineHmmData;
 import com.hello.suripu.core.models.OnlineHmmPriors;
 import com.hello.suripu.core.models.OnlineHmmScratchPad;
 import com.hello.suripu.core.models.RingTime;
+import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
@@ -143,7 +143,7 @@ public class TimelineProcessorTest {
 
     final SleepStatsDAO sleepStatsDAO = new SleepStatsDAO() {
         @Override
-        public Boolean updateStat(Long accountId, DateTime date, Integer sleepScore, MotionScore motionScore, SleepStats stats, Integer offsetMillis) {
+        public Boolean updateStat(Long accountId, DateTime date, Integer overallSleepScore, SleepScore sleepScore, SleepStats stats, Integer offsetMillis) {
             return Boolean.TRUE;
         }
 

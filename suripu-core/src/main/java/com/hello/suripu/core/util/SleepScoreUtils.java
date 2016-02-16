@@ -39,6 +39,8 @@ public class SleepScoreUtils {
     public static final Integer DURATION_TOO_MUCH_HOURS = 15;
     public static final Integer DURATION_TOO_MUCH_SCORE = 50;
 
+    public static final Integer MAX_TIMES_AWAKE_PENALTY_SCORE = -30;
+    public static final Integer AWAKE_PENALTY_SCORE = -5; // minus 5 for each time-awake
     /**
      * compute a score based on sleep duration.
      * if duration is within recommended range, return max score
@@ -288,5 +290,12 @@ public class SleepScoreUtils {
         }
 
         return Optional.absent();
+    }
+
+
+    public static Integer calculateTimesAwakePenaltyScore(final int timesAwake) {
+        // penalty, returns a negative score
+        final int penalty = timesAwake * AWAKE_PENALTY_SCORE;
+        return (penalty < MAX_TIMES_AWAKE_PENALTY_SCORE) ? MAX_TIMES_AWAKE_PENALTY_SCORE : penalty;
     }
 }

@@ -142,4 +142,8 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_STATS_MEDIUM_SLEEP, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasTimesAwakeSleepScorePenalty(final Long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_TIMES_AWAKE_PENALTY, accountId, Collections.EMPTY_LIST);
+    }
+
 }

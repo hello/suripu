@@ -84,6 +84,7 @@ public class FeatureFlipper {
     public final static String SLEEP_SCORE_DURATION_WEIGHTING = "sleep_score_duration_weighting";
     public final static String SLEEP_SCORE_DURATION_WEIGHTING_V2 = "sleep_score_duration_weighting_V2";
     public final static String SLEEP_SCORE_DURATION_V2 = "sleep_score_duration_v2";
+    public final static String SLEEP_SCORE_TIMES_AWAKE_PENALTY = "sleep_score_times_awake_penalty";
     public final static String SLEEP_SEGMENT_OFFSET_REMAPPING = "sleep_segment_offset_remapping";
     public final static String SLEEP_STATS_MEDIUM_SLEEP = "sleep_stats_medium_sleep";
     public final static String SMART_ALARM = "smart_alarm";

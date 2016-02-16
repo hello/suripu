@@ -119,7 +119,7 @@ public class InsightProcessorTest {
         final MotionScore fakeMotionScore = Mockito.mock(MotionScore.class);
         final SleepStats fakeSleepStat = Mockito.mock(SleepStats.class);
         final List<AggregateSleepStats> fakeAggregateSleepStatsList = Lists.newArrayList();
-        fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, fakeSleepStat));
+        fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat));
 
         //Taking care of @NotNull check for light
         final DeviceDataResponse successfulResponse = new DeviceDataResponse(ImmutableList.copyOf(data), Response.Status.SUCCESS, Optional.<Exception>absent());

@@ -25,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.MotionScore;
+import com.hello.suripu.core.models.SleepScore;
 import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -65,7 +66,13 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
     public static final String MOTIONS_PERIOD_MINS_ATTRIBUTE_NAME = "motion_period_mins";
     public static final String AVG_MOTION_AMPLITUDE_ATTRIBUTE_NAME = "avg_motion_amplitude";
     public static final String MAX_MOTION_AMPLITUDE_ATTRIBUTE_NAME = "max_motion_amplitude";
+
+
+    // sleep score breakdown
     public static final String MOTION_SCORE_ATTRIBUTE_NAME = "motion_score";
+    public static final String SLEEP_DURATION_SCORE_ATTRIBUTE_NAME = "duration_score";
+    public static final String ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME = "env_score";
+    public static final String TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME =  "awake_score";
 
     // sleep stats stuff
     public static final String SLEEP_DURATION_ATTRIBUTE_NAME = "sleep_duration";
@@ -80,8 +87,6 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     private static final int MAX_CALL_COUNT = 5;
 
-
-
     public static final String DEFAULT_SCORE_TYPE = "sleep";
 
     public SleepStatsDAODynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName, final String version) {
@@ -93,6 +98,9 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                 DOW_ATTRIBUTE_NAME, OFFSET_MILLIS_ATTRIBUTE_NAME,
                 SCORE_ATTRIBUTE_NAME, TYPE_ATTRIBUTE_NAME, VERSION_ATTRIBUTE_NAME,
                 MOTION_SCORE_ATTRIBUTE_NAME,
+                SLEEP_DURATION_SCORE_ATTRIBUTE_NAME,
+                ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME,
+                TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME,
                 NUM_MOTIONS_ATTRIBUTE_NAME, MOTIONS_PERIOD_MINS_ATTRIBUTE_NAME,
                 AVG_MOTION_AMPLITUDE_ATTRIBUTE_NAME, MAX_MOTION_AMPLITUDE_ATTRIBUTE_NAME,
                 SLEEP_DURATION_ATTRIBUTE_NAME,
@@ -110,13 +118,17 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
     }
 
     @Override
-    public Boolean updateStat(final Long accountId, final DateTime date, final Integer sleepScore, final MotionScore motionScore, final SleepStats stats, final Integer offsetMillis) {
-        LOGGER.debug("Write single score: {}, {}, {}", accountId, date, sleepScore);
+    public Boolean updateStat(final Long accountId, final DateTime date,
+                              final Integer overallSleepScore,
+                              final SleepScore sleepScore,
+                              final SleepStats stats,
+                              final Integer offsetMillis) {
+        LOGGER.debug("Write single score: {}, {}, {}", accountId, date, overallSleepScore);
 
         final String dateString = DateTimeUtil.dateToYmdString(date.withTimeAtStartOfDay());
 
         try {
-            final HashMap<String, AttributeValueUpdate> item = this.createUpdateItem(accountId, date, sleepScore, motionScore, stats, offsetMillis);
+            final HashMap<String, AttributeValueUpdate> item = this.createUpdateItem(accountId, date, overallSleepScore, sleepScore, stats, offsetMillis);
 
             final Map<String, AttributeValue> key = new HashMap<>();
             key.put(ACCOUNT_ID_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(accountId)));
@@ -143,7 +155,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
             }
         } catch (AmazonServiceException ase) {
             LOGGER.error("Failed to update sleep score for account {}, date {}, score {}",
-                    accountId, date, sleepScore);
+                    accountId, date, overallSleepScore);
         }
         return false;
 
@@ -283,8 +295,8 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     }
 
-    private HashMap<String, AttributeValue> createItem(final Long accountId, final DateTime date, final Integer sleepScore,
-                                                       final MotionScore motionScore,
+    private HashMap<String, AttributeValue> createItem(final Long accountId, final DateTime date, final Integer overallSleepScore,
+                                                       final SleepScore sleepScore,
                                                        final SleepStats stats, final Integer offsetMillis) {
         final HashMap<String, AttributeValue> item = new HashMap<>();
 
@@ -300,16 +312,21 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         item.put(OFFSET_MILLIS_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(offsetMillis)));
 
         //score stuff
-        item.put(SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore)));
+        item.put(SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(overallSleepScore)));
         item.put(TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(DEFAULT_SCORE_TYPE));
         item.put(VERSION_ATTRIBUTE_NAME, new AttributeValue().withS(this.version));
 
         // motion stuff
-        item.put(MOTION_SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(motionScore.score)));
-        item.put(NUM_MOTIONS_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(motionScore.numMotions)));
-        item.put(MOTIONS_PERIOD_MINS_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(motionScore.motionPeriodMinutes)));
-        item.put(AVG_MOTION_AMPLITUDE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(motionScore.avgAmplitude)));
-        item.put(MAX_MOTION_AMPLITUDE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(motionScore.maxAmplitude)));
+        item.put(NUM_MOTIONS_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.motionScore.numMotions)));
+        item.put(MOTIONS_PERIOD_MINS_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.motionScore.motionPeriodMinutes)));
+        item.put(AVG_MOTION_AMPLITUDE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.motionScore.avgAmplitude)));
+        item.put(MAX_MOTION_AMPLITUDE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.motionScore.maxAmplitude)));
+
+        // sleep score components
+        item.put(MOTION_SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.motionScore.score)));
+        item.put(ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.environmentalScore)));
+        item.put(SLEEP_DURATION_SCORE_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.sleepDurationScore)));
+        item.put(TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(sleepScore.timesAwakePenaltyScore)));
 
         // stats stuff
         item.put(SLEEP_DURATION_ATTRIBUTE_NAME, new AttributeValue().withN(String.valueOf(stats.sleepDurationInMinutes)));
@@ -325,13 +342,13 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         return item;
     }
 
-    private HashMap<String, AttributeValueUpdate> createUpdateItem(final Long accountId, final DateTime date, final Integer sleepScore,
-                                                                   final MotionScore motionScore,
+    private HashMap<String, AttributeValueUpdate> createUpdateItem(final Long accountId, final DateTime date, final Integer overallSleepScore,
+                                                                   final SleepScore sleepScore,
                                                                    final SleepStats stats,
                                                                    final Integer offsetMillis) {
         final HashMap<String, AttributeValueUpdate> item = new HashMap<>();
 
-        final HashMap<String, AttributeValue> values = createItem(accountId, date, sleepScore, motionScore, stats, offsetMillis);
+        final HashMap<String, AttributeValue> values = createItem(accountId, date, overallSleepScore, sleepScore, stats, offsetMillis);
         for (final String attribute : values.keySet()) {
             if (attribute.equals(ACCOUNT_ID_ATTRIBUTE_NAME) || attribute.equals(DATE_ATTRIBUTE_NAME)) {
                 continue;
@@ -345,12 +362,8 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
     }
 
     private AggregateSleepStats createAggregateStat(Map<String, AttributeValue> item) {
-        final Long accountId = Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN());
-        final Integer offsetMillis = Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN());
 
-        final Integer score = Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN());
-        final String version = item.get(VERSION_ATTRIBUTE_NAME).getS();
-
+        // score components
         final MotionScore motionScore = new MotionScore(
                 Integer.valueOf(item.get(NUM_MOTIONS_ATTRIBUTE_NAME).getN()),
                 Integer.valueOf(item.get(MOTIONS_PERIOD_MINS_ATTRIBUTE_NAME).getN()),
@@ -359,6 +372,7 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                 Integer.valueOf(item.get(MOTION_SCORE_ATTRIBUTE_NAME).getN())
         );
 
+        // Sleep depths
         final Integer soundSleep = Integer.valueOf(item.get(SOUND_SLEEP_ATTRIBUTE_NAME).getN());
         final Integer lightSleep = Integer.valueOf(item.get(LIGHT_SLEEP_ATTRIBUTE_NAME).getN());
         final Integer sleepDuration = Integer.valueOf(item.get(SLEEP_DURATION_ATTRIBUTE_NAME).getN());
@@ -380,9 +394,28 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                 Integer.valueOf(item.get(SLEEP_ONSET_ATTRIBUTE_NAME).getN())
         );
 
-        final DateTime date = DateTimeUtil.ymdStringToDateTime(item.get(DATE_ATTRIBUTE_NAME).getS());
+        AggregateSleepStats.Builder builder = new AggregateSleepStats.Builder()
+                .withAccountId(Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()))
+                .withDateTime(DateTimeUtil.ymdStringToDateTime(item.get(DATE_ATTRIBUTE_NAME).getS()))
+                .withOffsetMillis(Integer.valueOf(item.get(OFFSET_MILLIS_ATTRIBUTE_NAME).getN()))
+                .withSleepScore(Integer.valueOf(item.get(SCORE_ATTRIBUTE_NAME).getN()))
+                .withVersion(item.get(VERSION_ATTRIBUTE_NAME).getS())
+                .withMotionScore(motionScore)
+                .withSleepStats(stats);
 
-        return new AggregateSleepStats(accountId, date, offsetMillis, score, version, motionScore, stats);
+        if (item.containsKey(SLEEP_DURATION_SCORE_ATTRIBUTE_NAME)) {
+            builder.withSleepDurationScore(Integer.valueOf(item.get(SLEEP_DURATION_SCORE_ATTRIBUTE_NAME).getN()));
+        }
+
+        if (item.containsKey(ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME)) {
+            builder.withEnvironmentalScore(Integer.valueOf(item.get(ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME).getN()));
+        }
+
+        if (item.containsKey(TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME)) {
+            builder.withTimesAwakePenaltyScore(Integer.valueOf(item.get(TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME).getN()));
+        }
+
+        return builder.build();
     }
 
 }

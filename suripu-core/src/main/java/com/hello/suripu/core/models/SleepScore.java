@@ -6,6 +6,7 @@ package com.hello.suripu.core.models;
 public class SleepScore {
 
     public static final int MAX_SCORE = 100;
+    public static final int MIN_SCORE = 15;
     public static final int IDEAL_SCORE_THRESHOLD = 80;
     public static final int WARNING_SCORE_THRESHOLD = 60;
     public static final int ALERT_SCORE_THRESHOLD = 0;
@@ -14,31 +15,36 @@ public class SleepScore {
     public final MotionScore motionScore;
     public final Integer sleepDurationScore;
     public final Integer environmentalScore;
+    public final Integer timesAwakePenaltyScore; // negative
     public final Integer value;
 
     public SleepScore(final Integer value,
                       final MotionScore motionScore,
                       final Integer sleepDurationScore,
-                      final Integer environmentalScore) {
+                      final Integer environmentalScore,
+                      final Integer timesAwakePenaltyScore) {
 
         this.value = value;
         this.motionScore = motionScore;
         this.sleepDurationScore = sleepDurationScore;
         this.environmentalScore = environmentalScore;
+        this.timesAwakePenaltyScore = timesAwakePenaltyScore;
     }
 
     @Override
     public String toString(){
         final StringBuilder builder = new StringBuilder()
-            .append("{motion ")
-            .append(this.motionScore.score)
-            .append(", duration ")
-            .append(this.sleepDurationScore)
-            .append(", environment ")
-            .append(this.environmentalScore)
-            .append(", sleep score ")
-            .append(this.value)
-            .append("}");
+                .append("{motion ")
+                .append(this.motionScore.score)
+                .append(", duration ")
+                .append(this.sleepDurationScore)
+                .append(", environment ")
+                .append(this.environmentalScore)
+                .append(", times-awakes-penalty ")
+                .append(this.timesAwakePenaltyScore)
+                .append(", sleep score ")
+                .append(this.value)
+                .append("}");
         return builder.toString();
     }
 
@@ -80,10 +86,12 @@ public class SleepScore {
         private MotionScore motionScore;
         private Integer sleepDurationScore;
         private Integer environmentalScore;
+        private Integer timesAwakePenaltyScore;
         private Weighting weighting;
 
         public Builder() {
             this.weighting = new Weighting(); // default weighting
+            this.timesAwakePenaltyScore = 0;
         }
 
         public Builder withMotionScore(final MotionScore motionScore) {
@@ -101,21 +109,32 @@ public class SleepScore {
             return this;
         }
 
+        public Builder withTimesAwakePenaltyScore(final Integer timesAwakePenaltyScore) {
+            this.timesAwakePenaltyScore = timesAwakePenaltyScore;
+            return this;
+        }
+
         public Builder withWeighting(final Weighting weighting) {
             this.weighting = weighting;
             return this;
         }
 
         public SleepScore build() {
-            final Integer value = Math.round(
+            Integer value = Math.round(
                       (weighting.motion * motionScore.score)
                     + (weighting.duration * sleepDurationScore)
-                    + (weighting.environmental * environmentalScore));
+                    + (weighting.environmental * environmentalScore))
+                    + timesAwakePenaltyScore;
+
+            if (value < MIN_SCORE) {
+                value = MIN_SCORE;
+            }
 
             return new SleepScore(value,
                     motionScore,
                     sleepDurationScore,
-                    environmentalScore);
+                    environmentalScore,
+                    timesAwakePenaltyScore);
         }
     }
 

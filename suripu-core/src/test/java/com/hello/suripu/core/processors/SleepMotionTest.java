@@ -36,7 +36,7 @@ public class SleepMotionTest {
         final int numData = numMotions.size();
         for (int i = 0; i < numData; i ++) {
             final MotionScore motionScore = new MotionScore(numMotions.get(i), durations.get(i), 1.0f, 1000, 10);
-            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, sleepStats));
+            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, 0, 0, 0, sleepStats));
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
@@ -59,7 +59,7 @@ public class SleepMotionTest {
         final int numData = numMotions.size();
         for (int i = 0; i < numData; i ++) {
             final MotionScore motionScore = new MotionScore(numMotions.get(i), durations.get(i), 1.0f, 1000, 10);
-            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, sleepStats));
+            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, 0, 0, 0, sleepStats));
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
@@ -82,7 +82,7 @@ public class SleepMotionTest {
         final int numData = numMotions.size();
         for (int i = 0; i < numData; i ++) {
             final MotionScore motionScore = new MotionScore(numMotions.get(i), durations.get(i), 1.0f, 1000, 10);
-            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, sleepStats));
+            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, 0, 0, 0, sleepStats));
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
@@ -106,7 +106,7 @@ public class SleepMotionTest {
         final int numData = numMotions.size();
         for (int i = 0; i < numData; i ++) {
             final MotionScore motionScore = new MotionScore(numMotions.get(i), durations.get(i), 1.0f, 1000, 10);
-            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, sleepStats));
+            aggSleepStats.add(new AggregateSleepStats(accountId, now, -252000, 10, "0.2", motionScore, 0, 0, 0, sleepStats));
         }
 
         final Optional<InsightCard> optionalCard = SleepMotion.processData(accountId, ImmutableList.copyOf(aggSleepStats), false);
