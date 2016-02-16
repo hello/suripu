@@ -27,7 +27,7 @@ public class TestOnBedSearcher {
 
         //in the middle
         final long tsleep = (startTime.withZone(DateTimeZone.UTC).getMillis() + endTime.withZone(DateTimeZone.UTC).getMillis()) / 2;
-        final long tInBed = tsleep - DateTimeConstants.MILLIS_PER_HOUR*1000L;
+        final long tInBed = startTime.withZone(DateTimeZone.UTC).getMillis();
 
         final ImmutableList<TrackerMotion> trackerMotion = OnlineHmmTest.getTypicalDayOfPill(startTime,endTime,tzOffset);
 
@@ -39,7 +39,7 @@ public class TestOnBedSearcher {
 
 
         TestCase.assertTrue(newInBed.getStartTimestamp() > inbed.getStartTimestamp());
-        TestCase.assertTrue(newInBed.getStartTimestamp() > startTime.getMillis());
+        TestCase.assertTrue(newInBed.getStartTimestamp() > startTime.getMillis() + 1L);
 
 
     }
