@@ -332,8 +332,6 @@ public class OnlineHmm {
         }
 
 
-        //last
-
         return SleepEvents.create(inbed,sleep,wake,outofbed);
     }
 
