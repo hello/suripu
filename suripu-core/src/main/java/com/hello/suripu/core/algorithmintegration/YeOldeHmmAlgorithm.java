@@ -88,7 +88,7 @@ class YeOldeHmmAlgorithm implements TimelineAlgorithm{
 
             log.addMessage(AlgorithmType.HMM, eventList);
 
-            return Optional.of(new TimelineAlgorithmResult(eventList));
+            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.HMM,eventList));
 
         }
         catch (Exception e) {

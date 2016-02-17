@@ -85,7 +85,7 @@ public class OnlineHmmAlgorithm implements TimelineAlgorithm {
             final List<Event> eventsList = timelineUtils.eventsFromOptionalEvents(events.toList());
             log.addMessage(AlgorithmType.ONLINE_HMM, eventsList);
 
-            return Optional.of(new TimelineAlgorithmResult(eventsList));
+            return Optional.of(new TimelineAlgorithmResult(AlgorithmType.ONLINE_HMM,eventsList));
         }
         catch (Exception e) {
             log.addMessage(AlgorithmType.ONLINE_HMM, TimelineError.UNEXEPECTED);

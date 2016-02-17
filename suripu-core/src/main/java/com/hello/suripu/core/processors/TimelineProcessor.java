@@ -44,11 +44,13 @@ import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
+import com.hello.suripu.core.models.timeline.v2.EventType;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.hello.suripu.core.util.FeedbackUtils;
+import com.hello.suripu.core.util.InBedSearcher;
 import com.hello.suripu.core.util.OutlierFilter;
 import com.hello.suripu.core.util.PartnerDataUtils;
 import com.hello.suripu.core.util.SensorDataTimezoneMap;
@@ -188,6 +190,71 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         return TimelineLog.DEFAULT_TEST_GROUP;
     }
 
+    private TimelineAlgorithmResult refineInBedTime(final DateTime startTimeLocalUTC, final DateTime endTimeLocalUtc, final long accountId,final OneDaysSensorData sensorData, final TimelineAlgorithmResult origResult) {
+
+        //return original if not enabled
+        if (!this.hasInBedSearchEnabled(accountId)) {
+            return origResult;
+        }
+
+        //doesn't play nicely with extra events
+        if (this.hasExtraEventsEnabled(accountId)) {
+            return origResult;
+        }
+
+        //only works on ONLINE_HMM
+        if (!origResult.algorithmType.equals(AlgorithmType.ONLINE_HMM)) {
+            return origResult;
+        }
+
+        //make sure events I care about are actually present
+        if (!origResult.mainEvents.containsKey(Event.Type.SLEEP)) {
+            return origResult;
+        }
+
+        if (!origResult.mainEvents.containsKey(Event.Type.IN_BED)) {
+            return origResult;
+        }
+
+        final DateTime startTimeUTC = startTimeLocalUTC.minusMillis(sensorData.timezoneOffsetMillis);
+        final DateTime endTimeUTC = endTimeLocalUtc.minusMillis(sensorData.timezoneOffsetMillis);
+
+        final Event sleepEvent = origResult.mainEvents.get(Event.Type.SLEEP);
+
+        final Event inBedEvent = InBedSearcher.getInBedPlausiblyBeforeSleep(
+                startTimeUTC,endTimeUTC,
+                sleepEvent,
+                origResult.mainEvents.get(Event.Type.IN_BED),
+                15, //15 minutes to fall asleep minimum
+                sensorData.trackerMotions);
+
+        //replace original in-bed event with new event
+        final List<Event> origEvents = origResult.mainEvents.values().asList();
+
+        final List<Event> newEvents = Lists.newArrayList();
+        newEvents.add(inBedEvent);
+
+        for (final Event event : origEvents) {
+            if (event.getType().equals(Event.Type.IN_BED)) {
+                continue;
+            }
+
+            newEvents.add(event);
+        }
+
+        //sanity check
+        if (sleepEvent.getStartTimestamp() < inBedEvent.getStartTimestamp()) {
+            return origResult;
+        }
+
+        if (startTimeUTC.getMillis() > inBedEvent.getStartTimestamp()) {
+            return origResult;
+        }
+
+        return new TimelineAlgorithmResult(origResult.algorithmType,newEvents,origResult.extraEvents.asList());
+
+    }
+
     public TimelineResult retrieveTimelinesFast(final Long accountId, final DateTime targetDate, final Optional<TimelineFeedback> newFeedback) {
 
         final boolean feedbackChanged = newFeedback.isPresent() && this.hasOnlineHmmLearningEnabled(accountId);
@@ -283,7 +350,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
             return TimelineResult.createEmpty(log);
         }
 
-        final TimelineAlgorithmResult result = resultOptional.get();
+
+        //get result, and refine (optional feature) in-bed time for online HMM
+        final TimelineAlgorithmResult result = refineInBedTime(startTimeLocalUTC,endTimeLocalUTC,accountId,sensorData,resultOptional.get());
+
         List<Event> extraEvents = result.extraEvents;
 
             /* FEATURE FLIP EXTRA EVENTS */
