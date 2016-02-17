@@ -98,14 +98,10 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
                 DOW_ATTRIBUTE_NAME, OFFSET_MILLIS_ATTRIBUTE_NAME,
                 SCORE_ATTRIBUTE_NAME, TYPE_ATTRIBUTE_NAME, VERSION_ATTRIBUTE_NAME,
                 MOTION_SCORE_ATTRIBUTE_NAME,
-                SLEEP_DURATION_SCORE_ATTRIBUTE_NAME,
-                ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME,
-                TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME,
                 NUM_MOTIONS_ATTRIBUTE_NAME, MOTIONS_PERIOD_MINS_ATTRIBUTE_NAME,
                 AVG_MOTION_AMPLITUDE_ATTRIBUTE_NAME, MAX_MOTION_AMPLITUDE_ATTRIBUTE_NAME,
                 SLEEP_DURATION_ATTRIBUTE_NAME,
                 LIGHT_SLEEP_ATTRIBUTE_NAME,
-                MEDIUM_SLEEP_ATTRIBUTE_NAME,
                 SOUND_SLEEP_ATTRIBUTE_NAME,
                 ASLEEP_TIME_ATTRIBUTE_NAME,
                 AWAKE_TIME_ATTRIBUTE_NAME,
@@ -114,6 +110,12 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
         this.targetAttributes = new HashSet<>();
         this.targetAttributes.addAll(this.mustHaveAttributes);
+        Collections.addAll(targetAttributes,
+                SLEEP_DURATION_SCORE_ATTRIBUTE_NAME,
+                ENVIRONMENTAL_SCORE_ATTRIBUTE_NAME,
+                TIMES_AWAKE_PENALTY_ATTRIBUTE_NAME,
+                MEDIUM_SLEEP_ATTRIBUTE_NAME
+        );
         Collections.addAll(this.targetAttributes, IS_INBED_DURATION_ATTRIBUTE_NAME);
     }
 
