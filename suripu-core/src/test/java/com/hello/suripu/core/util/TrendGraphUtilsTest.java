@@ -29,21 +29,21 @@ public class TrendGraphUtilsTest {
         final MotionScore motionScore = new MotionScore(0, 0, 1.0f, 0, 0);
         final List<AggregateSleepStats> stats = new ArrayList<>();
         stats.add(new AggregateSleepStats(1L, now, offsetMillis, 80, version, motionScore,
-                new SleepStats(300, 200, 400, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 400, false, 10, 0L, 0L, 0)));
         stats.add(new AggregateSleepStats(1L, now.minusDays(1), offsetMillis, 75, version, motionScore,
-                new SleepStats(300, 200, 410, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 410, false, 10, 0L, 0L, 0)));
         stats.add(new AggregateSleepStats(1L, now.minusDays(2), offsetMillis, 70, version, motionScore,
-                new SleepStats(300, 200, 420, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 420, false, 10, 0L, 0L, 0)));
         stats.add(new AggregateSleepStats(1L, now.minusDays(3), offsetMillis, 65, version, motionScore,
-                new SleepStats(300, 200, 430, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 430, false, 10, 0L, 0L, 0)));
         stats.add(new AggregateSleepStats(1L, now.minusDays(4), offsetMillis, 60, version, motionScore,
-                new SleepStats(300, 200, 440, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 440, false, 10, 0L, 0L, 0)));
         stats.add(new AggregateSleepStats(1L, now.minusDays(5), offsetMillis, 55, version, motionScore,
-                new SleepStats(300, 200, 450, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 450, false, 10, 0L, 0L, 0)));
         stats.add(new AggregateSleepStats(1L, now.minusDays(6), offsetMillis, 50, version, motionScore,
-                new SleepStats(300, 200, 460, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 460, false, 10, 0L, 0L, 0)));
         stats.add(new AggregateSleepStats(1L, now.minusDays(7), offsetMillis, 45, version, motionScore,
-                new SleepStats(300, 200, 470, false, 10, 0L, 0L, 0)));
+                0, 0 ,0, new SleepStats(300, 0, 200, 470, false, 10, 0L, 0L, 0)));
         return stats;
     }
 

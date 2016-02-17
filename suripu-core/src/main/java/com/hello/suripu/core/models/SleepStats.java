@@ -7,8 +7,15 @@ import com.google.common.base.Objects;
 
 public class SleepStats {
 
+    public static final int AWAKE_SLEEP_DEPTH_THRESHOLD = 5; // awake state < 5
+    public static final int LIGHT_SLEEP_DEPTH_THRESHOLD = 10; // light < 10
+    public static final int MEDIUM_SLEEP_DEPTH_THRESHOLD = 70; // medium < 70, sound >= 70
+
     @JsonProperty("sound_sleep")
     final public Integer soundSleepDurationInMinutes;
+
+    @JsonIgnore
+    final public Integer mediumSleepDurationInMinutes;
 
     @JsonIgnore
     final public Integer lightSleepDurationInMinutes;
@@ -31,11 +38,14 @@ public class SleepStats {
     @JsonIgnore
     public final boolean isInBedDuration;
 
-    public SleepStats(final Integer soundSleepDurationInMinutes, final Integer lightSleepDurationInMinutes,
+    public SleepStats(final Integer soundSleepDurationInMinutes,
+                      final Integer mediumSleepDurationInMinutes,
+                      final Integer lightSleepDurationInMinutes,
                       final Integer sleepDurationInMinutes, final boolean isInBedDuration,
                       final Integer numberOfMotionEvents,
                       final Long sleepTime, final Long wakeTime, final Integer sleepOnsetTimeMinutes) {
         this.soundSleepDurationInMinutes = soundSleepDurationInMinutes;
+        this.mediumSleepDurationInMinutes = mediumSleepDurationInMinutes;
         this.lightSleepDurationInMinutes = lightSleepDurationInMinutes;
         this.sleepDurationInMinutes = sleepDurationInMinutes;
         this.numberOfMotionEvents = numberOfMotionEvents;
@@ -53,7 +63,7 @@ public class SleepStats {
             @JsonProperty("times_awake") Integer numberOfMotionEvents,
             @JsonProperty("time_to_sleep") Integer sleepOnsetTimeMinutes) {
 
-        return new SleepStats(soundSleepDurationInMinutes, 0,
+        return new SleepStats(soundSleepDurationInMinutes, 0, 0,
                 sleepDurationInMinutes, true,
                 numberOfMotionEvents, 0L, 0L, sleepOnsetTimeMinutes);
     }
@@ -62,6 +72,7 @@ public class SleepStats {
     public String toString() {
         return Objects.toStringHelper(SleepStats.class)
                 .add("soundSleep", sleepDurationInMinutes)
+                .add("mediumSleep", mediumSleepDurationInMinutes)
                 .add("lightSleep", lightSleepDurationInMinutes)
                 .add("totalSleep", sleepDurationInMinutes)
                 .add("# of motion events", numberOfMotionEvents)

@@ -15,33 +15,39 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * Created by kingshy on 2/25/15.
+ * Created by ksg on 02/25/15
  */
 public class SleepScoreUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepScoreUtils.class);
 
-    public static Integer DURATION_MAX_SCORE = 80;
-    public static Integer DURATION_MIN_SCORE = 10;
-    public static float MOTION_SCORE_MIN = 10.0f;
-    private static float MOTION_SCORE_RANGE = 80.0f; // max score is 90
-    private static float MIN_ASLEEP_MINUTES_REQUIRED = 60.0f; // need to be asleep for at least 60 minutes
+    public static final Integer DURATION_MAX_SCORE = 80;
+    public static final Integer DURATION_MIN_SCORE = 10;
+    public static final float MOTION_SCORE_MIN = 10.0f;
+    private static final float MOTION_SCORE_RANGE = 80.0f; // max score is 90
+    private static final float MIN_ASLEEP_MINUTES_REQUIRED = 60.0f; // need to be asleep for at least 60 minutes
 
     public static final int PENALTY_PER_SOUND_EVENT = 20;
     public static final int SENSOR_IDEAL_SCORE = 100;
     public static final int SENSOR_WARNING_SCORE = 75;
     public static final int SENSOR_ALERT_SCORE = 50;
 
-    public static Float DURATION_SCORE_SCALE = (float) (DURATION_MAX_SCORE - DURATION_MIN_SCORE);
-    public static Integer TOO_LITTLE_SLEEP_ALLOWANCE = 1;
-    public static Integer TOO_MUCH_SLEEP_ALLOWANCE = 4; // allow too much sleep recommendation to exceed by 4 hours
+    public static final Float DURATION_SCORE_SCALE = (float) (DURATION_MAX_SCORE - DURATION_MIN_SCORE);
+    public static final Integer TOO_LITTLE_SLEEP_ALLOWANCE = 1;
+    public static final Integer TOO_MUCH_SLEEP_ALLOWANCE = 4; // allow too much sleep recommendation to exceed by 4 hours
 
+    public static final Integer DURATION_V2_MIN_SCORE_HOURS = 2;
+    public static final Integer DURATION_TOO_MUCH_HOURS = 15;
+    public static final Integer DURATION_TOO_MUCH_SCORE = 50;
+
+    public static final Integer MAX_TIMES_AWAKE_PENALTY_SCORE = -30;
+    public static final Integer AWAKE_PENALTY_SCORE = -5; // minus 5 for each time-awake
     /**
      * compute a score based on sleep duration.
      * if duration is within recommended range, return max score
      * if duration is way out of the min/max + allowance recommended range, return min score
      * everything else is a linear decrease in score
-     * @param userAgeInYears
-     * @param sleepDurationMinutes
+     * @param userAgeInYears age
+     * @param sleepDurationMinutes sleep duration
      * @return duration score
      */
     public static Integer getSleepDurationScore(final int userAgeInYears, final Integer sleepDurationMinutes) {
@@ -57,8 +63,8 @@ public class SleepScoreUtils {
             return DURATION_MIN_SCORE;
         }
 
-        Float diffMinutes = 0.0f;
-        Float scaleMinutes = 0.0f;
+        Float diffMinutes;
+        Float scaleMinutes;
         if (sleepDurationHours < (float) idealHours.minHours) {
             // under-sleep
             diffMinutes = (float) (idealHours.minHours * 60  - sleepDurationMinutes);
@@ -68,19 +74,74 @@ public class SleepScoreUtils {
             diffMinutes = (float) (sleepDurationMinutes - idealHours.maxHours * 60);
             scaleMinutes = (idealHours.absoluteMaxHours + TOO_MUCH_SLEEP_ALLOWANCE - idealHours.maxHours) * 60.0f;
         }
-        final Integer score = DURATION_MAX_SCORE - Math.round((diffMinutes / scaleMinutes) * DURATION_SCORE_SCALE);
-        return score;
+        return DURATION_MAX_SCORE - Math.round((diffMinutes / scaleMinutes) * DURATION_SCORE_SCALE);
     }
 
-    /**
-     * Compute motion score based on average number of agitation during sleep.
-     * score ranges from 10 to 90. A ZERO score actually means no score is computed.
-     * @param targetDate
-     * @param trackerMotions
-     * @param fallAsleepTimestamp
-     * @param wakeUpTimestamp
-     * @return
-     */
+    public static Integer getSleepDurationScoreV2(final int userAgeInYears,  final Integer sleepDurationMinutes) {
+        final SleepDuration.recommendation idealHours = SleepDuration.getSleepDurationRecommendation(userAgeInYears);
+        final Float sleepDurationHours = (float) sleepDurationMinutes / 60.0f;
+
+        final float baseScore;
+        final float topScore;
+        final float diffMinutes;
+        final float bucketTotalMinutes;
+
+        if (sleepDurationHours < DURATION_V2_MIN_SCORE_HOURS) {
+            // if you sleep less than 2 hours, you're doomed.
+            return DURATION_MIN_SCORE;
+        }
+
+        else if (sleepDurationHours > DURATION_TOO_MUCH_HOURS) {
+            // sleep too much, doomed as well.
+            return DURATION_TOO_MUCH_SCORE;
+        }
+
+        else if (sleepDurationHours < idealHours.absoluteMinHours) {
+            // between 2 hours to ideal-min
+            // score is between 10 - 60
+            // this awards the user 1 extra point for every ~5 minutes of sleep
+            baseScore = (float) DURATION_MIN_SCORE;
+            topScore = 70.0f;
+            bucketTotalMinutes = idealHours.absoluteMinHours - DURATION_V2_MIN_SCORE_HOURS;
+            diffMinutes = sleepDurationMinutes - (DURATION_V2_MIN_SCORE_HOURS * 60.0f);
+        }
+
+        else if (sleepDurationHours < idealHours.maxHours) {
+            // between absolute min and ideal-max, score between 60 - 95
+            baseScore = 70.0f;
+            topScore = 95.0f;
+            bucketTotalMinutes = idealHours.maxHours - idealHours.absoluteMinHours;
+            diffMinutes = sleepDurationMinutes - (idealHours.absoluteMinHours * 60.0f);
+        }
+
+        // between ideal-max and absolute max, score between 70 - 80
+        else if (sleepDurationHours < idealHours.absoluteMaxHours) {
+            baseScore = 90.0f;
+            topScore = 70.0f;
+            bucketTotalMinutes = idealHours.absoluteMaxHours - idealHours.maxHours;
+            diffMinutes = sleepDurationMinutes - (idealHours.maxHours * 60.0f);
+        }
+
+        else {
+            // between absolute-max and way-too-much sleep, reduce score
+            baseScore = 70.0f;
+            topScore = DURATION_TOO_MUCH_SCORE;
+            bucketTotalMinutes = DURATION_TOO_MUCH_HOURS - idealHours.absoluteMaxHours;
+            diffMinutes = sleepDurationMinutes - (idealHours.absoluteMaxHours) * 60.0f;
+        }
+
+        return Math.round(baseScore + diffMinutes * ((topScore - baseScore) / (bucketTotalMinutes * 60.0f)));
+    }
+
+        /**
+         * Compute motion score based on average number of agitation during sleep.
+         * score ranges from 10 to 90. A ZERO score actually means no score is computed.
+         * @param targetDate nightdate
+         * @param trackerMotions pill data
+         * @param fallAsleepTimestamp detected fell asleep time
+         * @param wakeUpTimestamp detected woke up time
+         * @return a score for motion during the night
+         */
     public static MotionScore getSleepMotionScore(final DateTime targetDate, final List<TrackerMotion> trackerMotions, final Long fallAsleepTimestamp, final Long wakeUpTimestamp) {
         float numAgitations = 0.0f;
         Float avgMotionAmplitude = 0.0f;
@@ -229,5 +290,12 @@ public class SleepScoreUtils {
         }
 
         return Optional.absent();
+    }
+
+
+    public static Integer calculateTimesAwakePenaltyScore(final int timesAwake) {
+        // penalty, returns a negative score
+        final int penalty = timesAwake * AWAKE_PENALTY_SCORE;
+        return (penalty < MAX_TIMES_AWAKE_PENALTY_SCORE) ? MAX_TIMES_AWAKE_PENALTY_SCORE : penalty;
     }
 }
