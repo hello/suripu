@@ -130,6 +130,7 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ANOMALY_LIGHT_VISIBLE, accountId, Collections.EMPTY_LIST);
     }
 
+
     protected Boolean hasSleepScoreDurationV2(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_DURATION_V2, accountId, Collections.EMPTY_LIST);
     }
@@ -144,6 +145,10 @@ public class FeatureFlippedProcessor {
 
     protected Boolean hasTimesAwakeSleepScorePenalty(final Long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.SLEEP_SCORE_TIMES_AWAKE_PENALTY, accountId, Collections.EMPTY_LIST);
+    }
+
+    protected Boolean hasInBedSearchEnabled(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.IN_BED_SEARCH,accountId,Collections.EMPTY_LIST);
     }
 
 }

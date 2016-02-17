@@ -8,6 +8,8 @@ import com.google.common.base.Optional;
  */
 public class Annotation {
 
+    public static final int ANNOTATION_ENABLED_THRESHOLD = 7; // accounts older than 7 days
+
     @JsonProperty("title")
     public final String title;
 

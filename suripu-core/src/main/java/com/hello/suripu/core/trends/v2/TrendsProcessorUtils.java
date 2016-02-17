@@ -36,20 +36,8 @@ public class TrendsProcessorUtils {
     }
 
     public static List<Annotation> getAnnotations(final AnnotationStats stats, final DataType dataType) {
+
         final List<Annotation> annotations = Lists.newArrayList();
-
-        if (stats.numDays > 0.0f) { // Average
-            final float avg = stats.sumValues/stats.numDays;
-
-            String title = English.ANNOTATION_TOTAL_AVERAGE;
-            Optional<Condition> condition = Optional.absent();
-            if (dataType.equals(DataType.SCORES)) {
-                title = English.ANNOTATION_AVERAGE_SCORE;
-                condition = Optional.of(Condition.getScoreCondition(avg));
-            }
-
-            annotations.add(new Annotation(title, avg, dataType, condition));
-        }
 
         if (stats.numWeekdays > 0.0f) {
             final float avg = stats.sumWeekdayValues/stats.numWeekdays;
@@ -67,6 +55,18 @@ public class TrendsProcessorUtils {
                 condition = Optional.of(Condition.getScoreCondition(avg));
             }
             annotations.add(new Annotation(English.ANNOTATION_WEEKENDS, avg, dataType, condition));
+        }
+
+        if (stats.numDays > 0.0f) { // Average
+            final float avg = stats.sumValues/stats.numDays;
+
+            String title = English.ANNOTATION_AVERAGE;
+            Optional<Condition> condition = Optional.absent();
+            if (dataType.equals(DataType.SCORES)) {
+                condition = Optional.of(Condition.getScoreCondition(avg));
+            }
+
+            annotations.add(new Annotation(title, avg, dataType, condition));
         }
 
         return annotations;

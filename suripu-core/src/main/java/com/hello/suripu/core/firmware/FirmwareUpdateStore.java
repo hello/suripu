@@ -13,6 +13,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.io.CharStreams;
@@ -44,6 +45,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 
 public class FirmwareUpdateStore {
 
@@ -173,101 +175,38 @@ public class FirmwareUpdateStore {
                     .setUrl(s.getPath() + "?" + s.getQuery())
                     .setHost(s.getHost()); // TODO: replace with hello s3 proxy
 
+            final ImmutableMap<String, FirmwareFile> downloadableFiles = new ImmutableMap.Builder<String, FirmwareFile>()
+                .put("servicepack.ucf", new FirmwareFile(bucketName, "", true, false, false, "servicepack.ucf", "/sys/", "servicepack.ucf", "/"))
+                .put("ca0515.der", new FirmwareFile(bucketName, "", true, false, false, "ca0515.der", "/cert/", "ca0515.der", "/"))
+                .put("kitsune.bin", new FirmwareFile(bucketName, "", true, false, true, "mcuimgx.bin", "/sys/", "mcuimgx.bin", "/"))
+                .put("top.bin", new FirmwareFile(bucketName, "", true, false, false, "update.bin", "/top/", "top.update.bin", "/"))
+                .put(".raw", new FirmwareFile(bucketName, "", false, false, false, "", "", f.substring(f.lastIndexOf("/")), "/"))
+                .build();
 
-            //Allow upload of TI service packs
-            if(f.contains("servicepack.ucf")) {
+            for(final Entry<String, FirmwareFile> entry: downloadableFiles.entrySet()) {
 
-                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
-                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
+                if(f.endsWith(entry.getKey())) {
 
-                final boolean copyToSerialFlash = true;
-                final boolean resetApplicationProcessor = false;
-                final String serialFlashFilename = "servicepack.ucf";
-                final String serialFlashPath = "/sys/";
-                final String sdCardFilename = "servicepack.ucf";
-                final String sdCardPath = "/";
+                    final FirmwareFile fileInfo = entry.getValue();
+                    final byte[] sha1 = computeSha1ForS3File(bucketName, f);
+                    fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
 
-                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
-                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
-                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
-                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
-                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
-                fileDownloadBuilder.setSdCardPath(sdCardPath);
+                    final boolean copyToSerialFlash = fileInfo.copyToSerialFlash;
+                    final boolean resetApplicationProcessor = fileInfo.resetApplicationProcessor;
+                    final String serialFlashFilename = fileInfo.serialFlashFilename;
+                    final String serialFlashPath = fileInfo.serialFlashPath;
+                    final String sdCardFilename = fileInfo.sdCardFilename;
+                    final String sdCardPath = fileInfo.sdCardPath;
 
-                fileDownloadList.add(fileDownloadBuilder.build());
-            }
+                    fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
+                    fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
+                    fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
+                    fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
+                    fileDownloadBuilder.setSdCardFilename(sdCardFilename);
+                    fileDownloadBuilder.setSdCardPath(sdCardPath);
 
-            //Allow upload of different signing certificate
-            if(f.contains("ca0515.der")) {
-
-                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
-                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
-
-                final boolean copyToSerialFlash = true;
-                final boolean resetApplicationProcessor = false;
-                final String serialFlashFilename = "ca0515.der";
-                final String serialFlashPath = "/cert/";
-                final String sdCardFilename = "ca0515.der";
-                final String sdCardPath = "/";
-
-                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
-                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
-                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
-                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
-                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
-                fileDownloadBuilder.setSdCardPath(sdCardPath);
-
-                fileDownloadList.add(fileDownloadBuilder.build());
-            }
-
-            //Middle board upload
-            if(f.contains("kitsune.bin")) {
-
-                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
-                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
-
-                final boolean copyToSerialFlash = true;
-                final boolean resetApplicationProcessor = true;
-                final String serialFlashFilename = "mcuimgx.bin";
-                final String serialFlashPath = "/sys/";
-                final String sdCardFilename = "mcuimgx.bin";
-                final String sdCardPath = "/";
-
-                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
-                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
-                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
-                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
-                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
-                fileDownloadBuilder.setSdCardPath(sdCardPath);
-
-
-                fileDownloadList.add(fileDownloadBuilder.build());
-            }
-
-            //Top board upload
-            if(f.contains("top.bin")) {
-
-                final byte[] sha1 = computeSha1ForS3File(bucketName, f);
-                fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
-
-
-
-                final boolean copyToSerialFlash = true;
-                final boolean resetApplicationProcessor = false;
-                final String serialFlashFilename = "update.bin";
-                final String serialFlashPath = "/top/";
-                final String sdCardFilename = "top.update.bin";
-                final String sdCardPath = "/";
-
-                fileDownloadBuilder.setCopyToSerialFlash(copyToSerialFlash);
-                fileDownloadBuilder.setResetApplicationProcessor(resetApplicationProcessor);
-                fileDownloadBuilder.setSerialFlashFilename(serialFlashFilename);
-                fileDownloadBuilder.setSerialFlashPath(serialFlashPath);
-                fileDownloadBuilder.setSdCardFilename(sdCardFilename);
-                fileDownloadBuilder.setSdCardPath(sdCardPath);
-
-
-                fileDownloadList.add(fileDownloadBuilder.build());
+                    fileDownloadList.add(fileDownloadBuilder.build());
+                }
             }
         }
 
