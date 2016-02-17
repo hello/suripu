@@ -72,8 +72,7 @@ public class SleepScore {
 
         public DurationHeavyWeightingV2() {
             this.motion = 0.3f;
-            this.duration = 0.5f;
-            this.environmental = 0.2f;
+            this.duration = 0.6f;
         }
     }
 

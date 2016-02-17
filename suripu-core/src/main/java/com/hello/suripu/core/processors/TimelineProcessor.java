@@ -44,7 +44,6 @@ import com.hello.suripu.core.models.Timeline;
 import com.hello.suripu.core.models.TimelineFeedback;
 import com.hello.suripu.core.models.TimelineResult;
 import com.hello.suripu.core.models.TrackerMotion;
-import com.hello.suripu.core.models.timeline.v2.EventType;
 import com.hello.suripu.core.models.timeline.v2.TimelineLog;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.AlgorithmType;
@@ -980,10 +979,10 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
 
     private SleepScore.Weighting sleepScoreWeighting(final Long accountId) {
         final SleepScore.Weighting weighting;
-        if (hasSleepScoreDurationWeighting(accountId)) {
-            weighting = new SleepScore.DurationHeavyWeighting();
-        } else if (hasSleepScoreDurationWeightingV2(accountId)) {
+        if (hasSleepScoreDurationWeightingV2(accountId)) {
             weighting = new SleepScore.DurationHeavyWeightingV2();
+        } else if (hasSleepScoreDurationWeighting(accountId)) {
+            weighting = new SleepScore.DurationHeavyWeighting();
         } else {
             weighting = new SleepScore.Weighting();
         }
