@@ -150,5 +150,4 @@ public class FeatureFlippedProcessor {
     protected Boolean hasInBedSearchEnabled(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.IN_BED_SEARCH,accountId,Collections.EMPTY_LIST);
     }
-
 }
