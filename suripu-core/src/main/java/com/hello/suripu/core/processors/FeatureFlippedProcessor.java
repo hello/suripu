@@ -130,6 +130,10 @@ public class FeatureFlippedProcessor {
         return featureFlipper.userFeatureActive(FeatureFlipper.QUESTION_ANOMALY_LIGHT_VISIBLE, accountId, Collections.EMPTY_LIST);
     }
 
+    protected Boolean useAudioPeakEnergy(final long accountId) {
+        return featureFlipper.userFeatureActive(FeatureFlipper.AUDIO_PEAK_ENERGY_DB, accountId, Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasInBedSearchEnabled(final long accountId) {
         return featureFlipper.userFeatureActive(FeatureFlipper.IN_BED_SEARCH,accountId,Collections.EMPTY_LIST);
     }

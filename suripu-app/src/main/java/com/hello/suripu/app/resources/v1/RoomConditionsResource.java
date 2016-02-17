@@ -187,7 +187,8 @@ public class RoomConditionsResource extends BaseResource {
 
         final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
-                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional,
+                useAudioPeakEnergy(accessToken.accountId));
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }
@@ -230,7 +231,7 @@ public class RoomConditionsResource extends BaseResource {
 
         final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(queryStartTimeUTC, queryEndTimestampUTC,
             accessToken.accountId, deviceIdPair.get().externalDeviceId, slotDurationInMinutes,
-            missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+            missingDataDefaultValue(accessToken.accountId), color, calibrationOptional, useAudioPeakEnergy(accessToken.accountId));
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -278,7 +279,8 @@ public class RoomConditionsResource extends BaseResource {
 
         final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                 queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
-                slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+                slotDurationInMinutes, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional,
+                useAudioPeakEnergy(accessToken.accountId));
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();
@@ -362,7 +364,8 @@ public class RoomConditionsResource extends BaseResource {
 
         final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 queryStartTimeInUTC, queryEndTimestampInUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
-                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional,
+                useAudioPeakEnergy(accessToken.accountId));
 
         return adjustTimeSeries(timeSeries, sensor, deviceName);
     }
@@ -407,7 +410,8 @@ public class RoomConditionsResource extends BaseResource {
 
         final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 queryStartTimeUTC, queryEndTimestampUTC, accessToken.accountId, deviceIdPair.get().externalDeviceId,
-                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional);
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accessToken.accountId), color, calibrationOptional,
+                useAudioPeakEnergy(accessToken.accountId));
 
 
         return adjustTimeSeries(timeSeries, sensor, deviceName);
@@ -468,7 +472,8 @@ public class RoomConditionsResource extends BaseResource {
 
         final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
-                slotDurationInMinutes, sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accountId), color, calibrationOptional,
+                useAudioPeakEnergy(accountId));
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
 
@@ -510,7 +515,8 @@ public class RoomConditionsResource extends BaseResource {
 
         final List<Sample> timeSeries = deviceDataDAODynamoDB.generateTimeSeriesByUTCTime(
                 queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
-                slotDurationInMinutes, sensor, missingDataDefaultValue(accountId), color, calibrationOptional);
+                slotDurationInMinutes, sensor, missingDataDefaultValue(accountId), color, calibrationOptional,
+                useAudioPeakEnergy(accountId));
 
         return adjustTimeSeries(timeSeries, sensor, deviceIdPair.get().externalDeviceId);
     }
@@ -549,7 +555,8 @@ public class RoomConditionsResource extends BaseResource {
 
         final AllSensorSampleList sensorData = deviceDataDAODynamoDB.generateTimeSeriesByUTCTimeAllSensors(
                 queryStartTimeInUTC, queryEndTimestampInUTC, accountId, deviceIdPair.get().externalDeviceId,
-                slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional);
+                slotDurationInMinutes, missingDataDefaultValue(accountId), color, calibrationOptional,
+                useAudioPeakEnergy(accountId));
 
         if (sensorData.isEmpty()) {
             return AllSensorSampleList.getEmptyData();

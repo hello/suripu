@@ -76,7 +76,10 @@ public class TimelineProcessorTest {
 
     final DeviceDataReadAllSensorsDAO deviceDataReadAllSensorsDAO = new DeviceDataReadAllSensorsDAO() {
         @Override
-        public AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(Long queryStartTimestampInUTC, Long queryEndTimestampInUTC, Long accountId, String externalDeviceId, int slotDurationInMinutes, Integer missingDataDefaultValue, Optional<Device.Color> color, Optional<Calibration> calibrationOptional) {
+        public AllSensorSampleList generateTimeSeriesByUTCTimeAllSensors(
+                Long queryStartTimestampInUTC, Long queryEndTimestampInUTC, Long accountId, String externalDeviceId,
+                int slotDurationInMinutes, Integer missingDataDefaultValue, Optional<Device.Color> color,
+                Optional<Calibration> calibrationOptional, final Boolean useAudioPeakEnergy) {
             return OnlineHmmTest.getTypicalDayOfSense(new DateTime(queryStartTimestampInUTC).withZone(DateTimeZone.UTC),new DateTime(queryEndTimestampInUTC).withZone(DateTimeZone.UTC),0);
         }
     };

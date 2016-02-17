@@ -17,5 +17,6 @@ public interface DeviceDataReadAllSensorsDAO {
             int slotDurationInMinutes,
             Integer missingDataDefaultValue,
             Optional<Device.Color> color,
-            Optional<Calibration> calibrationOptional);
+            Optional<Calibration> calibrationOptional,
+            Boolean useAudioPeakEnergy);
 }

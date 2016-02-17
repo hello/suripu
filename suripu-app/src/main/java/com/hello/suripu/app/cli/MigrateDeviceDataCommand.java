@@ -239,14 +239,14 @@ public class MigrateDeviceDataCommand extends ConfiguredCommand<SuripuAppConfigu
                 startTimestamp, endTimestamp,
                 accountId, externalSenseId,
                 slotMinutes, defaultMissingValue,
-                optionalColor, optionalCalibration);
+                optionalColor, optionalCalibration, false);
 
         LOGGER.debug("Getting data from Postgres");
         final AllSensorSampleList samplesRDS = deviceDataDAO.generateTimeSeriesByUTCTimeAllSensors(
                 startTimestamp, endTimestamp,
                 accountId, internalSenseId,
                 slotMinutes, defaultMissingValue,
-                optionalColor, optionalCalibration);
+                optionalColor, optionalCalibration, false);
 
         // make sure that what's in RDS is also present in DDB
         final List<Sensor> sensors = samplesRDS.getAvailableSensors();
