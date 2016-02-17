@@ -767,6 +767,7 @@ public class TimelineUtils {
         }
 
         final Integer soundSleepDurationInMinutes = Math.round((float) soundSleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
+        final Integer mediumSleepDurationInMinutes = Math.round((float) mediumSleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer lightSleepDurationInMinutes = Math.round((float) lightSleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer sleepDurationInMinutes = Math.round((float) sleepDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
         final Integer inBedDurationInMinutes = Math.round((float) inBedDurationInSecs / DateTimeConstants.SECONDS_PER_MINUTE);
@@ -777,7 +778,7 @@ public class TimelineUtils {
 
         final SleepStats sleepStats = new SleepStats(
                 soundSleepDurationInMinutes,
-                mediumSleepDurationInSecs,
+                mediumSleepDurationInMinutes,
                 lightSleepDurationInMinutes,
                 sleepDurationInMinutes == 0 ? inBedDurationInMinutes : sleepDurationInMinutes,
                 sleepDurationInMinutes == 0,
