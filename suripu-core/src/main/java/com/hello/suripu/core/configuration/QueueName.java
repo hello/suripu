@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum QueueName {
 
     AUDIO_FEATURES("audio_features"),
+    AUDIO_PRODUCTS("audio_products"),
     ACTIVITY_STREAM("activity_stream"),
     REGISTRATIONS("registrations"),
     ENCODE_AUDIO("encode_audio"),
