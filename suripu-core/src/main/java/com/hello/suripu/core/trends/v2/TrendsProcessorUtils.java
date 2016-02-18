@@ -40,7 +40,7 @@ public class TrendsProcessorUtils {
         final List<Annotation> annotations = Lists.newArrayList();
 
         if (stats.numWeekdays > 0.0f) {
-            final float avg = stats.sumWeekdayValues/stats.numWeekdays;
+            final float avg = Math.round((stats.sumWeekdayValues/stats.numWeekdays) * 10.0f) / 10.0f ; // to make single decimal
             Optional<Condition> condition = Optional.absent();
             if (dataType.equals(DataType.SCORES)) {
                 condition = Optional.of(Condition.getScoreCondition(avg));
@@ -49,7 +49,7 @@ public class TrendsProcessorUtils {
         }
 
         if (stats.numWeekends > 0.0f) {
-            final float avg = stats.sumWeekendValues/stats.numWeekends;
+            final float avg = Math.round((stats.sumWeekendValues/stats.numWeekends) * 10.0f) / 10.0f;
             Optional<Condition> condition = Optional.absent();
             if (dataType.equals(DataType.SCORES)) {
                 condition = Optional.of(Condition.getScoreCondition(avg));
@@ -58,8 +58,7 @@ public class TrendsProcessorUtils {
         }
 
         if (stats.numDays > 0.0f) { // Average
-            final float avg = stats.sumValues/stats.numDays;
-
+            final float avg = Math.round((stats.sumValues/stats.numDays) * 10.0f) / 10.0f;
             String title = English.ANNOTATION_AVERAGE;
             Optional<Condition> condition = Optional.absent();
             if (dataType.equals(DataType.SCORES)) {
