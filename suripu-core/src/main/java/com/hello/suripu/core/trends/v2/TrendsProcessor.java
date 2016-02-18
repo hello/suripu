@@ -249,7 +249,7 @@ public class TrendsProcessor {
     private List<AggregateSleepStats> getRawData(final Long accountId, final DateTime localToday, final int days) {
         final DateTime queryStart = localToday.minusDays(days);
 
-        final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(2350L,
+        final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(accountId,
                 DateTimeUtil.dateToYmdString(queryStart),
                 DateTimeUtil.dateToYmdString(localToday));
 
