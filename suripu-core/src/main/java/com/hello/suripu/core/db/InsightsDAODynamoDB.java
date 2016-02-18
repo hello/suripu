@@ -30,6 +30,7 @@ import com.yammer.metrics.annotation.Timed;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +59,7 @@ public class InsightsDAODynamoDB {
     public static final String IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME = "phone_image_1x";
     public static final String IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME = "phone_image_2x";
     public static final String IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME = "phone_image_3x";
+    public static final String INSIGHT_TYPE = "insight_type";
     private static final int MAX_CALL_COUNT = 5;
 
     private static final String S3_BUCKET_PATH = "https://s3.amazonaws.com/hello-data/insights_images/";
@@ -264,6 +266,8 @@ public class InsightsDAODynamoDB {
             }
         }
 
+        item.put(INSIGHT_TYPE, new AttributeValue().withS(insightCard.insightType.toString()));
+
         return item;
     }
 
@@ -300,6 +304,17 @@ public class InsightsDAODynamoDB {
             image = Optional.absent();
         }
 
+        final String insightTypeString = item.containsKey(INSIGHT_TYPE)
+                ? item.get(INSIGHT_TYPE).getS()
+                : null;
+
+        final InsightCard.InsightType insightType;
+        if (insightTypeString != null) {
+            insightType = InsightCard.InsightType.fromString(insightTypeString);
+        } else {
+            insightType = InsightCard.InsightType.DEFAULT;
+        }
+
         return new InsightCard(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
                 item.get(TITLE_ATTRIBUTE_NAME).getS(),
@@ -308,7 +323,8 @@ public class InsightsDAODynamoDB {
                 timePeriod,
                 new DateTime(item.get(TIMESTAMP_UTC_ATTRIBUTE_NAME).getS(), DateTimeZone.UTC),
                 Optional.<String>absent(),
-                image
+                image,
+                insightType
         );
     }
 
