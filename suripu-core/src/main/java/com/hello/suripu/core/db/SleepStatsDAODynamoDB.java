@@ -212,7 +212,9 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
 
     
     @Override
-    public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId, final String startDate, final String endDate) {
+    public ImmutableList<AggregateSleepStats> getBatchStats(final Long accountId,
+                                                            final String startDate,
+                                                            final String endDate) {
 
         final Condition selectByAccountId = new Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)

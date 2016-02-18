@@ -20,4 +20,5 @@ public interface SleepStatsDAO {
     Optional<AggregateSleepStats> getSingleStat(Long accountId, String date);
 
     ImmutableList<AggregateSleepStats> getBatchStats(Long accountId, String startDate, String endDate);
+
 }

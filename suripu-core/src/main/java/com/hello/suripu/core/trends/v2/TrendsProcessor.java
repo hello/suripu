@@ -33,9 +33,10 @@ public class TrendsProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
     private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of data-points
-    private static final int MIN_DEPTH_DATA_SIZE = 5;
+    private static final int MIN_DEPTH_DATA_SIZE = 7;
     private static final int MIN_SCORE_DATA_SIZE = 3;
-    private static final int MIN_DURATION_DATA_SIZE = 5;
+    private static final int MIN_DURATION_DATA_SIZE = 7;
+    private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final AccountDAO accountDAO;
@@ -248,9 +249,17 @@ public class TrendsProcessor {
     private List<AggregateSleepStats> getRawData(final Long accountId, final DateTime localToday, final int days) {
         final DateTime queryStart = localToday.minusDays(days);
 
-        return sleepStatsDAODynamoDB.getBatchStats(accountId,
+        final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(2350L,
                 DateTimeUtil.dateToYmdString(queryStart),
                 DateTimeUtil.dateToYmdString(localToday));
+
+        final List<AggregateSleepStats> results = Lists.newArrayList();
+        for (final AggregateSleepStats stat : rawData) {
+            if (stat.sleepStats.sleepDurationInMinutes >= MIN_VALID_SLEEP_DURATION ) {
+                results.add(stat);
+            }
+        }
+        return results;
     }
 
     private DateTime getLocalToday(final Long accountId) {
