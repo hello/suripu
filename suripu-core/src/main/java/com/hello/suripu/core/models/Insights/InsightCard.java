@@ -166,15 +166,15 @@ public class InsightCard implements Comparable<InsightCard> {
     public final InsightType insightType;
 
     public InsightCard(final Long accountId, final String title, final String message,
-                       final Category category, final TimePeriod timePeriod, final DateTime timestamp) {
-        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent(), Optional.<MultiDensityImage>absent(), InsightType.DEFAULT);
+                       final Category category, final TimePeriod timePeriod, final DateTime timestamp, final InsightType insightType) {
+        this(accountId, title, message, category, timePeriod, timestamp, Optional.<String>absent(), Optional.<MultiDensityImage>absent(), insightType);
     }
 
     public InsightCard(final Long accountId, final String title, final String message,
                        final Category category, final TimePeriod timePeriod, final DateTime timestamp,
-                       final String categoryName) {
+                       final String categoryName, final InsightType insightType) {
         this(accountId, title, message, category, timePeriod, timestamp,
-                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName, InsightType.DEFAULT);
+                Optional.<String>absent(), Optional.<MultiDensityImage>absent(), categoryName, insightType);
     }
 
     public InsightCard(final Long accountId, final String title, final String message,

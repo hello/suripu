@@ -174,6 +174,6 @@ public class BedLightDuration {
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.BED_LIGHT_DURATION, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC)));
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 }
