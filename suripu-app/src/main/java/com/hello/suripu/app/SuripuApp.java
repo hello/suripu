@@ -41,6 +41,7 @@ import com.hello.suripu.app.resources.v1.SupportResource;
 import com.hello.suripu.app.resources.v1.TimeZoneResource;
 import com.hello.suripu.app.resources.v1.TimelineResource;
 import com.hello.suripu.app.v2.DeviceResource;
+import com.hello.suripu.app.v2.SleepSoundsResource;
 import com.hello.suripu.app.v2.StoreFeedbackResource;
 import com.hello.suripu.app.v2.TrendsResource;
 import com.hello.suripu.core.ObjectGraphRoot;
@@ -88,6 +89,8 @@ import com.hello.suripu.core.db.WifiInfoDAO;
 import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
+import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
+import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -464,5 +467,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final TrendsProcessor trendsProcessor = new TrendsProcessor(sleepStatsDAODynamoDB, accountDAO, timeZoneHistoryDAODynamoDB);
         environment.addResource(new TrendsResource(trendsProcessor));
+
+        final SoundDAO soundDAO = commonDB.onDemand(SoundDAO.class);
+        final DurationDAO durationDAO = commonDB.onDemand(DurationDAO.class);
+        environment.addResource(SleepSoundsResource.create(soundDAO, durationDAO));
     }
 }
