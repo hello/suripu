@@ -53,7 +53,7 @@ public class TrendsProcessor {
 
         // get data
         final DateTime localToday = getLocalToday(accountId);
-        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
+        final List<AggregateSleepStats> data = getRawData(3290L, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             LOGGER.debug("debug=no-trends-data, account={}", accountId);
@@ -62,7 +62,7 @@ public class TrendsProcessor {
 
         // only show annotations if account could have 7 or more timelines
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-        final int accountAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().created) : 0;
+        final int accountAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().created.withTimeAtStartOfDay()) : 0;
 
         final Optional<DateTime> optionalAccountCreated;
         if (accountAge < DateTimeConstants.DAYS_PER_WEEK) {
@@ -300,7 +300,7 @@ public class TrendsProcessor {
     private List<TimeScale> computeAvailableTimeScales(final int accountAge) {
         final List<TimeScale> timeScales = Lists.newArrayList();
         for (final TimeScale scale : TimeScale.values()) {
-            if (accountAge >= scale.getDays()) {
+            if (accountAge >= scale.getVisibleAfterDays()) {
                 timeScales.add(scale);
             }
         }
