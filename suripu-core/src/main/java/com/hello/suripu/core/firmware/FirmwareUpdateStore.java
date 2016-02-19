@@ -177,9 +177,10 @@ public class FirmwareUpdateStore {
 
             // Trimming filename down to 8.3 format for *.raw files with original filenames
             // of the format SENSE_SLEEPTONES_<foo>.raw (e.g. "SENSE_SLEEPTONES_OUTERSPACE.raw")
-            final String filename = f.substring(f.lastIndexOf("_") + 1)
-                .replace(".raw", "")
-                .substring(0, 8);
+            final String filenamePre = f.substring(f.lastIndexOf("_") + 1)
+                .replace(".raw", "");
+            final String filename = filenamePre.substring(0, Math.min(8, filenamePre.length()));
+
 
             final ImmutableMap<String, FirmwareFile> downloadableFiles = new ImmutableMap.Builder<String, FirmwareFile>()
                 .put("servicepack.ucf", new FirmwareFile(bucketName, "", true, false, false, "servicepack.ucf", "/sys/", "servicepack.ucf", "/"))
