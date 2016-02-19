@@ -99,6 +99,7 @@ SQS_configuration:
     sqs_wait_time_seconds: 10
     sqs_visibility_timeout_seconds: 5
 
+
 dynamodb:
   region: us-east-1
   tables:

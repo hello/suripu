@@ -250,9 +250,6 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
             } else {
                 numEmptyQueueIterations++;
                 LOGGER.debug("action=empty-iteration value={}", numEmptyQueueIterations);
-                if (numEmptyQueueIterations > NUM_EMPTY_ITERATIONS_BEFORE_DYING ) {
-                    isRunning = false;
-                }
             }
 
         } while (isRunning);
