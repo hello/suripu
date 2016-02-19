@@ -161,7 +161,7 @@ public class TimelineQueueProcessor {
         return result.getSuccessful().size();
     }
 
-    private static String encodeMessage(final TimelineQueueProtos.Message message) {
+    public static String encodeMessage(final TimelineQueueProtos.Message message) {
         final byte [] bytes = message.toByteArray();
         return Base64.encodeBase64URLSafeString(bytes);
     }
