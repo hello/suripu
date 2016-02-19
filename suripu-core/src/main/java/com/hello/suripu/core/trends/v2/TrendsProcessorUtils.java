@@ -301,11 +301,18 @@ public class TrendsProcessorUtils {
                                              final DateTime today,
                                              final DateTime firstDataDateTime, final DateTime lastDataDateTime,
                                              final int numDays,
-                                             final boolean padDayOfWeek) {
+                                             final boolean padDayOfWeek,
+                                             final Optional<DateTime> optionalCreated) {
         final List<Float> sectionData = Lists.newArrayList();
 
         // fill in missing days first, include firstDate
-        final DateTime firstDate = today.minusDays(numDays);
+        final DateTime firstDate;
+        if (optionalCreated.isPresent()) {
+            firstDate = optionalCreated.get();
+        } else {
+            firstDate = today.minusDays(numDays);
+        }
+
         final Days missingDays = Days.daysBetween(firstDate, firstDataDateTime);
         if (missingDays.getDays() > 0) {
             for (int day = 0; day < missingDays.getDays(); day ++) {
