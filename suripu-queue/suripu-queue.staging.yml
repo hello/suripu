@@ -89,11 +89,12 @@ timeline_seed_model:
 
 
 SQS_configuration:
-    sqs_queue_name: timeline_queue
+    sqs_queue_name: dev_timeline_queue
     sqs_max_connections: 50
     sqs_max_messages_read: 10
     sqs_wait_time_seconds: 10
     sqs_visibility_timeout_seconds: 5
+    sqs_extra_queue_name: dev_timeline_queue_odd
 
 dynamodb:
   region: us-east-1

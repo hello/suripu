@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.NotNull;
 
 /**
- * Created by kingshy on 1/11/16.
+ * Created by kingshy on 1/11/16
  */
 public class SQSConfiguration {
 
@@ -29,6 +29,8 @@ public class SQSConfiguration {
     @JsonProperty("sqs_wait_time_seconds")
     private int sqsWaitTimeSeconds = 30;
 
+    @JsonProperty("sqs_extra_queue_name")
+    private String sqsExtraQueueName = null;
 
     public String getSqsQueueName() { return this.sqsQueueName; }
     public void setSqsQueueName(final String sqsQueueName) { this.sqsQueueName = sqsQueueName; }
@@ -44,5 +46,9 @@ public class SQSConfiguration {
 
     public int getSqsWaitTimeSeconds() { return this.sqsWaitTimeSeconds; }
     public void setSqsWaitTimeSeconds(final int sqsWaitTimeSeconds) { this.sqsWaitTimeSeconds = sqsWaitTimeSeconds; }
+
+    public String getSqsExtraQueueName() { return this.sqsExtraQueueName; }
+    public void setSqsExtraQueueName(final String sqsExtraQueueName) { this.sqsExtraQueueName = sqsExtraQueueName; }
+
 
 }

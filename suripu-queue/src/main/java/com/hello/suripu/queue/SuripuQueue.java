@@ -1,5 +1,6 @@
 package com.hello.suripu.queue;
 
+import com.hello.suripu.queue.cli.PopulateTimelineQueueCommand;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
 import com.hello.suripu.queue.workers.TimelineQueueWorkerCommand;
 import com.yammer.dropwizard.Service;
@@ -21,6 +22,7 @@ public class SuripuQueue extends Service<SuripuQueueConfiguration> {
     @Override
     public void initialize(Bootstrap<SuripuQueueConfiguration> bootstrap) {
         bootstrap.addCommand(new TimelineQueueWorkerCommand(this, "timeline_generator", "generate timeline"));
+        bootstrap.addCommand(new PopulateTimelineQueueCommand(this, "write_batch_messages", "insert queue message to generate timelines"));
     }
 
     @Override
