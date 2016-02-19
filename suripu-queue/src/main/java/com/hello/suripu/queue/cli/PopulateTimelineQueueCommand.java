@@ -82,12 +82,6 @@ public class PopulateTimelineQueueCommand extends EnvironmentCommand<SuripuQueue
                 .nargs("?")
                 .required(true)
                 .help("number of messages to send");
-
-        subparser.addArgument("--use_extra")
-                .nargs("?")
-                .required(false)
-                .help("true/false");
-
     }
 
     @Override
@@ -122,17 +116,6 @@ public class PopulateTimelineQueueCommand extends EnvironmentCommand<SuripuQueue
 
         final String sqsQueueUrl = optionalSqsQueueUrl.get();
 
-        // use extra queue for odd-numbered account-ids
-        String extraQueueUrl = "";
-        if (namespace.getString("use_extra") != null) {
-            final Optional<String> optionalExtraQueueUrl = TimelineQueueProcessor.getSQSQueueURL(sqs,
-                    sqsConfig.getSqsExtraQueueName());
-            if (optionalExtraQueueUrl.isPresent()) {
-                extraQueueUrl = optionalExtraQueueUrl.get();
-                LOGGER.debug("key=extra-queue-url value={}", extraQueueUrl);
-            }
-        }
-
         int totalMessages = 0;
         int totalMessagesSent = 0;
         int totalMessagesFail = 0;
@@ -153,14 +136,8 @@ public class PopulateTimelineQueueCommand extends EnvironmentCommand<SuripuQueue
 
             messages.addAll(batch);
 
-            // odd ids may use extra queue
-            String queueUrl = sqsQueueUrl;
-            if (accountId % 2 == 1 && !extraQueueUrl.isEmpty()) {
-                queueUrl = extraQueueUrl;
-            }
-
             // batch send a whole bunch of messages in multiple threads
-            final BatchResult result = sendBatchMessages(sqs, queueUrl, messages);
+            final BatchResult result = sendBatchMessages(sqs, sqsQueueUrl, messages);
 
             LOGGER.debug("key=result value=success={}|fail={}", accountId, result.success, result.failedMessages.size());
             totalMessagesSent += result.success;
