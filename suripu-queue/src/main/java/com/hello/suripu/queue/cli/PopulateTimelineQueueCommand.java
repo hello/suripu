@@ -138,30 +138,20 @@ public class PopulateTimelineQueueCommand extends EnvironmentCommand<SuripuQueue
         int totalMessagesFail = 0;
         final List<SendMessageBatchRequestEntry> messages  = Lists.newArrayList();
 
-        // send messages for each account-id
+        // process each account-id
         for (final Map.Entry<Long, DateTime> entry : accountIds.entrySet()) {
+
+            // generate a batch of messages for account-id
             final Long accountId = entry.getKey();
+            final DateTime startDate = entry.getValue();
+            LOGGER.debug("key=processing value=account-{}|startdate-{}", accountId, startDate);
 
-            // determine max no. of msg
-            final DateTime now = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
-            final Days days = Days.daysBetween(entry.getValue(), now);
-            final int numDays = (days.getDays() > maxMessages) ? maxMessages : days.getDays();
+            final List<SendMessageBatchRequestEntry> batch = generateMessages(accountId, startDate, maxMessages);
+            totalMessages += batch.size();
 
-            totalMessages += numDays;
+            LOGGER.debug("key=message-info value=days-{}|leftovers-{}", accountId, batch.size(), messages.size());
 
-            LOGGER.debug("key=processing value=account-{}|days-{}|leftovers-{}", accountId, numDays, messages.size());
-
-            // create messages
-            final TimelineQueueProtos.Message.Builder builder = TimelineQueueProtos.Message.newBuilder();
-            for (int i = 2; i <= numDays+1; i++) {
-                final String targetDate = DateTimeUtil.dateToYmdString(now.minusDays(i));
-                final TimelineQueueProtos.Message msg = builder
-                        .setAccountId(accountId)
-                        .setTargetDate(targetDate)
-                        .setTimestamp(DateTime.now().getMillis()).build();
-                final String messageId = String.format("%s_%s", String.valueOf(accountId), targetDate);
-                messages.add(new SendMessageBatchRequestEntry(messageId, TimelineQueueProcessor.encodeMessage(msg)));
-            }
+            messages.addAll(batch);
 
             // odd ids may use extra queue
             String queueUrl = sqsQueueUrl;
@@ -183,7 +173,7 @@ public class PopulateTimelineQueueCommand extends EnvironmentCommand<SuripuQueue
                 LOGGER.debug("key=resend-message-size value={}", result.failedMessages.size());
                 for (final String failedId : result.failedMessages) {
                     String [] parts = failedId.split("_");
-                    final TimelineQueueProtos.Message msg = builder
+                    final TimelineQueueProtos.Message msg = TimelineQueueProtos.Message.newBuilder()
                             .setAccountId(Long.valueOf(parts[0]))
                             .setTargetDate(parts[1])
                             .setTimestamp(DateTime.now().getMillis()).build();
@@ -208,12 +198,13 @@ public class PopulateTimelineQueueCommand extends EnvironmentCommand<SuripuQueue
         final List<List<SendMessageBatchRequestEntry>> batches = Lists.partition(messages, MAX_BATCH_SIZE);
         final List<Future<SendMessageBatchResult>> futures = Lists.newArrayListWithCapacity(batches.size());
 
+        LOGGER.debug("key=no-of-batches value={}", batches.size());
+
         for (final List<SendMessageBatchRequestEntry> batch : batches) {
             // construct a batch message request
             final Future<SendMessageBatchResult> future = executor.submit(new Callable<SendMessageBatchResult>() {
                 @Override
                 public SendMessageBatchResult call() throws Exception {
-                    LOGGER.debug("key=batch-size value={}", batch.size());
                     final SendMessageBatchResult result = sqsClient.sendMessageBatch(queueUrl, batch);
                     return result;
                 }
@@ -242,6 +233,28 @@ public class PopulateTimelineQueueCommand extends EnvironmentCommand<SuripuQueue
         return new BatchResult(success, failedAccountIdDates);
     }
 
+    private List<SendMessageBatchRequestEntry> generateMessages(final Long accountId, final DateTime startDate, final int maxDays) {
+
+        final List<SendMessageBatchRequestEntry> messages = Lists.newArrayList();
+
+        // determine max no. of msg
+        final DateTime now = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
+        final Days days = Days.daysBetween(startDate, now);
+        final int numDays = (days.getDays() > maxDays) ? maxDays : days.getDays();
+
+        // create messages
+        final TimelineQueueProtos.Message.Builder builder = TimelineQueueProtos.Message.newBuilder();
+        for (int i = 2; i <= numDays+1; i++) {
+            final String targetDate = DateTimeUtil.dateToYmdString(now.minusDays(i));
+            final TimelineQueueProtos.Message msg = builder
+                    .setAccountId(accountId)
+                    .setTargetDate(targetDate)
+                    .setTimestamp(DateTime.now().getMillis()).build();
+            final String messageId = String.format("%s_%s", String.valueOf(accountId), targetDate);
+            messages.add(new SendMessageBatchRequestEntry(messageId, TimelineQueueProcessor.encodeMessage(msg)));
+        }
+        return messages;
+    }
 
     /**
      * Read list of account-ids to process, format: account-id,y-m-d-string
