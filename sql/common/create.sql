@@ -342,3 +342,29 @@ CREATE UNIQUE INDEX uniq_unsubscribe_email on unsubscribe_email(email);
 
 GRANT ALL PRIVILEGES ON unsubscribe_email TO ingress_user;
 GRANT ALL PRIVILEGES ON SEQUENCE unsubscribe_email_id_seq TO ingress_user;
+
+
+CREATE TABLE sleep_sound_durations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    duration_seconds BIGINT,
+    sort_key INTEGER NOT NULL
+);
+
+INSERT INTO sleep_sound_durations (name, duration_seconds, sort_key)
+VALUES ('10 Minutes', 600, 600),
+       ('30 Minutes', 1800, 1800),
+       ('1 Hour', 3600, 3600),
+       ('2 Hours', 7200, 7200),
+       ('3 Hours', 10800, 10800),
+       ('Indefinitely', NULL, 100000);
+
+CREATE TABLE sleep_sounds (
+    id SERIAL PRIMARY KEY,
+    preview_url VARCHAR(255) NOT NULL,  -- Preview for app
+    name VARCHAR(255) NOT NULL,         -- Display name
+    file_path VARCHAR(255) NOT NULL,    -- Path on Sense
+    url VARCHAR(255) NOT NULL,          -- Path to full file
+    sort_key INTEGER NOT NULL,          -- How to sort the values for displaying
+    firmware_version INTEGER NOT NULL   -- Minimum firmware version
+);
