@@ -6,6 +6,7 @@ import com.google.common.base.Optional;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
+import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
@@ -139,37 +140,12 @@ public class SleepSoundsResource extends BaseResource {
 
 
     //region status
-    private static class SenseStatus {
-        @JsonProperty("playing")
-        public final Boolean isPlaying;
-
-        @JsonProperty("sound")
-        public final Optional<Sound> sound;
-
-        @JsonProperty("duration")
-        public final Optional<Duration> duration;
-
-        private SenseStatus(final Boolean isPlaying, final Optional<Sound> sound, final Optional<Duration> duration) {
-            this.isPlaying = isPlaying;
-            this.sound = sound;
-            this.duration = duration;
-        }
-
-        public static SenseStatus create() {
-            return new SenseStatus(false, Optional.<Sound>absent(), Optional.<Duration>absent());
-        }
-
-        public static SenseStatus create(final Sound sound, final Duration duration) {
-            return new SenseStatus(true, Optional.of(sound), Optional.of(duration));
-        }
-    }
-
     @GET
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
-    public SenseStatus getStatus(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
+    public SleepSoundStatus getStatus(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
         // TODO reconstruct Sense state from DAO
-        return SenseStatus.create();
+        return SleepSoundStatus.create();
     }
     //endregion status
 

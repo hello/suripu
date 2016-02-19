@@ -3,9 +3,9 @@ package com.hello.suripu.core.db;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
@@ -15,10 +15,14 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.core.db.dynamo.Attribute;
-import com.hello.suripu.core.db.dynamo.Expressions;
-import com.hello.suripu.core.db.dynamo.expressions.Expression;
+import com.hello.suripu.core.models.SenseStateAtTime;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +47,10 @@ public class SenseStateDynamoDB {
 
     public enum SenseStateAttribute implements Attribute {
         SENSE_ID("sense_id", "S"),  // Hash key
-        TIMESTAMP("timestamp", "S"),
+        TIMESTAMP("timestamp", "N"),
         PLAYING_AUDIO("playing_audio", "B"),
-        SLEEP_SOUND_DURATION_ID("duration", "N"),
-        SLEEP_SOUND_ID("sound", "N");
+        SLEEP_SOUND_DURATION("duration", "N"),
+        SLEEP_SOUND_FILE("sound", "S");
 
         private final String name;
         private final String type;
@@ -65,6 +69,10 @@ public class SenseStateDynamoDB {
         public String sanitizedName() {
             return toString();
         }
+    }
+
+    private Map<String, AttributeValue> getKey(final String senseId) {
+        return ImmutableMap.of(SenseStateAttribute.SENSE_ID.shortName(), new AttributeValue().withS(senseId));
     }
 
     public SenseStateDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
@@ -108,22 +116,29 @@ public class SenseStateDynamoDB {
         }
     }
 
-    private State.SenseState toSenseState(final Map<String, AttributeValue> item) {
-        final State.AudioState.Builder audioStateBuilder = State.AudioState.newBuilder();
-        final Boolean isPlayingAudio = item.get(SenseStateAttribute.PLAYING_AUDIO.shortName()).getBOOL();
-        audioStateBuilder.setPlayingAudio(isPlayingAudio);
-        if (isPlayingAudio) {
-            // TODO
+    private SenseStateAtTime toSenseState(final Map<String, AttributeValue> item) {
+        final State.SenseState.Builder senseStateBuilder = State.SenseState.newBuilder()
+                .setSenseId(item.get(SenseStateAttribute.SENSE_ID.shortName()).getS());
+
+        if (item.containsKey(SenseStateAttribute.PLAYING_AUDIO.shortName())) {
+            final State.AudioState.Builder audioStateBuilder = State.AudioState.newBuilder();
+            final Boolean isPlayingAudio = item.get(SenseStateAttribute.PLAYING_AUDIO.shortName()).getBOOL();
+            audioStateBuilder.setPlayingAudio(isPlayingAudio);
+            if (isPlayingAudio) {
+                audioStateBuilder.setDurationSeconds(Integer.valueOf(item.get(SenseStateAttribute.SLEEP_SOUND_DURATION.shortName()).getN()));
+                audioStateBuilder.setFilePath(item.get(SenseStateAttribute.SLEEP_SOUND_FILE.shortName()).getS());
+            }
+            senseStateBuilder.setAudioState(audioStateBuilder.build());
         }
 
-        return State.SenseState.newBuilder()
-                .setAudioState(audioStateBuilder.build())
-                .setSenseId(item.get(SenseStateAttribute.SENSE_ID.shortName()).getS())
-                .build();
+        final State.SenseState state = senseStateBuilder.build();
+
+        final Long timestamp = Long.valueOf(item.get(SenseStateAttribute.TIMESTAMP.shortName()).getN());
+        return new SenseStateAtTime(state, new DateTime(timestamp, DateTimeZone.UTC));
     }
 
-    public Optional<State.SenseState> getState(final String senseId) {
-        final Map<String, AttributeValue> key = ImmutableMap.of(SenseStateAttribute.SENSE_ID.shortName(), new AttributeValue().withS(senseId));
+    public Optional<SenseStateAtTime> getState(final String senseId) {
+        final Map<String, AttributeValue> key = getKey(senseId);
 
         GetItemResult result = null;
         int numAttempts = 0;
@@ -144,6 +159,47 @@ public class SenseStateDynamoDB {
             }
         } while (result == null);
 
+        if (result.getItem() == null) {
+            return Optional.absent();
+        }
         return Optional.of(toSenseState(result.getItem()));
     }
+
+    private AttributeValueUpdate putAction(final Long value) {
+        return new AttributeValueUpdate(new AttributeValue().withN(String.valueOf(value)), "PUT");
+    }
+
+    private AttributeValueUpdate putAction(final String value) {
+        return new AttributeValueUpdate(new AttributeValue().withS(value), "PUT");
+    }
+
+    private AttributeValueUpdate putAction(final Boolean value) {
+        return new AttributeValueUpdate(new AttributeValue().withBOOL(value), "PUT");
+    }
+
+    private Map<String, AttributeValueUpdate> toDynamoDBUpdates(final SenseStateAtTime state) {
+        final Map<String, AttributeValueUpdate> updates = Maps.newHashMap();
+        updates.put(SenseStateAttribute.TIMESTAMP.shortName(), putAction(state.timestamp.getMillis()));
+
+        if (state.state.hasAudioState()) {
+            final State.AudioState audioState = state.state.getAudioState();
+            updates.put(SenseStateAttribute.PLAYING_AUDIO.shortName(), putAction(audioState.getPlayingAudio()));
+
+            if (audioState.getPlayingAudio()) {
+                updates.put(SenseStateAttribute.SLEEP_SOUND_FILE.shortName(), putAction(audioState.getFilePath()));
+                updates.put(SenseStateAttribute.SLEEP_SOUND_DURATION.shortName(), putAction((long) audioState.getDurationSeconds()));
+            }
+        }
+
+        return updates;
+    }
+
+    /**
+     * WARNING: Last write wins
+     * @param state
+     */
+    public void updateState(final SenseStateAtTime state) {
+        dynamoDBClient.updateItem(tableName, getKey(state.state.getSenseId()), toDynamoDBUpdates(state));
+    }
+
 }
