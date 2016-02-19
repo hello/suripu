@@ -175,12 +175,18 @@ public class FirmwareUpdateStore {
                     .setUrl(s.getPath() + "?" + s.getQuery())
                     .setHost(s.getHost()); // TODO: replace with hello s3 proxy
 
+            // Trimming filename down to 8.3 format for *.raw files with original filenames
+            // of the format SENSE_SLEEPTONES_<foo>.raw (e.g. "SENSE_SLEEPTONES_OUTERSPACE.raw")
+            final String filename = f.substring(f.lastIndexOf("_") + 1)
+                .replace(".raw", "")
+                .substring(0, 8);
+
             final ImmutableMap<String, FirmwareFile> downloadableFiles = new ImmutableMap.Builder<String, FirmwareFile>()
                 .put("servicepack.ucf", new FirmwareFile(bucketName, "", true, false, false, "servicepack.ucf", "/sys/", "servicepack.ucf", "/"))
                 .put("ca0515.der", new FirmwareFile(bucketName, "", true, false, false, "ca0515.der", "/cert/", "ca0515.der", "/"))
                 .put("kitsune.bin", new FirmwareFile(bucketName, "", true, false, true, "mcuimgx.bin", "/sys/", "mcuimgx.bin", "/"))
                 .put("top.bin", new FirmwareFile(bucketName, "", true, false, false, "update.bin", "/top/", "top.update.bin", "/"))
-                .put(".raw", new FirmwareFile(bucketName, "", false, false, false, "", "", f.substring(f.lastIndexOf("/")), "/"))
+                .put(".raw", new FirmwareFile(bucketName, "", false, false, false, "", "", filename.concat(".raw"), "SLPTONE"))
                 .build();
 
             for(final Entry<String, FirmwareFile> entry: downloadableFiles.entrySet()) {
