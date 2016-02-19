@@ -82,7 +82,6 @@ SQS_configuration:
     sqs_max_messages_read: 10
     sqs_wait_time_seconds: 10
     sqs_visibility_timeout_seconds: 5
-    sqs_extra_queue_name: timeline_queue_odd
 
 dynamodb:
   region: us-east-1
