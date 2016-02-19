@@ -66,7 +66,7 @@ public class TrendsProcessor {
 
         final Optional<DateTime> optionalAccountCreated;
         if (accountAge < DateTimeConstants.DAYS_PER_WEEK) {
-            optionalAccountCreated = Optional.of(optionalAccount.get().created);
+            optionalAccountCreated = Optional.of(optionalAccount.get().created.withTimeAtStartOfDay());
         } else {
             optionalAccountCreated = Optional.absent();
         }
