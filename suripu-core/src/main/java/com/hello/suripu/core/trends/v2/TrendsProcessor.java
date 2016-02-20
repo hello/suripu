@@ -75,6 +75,9 @@ public class TrendsProcessor {
 
         final List<Graph> graphs = Lists.newArrayList();
 
+        // users < one-week old will get graphs if data-size meets certain minimum threshold
+        // users > one-week old will get graphs regardless, may not have annotations if insufficient data
+
         // sleep-score grid graph
         if (data.size() >= MIN_SCORE_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
             final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation, optionalAccountCreated);

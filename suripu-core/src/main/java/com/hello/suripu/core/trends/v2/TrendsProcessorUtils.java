@@ -309,7 +309,7 @@ public class TrendsProcessorUtils {
                                              final Optional<DateTime> optionalCreated) {
         final List<Float> sectionData = Lists.newArrayList();
 
-        // fill in missing days first, include firstDate
+        // fill in missing days first, include firstDate, gated by account-creation date
         final DateTime firstDate;
         if (optionalCreated.isPresent()) {
             firstDate = optionalCreated.get();
