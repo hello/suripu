@@ -107,10 +107,12 @@ public class TrendsProcessorUtils {
         for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
             Optional<Integer> highlightedTitle = Optional.<Integer>absent();
+            List<String> titles = Collections.<String>emptyList();
             if (weeks == 1) {
                 highlightedTitle = Optional.of(todayDOW - 1);
+                titles = English.DAY_OF_WEEK_NAMES;
                 if (numWeeks > 1) {
-                    sections.add(new GraphSection(oneWeek, English.DAY_OF_WEEK_NAMES, Collections.<Integer>emptyList(), highlightedTitle));
+                    sections.add(new GraphSection(oneWeek, titles, Collections.<Integer>emptyList(), highlightedTitle));
                     continue;
                 }
             }
@@ -122,7 +124,7 @@ public class TrendsProcessorUtils {
                 }
             }
             // no titles for subsequent sections
-            sections.add(new GraphSection(oneWeek, Collections.<String>emptyList(), highlightedValues, highlightedTitle));
+            sections.add(new GraphSection(oneWeek, titles, highlightedValues, highlightedTitle));
 
         }
         return sections;

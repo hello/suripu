@@ -52,7 +52,8 @@ public class TrendsProcessor {
     public TrendsResult getAllTrends(final Long accountId, final TimeScale timescale) {
 
         // get data
-        final DateTime localToday = getLocalToday(accountId);
+        final Integer offsetMillis = getAccountMillisOffset(accountId);
+        final DateTime localToday = getLocalToday(offsetMillis);
         final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
@@ -62,11 +63,18 @@ public class TrendsProcessor {
 
         // only show annotations if account could have 7 or more timelines
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
-        final int accountAge = (optionalAccount.isPresent()) ? DateTimeUtil.getDateDiffFromNowInDays(optionalAccount.get().created.withTimeAtStartOfDay()) : 0;
+        final int accountAge;
+        if (optionalAccount.isPresent()) {
+            final Days daysDiff = Days.daysBetween(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay(), localToday);
+            accountAge = daysDiff.getDays();
+        } else {
+            accountAge = 0;
+        }
+
 
         final Optional<DateTime> optionalAccountCreated;
         if (accountAge < DateTimeConstants.DAYS_PER_WEEK) {
-            optionalAccountCreated = Optional.of(optionalAccount.get().created.withTimeAtStartOfDay());
+            optionalAccountCreated = Optional.of(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay());
         } else {
             optionalAccountCreated = Optional.absent();
         }
@@ -272,11 +280,18 @@ public class TrendsProcessor {
         return results;
     }
 
-    private DateTime getLocalToday(final Long accountId) {
+    private Integer getAccountMillisOffset(final Long accountId) {
         final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        final DateTime now = DateTime.now(DateTimeZone.UTC);
         if (optionalTimeZone.isPresent()) {
-            return now.plusMillis(optionalTimeZone.get().offsetMillis).withTimeAtStartOfDay();
+            return optionalTimeZone.get().offsetMillis;
+        }
+        return 0;
+    }
+
+    private DateTime getLocalToday(final Integer offsetMillis) {
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        if (offsetMillis != 0) {
+            return now.plusMillis(offsetMillis).withTimeAtStartOfDay();
         }
         return now.withTimeAtStartOfDay();
     }
