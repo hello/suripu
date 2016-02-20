@@ -53,7 +53,7 @@ public class TrendsProcessor {
 
         // get data
         final DateTime localToday = getLocalToday(accountId);
-        final List<AggregateSleepStats> data = getRawData(3290L, localToday, timescale.getDays());
+        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             LOGGER.debug("debug=no-trends-data, account={}", accountId);
@@ -76,7 +76,7 @@ public class TrendsProcessor {
         final List<Graph> graphs = Lists.newArrayList();
 
         // sleep-score grid graph
-        if (data.size() >= MIN_SCORE_DATA_SIZE) {
+        if (data.size() >= MIN_SCORE_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
             final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation, optionalAccountCreated);
             if (sleepScoreGraph.isPresent()) {
                 graphs.add(sleepScoreGraph.get());
@@ -84,7 +84,7 @@ public class TrendsProcessor {
         }
 
         // sleep duration bar graph
-        if (data.size() >= MIN_DURATION_DATA_SIZE) {
+        if (data.size() >= MIN_DURATION_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
             final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, English.GRAPH_TITLE_SLEEP_DURATION, localToday, hasAnnotation, optionalAccountCreated);
             if (durationGraph.isPresent()) {
                 graphs.add(durationGraph.get());
@@ -92,7 +92,7 @@ public class TrendsProcessor {
         }
 
         // sleep depth bubbles
-        if (data.size() >= MIN_DEPTH_DATA_SIZE) {
+        if (data.size() >= MIN_DEPTH_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
             final Optional<Graph> depthGraph = getSleepDepthGraph(data, timescale);
             if (depthGraph.isPresent()) {
                 graphs.add(depthGraph.get());

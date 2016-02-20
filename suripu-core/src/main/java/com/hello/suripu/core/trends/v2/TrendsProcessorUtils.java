@@ -68,6 +68,10 @@ public class TrendsProcessorUtils {
             annotations.add(new Annotation(title, avg, dataType, condition));
         }
 
+        if (annotations.size() < 3) {
+            return Collections.emptyList();
+        }
+
         return annotations;
     }
 
