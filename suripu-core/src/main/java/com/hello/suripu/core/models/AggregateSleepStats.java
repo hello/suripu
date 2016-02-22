@@ -43,10 +43,9 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
     @Override
     public int compareTo(AggregateSleepStats o) {
         final AggregateSleepStats compareObject = o;
-        final long compareTimestamp = compareObject.dateTime.getMillis();
-        final long objectTimestamp = this.dateTime.getMillis();
+        final long compareTimestamp = compareObject.dateTime.getMillis()/1000L;
+        final long objectTimestamp = this.dateTime.getMillis()/1000L;
         return (int) (objectTimestamp - compareTimestamp);  // ascending
-
     }
 
     public static class Builder {

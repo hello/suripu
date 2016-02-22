@@ -54,6 +54,7 @@ public class TrendsProcessor {
         // get data
         final Integer offsetMillis = getAccountMillisOffset(accountId);
         final DateTime localToday = getLocalToday(offsetMillis);
+
         final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
