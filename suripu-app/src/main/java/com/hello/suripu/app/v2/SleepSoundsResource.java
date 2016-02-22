@@ -16,12 +16,9 @@ import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
-import com.hello.suripu.core.resources.BaseResource;
-import com.librato.rollout.RolloutClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -33,11 +30,8 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/v2/sleep_sounds")
-public class SleepSoundsResource extends BaseResource {
+public class SleepSoundsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsResource.class);
-
-    @Inject
-    RolloutClient feature;
 
     private final SoundDAO soundDAO;
     private final DurationDAO durationDAO;
@@ -203,7 +197,7 @@ public class SleepSoundsResource extends BaseResource {
                     accountId, deviceId, audioState.getFilePath());
             return NOT_PLAYING;
         }
-        
+
         return SleepSoundStatus.create(soundOptional.get(), durationOptional.get());
     }
     //endregion status
