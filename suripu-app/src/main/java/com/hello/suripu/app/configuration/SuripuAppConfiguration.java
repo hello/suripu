@@ -190,6 +190,12 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("sense_state_db")
+    private DynamoDBConfiguration senseStateDBConfiguration;
+    public DynamoDBConfiguration getSenseStateDBConfiguration() { return this.senseStateDBConfiguration; }
+
+    @Valid
+    @NotNull
     @JsonProperty("sleep_score_version")
     private String sleepScoreVersion;
     public String getSleepScoreVersion() {

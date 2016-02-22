@@ -301,3 +301,8 @@ pill_data:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: pill_data
+
+sense_state_db:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: sense_state
