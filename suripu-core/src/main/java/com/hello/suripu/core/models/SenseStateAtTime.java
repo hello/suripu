@@ -14,4 +14,13 @@ public class SenseStateAtTime {
         this.state = state;
         this.timestamp = timestamp;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof SenseStateAtTime)) {
+            return false;
+        }
+        final SenseStateAtTime otherState = (SenseStateAtTime) obj;
+        return (state.equals(otherState.state) && timestamp.equals(otherState.timestamp));
+    }
 }
