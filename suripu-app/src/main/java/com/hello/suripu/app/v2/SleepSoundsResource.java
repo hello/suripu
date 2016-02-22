@@ -3,8 +3,13 @@ package com.hello.suripu.app.v2;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hello.suripu.api.input.State;
+import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
+import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.SenseStateAtTime;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
 import com.hello.suripu.core.models.sleep_sounds.Sound;
@@ -36,14 +41,26 @@ public class SleepSoundsResource extends BaseResource {
 
     private final SoundDAO soundDAO;
     private final DurationDAO durationDAO;
+    private final SenseStateDynamoDB senseStateDynamoDB;
+    private final DeviceDAO deviceDAO;
 
-    private SleepSoundsResource(final SoundDAO soundDAO, final DurationDAO durationDAO) {
+    private SleepSoundsResource(final SoundDAO soundDAO,
+                                final DurationDAO durationDAO,
+                                final SenseStateDynamoDB senseStateDynamoDB,
+                                final DeviceDAO deviceDAO)
+    {
         this.soundDAO = soundDAO;
         this.durationDAO = durationDAO;
+        this.senseStateDynamoDB = senseStateDynamoDB;
+        this.deviceDAO = deviceDAO;
     }
 
-    public static SleepSoundsResource create(final SoundDAO soundDAO, final DurationDAO durationDAO) {
-        return new SleepSoundsResource(soundDAO, durationDAO);
+    public static SleepSoundsResource create(final SoundDAO soundDAO,
+                                             final DurationDAO durationDAO,
+                                             final SenseStateDynamoDB senseStateDynamoDB,
+                                             final DeviceDAO deviceDAO)
+    {
+        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO);
     }
 
 
@@ -144,11 +161,51 @@ public class SleepSoundsResource extends BaseResource {
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
     public SleepSoundStatus getStatus(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
-        // TODO reconstruct Sense state from DAO
-        return SleepSoundStatus.create();
+        final SleepSoundStatus NOT_PLAYING = SleepSoundStatus.create();
+        final Long accountId = accessToken.accountId;
+
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
+            return NOT_PLAYING;
+        }
+
+        final String deviceId = deviceIdPair.get().externalDeviceId;
+
+        final Optional<SenseStateAtTime> senseStateAtTimeOptional = senseStateDynamoDB.getState(deviceId);
+        if (!senseStateAtTimeOptional.isPresent()) {
+            LOGGER.warn("account-id={} device-id={} sense-state=not-found", accountId, deviceId);
+            return NOT_PLAYING;
+        }
+
+        final SenseStateAtTime senseStateAtTime = senseStateAtTimeOptional.get();
+        if (!senseStateAtTime.state.hasAudioState() || !senseStateAtTime.state.getAudioState().getPlayingAudio()) {
+            return NOT_PLAYING;
+        }
+
+        final State.AudioState audioState = senseStateAtTime.state.getAudioState();
+        if (!(audioState.hasDurationSeconds() && audioState.hasFilePath())) {
+            LOGGER.warn("error=inconsistent-sense-state account-id={} device-id={} audio-state-playing={} audio-state-has-duration={} audio-state-has-file-path={}",
+                    accountId, deviceId, audioState.getPlayingAudio(), audioState.getDurationSeconds(), audioState.getFilePath());
+            return NOT_PLAYING;
+        }
+
+        final Optional<Duration> durationOptional = durationDAO.getByDurationSeconds(new Long(audioState.getDurationSeconds()));
+        if (!durationOptional.isPresent()) {
+            LOGGER.warn("error=duration-not-found account-id={} device-id={} duration-seconds={}",
+                    accountId, deviceId, audioState.getDurationSeconds());
+            return NOT_PLAYING;
+        }
+
+        final Optional<Sound> soundOptional = soundDAO.getByFilePath(audioState.getFilePath());
+        if (!soundOptional.isPresent()) {
+            LOGGER.warn("error=sound-file-not-found account-id={} device-id={} file-path={}",
+                    accountId, deviceId, audioState.getFilePath());
+            return NOT_PLAYING;
+        }
+        
+        return SleepSoundStatus.create(soundOptional.get(), durationOptional.get());
     }
     //endregion status
 
-
-    // TODO endpoint to determine whether user can see sleep sounds or not
 }
