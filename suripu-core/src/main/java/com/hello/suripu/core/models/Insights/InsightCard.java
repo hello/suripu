@@ -101,33 +101,17 @@ public class InsightCard implements Comparable<InsightCard> {
     }
 
     public enum InsightType {
-        DEFAULT(0),
-        GENERIC(1);
-
-        private int value;
-
-        InsightType(final int value) {this.value = value;}
-
-        public int getValue() {return this.value;}
-
-        public String getString() {return this.toString();}
-
-        public static InsightType fromInteger(final int value) {
-            for (final InsightType insightType : InsightType.values()) {
-                if (value == insightType.getValue()) return insightType;
-            }
-            return InsightType.DEFAULT;
-        }
+        DEFAULT, GENERIC;
 
         public static InsightType fromString(final String text) {
             if (text != null) {
                 for (final InsightType insightType : InsightType.values()) {
-                    if (text.equalsIgnoreCase(insightType.toString())) return insightType;
+                    if (text.equalsIgnoreCase(insightType.toString()))
+                        return insightType;
                 }
             }
-            return InsightType.DEFAULT;
+            throw new IllegalArgumentException("Illegal InsightType string");
         }
-
     }
 
     @JsonProperty("account_id")
