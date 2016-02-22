@@ -1,5 +1,6 @@
 package com.hello.suripu.core.models;
 
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -41,12 +42,8 @@ public class AggregateSleepStats implements Comparable<AggregateSleepStats>{
     }
 
     @Override
-    public int compareTo(AggregateSleepStats o) {
-        final AggregateSleepStats compareObject = o;
-        final long compareTimestamp = compareObject.dateTime.getMillis();
-        final long objectTimestamp = this.dateTime.getMillis();
-        return (int) (objectTimestamp - compareTimestamp);  // ascending
-
+    public int compareTo(@NotNull AggregateSleepStats o) {
+        return this.dateTime.compareTo(o.dateTime);
     }
 
     public static class Builder {

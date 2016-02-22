@@ -52,7 +52,9 @@ public class TrendsProcessor {
     public TrendsResult getAllTrends(final Long accountId, final TimeScale timescale) {
 
         // get data
-        final DateTime localToday = getLocalToday(accountId);
+        final Integer offsetMillis = getAccountMillisOffset(accountId);
+        final DateTime localToday = getLocalToday(offsetMillis);
+
         final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
@@ -61,32 +63,48 @@ public class TrendsProcessor {
         }
 
         // only show annotations if account could have 7 or more timelines
-        final int accountAge = getAccountAge(accountId);
-        boolean hasAnnotation = true;
-        if (accountAge < Annotation.ANNOTATION_ENABLED_THRESHOLD) {
-            hasAnnotation = false;
+        final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+        final int accountAge;
+        if (optionalAccount.isPresent()) {
+            final Days daysDiff = Days.daysBetween(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay(), localToday);
+            accountAge = daysDiff.getDays();
+        } else {
+            accountAge = 0;
         }
+
+
+        final Optional<DateTime> optionalAccountCreated;
+        if (accountAge < DateTimeConstants.DAYS_PER_WEEK) {
+            optionalAccountCreated = Optional.of(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay());
+        } else {
+            optionalAccountCreated = Optional.absent();
+        }
+
+        boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
 
         final List<Graph> graphs = Lists.newArrayList();
 
+        // users < one-week old will get graphs if data-size meets certain minimum threshold
+        // users > one-week old will get graphs regardless, may not have annotations if insufficient data
+
         // sleep-score grid graph
-        if (data.size() >= MIN_SCORE_DATA_SIZE) {
-            final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation);
+        if (data.size() >= MIN_SCORE_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+            final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation, optionalAccountCreated);
             if (sleepScoreGraph.isPresent()) {
                 graphs.add(sleepScoreGraph.get());
             }
         }
 
         // sleep duration bar graph
-        if (data.size() >= MIN_DURATION_DATA_SIZE) {
-            final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, English.GRAPH_TITLE_SLEEP_DURATION, localToday, hasAnnotation);
+        if (data.size() >= MIN_DURATION_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+            final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, English.GRAPH_TITLE_SLEEP_DURATION, localToday, hasAnnotation, optionalAccountCreated);
             if (durationGraph.isPresent()) {
                 graphs.add(durationGraph.get());
             }
         }
 
         // sleep depth bubbles
-        if (data.size() >= MIN_DEPTH_DATA_SIZE) {
+        if (data.size() >= MIN_DEPTH_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
             final Optional<Graph> depthGraph = getSleepDepthGraph(data, timescale);
             if (depthGraph.isPresent()) {
                 graphs.add(depthGraph.get());
@@ -162,7 +180,8 @@ public class TrendsProcessor {
                                      final DataType dataType,
                                      final String graphTitle,
                                      final DateTime localToday,
-                                     final boolean hasAnnotation) {
+                                     final boolean hasAnnotation,
+                                     final Optional<DateTime> optionalCreated) {
 
         final TrendsProcessorUtils.AnnotationStats annotationStats = new TrendsProcessorUtils.AnnotationStats();
 
@@ -216,7 +235,7 @@ public class TrendsProcessor {
 
         final boolean padDayOfWeek = (timeScale.equals(TimeScale.LAST_WEEK) || (dataType.equals(DataType.SCORES) && timeScale.equals(TimeScale.LAST_MONTH)));
 
-        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays(), padDayOfWeek);
+        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays(), padDayOfWeek, optionalCreated);
 
         final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
 
@@ -262,11 +281,18 @@ public class TrendsProcessor {
         return results;
     }
 
-    private DateTime getLocalToday(final Long accountId) {
+    private Integer getAccountMillisOffset(final Long accountId) {
         final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        final DateTime now = DateTime.now(DateTimeZone.UTC);
         if (optionalTimeZone.isPresent()) {
-            return now.plusMillis(optionalTimeZone.get().offsetMillis).withTimeAtStartOfDay();
+            return optionalTimeZone.get().offsetMillis;
+        }
+        return 0;
+    }
+
+    private DateTime getLocalToday(final Integer offsetMillis) {
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        if (offsetMillis != 0) {
+            return now.plusMillis(offsetMillis).withTimeAtStartOfDay();
         }
         return now.withTimeAtStartOfDay();
     }
@@ -293,7 +319,7 @@ public class TrendsProcessor {
     private List<TimeScale> computeAvailableTimeScales(final int accountAge) {
         final List<TimeScale> timeScales = Lists.newArrayList();
         for (final TimeScale scale : TimeScale.values()) {
-            if (accountAge >= scale.getDays()) {
+            if (accountAge >= scale.getVisibleAfterDays()) {
                 timeScales.add(scale);
             }
         }
@@ -301,11 +327,4 @@ public class TrendsProcessor {
         return timeScales;
     }
 
-    private int getAccountAge(final Long accountId) {
-        final Optional<Account> accountOptional = accountDAO.getById(accountId);
-        if (accountOptional.isPresent()) {
-            return DateTimeUtil.getDateDiffFromNowInDays(accountOptional.get().created);
-        }
-        return 0;
-    }
 }

@@ -68,6 +68,10 @@ public class TrendsProcessorUtils {
             annotations.add(new Annotation(title, avg, dataType, condition));
         }
 
+        if (annotations.size() < 3) {
+            return Collections.emptyList();
+        }
+
         return annotations;
     }
 
@@ -102,18 +106,25 @@ public class TrendsProcessorUtils {
         int weeks = 0;
         for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
+            Optional<Integer> highlightedTitle = Optional.<Integer>absent();
+            List<String> titles = Collections.<String>emptyList();
             if (weeks == 1) {
-                sections.add(new GraphSection(oneWeek, English.DAY_OF_WEEK_NAMES, Collections.<Integer>emptyList(), Optional.of(todayDOW - 1)));
-            } else {
-                final List<Integer> highlightedValues = Lists.newArrayList();
-                if (weeks == numWeeks) {
-                    if (todayDOW > 0) {
-                        highlightedValues.add(todayDOW - 1); // today should always be > 0
-                    }
+                highlightedTitle = Optional.of(todayDOW - 1);
+                titles = English.DAY_OF_WEEK_NAMES;
+                if (numWeeks > 1) {
+                    sections.add(new GraphSection(oneWeek, titles, Collections.<Integer>emptyList(), highlightedTitle));
+                    continue;
                 }
-                // no titles for subsequent sections
-                sections.add(new GraphSection(oneWeek, Collections.<String>emptyList(), highlightedValues, Optional.<Integer>absent()));
             }
+
+            final List<Integer> highlightedValues = Lists.newArrayList();
+            if (weeks == numWeeks) {
+                if (todayDOW > 0) {
+                    highlightedValues.add(todayDOW - 1); // today should always be > 0
+                }
+            }
+            // no titles for subsequent sections
+            sections.add(new GraphSection(oneWeek, titles, highlightedValues, highlightedTitle));
 
         }
         return sections;
@@ -301,11 +312,18 @@ public class TrendsProcessorUtils {
                                              final DateTime today,
                                              final DateTime firstDataDateTime, final DateTime lastDataDateTime,
                                              final int numDays,
-                                             final boolean padDayOfWeek) {
+                                             final boolean padDayOfWeek,
+                                             final Optional<DateTime> optionalCreated) {
         final List<Float> sectionData = Lists.newArrayList();
 
-        // fill in missing days first, include firstDate
-        final DateTime firstDate = today.minusDays(numDays);
+        // fill in missing days first, include firstDate, gated by account-creation date
+        final DateTime firstDate;
+        if (optionalCreated.isPresent()) {
+            firstDate = optionalCreated.get();
+        } else {
+            firstDate = today.minusDays(numDays);
+        }
+
         final Days missingDays = Days.daysBetween(firstDate, firstDataDateTime);
         if (missingDays.getDays() > 0) {
             for (int day = 0; day < missingDays.getDays(); day ++) {
