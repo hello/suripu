@@ -16,11 +16,11 @@ import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
 import com.hello.suripu.core.flipper.FeatureFlipper;
-import com.hello.suripu.core.models.AccountInfo;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.DeviceId;
 import com.hello.suripu.core.models.Insights.InfoInsightCards;
 import com.hello.suripu.core.models.Insights.InsightCard;
+import com.hello.suripu.core.models.Insights.InsightSchedule;
 import com.hello.suripu.core.preferences.AccountPreferencesDAO;
 import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
@@ -81,6 +81,9 @@ public class InsightProcessor {
     private final AccountInfoProcessor accountInfoProcessor;
     private final CalibrationDAO calibrationDAO;
 
+
+
+
     public InsightProcessor(@NotNull final DeviceDataDAO deviceDataDAO,
                             @NotNull final DeviceDataDAODynamoDB deviceDataDAODynamoDB,
                             @NotNull final DeviceReadDAO deviceReadDAO,
@@ -139,6 +142,9 @@ public class InsightProcessor {
             }
         }
 
+        if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHT_SCHEDULE_CBTI_V1, accountId, Collections.EMPTY_LIST)) {
+            this.generateInsightCBTI(accountId, DeviceId.create(internalDeviceId), deviceDataDAO);
+        }
         this.generateGeneralInsights(accountId, DeviceId.create(internalDeviceId), deviceDataDAO, featureFlipper);
     }
 
@@ -235,6 +241,34 @@ public class InsightProcessor {
         }
 
         return Optional.absent();
+    }
+
+    private Optional<InsightCard.Category> generateInsightCBTI(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO) {
+        final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
+        final DateTime currentTime = DateTime.now();
+        return generateInsightCBTI(accountId, deviceId, deviceDataInsightQueryDAO, recentCategories, currentTime);
+    }
+
+    @VisibleForTesting
+    public Optional<InsightCard.Category> generateInsightCBTI(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
+                                                                      final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+
+        final InsightSchedule.InsightGroup insightGroup = InsightSchedule.InsightGroup.CBTI_V1;
+        final Integer year = currentTime.getYear();
+        final Integer monthOfYear = currentTime.getMonthOfYear();
+        final InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(insightGroup, year, monthOfYear);
+
+        final Integer dayOfMonth = currentTime.getDayOfMonth();
+        final InsightCard.Category todayCategory = insightSchedule.dayToCategoryMap.get(dayOfMonth);
+
+        if (todayCategory == null) {
+            return Optional.absent();
+        }
+        if (recentCategories.contains(todayCategory)) {
+            return Optional.absent();
+        }
+
+        return generateInsightsByCategory(accountId, deviceId, deviceDataInsightQueryDAO, todayCategory);
     }
 
 
