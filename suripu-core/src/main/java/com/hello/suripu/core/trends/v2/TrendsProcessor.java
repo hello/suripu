@@ -32,10 +32,7 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of data-points
-    private static final int MIN_DEPTH_DATA_SIZE = 7;
-    private static final int MIN_SCORE_DATA_SIZE = 3;
-    private static final int MIN_DURATION_DATA_SIZE = 7;
+    private static final int ABSOLUTE_MIN_DATA_SIZE = 1;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -88,23 +85,19 @@ public class TrendsProcessor {
         // users > one-week old will get graphs regardless, may not have annotations if insufficient data
 
         // sleep-score grid graph
-        if (data.size() >= MIN_SCORE_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+        if (data.size() >= ABSOLUTE_MIN_DATA_SIZE) {
             final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation, optionalAccountCreated);
             if (sleepScoreGraph.isPresent()) {
                 graphs.add(sleepScoreGraph.get());
             }
-        }
 
-        // sleep duration bar graph
-        if (data.size() >= MIN_DURATION_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+            // sleep duration bar graph
             final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, English.GRAPH_TITLE_SLEEP_DURATION, localToday, hasAnnotation, optionalAccountCreated);
             if (durationGraph.isPresent()) {
                 graphs.add(durationGraph.get());
             }
-        }
 
-        // sleep depth bubbles
-        if (data.size() >= MIN_DEPTH_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+            // sleep depth bubbles
             final Optional<Graph> depthGraph = getSleepDepthGraph(data, timescale);
             if (depthGraph.isPresent()) {
                 graphs.add(depthGraph.get());
@@ -319,7 +312,7 @@ public class TrendsProcessor {
     private List<TimeScale> computeAvailableTimeScales(final int accountAge) {
         final List<TimeScale> timeScales = Lists.newArrayList();
         for (final TimeScale scale : TimeScale.values()) {
-            if (accountAge >= scale.getVisibleAfterDays()) {
+            if (accountAge > scale.getVisibleAfterDays()) {
                 timeScales.add(scale);
             }
         }
