@@ -47,7 +47,8 @@ public class MessejiHttpClient extends MessejiClient {
         try {
             response = httpClient.execute(host, request);
         } catch (IOException e) {
-            LOGGER.error("error=IOException senseId={} on=http-request-messeji exception={}", senseId, e);
+            LOGGER.error("error=IOException senseId={} on=http-request-messeji message={} exception={}",
+                    senseId, logFormatMessage(message), e);
             return Optional.absent();
         }
 
@@ -55,13 +56,13 @@ public class MessejiHttpClient extends MessejiClient {
 
         if (statusCode >= 500) {
             // Service exception
-            LOGGER.error("error=messeji-service-error status-code={} sense-id={}",
-                    statusCode, senseId);
+            LOGGER.error("error=messeji-service-error status-code={} sense-id={} message={}",
+                    statusCode, senseId, logFormatMessage(message));
             return Optional.absent();
         } else if (statusCode >= 400) {
             // client exception
-            LOGGER.error("error=messeji-client-error status-code={} sense-id={}",
-                    statusCode, senseId);
+            LOGGER.error("error=messeji-client-error status-code={} sense-id={} message={}",
+                    statusCode, senseId, logFormatMessage(message));
             return Optional.absent();
         }
 
@@ -71,7 +72,8 @@ public class MessejiHttpClient extends MessejiClient {
             contentStream.close();
             return Optional.of(responseMessage.getMessageId());
         } catch (IOException e) {
-            LOGGER.error("error=IOException on=parse-messeji-protobuf-response senseId={} exception={}", senseId, e);
+            LOGGER.error("error=IOException on=parse-messeji-protobuf-response senseId={} message={} exception={}",
+                    senseId, logFormatMessage(message), e);
             return Optional.absent();
         }
     }

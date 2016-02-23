@@ -184,7 +184,7 @@ public class SleepSoundsResource {
             return NOT_PLAYING;
         }
 
-        final Optional<Duration> durationOptional = durationDAO.getByDurationSeconds(new Long(audioState.getDurationSeconds()));
+        final Optional<Duration> durationOptional = durationDAO.getByDurationSeconds(audioState.getDurationSeconds());
         if (!durationOptional.isPresent()) {
             LOGGER.warn("error=duration-not-found account-id={} device-id={} duration-seconds={}",
                     accountId, deviceId, audioState.getDurationSeconds());
