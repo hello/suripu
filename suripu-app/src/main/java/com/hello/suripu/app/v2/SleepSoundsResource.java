@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hello.suripu.api.input.State;
+import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,24 +39,28 @@ public class SleepSoundsResource {
     private final DurationDAO durationDAO;
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
+    private final MessejiClient messejiClient;
 
     private SleepSoundsResource(final SoundDAO soundDAO,
                                 final DurationDAO durationDAO,
                                 final SenseStateDynamoDB senseStateDynamoDB,
-                                final DeviceDAO deviceDAO)
+                                final DeviceDAO deviceDAO,
+                                final MessejiClient messejiClient)
     {
         this.soundDAO = soundDAO;
         this.durationDAO = durationDAO;
         this.senseStateDynamoDB = senseStateDynamoDB;
         this.deviceDAO = deviceDAO;
+        this.messejiClient = messejiClient;
     }
 
     public static SleepSoundsResource create(final SoundDAO soundDAO,
                                              final DurationDAO durationDAO,
                                              final SenseStateDynamoDB senseStateDynamoDB,
-                                             final DeviceDAO deviceDAO)
+                                             final DeviceDAO deviceDAO,
+                                             final MessejiClient messejiClient)
     {
-        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO);
+        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient);
     }
 
 
@@ -62,21 +68,29 @@ public class SleepSoundsResource {
     private static class PlayRequest {
 
         @JsonProperty("sound")
+        @NotNull
         public final Long soundId;
 
         @JsonProperty("duration")
+        @NotNull
         public final Long durationId;
 
-        private PlayRequest(final Long soundId, final Long durationId) {
+        @JsonProperty("order")
+        @NotNull
+        public final Long order;
+
+        private PlayRequest(final Long soundId, final Long durationId, final Long order) {
             this.soundId = soundId;
             this.durationId = durationId;
+            this.order = order;
         }
 
         @JsonCreator
         public static PlayRequest create(@JsonProperty("sound") final Long soundId,
-                                         @JsonProperty("duration") final Long durationId)
+                                         @JsonProperty("duration") final Long durationId,
+                                         @JsonProperty("order") final Long order)
         {
-            return new PlayRequest(soundId, durationId);
+            return new PlayRequest(soundId, durationId, order);
         }
     }
 
@@ -92,18 +106,68 @@ public class SleepSoundsResource {
         if (!soundOptional.isPresent() || !durationOptional.isPresent()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("").build();
         }
-        // TODO send to Messeji!!!
-        return Response.status(Response.Status.ACCEPTED).entity("").build();
+
+        final Long accountId = accessToken.accountId;
+
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
+            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+        }
+
+        final String senseId = deviceIdPair.get().externalDeviceId;
+
+        // TODO get volumePercent from request
+        final Optional<Long> messageId = messejiClient.playAudio(
+                senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
+                durationOptional.get(), soundOptional.get(), 0, 0, 50);
+
+        if (messageId.isPresent()) {
+            return Response.status(Response.Status.ACCEPTED).entity("").build();
+        } else {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("").build();
+        }
     }
     //endregion play
 
 
     //region stop
+    private static class StopRequest {
+        @JsonProperty("order")
+        @NotNull
+        public final Long order;
+
+        private StopRequest(final Long order) {
+            this.order = order;
+        }
+
+        @JsonCreator
+        public static StopRequest create(@JsonProperty("order") final Long order) {
+            return new StopRequest(order);
+        }
+    }
+
     @POST
     @Path("/stop")
-    public Response stop(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken) {
-        // TODO send to Messeji
-        return Response.status(Response.Status.ACCEPTED).entity("").build();
+    public Response stop(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
+                         @Valid final StopRequest stopRequest) {
+        final Long accountId = accessToken.accountId;
+
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
+            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+        }
+
+        final String senseId = deviceIdPair.get().externalDeviceId;
+
+        final Optional<Long> messageId = messejiClient.stopAudio(
+                senseId, MessejiClient.Sender.fromAccountId(accountId), stopRequest.order, 0);
+        if (messageId.isPresent()) {
+            return Response.status(Response.Status.ACCEPTED).entity("").build();
+        } else {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("").build();
+        }
     }
     //endregion stop
 
@@ -111,6 +175,7 @@ public class SleepSoundsResource {
     //region sounds
     private class SoundResult {
         @JsonProperty("sounds")
+        @NotNull
         public final List<Sound> sounds;
 
         public SoundResult(final List<Sound> sounds) {
@@ -121,7 +186,6 @@ public class SleepSoundsResource {
     @GET
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
-    // TODO different scope
     public SoundResult getSounds(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
         // TODO map sounds to user's firmware version
         final List<Sound> sounds = soundDAO.all();
@@ -133,6 +197,7 @@ public class SleepSoundsResource {
     //region durations
     private class DurationResult {
         @JsonProperty("durations")
+        @NotNull
         public final List<Duration> durations;
 
         public DurationResult(final List<Duration> durations) {

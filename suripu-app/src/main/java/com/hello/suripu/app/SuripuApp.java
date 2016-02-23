@@ -21,7 +21,10 @@ import com.hello.suripu.app.cli.MigratePillHeartbeatCommand;
 import com.hello.suripu.app.cli.MovePillDataToDynamoDBCommand;
 import com.hello.suripu.app.cli.RecreatePillColorCommand;
 import com.hello.suripu.app.cli.ScanInvalidNightsCommand;
+import com.hello.suripu.app.configuration.MessejiHttpClientConfiguration;
 import com.hello.suripu.app.configuration.SuripuAppConfiguration;
+import com.hello.suripu.app.messeji.MessejiClient;
+import com.hello.suripu.app.messeji.MessejiHttpClient;
 import com.hello.suripu.app.modules.RolloutAppModule;
 import com.hello.suripu.app.resources.v1.AccountPreferencesResource;
 import com.hello.suripu.app.resources.v1.AccountResource;
@@ -126,6 +129,7 @@ import com.hello.suripu.coredw.oauth.OAuthAuthenticator;
 import com.hello.suripu.coredw.oauth.OAuthProvider;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.yammer.dropwizard.Service;
+import com.yammer.dropwizard.client.HttpClientBuilder;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.jdbi.DBIFactory;
@@ -474,6 +478,10 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final SoundDAO soundDAO = commonDB.onDemand(SoundDAO.class);
         final DurationDAO durationDAO = commonDB.onDemand(DurationDAO.class);
-        environment.addResource(SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO));
+        final MessejiHttpClientConfiguration messejiHttpClientConfiguration = configuration.getMessejiHttpClientConfiguration();
+        final MessejiClient messejiClient = MessejiHttpClient.create(
+                new HttpClientBuilder().using(messejiHttpClientConfiguration.getHttpClientConfiguration()).build(),
+                messejiHttpClientConfiguration.getEndpoint());
+        environment.addResource(SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient));
     }
 }

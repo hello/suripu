@@ -2,6 +2,7 @@ package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.api.input.State;
+import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
@@ -47,6 +48,7 @@ public class SleepSoundsResourceTest {
     private SenseStateDynamoDB senseStateDynamoDB;
     private DurationDAO durationDAO;
     private SoundDAO soundDAO;
+    private MessejiClient messejiClient;
     private SleepSoundsResource sleepSoundsResource;
 
     @Before
@@ -55,7 +57,8 @@ public class SleepSoundsResourceTest {
         senseStateDynamoDB = Mockito.mock(SenseStateDynamoDB.class);
         durationDAO = Mockito.mock(DurationDAO.class);
         soundDAO = Mockito.mock(SoundDAO.class);
-        sleepSoundsResource = SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO);
+        messejiClient = Mockito.mock(MessejiClient.class);
+        sleepSoundsResource = SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient);
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
