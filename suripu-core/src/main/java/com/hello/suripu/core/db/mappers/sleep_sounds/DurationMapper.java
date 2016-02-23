@@ -16,6 +16,6 @@ public class DurationMapper implements ResultSetMapper<Duration> {
         return Duration.create(
                 r.getLong("id"),
                 r.getString("name"),
-                r.getLong("duration_seconds"));
+                r.getInt("duration_seconds"));
     }
 }

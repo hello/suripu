@@ -29,5 +29,5 @@ public abstract class DurationDAO {
 
     @SqlQuery("SELECT * FROM sleep_sound_durations WHERE duration_seconds = :duration_seconds LIMIT 1;")
     @SingleValueResult(Duration.class)
-    public abstract Optional<Duration> getByDurationSeconds(@Bind("duration_seconds") final Long durationSeconds);
+    public abstract Optional<Duration> getByDurationSeconds(@Bind("duration_seconds") final Integer durationSeconds);
 }
