@@ -75,6 +75,7 @@ import com.hello.suripu.core.db.PillDataDAODynamoDB;
 import com.hello.suripu.core.db.PillHeartBeatDAO;
 import com.hello.suripu.core.db.QuestionResponseDAO;
 import com.hello.suripu.core.db.RingTimeHistoryDAODynamoDB;
+import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TeamStore;
@@ -385,6 +386,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB pillHeartBeatDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getPillHeartBeatConfiguration().getEndpoint());
         final PillHeartBeatDAODynamoDB pillHeartBeatDAODynamoDB = PillHeartBeatDAODynamoDB.create(pillHeartBeatDynamoDBClient, configuration.getPillHeartBeatConfiguration().getTableName());
 
+        final AmazonDynamoDB senseStateDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseStateDBConfiguration().getEndpoint());
+        final SenseStateDynamoDB senseStateDynamoDB = new SenseStateDynamoDB(senseStateDynamoDBClient, configuration.getSenseStateDBConfiguration().getTableName());
+
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO, accountLocationDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAODynamoDB, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
@@ -470,6 +474,6 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
 
         final SoundDAO soundDAO = commonDB.onDemand(SoundDAO.class);
         final DurationDAO durationDAO = commonDB.onDemand(DurationDAO.class);
-        environment.addResource(SleepSoundsResource.create(soundDAO, durationDAO));
+        environment.addResource(SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO));
     }
 }

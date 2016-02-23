@@ -367,3 +367,8 @@ pill_data:
   endpoint: http://dynamodb.us-east-1.amazonaws.com
   region: us-east-1
   table_name: pill_data
+
+sense_state_db:
+  endpoint : http://dynamodb.us-east-1.amazonaws.com
+  region: us-east-1
+  table_name: sense_state
