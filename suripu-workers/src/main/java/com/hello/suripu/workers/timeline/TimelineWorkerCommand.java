@@ -203,7 +203,8 @@ public class TimelineWorkerCommand extends WorkerEnvironmentCommand<TimelineWork
                 featureExtractionModelsDAO,
                 calibrationDAO,
                         defaultModelEnsembleDAO,
-                        userTimelineTestGroupDAO);
+                        userTimelineTestGroupDAO,
+                        null);
 
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 

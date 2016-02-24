@@ -68,6 +68,7 @@ public class TimelineLog {
         algorithmTypeMap.put(AlgorithmType.HMM,AlgType.HMM);
         algorithmTypeMap.put(AlgorithmType.ONLINE_HMM,AlgType.ONLINE_HMM);
         algorithmTypeMap.put(AlgorithmType.VOTING,AlgType.VOTING);
+        algorithmTypeMap.put(AlgorithmType.NEURAL_NET,AlgType.NEURAL_NET);
 
 
         eventTypeMap = HashBiMap.create();
