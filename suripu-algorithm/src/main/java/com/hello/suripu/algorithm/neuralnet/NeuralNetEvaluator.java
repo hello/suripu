@@ -70,14 +70,16 @@ public class NeuralNetEvaluator {
         final int N = x.length;
         final int T = x[0].length;
 
-        final double [][] y = new double[N][T];
 
         final INDArray primitiveDataAsInput = Nd4j.create(x);
         final INDArray features = Nd4j.create(Lists.<INDArray>newArrayList(primitiveDataAsInput),new int[]{1,primitiveDataAsInput.size(0),primitiveDataAsInput.size(1)});
         final INDArray output = net.output(features).slice(0);
 
-        for (int i = 0; i < N; i++) {
-            for (int t = 0; t < T; t++) {
+        final double [][] y = new double[output.shape()[0]][output.shape()[1]];
+
+
+        for (int i = 0; i < y.length; i++) {
+            for (int t = 0; t < y[0].length; t++) {
                 y[i][t] = output.getRow(i).getDouble(t);
             }
         }
