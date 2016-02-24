@@ -23,6 +23,7 @@ public enum DynamoDBTableName {
     PILL_KEY_STORE("pill_key_store"),
     PILL_LAST_SEEN("pill_last_seen"),
     PREFERENCES("preferences"),
+    RING_TIME("ring_time"),
     RING_TIME_HISTORY("ring_time_history"),
     SENSE_EVENTS("sense_events"),
     SENSE_KEY_STORE("sense_key_store"),
