@@ -9,7 +9,6 @@ import com.hello.suripu.workers.notifications.PushNotificationsWorkerCommand;
 import com.hello.suripu.workers.pill.PillWorkerCommand;
 import com.hello.suripu.workers.sense.SenseSaveWorkerCommand;
 import com.hello.suripu.workers.sense.lastSeen.SenseLastSeenWorkerCommand;
-import com.hello.suripu.workers.timeline.TimelineWorkerCommand;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
@@ -35,7 +34,6 @@ public class HelloWorker extends Service<WorkerConfiguration> {
         bootstrap.addCommand(new AlarmWorkerCommand("smart_alarm", "Start smart alarm worker"));
         bootstrap.addCommand(new LogIndexerWorkerCommand("index_logs", "Indexes logs from Kinesis stream into searchify index"));
         bootstrap.addCommand(new InsightsGeneratorWorkerCommand("insights_generator", "generate insights for users"));
-        bootstrap.addCommand(new TimelineWorkerCommand("timeline", "generate timeline for users"));
         bootstrap.addCommand(new PushNotificationsWorkerCommand("push", "send push notifications"));
         bootstrap.addCommand(new TimelineLogCommand("timeline_log", "timeline log"));
     }
