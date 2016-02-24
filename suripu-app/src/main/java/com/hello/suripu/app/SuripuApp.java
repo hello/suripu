@@ -69,6 +69,8 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
+import com.hello.suripu.core.db.NeuralNetDAO;
+import com.hello.suripu.core.db.NeuralNetsFromS3;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
@@ -293,6 +295,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB featureExtractionModelsDb = dynamoDBClientFactory.getForEndpoint(configuration.getFeatureExtractionModelsConfiguration().getEndpoint());
         final FeatureExtractionModelsDAO featureExtractionDAO = new FeatureExtractionModelsDAODynamoDB(featureExtractionModelsDb,featureExtractionModelsTableName);
 
+        /* Neural net data DAOs */
+        final NeuralNetDAO neuralNetDAO = NeuralNetsFromS3.createFromConfigBucket(amazonS3,configuration.getNeuralNetConfiguration().getBucket(),configuration.getNeuralNetConfiguration().getKey());
+
         /* Default model ensemble for all users  */
         final S3BucketConfiguration timelineModelEnsemblesConfig = configuration.getTimelineModelEnsemblesConfiguration();
         final S3BucketConfiguration seedModelConfig = configuration.getTimelineSeedModelConfiguration();
@@ -413,7 +418,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
                 featureExtractionDAO,
                 calibrationDAO,
                 defaultModelEnsembleDAO,
-                userTimelineTestGroupDAO);
+                userTimelineTestGroupDAO,
+                neuralNetDAO);
                 
 
         environment.addResource(new TimelineResource(accountDAO, timelineDAODynamoDB, timelineLogDAO,timelineLogger, timelineProcessor));

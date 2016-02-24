@@ -9,7 +9,8 @@ public enum AlgorithmType {
     VOTING("voting"),
     HMM("hmm"),
     ONLINE_HMM("online_hmm"),
-    BAYES_NET("bayes_net");
+    BAYES_NET("bayes_net"),
+    NEURAL_NET("neural_net");
 
 
     private final String name;
