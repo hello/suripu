@@ -176,6 +176,12 @@ public class TimelineWorkerConfiguration extends WorkerConfiguration {
 
     @Valid
     @NotNull
+    @JsonProperty("neural_net_config")
+    private S3BucketConfiguration neuralNetConfiguration;
+    public S3BucketConfiguration getNeuralNetConfiguration() { return timelineModelEnsemblesConfiguration; }
+
+    @Valid
+    @NotNull
     @JsonProperty("pill_data")
     private DynamoDBConfiguration pillDataConfiguration;
     public DynamoDBConfiguration getPillDataConfiguration() { return this.pillDataConfiguration; }

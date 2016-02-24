@@ -293,6 +293,10 @@ timeline_seed_model:
   bucket: hello-timeline-models
   key: normal4.base64
 
+neural_net_config:
+  bucket: hello-timeline-models
+  key: net.config
+
 # for sense_data DDB migration
 #next_flush_sleep: 50
 #stop_month: -1

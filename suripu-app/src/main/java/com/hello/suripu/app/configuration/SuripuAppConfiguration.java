@@ -439,4 +439,11 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("provision_key")
     private S3BucketConfiguration provisionKeyConfiguration = S3BucketConfiguration.create("hello-secure", "hello-pvt.pem");
     public S3BucketConfiguration getProvisionKeyConfiguration() { return provisionKeyConfiguration; }
+
+    @Valid
+    @NotNull
+    @JsonProperty("neural_net_config")
+    private S3BucketConfiguration neuralNetConfiguration;
+    public S3BucketConfiguration getNeuralNetConfiguration() { return neuralNetConfiguration; }
+
 }
