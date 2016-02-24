@@ -28,6 +28,7 @@ public enum DynamoDBTableName {
     SENSE_KEY_STORE("sense_key_store"),
     SENSE_LAST_SEEN("sense_last_seen"),
     SENSE_PREFIX("sense_prefix"),
+    SENSE_STATE("sense_state"),
     SLEEP_HMM("sleep_hmm"),
     SLEEP_SCORE("sleep_score"),
     SLEEP_STATS("sleep_stats"),
