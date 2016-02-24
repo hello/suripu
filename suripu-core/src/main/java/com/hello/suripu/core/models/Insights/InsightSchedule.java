@@ -75,7 +75,7 @@ public class InsightSchedule {
 
     public static InsightSchedule loadInsightSchedule(final InsightGroup insightGroup, final Integer year, final Integer month) {
 
-        final String resourceString = String.format("insights/insight_schedule_%d-%d_%s.json", year, month, insightGroup);
+        final String resourceString = String.format("insights/insight_schedule_%d-%d_%s.json", year, month, insightGroup).toLowerCase();
 
         try {
             final URL insightScheduleJSONFileValid = Resources.getResource(resourceString);
