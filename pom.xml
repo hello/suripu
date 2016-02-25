@@ -22,7 +22,6 @@
         <module>suripu-core</module>
         <module>suripu-app</module>
         <module>suripu-algorithm</module>
-        <module>suripu-workers</module>
         <module>suripu-queue</module>
         <module>suripu-coredw</module>
         <module>suripu-coredw8</module>
