@@ -2,6 +2,7 @@ package com.hello.suripu.core.util;
 
 import com.google.common.base.Optional;
 import com.sun.jersey.api.NotFoundException;
+import com.yammer.dropwizard.validation.InvalidEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +57,14 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
                         .build();
             }
 
+            if (throwable instanceof InvalidEntityException) {
+                final String message = "Bad request.";
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), message))
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
+            }
+
 
             if (throwable instanceof NotFoundException) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -73,7 +82,7 @@ public class CustomJSONExceptionMapper implements ExceptionMapper<Throwable> {
             LOGGER.error("{}: {}", throwable.getClass().getName(), throwable.getMessage());
         } catch (Exception exception) {
             LOGGER.error("Failed to catch the following exception for: {}", throwable.getClass().getName());
-            LOGGER.error(exception.getMessage());
+            LOGGER.error("exception: {}", exception.getMessage());
         }
         return defaultResponse;
     }

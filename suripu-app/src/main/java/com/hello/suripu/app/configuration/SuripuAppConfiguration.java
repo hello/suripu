@@ -8,7 +8,9 @@ import com.hello.suripu.coredw.configuration.EmailConfiguration;
 import com.hello.suripu.coredw.configuration.GraphiteConfiguration;
 import com.hello.suripu.coredw.configuration.QuestionConfiguration;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
+import com.yammer.dropwizard.client.HttpClientConfiguration;
 import com.yammer.dropwizard.config.Configuration;
+import com.yammer.dropwizard.config.HttpConfiguration;
 import com.yammer.dropwizard.db.DatabaseConfiguration;
 
 import javax.validation.Valid;
@@ -439,4 +441,8 @@ public class SuripuAppConfiguration extends Configuration {
     @JsonProperty("provision_key")
     private S3BucketConfiguration provisionKeyConfiguration = S3BucketConfiguration.create("hello-secure", "hello-pvt.pem");
     public S3BucketConfiguration getProvisionKeyConfiguration() { return provisionKeyConfiguration; }
+
+    @JsonProperty("messeji_http_client")
+    private MessejiHttpClientConfiguration messejiHttpClientConfiguration;
+    public MessejiHttpClientConfiguration getMessejiHttpClientConfiguration() { return messejiHttpClientConfiguration; }
 }

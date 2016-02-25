@@ -280,6 +280,11 @@ sleep_stats_db:
     table_name: sleep_stats
 sleep_stats_version: v_0_2
 
+messeji_http_client:
+  endpoint: "http://messeji-dev.hello.is:80"
+  http_client_config:
+    keepAlive: 0s
+
 
 max_cache_refresh_days: 20
 

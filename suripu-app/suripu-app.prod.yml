@@ -248,6 +248,11 @@ kinesis:
     sense_sensors_data : sense_sensors_data
     logs : logs
 
+messeji_http_client:
+  endpoint: "http://messeji.hello.is:80"
+  http_client_config:
+    keepAlive: 0s
+
 question_configs:
   num_skips : 5
 

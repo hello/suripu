@@ -2,6 +2,7 @@ package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.api.input.State;
+import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
@@ -47,6 +48,7 @@ public class SleepSoundsResourceTest {
     private SenseStateDynamoDB senseStateDynamoDB;
     private DurationDAO durationDAO;
     private SoundDAO soundDAO;
+    private MessejiClient messejiClient;
     private SleepSoundsResource sleepSoundsResource;
 
     @Before
@@ -55,7 +57,8 @@ public class SleepSoundsResourceTest {
         senseStateDynamoDB = Mockito.mock(SenseStateDynamoDB.class);
         durationDAO = Mockito.mock(DurationDAO.class);
         soundDAO = Mockito.mock(SoundDAO.class);
-        sleepSoundsResource = SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO);
+        messejiClient = Mockito.mock(MessejiClient.class);
+        sleepSoundsResource = SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient);
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
@@ -158,7 +161,7 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetStatusInvalidDuration() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyLong())).thenReturn(Optional.<Duration>absent());
+        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.<Duration>absent());
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
                         .setSenseId(senseId)
@@ -178,7 +181,7 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetStatusInvalidPath() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyLong())).thenReturn(Optional.of(Duration.create(1L, "path", 30L)));
+        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(Duration.create(1L, "path", 30)));
         Mockito.when(soundDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.<Sound>absent());
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
@@ -199,8 +202,8 @@ public class SleepSoundsResourceTest {
     @Test
     public void testGetStatusAllCorrect() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
-        final Duration duration = Duration.create(1L, "path", 30L);
-        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyLong())).thenReturn(Optional.of(duration));
+        final Duration duration = Duration.create(1L, "path", 30);
+        Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(duration));
         final Sound sound = Sound.create(1L, "preview", "name", "path", "url");
         Mockito.when(soundDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.of(sound));
         final SenseStateAtTime state = new SenseStateAtTime(

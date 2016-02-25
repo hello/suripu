@@ -16,15 +16,15 @@ public class Duration {
     public final String name;
 
     @JsonIgnore
-    public final Optional<Long> durationSeconds;
+    public final Optional<Integer> durationSeconds;
 
-    private Duration(final Long id, final String name, final Optional<Long> durationSeconds) {
+    private Duration(final Long id, final String name, final Optional<Integer> durationSeconds) {
         this.id = id;
         this.name = name;
         this.durationSeconds = durationSeconds;
     }
 
-    public static Duration create(final Long id, final String name, final Long durationSeconds) {
+    public static Duration create(final Long id, final String name, final Integer durationSeconds) {
         return new Duration(id, name, Optional.fromNullable(durationSeconds));
     }
 }
