@@ -54,6 +54,10 @@ public class FeatureFlippedProcessor {
         return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_ALGORITHM,accountId,Collections.EMPTY_LIST);
     }
 
+    protected Boolean hasNeuralNetAlgorithmEnabled(final Long accountId) {
+        return  featureFlipper.userFeatureActive(FeatureFlipper.NEURAL_NET_ALGORITHM,accountId,Collections.EMPTY_LIST);
+    }
+
     protected Boolean hasOnlineHmmLearningEnabled(final Long accountId) {
         return  featureFlipper.userFeatureActive(FeatureFlipper.ONLINE_HMM_LEARNING,accountId,Collections.EMPTY_LIST);
     }

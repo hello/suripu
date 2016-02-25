@@ -30,6 +30,8 @@ import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackReadDAO;
+import com.hello.suripu.core.db.NeuralNetDAO;
+import com.hello.suripu.core.db.NeuralNetsFromS3;
 import com.hello.suripu.core.db.OnlineHmmModelsDAO;
 import com.hello.suripu.core.db.OnlineHmmModelsDAODynamoDB;
 import com.hello.suripu.core.db.PillDataDAODynamoDB;
@@ -327,6 +329,10 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 seedModelConfig.getBucket(),
                 seedModelConfig.getKey());
 
+        final NeuralNetDAO neuralNetDAO = NeuralNetsFromS3.createFromConfigBucket(amazonS3,
+                config.getNeuralNetConfiguration().getBucket(),
+                config.getNeuralNetConfiguration().getKey());
+
         return TimelineProcessor.createTimelineProcessor(
                 pillDataDAODynamoDB,
                 deviceDAO,
@@ -341,7 +347,8 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
                 featureExtractionDAO,
                 calibrationDAO,
                 defaultModelEnsembleDAO,
-                userTimelineTestGroupDAO);
+                userTimelineTestGroupDAO,
+                neuralNetDAO);
 
     }
 
