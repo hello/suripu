@@ -11,7 +11,6 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.TimeZoneHistory;
-import com.hello.suripu.core.models.timeline.v2.SleepState;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -61,19 +60,14 @@ public class TrendsProcessor {
 
         // only show annotations if account could have 7 or more timelines
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+        final Optional<DateTime> optionalAccountCreated;
         final int accountAge;
         if (optionalAccount.isPresent()) {
             final Days daysDiff = Days.daysBetween(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay(), localToday);
             accountAge = daysDiff.getDays();
-        } else {
-            accountAge = 0;
-        }
-
-
-        final Optional<DateTime> optionalAccountCreated;
-        if (accountAge < DateTimeConstants.DAYS_PER_WEEK) {
             optionalAccountCreated = Optional.of(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay());
         } else {
+            accountAge = 0;
             optionalAccountCreated = Optional.absent();
         }
 
@@ -136,9 +130,10 @@ public class TrendsProcessor {
                     totalMediumSleep/totalSleep,
                     totalSoundSleep/totalSleep);
 
-            final List<String> title = Lists.newArrayList(SleepState.LIGHT.toString(),
-                    SleepState.MEDIUM.toString(),
-                    SleepState.SOUND.toString());
+            final List<String> title = Lists.newArrayList(
+                    English.SLEEP_DEPTH_LIGHT,
+                    English.SLEEP_DEPTH_MEDIUM,
+                    English.SLEEP_DEPTH_SOUND);
 
             sections.add(new GraphSection(sectionValues, title, Collections.<Integer>emptyList(), Optional.<Integer>absent()));
         }
