@@ -9,6 +9,25 @@
 
     <artifactId>suripu-algorithm</artifactId>
 
+    <properties>
+        <nd4j.version>0.4-rc3.9-SNAPSHOT</nd4j.version>
+        <canova.version>0.0.0.15-SNAPSHOT</canova.version>
+        <dl4j.version>0.4-rc3.9-SNAPSHOT</dl4j.version>
+    </properties>
+
+
+    <repositories>
+        <repository>
+            <id>snapshots-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
+
+
+
+
     <dependencies>
         <dependency>
             <groupId>joda-time</groupId>
@@ -23,10 +42,38 @@
             <artifactId>commons-math3</artifactId>
             <version>3.2</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
             <version>1.8.1</version>
+        </dependency>
+
+
+
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-core</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>nd4j-x86</artifactId>
+            <version>${nd4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <artifactId>canova-nd4j-image</artifactId>
+            <groupId>org.nd4j</groupId>
+            <version>${canova.version}</version>
+        </dependency>
+
+        <dependency>
+            <artifactId>canova-nd4j-codec</artifactId>
+            <groupId>org.nd4j</groupId>
+            <version>${canova.version}</version>
         </dependency>
 
     </dependencies>
