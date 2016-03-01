@@ -46,7 +46,7 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
     private static final int NEW_USER_NUM_Q = 3; // no. of on-boarding questions
     private static final int OLD_ACCOUNT_AGE = 7; // older accounts are more than this many days
 
-    public static final int DAYS_BETWEEN_ANOMALY_QUESTIONS = 14; // no more than 1 every 2 weeks
+    public static final int DAYS_BETWEEN_ANOMALY_QUESTIONS = 2; // no more than 1 every 2 weeks
     public static final int ANOMALY_TOO_OLD_THRESHOLD = 2; // night date older than this number of days
 
     private final QuestionResponseDAO questionResponseDAO;
