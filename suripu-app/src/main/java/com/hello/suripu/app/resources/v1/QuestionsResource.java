@@ -68,6 +68,7 @@ public class QuestionsResource {
         final DateTime today = DateTime.now(DateTimeZone.UTC).plusMillis(timeZoneOffset).withTimeAtStartOfDay();
         LOGGER.debug("today = {}", today);
         if(date != null && !date.equals(today.toString("yyyy-MM-dd"))) {
+            LOGGER.debug("key=question-query-date-mismatch today={} date-param={}", today, date);
             return Collections.emptyList();
         }
 
