@@ -21,20 +21,23 @@ public class InsightScheduleTest {
     final AWSCredentialsProvider awsCredentialsProvider= new DefaultAWSCredentialsProviderChain();
     final AmazonS3Client amazonS3 = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
 
-    private String insightScheduleLocation = "hello-prod";
 
     @Test
     public void testLoadInsightSchedule() {
-        final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.CBTI_V1;
+        final String insightScheduleLocation = "insights";
+
+        final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.DEFAULT;
         final Integer year = 2016;
         final Integer month = 2;
-        InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(amazonS3, insightScheduleLocation, group, year, month);
+        InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(insightScheduleLocation, group, year, month);
         InsightCard.Category cat = insightSchedule.dayToCategoryMap.get(1);
         assertThat(cat, is(InsightCard.Category.WAKE_VARIANCE));
     }
 
     @Test
     public void testLoadInsightsSchedule_empty() {
+        final String insightScheduleLocation = "hello-prod";
+
         final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.DEFAULT;
         final Integer year = 2016;
         final Integer month = 2;
@@ -45,6 +48,8 @@ public class InsightScheduleTest {
 
     @Test
     public void testLoadInsightsSchedule_empty2() {
+        final String insightScheduleLocation = "hello-prod";
+
         final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.CBTI_V1;
         final Integer year = -2000;
         final Integer month = 2;
@@ -55,6 +60,8 @@ public class InsightScheduleTest {
 
     @Test
     public void testLoadInsightsSchedule_empty3() {
+        final String insightScheduleLocation = "hello-prod";
+
         final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.CBTI_V1;
         final Integer year = 2016;
         final Integer month = 2;

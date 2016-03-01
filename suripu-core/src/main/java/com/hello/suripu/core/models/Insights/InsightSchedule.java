@@ -105,4 +105,19 @@ public class InsightSchedule {
             return insightScheduleEmpty;
         }
     }
+
+    public static InsightSchedule loadInsightSchedule(final String insightScheduleLocation, final InsightGroup insightGroup, final Integer year, final Integer month) {
+        final String resourceString = String.format("%s/insight_schedule_%d-%d_%s.yml", insightScheduleLocation, year, month, insightGroup).toLowerCase();
+
+        try {
+            final URL insightScheduleYAMLFileValid = Resources.getResource(resourceString);
+            final Map<Integer, InsightCard.Category> dayToCategoryMap = new ObjectMapper(new YAMLFactory()).readValue(insightScheduleYAMLFileValid, new TypeReference<Map<Integer, InsightCard.Category>> () {});
+            final InsightSchedule insightSchedule = new InsightSchedule(insightGroup, year, month, dayToCategoryMap);
+            return insightSchedule;
+        } catch (IllegalArgumentException | IOException e) {
+            LOGGER.debug(e.getMessage());
+            final InsightSchedule insightScheduleEmpty = new InsightSchedule(insightGroup, year, month);
+            return insightScheduleEmpty;
+        }
+    }
 }
