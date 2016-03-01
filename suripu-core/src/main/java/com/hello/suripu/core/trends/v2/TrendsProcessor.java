@@ -11,7 +11,6 @@ import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
 import com.hello.suripu.core.models.Account;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.TimeZoneHistory;
-import com.hello.suripu.core.models.timeline.v2.SleepState;
 import com.hello.suripu.core.translations.English;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -32,10 +31,7 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int MIN_ANNOTATION_DATA_SIZE = 7; // don't show annotation if less than this number of data-points
-    private static final int MIN_DEPTH_DATA_SIZE = 7;
-    private static final int MIN_SCORE_DATA_SIZE = 3;
-    private static final int MIN_DURATION_DATA_SIZE = 7;
+    private static final int ABSOLUTE_MIN_DATA_SIZE = 1;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -55,64 +51,57 @@ public class TrendsProcessor {
         final Integer offsetMillis = getAccountMillisOffset(accountId);
         final DateTime localToday = getLocalToday(offsetMillis);
 
-        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
-
-        if (data.isEmpty()) {
-            LOGGER.debug("debug=no-trends-data, account={}", accountId);
-            return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
-        }
-
         // only show annotations if account could have 7 or more timelines
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+        final Optional<DateTime> optionalAccountCreated;
         final int accountAge;
         if (optionalAccount.isPresent()) {
             final Days daysDiff = Days.daysBetween(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay(), localToday);
             accountAge = daysDiff.getDays();
-        } else {
-            accountAge = 0;
-        }
-
-
-        final Optional<DateTime> optionalAccountCreated;
-        if (accountAge < DateTimeConstants.DAYS_PER_WEEK) {
             optionalAccountCreated = Optional.of(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay());
         } else {
+            accountAge = 0;
             optionalAccountCreated = Optional.absent();
         }
 
-        boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
+        // check account-age to determine available time-scale
+        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
-        final List<Graph> graphs = Lists.newArrayList();
+        // get raw data
+        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
+
+        if (data.isEmpty()) {
+            LOGGER.debug("debug=no-trends-data, account={}", accountId);
+            return new TrendsResult(timeScales, Collections.<Graph>emptyList());
+        }
+
 
         // users < one-week old will get graphs if data-size meets certain minimum threshold
         // users > one-week old will get graphs regardless, may not have annotations if insufficient data
 
-        // sleep-score grid graph
-        if (data.size() >= MIN_SCORE_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+        final List<Graph> graphs = Lists.newArrayList();
+
+        if (data.size() >= ABSOLUTE_MIN_DATA_SIZE) {
+            boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
+
+            // sleep-score calendar
             final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation, optionalAccountCreated);
             if (sleepScoreGraph.isPresent()) {
                 graphs.add(sleepScoreGraph.get());
             }
-        }
 
-        // sleep duration bar graph
-        if (data.size() >= MIN_DURATION_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+            // sleep duration bar graph
             final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, English.GRAPH_TITLE_SLEEP_DURATION, localToday, hasAnnotation, optionalAccountCreated);
             if (durationGraph.isPresent()) {
                 graphs.add(durationGraph.get());
             }
-        }
 
-        // sleep depth bubbles
-        if (data.size() >= MIN_DEPTH_DATA_SIZE || (accountAge > DateTimeConstants.DAYS_PER_WEEK)) {
+            // sleep depth bubbles
             final Optional<Graph> depthGraph = getSleepDepthGraph(data, timescale);
             if (depthGraph.isPresent()) {
                 graphs.add(depthGraph.get());
             }
         }
-
-        // check account-age to determine available time-scale
-        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
         return new TrendsResult(timeScales, graphs);
     }
@@ -143,9 +132,10 @@ public class TrendsProcessor {
                     totalMediumSleep/totalSleep,
                     totalSoundSleep/totalSleep);
 
-            final List<String> title = Lists.newArrayList(SleepState.LIGHT.toString(),
-                    SleepState.MEDIUM.toString(),
-                    SleepState.SOUND.toString());
+            final List<String> title = Lists.newArrayList(
+                    English.SLEEP_DEPTH_LIGHT,
+                    English.SLEEP_DEPTH_MEDIUM,
+                    English.SLEEP_DEPTH_SOUND);
 
             sections.add(new GraphSection(sectionValues, title, Collections.<Integer>emptyList(), Optional.<Integer>absent()));
         }
@@ -199,6 +189,7 @@ public class TrendsProcessor {
                 statValue = (float) stat.sleepScore;
             }
 
+            LOGGER.debug("key=aggregate-data, date={}, stat={} value={}", stat.dateTime, dataType.value, statValue);
             currentDateTime = stat.dateTime;
             final int dayOfWeek = currentDateTime.getDayOfWeek();
 
@@ -208,6 +199,7 @@ public class TrendsProcessor {
                 final DateTime previousDateTime = data.get(currentIndex - 1).dateTime;
                 final Days diffDays = Days.daysBetween(previousDateTime, currentDateTime);
                 if (diffDays.getDays() > 1) {
+                    LOGGER.debug("key=missing-days start={} end={} days={}", previousDateTime, currentDateTime, diffDays.getDays());
                     for (int day = 1; day < diffDays.getDays(); day++) {
                         validData.add(GraphSection.MISSING_VALUE);
                     }
@@ -232,10 +224,11 @@ public class TrendsProcessor {
             maxValue = Math.max(maxValue, statValue);
 
         }
+        LOGGER.debug("key=last-data-date date={} today={} date-size={}", currentDateTime, localToday, validData.size());
 
         final boolean padDayOfWeek = (timeScale.equals(TimeScale.LAST_WEEK) || (dataType.equals(DataType.SCORES) && timeScale.equals(TimeScale.LAST_MONTH)));
 
-        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays(), padDayOfWeek, optionalCreated);
+        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale, padDayOfWeek, optionalCreated);
 
         final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
 
@@ -319,7 +312,7 @@ public class TrendsProcessor {
     private List<TimeScale> computeAvailableTimeScales(final int accountAge) {
         final List<TimeScale> timeScales = Lists.newArrayList();
         for (final TimeScale scale : TimeScale.values()) {
-            if (accountAge >= scale.getVisibleAfterDays()) {
+            if (accountAge > scale.getVisibleAfterDays()) {
                 timeScales.add(scale);
             }
         }

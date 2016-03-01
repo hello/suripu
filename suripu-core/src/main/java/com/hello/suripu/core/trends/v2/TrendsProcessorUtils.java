@@ -158,6 +158,14 @@ public class TrendsProcessorUtils {
             index++;
         }
 
+        // pad front section to make it 7 days
+        final int daysDiff = DateTimeConstants.DAYS_PER_WEEK - sectionValues.size();
+        if (daysDiff > 0) {
+            for (int i = 0; i < daysDiff; i++) {
+                sectionValues.add(0, GraphSection.MISSING_VALUE);
+            }
+        }
+
         return Lists.newArrayList(
                 new GraphSection(sectionValues,
                         title,
@@ -184,9 +192,12 @@ public class TrendsProcessorUtils {
                     maxIndex = index; // highlight first max
                 }
 
-                index++;
                 sectionValues.add(value);
+            } else {
+                sectionValues.add(GraphSection.MISSING_VALUE);
             }
+            index++;
+
         }
 
         if (minIndex == maxIndex) {
@@ -264,7 +275,7 @@ public class TrendsProcessorUtils {
 
         // pad current month till the last day
         final DateTime lastDate = today.dayOfMonth().withMaximumValue();
-        if (today.getDayOfMonth() != lastDate.getDayOfMonth()) {
+        if (today.getDayOfMonth() > 1 && today.getDayOfMonth() <= lastDate.getDayOfMonth()) {
             final int numExtraDays = lastDate.getDayOfMonth() - today.getDayOfMonth();
             for (int day = 0; day <= numExtraDays; day++) {
                 sectionData.add(null);
@@ -295,8 +306,10 @@ public class TrendsProcessorUtils {
             final String title = English.MONTH_OF_YEAR_NAMES.get(currentMonth.getMonthOfYear() - 1);
             final int maxDays = currentMonth.dayOfMonth().getMaximumValue();
 
+            int lastIndex = sectionFirstIndex + maxDays;
+            lastIndex = (lastIndex > sectionData.size()) ? sectionData.size() : lastIndex;
             sections.add(new GraphSection(
-                    sectionData.subList(sectionFirstIndex, sectionFirstIndex + maxDays),
+                    sectionData.subList(sectionFirstIndex, lastIndex),
                     Lists.newArrayList(title),
                     highlightedValues,
                     highlightTitle
@@ -311,23 +324,37 @@ public class TrendsProcessorUtils {
     public static List<Float> padSectionData(final List<Float> data,
                                              final DateTime today,
                                              final DateTime firstDataDateTime, final DateTime lastDataDateTime,
-                                             final int numDays,
+                                             final TimeScale timeScale,
                                              final boolean padDayOfWeek,
                                              final Optional<DateTime> optionalCreated) {
         final List<Float> sectionData = Lists.newArrayList();
 
-        // fill in missing days first, include firstDate, gated by account-creation date
-        final DateTime firstDate;
+        final int numDays = timeScale.getDays();
+
+        // fill in missing days first, include firstDate, always gated by account-creation date
+        DateTime firstDate = today.minusDays(numDays);
+        final DateTime accountCreatedDate;
         if (optionalCreated.isPresent()) {
-            firstDate = optionalCreated.get();
+            accountCreatedDate = optionalCreated.get();
         } else {
-            firstDate = today.minusDays(numDays);
+            accountCreatedDate = firstDate;
+        }
+
+        // if first-date in weekly calendar view is before account-creation,
+        // set first-date as account-created date to prevent an extra row of nulls
+        if (timeScale == TimeScale.LAST_WEEK && firstDate.isBefore(accountCreatedDate)) {
+            firstDate = accountCreatedDate;
         }
 
         final Days missingDays = Days.daysBetween(firstDate, firstDataDateTime);
         if (missingDays.getDays() > 0) {
             for (int day = 0; day < missingDays.getDays(); day ++) {
-                sectionData.add(GraphSection.MISSING_VALUE);
+                final DateTime thisDayDate = firstDate.plusDays(day);
+                if (thisDayDate.isBefore(accountCreatedDate)) {
+                    sectionData.add(0,null);
+                } else {
+                    sectionData.add(GraphSection.MISSING_VALUE);
+                }
             }
         }
 

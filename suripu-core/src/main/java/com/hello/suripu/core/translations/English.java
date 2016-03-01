@@ -206,4 +206,8 @@ public class English {
     public final static String ANNOTATION_AVERAGE = "Avg. Overall";
     public final static String ANNOTATION_WEEKDAYS = "Avg. Weekdays";
     public final static String ANNOTATION_WEEKENDS = "Avg. Weekends";
+
+    public final static String SLEEP_DEPTH_LIGHT = "LIGHT";
+    public final static String SLEEP_DEPTH_MEDIUM = "MEDIUM";
+    public final static String SLEEP_DEPTH_SOUND = "DEEP";
 }
