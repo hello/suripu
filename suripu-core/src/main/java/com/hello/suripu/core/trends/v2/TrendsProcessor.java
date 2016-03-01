@@ -51,13 +51,6 @@ public class TrendsProcessor {
         final Integer offsetMillis = getAccountMillisOffset(accountId);
         final DateTime localToday = getLocalToday(offsetMillis);
 
-        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
-
-        if (data.isEmpty()) {
-            LOGGER.debug("debug=no-trends-data, account={}", accountId);
-            return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
-        }
-
         // only show annotations if account could have 7 or more timelines
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
         final Optional<DateTime> optionalAccountCreated;
@@ -71,15 +64,27 @@ public class TrendsProcessor {
             optionalAccountCreated = Optional.absent();
         }
 
-        boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
+        // check account-age to determine available time-scale
+        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
-        final List<Graph> graphs = Lists.newArrayList();
+        // get raw data
+        final List<AggregateSleepStats> data = getRawData(3304L, localToday, timescale.getDays());
+
+        if (data.isEmpty()) {
+            LOGGER.debug("debug=no-trends-data, account={}", accountId);
+            return new TrendsResult(timeScales, Collections.<Graph>emptyList());
+        }
+
 
         // users < one-week old will get graphs if data-size meets certain minimum threshold
         // users > one-week old will get graphs regardless, may not have annotations if insufficient data
 
-        // sleep-score grid graph
+        final List<Graph> graphs = Lists.newArrayList();
+
         if (data.size() >= ABSOLUTE_MIN_DATA_SIZE) {
+            boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
+
+            // sleep-score calendar
             final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation, optionalAccountCreated);
             if (sleepScoreGraph.isPresent()) {
                 graphs.add(sleepScoreGraph.get());
@@ -97,9 +102,6 @@ public class TrendsProcessor {
                 graphs.add(depthGraph.get());
             }
         }
-
-        // check account-age to determine available time-scale
-        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
         return new TrendsResult(timeScales, graphs);
     }
@@ -187,6 +189,7 @@ public class TrendsProcessor {
                 statValue = (float) stat.sleepScore;
             }
 
+            LOGGER.debug("key=aggregate-data, date={}, stat={} value={}", stat.dateTime, dataType.value, statValue);
             currentDateTime = stat.dateTime;
             final int dayOfWeek = currentDateTime.getDayOfWeek();
 
@@ -196,6 +199,7 @@ public class TrendsProcessor {
                 final DateTime previousDateTime = data.get(currentIndex - 1).dateTime;
                 final Days diffDays = Days.daysBetween(previousDateTime, currentDateTime);
                 if (diffDays.getDays() > 1) {
+                    LOGGER.debug("key=missing-days start={} end={} days={}", previousDateTime, currentDateTime, diffDays.getDays());
                     for (int day = 1; day < diffDays.getDays(); day++) {
                         validData.add(GraphSection.MISSING_VALUE);
                     }
@@ -220,10 +224,11 @@ public class TrendsProcessor {
             maxValue = Math.max(maxValue, statValue);
 
         }
+        LOGGER.debug("key=last-data-date date={} today={} date-size={}", currentDateTime, localToday, validData.size());
 
         final boolean padDayOfWeek = (timeScale.equals(TimeScale.LAST_WEEK) || (dataType.equals(DataType.SCORES) && timeScale.equals(TimeScale.LAST_MONTH)));
 
-        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale.getDays(), padDayOfWeek, optionalCreated);
+        final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale, padDayOfWeek, optionalCreated);
 
         final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
 
