@@ -104,7 +104,7 @@ public class InsightCard implements Comparable<InsightCard> {
 
     public enum InsightType {
         DEFAULT, //Contains block quotes
-        GENERIC; //No block quotes. Used for intro insights.
+        BASIC; //No block quotes. Used for intro insights.
 
         public static InsightType fromString(final String text) {
             for (final InsightType insightType : InsightType.values()) {
