@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -98,6 +99,7 @@ public class InsightProcessorTest {
         final WakeStdDevData wakeStdDevData = Mockito.mock(WakeStdDevData.class);
         final CalibrationDAO calibrationDAO = Mockito.mock(CalibrationDAO.class);
         final AccountInfoProcessor accountInfoProcessor = Mockito.mock(AccountInfoProcessor.class);
+        final AmazonS3Client amazonS3Client = Mockito.mock(AmazonS3Client.class);
 
         //Prepping for taking care of @NotNull check for light
         final int light = 2;
@@ -144,18 +146,22 @@ public class InsightProcessorTest {
                 .thenReturn(successfulResponse);
         Mockito.when(insightsDAODynamoDB.getInsightsByCategory(FAKE_ACCOUNT_ID, InsightCard.Category.HUMIDITY, 1)).thenReturn(ImmutableList.copyOf(mockInsightCardList));
 
+        final String insightScheduleLocation = "insights";
+
         //Initialize InsightProcessor
         final InsightProcessor insightProcessor = new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceDAO,
                 trendsInsightsDAO,
                 trackerMotionDAO,
                 scoreDAODynamoDB,
                 insightsDAODynamoDB,
+                insightScheduleLocation,
                 sleepStatsDAODynamoDB,
                 preferencesDAO,
                 accountInfoProcessor,
                 lightData,
                 wakeStdDevData,
-                calibrationDAO);
+                calibrationDAO,
+                amazonS3Client);
 
         //only to get rid of null pointer exception
         final InsightCard insightCardMock = Mockito.mock(InsightCard.class);

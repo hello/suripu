@@ -1,5 +1,6 @@
 package com.hello.suripu.core.processors;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -74,12 +75,14 @@ public class InsightProcessor {
     private final TrackerMotionDAO trackerMotionDAO;
     private final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
     private final InsightsDAODynamoDB insightsDAODynamoDB;
+    private final String insightScheduleLocation;
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final AccountPreferencesDAO preferencesDAO;
     private final LightData lightData;
     private final WakeStdDevData wakeStdDevData;
     private final AccountInfoProcessor accountInfoProcessor;
     private final CalibrationDAO calibrationDAO;
+    private final AmazonS3Client amazonS3Client;
 
 
 
@@ -91,12 +94,14 @@ public class InsightProcessor {
                             @NotNull final TrackerMotionDAO trackerMotionDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             @NotNull final InsightsDAODynamoDB insightsDAODynamoDB,
+                            @NotNull final String insightScheduleLocation,
                             @NotNull final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
                             @NotNull final LightData lightData,
                             @NotNull final WakeStdDevData wakeStdDevData,
-                            @NotNull final CalibrationDAO calibrationDAO
+                            @NotNull final CalibrationDAO calibrationDAO,
+                            @NotNull final AmazonS3Client amazonS3Client
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -105,12 +110,14 @@ public class InsightProcessor {
         this.trackerMotionDAO = trackerMotionDAO;
         this.scoreDAODynamoDB = scoreDAODynamoDB;
         this.insightsDAODynamoDB = insightsDAODynamoDB;
+        this.insightScheduleLocation = insightScheduleLocation;
         this.preferencesDAO = preferencesDAO;
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.lightData = lightData;
         this.wakeStdDevData = wakeStdDevData;
         this.accountInfoProcessor = accountInfoProcessor;
         this.calibrationDAO = calibrationDAO;
+        this.amazonS3Client = amazonS3Client;
     }
 
     public void generateInsights(final Long accountId, final DateTime accountCreated, final RolloutClient featureFlipper) {
@@ -246,17 +253,17 @@ public class InsightProcessor {
     private Optional<InsightCard.Category> generateInsightCBTI(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO) {
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
         final DateTime currentTime = DateTime.now();
-        return generateInsightCBTI(accountId, deviceId, deviceDataInsightQueryDAO, recentCategories, currentTime);
+        return generateInsightCBTI(accountId, deviceId, deviceDataInsightQueryDAO, recentCategories, insightScheduleLocation, currentTime);
     }
 
     @VisibleForTesting
     public Optional<InsightCard.Category> generateInsightCBTI(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
-                                                                      final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+                                                                      final Set<InsightCard.Category> recentCategories, final String insightScheduleBucket, final DateTime currentTime) {
 
         final InsightSchedule.InsightGroup insightGroup = InsightSchedule.InsightGroup.CBTI_V1;
         final Integer year = currentTime.getYear();
         final Integer monthOfYear = currentTime.getMonthOfYear();
-        final InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(insightGroup, year, monthOfYear);
+        final InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(amazonS3Client, insightScheduleBucket, insightGroup, year, monthOfYear);
 
         final Integer dayOfMonth = currentTime.getDayOfMonth();
         final InsightCard.Category todayCategory = insightSchedule.dayToCategoryMap.get(dayOfMonth);
@@ -485,12 +492,14 @@ public class InsightProcessor {
         private @Nullable TrackerMotionDAO trackerMotionDAO;
         private @Nullable AggregateSleepScoreDAODynamoDB scoreDAODynamoDB;
         private @Nullable InsightsDAODynamoDB insightsDAODynamoDB;
+        private @Nullable String insightScheduleLocation;
         private @Nullable SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
         private @Nullable AccountPreferencesDAO preferencesDAO;
         private @Nullable LightData lightData;
         private @Nullable WakeStdDevData wakeStdDevData;
         private @Nullable AccountInfoProcessor accountInfoProcessor;
         private @Nullable CalibrationDAO calibrationDAO;
+        private @Nullable AmazonS3Client amazonS3Client;
 
         public Builder withSenseDAOs(final DeviceDataDAO deviceDataDAO, final DeviceDataDAODynamoDB deviceDataDAODynamoDB, final DeviceReadDAO deviceReadDAO) {
             this.deviceReadDAO = deviceReadDAO;
@@ -506,6 +515,11 @@ public class InsightProcessor {
 
         public Builder withInsightsDAO(final TrendsInsightsDAO trendsInsightsDAO) {
             this.trendsInsightsDAO = trendsInsightsDAO;
+            return this;
+        }
+
+        public Builder withInsightScheduleLocation(final String insightScheduleLocation) {
+            this.insightScheduleLocation = insightScheduleLocation;
             return this;
         }
 
@@ -541,6 +555,11 @@ public class InsightProcessor {
             return this;
         }
 
+        public Builder withAmazonS3Client(final AmazonS3Client amazonS3Client) {
+            this.amazonS3Client = amazonS3Client;
+            return this;
+        }
+
         public InsightProcessor build() {
             checkNotNull(deviceDataDAO, "deviceDataDAO can not be null");
             checkNotNull(deviceReadDAO, "deviceReadDAO can not be null");
@@ -548,23 +567,30 @@ public class InsightProcessor {
             checkNotNull(trackerMotionDAO, "trackerMotionDAO can not be null");
             checkNotNull(scoreDAODynamoDB, "scoreDAODynamoDB can not be null");
             checkNotNull(insightsDAODynamoDB, "insightsDAODynamoDB can not be null");
+            checkNotNull(insightScheduleLocation, "insightScheduleLocation can not be null");
             checkNotNull(sleepStatsDAODynamoDB, "sleepStatsDAODynamoDB can not be null");
             checkNotNull(preferencesDAO, "preferencesDAO can not be null");
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
+            checkNotNull(amazonS3Client, "amazonS3Client cannot be null");
 
-            return new InsightProcessor(deviceDataDAO, deviceDataDAODynamoDB, deviceReadDAO,
+            return new InsightProcessor(deviceDataDAO,
+                    deviceDataDAODynamoDB,
+                    deviceReadDAO,
                     trendsInsightsDAO,
                     trackerMotionDAO,
-                    scoreDAODynamoDB, insightsDAODynamoDB,
+                    scoreDAODynamoDB,
+                    insightsDAODynamoDB,
+                    insightScheduleLocation,
                     sleepStatsDAODynamoDB,
                     preferencesDAO,
                     accountInfoProcessor,
                     lightData,
                     wakeStdDevData,
-                    calibrationDAO);
+                    calibrationDAO,
+                    amazonS3Client);
         }
     }
 }

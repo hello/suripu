@@ -1,13 +1,22 @@
 package com.hello.suripu.core.models.Insights;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
@@ -73,19 +82,25 @@ public class InsightSchedule {
         this.dayToCategoryMap = dayToCategoryMap;
     }
 
-    public static InsightSchedule loadInsightSchedule(final InsightGroup insightGroup, final Integer year, final Integer month) {
+    public static InsightSchedule loadInsightSchedule(final AmazonS3Client amazons3client, final String insightScheduleBucket, final InsightGroup insightGroup, final Integer year, final Integer month) {
 
-        final String resourceString = String.format("insights/insight_schedule_%d-%d_%s.json", year, month, insightGroup).toLowerCase();
+        final String bucket = insightScheduleBucket;
+        final String key = String.format("insight_schedule_%d-%d_%s.yml", year, month, insightGroup).toLowerCase();
 
         try {
-            final URL insightScheduleJSONFileValid = Resources.getResource(resourceString);
-            final Map<Integer, InsightCard.Category> dayToCategoryMap = new ObjectMapper().readValue(insightScheduleJSONFileValid, new TypeReference<Map<Integer, InsightCard.Category>>() {
-            });
-            final InsightSchedule insightSchedule = new InsightSchedule(insightGroup, year, month, dayToCategoryMap);
-            return insightSchedule;
-        }
-        catch (IllegalArgumentException | IOException e) {
-            LOGGER.debug(e.getMessage());
+            final S3Object s3Object = amazons3client.getObject(bucket, key);
+            try (final Reader inputStream = new InputStreamReader(s3Object.getObjectContent())) {
+                final String base64data = CharStreams.toString(inputStream);
+                final Map<Integer, InsightCard.Category> dayToCategoryMap = new ObjectMapper(new YAMLFactory()).readValue(base64data, new TypeReference<Map<Integer, InsightCard.Category>>() {});
+                final InsightSchedule insightSchedule = new InsightSchedule(insightGroup, year, month, dayToCategoryMap);
+                return insightSchedule;
+            } catch (IOException | IllegalArgumentException e) {
+                LOGGER.debug(e.getMessage());
+                final InsightSchedule insightScheduleEmpty = new InsightSchedule(insightGroup, year, month);
+                return insightScheduleEmpty;
+            }
+        } catch (AmazonClientException ace) {
+            LOGGER.debug(ace.getMessage());
             final InsightSchedule insightScheduleEmpty = new InsightSchedule(insightGroup, year, month);
             return insightScheduleEmpty;
         }
