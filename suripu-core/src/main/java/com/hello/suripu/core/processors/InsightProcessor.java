@@ -166,7 +166,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final Set<InsightCard.Category> recentCategories) {
+    protected Optional<InsightCard.Category> generateNewUserInsights(final Long accountId, final int accountAge, final Set<InsightCard.Category> recentCategories) {
 
         InsightCard card;
         switch (accountAge) {
@@ -204,7 +204,7 @@ public class InsightProcessor {
      * @param accountId
      */
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
+    protected Optional<InsightCard.Category> generateGeneralInsights(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                   final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         final Optional<InsightCard.Category> toGenerateWeeklyCategory = selectWeeklyInsightsToGenerate(accountId, recentCategories, currentTime);
@@ -257,7 +257,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateInsightCBTI(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
+    protected Optional<InsightCard.Category> generateInsightCBTI(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
                                                                       final Set<InsightCard.Category> recentCategories, final String insightScheduleBucket, final DateTime currentTime) {
 
         final InsightSchedule.InsightGroup insightGroup = InsightSchedule.InsightGroup.CBTI_V1;
@@ -281,7 +281,7 @@ public class InsightProcessor {
 
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
+    protected Optional<InsightCard.Category> selectWeeklyInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime) {
 
         //Generate some Insights weekly
         final Integer dayOfWeek = currentTime.getDayOfWeek();
@@ -304,7 +304,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+    protected Optional<InsightCard.Category> selectRandomOldInsightsToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         /* randomly select a card that hasn't been generated recently - TODO when we have all categories
         final List<InsightCard.Category> eligibleCatgories = new ArrayList<>();
@@ -373,7 +373,7 @@ public class InsightProcessor {
     }
 
     @VisibleForTesting
-    public Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category) {
+    protected Optional<InsightCard.Category> generateInsightsByCategory(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO, final InsightCard.Category category) {
 
         Optional<InsightCard> insightCardOptional = Optional.absent();
         switch (category) {
