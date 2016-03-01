@@ -305,7 +305,7 @@ public class InsightsDAODynamoDB {
 
         final String insightTypeString = item.containsKey(INSIGHT_TYPE_ATTRIBUTE_NAME)
                 ? item.get(INSIGHT_TYPE_ATTRIBUTE_NAME).getS()
-                : null;
+                : InsightCard.InsightType.DEFAULT.toString();
 
         final InsightCard.InsightType insightType;
         if (insightTypeString != null) {

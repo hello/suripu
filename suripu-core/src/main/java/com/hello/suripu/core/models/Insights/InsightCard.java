@@ -7,6 +7,8 @@ import com.google.common.collect.ComparisonChain;
 
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by kingshy on 10/24/14.
@@ -101,16 +103,15 @@ public class InsightCard implements Comparable<InsightCard> {
     }
 
     public enum InsightType {
-        DEFAULT, GENERIC;
+        DEFAULT, //Contains block quotes
+        GENERIC; //No block quotes. Used for intro insights.
 
         public static InsightType fromString(final String text) {
-            if (text != null) {
-                for (final InsightType insightType : InsightType.values()) {
-                    if (text.equalsIgnoreCase(insightType.toString()))
-                        return insightType;
-                }
+            for (final InsightType insightType : InsightType.values()) {
+                if (insightType.toString().equalsIgnoreCase(text))
+                    return insightType;
             }
-            throw new IllegalArgumentException("Illegal InsightType string");
+            throw new IllegalArgumentException(String.format("Illegal InsightType string {}", text));
         }
     }
 
