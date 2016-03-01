@@ -159,6 +159,8 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
         // check if we have generated any questions for this user TODAY
         int answered = 0;
+        boolean foundAnomalyQuestion = false;
+
         if (questionResponseList.size() != 0) {
             // check number of today's question the user has answered
             for (final AccountQuestionResponses question : questionResponseList) {
@@ -169,24 +171,28 @@ public class QuestionProcessor extends FeatureFlippedProcessor{
 
                 // add this unanswered question to list
                 final Integer qid = question.questionId;
-                if (!preGeneratedQuestions.containsKey(qid)) {
+                if (preGeneratedQuestions.containsKey(qid)) {
+                    continue;
+                }
                     final Long accountQId = question.id;
                     final Question questionTemplate = this.questionIdMap.get(qid);
 
-                    // if anomaly NOT enabled, SKIP
-                    if (!hasAnomalyLightQuestionEnabled(accountId) && questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                // if anomaly NOT enabled, SKIP
+                if (questionTemplate.category.equals(QuestionCategory.ANOMALY_LIGHT)) {
+                    if (!hasAnomalyLightQuestionEnabled(accountId)) {
                         LOGGER.debug("key=anomaly-question value=not-enabled-for-{}", accountId);
                         continue;
                     }
-
-                    preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
-                                                                                  accountQId,
-                                                                                  today,
-                                                                                  question.questionCreationDate));
+                    foundAnomalyQuestion = true;
                 }
+
+                preGeneratedQuestions.put(qid, Question.withAskTimeAccountQId(questionTemplate,
+                        accountQId,
+                        today,
+                        question.questionCreationDate));
             }
 
-            if (checkPause && answered >= numQuestions) {
+            if (!foundAnomalyQuestion && checkPause && answered >= numQuestions) {
                 // user has answered today's quota
                 LOGGER.debug("User has answered all questions for today {}", accountId);
                 return Collections.emptyList();
