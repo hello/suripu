@@ -266,11 +266,12 @@ public class InsightProcessor {
         final InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(amazonS3Client, insightScheduleBucket, insightGroup, year, monthOfYear);
 
         final Integer dayOfMonth = currentTime.getDayOfMonth();
-        final InsightCard.Category todayCategory = insightSchedule.dayToCategoryMap.get(dayOfMonth);
 
-        if (todayCategory == null) {
+        if (!insightSchedule.dayToCategoryMap.containsKey(dayOfMonth)) {
             return Optional.absent();
         }
+        final InsightCard.Category todayCategory = insightSchedule.dayToCategoryMap.get(dayOfMonth);
+
         if (recentCategories.contains(todayCategory)) {
             return Optional.absent();
         }
