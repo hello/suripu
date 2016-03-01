@@ -68,7 +68,7 @@ public class TrendsProcessor {
         final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
         // get raw data
-        final List<AggregateSleepStats> data = getRawData(3304L, localToday, timescale.getDays());
+        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             LOGGER.debug("debug=no-trends-data, account={}", accountId);
