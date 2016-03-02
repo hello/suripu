@@ -111,7 +111,7 @@ public class InsightCard implements Comparable<InsightCard> {
                 if (insightType.toString().equalsIgnoreCase(text))
                     return insightType;
             }
-            throw new IllegalArgumentException(String.format("Illegal InsightType string {}", text));
+            throw new IllegalArgumentException(String.format("Illegal InsightType string %s", text));
         }
     }
 

@@ -307,12 +307,7 @@ public class InsightsDAODynamoDB {
                 ? item.get(INSIGHT_TYPE_ATTRIBUTE_NAME).getS()
                 : InsightCard.InsightType.DEFAULT.toString();
 
-        final InsightCard.InsightType insightType;
-        if (insightTypeString != null) {
-            insightType = InsightCard.InsightType.fromString(insightTypeString);
-        } else {
-            insightType = InsightCard.InsightType.DEFAULT;
-        }
+        final InsightCard.InsightType insightType = InsightCard.InsightType.fromString(insightTypeString);
 
         return new InsightCard(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
