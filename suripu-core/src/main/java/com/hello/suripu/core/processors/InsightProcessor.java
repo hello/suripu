@@ -94,14 +94,14 @@ public class InsightProcessor {
                             @NotNull final TrackerMotionDAO trackerMotionDAO,
                             @NotNull final AggregateSleepScoreDAODynamoDB scoreDAODynamoDB,
                             @NotNull final InsightsDAODynamoDB insightsDAODynamoDB,
-                            @NotNull final String insightScheduleLocation,
+                            final String insightScheduleLocation,
                             @NotNull final SleepStatsDAODynamoDB sleepStatsDAODynamoDB,
                             @NotNull final AccountPreferencesDAO preferencesDAO,
                             @NotNull final AccountInfoProcessor accountInfoProcessor,
                             @NotNull final LightData lightData,
                             @NotNull final WakeStdDevData wakeStdDevData,
                             @NotNull final CalibrationDAO calibrationDAO,
-                            @NotNull final AmazonS3Client amazonS3Client
+                            final AmazonS3Client amazonS3Client
                             ) {
         this.deviceDataDAO = deviceDataDAO;
         this.deviceDataDAODynamoDB = deviceDataDAODynamoDB;
@@ -568,14 +568,12 @@ public class InsightProcessor {
             checkNotNull(trackerMotionDAO, "trackerMotionDAO can not be null");
             checkNotNull(scoreDAODynamoDB, "scoreDAODynamoDB can not be null");
             checkNotNull(insightsDAODynamoDB, "insightsDAODynamoDB can not be null");
-            checkNotNull(insightScheduleLocation, "insightScheduleLocation can not be null");
             checkNotNull(sleepStatsDAODynamoDB, "sleepStatsDAODynamoDB can not be null");
             checkNotNull(preferencesDAO, "preferencesDAO can not be null");
             checkNotNull(accountInfoProcessor, "accountInfoProcessor can not be null");
             checkNotNull(lightData, "lightData can not be null");
             checkNotNull(wakeStdDevData, "wakeStdDevData cannot be null");
             checkNotNull(calibrationDAO, "calibrationDAO cannot be null");
-            checkNotNull(amazonS3Client, "amazonS3Client cannot be null");
 
             return new InsightProcessor(deviceDataDAO,
                     deviceDataDAODynamoDB,
