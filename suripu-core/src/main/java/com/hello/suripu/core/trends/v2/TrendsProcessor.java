@@ -31,7 +31,8 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int ABSOLUTE_MIN_DATA_SIZE = 1;
+    private static final int ABSOLUTE_MIN_DATA_SIZE = 3;
+    private static final int MIN_ACCOUNT_AGE = 3; // less than 3 days, no graphs
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
@@ -63,6 +64,12 @@ public class TrendsProcessor {
         } else {
             accountAge = 0;
             optionalAccountCreated = Optional.absent();
+        }
+
+        // accounts less than 3 days old will not see any graphs
+        if (accountAge < MIN_ACCOUNT_AGE) {
+            LOGGER.debug("key=no-graphs-for-new-account account={} account-age={}", accountId, accountAge);
+            return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
 
         // check account-age to determine available time-scale
@@ -102,6 +109,8 @@ public class TrendsProcessor {
             if (depthGraph.isPresent()) {
                 graphs.add(depthGraph.get());
             }
+        } else {
+            LOGGER.debug("key=insufficent-data-no-graphs timescale={} account={} data-size={}", timescale.toString(), accountId, data.size());
         }
 
         return new TrendsResult(timeScales, graphs);
