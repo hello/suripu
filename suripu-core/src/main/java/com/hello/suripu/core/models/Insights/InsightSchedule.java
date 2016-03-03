@@ -14,6 +14,7 @@ import com.google.common.io.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -85,7 +86,7 @@ public class InsightSchedule {
     public static InsightSchedule loadInsightSchedule(final AmazonS3Client amazons3client, final String insightScheduleBucket, final InsightGroup insightGroup, final Integer year, final Integer month) {
 
         final String bucket = insightScheduleBucket;
-        final String key = String.format("insight_schedule_%d-%d_%s.yml", year, month, insightGroup).toLowerCase();
+        final String key = getScheduleFileName(year, month, insightGroup);
 
         try {
             final S3Object s3Object = amazons3client.getObject(bucket, key);
@@ -107,10 +108,10 @@ public class InsightSchedule {
     }
 
     public static InsightSchedule loadInsightSchedule(final String insightScheduleLocation, final InsightGroup insightGroup, final Integer year, final Integer month) {
-        final String resourceString = String.format("%s/insight_schedule_%d-%d_%s.yml", insightScheduleLocation, year, month, insightGroup).toLowerCase();
 
         try {
-            final URL insightScheduleYAMLFileValid = Resources.getResource(resourceString);
+            final String resourcePath = insightScheduleLocation + "/" + getScheduleFileName(year, month, insightGroup);
+            final URL insightScheduleYAMLFileValid = Resources.getResource(resourcePath);
             final Map<Integer, InsightCard.Category> dayToCategoryMap = new ObjectMapper(new YAMLFactory()).readValue(insightScheduleYAMLFileValid, new TypeReference<Map<Integer, InsightCard.Category>> () {});
             final InsightSchedule insightSchedule = new InsightSchedule(insightGroup, year, month, dayToCategoryMap);
             return insightSchedule;
@@ -119,5 +120,9 @@ public class InsightSchedule {
             final InsightSchedule insightScheduleEmpty = new InsightSchedule(insightGroup, year, month);
             return insightScheduleEmpty;
         }
+    }
+
+    private static String getScheduleFileName(final Integer year, final Integer month, final InsightGroup insightGroup) {
+        return String.format("insight_schedule_%d-%d_%s.yml", year, month, insightGroup).toLowerCase();
     }
 }
