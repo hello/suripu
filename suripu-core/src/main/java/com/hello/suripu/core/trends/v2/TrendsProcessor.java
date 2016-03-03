@@ -69,7 +69,7 @@ public class TrendsProcessor {
         final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
         // get raw data
-        final List<AggregateSleepStats> data = getRawData(55024L, localToday, timescale.getDays());
+        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             LOGGER.debug("debug=no-trends-data, account={}", accountId);
@@ -178,8 +178,8 @@ public class TrendsProcessor {
 
         // computing averages
         final List<Float> validData = Lists.newArrayList();
-        float minValue = 10000.0f;
-        float maxValue = 0.0f;
+        float maxValue = Float.MIN_VALUE;
+        float minValue = Float.MAX_VALUE;
         DateTime currentDateTime = data.get(0).dateTime;
 
         for (final AggregateSleepStats stat: data) {
@@ -231,12 +231,12 @@ public class TrendsProcessor {
 
         final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale, padDayOfWeek, optionalCreated);
 
-        if (data.size() < MIN_DATA_SIZE_SHOW_MINMAX) {
-            minValue = -1.0f;
-            maxValue = -1.0f;
-
+        final boolean hasMinMaxValues = (data.size() >= MIN_DATA_SIZE_SHOW_MINMAX);
+        if (!hasMinMaxValues) {
+            minValue = 0.0f;
         }
-        final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
+
+        final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday, hasMinMaxValues);
 
         final List<Annotation> annotations = Lists.newArrayList();
         if (hasAnnotation) {
