@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -34,15 +35,7 @@ public class SleepSoundsResourceTest {
 
     private final Optional<DeviceAccountPair> pair = Optional.of(new DeviceAccountPair(accountId, 1L, senseId, new DateTime()));
 
-    private final AccessToken token = new AccessToken.Builder()
-            .withAccountId(accountId)
-            .withCreatedAt(DateTime.now())
-            .withExpiresIn(DateTime.now().plusHours(1).getMillis())
-            .withRefreshToken(UUID.randomUUID())
-            .withToken(UUID.randomUUID())
-            .withScopes(new OAuthScope[]{ OAuthScope.USER_BASIC, OAuthScope.USER_BASIC })
-            .withAppId(1L)
-            .build();
+    private final AccessToken token = makeToken(accountId);
 
     private DeviceDAO deviceDAO;
     private SenseStateDynamoDB senseStateDynamoDB;
@@ -67,6 +60,19 @@ public class SleepSoundsResourceTest {
         assertThat(status.sound.isPresent(), is(false));
     }
 
+    private static AccessToken makeToken(final Long accountId) {
+        return new AccessToken.Builder()
+                .withAccountId(accountId)
+                .withCreatedAt(DateTime.now())
+                .withExpiresIn(DateTime.now().plusHours(1).getMillis())
+                .withRefreshToken(UUID.randomUUID())
+                .withToken(UUID.randomUUID())
+                .withScopes(new OAuthScope[]{ OAuthScope.USER_BASIC, OAuthScope.USER_BASIC })
+                .withAppId(1L)
+                .build();
+    }
+
+    // region getStatus
     @Test
     public void testGetStatusNoDevicePaired() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(Optional.<DeviceAccountPair>absent());
@@ -226,4 +232,53 @@ public class SleepSoundsResourceTest {
         assertThat(status.duration.get(), is(duration));
         assertThat(status.sound.get(), is(sound));
     }
+    // endregion getStatus
+
+    // region play
+    @Test
+    public void testPlayRequestValidation() throws Exception {
+        final Long durationId = 1L;
+        final Long soundId = 1L;
+        final Long order = 1L;
+        final Integer volumePercent = 50;
+
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+
+
+        final Sound sound = Sound.create(soundId, "preview", "name", "path", "url");
+        final Duration duration = Duration.create(durationId, "name", 30);
+
+        // Only work for our specific sound
+        Mockito.when(soundDAO.getById(Mockito.anyLong())).thenReturn(Optional.<Sound>absent());
+        Mockito.when(soundDAO.getById(soundId)).thenReturn(Optional.of(sound));
+
+        // Only work for our specific duration
+        Mockito.when(durationDAO.getById(Mockito.anyLong())).thenReturn(Optional.<Duration>absent());
+        Mockito.when(durationDAO.getById(durationId)).thenReturn(Optional.of(duration));
+
+        // TEST invalid sound
+        assertThat(
+                sleepSoundsResource.play(
+                        token, SleepSoundsResource.PlayRequest.create(soundId + 1, durationId, order, volumePercent)
+                ).getStatus(),
+                is(Response.Status.BAD_REQUEST.getStatusCode()));
+
+        // TEST invalid duration
+        assertThat(
+                sleepSoundsResource.play(
+                        token, SleepSoundsResource.PlayRequest.create(soundId, durationId + 1, order, volumePercent)
+                ).getStatus(),
+                is(Response.Status.BAD_REQUEST.getStatusCode()));
+
+        // TEST no sense for account
+        final Long badAccountId = accountId + 100;
+        final AccessToken badToken = makeToken(badAccountId);
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(badAccountId)).thenReturn(Optional.<DeviceAccountPair>absent());
+        assertThat(
+                sleepSoundsResource.play(
+                        badToken, SleepSoundsResource.PlayRequest.create(soundId, durationId, order, volumePercent)
+                ).getStatus(),
+                is(Response.Status.BAD_REQUEST.getStatusCode()));
+    }
+    // endregion play
 }

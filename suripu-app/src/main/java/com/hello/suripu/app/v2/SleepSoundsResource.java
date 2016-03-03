@@ -21,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -65,7 +67,7 @@ public class SleepSoundsResource {
 
 
     //region play
-    private static class PlayRequest {
+    protected static class PlayRequest {
 
         @JsonProperty("sound")
         @NotNull
@@ -79,18 +81,26 @@ public class SleepSoundsResource {
         @NotNull
         public final Long order;
 
-        private PlayRequest(final Long soundId, final Long durationId, final Long order) {
+        @JsonProperty("volume_percent")
+        @NotNull
+        @Min(0)
+        @Max(100)
+        public final Integer volumePercent;
+
+        private PlayRequest(final Long soundId, final Long durationId, final Long order, final Integer volumePercent) {
             this.soundId = soundId;
             this.durationId = durationId;
             this.order = order;
+            this.volumePercent = volumePercent;
         }
 
         @JsonCreator
         public static PlayRequest create(@JsonProperty("sound") final Long soundId,
                                          @JsonProperty("duration") final Long durationId,
-                                         @JsonProperty("order") final Long order)
+                                         @JsonProperty("order") final Long order,
+                                         @JsonProperty("volume_percent") final Integer volumePercent)
         {
-            return new PlayRequest(soundId, durationId, order);
+            return new PlayRequest(soundId, durationId, order, volumePercent);
         }
     }
 
@@ -117,10 +127,9 @@ public class SleepSoundsResource {
 
         final String senseId = deviceIdPair.get().externalDeviceId;
 
-        // TODO get volumePercent from request
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
-                durationOptional.get(), soundOptional.get(), 0, 0, 50);
+                durationOptional.get(), soundOptional.get(), 0, 0, playRequest.volumePercent);
 
         if (messageId.isPresent()) {
             return Response.status(Response.Status.ACCEPTED).entity("").build();
