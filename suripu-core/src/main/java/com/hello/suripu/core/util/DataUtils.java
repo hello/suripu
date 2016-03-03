@@ -149,7 +149,7 @@ public class DataUtils{
 
         //Don't allow devices on older firmware to see calibrated audio without the trim
         if (!BLACKLISTED_FIRMWARE.contains(firmwareVersion)) {
-            return removedNoiseFloor + artificialNoiseFloor;
+            return Math.max((removedNoiseFloor + artificialNoiseFloor), 0);
         }
         return Math.max(removedNoiseFloor, 0) + artificialNoiseFloor;
     }
