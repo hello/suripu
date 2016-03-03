@@ -33,6 +33,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
@@ -48,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
-import javax.xml.bind.DatatypeConverter;
 
 public class FirmwareUpdateStore {
 
@@ -123,7 +124,7 @@ public class FirmwareUpdateStore {
         listObjectsRequest.withPrefix("sense/" + objectKey + "/");
 
         final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
-        final Map<String, String> files = Maps.newHashMap();
+        final Map<String, String> filenameSHAMap = Maps.newHashMap(); //a map of filename->SHA1 value from S3 metaData
         Integer firmwareVersion = 0;
         for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
             if(!summary.getKey().contains(".map") && !summary.getKey().contains(".out") && !summary.getKey().contains(".txt")) {
@@ -134,7 +135,7 @@ public class FirmwareUpdateStore {
                 final String metaDataChecksum = object.getObjectMetadata().getUserMetaDataOf("sha");
                 final String fileChecksum = (metaDataChecksum == null) ? "" : metaDataChecksum;
 
-                files.put(summary.getKey(), fileChecksum);
+                filenameSHAMap.put(summary.getKey(), fileChecksum);
             }
 
             if(summary.getKey().contains("build_info.txt")) {
@@ -171,7 +172,7 @@ public class FirmwareUpdateStore {
         msec += 1000 * 60 * 60; // 1 hour.
         expiration.setTime(msec);
 
-        for(final Entry<String, String> f : files.entrySet()) {
+        for(final Entry<String, String> f : filenameSHAMap.entrySet()) {
 
             final String filename = f.getKey();
             final String fileSHA = f.getValue();
@@ -207,8 +208,12 @@ public class FirmwareUpdateStore {
 
                     final FirmwareFile fileInfo = entry.getValue();
                     if (fileInfo.sha1.length() > 0) {
-                        final byte[] metaDataSHA = DatatypeConverter.parseHexBinary(fileInfo.sha1);
-                        fileDownloadBuilder.setSha1(ByteString.copyFrom(metaDataSHA));
+                        try {
+                            final byte[] metaDataSHA = Hex.decodeHex(fileInfo.sha1.toCharArray());
+                            fileDownloadBuilder.setSha1(ByteString.copyFrom(metaDataSHA));
+                        } catch (DecoderException de){
+                            LOGGER.error("error=invalid-metadata-sha filename={}", filename);
+                        }
                     } else {
                         fileDownloadBuilder.setSha1(ByteString.copyFrom(computeSha1ForS3File(bucketName, filename)));
                     }
