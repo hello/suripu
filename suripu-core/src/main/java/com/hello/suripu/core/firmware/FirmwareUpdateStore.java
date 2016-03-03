@@ -3,6 +3,7 @@ package com.hello.suripu.core.firmware;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
@@ -46,6 +47,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+
+import javax.xml.bind.DatatypeConverter;
 
 public class FirmwareUpdateStore {
 
@@ -120,12 +123,18 @@ public class FirmwareUpdateStore {
         listObjectsRequest.withPrefix("sense/" + objectKey + "/");
 
         final ObjectListing objectListing = s3.listObjects(listObjectsRequest);
-        final List<String> files = new ArrayList<>();
+        final Map<String, String> files = Maps.newHashMap();
         Integer firmwareVersion = 0;
         for(final S3ObjectSummary summary: objectListing.getObjectSummaries()) {
             if(!summary.getKey().contains(".map") && !summary.getKey().contains(".out") && !summary.getKey().contains(".txt")) {
                 LOGGER.trace("Adding file: {} to list of files to be prepared for update", summary.getKey());
-                files.add(summary.getKey());
+
+                //Get SHA1 checksum from metadata Key 'x-amz-meta-sha'
+                S3Object object = s3.getObject(new GetObjectRequest(bucketName, summary.getKey()));
+                final String metaDataChecksum = object.getObjectMetadata().getUserMetaDataOf("sha");
+                final String fileChecksum = (metaDataChecksum == null) ? "" : metaDataChecksum;
+
+                files.put(summary.getKey(), fileChecksum);
             }
 
             if(summary.getKey().contains("build_info.txt")) {
@@ -162,9 +171,11 @@ public class FirmwareUpdateStore {
         msec += 1000 * 60 * 60; // 1 hour.
         expiration.setTime(msec);
 
-        for(final String f : files) {
+        for(final Entry<String, String> f : files.entrySet()) {
 
-            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, f);
+            final String filename = f.getKey();
+            final String fileSHA = f.getValue();
+            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, filename);
             generatePresignedUrlRequest.setMethod(HttpMethod.GET); // Default.
             generatePresignedUrlRequest.setExpiration(expiration);
 
@@ -177,9 +188,9 @@ public class FirmwareUpdateStore {
 
             // Trimming filename down to 8.3 format for *.raw files with original filenames
             // of the format SENSE_SLEEPTONES_<foo>.raw (e.g. "SENSE_SLEEPTONES_OUTERSPACE.raw")
-            final String filenamePre = f.substring(f.lastIndexOf("_") + 1)
+            final String filenamePre = filename.substring(filename.lastIndexOf("_") + 1)
                 .replace(".raw", "");
-            final String filename = filenamePre.substring(0, Math.min(8, filenamePre.length()));
+            final String trimmedFilename = filenamePre.substring(0, Math.min(8, filenamePre.length()));
 
 
             final ImmutableMap<String, FirmwareFile> downloadableFiles = new ImmutableMap.Builder<String, FirmwareFile>()
@@ -187,16 +198,20 @@ public class FirmwareUpdateStore {
                 .put("ca0515.der", new FirmwareFile(bucketName, "", true, false, false, "ca0515.der", "/cert/", "ca0515.der", "/"))
                 .put("kitsune.bin", new FirmwareFile(bucketName, "", true, false, true, "mcuimgx.bin", "/sys/", "mcuimgx.bin", "/"))
                 .put("top.bin", new FirmwareFile(bucketName, "", true, false, false, "update.bin", "/top/", "top.update.bin", "/"))
-                .put(".raw", new FirmwareFile(bucketName, "", false, false, false, "", "", filename.concat(".raw"), "SLPTONE"))
+                .put(".raw", new FirmwareFile(bucketName, "", false, false, false, "", "", trimmedFilename.concat(".raw"), "SLPTONE", fileSHA))
                 .build();
 
             for(final Entry<String, FirmwareFile> entry: downloadableFiles.entrySet()) {
 
-                if(f.endsWith(entry.getKey())) {
+                if(filename.endsWith(entry.getKey())) {
 
                     final FirmwareFile fileInfo = entry.getValue();
-                    final byte[] sha1 = computeSha1ForS3File(bucketName, f);
-                    fileDownloadBuilder.setSha1(ByteString.copyFrom(sha1));
+                    if (fileInfo.sha1.length() > 0) {
+                        final byte[] metaDataSHA = DatatypeConverter.parseHexBinary(fileInfo.sha1);
+                        fileDownloadBuilder.setSha1(ByteString.copyFrom(metaDataSHA));
+                    } else {
+                        fileDownloadBuilder.setSha1(ByteString.copyFrom(computeSha1ForS3File(bucketName, filename)));
+                    }
 
                     final boolean copyToSerialFlash = fileInfo.copyToSerialFlash;
                     final boolean resetApplicationProcessor = fileInfo.resetApplicationProcessor;
