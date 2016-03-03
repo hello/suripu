@@ -60,7 +60,7 @@ public class Particulates {
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.AIR_QUALITY, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC)));
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
     private static List<Float> getAvgAirQualityList(final Long accountId, final DeviceId deviceId, final Integer num_days, final Integer timeZoneOffset, final DeviceDataInsightQueryDAO deviceDataDAO, final CalibrationDAO calibrationDAO) {

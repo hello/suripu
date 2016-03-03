@@ -95,7 +95,7 @@ public class Lights {
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.LIGHT, InsightCard.TimePeriod.RECENTLY,
-                DateTime.now(DateTimeZone.UTC)));
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
 }

@@ -58,6 +58,7 @@ public class InsightsDAODynamoDB {
     public static final String IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME = "phone_image_1x";
     public static final String IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME = "phone_image_2x";
     public static final String IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME = "phone_image_3x";
+    public static final String INSIGHT_TYPE_ATTRIBUTE_NAME = "insight_type";
     private static final int MAX_CALL_COUNT = 5;
 
     private static final String S3_BUCKET_PATH = "https://s3.amazonaws.com/hello-data/insights_images/";
@@ -74,7 +75,7 @@ public class InsightsDAODynamoDB {
                                                  CATEGORY_ATTRIBUTE_NAME, TIME_PERIOD_ATTRIBUTE_NAME,
                                                  TITLE_ATTRIBUTE_NAME, MESSAGE_ATTRIBUTE_NAME, TIMESTAMP_UTC_ATTRIBUTE_NAME,
                                                  IMAGE_PHONE_DENSITY_1X_ATTRIBUTE_NAME, IMAGE_PHONE_DENSITY_2X_ATTRIBUTE_NAME,
-                                                 IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME);
+                                                 IMAGE_PHONE_DENSITY_3X_ATTRIBUTE_NAME, INSIGHT_TYPE_ATTRIBUTE_NAME);
     }
 
     @Timed
@@ -264,6 +265,8 @@ public class InsightsDAODynamoDB {
             }
         }
 
+        item.put(INSIGHT_TYPE_ATTRIBUTE_NAME, new AttributeValue().withS(insightCard.insightType.toString()));
+
         return item;
     }
 
@@ -300,6 +303,13 @@ public class InsightsDAODynamoDB {
             image = Optional.absent();
         }
 
+
+        final Optional<String> optionalType = item.containsKey(INSIGHT_TYPE_ATTRIBUTE_NAME)
+                ? Optional.of(item.get(INSIGHT_TYPE_ATTRIBUTE_NAME).getS())
+                : Optional.<String>absent();
+
+        final InsightCard.InsightType insightType = InsightsDAODynamoDB.generateInsightType(category, optionalType);
+
         return new InsightCard(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
                 item.get(TITLE_ATTRIBUTE_NAME).getS(),
@@ -308,7 +318,8 @@ public class InsightsDAODynamoDB {
                 timePeriod,
                 new DateTime(item.get(TIMESTAMP_UTC_ATTRIBUTE_NAME).getS(), DateTimeZone.UTC),
                 Optional.<String>absent(),
-                image
+                image,
+                insightType
         );
     }
 
@@ -325,6 +336,28 @@ public class InsightsDAODynamoDB {
             cardsWithImages.add(InsightCard.withImageAndCategory(card, generateImageUrlBasedOnCategory(card.category), categoryName));
         }
         return cardsWithImages;
+    }
+
+
+    /**
+     * Returns appropriate insight type based on db value or category
+     * @param category
+     * @param insightType
+     * @return
+     */
+    public static InsightCard.InsightType generateInsightType(final InsightCard.Category category, final Optional<String> insightType) {
+        if (insightType.isPresent()) {
+             return InsightCard.InsightType.valueOf(insightType.get());
+        }
+
+        switch (category) {
+            case GENERIC:
+            case SLEEP_HYGIENE:
+            case SLEEP_DURATION:
+                return InsightCard.InsightType.BASIC;
+        }
+
+        return InsightCard.InsightType.DEFAULT;
     }
 
 }
