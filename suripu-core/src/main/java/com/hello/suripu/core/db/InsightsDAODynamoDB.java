@@ -303,11 +303,12 @@ public class InsightsDAODynamoDB {
             image = Optional.absent();
         }
 
-        final String insightTypeString = item.containsKey(INSIGHT_TYPE_ATTRIBUTE_NAME)
-                ? item.get(INSIGHT_TYPE_ATTRIBUTE_NAME).getS()
-                : InsightCard.InsightType.DEFAULT.toString();
 
-        final InsightCard.InsightType insightType = InsightCard.InsightType.fromString(insightTypeString);
+        final Optional<String> optionalType = item.containsKey(INSIGHT_TYPE_ATTRIBUTE_NAME)
+                ? Optional.of(item.get(INSIGHT_TYPE_ATTRIBUTE_NAME).getS())
+                : Optional.<String>absent();
+
+        final InsightCard.InsightType insightType = InsightsDAODynamoDB.generateInsightType(category, optionalType);
 
         return new InsightCard(
                 Long.valueOf(item.get(ACCOUNT_ID_ATTRIBUTE_NAME).getN()),
@@ -335,6 +336,28 @@ public class InsightsDAODynamoDB {
             cardsWithImages.add(InsightCard.withImageAndCategory(card, generateImageUrlBasedOnCategory(card.category), categoryName));
         }
         return cardsWithImages;
+    }
+
+
+    /**
+     * Returns appropriate insight type based on db value or category
+     * @param category
+     * @param insightType
+     * @return
+     */
+    public static InsightCard.InsightType generateInsightType(final InsightCard.Category category, final Optional<String> insightType) {
+        if (insightType.isPresent()) {
+             return InsightCard.InsightType.valueOf(insightType.get());
+        }
+
+        switch (category) {
+            case GENERIC:
+            case SLEEP_HYGIENE:
+            case SLEEP_DURATION:
+                return InsightCard.InsightType.BASIC;
+        }
+
+        return InsightCard.InsightType.DEFAULT;
     }
 
 }
