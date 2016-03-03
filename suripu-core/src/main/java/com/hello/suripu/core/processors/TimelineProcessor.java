@@ -598,7 +598,7 @@ public class TimelineProcessor extends FeatureFlippedProcessor {
         if (this.hasSoundInTimeline(accountId)) {
             final SleepEvents<Optional<Event>> sleepEventsFromAlgorithm = SleepEvents.create(inBed,sleep,wake,outOfBed);
 
-            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_DISTURBANCE),
+            final List<Event> soundEvents = getSoundEvents(allSensorSampleList.get(Sensor.SOUND_PEAK_ENERGY),
                     motionEvents, lightOutTimeOptional, sleepEventsFromAlgorithm);
             for (final Event event : soundEvents) {
                 timelineEvents.put(event.getStartTimestamp(), event);

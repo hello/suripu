@@ -6,17 +6,21 @@ import java.util.Map;
 
 public class AllSensorSampleMap {
 
-    private final Map<Long, Sample> light = Maps.newHashMap();
-    private final Map<Long, Sample> sound = Maps.newHashMap();
-    private final Map<Long, Sample> humidity = Maps.newHashMap();
-    private final Map<Long, Sample> temperature = Maps.newHashMap();
-    private final Map<Long, Sample> particulates = Maps.newHashMap();
-    private final Map<Long, Sample> waveCounts = Maps.newHashMap();
-    private final Map<Long, Sample> holdCounts = Maps.newHashMap();
-    private final Map<Long, Sample> soundNumDisturbances = Maps.newHashMap();
-    private final Map<Long, Sample> soundPeakDisturbance = Maps.newHashMap();
-
+    private final Map<Sensor, Map<Long, Sample>> sensorMap;
+    
     public AllSensorSampleMap() {
+        sensorMap = Maps.newHashMap();
+        for (final Sensor sensor: Sensor.values()) {
+            sensorMap.put(sensor, Maps.<Long, Sample>newHashMap());
+        }
+    }
+
+    private void put(final Sensor sensor, final Long dateTime, final int offsetMillis, final int value) {
+        sensorMap.get(sensor).put(dateTime, new Sample(dateTime, value, offsetMillis));
+    }
+
+    private void put(final Sensor sensor, final Long dateTime, final int offsetMillis, final float value) {
+        sensorMap.get(sensor).put(dateTime, new Sample(dateTime, value, offsetMillis));
     }
 
     public void addSample(final Long dateTime, final int offsetMillis,
@@ -28,81 +32,43 @@ public class AllSensorSampleMap {
                           final int waveCount,
                           final int holdCount,
                           final float soundNumDisturbance,
-                          final float soundPeakDisturbance) {
+                          final float soundPeakDisturbance,
+                          final float soundPeakEnergy) {
 
-        this.light.put(dateTime, new Sample(dateTime, light, offsetMillis));
-        this.sound.put(dateTime, new Sample(dateTime, sound, offsetMillis));
-        this.humidity.put(dateTime, new Sample(dateTime, humidity, offsetMillis));
-        this.temperature.put(dateTime, new Sample(dateTime, temperature, offsetMillis));
-        this.particulates.put(dateTime, new Sample(dateTime, particulates, offsetMillis));
-        this.waveCounts.put(dateTime, new Sample(dateTime, waveCount, offsetMillis));
-        this.holdCounts.put(dateTime, new Sample(dateTime, holdCount, offsetMillis));
-        this.soundNumDisturbances.put(dateTime, new Sample(dateTime, soundNumDisturbance, offsetMillis));
-        this.soundPeakDisturbance.put(dateTime, new Sample(dateTime, soundPeakDisturbance, offsetMillis));
+        put(Sensor.LIGHT, dateTime, offsetMillis, light);
+        put(Sensor.SOUND, dateTime, offsetMillis, sound);
+        put(Sensor.HUMIDITY, dateTime, offsetMillis, humidity);
+        put(Sensor.TEMPERATURE, dateTime, offsetMillis, temperature);
+        put(Sensor.PARTICULATES, dateTime, offsetMillis, particulates);
+        put(Sensor.WAVE_COUNT, dateTime, offsetMillis, waveCount);
+        put(Sensor.HOLD_COUNT, dateTime, offsetMillis, holdCount);
+        put(Sensor.SOUND_NUM_DISTURBANCES, dateTime, offsetMillis, soundNumDisturbance);
+        put(Sensor.SOUND_PEAK_DISTURBANCE, dateTime, offsetMillis, soundPeakDisturbance);
+        put(Sensor.SOUND_PEAK_ENERGY, dateTime, offsetMillis, soundPeakEnergy);
+
     }
 
     public void setSampleMap(final Sensor sensor, final Map<Long, Sample> sampleMap) {
-        switch (sensor) {
-            case LIGHT:
-                this.light.putAll(sampleMap);
-                break;
-            case SOUND:
-                this.sound.putAll(sampleMap);
-                break;
-            case HUMIDITY:
-                this.humidity.putAll(sampleMap);
-                break;
-            case TEMPERATURE:
-                this.temperature.putAll(sampleMap);
-                break;
-            case PARTICULATES:
-                this.particulates.putAll(sampleMap);
-                break;
-            case WAVE_COUNT:
-                this.waveCounts.putAll(sampleMap);
-                break;
-            case HOLD_COUNT:
-                this.holdCounts.putAll(sampleMap);
-                break;
-            case SOUND_NUM_DISTURBANCES:
-                this.soundNumDisturbances.putAll(sampleMap);
-                break;
-            case SOUND_PEAK_DISTURBANCE:
-                this.soundPeakDisturbance.putAll(sampleMap);
-                break;
-            default:
-                break;
+        if (this.sensorMap.containsKey(sensor)) {
+            this.sensorMap.get(sensor).putAll(sampleMap);
         }
     }
 
     public Map<Long, Sample> get(final Sensor sensor) {
-        switch (sensor) {
-            case LIGHT:
-                return light;
-            case SOUND:
-                return sound;
-            case HUMIDITY:
-                return humidity;
-            case TEMPERATURE:
-                return temperature;
-            case PARTICULATES:
-                return particulates;
-            case WAVE_COUNT:
-                return waveCounts;
-            case HOLD_COUNT:
-                return holdCounts;
-            case SOUND_NUM_DISTURBANCES:
-                return soundNumDisturbances;
-            case SOUND_PEAK_DISTURBANCE:
-                return soundPeakDisturbance;
+        if (sensorMap.containsKey(sensor)) {
+            return sensorMap.get(sensor);
         }
+
         return Maps.newHashMap();
     }
 
     public Boolean isEmpty() {
-        return light.isEmpty() && sound.isEmpty() && humidity.isEmpty() && temperature.isEmpty()
-                && particulates.isEmpty() && waveCounts.isEmpty() && holdCounts.isEmpty()
-                && soundNumDisturbances.isEmpty() && soundPeakDisturbance.isEmpty();
+        for (final Map<Long, Sample> samples : sensorMap.values()) {
+            if (!samples.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
