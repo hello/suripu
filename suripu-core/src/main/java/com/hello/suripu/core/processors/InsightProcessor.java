@@ -150,9 +150,10 @@ public class InsightProcessor {
         }
 
         if (featureFlipper.userFeatureActive(FeatureFlipper.INSIGHT_SCHEDULE_CBTI_V1, accountId, Collections.EMPTY_LIST)) {
-            this.generateInsightCoach(accountId, DeviceId.create(internalDeviceId), deviceDataDAO);
+            this.generateInsightFromConfigs(accountId, DeviceId.create(internalDeviceId), deviceDataDAO);
+        } else {
+            this.generateGeneralInsights(accountId, DeviceId.create(internalDeviceId), deviceDataDAO, featureFlipper);
         }
-        this.generateGeneralInsights(accountId, DeviceId.create(internalDeviceId), deviceDataDAO, featureFlipper);
     }
 
     /**
@@ -250,15 +251,15 @@ public class InsightProcessor {
         return Optional.absent();
     }
 
-    private Optional<InsightCard.Category> generateInsightCoach(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO) {
+    private Optional<InsightCard.Category> generateInsightFromConfigs(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO) {
         final Set<InsightCard.Category> recentCategories = this.getRecentInsightsCategories(accountId);
         final DateTime currentTime = DateTime.now();
-        return generateInsightCoach(accountId, deviceId, deviceDataInsightQueryDAO, recentCategories, insightScheduleLocation, currentTime);
+        return generateInsightFromConfigs(accountId, deviceId, deviceDataInsightQueryDAO, recentCategories, insightScheduleLocation, currentTime);
     }
 
     @VisibleForTesting
-    protected Optional<InsightCard.Category> generateInsightCoach(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
-                                                                      final Set<InsightCard.Category> recentCategories, final String insightScheduleBucket, final DateTime currentTime) {
+    protected Optional<InsightCard.Category> generateInsightFromConfigs(final Long accountId, final DeviceId deviceId, final DeviceDataInsightQueryDAO deviceDataInsightQueryDAO,
+                                                                        final Set<InsightCard.Category> recentCategories, final String insightScheduleBucket, final DateTime currentTime) {
 
         final InsightSchedule.InsightGroup insightGroup = InsightSchedule.InsightGroup.CBTI_V1;
         final Integer year = currentTime.getYear();

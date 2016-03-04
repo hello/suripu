@@ -91,17 +91,17 @@ public class InsightSchedule {
         try {
             final S3Object s3Object = amazons3client.getObject(bucket, key);
             try (final Reader inputStream = new InputStreamReader(s3Object.getObjectContent())) {
-                final String base64data = CharStreams.toString(inputStream);
-                final Map<Integer, InsightCard.Category> dayToCategoryMap = new ObjectMapper(new YAMLFactory()).readValue(base64data, new TypeReference<Map<Integer, InsightCard.Category>>() {});
+                final String configData = CharStreams.toString(inputStream);
+                final Map<Integer, InsightCard.Category> dayToCategoryMap = new ObjectMapper(new YAMLFactory()).readValue(configData, new TypeReference<Map<Integer, InsightCard.Category>>() {});
                 final InsightSchedule insightSchedule = new InsightSchedule(insightGroup, year, month, dayToCategoryMap);
                 return insightSchedule;
             } catch (IOException | IllegalArgumentException e) {
-                LOGGER.debug(e.getMessage());
+                LOGGER.error(e.getMessage());
                 final InsightSchedule insightScheduleEmpty = new InsightSchedule(insightGroup, year, month);
                 return insightScheduleEmpty;
             }
         } catch (AmazonClientException ace) {
-            LOGGER.debug(ace.getMessage());
+            LOGGER.error(ace.getMessage());
             final InsightSchedule insightScheduleEmpty = new InsightSchedule(insightGroup, year, month);
             return insightScheduleEmpty;
         }
@@ -116,7 +116,7 @@ public class InsightSchedule {
             final InsightSchedule insightSchedule = new InsightSchedule(insightGroup, year, month, dayToCategoryMap);
             return insightSchedule;
         } catch (IllegalArgumentException | IOException e) {
-            LOGGER.debug(e.getMessage());
+            LOGGER.error(e.getMessage());
             final InsightSchedule insightScheduleEmpty = new InsightSchedule(insightGroup, year, month);
             return insightScheduleEmpty;
         }
