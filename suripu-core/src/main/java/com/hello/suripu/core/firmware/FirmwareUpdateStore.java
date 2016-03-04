@@ -3,9 +3,9 @@ package com.hello.suripu.core.firmware;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -131,8 +131,8 @@ public class FirmwareUpdateStore {
                 LOGGER.trace("Adding file: {} to list of files to be prepared for update", summary.getKey());
 
                 //Get SHA1 checksum from metadata Key 'x-amz-meta-sha'
-                S3Object object = s3.getObject(new GetObjectRequest(bucketName, summary.getKey()));
-                final String metaDataChecksum = object.getObjectMetadata().getUserMetaDataOf("sha");
+                final ObjectMetadata metaData = s3.getObjectMetadata(bucketName, summary.getKey());
+                final String metaDataChecksum = metaData.getUserMetaDataOf("sha");
                 final String fileChecksum = (metaDataChecksum == null) ? "" : metaDataChecksum;
 
                 filenameSHAMap.put(summary.getKey(), fileChecksum);
