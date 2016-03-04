@@ -32,6 +32,7 @@ public class TrendsProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
     private static final int ABSOLUTE_MIN_DATA_SIZE = 1;
+    private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
@@ -177,8 +178,8 @@ public class TrendsProcessor {
 
         // computing averages
         final List<Float> validData = Lists.newArrayList();
-        float minValue = 100.0f;
-        float maxValue = 0.0f;
+        float maxValue = Float.MIN_VALUE;
+        float minValue = Float.MAX_VALUE;
         DateTime currentDateTime = data.get(0).dateTime;
 
         for (final AggregateSleepStats stat: data) {
@@ -230,7 +231,12 @@ public class TrendsProcessor {
 
         final List<Float> sectionData = TrendsProcessorUtils.padSectionData(validData, localToday, data.get(0).dateTime, currentDateTime, timeScale, padDayOfWeek, optionalCreated);
 
-        final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday);
+        final boolean hasMinMaxValues = (data.size() >= MIN_DATA_SIZE_SHOW_MINMAX);
+        if (!hasMinMaxValues) {
+            minValue = 0.0f;
+        }
+
+        final List<GraphSection> sections = TrendsProcessorUtils.getScoreDurationSections(sectionData, minValue, maxValue, dataType, timeScale, localToday, hasMinMaxValues);
 
         final List<Annotation> annotations = Lists.newArrayList();
         if (hasAnnotation) {

@@ -80,7 +80,8 @@ public class TrendsProcessorUtils {
                                                  final float minValue, final float maxValue,
                                                  final DataType dataType,
                                                  final TimeScale timeScale,
-                                                 final DateTime today) {
+                                                 final DateTime today,
+                                                 final boolean hasMinMaxValues) {
         if (dataType.equals(DataType.SCORES)) {
             if (!timeScale.equals(TimeScale.LAST_3_MONTHS)) {
                 return getScoreWeekSections(data, today); // last_week & last_month
@@ -91,10 +92,10 @@ public class TrendsProcessorUtils {
 
         // sleep duration
         if (timeScale.equals(TimeScale.LAST_WEEK)) {
-            return getDurationWeekSection(data, minValue, maxValue, today); // special-case: last_week
+            return getDurationWeekSection(data, minValue, maxValue, today, hasMinMaxValues); // special-case: last_week
         }
         // last_month & last_3_months
-        return getDurationMonthSections(data, minValue, maxValue, timeScale, today);
+        return getDurationMonthSections(data, minValue, maxValue, timeScale, today, hasMinMaxValues);
     }
 
 
@@ -130,7 +131,7 @@ public class TrendsProcessorUtils {
         return sections;
     }
 
-    private static List<GraphSection> getDurationWeekSection(final List<Float> data, final float minValue, final float maxValue, final DateTime today) {
+    private static List<GraphSection> getDurationWeekSection(final List<Float> data, final float minValue, final float maxValue, final DateTime today, final boolean hasMinMaxValues) {
 
         // populate titles
         final List<String> title = Lists.newArrayList();
@@ -150,7 +151,7 @@ public class TrendsProcessorUtils {
             }
 
             // highlight these values
-            if (value == minValue || value == maxValue) {
+            if (hasMinMaxValues &&  (value == minValue || value == maxValue)) {
                 highlights.add(index);
             }
 
@@ -178,7 +179,8 @@ public class TrendsProcessorUtils {
     private static List<GraphSection> getDurationMonthSections(final List<Float> data,
                                                                final float minValue, final float maxValue,
                                                                final TimeScale timeScale,
-                                                               final DateTime today) {
+                                                               final DateTime today,
+                                                               final boolean hasMinMaxValues) {
         // compile values
         int index = 0;
         int minIndex = -1;
@@ -210,20 +212,23 @@ public class TrendsProcessorUtils {
         final DateTime firstDate = today.minusDays(timeScale.getDays());
         String title = English.MONTH_OF_YEAR_NAMES.get(firstDate.getMonthOfYear() - 1);
         int sectionFirstIndex = 0;
+        int added = 0;
 
         for (int day = 0; day < timeScale.getDays(); day ++) {
             final String monthName = English.MONTH_OF_YEAR_NAMES.get(firstDate.plusDays(day).getMonthOfYear() - 1);
             if (!title.equals(monthName)) {
 
                 final List<Integer> highlightValues = Lists.newArrayList();
-                if (minIndex > 0 && minIndex < day) {
-                    highlightValues.add(minIndex - sectionFirstIndex); // position within current section
-                    minIndex = -1; // reset
-                }
+                if (hasMinMaxValues) {
+                    if (minIndex > 0 && minIndex < day) {
+                        highlightValues.add(minIndex - sectionFirstIndex); // position within current section
+                        minIndex = -1; // reset
+                    }
 
-                if (maxIndex > 0 && maxIndex < day) {
-                    highlightValues.add(maxIndex - sectionFirstIndex);
-                    maxIndex = -1;
+                    if (maxIndex > 0 && maxIndex < day) {
+                        highlightValues.add(maxIndex - sectionFirstIndex);
+                        maxIndex = -1;
+                    }
                 }
 
                 sections.add(new GraphSection(
@@ -232,6 +237,7 @@ public class TrendsProcessorUtils {
                                 highlightValues,
                                 Optional.<Integer>absent())
                 );
+                added += (day - sectionFirstIndex);
                 sectionFirstIndex = day;
                 title = monthName;
             }
@@ -239,14 +245,16 @@ public class TrendsProcessorUtils {
 
         // add remaining data
         final int lastDay = timeScale.getDays() - 1;
-        if (sectionFirstIndex != lastDay) {
+        if (added < sectionValues.size()) {
             final List<Integer> highlightValues = Lists.newArrayList();
-            if (minIndex > 0 && minIndex <= lastDay) {
-                highlightValues.add(minIndex - sectionFirstIndex);
-            }
+            if (hasMinMaxValues) {
+                if (minIndex > 0 && minIndex <= lastDay) {
+                    highlightValues.add(minIndex - sectionFirstIndex);
+                }
 
-            if (maxIndex > 0 && maxIndex <= lastDay) {
-                highlightValues.add(maxIndex - sectionFirstIndex);
+                if (maxIndex > 0 && maxIndex <= lastDay) {
+                    highlightValues.add(maxIndex - sectionFirstIndex);
+                }
             }
 
             sections.add(new GraphSection(
@@ -344,6 +352,11 @@ public class TrendsProcessorUtils {
         // set first-date as account-created date to prevent an extra row of nulls
         if (timeScale == TimeScale.LAST_WEEK && firstDate.isBefore(accountCreatedDate)) {
             firstDate = accountCreatedDate;
+        }
+
+        // for accounts created just after midnight, the first night-of will be one day before account-created
+        if (firstDataDateTime.isBefore(firstDate)) {
+            firstDate = firstDataDateTime;
         }
 
         final Days missingDays = Days.daysBetween(firstDate, firstDataDateTime);
