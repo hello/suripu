@@ -310,6 +310,14 @@ public class SensorsViewsDynamoDB {
         return Optional.of(fwVersions);
     }
 
+    public Optional<String> getFirmwareVersion(final String senseId) {
+        final Optional<DeviceStatus> statusOptional = senseStatus(senseId, 0L, 0L); // accountId and internalSenseId unused
+        if (statusOptional.isPresent()) {
+            return Optional.of(statusOptional.get().firmwareVersion);
+        }
+        return Optional.absent();
+    }
+
 
     public Optional<DeviceStatus> senseStatus(final String senseId, final Long accountId, final Long internalSenseId) {
         final Map<String, AttributeValue> key = Maps.newHashMap();

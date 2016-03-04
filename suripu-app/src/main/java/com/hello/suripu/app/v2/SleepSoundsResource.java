@@ -3,10 +3,12 @@ package com.hello.suripu.app.v2;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -42,27 +44,31 @@ public class SleepSoundsResource {
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
     private final MessejiClient messejiClient;
+    private final SensorsViewsDynamoDB sensorsViewsDynamoDB;
 
     private SleepSoundsResource(final SoundDAO soundDAO,
                                 final DurationDAO durationDAO,
                                 final SenseStateDynamoDB senseStateDynamoDB,
                                 final DeviceDAO deviceDAO,
-                                final MessejiClient messejiClient)
+                                final MessejiClient messejiClient,
+                                final SensorsViewsDynamoDB sensorsViewsDynamoDB)
     {
         this.soundDAO = soundDAO;
         this.durationDAO = durationDAO;
         this.senseStateDynamoDB = senseStateDynamoDB;
         this.deviceDAO = deviceDAO;
         this.messejiClient = messejiClient;
+        this.sensorsViewsDynamoDB = sensorsViewsDynamoDB;
     }
 
     public static SleepSoundsResource create(final SoundDAO soundDAO,
                                              final DurationDAO durationDAO,
                                              final SenseStateDynamoDB senseStateDynamoDB,
                                              final DeviceDAO deviceDAO,
-                                             final MessejiClient messejiClient)
+                                             final MessejiClient messejiClient,
+                                             final SensorsViewsDynamoDB sensorsViewsDynamoDB)
     {
-        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient);
+        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, sensorsViewsDynamoDB);
     }
 
 
@@ -112,7 +118,7 @@ public class SleepSoundsResource {
     {
         final Optional<Sound> soundOptional = soundDAO.getById(playRequest.soundId);
         final Optional<Duration> durationOptional = durationDAO.getById(playRequest.durationId);
-        // TODO validate that sense firmware can play sound
+
         if (!soundOptional.isPresent() || !durationOptional.isPresent()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("").build();
         }
@@ -126,6 +132,19 @@ public class SleepSoundsResource {
         }
 
         final String senseId = deviceIdPair.get().externalDeviceId;
+
+        final Optional<Integer> firmwareOptional = getFirmwareVersion(senseId);
+        if (!firmwareOptional.isPresent()) {
+            LOGGER.warn("error=unusable-firmware-version account-id={} device-id={}", accountId, senseId);
+            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+        }
+
+        final Boolean canPlaySound = soundDAO.hasSoundEnabledExcludingOldFirmwareVersions(soundOptional.get().id, firmwareOptional.get());
+        if (!canPlaySound) {
+            LOGGER.warn("error=unusable-firmware-version account-id={} device-id={} fw-version={} sound-id={}",
+                    accountId, senseId, firmwareOptional.get(), soundOptional.get().id);
+            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+        }
 
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
@@ -182,7 +201,7 @@ public class SleepSoundsResource {
 
 
     //region sounds
-    private class SoundResult {
+    protected class SoundResult {
         @JsonProperty("sounds")
         @NotNull
         public final List<Sound> sounds;
@@ -196,8 +215,21 @@ public class SleepSoundsResource {
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
     public SoundResult getSounds(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
-        // TODO map sounds to user's firmware version
-        final List<Sound> sounds = soundDAO.all();
+        final SoundResult EMPTY_SOUNDS = new SoundResult(Lists.<Sound>newArrayList());
+
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accessToken.accountId);
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("account-id={} device-id-pair=not-found", accessToken.accountId);
+            return EMPTY_SOUNDS;
+        }
+
+        final Optional<Integer> firmwareVersionOptional = getFirmwareVersion(deviceIdPair.get().externalDeviceId);
+        if (!firmwareVersionOptional.isPresent()) {
+            LOGGER.warn("error=unusable-firmware-version device-id={}", deviceIdPair.get().externalDeviceId);
+            return EMPTY_SOUNDS;
+        }
+
+        final List<Sound> sounds = soundDAO.getAllForFirmwareVersionExcludingOldVersions(firmwareVersionOptional.get());
         return new SoundResult(sounds);
     }
     //endregion sounds
@@ -275,5 +307,21 @@ public class SleepSoundsResource {
         return SleepSoundStatus.create(soundOptional.get(), durationOptional.get());
     }
     //endregion status
+
+
+    // region helpers
+    private Optional<Integer> getFirmwareVersion(final String senseId) {
+        final Optional<String> firmwareOptional = sensorsViewsDynamoDB.getFirmwareVersion(senseId);
+        if (firmwareOptional.isPresent()) {
+            try {
+                return Optional.of(Integer.parseInt(firmwareOptional.get()));
+            } catch (NumberFormatException nfe) {
+                LOGGER.warn("exception=NumberFormatException firmwareVersion={} device-id={}",
+                        firmwareOptional.get(), senseId);
+            }
+        }
+        return Optional.absent();
+    }
+    // endregion helpers
 
 }
