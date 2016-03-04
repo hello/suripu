@@ -118,7 +118,7 @@ public class SleepSoundsResource {
     {
         final Optional<Sound> soundOptional = soundDAO.getById(playRequest.soundId);
         final Optional<Duration> durationOptional = durationDAO.getById(playRequest.durationId);
-        // TODO validate that sense firmware can play sound
+
         if (!soundOptional.isPresent() || !durationOptional.isPresent()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("").build();
         }
@@ -132,6 +132,19 @@ public class SleepSoundsResource {
         }
 
         final String senseId = deviceIdPair.get().externalDeviceId;
+
+        final Optional<Integer> firmwareOptional = getFirmwareVersion(senseId);
+        if (!firmwareOptional.isPresent()) {
+            LOGGER.warn("error=unusable-firmware-version account-id={} device-id={}", accountId, senseId);
+            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+        }
+
+        final Boolean canPlaySound = soundDAO.hasSoundEnabledExcludingOldFirmwareVersions(soundOptional.get().id, firmwareOptional.get());
+        if (!canPlaySound) {
+            LOGGER.warn("error=unusable-firmware-version account-id={} device-id={} fw-version={} sound-id={}",
+                    accountId, senseId, firmwareOptional.get(), soundOptional.get().id);
+            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+        }
 
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,

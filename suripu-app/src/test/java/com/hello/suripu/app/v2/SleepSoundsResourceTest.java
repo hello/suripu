@@ -284,6 +284,78 @@ public class SleepSoundsResourceTest {
                 ).getStatus(),
                 is(Response.Status.BAD_REQUEST.getStatusCode()));
     }
+
+    @Test
+    public void testPlayUnusableFirmware() {
+        final Long durationId = 1L;
+        final Long soundId = 1L;
+        final Long order = 1L;
+        final Integer volumePercent = 50;
+        final Integer firmwareVersion = 100;
+
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+        Mockito.when(sensorsViewsDynamoDB.getFirmwareVersion(pair.get().externalDeviceId)).thenReturn(Optional.<String>absent());
+        Mockito.when(soundDAO.getById(soundId)).thenReturn(Optional.of(fakeSound(soundId)));
+        Mockito.when(durationDAO.getById(durationId)).thenReturn(Optional.of(fakeDuration(durationId)));
+
+        assertThat(
+                sleepSoundsResource.play(
+                        token, SleepSoundsResource.PlayRequest.create(soundId, durationId, order, volumePercent)
+                ).getStatus(),
+                is(Response.Status.BAD_REQUEST.getStatusCode())
+        );
+    }
+
+    @Test
+    public void testPlayUnacceptableFirmware() {
+        final Long durationId = 1L;
+        final Long soundId = 1L;
+        final Long order = 1L;
+        final Integer volumePercent = 50;
+        final Integer firmwareVersion = 100;
+
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+        Mockito.when(sensorsViewsDynamoDB.getFirmwareVersion(pair.get().externalDeviceId)).thenReturn(Optional.of(firmwareVersion.toString()));
+        Mockito.when(soundDAO.getById(soundId)).thenReturn(Optional.of(fakeSound(soundId)));
+        Mockito.when(soundDAO.hasSoundEnabledExcludingOldFirmwareVersions(soundId, firmwareVersion)).thenReturn(false);
+        Mockito.when(durationDAO.getById(durationId)).thenReturn(Optional.of(fakeDuration(durationId)));
+
+        assertThat(
+                sleepSoundsResource.play(
+                        token, SleepSoundsResource.PlayRequest.create(soundId, durationId, order, volumePercent)
+                ).getStatus(),
+                is(Response.Status.BAD_REQUEST.getStatusCode())
+        );
+    }
+
+    @Test
+    public void testPlayHappyPath() {
+        final Long durationId = 1L;
+        final Long soundId = 1L;
+        final Long order = 1L;
+        final Integer volumePercent = 50;
+        final Integer firmwareVersion = 100;
+        final Sound sound = fakeSound(soundId);
+        final Duration duration = fakeDuration(durationId);
+
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+        Mockito.when(sensorsViewsDynamoDB.getFirmwareVersion(pair.get().externalDeviceId)).thenReturn(Optional.of(firmwareVersion.toString()));
+        Mockito.when(soundDAO.getById(soundId)).thenReturn(Optional.of(sound));
+        Mockito.when(soundDAO.hasSoundEnabledExcludingOldFirmwareVersions(soundId, firmwareVersion)).thenReturn(true);
+        Mockito.when(durationDAO.getById(durationId)).thenReturn(Optional.of(duration));
+        Mockito.when(messejiClient.playAudio(
+                Mockito.eq(pair.get().externalDeviceId), Mockito.<MessejiClient.Sender>anyObject(),
+                Mockito.eq(order), Mockito.<Duration>anyObject(), Mockito.<Sound>anyObject(),
+                Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt())
+        ).thenReturn(Optional.of(1L)); // Return a fake message ID
+
+        assertThat(
+                sleepSoundsResource.play(
+                        token, SleepSoundsResource.PlayRequest.create(soundId, durationId, order, volumePercent)
+                ).getStatus(),
+                is(Response.Status.ACCEPTED.getStatusCode())
+        );
+    }
     // endregion play
 
 
@@ -324,6 +396,10 @@ public class SleepSoundsResourceTest {
     // region helpers
     private Sound fakeSound(final Long id) {
         return Sound.create(id, "preview", "name", "filepath", "url");
+    }
+
+    private Duration fakeDuration(final Long id) {
+        return Duration.create(id, "name", 30);
     }
     // endregion helpers
 }
