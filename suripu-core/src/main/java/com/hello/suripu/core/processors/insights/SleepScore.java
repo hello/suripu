@@ -13,6 +13,6 @@ public class SleepScore {
     public static Optional<InsightCard> getMarketingInsights(final Long accountId) {
         final Text text =  new Text("Sleep score marketing", "Sleep score marketing short text. CHANGEME");
         final String categoryName = "Sleep Score CHANGEME";
-        return Optional.of(new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_SCORE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName));
+        return Optional.of(new InsightCard(accountId, text.title, text.message, InsightCard.Category.SLEEP_SCORE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName, InsightCard.InsightType.BASIC));
     }
 }

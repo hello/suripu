@@ -13,6 +13,6 @@ public class Drive {
     public static Optional<InsightCard> getMarketingInsights(final Long accountId) {
         final Text text =  new Text("Drive marketing", "Drive marketing short text. CHANGEME");
         final String categoryName = "Drive CHANGEME";
-        return Optional.of(new InsightCard(accountId, text.title, text.message, InsightCard.Category.DRIVE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName));
+        return Optional.of(new InsightCard(accountId, text.title, text.message, InsightCard.Category.DRIVE, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName, InsightCard.InsightType.BASIC));
     }
 }
