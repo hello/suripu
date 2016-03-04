@@ -66,9 +66,12 @@ public class TrendsProcessor {
             optionalAccountCreated = Optional.absent();
         }
 
+        LOGGER.debug("key=get-trends-graph account={} timescale={}, account_age={} local_today={}",
+                accountId, timescale.toString(), accountAge, localToday);
+
         // accounts less than 3 days old will not see any graphs
         if (accountAge < MIN_ACCOUNT_AGE) {
-            LOGGER.debug("key=no-graphs-for-new-account account={} account-age={}", accountId, accountAge);
+            LOGGER.debug("key=fail-min-account-age-check account={} account_age={}", accountId, accountAge);
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
 
@@ -79,7 +82,7 @@ public class TrendsProcessor {
         final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
-            LOGGER.debug("debug=no-trends-data, account={}", accountId);
+            LOGGER.debug("debug=no-trends-data, account={}, num_timescales={}, account_age={}", accountId, timeScales.size(), accountAge);
             return new TrendsResult(timeScales, Collections.<Graph>emptyList());
         }
 
@@ -110,9 +113,10 @@ public class TrendsProcessor {
                 graphs.add(depthGraph.get());
             }
         } else {
-            LOGGER.debug("key=insufficent-data-no-graphs timescale={} account={} data-size={}", timescale.toString(), accountId, data.size());
+            LOGGER.debug("key=insufficient-data-no-graphs timescale={} account={} data_size={}", timescale.toString(), accountId, data.size());
         }
 
+        LOGGER.debug("key=trends-graph-returned num_timescales={} num_graphs={}", timeScales.size(), graphs.size());
         return new TrendsResult(timeScales, graphs);
     }
 
@@ -242,6 +246,7 @@ public class TrendsProcessor {
 
         final boolean hasMinMaxValues = (data.size() >= MIN_DATA_SIZE_SHOW_MINMAX);
         if (!hasMinMaxValues) {
+            LOGGER.debug("key=graph-has-no-min-max-highlights data_size={} data_type={}", data.size(), dataType.value);
             minValue = 0.0f;
         }
 
