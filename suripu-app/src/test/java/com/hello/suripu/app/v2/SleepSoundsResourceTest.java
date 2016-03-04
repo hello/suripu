@@ -1,10 +1,12 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -43,6 +45,7 @@ public class SleepSoundsResourceTest {
     private SoundDAO soundDAO;
     private MessejiClient messejiClient;
     private SleepSoundsResource sleepSoundsResource;
+    private SensorsViewsDynamoDB sensorsViewsDynamoDB;
 
     @Before
     public void setUp() {
@@ -51,7 +54,8 @@ public class SleepSoundsResourceTest {
         durationDAO = Mockito.mock(DurationDAO.class);
         soundDAO = Mockito.mock(SoundDAO.class);
         messejiClient = Mockito.mock(MessejiClient.class);
-        sleepSoundsResource = SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient);
+        sensorsViewsDynamoDB = Mockito.mock(SensorsViewsDynamoDB.class);
+        sleepSoundsResource = SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, sensorsViewsDynamoDB);
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
@@ -281,4 +285,45 @@ public class SleepSoundsResourceTest {
                 is(Response.Status.BAD_REQUEST.getStatusCode()));
     }
     // endregion play
+
+
+    // region getSounds
+    @Test
+    public void testGetSoundsUnparseableFirmwareVersion() {
+        Mockito.when(soundDAO.getAllForFirmwareVersionExcludingOldVersions(Mockito.anyInt()))
+                .thenReturn(ImmutableList.<Sound>of(fakeSound(1L)));
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+        Mockito.when(sensorsViewsDynamoDB.getFirmwareVersion(pair.get().externalDeviceId)).thenReturn(Optional.of("100.1"));
+        assertThat(sleepSoundsResource.getSounds(token).sounds.size(), is(0));
+    }
+
+    @Test
+    public void testGetSoundsMissingFirmwareVersion() {
+        Mockito.when(soundDAO.getAllForFirmwareVersionExcludingOldVersions(Mockito.anyInt()))
+                .thenReturn(ImmutableList.<Sound>of(fakeSound(1L)));
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+        Mockito.when(sensorsViewsDynamoDB.getFirmwareVersion(pair.get().externalDeviceId)).thenReturn(Optional.<String>absent());
+        assertThat(sleepSoundsResource.getSounds(token).sounds.size(), is(0));
+    }
+
+    @Test
+    public void testGetSoundsValidFirmwareVersion() {
+        final Integer firmwareVersion = 100;
+        final Long soundId = 1L;
+        Mockito.when(soundDAO.getAllForFirmwareVersionExcludingOldVersions(firmwareVersion))
+                .thenReturn(ImmutableList.of(fakeSound(soundId)));
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+        Mockito.when(sensorsViewsDynamoDB.getFirmwareVersion(pair.get().externalDeviceId)).thenReturn(Optional.of(firmwareVersion.toString()));
+        final SleepSoundsResource.SoundResult result = sleepSoundsResource.getSounds(token);
+        assertThat(result.sounds.size(), is(1));
+        assertThat(result.sounds.get(0).id, is(soundId));
+    }
+    // endregion getSounds
+
+
+    // region helpers
+    private Sound fakeSound(final Long id) {
+        return Sound.create(id, "preview", "name", "filepath", "url");
+    }
+    // endregion helpers
 }
