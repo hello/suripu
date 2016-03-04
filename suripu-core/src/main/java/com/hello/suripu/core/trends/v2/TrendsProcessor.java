@@ -31,7 +31,9 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int ABSOLUTE_MIN_DATA_SIZE = 1;
+    private static final int ABSOLUTE_MIN_DATA_SIZE = 3;
+    private static final int MIN_ACCOUNT_AGE = 4; // accounts that has less than 3 nights will see no graphs
+    private static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
@@ -65,6 +67,15 @@ public class TrendsProcessor {
             optionalAccountCreated = Optional.absent();
         }
 
+        LOGGER.debug("key=get-trends-graph account={} timescale={}, account_age={} local_today={}",
+                accountId, timescale.toString(), accountAge, localToday);
+
+        // accounts less than 4 days old will not see any graphs
+        if (accountAge < MIN_ACCOUNT_AGE) {
+            LOGGER.debug("key=fail-min-account-age-check account={} account_age={}", accountId, accountAge);
+            return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
+        }
+
         // check account-age to determine available time-scale
         final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
@@ -72,7 +83,13 @@ public class TrendsProcessor {
         final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
-            LOGGER.debug("debug=no-trends-data, account={}", accountId);
+            // TODO: until we have a better way to check for number of datapoints the account has....
+            if (accountAge < MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS) {
+                LOGGER.debug("key=new-account-no-data account={} account_age={}", accountId, accountAge);
+                return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
+            }
+
+            LOGGER.debug("debug=no-trends-data, account={}, num_timescales={}, account_age={}", accountId, timeScales.size(), accountAge);
             return new TrendsResult(timeScales, Collections.<Graph>emptyList());
         }
 
@@ -102,8 +119,11 @@ public class TrendsProcessor {
             if (depthGraph.isPresent()) {
                 graphs.add(depthGraph.get());
             }
+        } else {
+            LOGGER.debug("key=insufficient-data-no-graphs timescale={} account={} data_size={}", timescale.toString(), accountId, data.size());
         }
 
+        LOGGER.debug("key=trends-graph-returned num_timescales={} num_graphs={}", timeScales.size(), graphs.size());
         return new TrendsResult(timeScales, graphs);
     }
 
@@ -233,6 +253,7 @@ public class TrendsProcessor {
 
         final boolean hasMinMaxValues = (data.size() >= MIN_DATA_SIZE_SHOW_MINMAX);
         if (!hasMinMaxValues) {
+            LOGGER.debug("key=graph-has-no-min-max-highlights data_size={} data_type={}", data.size(), dataType.value);
             minValue = 0.0f;
         }
 
