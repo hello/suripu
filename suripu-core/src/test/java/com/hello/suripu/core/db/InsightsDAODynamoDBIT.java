@@ -79,7 +79,7 @@ public class InsightsDAODynamoDBIT {
         final InsightCard.Category category = InsightCard.Category.LIGHT;
         final InsightCard.TimePeriod timePeriod = InsightCard.TimePeriod.NONE;
         insightCards.add(new InsightCard(accountId, title, message, category, timePeriod,
-                                         DateTime.parse(date), Optional.<String>absent(), image));
+                                         DateTime.parse(date), Optional.<String>absent(), image, InsightCard.InsightType.DEFAULT));
     }
 
     @Test

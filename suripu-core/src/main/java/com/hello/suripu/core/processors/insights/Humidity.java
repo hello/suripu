@@ -78,7 +78,7 @@ public class Humidity {
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.HUMIDITY, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC)));
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
     @VisibleForTesting

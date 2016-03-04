@@ -111,7 +111,8 @@ public class AppStatsResourceTests {
                 "fake body",
                 InsightCard.Category.GENERIC,
                 InsightCard.TimePeriod.ANNUALLY,
-                insightsLastViewed.plusSeconds(1));
+                insightsLastViewed.plusSeconds(1),
+                InsightCard.InsightType.DEFAULT);
         final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
         doReturn(fakeInsights)
                 .when(insightsDAO)
@@ -156,7 +157,8 @@ public class AppStatsResourceTests {
                 "fake body",
                 InsightCard.Category.GENERIC,
                 InsightCard.TimePeriod.ANNUALLY,
-                insightsLastViewed);
+                insightsLastViewed,
+                InsightCard.InsightType.DEFAULT);
         final ImmutableList<InsightCard> fakeInsights = ImmutableList.of(fakeInsight);
         doReturn(fakeInsights)
                 .when(insightsDAO)
