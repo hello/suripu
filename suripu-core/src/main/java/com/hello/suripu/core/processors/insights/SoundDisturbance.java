@@ -73,7 +73,7 @@ public class SoundDisturbance {
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.SOUND, InsightCard.TimePeriod.MONTHLY,
-                DateTime.now(DateTimeZone.UTC)));
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
     @VisibleForTesting

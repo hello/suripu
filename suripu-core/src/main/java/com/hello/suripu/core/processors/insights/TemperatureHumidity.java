@@ -160,7 +160,7 @@ public class TemperatureHumidity {
 
         return Optional.of(new InsightCard(accountId, text.title, text.message,
                 InsightCard.Category.TEMPERATURE, InsightCard.TimePeriod.RECENTLY,
-                DateTime.now(DateTimeZone.UTC)));
+                DateTime.now(DateTimeZone.UTC), InsightCard.InsightType.DEFAULT));
     }
 
     private static int celsiusToFahrenheit(final double value) {
