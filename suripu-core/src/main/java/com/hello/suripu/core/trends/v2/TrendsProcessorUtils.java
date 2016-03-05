@@ -402,4 +402,5 @@ public class TrendsProcessorUtils {
         }
         return sectionData;
     }
+
 }

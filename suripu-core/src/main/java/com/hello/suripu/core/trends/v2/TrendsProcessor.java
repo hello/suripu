@@ -1,9 +1,8 @@
 package com.hello.suripu.core.trends.v2;
 
 
-import com.google.common.base.Function;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -42,6 +41,24 @@ public class TrendsProcessor {
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
 
 
+    public static class TrendsData {
+        private DateTime dateTime;
+        private Integer sleepDurationInMinutes;
+        private Integer lightSleepInMinutes;
+        private Integer mediumSleepInMinutes;
+        private Integer soundSleepInMinutes;
+        private Integer sleepScore;
+
+        public TrendsData(DateTime dateTime, Integer sleepDurationInMinutes, Integer lightSleepInMinutes, Integer mediumSleepInMinutes, Integer soundSleepInMinutes, Integer sleepScore) {
+            this.dateTime = dateTime;
+            this.sleepDurationInMinutes = sleepDurationInMinutes;
+            this.lightSleepInMinutes = lightSleepInMinutes;
+            this.mediumSleepInMinutes = mediumSleepInMinutes;
+            this.soundSleepInMinutes = soundSleepInMinutes;
+            this.sleepScore = sleepScore;
+        }
+    }
+
     public TrendsProcessor(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountDAO accountDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
         this.accountDAO = accountDAO;
@@ -52,10 +69,11 @@ public class TrendsProcessor {
 
         // get data
         final Integer offsetMillis = getAccountMillisOffset(accountId);
-        final DateTime localToday = getLocalToday(offsetMillis);
+        final DateTime localToday = getLocalToday(offsetMillis).plusDays(2);
 
         // only show annotations if account could have 7 or more timelines
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+
         final Optional<DateTime> optionalAccountCreated;
         final int accountAge;
         if (optionalAccount.isPresent()) {
@@ -76,11 +94,14 @@ public class TrendsProcessor {
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
 
-        // check account-age to determine available time-scale
-        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
-
         // get raw data
-        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
+        final List<TrendsData> rawData = getRawData(55004L, localToday);
+
+        // check account-age and data to determine available time-scale
+        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge, localToday, rawData);
+
+        // get relevant subset of data
+        final List<TrendsData> data = getRelevantData(rawData, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             // TODO: until we have a better way to check for number of datapoints the account has....
@@ -128,19 +149,19 @@ public class TrendsProcessor {
     }
 
 
-    private Optional<Graph> getSleepDepthGraph(final List<AggregateSleepStats> data, final TimeScale timeScale) {
+    private Optional<Graph> getSleepDepthGraph(final List<TrendsData> data, final TimeScale timeScale) {
         float totalSleep = 0.0f;
         float totalLightSleep = 0.0f;
         float totalSoundSleep = 0.0f;
         float totalMediumSleep = 0.0f;
-        for (final AggregateSleepStats stat : data) {
-            final float light = stat.sleepStats.lightSleepDurationInMinutes;
+        for (final TrendsData stat : data) {
+            final float light = stat.lightSleepInMinutes;
             totalLightSleep += light;
 
-            final float sound = stat.sleepStats.soundSleepDurationInMinutes;
+            final float sound = stat.soundSleepInMinutes;
             totalSoundSleep += sound;
 
-            final float medium = stat.sleepStats.sleepDurationInMinutes - light - sound;
+            final float medium = stat.mediumSleepInMinutes;
             totalMediumSleep += medium;
 
             totalSleep += (light + sound + medium);
@@ -185,7 +206,7 @@ public class TrendsProcessor {
      * @param graphTitle name of the graph
      * @return Optional graph
      */
-    private Optional<Graph> getDaysGraph(final List<AggregateSleepStats> data,
+    private Optional<Graph> getDaysGraph(final List<TrendsData> data,
                                      final TimeScale timeScale,
                                      final GraphType graphType,
                                      final DataType dataType,
@@ -202,10 +223,10 @@ public class TrendsProcessor {
         float minValue = Float.MAX_VALUE;
         DateTime currentDateTime = data.get(0).dateTime;
 
-        for (final AggregateSleepStats stat: data) {
+        for (final TrendsData stat: data) {
             final float statValue;
             if (dataType.equals(DataType.HOURS)) {
-                statValue = (float) stat.sleepStats.sleepDurationInMinutes / 60.0f; // convert to hours
+                statValue = (float) stat.sleepDurationInMinutes / 60.0f; // convert to hours
             } else {
                 statValue = (float) stat.sleepScore;
             }
@@ -285,20 +306,43 @@ public class TrendsProcessor {
         return Optional.of(graph);
     }
 
-    private List<AggregateSleepStats> getRawData(final Long accountId, final DateTime localToday, final int days) {
-        final DateTime queryStart = localToday.minusDays(days);
+    private List<TrendsData> getRawData(final Long accountId, final DateTime localToday) {
+        // always fetch the maximum possible number of days
+        final DateTime queryStart = localToday.minusDays(TimeScale.LAST_3_MONTHS.getDays());
 
         final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(accountId,
                 DateTimeUtil.dateToYmdString(queryStart),
                 DateTimeUtil.dateToYmdString(localToday));
 
-        final List<AggregateSleepStats> results = Lists.newArrayList();
+        final List<TrendsData> results = Lists.newArrayList();
         for (final AggregateSleepStats stat : rawData) {
             if (stat.sleepStats.sleepDurationInMinutes >= MIN_VALID_SLEEP_DURATION ) {
-                results.add(stat);
+                results.add(new TrendsData(stat.dateTime,
+                        stat.sleepStats.sleepDurationInMinutes,
+                        stat.sleepStats.lightSleepDurationInMinutes,
+                        stat.sleepStats.mediumSleepDurationInMinutes,
+                        stat.sleepStats.soundSleepDurationInMinutes,
+                        stat.sleepScore));
             }
         }
         return results;
+    }
+    private List<TrendsData> getRelevantData(final List<TrendsData> rawData, final DateTime localToday, final int days) {
+        if (rawData.isEmpty()) {
+            return Collections.<TrendsData>emptyList();
+        }
+
+        final DateTime queryStart = localToday.minusDays(days);
+        final List<TrendsData> relevantData = Lists.newArrayList();
+        for (final TrendsData data : rawData) {
+            if (data.dateTime.isBefore(queryStart)) {
+                continue;
+            }
+
+            relevantData.add(data);
+        }
+
+        return relevantData;
     }
 
     private Integer getAccountMillisOffset(final Long accountId) {
@@ -311,36 +355,25 @@ public class TrendsProcessor {
 
     private DateTime getLocalToday(final Integer offsetMillis) {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
-        if (offsetMillis != 0) {
-            return now.plusMillis(offsetMillis).withTimeAtStartOfDay();
+            if (offsetMillis != 0) {
+                return now.plusMillis(offsetMillis).withTimeAtStartOfDay();
         }
         return now.withTimeAtStartOfDay();
     }
 
-    // DO NOT DELETE THIS!!
-    private DateTime reallyFancyGetLocalToday(final Long accountId) {
-        final Optional<TimeZoneHistory> timeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        final Optional<DateTime> nowForUser = timeZone.transform(new Function<TimeZoneHistory, DateTime>() {
-            @Override
-            public DateTime apply(TimeZoneHistory history) {
-                return DateTime.now(DateTimeZone.UTC)
-                        .plusMillis(history.offsetMillis)
-                        .withTimeAtStartOfDay();
-            }
-        });
-        return nowForUser.or(new Supplier<DateTime>() {
-            @Override
-            public DateTime get() {
-                return DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
-            }
-        });
-    }
+    @VisibleForTesting
+    protected List<TimeScale> computeAvailableTimeScales(final int accountAge, final DateTime localToday, final List<TrendsData> dataList) {
+        if (dataList.isEmpty()) {
+            return Collections.<TimeScale>emptyList();
+        }
 
-    private List<TimeScale> computeAvailableTimeScales(final int accountAge) {
         final List<TimeScale> timeScales = Lists.newArrayList();
         for (final TimeScale scale : TimeScale.values()) {
             if (accountAge > scale.getVisibleAfterDays()) {
-                timeScales.add(scale);
+                final List<TrendsData> data = getRelevantData(dataList, localToday, scale.getDays());
+                if (data.size() >= ABSOLUTE_MIN_DATA_SIZE) {
+                    timeScales.add(scale);
+                }
             }
         }
 
