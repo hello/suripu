@@ -4,9 +4,16 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.hello.suripu.core.db.InsightScheduleDAO;
+import com.hello.suripu.core.db.InsightSchedulesFromResource;
 import com.hello.suripu.core.models.Insights.InsightCard;
 import com.hello.suripu.core.models.Insights.InsightSchedule;
+import com.hello.suripu.core.models.Insights.InsightScheduleMap;
+import com.hello.suripu.core.models.Insights.InsightScheduleMonth;
+import com.hello.suripu.core.models.Insights.InsightScheduleYear;
 import org.junit.Test;
+
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -23,50 +30,25 @@ public class InsightScheduleTest {
 
 
     @Test
-    public void testLoadInsightSchedule() {
+    public void testLoadInsightSchedulesFromResources() {
         final String insightScheduleLocation = "insights";
 
-        final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.DEFAULT;
         final Integer year = 2016;
         final Integer month = 2;
-        InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(insightScheduleLocation, group, year, month);
-        InsightCard.Category cat = insightSchedule.dayToCategoryMap.get(1);
+
+        final InsightScheduleDAO insightScheduleDAO = InsightSchedulesFromResource.create(insightScheduleLocation, year, month);
+        InsightSchedule insightSchedule = insightScheduleDAO.getInsightScheduleDefault();
+
+        Map<Integer, Map<Integer, Map<Integer, InsightCard.Category>>> insightScheduleMap = insightSchedule.insightScheduleMap;
+        InsightCard.Category cat = insightScheduleMap.get(year).get(month).get(1);
+//         insightScheduleYear = insightScheduleMap.get(year);
+//        InsightScheduleMonth insightScheduleMonth = insightScheduleYear.monthToDay.get(month);
+//        InsightCard.Category cat = insightScheduleMonth.dayToCategoryMap.get(1);
+//
         assertThat(cat, is(InsightCard.Category.WAKE_VARIANCE));
-    }
 
-    @Test
-    public void testLoadInsightsSchedule_empty() {
-        final String insightScheduleLocation = "hello-prod";
-
-        final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.DEFAULT;
-        final Integer year = 2016;
-        final Integer month = 2;
-        InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(amazonS3, insightScheduleLocation, group, year, month);
-        InsightCard.Category cat = insightSchedule.dayToCategoryMap.get(4);
-        assertThat(cat, is(nullValue()));
-    }
-
-    @Test
-    public void testLoadInsightsSchedule_empty2() {
-        final String insightScheduleLocation = "hello-prod";
-
-        final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.CBTI_V1;
-        final Integer year = -2000;
-        final Integer month = 2;
-        InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(amazonS3, insightScheduleLocation, group, year, month);
-        InsightCard.Category cat = insightSchedule.dayToCategoryMap.get(4);
-        assertThat(cat, is(nullValue()));
-    }
-
-    @Test
-    public void testLoadInsightsSchedule_empty3() {
-        final String insightScheduleLocation = "hello-prod";
-
-        final InsightSchedule.InsightGroup group = InsightSchedule.InsightGroup.CBTI_V1;
-        final Integer year = 2016;
-        final Integer month = 2;
-        InsightSchedule insightSchedule = InsightSchedule.loadInsightSchedule(amazonS3, insightScheduleLocation, group, year, month);
-        InsightCard.Category cat = insightSchedule.dayToCategoryMap.get(50);
-        assertThat(cat, is(nullValue()));
+//        InsightCard.Category catNull = insightSchedule.yearToMonthMapMap.get(year).get(month).get(50);
+        InsightCard.Category catNull = insightScheduleMap.get(year).get(month).get(50);
+        assertThat(catNull, is(nullValue()));
     }
 }
