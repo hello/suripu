@@ -32,7 +32,7 @@ public class TrendsProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
     private static final int ABSOLUTE_MIN_DATA_SIZE = 3;
-    private static final int MIN_ACCOUNT_AGE = 4; // accounts that has less than 3 nights will see no graphs
+    private static final int MIN_ACCOUNT_AGE = 3; // accounts that are less than 3 days old will not see graphs
     private static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
@@ -60,8 +60,9 @@ public class TrendsProcessor {
         final int accountAge;
         if (optionalAccount.isPresent()) {
             final Days daysDiff = Days.daysBetween(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay(), localToday);
-            accountAge = daysDiff.getDays();
+            accountAge = daysDiff.getDays() + 1;
             optionalAccountCreated = Optional.of(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay());
+            LOGGER.debug("key=trends-account-created created={}", optionalAccountCreated.get());
         } else {
             accountAge = 0;
             optionalAccountCreated = Optional.absent();
@@ -70,8 +71,8 @@ public class TrendsProcessor {
         LOGGER.debug("key=get-trends-graph account={} timescale={}, account_age={} local_today={}",
                 accountId, timescale.toString(), accountAge, localToday);
 
-        // accounts less than 4 days old will not see any graphs
-        if (accountAge < MIN_ACCOUNT_AGE) {
+        // accounts will start seeing graphs on 4th day of account-creation
+        if (accountAge <= MIN_ACCOUNT_AGE) {
             LOGGER.debug("key=fail-min-account-age-check account={} account_age={}", accountId, accountAge);
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
@@ -83,8 +84,8 @@ public class TrendsProcessor {
         final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
-            // TODO: until we have a better way to check for number of datapoints the account has....
-            if (accountAge < MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS) {
+            // TODO: until we have a better way to check for number of data-points the account has....
+            if (accountAge <= MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS) {
                 LOGGER.debug("key=new-account-no-data account={} account_age={}", accountId, accountAge);
                 return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
             }

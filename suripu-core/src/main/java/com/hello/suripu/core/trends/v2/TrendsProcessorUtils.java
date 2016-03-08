@@ -274,11 +274,11 @@ public class TrendsProcessorUtils {
         if (added < sectionValues.size()) {
             final List<Integer> highlightValues = Lists.newArrayList();
             if (hasMinMaxValues) {
-                if (minIndex > 0 && minIndex <= lastDay) {
+                if (minIndex >= 0 && minIndex <= lastDay) {
                     highlightValues.add(minIndex - sectionFirstIndex);
                 }
 
-                if (maxIndex > 0 && maxIndex <= lastDay) {
+                if (maxIndex >= 0 && maxIndex <= lastDay) {
                     highlightValues.add(maxIndex - sectionFirstIndex);
                 }
             }
