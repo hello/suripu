@@ -144,6 +144,8 @@ public class TrendsProcessorUtils {
         // populate values
         final List<Float> sectionValues = Lists.newArrayList();
         final List<Integer> highlights = Lists.newArrayList();
+        int minIndex = -1;
+        int maxIndex = -1;
         int index = 0;
         for(final Float value: data) {
             if (value == null) {
@@ -151,8 +153,12 @@ public class TrendsProcessorUtils {
             }
 
             // highlight these values
-            if (hasMinMaxValues &&  (value == minValue || value == maxValue)) {
-                highlights.add(index);
+            if (hasMinMaxValues) {
+                if (value == minValue) {
+                    minIndex = index;
+                } else if (maxIndex == -1 && value == maxValue) {
+                    maxIndex = index;
+                }
             }
 
             sectionValues.add(value);
@@ -164,7 +170,27 @@ public class TrendsProcessorUtils {
         if (daysDiff > 0) {
             for (int i = 0; i < daysDiff; i++) {
                 sectionValues.add(0, GraphSection.MISSING_VALUE);
+
+                if (minIndex >= 0) { // adjust
+                    minIndex++;
+                }
+
+                if (maxIndex >= 0) {
+                    maxIndex++;
+                }
             }
+        }
+
+        if (maxIndex == minIndex) {
+            minIndex = -1;
+        }
+
+        if (minIndex >= 0) {
+            highlights.add(minIndex);
+        }
+
+        if (maxIndex >= 0) {
+            highlights.add(maxIndex);
         }
 
         return Lists.newArrayList(
@@ -220,12 +246,12 @@ public class TrendsProcessorUtils {
 
                 final List<Integer> highlightValues = Lists.newArrayList();
                 if (hasMinMaxValues) {
-                    if (minIndex > 0 && minIndex < day) {
+                    if (minIndex >= 0 && minIndex < day) {
                         highlightValues.add(minIndex - sectionFirstIndex); // position within current section
                         minIndex = -1; // reset
                     }
 
-                    if (maxIndex > 0 && maxIndex < day) {
+                    if (maxIndex >= 0 && maxIndex < day) {
                         highlightValues.add(maxIndex - sectionFirstIndex);
                         maxIndex = -1;
                     }
