@@ -69,7 +69,7 @@ public class TrendsProcessor {
 
         // get data
         final Integer offsetMillis = getAccountMillisOffset(accountId);
-        final DateTime localToday = getLocalToday(offsetMillis).plusDays(2);
+        final DateTime localToday = getLocalToday(offsetMillis);
 
         // only show annotations if account could have 7 or more timelines
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
@@ -77,25 +77,33 @@ public class TrendsProcessor {
         final Optional<DateTime> optionalAccountCreated;
         final int accountAge;
         if (optionalAccount.isPresent()) {
-            final Days daysDiff = Days.daysBetween(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay(), localToday);
+            final DateTime accountCreated = optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay();
+            final Days daysDiff = Days.daysBetween(accountCreated, localToday);
             accountAge = daysDiff.getDays();
-            optionalAccountCreated = Optional.of(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay());
+            optionalAccountCreated = Optional.of(accountCreated);
         } else {
             accountAge = 0;
             optionalAccountCreated = Optional.absent();
         }
 
+        // get raw data
+        final List<TrendsData> rawData = getRawData(accountId, localToday);
+
         LOGGER.debug("key=get-trends-graph account={} timescale={}, account_age={} local_today={}",
                 accountId, timescale.toString(), accountAge, localToday);
+
+        return getGraphs(accountId, accountAge, optionalAccountCreated, localToday, timescale, rawData);
+    }
+
+    @VisibleForTesting
+    protected TrendsResult getGraphs(final Long accountId, final Integer accountAge, final Optional<DateTime> optionalAccountCreated,
+                                     final DateTime localToday, final TimeScale timescale, final List<TrendsData> rawData) {
 
         // accounts less than 4 days old will not see any graphs
         if (accountAge < MIN_ACCOUNT_AGE) {
             LOGGER.debug("key=fail-min-account-age-check account={} account_age={}", accountId, accountAge);
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
-
-        // get raw data
-        final List<TrendsData> rawData = getRawData(55004L, localToday);
 
         // check account-age and data to determine available time-scale
         final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge, localToday, rawData);
@@ -104,7 +112,7 @@ public class TrendsProcessor {
         final List<TrendsData> data = getRelevantData(rawData, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
-            // TODO: until we have a better way to check for number of datapoints the account has....
+            // TODO: until we have a better way to check for number of data-points the account has....
             if (accountAge < MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS) {
                 LOGGER.debug("key=new-account-no-data account={} account_age={}", accountId, accountAge);
                 return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
@@ -329,7 +337,7 @@ public class TrendsProcessor {
     }
     private List<TrendsData> getRelevantData(final List<TrendsData> rawData, final DateTime localToday, final int days) {
         if (rawData.isEmpty()) {
-            return Collections.<TrendsData>emptyList();
+            return Collections.emptyList();
         }
 
         final DateTime queryStart = localToday.minusDays(days);
@@ -364,7 +372,7 @@ public class TrendsProcessor {
     @VisibleForTesting
     protected List<TimeScale> computeAvailableTimeScales(final int accountAge, final DateTime localToday, final List<TrendsData> dataList) {
         if (dataList.isEmpty()) {
-            return Collections.<TimeScale>emptyList();
+            return Collections.emptyList();
         }
 
         final List<TimeScale> timeScales = Lists.newArrayList();

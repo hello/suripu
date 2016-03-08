@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Created by ksg on 3/4/16
  */
-public class TestTimeScales {
+public class TimeScalesTests {
 
     private SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;

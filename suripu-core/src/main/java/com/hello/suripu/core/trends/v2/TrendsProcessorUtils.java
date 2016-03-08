@@ -107,8 +107,8 @@ public class TrendsProcessorUtils {
         int weeks = 0;
         for (final List<Float> oneWeek : Lists.partition(data, DateTimeConstants.DAYS_PER_WEEK)) {
             weeks++;
-            Optional<Integer> highlightedTitle = Optional.<Integer>absent();
-            List<String> titles = Collections.<String>emptyList();
+            Optional<Integer> highlightedTitle = Optional.absent();
+            List<String> titles = Collections.emptyList();
             if (weeks == 1) {
                 highlightedTitle = Optional.of(todayDOW - 1);
                 titles = English.DAY_OF_WEEK_NAMES;
