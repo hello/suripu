@@ -372,20 +372,16 @@ public class TrendsProcessor {
 
     @VisibleForTesting
     protected List<TimeScale> computeAvailableTimeScales(final int accountAge, final DateTime localToday, final List<TrendsData> dataList) {
-        if (dataList.isEmpty()) {
+        if (dataList.size() < ABSOLUTE_MIN_DATA_SIZE) {
             return Collections.emptyList();
         }
 
         final List<TimeScale> timeScales = Lists.newArrayList();
         for (final TimeScale scale : TimeScale.values()) {
             if (accountAge > scale.getVisibleAfterDays()) {
-                final List<TrendsData> data = getRelevantData(dataList, localToday, scale.getDays());
-                if (data.size() >= ABSOLUTE_MIN_DATA_SIZE) {
-                    timeScales.add(scale);
-                }
+                timeScales.add(scale);
             }
         }
-
         return timeScales;
     }
 
