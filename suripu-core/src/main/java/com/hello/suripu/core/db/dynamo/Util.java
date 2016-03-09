@@ -14,7 +14,6 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.db.responses.Response;
-import com.hello.suripu.core.db.responses.SingleItemDynamoDBResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,7 @@ public class Util {
         }
     }
 
-    public static SingleItemDynamoDBResponse getWithBackoff(final AmazonDynamoDB dynamoDB, final String tableName, final Map<String, AttributeValue> key) {
+    public static Response<Optional<Map<String, AttributeValue>>> getWithBackoff(final AmazonDynamoDB dynamoDB, final String tableName, final Map<String, AttributeValue> key) {
         GetItemResult result = null;
         int numAttempts = 0;
 
@@ -46,22 +45,22 @@ public class Util {
             try {
                 result = dynamoDB.getItem(tableName, key);
             } catch (ResourceNotFoundException rnfe) {
-                return new SingleItemDynamoDBResponse(Optional.<Map<String,AttributeValue>>absent(), Response.Status.FAILURE, Optional.of(rnfe));
+                return Response.failure(Optional.<Map<String,AttributeValue>>absent(), rnfe);
             } catch (ProvisionedThroughputExceededException ptee) {
                 if (numAttempts < 5) {
                     backoff(tableName, numAttempts);
                 } else {
                     LOGGER.error("error=ProvisionedThroughputExceededException tries={} status=aborted table={}",
                             numAttempts, tableName);
-                    return new SingleItemDynamoDBResponse(Optional.<Map<String,AttributeValue>>absent(), Response.Status.FAILURE, Optional.of(ptee));
+                    return Response.failure(Optional.<Map<String,AttributeValue>>absent(), ptee);
                 }
             }
         } while (result == null);
 
         if (result.getItem() == null) {
-            return new SingleItemDynamoDBResponse(Optional.<Map<String,AttributeValue>>absent(), Response.Status.FAILURE, Optional.<Exception>absent());
+            return Response.failure(Optional.<Map<String,AttributeValue>>absent());
         }
-        return new SingleItemDynamoDBResponse(Optional.of(result.getItem()), Response.Status.SUCCESS, Optional.<Exception>absent());
+        return Response.success(Optional.of(result.getItem()));
     }
 
 

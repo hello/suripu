@@ -2,10 +2,10 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -151,7 +151,8 @@ public class BedLightDuration {
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         //Grab all night-time data for past week
-        final DeviceDataResponse response = deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, LIGHT_ON_LEVEL.intValue() , queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
+        final Response<ImmutableList<DeviceData>> response = deviceDataDAO.getLightByBetweenHourDateByTS(
+                accountId, deviceId, LIGHT_ON_LEVEL.intValue() , queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR_LOCAL, NIGHT_END_HOUR_LOCAL);
         if (response.status == Response.Status.SUCCESS) {
             return response.data;
         }

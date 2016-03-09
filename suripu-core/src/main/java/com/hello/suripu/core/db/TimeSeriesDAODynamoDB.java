@@ -26,7 +26,6 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
-import com.hello.suripu.core.db.responses.MultiItemDynamoDBResponse;
 import com.hello.suripu.core.db.responses.Response;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -267,7 +266,7 @@ public abstract class TimeSeriesDAODynamoDB<T> {
     }
 
     //region Query
-    private MultiItemDynamoDBResponse query(final QueryRequest originalQueryRequest) {
+    private Response<List<Map<String, AttributeValue>>> query(final QueryRequest originalQueryRequest) {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
 
         Map<String, AttributeValue> lastEvaluatedKey = null;
@@ -288,7 +287,7 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                     logger().warn("exception=ProvisionedThroughputExceededException method=query table={} {}",
                             queryRequest.getTableName(),
                             attributeValueMapToLogString(queryRequest.getExpressionAttributeValues()));
-                    return new MultiItemDynamoDBResponse(results, Response.Status.PARTIAL_RESULTS, Optional.of(ptee));
+                    return Response.partial(results, ptee);
                 }
                 backoff(numAttempts);
                 continue;
@@ -297,7 +296,7 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 logger().error("Got ResourceNotFoundException while attempting to read from table {}; {}",
                         queryRequest.getTableName(),
                         rnfe);
-                return new MultiItemDynamoDBResponse(results, Response.Status.FAILURE, Optional.of(rnfe));
+                return Response.failure(results, rnfe);
             }
             final List<Map<String, AttributeValue>> items = queryResult.getItems();
 
@@ -312,23 +311,21 @@ public abstract class TimeSeriesDAODynamoDB<T> {
 
         } while (keepTrying && (numAttempts < maxQueryAttempts()));
 
-        final Response.Status status;
         if (lastEvaluatedKey != null) {
             logger().warn("Exceeded {} attempts while querying. Stopping with last evaluated key: {}",
                     maxQueryAttempts(), lastEvaluatedKey);
-            status = Response.Status.PARTIAL_RESULTS;
-        } else {
-            status = Response.Status.SUCCESS;
+            return Response.partial(results);
         }
 
-        return new MultiItemDynamoDBResponse(results, status, Optional.<Exception>absent());
+        return Response.success(results);
+
     }
 
-    private MultiItemDynamoDBResponse query(final String tableName,
-                                            final String keyConditionExpression,
-                                            final Collection<? extends Attribute> targetAttributes,
-                                            final Optional<String> filterExpression,
-                                            final Map<String, AttributeValue> filterAttributeValues)
+    private Response<List<Map<String, AttributeValue>>> query(final String tableName,
+                                                              final String keyConditionExpression,
+                                                              final Collection<? extends Attribute> targetAttributes,
+                                                              final Optional<String> filterExpression,
+                                                              final Map<String, AttributeValue> filterAttributeValues)
     {
         final Map<String, String> expressionAttributeNames = Expressions.expressionAttributeNames(targetAttributes);
         final String projectionExpression = Expressions.projectionExpression(targetAttributes);
@@ -363,7 +360,7 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 .withScanIndexForward(false)
                 .withLimit(1);
 
-        final MultiItemDynamoDBResponse response = query(queryRequest);
+        final Response<List<Map<String, AttributeValue>>> response = query(queryRequest);
         if (response.status == Response.Status.FAILURE || response.data.isEmpty()) {
             return Optional.absent();
         }
@@ -371,21 +368,21 @@ public abstract class TimeSeriesDAODynamoDB<T> {
         return Optional.of(response.data.get(0));
     }
 
-    protected MultiItemDynamoDBResponse queryTables(final Iterable<String> tableNames,
-                                                    final Expression keyConditionExpression,
-                                                    final Collection<? extends Attribute> attributes)
+    protected Response<List<Map<String, AttributeValue>>> queryTables(final Iterable<String> tableNames,
+                                                                      final Expression keyConditionExpression,
+                                                                      final Collection<? extends Attribute> attributes)
     {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
         final String keyCondition = keyConditionExpression.expressionString();
         for (final String table: tableNames) {
-            final MultiItemDynamoDBResponse response = query(table, keyCondition, attributes, Optional.<String>absent(), keyConditionExpression.expressionAttributeValues());
+            final Response<List<Map<String, AttributeValue>>> response = query(table, keyCondition, attributes, Optional.<String>absent(), keyConditionExpression.expressionAttributeValues());
             if (response.status == Response.Status.SUCCESS) {
                 results.addAll(response.data);
             } else {
-                return new MultiItemDynamoDBResponse(results, response.status, response.exception);
+                return Response.into(results, response);
             }
         }
-        return new MultiItemDynamoDBResponse(results, Response.Status.SUCCESS, Optional.<Exception>absent());
+        return Response.success(results);
     }
 
     private ImmutableMap<String,AttributeValue> getAllAttributeValues(final Expression keyConditionExpression,
@@ -397,24 +394,25 @@ public abstract class TimeSeriesDAODynamoDB<T> {
                 .build();
     }
 
-    protected MultiItemDynamoDBResponse queryTables(final Iterable<String> tableNames,
-                                                    final Expression keyConditionExpression,
-                                                    final Expression filterExpression,
-                                                    final Collection<? extends Attribute> attributes)
+    protected Response<List<Map<String, AttributeValue>>> queryTables(final Iterable<String> tableNames,
+                                                                      final Expression keyConditionExpression,
+                                                                      final Expression filterExpression,
+                                                                      final Collection<? extends Attribute> attributes)
     {
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
         final String keyCondition = keyConditionExpression.expressionString();
         final String filterCondition = filterExpression.expressionString();
         final Map<String,AttributeValue> attributeValues = getAllAttributeValues(keyConditionExpression, filterExpression);
         for (final String table: tableNames) {
-            final MultiItemDynamoDBResponse response = query(table, keyCondition, attributes, Optional.of(filterCondition), attributeValues);
+            final Response<List<Map<String, AttributeValue>>> response = query(
+                    table, keyCondition, attributes, Optional.of(filterCondition), attributeValues);
             if (response.status == Response.Status.SUCCESS) {
                 results.addAll(response.data);
             } else {
-                return new MultiItemDynamoDBResponse(results, response.status, response.exception);
+                return Response.into(results, response);
             }
         }
-        return new MultiItemDynamoDBResponse(results, Response.Status.SUCCESS, Optional.<Exception>absent());
+        return Response.success(results);
     }
     //endregion
 
