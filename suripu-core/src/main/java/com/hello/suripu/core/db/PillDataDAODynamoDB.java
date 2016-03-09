@@ -18,8 +18,7 @@ import com.google.common.collect.Maps;
 import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
-import com.hello.suripu.core.db.responses.DynamoDBResponse;
-import com.hello.suripu.core.models.DeviceStatus;
+import com.hello.suripu.core.db.responses.MultiItemDynamoDBResponse;
 import com.hello.suripu.core.models.TrackerMotion;
 import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
@@ -95,6 +94,11 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         }
         public String shortName() {
             return name;
+        }
+
+        @Override
+        public String type() {
+            return type;
         }
     }
 
@@ -320,7 +324,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
                                                  final String externalPillId,
                                                  final DateTime queryDateTimeUTC) {
         // add two minutes for query time upper bound.
-        final DynamoDBResponse response = getItemsBetweenTS(accountId, queryDateTimeUTC, queryDateTimeUTC.plusMinutes(2), Optional.of(externalPillId));
+        final MultiItemDynamoDBResponse response = getItemsBetweenTS(accountId, queryDateTimeUTC, queryDateTimeUTC.plusMinutes(2), Optional.of(externalPillId));
         final ImmutableList<TrackerMotion> items = ImmutableList.copyOf(attributeMapsToPillDataList(response.data));
 
         if (items.isEmpty()) {
@@ -338,10 +342,10 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         return dataList;
     }
 
-    private DynamoDBResponse getItemsBetweenTS(final long accountId,
-                                               final DateTime startTimestampUTC,
-                                               final DateTime endTimestampUTC,
-                                               final Optional<String> optionalExternalPillId) {
+    private MultiItemDynamoDBResponse getItemsBetweenTS(final long accountId,
+                                                        final DateTime startTimestampUTC,
+                                                        final DateTime endTimestampUTC,
+                                                        final Optional<String> optionalExternalPillId) {
 
         // aid = accountId, ts >= start, ts <= end
         // with pill_id == "", there is no need to minus 1 minute from the endTimestamp
@@ -359,7 +363,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
                         getRangeKey(queryEndTimestampUTC, externalPillId)));
 
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        final DynamoDBResponse response = queryTables(
+        final MultiItemDynamoDBResponse response = queryTables(
                 getTableNames(startTimestampUTC, queryEndTimestampUTC),
                 keyConditionExpression,
                 TARGET_ATTRIBUTES);
@@ -367,13 +371,13 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         for (final Map<String, AttributeValue> result : response.data) {
             results.add(result);
         }
-        return new DynamoDBResponse(results, response.status, response.exception);
+        return new MultiItemDynamoDBResponse(results, response.status, response.exception);
     }
 
-    private DynamoDBResponse getItemsBetweenLocalTS(final long accountId,
-                                               final DateTime startLocalTime,
-                                               final DateTime endLocalTime,
-                                               final Optional<String> optionalExternalPillId) {
+    private MultiItemDynamoDBResponse getItemsBetweenLocalTS(final long accountId,
+                                                             final DateTime startLocalTime,
+                                                             final DateTime endLocalTime,
+                                                             final Optional<String> optionalExternalPillId) {
         // aid = accountId, lutcts >= startLocal, lutcts <= endLocal (note, inclusive)
         final DateTime startTimestampUTC = startLocalTime.minusDays(1).minusMinutes(1);
         final DateTime endTimestampUTC = endLocalTime.plusDays(1).plusMinutes(1);
@@ -394,7 +398,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
                 dateTimeToAttributeValue(startLocalTime),
                 dateTimeToAttributeValue(endLocalTime));
 
-        final DynamoDBResponse response = queryTables(getTableNames(startTimestampUTC, endTimestampUTC),
+        final MultiItemDynamoDBResponse response = queryTables(getTableNames(startTimestampUTC, endTimestampUTC),
                 keyConditionExpression,
                 filterExpression,
                 TARGET_ATTRIBUTES);
@@ -403,14 +407,14 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         for (final Map<String, AttributeValue> result : response.data) {
             results.add(result);
         }
-        return new DynamoDBResponse(results, response.status, response.exception);
+        return new MultiItemDynamoDBResponse(results, response.status, response.exception);
     }
 
     //region query methods mirroring TrackerMotionDAO
     public ImmutableList<TrackerMotion> getBetween(final long accountId,
                                                    final DateTime startTimestampUTC,
                                                    final DateTime endTimestampUTC) {
-        final DynamoDBResponse response = getItemsBetweenTS(accountId, startTimestampUTC, endTimestampUTC, Optional.<String>absent());
+        final MultiItemDynamoDBResponse response = getItemsBetweenTS(accountId, startTimestampUTC, endTimestampUTC, Optional.<String>absent());
         return ImmutableList.copyOf(attributeMapsToPillDataList(response.data));
     }
 
@@ -418,7 +422,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
                                                    final DateTime startTimestampUTC,
                                                    final DateTime endTimestampUTC,
                                                    final String ExternalPillId) {
-        final DynamoDBResponse response = getItemsBetweenTS(accountId, startTimestampUTC, endTimestampUTC, Optional.of(ExternalPillId));
+        final MultiItemDynamoDBResponse response = getItemsBetweenTS(accountId, startTimestampUTC, endTimestampUTC, Optional.of(ExternalPillId));
         return ImmutableList.copyOf(attributeMapsToPillDataList(response.data));
     }
 
@@ -426,14 +430,14 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
     public ImmutableList<TrackerMotion>  getBetweenLocalUTC(final long accountId,
                                                             final DateTime startLocalTime,
                                                             final DateTime endLocalTime) {
-        final DynamoDBResponse response = getItemsBetweenLocalTS(accountId, startLocalTime, endLocalTime, Optional.<String>absent());
+        final MultiItemDynamoDBResponse response = getItemsBetweenLocalTS(accountId, startLocalTime, endLocalTime, Optional.<String>absent());
         return ImmutableList.copyOf(attributeMapsToPillDataList(response.data));
     }
 
     public Integer getDataCountBetweenLocalUTC(final long accountId,
                                                final DateTime startLocalTime,
                                                final DateTime endLocalTime) {
-        final DynamoDBResponse response = getItemsBetweenLocalTS(accountId, startLocalTime, endLocalTime, Optional.<String>absent());
+        final MultiItemDynamoDBResponse response = getItemsBetweenLocalTS(accountId, startLocalTime, endLocalTime, Optional.<String>absent());
         return response.data.size();
     }
 
@@ -475,7 +479,7 @@ public class PillDataDAODynamoDB extends TimeSeriesDAODynamoDB<TrackerMotion> im
         }
 
         // Getting the absolute most recent didn't work, so try querying relevant tables.
-        final DynamoDBResponse response = queryTables(getTableNames(startTime, now), keyConditionExpression, TARGET_ATTRIBUTES);
+        final MultiItemDynamoDBResponse response = queryTables(getTableNames(startTime, now), keyConditionExpression, TARGET_ATTRIBUTES);
 
         // Iterate through results in reverse order (most recent first)
         for (final Map<String, AttributeValue> item: Lists.reverse(response.data)) {

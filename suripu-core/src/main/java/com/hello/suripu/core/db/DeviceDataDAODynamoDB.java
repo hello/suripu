@@ -15,7 +15,7 @@ import com.hello.suripu.core.db.dynamo.Attribute;
 import com.hello.suripu.core.db.dynamo.Expressions;
 import com.hello.suripu.core.db.dynamo.expressions.Expression;
 import com.hello.suripu.core.db.responses.DeviceDataResponse;
-import com.hello.suripu.core.db.responses.DynamoDBResponse;
+import com.hello.suripu.core.db.responses.MultiItemDynamoDBResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.DynamoDBItemAggregator;
@@ -113,6 +113,11 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
 
         public String shortName() {
             return name;
+        }
+
+        @Override
+        public String type() {
+            return type;
         }
     }
 
@@ -367,7 +372,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 Expressions.equals(DeviceDataAttribute.ACCOUNT_ID, toAttributeValue(accountId)),
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(start, externalDeviceId), getRangeKey(endExclusive, externalDeviceId)));
 
-        final DynamoDBResponse results = queryTables(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes);
+        final MultiItemDynamoDBResponse results = queryTables(getTableNames(start, endExclusive), keyConditionExpression, targetAttributes);
         final List<Map<String, AttributeValue>> filteredResults = Lists.newLinkedList();
         for (final Map<String, AttributeValue> item : results.data) {
             if (externalDeviceIdFromDDBItem(item).equals(externalDeviceId)) {
@@ -619,7 +624,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         }
 
         // Getting the absolute most recent didn't work, so try querying relevant tables.
-        final DynamoDBResponse response = queryTables(getTableNames(minTsLimit, maxTsLimit), keyConditionExpression, attributes);
+        final MultiItemDynamoDBResponse response = queryTables(getTableNames(minTsLimit, maxTsLimit), keyConditionExpression, attributes);
 
         // Iterate through results in reverse order (most recent first)
         for (final Map<String, AttributeValue> item: Lists.reverse(response.data)) {
@@ -647,7 +652,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 .add(attribute)
                 .addAll(BASE_ATTRIBUTES)
                 .build();
-        final DynamoDBResponse response = queryTables(getTableNames(startTime, endTime), keyConditionExp, attributes);
+        final MultiItemDynamoDBResponse response = queryTables(getTableNames(startTime, endTime), keyConditionExp, attributes);
         return new DynamoDBItemAggregator(response.data);
     }
 
@@ -706,7 +711,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 Expressions.between(DeviceDataAttribute.RANGE_KEY, getRangeKey(startTime, externalDeviceId), getRangeKey(endTime, externalDeviceId)));
 
         final List<DeviceData> results = Lists.newArrayList();
-        final DynamoDBResponse response = queryTables(getTableNames(startTime, endTime), keyConditionExp, filterExp, ALL_ATTRIBUTES);
+        final MultiItemDynamoDBResponse response = queryTables(getTableNames(startTime, endTime), keyConditionExp, filterExp, ALL_ATTRIBUTES);
         for (final Map<String, AttributeValue> result : response.data) {
             final DeviceData data = attributeMapToDeviceData(result);
             final int hourOfDay = data.localTime().getHourOfDay();
@@ -720,7 +725,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         return new DeviceDataResponse(ImmutableList.copyOf(results), response.status, response.exception);
     }
 
-    private DynamoDBResponse getItemsBetweenLocalTime(
+    private MultiItemDynamoDBResponse getItemsBetweenLocalTime(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime startUTCTime,
@@ -736,14 +741,14 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         final Expression filterExpression = Expressions.between(DeviceDataAttribute.LOCAL_UTC_TIMESTAMP, dateTimeToAttributeValue(startLocalTime), dateTimeToAttributeValue(endLocalTime));
 
         final List<Map<String, AttributeValue>> results = Lists.newArrayList();
-        final DynamoDBResponse response = queryTables(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, filterExpression, attributes);
+        final MultiItemDynamoDBResponse response = queryTables(getTableNames(startUTCTime, endUTCTime), keyConditionExpression, filterExpression, attributes);
         for (final Map<String, AttributeValue> result : response.data) {
             if (externalDeviceIdFromDDBItem(result).equals(externalDeviceId)) {
                 results.add(result);
             }
         }
 
-        return new DynamoDBResponse(results, response.status, response.exception);
+        return new MultiItemDynamoDBResponse(results, response.status, response.exception);
     }
 
     /**
@@ -765,7 +770,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                                                   final DateTime endLocalTime,
                                                   final Collection<DeviceDataAttribute> attributes)
     {
-        final DynamoDBResponse response = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
+        final MultiItemDynamoDBResponse response = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, attributes);
         ImmutableList<DeviceData> data = ImmutableList.copyOf(attributeMapsToDeviceDataList(response.data));
         return new DeviceDataResponse(data, response.status, response.exception);
     }
@@ -816,17 +821,17 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
         return new Response<>(ImmutableList.copyOf(aggregated), response.status, response.exception);
     }
 
-    private DynamoDBResponse getBetweenHourDateByTS(final Long accountId,
-                                                    final DeviceId deviceId,
-                                                    final DateTime startUTCTime,
-                                                    final DateTime endUTCTime,
-                                                    final DateTime startLocalTime,
-                                                    final DateTime endLocalTime,
-                                                    final int startHour,
-                                                    final int endHour,
-                                                    final boolean sameDay)
+    private MultiItemDynamoDBResponse getBetweenHourDateByTS(final Long accountId,
+                                                             final DeviceId deviceId,
+                                                             final DateTime startUTCTime,
+                                                             final DateTime endUTCTime,
+                                                             final DateTime startLocalTime,
+                                                             final DateTime endLocalTime,
+                                                             final int startHour,
+                                                             final int endHour,
+                                                             final boolean sameDay)
     {
-        final DynamoDBResponse response = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
+        final MultiItemDynamoDBResponse response = getItemsBetweenLocalTime(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, ALL_ATTRIBUTES);
         final ImmutableList.Builder<Map<String, AttributeValue>> filteredBuilder = new ImmutableList.Builder<>();
         for (final Map<String, AttributeValue> result: response.data) {
             final int hourOfDay = timestampFromDDBItem(result).plusMillis(DeviceDataAttribute.OFFSET_MILLIS.getInteger(result)).getHourOfDay();
@@ -835,7 +840,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                 filteredBuilder.add(result);
             }
         }
-        return new DynamoDBResponse(filteredBuilder.build(), response.status, response.exception);
+        return new MultiItemDynamoDBResponse(filteredBuilder.build(), response.status, response.exception);
     }
 
     /**
@@ -851,7 +856,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                                                             final int startHour,
                                                             final int endHour)
     {
-        final DynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
+        final MultiItemDynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, true);
         final ImmutableList<DeviceData> data = ImmutableList.copyOf(attributeMapsToDeviceDataList(response.data));
         return new DeviceDataResponse(data, response.status, response.exception);
     }
@@ -869,7 +874,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                                                      final int startHour,
                                                      final int endHour)
     {
-        final DynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
+        final MultiItemDynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, startUTCTime, endUTCTime, startLocalTime, endLocalTime, startHour, endHour, false);
         final ImmutableList<DeviceData> data = ImmutableList.copyOf(attributeMapsToDeviceDataList(response.data));
         return new DeviceDataResponse(data, response.status, response.exception);
     }
@@ -887,7 +892,7 @@ public class DeviceDataDAODynamoDB extends TimeSeriesDAODynamoDB<DeviceData> imp
                                                                            int startHour,
                                                                            int endHour,
                                                                            final Integer slotDuration) {
-        final DynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, start, end, startLocal, endLocal, startHour, endHour, false);
+        final MultiItemDynamoDBResponse response = getBetweenHourDateByTS(accountId, deviceId, start, end, startLocal, endLocal, startHour, endHour, false);
         final ImmutableList<DeviceData> data = ImmutableList.copyOf(aggregateDynamoDBItemsToDeviceData(response.data, slotDuration));
         return new DeviceDataResponse(data, response.status, response.exception);
     }
