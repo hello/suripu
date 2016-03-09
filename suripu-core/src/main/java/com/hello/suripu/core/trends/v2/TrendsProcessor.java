@@ -30,7 +30,7 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int ABSOLUTE_MIN_DATA_SIZE = 3;
+    public static final int ABSOLUTE_MIN_DATA_SIZE = 3;
     private static final int MIN_ACCOUNT_AGE = 3; // accounts that are less than 3 days old will not see graphs
     private static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
@@ -56,6 +56,10 @@ public class TrendsProcessor {
             this.mediumSleepInMinutes = mediumSleepInMinutes;
             this.soundSleepInMinutes = soundSleepInMinutes;
             this.sleepScore = sleepScore;
+        }
+
+        public Integer getScore() {
+            return this.sleepScore;
         }
     }
 
