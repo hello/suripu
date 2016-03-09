@@ -51,6 +51,9 @@ public class Response<T> {
         return create(data, Status.PARTIAL_RESULTS);
     }
 
+    /**
+     * Convert a Response of one type into type T, using data in the new Response and the exception/status from other.
+     */
     public static <T> Response<T> into(final T data, final Response other) {
         return new Response<>(data, other.status, other.exception);
     }
