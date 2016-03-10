@@ -2,8 +2,7 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
 import com.hello.suripu.core.models.Insights.InsightCard;
-import com.hello.suripu.core.models.Insights.Message.Text;
-import com.hello.suripu.core.models.Insights.Message.WorkMsgEN;
+import com.hello.suripu.core.models.Insights.Message.MarketingMsgEN;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -12,8 +11,7 @@ import org.joda.time.DateTimeZone;
  */
 public class Work {
     public static Optional<InsightCard> getMarketingInsights(final Long accountId) {
-        final Text text = WorkMsgEN.getWorkMarketing();
         final String categoryName = "Performance";
-        return Optional.of(new InsightCard(accountId, text.title, text.message, InsightCard.Category.WORK, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName, InsightCard.InsightType.BASIC));
+        return Optional.of(new InsightCard(accountId, MarketingMsgEN.WORK_TITLE, MarketingMsgEN.WORK_MSG, InsightCard.Category.WORK, InsightCard.TimePeriod.NONE, DateTime.now(DateTimeZone.UTC), categoryName, InsightCard.InsightType.BASIC));
     }
 }
