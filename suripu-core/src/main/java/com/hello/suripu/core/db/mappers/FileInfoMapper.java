@@ -22,7 +22,7 @@ public class FileInfoMapper implements ResultSetMapper<FileInfo> {
                 .withUri(resultSet.getString("uri"))
                 .withPreviewUri(resultSet.getString("preview_uri"))
                 .withName(resultSet.getString("name"))
-                .withFirmwareVersion(resultSet.getLong("firmware_version"))
+                .withFirmwareVersion(resultSet.getInt("firmware_version"))
                 .withIsPublic(resultSet.getBoolean("is_public"))
                 .build();
     }

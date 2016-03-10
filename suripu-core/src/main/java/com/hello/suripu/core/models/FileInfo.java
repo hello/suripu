@@ -27,7 +27,7 @@ public class FileInfo {
 
     public final String name;
 
-    public final Long firmwareVersion;
+    public final Integer firmwareVersion;
 
     final Boolean isPublic;
 
@@ -56,7 +56,7 @@ public class FileInfo {
         private String uri;
         private String previewUri;
         private String name;
-        private Long firmwareVersion;
+        private Integer firmwareVersion;
         private Boolean isPublic;
 
         private Builder() {
@@ -97,7 +97,7 @@ public class FileInfo {
             return this;
         }
 
-        public Builder withFirmwareVersion(Long val) {
+        public Builder withFirmwareVersion(Integer val) {
             firmwareVersion = val;
             return this;
         }

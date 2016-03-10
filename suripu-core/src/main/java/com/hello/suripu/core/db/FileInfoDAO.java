@@ -21,7 +21,7 @@ public abstract class FileInfoDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileInfoDAO.class);
 
-    private static final Long OLD_FW_VERSION_CUTOFF = 100000000L;
+    protected static final Integer OLD_FW_VERSION_CUTOFF = 100000000;
 
     @SqlQuery("SELECT * FROM file_info WHERE id=:id LIMIT 1;")
     @SingleValueResult(FileInfo.class)
@@ -33,15 +33,16 @@ public abstract class FileInfoDAO {
             "FROM file_info AS fi " +
             "LEFT JOIN sense_file_info AS sfi " +
             "ON fi.id=sfi.file_info_id " +
-            "WHERE (is_public AND firmware_version <= :firmware_version) OR sense_id=:sense_id;")
+            "WHERE (is_public AND firmware_version <= :firmware_version) OR sense_id=:sense_id " +
+            "ORDER BY sort_key;")
     protected abstract List<FileInfo> getAllForFirmwareVersionAndSenseId(
-            @Bind("firmware_version") final Long firmwareVersion,
+            @Bind("firmware_version") final Integer firmwareVersion,
             @Bind("sense_id") final String senseId);
 
 
 
-    public List<FileInfo> getAll(final Long firmwareVersion, final String senseId) {
-        if (firmwareVersion > OLD_FW_VERSION_CUTOFF) {
+    public List<FileInfo> getAll(final Integer firmwareVersion, final String senseId) {
+        if (firmwareVersion >= OLD_FW_VERSION_CUTOFF) {
             return Lists.newArrayList();
         }
         return getAllForFirmwareVersionAndSenseId(firmwareVersion, senseId);
