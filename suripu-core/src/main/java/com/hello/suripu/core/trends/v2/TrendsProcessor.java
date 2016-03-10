@@ -58,9 +58,8 @@ public class TrendsProcessor {
             this.sleepScore = sleepScore;
         }
 
-        public Integer getScore() {
-            return this.sleepScore;
-        }
+        public Integer getScore() { return this.sleepScore; }
+        public Integer getDuration() { return this.sleepDurationInMinutes; }
     }
 
     public TrendsProcessor(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountDAO accountDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
@@ -219,7 +218,8 @@ public class TrendsProcessor {
      * @param graphTitle name of the graph
      * @return Optional graph
      */
-    private Optional<Graph> getDaysGraph(final List<TrendsData> data,
+    @VisibleForTesting
+    protected Optional<Graph> getDaysGraph(final List<TrendsData> data,
                                      final TimeScale timeScale,
                                      final GraphType graphType,
                                      final DataType dataType,
