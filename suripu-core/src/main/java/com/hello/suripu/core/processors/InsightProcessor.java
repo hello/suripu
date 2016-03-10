@@ -26,17 +26,26 @@ import com.hello.suripu.core.preferences.PreferenceName;
 import com.hello.suripu.core.preferences.TemperatureUnit;
 import com.hello.suripu.core.processors.insights.BedLightDuration;
 import com.hello.suripu.core.processors.insights.BedLightIntensity;
+import com.hello.suripu.core.processors.insights.Drive;
+import com.hello.suripu.core.processors.insights.Eat;
 import com.hello.suripu.core.processors.insights.Humidity;
 import com.hello.suripu.core.processors.insights.IntroductionInsights;
+import com.hello.suripu.core.processors.insights.Learn;
 import com.hello.suripu.core.processors.insights.LightData;
 import com.hello.suripu.core.processors.insights.Lights;
+import com.hello.suripu.core.processors.insights.Love;
 import com.hello.suripu.core.processors.insights.Particulates;
 import com.hello.suripu.core.processors.insights.PartnerMotionInsight;
+import com.hello.suripu.core.processors.insights.Play;
+import com.hello.suripu.core.processors.insights.Run;
 import com.hello.suripu.core.processors.insights.SleepMotion;
+import com.hello.suripu.core.processors.insights.SleepScore;
 import com.hello.suripu.core.processors.insights.SoundDisturbance;
+import com.hello.suripu.core.processors.insights.Swim;
 import com.hello.suripu.core.processors.insights.TemperatureHumidity;
 import com.hello.suripu.core.processors.insights.WakeStdDevData;
 import com.hello.suripu.core.processors.insights.WakeVariance;
+import com.hello.suripu.core.processors.insights.Work;
 import com.hello.suripu.core.util.DateTimeUtil;
 import com.librato.rollout.RolloutClient;
 
@@ -344,20 +353,44 @@ public class InsightProcessor {
             case BED_LIGHT_INTENSITY_RATIO:
                 insightCardOptional = BedLightIntensity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
                 break;
+            case DRIVE:
+                insightCardOptional = Drive.getMarketingInsights(accountId);
+                break;
+            case EAT:
+                insightCardOptional = Eat.getMarketingInsights(accountId);
+                break;
             case HUMIDITY:
                 insightCardOptional = Humidity.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, sleepStatsDAODynamoDB);
+                break;
+            case LEARN:
+                insightCardOptional = Learn.getMarketingInsights(accountId);
                 break;
             case LIGHT:
                 insightCardOptional = Lights.getInsights(accountId, deviceId, deviceDataInsightQueryDAO, lightData, sleepStatsDAODynamoDB);
                 break;
+            case LOVE:
+                insightCardOptional = Love.getMarketingInsights(accountId);
+                break;
             case PARTNER_MOTION:
                 insightCardOptional = PartnerMotionInsight.getInsights(accountId, deviceReadDAO, sleepStatsDAODynamoDB);
+                break;
+            case PLAY:
+                insightCardOptional = Play.getMarketingInsights(accountId);
+                break;
+            case RUN:
+                insightCardOptional = Run.getMarketingInsights(accountId);
                 break;
             case SLEEP_QUALITY:
                 insightCardOptional = SleepMotion.getInsights(accountId, deviceId, trendsInsightsDAO, sleepStatsDAODynamoDB, false);
                 break;
+            case SLEEP_SCORE:
+                insightCardOptional = SleepScore.getMarketingInsights(accountId);
+                break;
             case SOUND:
                 insightCardOptional = SoundDisturbance.getInsights(accountId, deviceId, deviceDataDAO, sleepStatsDAODynamoDB);
+                break;
+            case SWIM:
+                insightCardOptional = Swim.getMarketingInsights(accountId);
                 break;
             case TEMPERATURE:
                 final TemperatureUnit tempUnit = this.getTemperatureUnitString(accountId);
@@ -366,6 +399,9 @@ public class InsightProcessor {
             case WAKE_VARIANCE:
                 final DateTime queryEndDate = DateTime.now().withTimeAtStartOfDay();
                 insightCardOptional = WakeVariance.getInsights(sleepStatsDAODynamoDB, accountId, wakeStdDevData, queryEndDate, DAYS_ONE_WEEK);
+                break;
+            case WORK:
+                insightCardOptional = Work.getMarketingInsights(accountId);
                 break;
         }
 

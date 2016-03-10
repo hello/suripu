@@ -408,3 +408,67 @@ UPDATE info_insight_cards SET text=
 
 While these tips can be useful to anyone trying to improve their sleep, you''ll get the most benefit from learning the specific factors that affect your sleep as an individual.  Soon, you''ll begin to see personalized Insights based on your own sleep patterns'
 WHERE category='sleep_hygiene';
+
+--- jyfan marketing insights 2016-03-09
+ALTER TYPE insight_category ADD VALUE 'drive';
+ALTER TYPE insight_category ADD VALUE 'eat';
+ALTER TYPE insight_category ADD VALUE 'learn';
+ALTER TYPE insight_category ADD VALUE 'love';
+ALTER TYPE insight_category ADD VALUE 'play';
+ALTER TYPE insight_category ADD VALUE 'run';
+ALTER TYPE insight_category ADD VALUE 'swim';
+ALTER TYPE insight_category ADD VALUE 'work';
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('drive','When You''re Tired, Stay Off the Road','Drowsy Driving',
+'Falling asleep while driving can have disastrous consequences for you and others, but you might not even realize you''re that tired until it''s too late. If you start to feel sleepy, have difficulty focusing, begin daydreaming, or find yourself drifting from your lane, find a safe place to stop and rest. Even if you feel like you can power through it, you might be closer to falling asleep than you think.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('eat','A Lack of Sleep Makes You Hungry','Appetite',
+'Sleep deprivation leads to an increase in ghrelin, the hormone that makes you feel hunger. At the same time, it causes a decrease in leptin, the hormone that lets you know to stop eating. As a result of this imbalance, you''ll stay hungry even as you keep eating, past the point where you''d otherwise feel satisfied. Good sleep keeps these hormones properly balanced, helping you keep your hunger in check.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('learn','Remember to Sleep Well','Memory',
+'Your brain is creating memories every moment that you''re awake, but they''re raw and fragile. While you''re in deep sleep, these memories are inventoried and catalogued. Some less-important memories are discarded while others are retained - and in some cases, even strengthened.
+
+While you''re in REM sleep, your brain then works to connect related memories together, sometimes with unexpected results. If you''ve ever woken up and suddenly had new insight into a problem or question that''s been bothering you, this might be why.
+
+A lack of sleep not only prevents your brain from performing these necessary tasks, but it can also disrupt your ability to form new memories in the first place.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('love','Empathy and Problem Solving','Relationships',
+'A study that investigated how sleep impacts conflict resolution found that sleep deprivation decreases empathic accuracy — meaning that those who went without sleep were unable to accurately judge how their partner was feeling. Those that slept well were better in tune with the feelings of their partners. Simply put, good sleep makes it easier to resolve conflicts, which helps you build and maintain strong relationships.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('play','Get Prepped for Game Time','Performance',
+'A Stanford University study found that over a 25-year period, West Coast NFL teams won over East Coast teams 63% of the time, by an average of 14 points. In the 37% of the time the East Coast team won, it was by only a 9 point average.
+
+Monday Night Football games begin at 8:30 eastern time, no matter where the game happens. This means that for West Coast players, it''s a full three hours earlier, and their bodies are gearing up for another burst of energy.  Meanwhile, East Coast teams are fighting against their body as it tries to wind them down for sleep.
+
+The lesson? Whether you''re playing ball or not, sleeping well and sticking with your natural circadian rhythm will keep you performing at your best.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('run','Sleeping Better Keeps You Moving','Performance',
+'Food that''s high in carbohydrates is an important part of a healthy diet, but good sleep is crucial for getting the most out of them. When you digest carbohydrates, they are converted into glycogen, which is the primary source of energy for your muscles.
+
+When you''re sleep deprived, your body''s ability to store this energy is lessened, and your athletic performance can take a significant hit. Even if you load up on extra carbohydrates, you’ll find that you run through your available glycogen much faster than you would on a good night''s sleep.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('swim','Keep Swimming','Performance',
+'Numerous studies have shown a clear link between sleep deprivation and athletic performance. Without a good night''s sleep to prep you before a workout or competition, you''re more likely to get fatigued faster, and suffer from poorer reaction time.
+
+While these effects can be detrimental to your exercise regimen, they can also affect you during other activities, too. Sleeping well is the best way to ensure you''re ready for whatever the day throws at you.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('work','Keep Up the Good Work','Performance',
+'Insufficient sleep, or poor quality sleep, can impair your cognitive functions, making it harder to perform at your peak.
+
+From affecting your ability to make split-second decisions to decreasing your attention span, sleep deprivation can have a significant impact on your work. This is especially important if your work involves operating a vehicle or other machinery, as a slowed response time can have dangerous consequences.');
+
+INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
+('sleep_score','Improving Your Sleep Score','Sleep Score',
+'Your Sleep Score is generated by analyzing everything about your night, from sleep duration, sleep depth, room conditions, and more.
+
+In addition to getting the right amount of sleep, you''ll want to make sure your room conditions are optimal. Check them a bit before sleep so that you can make any adjustments and ensure your room is in the best state it can be for a great night’s sleep.
+
+Also check your Sleep Timeline to see if you''re moving around during the night, or if you aren''t reaching deep sleep often enough. If you aren''t sleeping as well as you could be even with an optimal sleeping environment, remember that things like caffeine intake or your stress level can cause agitated sleep, and affect your Sleep Score.');
