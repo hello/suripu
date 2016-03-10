@@ -420,7 +420,7 @@ ALTER TYPE insight_category ADD VALUE 'swim';
 ALTER TYPE insight_category ADD VALUE 'work';
 
 INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
-('drive','When You''re Tired, Stay Off the Road','Drowsy Driving'
+('drive','When You''re Tired, Stay Off the Road','Drowsy Driving',
 'Falling asleep while driving can have disastrous consequences for you and others, but you might not even realize you''re that tired until it''s too late. If you start to feel sleepy, have difficulty focusing, begin daydreaming, or find yourself drifting from your lane, find a safe place to stop and rest. Even if you feel like you can power through it, you might be closer to falling asleep than you think.');
 
 INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
