@@ -410,6 +410,15 @@ While these tips can be useful to anyone trying to improve their sleep, you''ll 
 WHERE category='sleep_hygiene';
 
 --- jyfan marketing insights 2016-03-09
+ALTER TYPE insight_category ADD VALUE 'drive';
+ALTER TYPE insight_category ADD VALUE 'eat';
+ALTER TYPE insight_category ADD VALUE 'learn';
+ALTER TYPE insight_category ADD VALUE 'love';
+ALTER TYPE insight_category ADD VALUE 'play';
+ALTER TYPE insight_category ADD VALUE 'run';
+ALTER TYPE insight_category ADD VALUE 'swim';
+ALTER TYPE insight_category ADD VALUE 'work';
+
 INSERT INTO info_insight_cards (category, title, category_name, text) VALUES
 ('drive','When You''re Tired, Stay Off the Road','Drowsy Driving'
 'Falling asleep while driving can have disastrous consequences for you and others, but you might not even realize you''re that tired until it''s too late. If you start to feel sleepy, have difficulty focusing, begin daydreaming, or find yourself drifting from your lane, find a safe place to stop and rest. Even if you feel like you can power through it, you might be closer to falling asleep than you think.');
