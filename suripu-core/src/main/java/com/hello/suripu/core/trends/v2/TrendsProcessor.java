@@ -32,7 +32,7 @@ public class TrendsProcessor {
 
     public static final int ABSOLUTE_MIN_DATA_SIZE = 3;
     private static final int MIN_ACCOUNT_AGE = 3; // accounts that are less than 3 days old will not see graphs
-    private static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
+    public static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
@@ -90,18 +90,19 @@ public class TrendsProcessor {
             optionalAccountCreated = Optional.absent();
         }
 
-        // get raw data
-        final List<TrendsData> rawData = getRawData(accountId, localToday);
+        // get raw data (todo)
+        // final List<TrendsData> rawData = getAllData(accountId, localToday);
+        final List<TrendsData> data = getRawData(accountId, localToday, timescale.getDays());
 
         LOGGER.debug("key=get-trends-graph account={} timescale={}, account_age={} local_today={}",
                 accountId, timescale.toString(), accountAge, localToday);
 
-        return getGraphs(accountId, accountAge, optionalAccountCreated, localToday, timescale, rawData);
+        return getGraphs(accountId, accountAge, optionalAccountCreated, localToday, timescale, data);
     }
 
     @VisibleForTesting
     protected TrendsResult getGraphs(final Long accountId, final Integer accountAge, final Optional<DateTime> optionalAccountCreated,
-                                     final DateTime localToday, final TimeScale timescale, final List<TrendsData> rawData) {
+                                     final DateTime localToday, final TimeScale timescale, final List<TrendsData> data) {
 
         // accounts will start seeing graphs on 4th day of account-creation
         if (accountAge <= MIN_ACCOUNT_AGE) {
@@ -109,11 +110,11 @@ public class TrendsProcessor {
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
 
-        // check account-age and data to determine available time-scale
-        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge, localToday, rawData);
+        // check account-age and data to determine available time-scale (todo: use New method)
+        final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
-        // get relevant subset of data
-        final List<TrendsData> data = getRelevantData(rawData, localToday, timescale.getDays());
+        // get relevant subset of data (todo)
+        //final List<TrendsData> data = getRelevantData(rawData, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             // TODO: until we have a better way to check for number of data-points the account has....
@@ -319,7 +320,28 @@ public class TrendsProcessor {
         return Optional.of(graph);
     }
 
-    private List<TrendsData> getRawData(final Long accountId, final DateTime localToday) {
+    private List<TrendsData> getRawData(final Long accountId, final DateTime localToday, final int days) {
+        final DateTime queryStart = localToday.minusDays(days);
+
+        final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(accountId,
+                DateTimeUtil.dateToYmdString(queryStart),
+                DateTimeUtil.dateToYmdString(localToday));
+
+        final List<TrendsData> results = Lists.newArrayList();
+        for (final AggregateSleepStats stat : rawData) {
+            if (stat.sleepStats.sleepDurationInMinutes >= MIN_VALID_SLEEP_DURATION ) {
+                results.add(new TrendsData(stat.dateTime,
+                        stat.sleepStats.sleepDurationInMinutes,
+                        stat.sleepStats.lightSleepDurationInMinutes,
+                        stat.sleepStats.mediumSleepDurationInMinutes,
+                        stat.sleepStats.soundSleepDurationInMinutes,
+                        stat.sleepScore));
+            }
+        }
+        return results;
+    }
+    // not-used (todo)
+    private List<TrendsData> getAllData(final Long accountId, final DateTime localToday) {
         // always fetch the maximum possible number of days
         final DateTime queryStart = localToday.minusDays(TimeScale.LAST_3_MONTHS.getDays());
 
@@ -375,7 +397,19 @@ public class TrendsProcessor {
     }
 
     @VisibleForTesting
-    protected List<TimeScale> computeAvailableTimeScales(final int accountAge, final DateTime localToday, final List<TrendsData> dataList) {
+    protected List<TimeScale> computeAvailableTimeScales(final int accountAge) {
+        final List<TimeScale> timeScales = Lists.newArrayList();
+        for (final TimeScale scale : TimeScale.values()) {
+            if (accountAge > scale.getVisibleAfterDays()) {
+                timeScales.add(scale);
+            }
+        }
+
+        return timeScales;
+    }
+
+    // not used yet (todo)
+    protected List<TimeScale> computeAvailableTimeScalesNew(final int accountAge, final DateTime localToday, final List<TrendsData> dataList) {
         if (dataList.size() < ABSOLUTE_MIN_DATA_SIZE) {
             return Collections.emptyList();
         }
