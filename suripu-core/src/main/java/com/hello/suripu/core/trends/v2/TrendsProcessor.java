@@ -90,8 +90,6 @@ public class TrendsProcessor {
             optionalAccountCreated = Optional.absent();
         }
 
-        // get raw data (todo)
-        // final List<TrendsData> rawData = getAllData(accountId, localToday);
         final List<TrendsData> data = getRawData(accountId, localToday, timescale.getDays());
 
         LOGGER.debug("key=get-trends-graph account={} timescale={}, account_age={} local_today={}",
@@ -110,11 +108,9 @@ public class TrendsProcessor {
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
 
-        // check account-age and data to determine available time-scale (todo: use New method)
+        // check account-age and data to determine available time-scale
         final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
-        // get relevant subset of data (todo)
-        //final List<TrendsData> data = getRelevantData(rawData, localToday, timescale.getDays());
 
         if (data.isEmpty()) {
             // TODO: until we have a better way to check for number of data-points the account has....
@@ -340,45 +336,6 @@ public class TrendsProcessor {
         }
         return results;
     }
-    // not-used (todo)
-    private List<TrendsData> getAllData(final Long accountId, final DateTime localToday) {
-        // always fetch the maximum possible number of days
-        final DateTime queryStart = localToday.minusDays(TimeScale.LAST_3_MONTHS.getDays());
-
-        final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(accountId,
-                DateTimeUtil.dateToYmdString(queryStart),
-                DateTimeUtil.dateToYmdString(localToday));
-
-        final List<TrendsData> results = Lists.newArrayList();
-        for (final AggregateSleepStats stat : rawData) {
-            if (stat.sleepStats.sleepDurationInMinutes >= MIN_VALID_SLEEP_DURATION ) {
-                results.add(new TrendsData(stat.dateTime,
-                        stat.sleepStats.sleepDurationInMinutes,
-                        stat.sleepStats.lightSleepDurationInMinutes,
-                        stat.sleepStats.mediumSleepDurationInMinutes,
-                        stat.sleepStats.soundSleepDurationInMinutes,
-                        stat.sleepScore));
-            }
-        }
-        return results;
-    }
-    private List<TrendsData> getRelevantData(final List<TrendsData> rawData, final DateTime localToday, final int days) {
-        if (rawData.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        final DateTime queryStart = localToday.minusDays(days);
-        final List<TrendsData> relevantData = Lists.newArrayList();
-        for (final TrendsData data : rawData) {
-            if (data.dateTime.isBefore(queryStart)) {
-                continue;
-            }
-
-            relevantData.add(data);
-        }
-
-        return relevantData;
-    }
 
     private Integer getAccountMillisOffset(final Long accountId) {
         final Optional<TimeZoneHistory> optionalTimeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
@@ -405,21 +362,6 @@ public class TrendsProcessor {
             }
         }
 
-        return timeScales;
-    }
-
-    // not used yet (todo)
-    protected List<TimeScale> computeAvailableTimeScalesNew(final int accountAge, final DateTime localToday, final List<TrendsData> dataList) {
-        if (dataList.size() < ABSOLUTE_MIN_DATA_SIZE) {
-            return Collections.emptyList();
-        }
-
-        final List<TimeScale> timeScales = Lists.newArrayList();
-        for (final TimeScale scale : TimeScale.values()) {
-            if (accountAge > scale.getVisibleAfterDays()) {
-                timeScales.add(scale);
-            }
-        }
         return timeScales;
     }
 

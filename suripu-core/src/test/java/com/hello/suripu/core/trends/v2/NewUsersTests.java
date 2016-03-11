@@ -9,6 +9,7 @@ import com.hello.suripu.core.translations.English;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -200,7 +201,7 @@ public class NewUsersTests {
 
         final DateTime todayStartDate = new DateTime(DateTimeZone.UTC).withDate(2016, 2, 28).withTimeAtStartOfDay();
 
-        for (int accountAge = 5; accountAge <= 10; accountAge++) {
+        for (int accountAge = 3; accountAge <= 10; accountAge++) {
             for (int day = 0; day < DateTimeConstants.DAYS_PER_WEEK * 2; day++) {
                 final DateTime today = todayStartDate.plusDays(day);
                 final DateTime accountCreated = today.minusDays(accountAge - 1);
@@ -211,8 +212,11 @@ public class NewUsersTests {
                 boolean hasWeekDays = false;
                 boolean hasWeekEnd = false;
                 for (int age = startAge; age >= 1; age--) {
-                    final int durationMinutes = 100 + (age * 60);
                     final DateTime dataDate = today.minusDays(age);
+
+                    final int durationMinutes = 100 + (age * 60);
+
+                    // for annotation checks
                     if (dataDate.getDayOfWeek() < DateTimeConstants.SATURDAY) {
                         hasWeekDays = true;
                     } else if (dataDate.getDayOfWeek() >= DateTimeConstants.SATURDAY) {
@@ -251,13 +255,86 @@ public class NewUsersTests {
                 final int barHighlightTitle = DateTimeConstants.DAYS_PER_WEEK - 1;
                 assertThat(duration.sections.get(barNumSections - 1).highlightedTitle.get(), is(barHighlightTitle));
 
-                // check number of sections
+                // check number of sections, should always be 1 for week graph
+                assertThat(duration.sections.size(), is(1));
 
-                // check first non-null bar value (MISSING) and last value
+                final GraphSection section = duration.sections.get(0);
+
+                // check last title, should be Yesterday
+                final int yesterdayDOW = today.minusDays(1).getDayOfWeek();
+                final String yesterdayString = (yesterdayDOW == DateTimeConstants.SUNDAY) ? "sun" : English.DAY_OF_WEEK_NAMES.get(yesterdayDOW);
+                assertThat(section.titles.get(6).equalsIgnoreCase(yesterdayString), is(true));
+
+                // check first and last values
+                assertThat(section.values.size(), is(7));
+                assertThat(section.values.get(0), is(GraphSection.MISSING_VALUE));
+                assertThat(section.values.get(6), is((float) data.get(data.size()-1).getDuration()/60.0f));
             }
         }
-
     }
 
 
+    @Test
+    public void spencerDev570Case() {
+        // only two nights of data in the past week, should not have min/max highlights
+        final DateTime accountCreated = new DateTime(DateTimeZone.UTC).withDate(2016, 3, 9).withTimeAtStartOfDay(); // Wed
+
+        final List<TrendsProcessor.TrendsData> data = Lists.newArrayList(); // data in ascending order
+
+        // today = day 2, 03/10
+        data.add(new TrendsProcessor.TrendsData(accountCreated.plusDays(0), 500, 300, 100, 100, 50)); // day 1 03/09 night
+        DateTime localToday = accountCreated.plusDays(1);
+        int accountAge = Days.daysBetween(accountCreated, localToday).getDays() + 1;
+        TrendsResult trends = trendsProcessor.getGraphs(10L, accountAge, Optional.of(accountCreated), localToday, TimeScale.LAST_WEEK, data);
+
+        assertThat(trends.timeScales.size(), is(0));
+        assertThat(trends.graphs.size(), is(0));
+
+        // today = day 3, 03/11
+        localToday = accountCreated.plusDays(2);
+        data.add(new TrendsProcessor.TrendsData(accountCreated.plusDays(1), 501, 300, 100, 100, 51)); // day 2 03/10 night
+        accountAge = Days.daysBetween(accountCreated, localToday).getDays() + 1;
+        trends = trendsProcessor.getGraphs(10L, accountAge, Optional.of(accountCreated), localToday, TimeScale.LAST_WEEK, data);
+        assertThat(trends.timeScales.size(), is(0));
+        assertThat(trends.graphs.size(), is(0));
+
+        // today = day 4, 03/12, no data for 03/11
+        localToday = accountCreated.plusDays(3);
+        accountAge = Days.daysBetween(accountCreated, localToday).getDays() + 1;
+        trends = trendsProcessor.getGraphs(10L, accountAge, Optional.of(accountCreated), localToday, TimeScale.LAST_WEEK, data);
+        assertThat(trends.timeScales.size(), is(1));
+        assertThat(trends.graphs.size(), is(0));
+
+        // today = day 5, 03/13, no data for 03/12
+        localToday = accountCreated.plusDays(4);
+        accountAge = Days.daysBetween(accountCreated, localToday).getDays() + 1;
+        trends = trendsProcessor.getGraphs(10L, accountAge, Optional.of(accountCreated), localToday, TimeScale.LAST_WEEK, data);
+        assertThat(trends.timeScales.size(), is(1));
+        assertThat(trends.graphs.size(), is(0));
+
+        // today = day 6, 03/14, data for 03/13 Sun
+        localToday = accountCreated.plusDays(5);
+        data.add(new TrendsProcessor.TrendsData(accountCreated.plusDays(4), 504, 300, 100, 100, 54)); // day 2 03/10 night
+        accountAge = Days.daysBetween(accountCreated, localToday).getDays() + 1;
+        trends = trendsProcessor.getGraphs(10L, accountAge, Optional.of(accountCreated), localToday, TimeScale.LAST_WEEK, data);
+        assertThat(trends.timeScales.size(), is(1));
+        assertThat(trends.graphs.size(), is(3));
+
+        // today = day 7, 03/15, data for 03/14 mon night
+        localToday = accountCreated.plusDays(6);
+        data.add(new TrendsProcessor.TrendsData(accountCreated.plusDays(5), 505, 300, 100, 100, 55)); // day 2 03/10 night
+        accountAge = Days.daysBetween(accountCreated, localToday).getDays() + 1;
+        trends = trendsProcessor.getGraphs(10L, accountAge, Optional.of(accountCreated), localToday, TimeScale.LAST_WEEK, data);
+        assertThat(trends.timeScales.size(), is(1));
+        assertThat(trends.graphs.size(), is(3));
+
+        // today = day 8, 03/16, data for 03/15 night
+        localToday = accountCreated.plusDays(7);
+        data.add(new TrendsProcessor.TrendsData(accountCreated.plusDays(6), 505, 300, 100, 100, 55)); // day 2 03/10 night
+        accountAge = Days.daysBetween(accountCreated, localToday).getDays() + 1;
+        trends = trendsProcessor.getGraphs(10L, accountAge, Optional.of(accountCreated), localToday, TimeScale.LAST_WEEK, data);
+        assertThat(trends.timeScales.size(), is(2));
+        assertThat(trends.graphs.size(), is(3));
+
+    }
 }
