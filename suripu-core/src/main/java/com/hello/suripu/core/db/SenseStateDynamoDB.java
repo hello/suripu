@@ -1,32 +1,22 @@
 package com.hello.suripu.core.db;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
-import com.amazonaws.services.dynamodbv2.model.GetItemResult;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.core.db.dynamo.Attribute;
+import com.hello.suripu.core.db.dynamo.Util;
+import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.SenseStateAtTime;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,6 +59,11 @@ public class SenseStateDynamoDB {
         public String sanitizedName() {
             return toString();
         }
+
+        @Override
+        public String type() {
+            return type;
+        }
     }
 
     private Map<String, AttributeValue> getKey(final String senseId) {
@@ -81,39 +76,7 @@ public class SenseStateDynamoDB {
     }
 
     public CreateTableResult createTable(final Long readCapacityUnits, final Long writeCapacityUnits) {
-        // attributes
-        final SenseStateAttribute hashKey = SenseStateAttribute.SENSE_ID;
-        List<AttributeDefinition> attributes = ImmutableList.of(
-                new AttributeDefinition().withAttributeName(hashKey.shortName()).withAttributeType(hashKey.type)
-        );
-
-        // Keys
-        List<KeySchemaElement> keySchema = ImmutableList.of(
-                new KeySchemaElement().withAttributeName(hashKey.shortName()).withKeyType(KeyType.HASH)
-        );
-
-        // throughput provision
-        ProvisionedThroughput provisionedThroughput = new ProvisionedThroughput()
-                .withReadCapacityUnits(readCapacityUnits)
-                .withWriteCapacityUnits(writeCapacityUnits);
-
-        final CreateTableRequest request = new CreateTableRequest()
-                .withTableName(tableName)
-                .withAttributeDefinitions(attributes)
-                .withKeySchema(keySchema)
-                .withProvisionedThroughput(provisionedThroughput);
-
-        return dynamoDBClient.createTable(request);
-    }
-
-    private void backoff(int numberOfAttempts) {
-        try {
-            long sleepMillis = (long) Math.pow(2, numberOfAttempts) * 50;
-            LOGGER.warn("Throttled by DynamoDB, sleeping for {} ms.", sleepMillis);
-            Thread.sleep(sleepMillis);
-        } catch (InterruptedException e) {
-            LOGGER.error("Interrupted while attempting exponential backoff.");
-        }
+        return Util.createTable(dynamoDBClient, tableName, SenseStateAttribute.SENSE_ID, readCapacityUnits, writeCapacityUnits);
     }
 
     private SenseStateAtTime toSenseState(final Map<String, AttributeValue> item) {
@@ -140,29 +103,12 @@ public class SenseStateDynamoDB {
     public Optional<SenseStateAtTime> getState(final String senseId) {
         final Map<String, AttributeValue> key = getKey(senseId);
 
-        GetItemResult result = null;
-        int numAttempts = 0;
+        final Response<Optional<Map<String, AttributeValue>>> response = Util.getWithBackoff(dynamoDBClient, tableName, key);
 
-        do {
-            numAttempts++;
-            try {
-                result = dynamoDBClient.getItem(tableName, key);
-            } catch (ResourceNotFoundException rnfe) {
-                return Optional.absent();
-            } catch (ProvisionedThroughputExceededException ptee) {
-                if (numAttempts < 5) {
-                    backoff(numAttempts);
-                } else {
-                    LOGGER.error("error=ProvisionedThroughputExceededException tries=% status=aborted", numAttempts);
-                    return Optional.absent();
-                }
-            }
-        } while (result == null);
-
-        if (result.getItem() == null) {
-            return Optional.absent();
+        if (response.data.isPresent()) {
+            return Optional.of(toSenseState(response.data.get()));
         }
-        return Optional.of(toSenseState(result.getItem()));
+        return Optional.absent();
     }
 
     private AttributeValueUpdate putAction(final Long value) {

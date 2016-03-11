@@ -1,7 +1,6 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.collect.ImmutableList;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -12,7 +11,7 @@ import org.joda.time.DateTime;
  */
 public interface DeviceDataInsightQueryDAO {
 
-    DeviceDataResponse getBetweenByLocalHourAggregateBySlotDuration(
+    Response<ImmutableList<DeviceData>> getBetweenByLocalHourAggregateBySlotDuration(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime start,
@@ -23,7 +22,7 @@ public interface DeviceDataInsightQueryDAO {
             final int endHour,
             final Integer slotDuration);
 
-    DeviceDataResponse getLightByBetweenHourDateByTS(
+    Response<ImmutableList<DeviceData>> getLightByBetweenHourDateByTS(
             final Long accountId,
             final DeviceId deviceId,
             final int lightLevel,
@@ -34,7 +33,7 @@ public interface DeviceDataInsightQueryDAO {
             final int startHour,
             final int endHour);
 
-    DeviceDataResponse getBetweenHourDateByTSSameDay(
+    Response<ImmutableList<DeviceData>> getBetweenHourDateByTSSameDay(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime startTimestamp,
@@ -44,7 +43,7 @@ public interface DeviceDataInsightQueryDAO {
             final int startHour,
             final int endHour);
 
-    DeviceDataResponse getBetweenHourDateByTS(
+    Response<ImmutableList<DeviceData>> getBetweenHourDateByTS(
             final Long accountId,
             final DeviceId deviceId,
             final DateTime startTimestamp,

@@ -17,4 +17,9 @@ public interface Attribute {
      * i.e. Expression Attribute Names (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ExpressionPlaceholders.html#ExpressionAttributeNames).
      */
     String sanitizedName();
+
+    /**
+     * The type of this attribute in Dynamo as a String, i.e. "S" for String, "N" for number, etc.
+     */
+    String type();
 }
