@@ -368,3 +368,30 @@ CREATE TABLE sleep_sounds (
     sort_key INTEGER NOT NULL,          -- How to sort the values for displaying
     firmware_version INTEGER NOT NULL   -- Minimum firmware version
 );
+
+
+CREATE TABLE file_info (
+    id SERIAL PRIMARY KEY,
+    sort_key INTEGER NOT NULL,          -- How to sort the values for displaying
+    firmware_version INTEGER NOT NULL,  -- Minimum firmware version
+    type VARCHAR(255),
+    path VARCHAR(255),
+    sha VARCHAR(255),
+    uri VARCHAR(255),
+    preview_uri VARCHAR(255),
+    name VARCHAR(255),
+    is_public BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE sense_file_info (
+    id SERIAL PRIMARY KEY,
+    sense_id VARCHAR(255) NOT NULL,
+    file_info_id INTEGER NOT NULL REFERENCES file_info (id)
+);
+
+CREATE INDEX sense_id_idx on sense_file_info(sense_id);
+
+GRANT ALL PRIVILEGES ON sleep_sound_durations TO ingress_user;
+GRANT ALL PRIVILEGES ON sleep_sounds TO ingress_user;
+GRANT ALL PRIVILEGES ON file_info TO ingress_user;
+GRANT ALL PRIVILEGES ON sense_file_info TO ingress_user;
