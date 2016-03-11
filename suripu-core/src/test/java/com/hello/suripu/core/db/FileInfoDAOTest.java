@@ -46,21 +46,24 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
 
     private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic)
     {
-        // Use String.format to build SQL cause this is a test LMFAO
-        handle.execute(String.format(
-                "Insert INTO file_info (id, sort_key, firmware_version, is_public, type, path, sha, uri, preview_uri, name)\n" +
-                        "VALUES (%s, %s, %s, %s, 'SLEEP_SOUND', '', '', '', '', '');",
-                id, sortKey, firmwareVersion, isPublic));
+        final String insertStatement = "Insert INTO file_info (id, sort_key, firmware_version, is_public, type, path, sha, uri, preview_uri, name)\n" +
+                "VALUES (:id, :sort_key, :firmware_version, :is_public, 'SLEEP_SOUND', '', '', '', '', '');";
+        handle.createStatement(insertStatement)
+                .bind("id", id)
+                .bind("sort_key", sortKey)
+                .bind("firmware_version", firmwareVersion)
+                .bind("is_public", isPublic)
+                .execute();
     }
 
     private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic, final String senseId)
     {
         insert(id, sortKey, firmwareVersion, isPublic);
-        handle.execute(String.format(
-                "INSERT INTO sense_file_info (file_info_id, sense_id)\n" +
-                        "VALUES (%s, '%s');",
-                id, senseId
-        ));
+        handle.createStatement("INSERT INTO sense_file_info (file_info_id, sense_id)\n" +
+                "VALUES (:id, :sense_id);")
+                .bind("id", id)
+                .bind("sense_id", senseId)
+                .execute();
     }
 
     @Test
