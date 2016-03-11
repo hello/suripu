@@ -3,7 +3,7 @@
     <parent>
         <artifactId>suripu-parent</artifactId>
         <groupId>com.hello.suripu</groupId>
-        <version>0.6.71-SNAPSHOT</version>
+        <version>0.6.71</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>com.hello.suripu</groupId>
             <artifactId>suripu-core</artifactId>
-            <version>0.6.71-SNAPSHOT</version>
+            <version>0.6.71</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.yammer.dropwizard</groupId>
