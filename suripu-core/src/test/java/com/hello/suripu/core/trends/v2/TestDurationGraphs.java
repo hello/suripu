@@ -62,7 +62,7 @@ public class TestDurationGraphs {
         final DateTime accountCreated = today.minusDays(accountAge - 1);
 
         final boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
-        final Optional<Graph> optionalGraph = this.trendsProcessor.getDaysGraph(data,
+        final Optional<Graph> optionalGraph = this.trendsProcessor.getDaysGraph(10L, data,
                 TimeScale.LAST_WEEK,
                 GraphType.BAR,
                 DataType.HOURS,
@@ -109,7 +109,7 @@ public class TestDurationGraphs {
         final DateTime accountCreated = today.minusDays(accountAge - 1);
 
         final boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
-        final Optional<Graph> optionalGraph = this.trendsProcessor.getDaysGraph(data,
+        final Optional<Graph> optionalGraph = this.trendsProcessor.getDaysGraph(10L, data,
                 TimeScale.LAST_WEEK,
                 GraphType.BAR,
                 DataType.HOURS,
