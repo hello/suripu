@@ -390,3 +390,8 @@ CREATE TABLE sense_file_info (
 );
 
 CREATE INDEX sense_id_idx on sense_file_info(sense_id);
+
+GRANT ALL PRIVILEGES ON sleep_sound_durations TO ingress_user;
+GRANT ALL PRIVILEGES ON sleep_sounds TO ingress_user;
+GRANT ALL PRIVILEGES ON file_info TO ingress_user;
+GRANT ALL PRIVILEGES ON sense_file_info TO ingress_user;

@@ -110,7 +110,19 @@ public class FileInfoDAOTest {
 
         assertThat(dao.getAll(FileInfoDAO.OLD_FW_VERSION_CUTOFF, "nosense").size(), is(0));
 
-        // TODO test specific sense ids
+        // test specific sense ids
+        final List<FileInfo> forSense1 = dao.getAll(3, "sense1");
+        assertThat(forSense1.size(), is(3));
+        assertThat(forSense1.get(0).id, is(4L));
+        assertThat(forSense1.get(1).id, is(5L));
+        assertThat(forSense1.get(2).id, is(7L));
+
+        final List<FileInfo> forSense2 = dao.getAll(5, "sense2");
+        assertThat(forSense2.size(), is(4));
+        assertThat(forSense2.get(0).id, is(1L));
+        assertThat(forSense2.get(1).id, is(4L));
+        assertThat(forSense2.get(2).id, is(6L));
+        assertThat(forSense2.get(3).id, is(2L));
     }
 
 }
