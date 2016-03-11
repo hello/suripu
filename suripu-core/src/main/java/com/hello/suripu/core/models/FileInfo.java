@@ -1,5 +1,7 @@
 package com.hello.suripu.core.models;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Created by jakepiccolo on 3/9/16.
  */
@@ -41,6 +43,15 @@ public class FileInfo {
         name = builder.name;
         firmwareVersion = builder.firmwareVersion;
         isPublic = builder.isPublic;
+
+        checkNotNull(id, "id must not be null");
+        checkNotNull(path, "path must not be null");
+        checkNotNull(fileType, "fileType must not be null");
+        checkNotNull(sha, "sha must not be null");
+        checkNotNull(uri, "previewUri must not be null");
+        checkNotNull(name, "name must not be null");
+        checkNotNull(firmwareVersion, "firmwareVersion must not be null");
+        checkNotNull(isPublic, "isPublic must not be null");
     }
 
     public static Builder newBuilder() {
@@ -57,7 +68,7 @@ public class FileInfo {
         private String previewUri;
         private String name;
         private Integer firmwareVersion;
-        private Boolean isPublic;
+        private Boolean isPublic = false;
 
         private Builder() {
         }
