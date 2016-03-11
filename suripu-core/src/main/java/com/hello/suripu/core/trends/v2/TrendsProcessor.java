@@ -42,14 +42,17 @@ public class TrendsProcessor {
 
 
     public static class TrendsData {
-        private DateTime dateTime;
-        private Integer sleepDurationInMinutes;
-        private Integer lightSleepInMinutes;
-        private Integer mediumSleepInMinutes;
-        private Integer soundSleepInMinutes;
-        private Integer sleepScore;
+        private final DateTime dateTime;
+        private final Integer sleepDurationInMinutes;
+        private final Integer lightSleepInMinutes;
+        private final Integer mediumSleepInMinutes;
+        private final Integer soundSleepInMinutes;
+        private final Integer sleepScore;
 
-        public TrendsData(DateTime dateTime, Integer sleepDurationInMinutes, Integer lightSleepInMinutes, Integer mediumSleepInMinutes, Integer soundSleepInMinutes, Integer sleepScore) {
+        public TrendsData(final DateTime dateTime,
+                          final Integer sleepDurationInMinutes, final Integer lightSleepInMinutes,
+                          final Integer mediumSleepInMinutes, final Integer soundSleepInMinutes,
+                          final Integer sleepScore) {
             this.dateTime = dateTime;
             this.sleepDurationInMinutes = sleepDurationInMinutes;
             this.lightSleepInMinutes = lightSleepInMinutes;
