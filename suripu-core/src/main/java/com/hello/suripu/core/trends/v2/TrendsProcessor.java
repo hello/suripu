@@ -371,8 +371,8 @@ public class TrendsProcessor {
 
     private DateTime getLocalToday(final Integer offsetMillis) {
         final DateTime now = DateTime.now(DateTimeZone.UTC);
-            if (offsetMillis != 0) {
-                return now.plusMillis(offsetMillis).withTimeAtStartOfDay();
+        if (offsetMillis != 0) {
+            return now.plusMillis(offsetMillis).withTimeAtStartOfDay();
         }
         return now.withTimeAtStartOfDay();
     }
