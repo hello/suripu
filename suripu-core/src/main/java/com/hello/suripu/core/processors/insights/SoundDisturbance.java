@@ -2,10 +2,10 @@ package com.hello.suripu.core.processors.insights;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.AggregateSleepStats;
 import com.hello.suripu.core.models.DeviceData;
@@ -124,7 +124,7 @@ er
         final DateTime queryStartTimeLocal = queryStartTime.plusMillis(timeZoneOffset);
 
         //Grab all pre-bed data for past week
-        DeviceDataResponse response = deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, DATA_START_HOUR_LOCAL, DATA_END_HOUR_LOCAL);
+        Response<ImmutableList<DeviceData>> response = deviceDataDAO.getBetweenHourDateByTS(accountId, deviceId, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, DATA_START_HOUR_LOCAL, DATA_END_HOUR_LOCAL);
         if (response.status == Response.Status.SUCCESS) {
             return response.data;
         }

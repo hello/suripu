@@ -12,7 +12,6 @@ import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TrackerMotionDAO;
 import com.hello.suripu.core.db.TrendsInsightsDAO;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.flipper.FeatureFlipper;
 import com.hello.suripu.core.models.AggregateScore;
@@ -122,7 +121,7 @@ public class InsightProcessorTest {
         fakeAggregateSleepStatsList.add(new AggregateSleepStats(FAKE_ACCOUNT_ID, timestamp, offsetMillis, 0, "1", fakeMotionScore, 0, 0, 0, fakeSleepStat));
 
         //Taking care of @NotNull check for light
-        final DeviceDataResponse successfulResponse = new DeviceDataResponse(ImmutableList.copyOf(data), Response.Status.SUCCESS, Optional.<Exception>absent());
+        final Response<ImmutableList<DeviceData>> successfulResponse = Response.success(ImmutableList.copyOf(data));
         Mockito.when(deviceDataDAO.getLightByBetweenHourDateByTS(Mockito.any(Long.class), Mockito.any(DeviceId.class), Mockito.any(Integer.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class), Mockito.any(DateTime.class),Mockito.any(Integer.class), Mockito.any(Integer.class))).thenReturn(successfulResponse);
 
         Mockito.when(deviceDataDAO.toString()).thenReturn("someString");

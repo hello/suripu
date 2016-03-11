@@ -4,17 +4,12 @@ import com.google.common.base.Optional;
 import com.hello.suripu.api.logging.LoggingProtos;
 import com.hello.suripu.core.db.mappers.GroupedTimelineLogsSummaryMapper;
 import com.hello.suripu.core.models.GroupedTimelineLogSummary;
-import org.h2.jdbcx.JdbcDataSource;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Handle;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -23,15 +18,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by jakepiccolo on 10/5/15.
  */
-public class TimelineAnalyticsDAOTest {
+public class TimelineAnalyticsDAOTest extends SqlDAOTest<TimelineAnalyticsDAO> {
 
-    private DBI dbi;
-    private Handle handle;
-    private TimelineAnalyticsDAO dao;
+    @Override
+    protected Class<TimelineAnalyticsDAO> tClass() {
+        return TimelineAnalyticsDAO.class;
+    }
 
-    @Before
-    public void setUp() throws Exception {
-        final String createTableQuery = "CREATE TABLE timeline_analytics (\n" +
+    @Override
+    protected String setupQuery() {
+        return "CREATE TABLE timeline_analytics (\n" +
                 "    id BIGSERIAL PRIMARY KEY,\n" +
                 "    account_id BIGINT,\n" +
                 "    date_of_night VARCHAR,\n" +
@@ -40,21 +36,17 @@ public class TimelineAnalyticsDAOTest {
                 "    created_at TIMESTAMP,\n" +
                 "    test_group BIGINT\n" +
                 ");";
-
-        final JdbcDataSource ds = new JdbcDataSource();
-        ds.setURL("jdbc:h2:mem:" + UUID.randomUUID());
-        dbi = new DBI(ds);
-        dbi.registerMapper(new GroupedTimelineLogsSummaryMapper());
-        handle = dbi.open();
-
-        handle.execute(createTableQuery);
-        dao = dbi.onDemand(TimelineAnalyticsDAO.class);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        handle.execute("DROP TABLE timeline_analytics;");
-        handle.close();
+    @Override
+    protected String tearDownQuery() {
+        return "DROP TABLE timeline_analytics;";
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        dbi.registerMapper(new GroupedTimelineLogsSummaryMapper());
     }
 
     @Test

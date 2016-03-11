@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.models.AllSensorSampleList;
 import com.hello.suripu.core.models.Calibration;
 import com.hello.suripu.core.models.Device;
@@ -348,7 +347,7 @@ public class DeviceDataDAODynamoDBIT {
         // No table created for this date
         final DateTime firstTime = new DateTime(2015, 9, 1, 7, 0, DateTimeZone.UTC);
 
-        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+        final com.hello.suripu.core.db.responses.Response<ImmutableList<DeviceData>> response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 accountId, deviceId, firstTime, firstTime.plusMinutes(1), 1);
         assertThat(response.data.size(), is(0));
         assertThat(response.status, is(com.hello.suripu.core.db.responses.Response.Status.FAILURE));
@@ -473,7 +472,7 @@ public class DeviceDataDAODynamoDBIT {
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
-        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+        final com.hello.suripu.core.db.responses.Response<ImmutableList<DeviceData>> response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1);
         assertThat(response.data.size(),
                 is(2));
@@ -491,7 +490,7 @@ public class DeviceDataDAODynamoDBIT {
 
         addDataForQuerying(accountId, deviceId, offsetMillis, firstTime);
 
-        final DeviceDataResponse response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
+        final com.hello.suripu.core.db.responses.Response<ImmutableList<DeviceData>> response = deviceDataDAODynamoDB.getBetweenByAbsoluteTimeAggregateBySlotDuration(
                 accountId, deviceId, firstTime, firstTime.plusMinutes(2), 1);
         assertThat(response.data.size(),
                 is(0));

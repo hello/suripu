@@ -1,10 +1,10 @@
 package com.hello.suripu.core.processors.insights;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataInsightQueryDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.core.models.DeviceId;
@@ -48,7 +48,8 @@ public class Lights {
 
         // get light data > 0 between the hour of 6pm to 1am
         final List<DeviceData> rows;
-        final DeviceDataResponse response = deviceDataDAO.getLightByBetweenHourDateByTS(accountId, deviceId, LIGHT_LEVEL_ON_RAW, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
+        final Response<ImmutableList<DeviceData>> response = deviceDataDAO.getLightByBetweenHourDateByTS(
+                accountId, deviceId, LIGHT_LEVEL_ON_RAW, queryStartTime, queryEndTime, queryStartTimeLocal, queryEndTimeLocal, NIGHT_START_HOUR, NIGHT_END_HOUR);
         if (response.status == Response.Status.SUCCESS) {
             rows = response.data;
         } else {

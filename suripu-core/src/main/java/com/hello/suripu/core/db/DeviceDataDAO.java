@@ -7,7 +7,6 @@ import com.hello.suripu.core.db.binders.BindDeviceData;
 import com.hello.suripu.core.db.mappers.DeviceDataBucketMapper;
 import com.hello.suripu.core.db.mappers.DeviceDataMapper;
 import com.hello.suripu.core.db.mappers.SenseDeviceStatusMapper;
-import com.hello.suripu.core.db.responses.DeviceDataResponse;
 import com.hello.suripu.core.db.responses.Response;
 import com.hello.suripu.core.db.util.Bucketing;
 import com.hello.suripu.core.db.util.MatcherPatternsDB;
@@ -175,22 +174,20 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
                                                                                @Bind("end_hour") int endHour);
 
     @Override
-    public DeviceDataResponse getLightByBetweenHourDateByTS(final Long accountId,
-                                                            final DeviceId deviceId,
-                                                            final int lightLevel,
-                                                            final DateTime startTimestamp,
-                                                            final DateTime endTimestamp,
-                                                            final DateTime startLocalTimeStamp,
-                                                            final DateTime endLocalTimeStamp,
-                                                            final int startHour,
-                                                            final int endHour)
+    public Response<ImmutableList<DeviceData>> getLightByBetweenHourDateByTS(final Long accountId,
+                                                                             final DeviceId deviceId,
+                                                                             final int lightLevel,
+                                                                             final DateTime startTimestamp,
+                                                                             final DateTime endTimestamp,
+                                                                             final DateTime startLocalTimeStamp,
+                                                                             final DateTime endLocalTimeStamp,
+                                                                             final int startHour,
+                                                                             final int endHour)
     {
-        return new DeviceDataResponse(
+        return Response.success(
                 getLightByBetweenHourDateByTS(
                         accountId, deviceId.internalDeviceId.get(), lightLevel,
-                        startTimestamp, endTimestamp, startLocalTimeStamp, endLocalTimeStamp, startHour, endHour),
-                Response.Status.SUCCESS,
-                Optional.<Exception>absent());
+                        startTimestamp, endTimestamp, startLocalTimeStamp, endLocalTimeStamp, startHour, endHour));
     }
 
     @SqlQuery("SELECT AVG(ambient_air_quality), EXTRACT(day FROM local_utc_ts) AS date FROM device_sensors_master " +
@@ -213,9 +210,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
                                                                  final DateTime startLocalTimeStamp,
                                                                  final DateTime endLocalTimeStamp)
     {
-        return Response.create(
-                getAirQualityRawList(accountId, deviceId.internalDeviceId.get(), startTimestamp, endTimestamp, startLocalTimeStamp, endLocalTimeStamp),
-                Response.Status.SUCCESS);
+        return Response.success(getAirQualityRawList(accountId, deviceId.internalDeviceId.get(), startTimestamp, endTimestamp, startLocalTimeStamp, endLocalTimeStamp));
     }
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -235,21 +230,19 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
                                                                                @Bind("end_hour") int endHour);
 
     @Override
-    public DeviceDataResponse getBetweenHourDateByTSSameDay(final Long accountId,
-                                                            final DeviceId deviceId,
-                                                            final DateTime startTimestamp,
-                                                            final DateTime endTimestamp,
-                                                            final DateTime startLocalTimeStamp,
-                                                            final DateTime endLocalTimeStamp,
-                                                            final int startHour,
-                                                            final int endHour)
+    public Response<ImmutableList<DeviceData>> getBetweenHourDateByTSSameDay(final Long accountId,
+                                                                             final DeviceId deviceId,
+                                                                             final DateTime startTimestamp,
+                                                                             final DateTime endTimestamp,
+                                                                             final DateTime startLocalTimeStamp,
+                                                                             final DateTime endLocalTimeStamp,
+                                                                             final int startHour,
+                                                                             final int endHour)
     {
-        return new DeviceDataResponse(
+        return Response.success(
                 getBetweenHourDateByTSSameDay(
                         accountId, deviceId.internalDeviceId.get(), startTimestamp, endTimestamp,
-                        startLocalTimeStamp, endLocalTimeStamp, startHour, endHour),
-                Response.Status.SUCCESS,
-                Optional.<Exception>absent());
+                        startLocalTimeStamp, endLocalTimeStamp, startHour, endHour));
     }
 
     @RegisterMapper(DeviceDataMapper.class)
@@ -269,7 +262,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
                                                                         @Bind("end_hour") int endHour);
 
     @Override
-    public DeviceDataResponse getBetweenHourDateByTS(final Long accountId,
+    public Response<ImmutableList<DeviceData>> getBetweenHourDateByTS(final Long accountId,
                                                      final DeviceId deviceId,
                                                      final DateTime startTimestamp,
                                                      final DateTime endTimestamp,
@@ -278,12 +271,10 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
                                                      final int startHour,
                                                      final int endHour)
     {
-        return new DeviceDataResponse(
+        return Response.success(
                 getBetweenHourDateByTS(
                         accountId, deviceId.internalDeviceId.get(), startTimestamp, endTimestamp,
-                        startLocalTimeStamp, endLocalTimeStamp, startHour, endHour),
-                Response.Status.SUCCESS,
-                Optional.<Exception>absent());
+                        startLocalTimeStamp, endLocalTimeStamp, startHour, endHour));
     }
 
     @RegisterMapper(DeviceDataBucketMapper.class)
@@ -307,7 +298,7 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
                                                                                               @Bind("slot_duration") Integer slotDuration);
 
     @Override
-    public DeviceDataResponse getBetweenByLocalHourAggregateBySlotDuration(final Long accountId,
+    public Response<ImmutableList<DeviceData>> getBetweenByLocalHourAggregateBySlotDuration(final Long accountId,
                                                                            final DeviceId deviceId,
                                                                            final DateTime start,
                                                                            final DateTime end,
@@ -317,10 +308,8 @@ public abstract class DeviceDataDAO implements DeviceDataIngestDAO, DeviceDataIn
                                                                            final int endHour,
                                                                            final Integer slotDuration)
     {
-        return new DeviceDataResponse(
-                getBetweenByLocalHourAggregateBySlotDuration(accountId, deviceId.internalDeviceId.get(), start, end, startLocal, endLocal, startHour, endHour, slotDuration),
-                Response.Status.SUCCESS,
-                Optional.<Exception>absent());
+        return Response.success(
+                getBetweenByLocalHourAggregateBySlotDuration(accountId, deviceId.internalDeviceId.get(), start, end, startLocal, endLocal, startHour, endHour, slotDuration));
     }
 
     @RegisterMapper(DeviceDataMapper.class)
