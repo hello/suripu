@@ -125,15 +125,15 @@ public class SenseStateDynamoDB {
 
     private Map<String, AttributeValueUpdate> toDynamoDBUpdates(final SenseStateAtTime state) {
         final Map<String, AttributeValueUpdate> updates = Maps.newHashMap();
-        updates.put(SenseStateAttribute.TIMESTAMP.shortName(), putAction(state.timestamp.getMillis()));
+        updates.put(SenseStateAttribute.TIMESTAMP.shortName(), Util.putAction(state.timestamp.getMillis()));
 
         if (state.state.hasAudioState()) {
             final State.AudioState audioState = state.state.getAudioState();
-            updates.put(SenseStateAttribute.PLAYING_AUDIO.shortName(), putAction(audioState.getPlayingAudio()));
+            updates.put(SenseStateAttribute.PLAYING_AUDIO.shortName(), Util.putAction(audioState.getPlayingAudio()));
 
             if (audioState.getPlayingAudio()) {
-                updates.put(SenseStateAttribute.SLEEP_SOUND_FILE.shortName(), putAction(audioState.getFilePath()));
-                updates.put(SenseStateAttribute.SLEEP_SOUND_DURATION.shortName(), putAction((long) audioState.getDurationSeconds()));
+                updates.put(SenseStateAttribute.SLEEP_SOUND_FILE.shortName(), Util.putAction(audioState.getFilePath()));
+                updates.put(SenseStateAttribute.SLEEP_SOUND_DURATION.shortName(), Util.putAction((long) audioState.getDurationSeconds()));
             }
         }
 

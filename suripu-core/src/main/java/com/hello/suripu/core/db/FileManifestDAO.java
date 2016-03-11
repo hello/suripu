@@ -1,19 +1,18 @@
 package com.hello.suripu.core.db;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.api.input.FileSync;
 
 /**
  * Created by jakepiccolo on 3/8/16.
  */
 public interface FileManifestDAO {
 
-    class FileManifest {}
-
     /**
      * @param newManifest - new manifest to set
      * @return The old manifest
      */
-    Optional<FileManifest> updateManifest(final FileManifest newManifest);
+    Optional<FileSync.FileManifest> updateManifest(final String senseId, final FileSync.FileManifest newManifest);
 
-    Optional<FileManifest> getManifest(final String senseId);
+    Optional<FileSync.FileManifest> getManifest(final String senseId);
 }
