@@ -119,7 +119,7 @@ public class AlarmResource {
                           final List<Alarm> alarms){
 
         final DateTime now = DateTime.now();
-        if(!AlarmUtils.isWithinReasonableBounds(now, clientTime)) {
+        if(!AlarmUtils.isWithinReasonableBounds(now, clientTime, 50000)) {
             LOGGER.error("account_id {} set alarm failed, client time too off.( was {}, now is {}", token.accountId, clientTime, now);
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(
                     new JsonError(Response.Status.BAD_REQUEST.getStatusCode(), English.ERROR_CLOCK_OUT_OF_SYNC)).build()
