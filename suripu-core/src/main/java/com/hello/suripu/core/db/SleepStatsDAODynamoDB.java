@@ -378,10 +378,12 @@ public class SleepStatsDAODynamoDB implements SleepStatsDAO {
         final Integer soundSleep = Integer.valueOf(item.get(SOUND_SLEEP_ATTRIBUTE_NAME).getN());
         final Integer lightSleep = Integer.valueOf(item.get(LIGHT_SLEEP_ATTRIBUTE_NAME).getN());
         final Integer sleepDuration = Integer.valueOf(item.get(SLEEP_DURATION_ATTRIBUTE_NAME).getN());
-        Integer mediumSleep = sleepDuration - soundSleep - lightSleep;
+        final Integer mediumSleep;
 
         if (item.containsKey(MEDIUM_SLEEP_ATTRIBUTE_NAME)) {
             mediumSleep = Integer.valueOf(item.get(MEDIUM_SLEEP_ATTRIBUTE_NAME).getN());
+        } else {
+            mediumSleep = sleepDuration - soundSleep - lightSleep;
         }
 
         final SleepStats stats = new SleepStats(

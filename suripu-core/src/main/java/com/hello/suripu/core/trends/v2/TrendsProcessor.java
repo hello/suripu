@@ -1,9 +1,8 @@
 package com.hello.suripu.core.trends.v2;
 
 
-import com.google.common.base.Function;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
@@ -31,9 +30,9 @@ public class TrendsProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TrendsProcessor.class);
 
-    private static final int ABSOLUTE_MIN_DATA_SIZE = 3;
+    public static final int ABSOLUTE_MIN_DATA_SIZE = 3;
     private static final int MIN_ACCOUNT_AGE = 3; // accounts that are less than 3 days old will not see graphs
-    private static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
+    public static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
     private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
 
@@ -41,6 +40,30 @@ public class TrendsProcessor {
     private final AccountDAO accountDAO;
     private final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
 
+
+    public static class TrendsData {
+        private final DateTime dateTime;
+        private final Integer sleepDurationInMinutes;
+        private final Integer lightSleepInMinutes;
+        private final Integer mediumSleepInMinutes;
+        private final Integer soundSleepInMinutes;
+        private final Integer sleepScore;
+
+        public TrendsData(final DateTime dateTime,
+                          final Integer sleepDurationInMinutes, final Integer lightSleepInMinutes,
+                          final Integer mediumSleepInMinutes, final Integer soundSleepInMinutes,
+                          final Integer sleepScore) {
+            this.dateTime = dateTime;
+            this.sleepDurationInMinutes = sleepDurationInMinutes;
+            this.lightSleepInMinutes = lightSleepInMinutes;
+            this.mediumSleepInMinutes = mediumSleepInMinutes;
+            this.soundSleepInMinutes = soundSleepInMinutes;
+            this.sleepScore = sleepScore;
+        }
+
+        public Integer getScore() { return this.sleepScore; }
+        public Integer getDuration() { return this.sleepDurationInMinutes; }
+    }
 
     public TrendsProcessor(final SleepStatsDAODynamoDB sleepStatsDAODynamoDB, final AccountDAO accountDAO, final TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB) {
         this.sleepStatsDAODynamoDB = sleepStatsDAODynamoDB;
@@ -50,98 +73,122 @@ public class TrendsProcessor {
 
     public TrendsResult getAllTrends(final Long accountId, final TimeScale timescale) {
 
-        // get data
+        // get user's local today date
         final Integer offsetMillis = getAccountMillisOffset(accountId);
         final DateTime localToday = getLocalToday(offsetMillis);
 
-        // only show annotations if account could have 7 or more timelines
+        // compute account-age
         final Optional<Account> optionalAccount = accountDAO.getById(accountId);
+
         final Optional<DateTime> optionalAccountCreated;
         final int accountAge;
         if (optionalAccount.isPresent()) {
-            final Days daysDiff = Days.daysBetween(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay(), localToday);
+            final DateTime accountCreated = optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay();
+            final Days daysDiff = Days.daysBetween(accountCreated, localToday);
             accountAge = daysDiff.getDays() + 1;
-            optionalAccountCreated = Optional.of(optionalAccount.get().created.plusMillis(offsetMillis).withTimeAtStartOfDay());
-            LOGGER.debug("key=trends-account-created created={}", optionalAccountCreated.get());
+            optionalAccountCreated = Optional.of(accountCreated);
         } else {
             accountAge = 0;
             optionalAccountCreated = Optional.absent();
+            LOGGER.debug("key=trends-v2 action=no-account found account={}", accountId);
         }
 
-        LOGGER.debug("key=get-trends-graph account={} timescale={}, account_age={} local_today={}",
+        // get data
+        final List<TrendsData> data = getRawData(accountId, localToday, timescale.getDays());
+
+        LOGGER.debug("key=trends-v2 action=get-trends-graph account={} timescale={}, account_age={} local_today={}",
                 accountId, timescale.toString(), accountAge, localToday);
 
-        // accounts will start seeing graphs on 4th day of account-creation
+        // all the graphs!
+        return getGraphs(accountId, accountAge, optionalAccountCreated, localToday, timescale, data);
+    }
+
+    @VisibleForTesting
+    protected TrendsResult getGraphs(final Long accountId, final Integer accountAge, final Optional<DateTime> optionalAccountCreated,
+                                     final DateTime localToday, final TimeScale timescale, final List<TrendsData> data) {
+
+        // accounts will only start seeing graphs on 4th day of account-creation
         if (accountAge <= MIN_ACCOUNT_AGE) {
-            LOGGER.debug("key=fail-min-account-age-check account={} account_age={}", accountId, accountAge);
+            LOGGER.debug("key=trends-v2 action=fail-minimum-account-age-check account={} account_age={}", accountId, accountAge);
             return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
         }
 
-        // check account-age to determine available time-scale
+        // check account-age and data to determine available time-scale to show
         final List<TimeScale> timeScales = computeAvailableTimeScales(accountAge);
 
-        // get raw data
-        final List<AggregateSleepStats> data = getRawData(accountId, localToday, timescale.getDays());
-
+        // no data no graphs
         if (data.isEmpty()) {
             // TODO: until we have a better way to check for number of data-points the account has....
             if (accountAge <= MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS) {
-                LOGGER.debug("key=new-account-no-data account={} account_age={}", accountId, accountAge);
+                LOGGER.debug("key=trends-v2 action=new-account-no-data-no-graph account={} account_age={}", accountId, accountAge);
                 return new TrendsResult(Collections.<TimeScale>emptyList(), Collections.<Graph>emptyList());
             }
 
-            LOGGER.debug("debug=no-trends-data, account={}, num_timescales={}, account_age={}", accountId, timeScales.size(), accountAge);
+            LOGGER.debug("key=trends-v2 action=old-account-no-data-no-graph, account={}, num_timescales={}, account_age={}",
+                    accountId, timeScales.size(), accountAge);
             return new TrendsResult(timeScales, Collections.<Graph>emptyList());
         }
 
-
-        // users < one-week old will get graphs if data-size meets certain minimum threshold
-        // users > one-week old will get graphs regardless, may not have annotations if insufficient data
-
-        final List<Graph> graphs = Lists.newArrayList();
-
-        if (data.size() >= ABSOLUTE_MIN_DATA_SIZE) {
-            boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
-
-            // sleep-score calendar
-            final Optional<Graph> sleepScoreGraph = getDaysGraph(data, timescale, GraphType.GRID, DataType.SCORES, English.GRAPH_TITLE_SLEEP_SCORE, localToday, hasAnnotation, optionalAccountCreated);
-            if (sleepScoreGraph.isPresent()) {
-                graphs.add(sleepScoreGraph.get());
-            }
-
-            // sleep duration bar graph
-            final Optional<Graph> durationGraph = getDaysGraph(data, timescale, GraphType.BAR, DataType.HOURS, English.GRAPH_TITLE_SLEEP_DURATION, localToday, hasAnnotation, optionalAccountCreated);
-            if (durationGraph.isPresent()) {
-                graphs.add(durationGraph.get());
-            }
-
-            // sleep depth bubbles
-            final Optional<Graph> depthGraph = getSleepDepthGraph(data, timescale);
-            if (depthGraph.isPresent()) {
-                graphs.add(depthGraph.get());
-            }
-        } else {
-            LOGGER.debug("key=insufficient-data-no-graphs timescale={} account={} data_size={}", timescale.toString(), accountId, data.size());
+        // minimum data requirement
+        if (data.size() < ABSOLUTE_MIN_DATA_SIZE) {
+            LOGGER.debug("key=trends-v2 action=insufficient-data-no-graphs account={} timescale={} data_size={}",
+                    accountId, timescale.toString(), data.size());
+            return new TrendsResult(timeScales, Collections.<Graph>emptyList());
         }
 
-        LOGGER.debug("key=trends-graph-returned num_timescales={} num_graphs={}", timeScales.size(), graphs.size());
+        // get graphs
+        final List<Graph> graphs = Lists.newArrayList();
+
+        boolean hasAnnotation = (accountAge >= Annotation.ANNOTATION_ENABLED_THRESHOLD);
+
+        // sleep-score calendar
+        final Optional<Graph> sleepScoreGraph = getDaysGraph(accountId, data, timescale,
+                GraphType.GRID,
+                DataType.SCORES,
+                English.GRAPH_TITLE_SLEEP_SCORE,
+                localToday, hasAnnotation, optionalAccountCreated);
+
+        if (sleepScoreGraph.isPresent()) {
+            graphs.add(sleepScoreGraph.get());
+        }
+
+        // sleep duration bar graph
+        final Optional<Graph> durationGraph = getDaysGraph(accountId, data, timescale,
+                GraphType.BAR,
+                DataType.HOURS,
+                English.GRAPH_TITLE_SLEEP_DURATION,
+                localToday, hasAnnotation, optionalAccountCreated);
+
+        if (durationGraph.isPresent()) {
+            graphs.add(durationGraph.get());
+        }
+
+        // sleep depth bubbles
+        final Optional<Graph> depthGraph = getSleepDepthGraph(data, timescale);
+        if (depthGraph.isPresent()) {
+            graphs.add(depthGraph.get());
+        }
+
+        LOGGER.debug("key=trends-v2 action==trends-graph-returned account={} num_timescales={} num_graphs={}",
+                accountId, timeScales.size(), graphs.size());
+
         return new TrendsResult(timeScales, graphs);
     }
 
 
-    private Optional<Graph> getSleepDepthGraph(final List<AggregateSleepStats> data, final TimeScale timeScale) {
+    private Optional<Graph> getSleepDepthGraph(final List<TrendsData> data, final TimeScale timeScale) {
         float totalSleep = 0.0f;
         float totalLightSleep = 0.0f;
         float totalSoundSleep = 0.0f;
         float totalMediumSleep = 0.0f;
-        for (final AggregateSleepStats stat : data) {
-            final float light = stat.sleepStats.lightSleepDurationInMinutes;
+        for (final TrendsData stat : data) {
+            final float light = stat.lightSleepInMinutes;
             totalLightSleep += light;
 
-            final float sound = stat.sleepStats.soundSleepDurationInMinutes;
+            final float sound = stat.soundSleepInMinutes;
             totalSoundSleep += sound;
 
-            final float medium = stat.sleepStats.sleepDurationInMinutes - light - sound;
+            final float medium = stat.mediumSleepInMinutes;
             totalMediumSleep += medium;
 
             totalSleep += (light + sound + medium);
@@ -186,14 +233,16 @@ public class TrendsProcessor {
      * @param graphTitle name of the graph
      * @return Optional graph
      */
-    private Optional<Graph> getDaysGraph(final List<AggregateSleepStats> data,
-                                     final TimeScale timeScale,
-                                     final GraphType graphType,
-                                     final DataType dataType,
-                                     final String graphTitle,
-                                     final DateTime localToday,
-                                     final boolean hasAnnotation,
-                                     final Optional<DateTime> optionalCreated) {
+    @VisibleForTesting
+    protected Optional<Graph> getDaysGraph(final long accountId,
+                                           final List<TrendsData> data,
+                                           final TimeScale timeScale,
+                                           final GraphType graphType,
+                                           final DataType dataType,
+                                           final String graphTitle,
+                                           final DateTime localToday,
+                                           final boolean hasAnnotation,
+                                           final Optional<DateTime> optionalCreated) {
 
         final TrendsProcessorUtils.AnnotationStats annotationStats = new TrendsProcessorUtils.AnnotationStats();
 
@@ -203,15 +252,17 @@ public class TrendsProcessor {
         float minValue = Float.MAX_VALUE;
         DateTime currentDateTime = data.get(0).dateTime;
 
-        for (final AggregateSleepStats stat: data) {
+        for (final TrendsData stat: data) {
             final float statValue;
             if (dataType.equals(DataType.HOURS)) {
-                statValue = (float) stat.sleepStats.sleepDurationInMinutes / 60.0f; // convert to hours
+                statValue = (float) stat.sleepDurationInMinutes / 60.0f; // convert to hours
             } else {
                 statValue = (float) stat.sleepScore;
             }
 
-            LOGGER.debug("key=aggregate-data, date={}, stat={} value={}", stat.dateTime, dataType.value, statValue);
+            LOGGER.debug("key=trends-v2 action=aggregate-data, account={} date={}, stat={} value={}",
+                    accountId, stat.dateTime, dataType.value, statValue);
+
             currentDateTime = stat.dateTime;
             final int dayOfWeek = currentDateTime.getDayOfWeek();
 
@@ -221,7 +272,8 @@ public class TrendsProcessor {
                 final DateTime previousDateTime = data.get(currentIndex - 1).dateTime;
                 final Days diffDays = Days.daysBetween(previousDateTime, currentDateTime);
                 if (diffDays.getDays() > 1) {
-                    LOGGER.debug("key=missing-days start={} end={} days={}", previousDateTime, currentDateTime, diffDays.getDays());
+                    LOGGER.debug("key=trends-v2 action=missing-days account={} start={} end={} days={}",
+                            accountId, previousDateTime, currentDateTime, diffDays.getDays());
                     for (int day = 1; day < diffDays.getDays(); day++) {
                         validData.add(GraphSection.MISSING_VALUE);
                     }
@@ -246,7 +298,8 @@ public class TrendsProcessor {
             maxValue = Math.max(maxValue, statValue);
 
         }
-        LOGGER.debug("key=last-data-date date={} today={} date-size={}", currentDateTime, localToday, validData.size());
+        LOGGER.debug("key=trends-v2 action=last-data-date account={} date={} today={} date-size={}",
+                accountId, currentDateTime, localToday, validData.size());
 
         final boolean padDayOfWeek = (timeScale.equals(TimeScale.LAST_WEEK) || (dataType.equals(DataType.SCORES) && timeScale.equals(TimeScale.LAST_MONTH)));
 
@@ -254,7 +307,8 @@ public class TrendsProcessor {
 
         final boolean hasMinMaxValues = (data.size() >= MIN_DATA_SIZE_SHOW_MINMAX);
         if (!hasMinMaxValues) {
-            LOGGER.debug("key=graph-has-no-min-max-highlights data_size={} data_type={}", data.size(), dataType.value);
+            LOGGER.debug("key=trends-v2 action=graph-has-no-min-max-highlights account={} data_size={} data_type={}",
+                    accountId, data.size(), dataType.value);
             minValue = 0.0f;
         }
 
@@ -286,17 +340,22 @@ public class TrendsProcessor {
         return Optional.of(graph);
     }
 
-    private List<AggregateSleepStats> getRawData(final Long accountId, final DateTime localToday, final int days) {
+    private List<TrendsData> getRawData(final Long accountId, final DateTime localToday, final int days) {
         final DateTime queryStart = localToday.minusDays(days);
 
         final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(accountId,
                 DateTimeUtil.dateToYmdString(queryStart),
                 DateTimeUtil.dateToYmdString(localToday));
 
-        final List<AggregateSleepStats> results = Lists.newArrayList();
+        final List<TrendsData> results = Lists.newArrayList();
         for (final AggregateSleepStats stat : rawData) {
             if (stat.sleepStats.sleepDurationInMinutes >= MIN_VALID_SLEEP_DURATION ) {
-                results.add(stat);
+                results.add(new TrendsData(stat.dateTime,
+                        stat.sleepStats.sleepDurationInMinutes,
+                        stat.sleepStats.lightSleepDurationInMinutes,
+                        stat.sleepStats.mediumSleepDurationInMinutes,
+                        stat.sleepStats.soundSleepDurationInMinutes,
+                        stat.sleepScore));
             }
         }
         return results;
@@ -318,26 +377,8 @@ public class TrendsProcessor {
         return now.withTimeAtStartOfDay();
     }
 
-    // DO NOT DELETE THIS!!
-    private DateTime reallyFancyGetLocalToday(final Long accountId) {
-        final Optional<TimeZoneHistory> timeZone = this.timeZoneHistoryDAODynamoDB.getCurrentTimeZone(accountId);
-        final Optional<DateTime> nowForUser = timeZone.transform(new Function<TimeZoneHistory, DateTime>() {
-            @Override
-            public DateTime apply(TimeZoneHistory history) {
-                return DateTime.now(DateTimeZone.UTC)
-                        .plusMillis(history.offsetMillis)
-                        .withTimeAtStartOfDay();
-            }
-        });
-        return nowForUser.or(new Supplier<DateTime>() {
-            @Override
-            public DateTime get() {
-                return DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay();
-            }
-        });
-    }
-
-    private List<TimeScale> computeAvailableTimeScales(final int accountAge) {
+    @VisibleForTesting
+    protected List<TimeScale> computeAvailableTimeScales(final int accountAge) {
         final List<TimeScale> timeScales = Lists.newArrayList();
         for (final TimeScale scale : TimeScale.values()) {
             if (accountAge > scale.getVisibleAfterDays()) {
