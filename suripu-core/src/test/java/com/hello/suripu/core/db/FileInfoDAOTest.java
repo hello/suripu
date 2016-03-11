@@ -1,16 +1,8 @@
 package com.hello.suripu.core.db;
 
-import com.hello.suripu.core.db.mappers.GroupedTimelineLogsSummaryMapper;
 import com.hello.suripu.core.models.FileInfo;
-import org.h2.jdbcx.JdbcDataSource;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Handle;
-
 import java.util.List;
-import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -18,15 +10,21 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by jakepiccolo on 3/9/16.
  */
-public class FileInfoDAOTest {
+public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
 
-    private DBI dbi;
-    private Handle handle;
-    private FileInfoDAO dao;
+    @Override
+    protected Class<FileInfoDAO> tClass() {
+        return FileInfoDAO.class;
+    }
 
-    @Before
-    public void setUp() throws Exception {
-        final String createTableQuery = "CREATE TABLE file_info (\n" +
+    @Override
+    protected String tearDownQuery() {
+        return "DROP TABLE file_info; DROP TABLE sense_file_info;";
+    }
+
+    @Override
+    protected String setupQuery() {
+        return "CREATE TABLE file_info (\n" +
                 "    id SERIAL PRIMARY KEY,\n" +
                 "    sort_key INTEGER NOT NULL,          -- How to sort the values for displaying\n" +
                 "    firmware_version INTEGER NOT NULL,  -- Minimum firmware version\n" +
@@ -44,23 +42,7 @@ public class FileInfoDAOTest {
                 "    sense_id VARCHAR(255) NOT NULL,\n" +
                 "    file_info_id INTEGER NOT NULL REFERENCES file_info (id)\n" +
                 ");";
-
-        final JdbcDataSource ds = new JdbcDataSource();
-        ds.setURL("jdbc:h2:mem:" + UUID.randomUUID());
-        dbi = new DBI(ds);
-        dbi.registerMapper(new GroupedTimelineLogsSummaryMapper());
-        handle = dbi.open();
-
-        handle.execute(createTableQuery);
-        dao = dbi.onDemand(FileInfoDAO.class);
     }
-
-    @After
-    public void tearDown() throws Exception {
-        handle.execute("DROP TABLE file_info;");
-        handle.close();
-    }
-
 
     private void insert(final Long id, final Integer sortKey, final Integer firmwareVersion, final Boolean isPublic)
     {
