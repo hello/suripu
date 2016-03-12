@@ -311,3 +311,8 @@ sense_state_db:
   endpoint : http://localhost:7777
   region: us-east-1
   table_name: sense_state
+
+file_manifest:
+  endpoint : http://localhost:7777
+  region: us-east-1
+  table_name: file_manifest
