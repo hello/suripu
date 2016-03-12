@@ -57,8 +57,6 @@ public class FileManifestDynamoDB implements FileManifestDAO {
     }
 
 
-
-
     public FileManifestDynamoDB(final AmazonDynamoDB dynamoDBClient, final String tableName) {
         this.dynamoDBClient = dynamoDBClient;
         this.tableName = tableName;
@@ -68,11 +66,11 @@ public class FileManifestDynamoDB implements FileManifestDAO {
         return Util.createTable(dynamoDBClient, tableName, FileManifestAttribute.SENSE_ID, readCapacity, writeCapacity);
     }
 
+
     // region FileManifestDAO overrides
     @Override
     public Optional<FileSync.FileManifest> updateManifest(final String senseId, FileSync.FileManifest newManifest) {
         final Map<String, AttributeValueUpdate> updates = ImmutableMap.of(
-                FileManifestAttribute.SENSE_ID.shortName(), Util.putAction(senseId),
                 FileManifestAttribute.LATEST_FILE_MANIFEST.shortName(), Util.putAction(newManifest.toByteArray())
         );
 
