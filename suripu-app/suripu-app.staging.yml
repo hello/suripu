@@ -281,7 +281,7 @@ sleep_stats_db:
 sleep_stats_version: v_0_2
 
 messeji_http_client:
-  endpoint: "http://messeji-dev.hello.is:80"
+  endpoint: "http://internal-internal-messeji-dev-1279589514.us-east-1.elb.amazonaws.com:80"
   http_client_config:
     keepAlive: 0s
 
