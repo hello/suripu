@@ -34,7 +34,7 @@ public class TrendsProcessor {
     private static final int MIN_ACCOUNT_AGE = 3; // accounts that are less than 3 days old will not see graphs
     public static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
-    private static final int MIN_VALID_SLEEP_DURATION = 1; // minutes - discard stats with 0 mins of sleep-duration
+    public static final int MIN_VALID_SLEEP_DURATION = 1; // minutes - discard stats with 0 mins of sleep-duration
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final AccountDAO accountDAO;
@@ -340,7 +340,8 @@ public class TrendsProcessor {
         return Optional.of(graph);
     }
 
-    private List<TrendsData> getRawData(final Long accountId, final DateTime localToday, final int days) {
+    @VisibleForTesting
+    protected List<TrendsData> getRawData(final Long accountId, final DateTime localToday, final int days) {
         final DateTime queryStart = localToday.minusDays(days);
 
         final List<AggregateSleepStats> rawData = sleepStatsDAODynamoDB.getBatchStats(accountId,
