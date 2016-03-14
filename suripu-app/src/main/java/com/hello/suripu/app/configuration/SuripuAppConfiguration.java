@@ -196,6 +196,12 @@ public class SuripuAppConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    @JsonProperty("file_manifest")
+    private DynamoDBConfiguration fileManifestDBConfiguration;
+    public DynamoDBConfiguration getFileManifestDBConfiguration() { return this.fileManifestDBConfiguration; }
+
+    @Valid
+    @NotNull
     @JsonProperty("sleep_score_version")
     private String sleepScoreVersion;
     public String getSleepScoreVersion() {

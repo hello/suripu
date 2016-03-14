@@ -12,6 +12,7 @@ public enum DynamoDBTableName {
     DEVICE_DATA("device_data"),
     FEATURE_EXTRACTION_MODELS("feature_extraction_models"),
     FEATURES("features"),
+    FILE_MANIFEST("file_manifest"),
     FIRMWARE_UPGRADE_PATH("firmware_upgrade_path"),
     FIRMWARE_VERSIONS("firmware_versions"),
     INSIGHTS("insights"),

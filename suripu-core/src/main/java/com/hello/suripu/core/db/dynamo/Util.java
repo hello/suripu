@@ -3,6 +3,7 @@ package com.hello.suripu.core.db.dynamo;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
@@ -17,6 +18,7 @@ import com.hello.suripu.core.db.responses.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
@@ -123,4 +125,27 @@ public class Util {
         return createTable(dynamoDB, tableName, attributes, keySchema, readCapacityUnits, writeCapacityUnits);
     }
     // endregion Table creation
+
+
+    // region AttributeValueUpdate
+    public static AttributeValueUpdate putAction(final ByteBuffer value) {
+        return new AttributeValueUpdate(new AttributeValue().withB(value), "PUT");
+    }
+
+    public static AttributeValueUpdate putAction(final byte[] value) {
+        return putAction(ByteBuffer.wrap(value));
+    }
+
+    public static AttributeValueUpdate putAction(final Long value) {
+        return new AttributeValueUpdate(new AttributeValue().withN(String.valueOf(value)), "PUT");
+    }
+
+    public static AttributeValueUpdate putAction(final String value) {
+        return new AttributeValueUpdate(new AttributeValue().withS(value), "PUT");
+    }
+
+    public static AttributeValueUpdate putAction(final Boolean value) {
+        return new AttributeValueUpdate(new AttributeValue().withBOOL(value), "PUT");
+    }
+    // endregion AttributeValueUpdate
 }
