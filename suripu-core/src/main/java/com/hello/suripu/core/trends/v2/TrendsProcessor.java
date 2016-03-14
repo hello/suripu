@@ -34,7 +34,7 @@ public class TrendsProcessor {
     private static final int MIN_ACCOUNT_AGE = 3; // accounts that are less than 3 days old will not see graphs
     public static final int MAX_ACCOUNT_AGE_SHOW_WELCOME_CARDS = 14; //
     private static final int MIN_DATA_SIZE_SHOW_MINMAX = 3;
-    private static final int MIN_VALID_SLEEP_DURATION = 30; // minutes
+    private static final int MIN_VALID_SLEEP_DURATION = 1; // minutes - discard stats with 0 mins of sleep-duration
 
     private final SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private final AccountDAO accountDAO;
