@@ -1,11 +1,16 @@
 package com.hello.suripu.core.trends.v2;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.AccountDAO;
 import com.hello.suripu.core.db.SleepStatsDAODynamoDB;
 import com.hello.suripu.core.db.TimeZoneHistoryDAODynamoDB;
+import com.hello.suripu.core.models.AggregateSleepStats;
+import com.hello.suripu.core.models.MotionScore;
+import com.hello.suripu.core.models.SleepStats;
 import com.hello.suripu.core.translations.English;
+import com.hello.suripu.core.util.DateTimeUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -19,12 +24,16 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by kingshy on 3/10/16.
  */
 public class TestDurationGraphs {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestDurationGraphs.class);
+    private static final long TEST_DURATION_ACCOUNT_ID = 100L;
+    private static final DateTime TEST_DURATION_TODAY = new DateTime(DateTimeZone.UTC).withDate(2016, 3, 14).withTimeAtStartOfDay(); // Mon
+    private static final int TEST_DURATION_DAYS = 2;
 
     private SleepStatsDAODynamoDB sleepStatsDAODynamoDB;
     private TimeZoneHistoryDAODynamoDB timeZoneHistoryDAODynamoDB;
@@ -41,6 +50,30 @@ public class TestDurationGraphs {
 
     @After
     public void tearDown() {
+    }
+
+    @Test
+    public void testMinDurationThreshold() {
+
+        // setup
+        final MotionScore motionScore = new MotionScore(1, 2, 3.0f, 4, 5);
+        final List<AggregateSleepStats> testDurationStats = Lists.newArrayList();
+        testDurationStats.add(new AggregateSleepStats(TEST_DURATION_ACCOUNT_ID,
+                TEST_DURATION_TODAY.minusDays(2), -28800000, 23, "0.1", motionScore, 20, 30, 0,
+                new SleepStats(0, 1, 2, TrendsProcessor.MIN_VALID_SLEEP_DURATION + 10, false, 2, 1L, 2L, 0)));
+
+        testDurationStats.add(new AggregateSleepStats(TEST_DURATION_ACCOUNT_ID,
+                TEST_DURATION_TODAY.minusDays(1), -28800000, 10, "0.1", motionScore, 20, 30, 0,
+                new SleepStats(0, 1, 2, 0, false, 2, 1L, 2L, 0)));
+
+        when(sleepStatsDAODynamoDB.getBatchStats(TEST_DURATION_ACCOUNT_ID,
+                DateTimeUtil.dateToYmdString(TEST_DURATION_TODAY.minusDays(TEST_DURATION_DAYS)),
+                DateTimeUtil.dateToYmdString(TEST_DURATION_TODAY))).thenReturn(ImmutableList.copyOf(testDurationStats));
+
+
+        final List<TrendsProcessor.TrendsData> data = trendsProcessor.getRawData(TEST_DURATION_ACCOUNT_ID, TEST_DURATION_TODAY, TEST_DURATION_DAYS);
+        assertThat(data.size(), is (1));
+        assertThat(data.get(0).getDuration(), is(TrendsProcessor.MIN_VALID_SLEEP_DURATION + 10));
     }
 
     @Test
