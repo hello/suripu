@@ -1,13 +1,17 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
+import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.FileInfoDAO;
+import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.SenseStateAtTime;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
@@ -42,6 +46,8 @@ public class SleepSoundsResourceTest {
     private DurationDAO durationDAO;
     private SoundDAO soundDAO;
     private MessejiClient messejiClient;
+    private FileInfoDAO fileInfoDAO;
+    private FileManifestDAO fileManifestDAO;
     private SleepSoundsResource sleepSoundsResource;
 
     @Before
@@ -51,7 +57,11 @@ public class SleepSoundsResourceTest {
         durationDAO = Mockito.mock(DurationDAO.class);
         soundDAO = Mockito.mock(SoundDAO.class);
         messejiClient = Mockito.mock(MessejiClient.class);
-        sleepSoundsResource = SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient);
+        fileInfoDAO = Mockito.mock(FileInfoDAO.class);
+        fileManifestDAO = Mockito.mock(FileManifestDAO.class);
+        sleepSoundsResource = SleepSoundsResource.create(
+                soundDAO, durationDAO, senseStateDynamoDB, deviceDAO,
+                messejiClient, fileInfoDAO, fileManifestDAO);
     }
 
     private void assertEmpty(final SleepSoundStatus status) {
@@ -244,13 +254,33 @@ public class SleepSoundsResourceTest {
 
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
 
-
-        final Sound sound = Sound.create(soundId, "preview", "name", "path", "url");
+        final FileInfo fileInfo = FileInfo.newBuilder()
+                .withId(soundId)
+                .withPreviewUri("preview")
+                .withName("name")
+                .withPath("/path/to/file")
+                .withUri("url")
+                .withFirmwareVersion(1)
+                .withIsPublic(true)
+                .withSha("11")
+                .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                .build();
+        final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
+                .addFileInfo(FileSync.FileManifest.File.newBuilder()
+                        .setDownloadInfo(FileSync.FileManifest.FileDownload.newBuilder()
+                                .setSdCardFilename("file")
+                                .setSdCardPath("path/to")
+                                .build())
+                        .build())
+                .build();
         final Duration duration = Duration.create(durationId, "name", 30);
 
         // Only work for our specific sound
-        Mockito.when(soundDAO.getById(Mockito.anyLong())).thenReturn(Optional.<Sound>absent());
-        Mockito.when(soundDAO.getById(soundId)).thenReturn(Optional.of(sound));
+        Mockito.when(fileInfoDAO.getById(Mockito.anyLong())).thenReturn(Optional.<FileInfo>absent());
+        Mockito.when(fileInfoDAO.getById(soundId)).thenReturn(Optional.of(fileInfo));
+
+        Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.<FileSync.FileManifest>absent());
+        Mockito.when(fileManifestDAO.getManifest(senseId)).thenReturn(Optional.of(fileManifest));
 
         // Only work for our specific duration
         Mockito.when(durationDAO.getById(Mockito.anyLong())).thenReturn(Optional.<Duration>absent());

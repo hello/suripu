@@ -3,13 +3,17 @@ package com.hello.suripu.app.v2;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
 import com.hello.suripu.core.db.DeviceDAO;
+import com.hello.suripu.core.db.FileInfoDAO;
+import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
+import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.SenseStateAtTime;
 import com.hello.suripu.core.models.sleep_sounds.Duration;
 import com.hello.suripu.core.models.sleep_sounds.SleepSoundStatus;
@@ -42,27 +46,35 @@ public class SleepSoundsResource {
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
     private final MessejiClient messejiClient;
+    private final FileInfoDAO fileInfoDAO;
+    private final FileManifestDAO fileManifestDAO;
 
     private SleepSoundsResource(final SoundDAO soundDAO,
                                 final DurationDAO durationDAO,
                                 final SenseStateDynamoDB senseStateDynamoDB,
                                 final DeviceDAO deviceDAO,
-                                final MessejiClient messejiClient)
+                                final MessejiClient messejiClient,
+                                final FileInfoDAO fileInfoDAO,
+                                final FileManifestDAO fileManifestDAO)
     {
         this.soundDAO = soundDAO;
         this.durationDAO = durationDAO;
         this.senseStateDynamoDB = senseStateDynamoDB;
         this.deviceDAO = deviceDAO;
         this.messejiClient = messejiClient;
+        this.fileInfoDAO = fileInfoDAO;
+        this.fileManifestDAO = fileManifestDAO;
     }
 
     public static SleepSoundsResource create(final SoundDAO soundDAO,
                                              final DurationDAO durationDAO,
                                              final SenseStateDynamoDB senseStateDynamoDB,
                                              final DeviceDAO deviceDAO,
-                                             final MessejiClient messejiClient)
+                                             final MessejiClient messejiClient,
+                                             final FileInfoDAO fileInfoDAO,
+                                             final FileManifestDAO fileManifestDAO)
     {
-        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient);
+        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO);
     }
 
 
@@ -104,17 +116,45 @@ public class SleepSoundsResource {
         }
     }
 
+    private static Boolean canPlayFile(final FileSync.FileManifest senseManifest, final FileInfo fileInfo) {
+        for (final FileSync.FileManifest.File file : senseManifest.getFileInfoList()) {
+            if (file.hasDownloadInfo() &&
+                    file.getDownloadInfo().hasSdCardFilename() &&
+                    file.getDownloadInfo().hasSdCardPath())
+            {
+                final String sdCardPath = file.getDownloadInfo().getSdCardPath();
+                final String sdCardFilename = file.getDownloadInfo().getSdCardFilename();
+                if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @POST
     @Path("/play")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response play(@Scope(OAuthScope.DEVICE_INFORMATION_WRITE) final AccessToken accessToken,
                          @Valid final PlayRequest playRequest)
     {
-        final Optional<Sound> soundOptional = soundDAO.getById(playRequest.soundId);
+        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getById(playRequest.soundId);
+        if (!fileInfoOptional.isPresent()) {
+            LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-found", playRequest.soundId);
+            return invalid_request("invalid sound id");
+        }
+
+        if (fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
+            LOGGER.warn("dao=fileInfoDAO method=getById id={} error=not-sleep-sound", playRequest.soundId);
+            return invalid_request("invalid sound id");
+        }
+
+        final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
+
         final Optional<Duration> durationOptional = durationDAO.getById(playRequest.durationId);
-        // TODO validate that sense firmware can play sound
-        if (!soundOptional.isPresent() || !durationOptional.isPresent()) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+        if (!durationOptional.isPresent()) {
+            LOGGER.warn("dao=durationDAO method=getById id={} error=not-found", playRequest.durationId);
+            return invalid_request("invalid duration id");
         }
 
         final Long accountId = accessToken.accountId;
@@ -122,18 +162,34 @@ public class SleepSoundsResource {
         final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
         if (!deviceIdPair.isPresent()) {
             LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
-            return Response.status(Response.Status.BAD_REQUEST).entity("").build();
+            return invalid_request("no device pair found");
         }
 
         final String senseId = deviceIdPair.get().externalDeviceId;
 
+        // Make sure that this Sense can play this sound
+        final Optional<FileSync.FileManifest> fileManifestOptional = fileManifestDAO.getManifest(senseId);
+        if (!fileManifestOptional.isPresent()) {
+            LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
+            return invalid_request("cannot play sound");
+        }
+
+        if (!canPlayFile(fileManifestOptional.get(), fileInfoOptional.get())) {
+            LOGGER.warn("sense-id={} error=cannot-play-file file-info-id={} path={}",
+                    senseId, fileInfoOptional.get().id, fileInfoOptional.get().path);
+            return invalid_request("cannot play sound");
+        }
+
+        // Send to Messeji
         final Optional<Long> messageId = messejiClient.playAudio(
                 senseId, MessejiClient.Sender.fromAccountId(accountId), playRequest.order,
-                durationOptional.get(), soundOptional.get(), 0, 0, playRequest.volumePercent);
+                durationOptional.get(), sound, 0, 0, playRequest.volumePercent);
 
         if (messageId.isPresent()) {
+            LOGGER.debug("messeji-status=success message-id={} sense-id={}", messageId.get(), senseId);
             return Response.status(Response.Status.ACCEPTED).entity("").build();
         } else {
+            LOGGER.error("messeji-status=failure sense-id={}", senseId);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("").build();
         }
     }
@@ -275,5 +331,14 @@ public class SleepSoundsResource {
         return SleepSoundStatus.create(soundOptional.get(), durationOptional.get());
     }
     //endregion status
+
+
+    private static Response invalid_request(final String message) {
+        return Response.status(Response.Status.BAD_REQUEST).entity(message).build();
+    }
+
+    private static String getFullPath(final String sdCardPath, final String sdCardFilename) {
+        return "/" + sdCardPath + "/" + sdCardFilename;
+    }
 
 }
