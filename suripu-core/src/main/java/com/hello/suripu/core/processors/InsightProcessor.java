@@ -234,6 +234,8 @@ public class InsightProcessor {
             }
         }
 
+        //Generate random marketing insight here. Will pull historical categoreis for all time again
+
         //logic for generating old random insight
         final Optional<InsightCard.Category> toGenerateRandomCategory = selectRandomOldInsightsToGenerate(accountId, recentCategories, currentTime, featureFlipper);
         if (!toGenerateRandomCategory.isPresent()) {
@@ -271,6 +273,15 @@ public class InsightProcessor {
     private Optional<InsightCard.Category> selectHighPriorityInsightToGenerate(final Long accountId, final Set<InsightCard.Category> recentCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
 
         //TODO: Read category to generate off of an external file to allow for most flexibility
+        return Optional.absent();
+    }
+
+    public Optional<InsightCard.Category> selectRandomOneTimeInsightToGenerate(final Long accountId, final Set<InsightCard.Category> historicalCategories, final DateTime currentTime, final RolloutClient featureFlipper) {
+        //Check if date condition is correct?
+        //Check if feature flipper on
+        //Get all historical insights
+        //Build set of marketing insights minus already generated insights
+        //Pull random insight out of set of marketing insights
         return Optional.absent();
     }
 
