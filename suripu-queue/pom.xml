@@ -55,6 +55,21 @@
             <artifactId>opencsv</artifactId>
             <version>3.4</version>
         </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.knowm</groupId>-->
+            <!--<artifactId>dropwizard-sundial</artifactId>-->
+            <!--<version>0.9.1.0</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>de.spinscale</groupId>-->
+            <!--<artifactId>dropwizard-jobs-guice</artifactId>-->
+            <!--<version>1.0.1</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.hubspot.dropwizard</groupId>-->
+            <!--<artifactId>dropwizard-guice</artifactId>-->
+            <!--<version>0.8.4.0</version>-->
+        <!--</dependency>-->
     </dependencies>
     <build>
         <plugins>

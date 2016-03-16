@@ -25,6 +25,14 @@ public class SuripuQueueConfiguration extends Configuration {
     public DatabaseConfiguration getCommonDB() {
         return commonDB;
     }
+    @Valid
+    @NotNull
+    @JsonProperty("sensors_db")
+    private DatabaseConfiguration sensorDB = new DatabaseConfiguration();
+
+    public DatabaseConfiguration getSensorDB() {
+        return sensorDB;
+    }
 
     @Valid
     @NotNull
@@ -90,4 +98,10 @@ public class SuripuQueueConfiguration extends Configuration {
     @Min(1)
     private int numGeneratorThreads = 5;
     public int getNumGeneratorThreads() { return this.numGeneratorThreads; }
+
+//    @Valid
+//    @NotNull
+//    @JsonProperty("sundial")
+//    private SundialConfiguration sundialConfiguration = new SundialConfiguration();
+//    public SundialConfiguration getSundialConfiguration() { return this.sundialConfiguration; }
 }

@@ -2,15 +2,9 @@ package com.hello.suripu.queue.workers;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
-import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -46,21 +40,16 @@ import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
 import com.hello.suripu.coredw.db.SleepHmmDAODynamoDB;
-import com.hello.suripu.queue.configuration.SQSConfiguration;
 import com.hello.suripu.queue.configuration.SuripuQueueConfiguration;
 import com.hello.suripu.queue.modules.RolloutQueueModule;
-import com.yammer.dropwizard.Service;
-import com.yammer.dropwizard.cli.EnvironmentCommand;
-import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.db.ManagedDataSourceFactory;
 import com.yammer.dropwizard.jdbi.ImmutableListContainerFactory;
 import com.yammer.dropwizard.jdbi.ImmutableSetContainerFactory;
 import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
+import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
 import com.yammer.metrics.reporting.GraphiteReporter;
-import net.sourceforge.argparse4j.inf.Namespace;
-import net.sourceforge.argparse4j.inf.Subparser;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,102 +59,49 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-// docs: http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/Welcome.html
-public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueConfiguration> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineQueueWorkerCommand.class);
+/**
+ * Created by kingshy on 3/15/16.
+ */
+public class ProcessMessages implements Managed {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessMessages.class);
 
-    private static int NUM_EMPTY_ITERATIONS_BEFORE_DYING = 100;
-
-    private Boolean isRunning = false;
+    private final TimelineQueueProcessor queueProcessor;
+    private final AWSCredentialsProvider provider;
+    private final SuripuQueueConfiguration configuration;
     private ExecutorService executor;
+    private boolean isRunning = false;
 
-    public TimelineQueueWorkerCommand(Service<SuripuQueueConfiguration> service, String name, String description) {
-        super(service, name, description);
+    public ProcessMessages(final TimelineQueueProcessor queueProcessor,
+                           final AWSCredentialsProvider provider,
+                           final SuripuQueueConfiguration configuration,
+                           final ExecutorService executor
+    ) {
+        this.queueProcessor = queueProcessor;
+        this.provider = provider;
+        this.configuration = configuration;
+        this.executor = executor;
     }
 
     @Override
-    public void configure(Subparser subparser) {
-        super.configure(subparser);
-        subparser.addArgument("--task")
-                .nargs("?")
-                .required(true)
-                .help("task to perform, send or process queue messages");
+    public void start() throws Exception {
 
-        // for sending messages
-        subparser.addArgument("--num_msg")
-                .nargs("?")
-                .required(false)
-                .help("number of messages to send");
-
-        subparser.addArgument("--account")
-                .nargs("?")
-                .required(false)
-                .help("number of messages to send");
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    LOGGER.debug("key=suripu-queue action=started");
+                    isRunning = true;
+                    process();
+                } catch (Exception e) {
+                    isRunning = false;
+                    e.printStackTrace();
+                }
+            }
+        });
 
     }
+    public void process() throws Exception {
 
-    @Override
-    protected void run(Environment environment, Namespace namespace, SuripuQueueConfiguration configuration) throws Exception {
-
-        final String task = namespace.getString("task");
-
-        // setup SQS connection
-        final AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
-
-        final SQSConfiguration sqsConfiguration = configuration.getSqsConfiguration();
-        final int maxConnections = sqsConfiguration.getSqsMaxConnections();
-        final AmazonSQSAsync sqsAsync = new AmazonSQSAsyncClient(provider, new ClientConfiguration().withMaxConnections(maxConnections).withConnectionTimeout(500));
-        final AmazonSQSAsync sqs = new AmazonSQSBufferedAsyncClient(sqsAsync);
-
-        final Region region = Region.getRegion(Regions.US_EAST_1);
-        sqs.setRegion(region);
-
-        final Optional<String> optionalSqsQueueUrl = TimelineQueueProcessor.getSQSQueueURL(sqs, sqsConfiguration.getSqsQueueName());
-        if (!optionalSqsQueueUrl.isPresent()) {
-            LOGGER.error("error=no-sqs-found queue_name={}", sqsConfiguration.getSqsQueueName());
-            throw new Exception("Invalid queue name");
-        }
-
-        final String sqsQueueUrl = optionalSqsQueueUrl.get();
-
-        final TimelineQueueProcessor queueProcessor = new TimelineQueueProcessor(sqsQueueUrl, sqs, sqsConfiguration);
-
-        if (task.equalsIgnoreCase("send")) {
-            // producer -- debugging, create 10 messages for testing
-            Integer numMessages = 30;
-            Long accountId = 1310L;
-
-            if (namespace.getString("num_msg") != null) {
-                numMessages = Integer.valueOf(namespace.getString("num_msg"));
-            }
-
-            if (namespace.getString("account") != null) {
-                accountId = Long.valueOf(namespace.getString("account"));
-            }
-
-            queueProcessor.sendMessages(accountId, numMessages);
-
-        } else {
-            // consumer
-            final int numGeneratorThreads = configuration.getNumGeneratorThreads();
-            executor = environment.managedExecutorService("timeline_queue", numGeneratorThreads, numGeneratorThreads, 2, TimeUnit.SECONDS);
-            isRunning = true;
-            processMessages(queueProcessor, provider, configuration);
-        }
-    }
-
-
-    /**
-     * Main queue worker function
-     * @param queueProcessor - send, receive, encode and decode queue messages
-     * @param provider - aws credentials
-     * @param configuration - config object
-     * @throws Exception
-     */
-
-    private void processMessages(final TimelineQueueProcessor queueProcessor,
-                                 final AWSCredentialsProvider provider,
-                                 final SuripuQueueConfiguration configuration) throws Exception {
         // setup rollout module
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(provider, configuration.dynamoDBConfiguration());
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
@@ -253,8 +189,14 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         } while (isRunning);
     }
 
+    @Override
+    public void stop() throws Exception {
+        LOGGER.debug("key=suripu-queue action=stopped");
+        isRunning = false;
+    }
+
     private TimelineProcessor createTimelineProcessor(final AWSCredentialsProvider provider,
-                                                      final SuripuQueueConfiguration config)throws Exception {
+                                                      final SuripuQueueConfiguration config) throws Exception {
 
         final ManagedDataSourceFactory managedDataSourceFactory = new ManagedDataSourceFactory();
         final DBI commonDB = new DBI(managedDataSourceFactory.build(config.getCommonDB()));
@@ -284,7 +226,7 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
         final PillDataDAODynamoDB pillDataDAODynamoDB = new PillDataDAODynamoDB(pillDataDAODynamoDBClient,
                 tableNames.get(DynamoDBTableName.PILL_DATA));
 
-        final AmazonDynamoDB deviceDataDAODynamoDBClient =  dynamoDBClientFactory.getForTable(DynamoDBTableName.DEVICE_DATA);
+        final AmazonDynamoDB deviceDataDAODynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.DEVICE_DATA);
         final DeviceDataDAODynamoDB deviceDataDAODynamoDB = new DeviceDataDAODynamoDB(deviceDataDAODynamoDBClient,
                 tableNames.get(DynamoDBTableName.DEVICE_DATA));
 
@@ -344,4 +286,3 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
     }
 
 }
-
