@@ -63,6 +63,23 @@ public final class State {
      */
     com.google.protobuf.ByteString
         getFilePathBytes();
+
+    /**
+     * <code>optional uint32 volume_percent = 4;</code>
+     *
+     * <pre>
+     * As a percent [0, 100]
+     * </pre>
+     */
+    boolean hasVolumePercent();
+    /**
+     * <code>optional uint32 volume_percent = 4;</code>
+     *
+     * <pre>
+     * As a percent [0, 100]
+     * </pre>
+     */
+    int getVolumePercent();
   }
   /**
    * Protobuf type {@code AudioState}
@@ -130,6 +147,11 @@ public final class State {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000004;
               filePath_ = bs;
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              volumePercent_ = input.readUInt32();
               break;
             }
           }
@@ -264,10 +286,34 @@ public final class State {
       }
     }
 
+    public static final int VOLUME_PERCENT_FIELD_NUMBER = 4;
+    private int volumePercent_;
+    /**
+     * <code>optional uint32 volume_percent = 4;</code>
+     *
+     * <pre>
+     * As a percent [0, 100]
+     * </pre>
+     */
+    public boolean hasVolumePercent() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional uint32 volume_percent = 4;</code>
+     *
+     * <pre>
+     * As a percent [0, 100]
+     * </pre>
+     */
+    public int getVolumePercent() {
+      return volumePercent_;
+    }
+
     private void initFields() {
       playingAudio_ = false;
       durationSeconds_ = 0;
       filePath_ = "";
+      volumePercent_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -295,6 +341,9 @@ public final class State {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, getFilePathBytes());
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt32(4, volumePercent_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -315,6 +364,10 @@ public final class State {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, getFilePathBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(4, volumePercent_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -439,6 +492,8 @@ public final class State {
         bitField0_ = (bitField0_ & ~0x00000002);
         filePath_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
+        volumePercent_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -479,6 +534,10 @@ public final class State {
           to_bitField0_ |= 0x00000004;
         }
         result.filePath_ = filePath_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.volumePercent_ = volumePercent_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -505,6 +564,9 @@ public final class State {
           bitField0_ |= 0x00000004;
           filePath_ = other.filePath_;
           onChanged();
+        }
+        if (other.hasVolumePercent()) {
+          setVolumePercent(other.getVolumePercent());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -713,6 +775,54 @@ public final class State {
   }
   bitField0_ |= 0x00000004;
         filePath_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int volumePercent_ ;
+      /**
+       * <code>optional uint32 volume_percent = 4;</code>
+       *
+       * <pre>
+       * As a percent [0, 100]
+       * </pre>
+       */
+      public boolean hasVolumePercent() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional uint32 volume_percent = 4;</code>
+       *
+       * <pre>
+       * As a percent [0, 100]
+       * </pre>
+       */
+      public int getVolumePercent() {
+        return volumePercent_;
+      }
+      /**
+       * <code>optional uint32 volume_percent = 4;</code>
+       *
+       * <pre>
+       * As a percent [0, 100]
+       * </pre>
+       */
+      public Builder setVolumePercent(int value) {
+        bitField0_ |= 0x00000008;
+        volumePercent_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 volume_percent = 4;</code>
+       *
+       * <pre>
+       * As a percent [0, 100]
+       * </pre>
+       */
+      public Builder clearVolumePercent() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        volumePercent_ = 0;
         onChanged();
         return this;
       }
@@ -1432,11 +1542,12 @@ public final class State {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\013state.proto\"P\n\nAudioState\022\025\n\rplaying_a" +
+      "\n\013state.proto\"h\n\nAudioState\022\025\n\rplaying_a" +
       "udio\030\001 \002(\010\022\030\n\020duration_seconds\030\002 \001(\r\022\021\n\t" +
-      "file_path\030\003 \001(\t\"@\n\nSenseState\022\020\n\010sense_i" +
-      "d\030\001 \002(\t\022 \n\013audio_state\030\002 \001(\0132\013.AudioStat" +
-      "eB\034\n\032com.hello.suripu.api.input"
+      "file_path\030\003 \001(\t\022\026\n\016volume_percent\030\004 \001(\r\"" +
+      "@\n\nSenseState\022\020\n\010sense_id\030\001 \002(\t\022 \n\013audio" +
+      "_state\030\002 \001(\0132\013.AudioStateB\034\n\032com.hello.s" +
+      "uripu.api.input"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1455,7 +1566,7 @@ public final class State {
     internal_static_AudioState_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_AudioState_descriptor,
-        new java.lang.String[] { "PlayingAudio", "DurationSeconds", "FilePath", });
+        new java.lang.String[] { "PlayingAudio", "DurationSeconds", "FilePath", "VolumePercent", });
     internal_static_SenseState_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_SenseState_fieldAccessorTable = new

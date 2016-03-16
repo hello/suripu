@@ -327,7 +327,6 @@ public class SleepSoundsResource {
             return NOT_PLAYING;
         }
 
-//        fileManifestDAO.getManifest()
         final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(audioState.getFilePath());
         if (!fileInfoOptional.isPresent() || fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
             LOGGER.warn("error=sound-file-not-found account-id={} device-id={} file-path={}",
@@ -337,7 +336,12 @@ public class SleepSoundsResource {
 
         final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
 
-        return SleepSoundStatus.create(sound, durationOptional.get());
+        if (audioState.hasVolumePercent()) {
+            return SleepSoundStatus.create(sound, durationOptional.get(), audioState.getVolumePercent());
+        } else {
+            return SleepSoundStatus.create(sound, durationOptional.get());
+        }
+
     }
     //endregion status
 
