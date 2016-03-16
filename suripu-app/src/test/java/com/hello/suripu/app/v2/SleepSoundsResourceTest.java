@@ -27,7 +27,6 @@ import org.mockito.Mockito;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -201,7 +200,7 @@ public class SleepSoundsResourceTest {
     public void testGetStatusInvalidPath() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
         Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(Duration.create(1L, "path", 30)));
-        Mockito.when(soundDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.<Sound>absent());
+        Mockito.when(fileInfoDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.<FileInfo>absent());
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
                         .setSenseId(senseId)
@@ -218,13 +217,27 @@ public class SleepSoundsResourceTest {
         assertEmpty(status);
     }
 
+    private FileInfo makeFileInfo(final Long id, final String preview, final String name, final String path, final String url) {
+        return FileInfo.newBuilder()
+                .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                .withId(id)
+                .withPreviewUri(preview)
+                .withName(name)
+                .withPath(path)
+                .withUri(url)
+                .withSha(path)
+                .withIsPublic(true)
+                .withFirmwareVersion(1)
+                .build();
+    }
+
     @Test
     public void testGetStatusAllCorrect() throws Exception {
         Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(Mockito.anyLong())).thenReturn(pair);
         final Duration duration = Duration.create(1L, "path", 30);
         Mockito.when(durationDAO.getByDurationSeconds(Mockito.anyInt())).thenReturn(Optional.of(duration));
-        final Sound sound = Sound.create(1L, "preview", "name", "path", "url");
-        Mockito.when(soundDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.of(sound));
+        final FileInfo fileInfo = makeFileInfo(1L, "preview", "name", "path", "url");
+        Mockito.when(fileInfoDAO.getByFilePath(Mockito.anyString())).thenReturn(Optional.of(fileInfo));
         final SenseStateAtTime state = new SenseStateAtTime(
                 State.SenseState.newBuilder()
                         .setSenseId(senseId)
@@ -243,7 +256,7 @@ public class SleepSoundsResourceTest {
         assertThat(status.sound.isPresent(), is(true));
         assertThat(status.duration.isPresent(), is(true));
         assertThat(status.duration.get(), is(duration));
-        assertThat(status.sound.get(), is(sound));
+        assertThat(status.sound.get(), is(Sound.fromFileInfo(fileInfo)));
     }
     // endregion getStatus
 

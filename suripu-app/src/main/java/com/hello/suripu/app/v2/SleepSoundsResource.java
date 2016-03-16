@@ -331,15 +331,18 @@ public class SleepSoundsResource {
                     accountId, deviceId, audioState.getDurationSeconds());
             return NOT_PLAYING;
         }
-        
-        final Optional<Sound> soundOptional = soundDAO.getByFilePath(audioState.getFilePath());
-        if (!soundOptional.isPresent()) {
+
+//        fileManifestDAO.getManifest()
+        final Optional<FileInfo> fileInfoOptional = fileInfoDAO.getByFilePath(audioState.getFilePath());
+        if (!fileInfoOptional.isPresent() || fileInfoOptional.get().fileType != FileInfo.FileType.SLEEP_SOUND) {
             LOGGER.warn("error=sound-file-not-found account-id={} device-id={} file-path={}",
                     accountId, deviceId, audioState.getFilePath());
             return NOT_PLAYING;
         }
 
-        return SleepSoundStatus.create(soundOptional.get(), durationOptional.get());
+        final Sound sound = Sound.fromFileInfo(fileInfoOptional.get());
+
+        return SleepSoundStatus.create(sound, durationOptional.get());
     }
     //endregion status
 
