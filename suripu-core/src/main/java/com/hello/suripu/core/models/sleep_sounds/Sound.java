@@ -45,4 +45,17 @@ public class Sound {
                 throw new IllegalArgumentException(String.format("Invalid FileType for Sound: %s", fileInfo.fileType));
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof Sound)) {
+            return false;
+        }
+        final Sound otherSound = (Sound) obj;
+        return (id.equals(otherSound.id) &&
+                previewUrl.equals(otherSound.previewUrl) &&
+                name.equals(otherSound.name) &&
+                filePath.equals(otherSound.filePath) &&
+                url.equals(otherSound.url));
+    }
 }

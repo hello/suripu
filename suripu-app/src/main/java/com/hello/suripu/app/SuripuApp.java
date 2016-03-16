@@ -68,6 +68,9 @@ import com.hello.suripu.core.db.FeatureExtractionModelsDAO;
 import com.hello.suripu.core.db.FeatureExtractionModelsDAODynamoDB;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.FeedbackDAO;
+import com.hello.suripu.core.db.FileInfoDAO;
+import com.hello.suripu.core.db.FileManifestDAO;
+import com.hello.suripu.core.db.FileManifestDynamoDB;
 import com.hello.suripu.core.db.InsightsDAODynamoDB;
 import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
@@ -94,7 +97,6 @@ import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
-import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -201,6 +203,8 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final QuestionResponseDAO questionResponseDAO = insightsDB.onDemand(QuestionResponseDAO.class);
         final FeedbackDAO feedbackDAO = commonDB.onDemand(FeedbackDAO.class);
         final NotificationSubscriptionsDAO notificationSubscriptionsDAO = commonDB.onDemand(NotificationSubscriptionsDAO.class);
+
+        final FileInfoDAO fileInfoDAO = commonDB.onDemand(FileInfoDAO.class);
 
         final PersistentApplicationStore applicationStore = new PersistentApplicationStore(applicationsDAO);
         final PersistentAccessTokenStore accessTokenStore = new PersistentAccessTokenStore(accessTokenDAO, applicationStore);
@@ -393,6 +397,9 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final AmazonDynamoDB senseStateDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getSenseStateDBConfiguration().getEndpoint());
         final SenseStateDynamoDB senseStateDynamoDB = new SenseStateDynamoDB(senseStateDynamoDBClient, configuration.getSenseStateDBConfiguration().getTableName());
 
+        final AmazonDynamoDB fileManifestDynamoDBClient = dynamoDBClientFactory.getForEndpoint(configuration.getFileManifestDBConfiguration().getEndpoint());
+        final FileManifestDAO fileManifestDAO = new FileManifestDynamoDB(fileManifestDynamoDBClient, configuration.getFileManifestDBConfiguration().getTableName());
+
         environment.addResource(new OAuthResource(accessTokenStore, applicationStore, accountDAO, notificationSubscriptionDAOWrapper));
         environment.addResource(new AccountResource(accountDAO, accountLocationDAO));
         environment.addProvider(new RoomConditionsResource(deviceDataDAODynamoDB, deviceDAO, configuration.getAllowedQueryRange(),senseColorDAO, calibrationDAO));
@@ -476,12 +483,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final TrendsProcessor trendsProcessor = new TrendsProcessor(sleepStatsDAODynamoDB, accountDAO, timeZoneHistoryDAODynamoDB);
         environment.addResource(new TrendsResource(trendsProcessor));
 
-        final SoundDAO soundDAO = commonDB.onDemand(SoundDAO.class);
         final DurationDAO durationDAO = commonDB.onDemand(DurationDAO.class);
         final MessejiHttpClientConfiguration messejiHttpClientConfiguration = configuration.getMessejiHttpClientConfiguration();
         final MessejiClient messejiClient = MessejiHttpClient.create(
                 new HttpClientBuilder().using(messejiHttpClientConfiguration.getHttpClientConfiguration()).build(),
                 messejiHttpClientConfiguration.getEndpoint());
-        environment.addResource(SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient));
+        environment.addResource(SleepSoundsResource.create(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO));
     }
 }
