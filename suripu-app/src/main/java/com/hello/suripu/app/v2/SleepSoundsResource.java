@@ -3,6 +3,7 @@ package com.hello.suripu.app.v2;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
@@ -10,6 +11,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FileInfoDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
+import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
 import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
@@ -33,6 +35,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -114,22 +117,6 @@ public class SleepSoundsResource {
         {
             return new PlayRequest(soundId, durationId, order, volumePercent);
         }
-    }
-
-    private static Boolean canPlayFile(final FileSync.FileManifest senseManifest, final FileInfo fileInfo) {
-        for (final FileSync.FileManifest.File file : senseManifest.getFileInfoList()) {
-            if (file.hasDownloadInfo() &&
-                    file.getDownloadInfo().hasSdCardFilename() &&
-                    file.getDownloadInfo().hasSdCardPath())
-            {
-                final String sdCardPath = file.getDownloadInfo().getSdCardPath();
-                final String sdCardFilename = file.getDownloadInfo().getSdCardFilename();
-                if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @POST
@@ -238,7 +225,7 @@ public class SleepSoundsResource {
 
 
     //region sounds
-    private class SoundResult {
+    protected class SoundResult {
         @JsonProperty("sounds")
         @NotNull
         public final List<Sound> sounds;
@@ -252,8 +239,32 @@ public class SleepSoundsResource {
     @Path("/sounds")
     @Produces(MediaType.APPLICATION_JSON)
     public SoundResult getSounds(@Scope(OAuthScope.DEVICE_INFORMATION_READ) final AccessToken accessToken) {
-        // TODO map sounds to user's firmware version
-        final List<Sound> sounds = soundDAO.all();
+        final Long accountId = accessToken.accountId;
+
+        final Optional<DeviceAccountPair> deviceIdPair = deviceDAO.getMostRecentSensePairByAccountId(accountId);
+        if (!deviceIdPair.isPresent()) {
+            LOGGER.warn("account-id={} device-id-pair=not-found", accountId);
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        final List<Sound> sounds = Lists.newArrayList();
+
+        final String senseId = deviceIdPair.get().externalDeviceId;
+        final Optional<FileSync.FileManifest> manifestOptional = fileManifestDAO.getManifest(senseId);
+        if (!manifestOptional.isPresent()) {
+            LOGGER.warn("dao=fileManifestDAO method=getManifest sense-id={} error=not-found", senseId);
+            // If no File manifest, Sense cannot play sounds so return an empty list.
+            return new SoundResult(sounds);
+        }
+
+        final List<FileInfo> sleepSoundFileInfoList = fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND);
+        // O(n*m) but n and m are so small this is probably faster than doing something fancier.
+        for (final FileInfo fileInfo : sleepSoundFileInfoList) {
+            if (canPlayFile(manifestOptional.get(), fileInfo)) {
+                sounds.add(Sound.fromFileInfo(fileInfo));
+            }
+        }
+
         return new SoundResult(sounds);
     }
     //endregion sounds
@@ -320,7 +331,7 @@ public class SleepSoundsResource {
                     accountId, deviceId, audioState.getDurationSeconds());
             return NOT_PLAYING;
         }
-
+        
         final Optional<Sound> soundOptional = soundDAO.getByFilePath(audioState.getFilePath());
         if (!soundOptional.isPresent()) {
             LOGGER.warn("error=sound-file-not-found account-id={} device-id={} file-path={}",
@@ -339,6 +350,22 @@ public class SleepSoundsResource {
 
     private static String getFullPath(final String sdCardPath, final String sdCardFilename) {
         return "/" + sdCardPath + "/" + sdCardFilename;
+    }
+
+    private static Boolean canPlayFile(final FileSync.FileManifest senseManifest, final FileInfo fileInfo) {
+        for (final FileSync.FileManifest.File file : senseManifest.getFileInfoList()) {
+            if (file.hasDownloadInfo() &&
+                    file.getDownloadInfo().hasSdCardFilename() &&
+                    file.getDownloadInfo().hasSdCardPath())
+            {
+                final String sdCardPath = file.getDownloadInfo().getSdCardPath();
+                final String sdCardFilename = file.getDownloadInfo().getSdCardFilename();
+                if (getFullPath(sdCardPath, sdCardFilename).equals(fileInfo.path)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

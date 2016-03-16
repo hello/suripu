@@ -1,6 +1,7 @@
 package com.hello.suripu.app.v2;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.hello.suripu.api.input.FileSync;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.app.messeji.MessejiClient;
@@ -24,7 +25,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -311,4 +314,63 @@ public class SleepSoundsResourceTest {
                 is(Response.Status.BAD_REQUEST.getStatusCode()));
     }
     // endregion play
+
+    // region getSounds
+    @Test
+    public void testGetSoundsNoManifest() throws Exception {
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+
+        Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.<FileSync.FileManifest>absent());
+
+        final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
+        assertThat(soundResult.sounds.size(), is(0));
+    }
+
+    @Test
+    public void testGetSounds() throws Exception {
+        final Long soundId = 1L;
+
+        Mockito.when(deviceDAO.getMostRecentSensePairByAccountId(accountId)).thenReturn(pair);
+
+        final FileInfo fileInfo = FileInfo.newBuilder()
+                .withId(soundId)
+                .withPreviewUri("preview")
+                .withName("name")
+                .withPath("/path/to/file")
+                .withUri("url")
+                .withFirmwareVersion(1)
+                .withIsPublic(true)
+                .withSha("11")
+                .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                .build();
+        final FileInfo unplayableFileInfo = FileInfo.newBuilder()
+                .withId(soundId + 1)
+                .withPreviewUri("preview")
+                .withName("name")
+                .withPath("/wrong/path/to/file")
+                .withUri("url")
+                .withFirmwareVersion(1)
+                .withIsPublic(true)
+                .withSha("11")
+                .withFileType(FileInfo.FileType.SLEEP_SOUND)
+                .build();
+        final List<FileInfo> fileInfoList = ImmutableList.of(fileInfo, unplayableFileInfo);
+        Mockito.when(fileInfoDAO.getAllForType(FileInfo.FileType.SLEEP_SOUND)).thenReturn(fileInfoList);
+
+        final FileSync.FileManifest fileManifest = FileSync.FileManifest.newBuilder()
+                .addFileInfo(FileSync.FileManifest.File.newBuilder()
+                        .setDownloadInfo(FileSync.FileManifest.FileDownload.newBuilder()
+                                .setSdCardFilename("file")
+                                .setSdCardPath("path/to")
+                                .build())
+                        .build())
+                .build();
+        Mockito.when(fileManifestDAO.getManifest(Mockito.anyString())).thenReturn(Optional.of(fileManifest));
+
+        final SleepSoundsResource.SoundResult soundResult = sleepSoundsResource.getSounds(token);
+        assertThat(soundResult.sounds.size(), is(1));
+        assertThat(soundResult.sounds.get(0).id, is(soundId));
+    }
+
+    // endregion getSounds
 }
