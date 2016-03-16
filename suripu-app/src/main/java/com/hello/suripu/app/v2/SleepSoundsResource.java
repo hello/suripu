@@ -21,6 +21,7 @@ import com.hello.suripu.core.models.sleep_sounds.Sound;
 import com.hello.suripu.core.oauth.AccessToken;
 import com.hello.suripu.core.oauth.OAuthScope;
 import com.hello.suripu.core.oauth.Scope;
+import com.hello.suripu.core.util.JsonError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -342,7 +343,10 @@ public class SleepSoundsResource {
 
 
     private static Response invalid_request(final String message) {
-        return Response.status(Response.Status.BAD_REQUEST).entity(message).build();
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(new JsonError(400, message))
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .build();
     }
 
     private static String getFullPath(final String sdCardPath, final String sdCardFilename) {
