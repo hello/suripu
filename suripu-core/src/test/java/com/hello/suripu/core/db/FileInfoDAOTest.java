@@ -110,4 +110,16 @@ public class FileInfoDAOTest extends SqlDAOTest<FileInfoDAO> {
         assertThat(forSense2.get(3).id, is(2L));
     }
 
+    @Test
+    public void testGetAllForType() throws Exception {
+        // Empty table
+        assertThat(dao.getAllForType(FileInfo.FileType.SLEEP_SOUND).size(), is(0));
+
+        // Insert sleep sound
+        insert(1L, 1, 5, true);
+
+        assertThat(dao.getAllForType(FileInfo.FileType.SLEEP_SOUND).get(0).id, is(1L));
+        assertThat(dao.getAllForType(FileInfo.FileType.ALARM).size(), is(0));
+    }
+
 }

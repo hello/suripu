@@ -28,7 +28,6 @@ public abstract class FileInfoDAO {
     public abstract Optional<FileInfo> getById(@Bind("id") final Long id);
 
 
-
     @SqlQuery("SELECT fi.* " +
             "FROM file_info AS fi " +
             "LEFT JOIN sense_file_info AS sfi " +
@@ -38,6 +37,10 @@ public abstract class FileInfoDAO {
     protected abstract List<FileInfo> getAllForFirmwareVersionAndSenseId(
             @Bind("firmware_version") final Integer firmwareVersion,
             @Bind("sense_id") final String senseId);
+
+
+    @SqlQuery("SELECT * FROM file_info WHERE type=:file_type;")
+    public abstract List<FileInfo> getAllForType(@Bind("file_type") final FileInfo.FileType fileType);
 
 
 
