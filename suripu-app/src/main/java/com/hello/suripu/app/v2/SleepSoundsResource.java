@@ -11,9 +11,7 @@ import com.hello.suripu.core.db.DeviceDAO;
 import com.hello.suripu.core.db.FileInfoDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
-import com.hello.suripu.core.db.SensorsViewsDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
-import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.SenseStateAtTime;
@@ -44,7 +42,6 @@ import java.util.List;
 public class SleepSoundsResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(SleepSoundsResource.class);
 
-    private final SoundDAO soundDAO;
     private final DurationDAO durationDAO;
     private final SenseStateDynamoDB senseStateDynamoDB;
     private final DeviceDAO deviceDAO;
@@ -52,15 +49,13 @@ public class SleepSoundsResource {
     private final FileInfoDAO fileInfoDAO;
     private final FileManifestDAO fileManifestDAO;
 
-    private SleepSoundsResource(final SoundDAO soundDAO,
-                                final DurationDAO durationDAO,
+    private SleepSoundsResource(final DurationDAO durationDAO,
                                 final SenseStateDynamoDB senseStateDynamoDB,
                                 final DeviceDAO deviceDAO,
                                 final MessejiClient messejiClient,
                                 final FileInfoDAO fileInfoDAO,
                                 final FileManifestDAO fileManifestDAO)
     {
-        this.soundDAO = soundDAO;
         this.durationDAO = durationDAO;
         this.senseStateDynamoDB = senseStateDynamoDB;
         this.deviceDAO = deviceDAO;
@@ -69,15 +64,14 @@ public class SleepSoundsResource {
         this.fileManifestDAO = fileManifestDAO;
     }
 
-    public static SleepSoundsResource create(final SoundDAO soundDAO,
-                                             final DurationDAO durationDAO,
+    public static SleepSoundsResource create(final DurationDAO durationDAO,
                                              final SenseStateDynamoDB senseStateDynamoDB,
                                              final DeviceDAO deviceDAO,
                                              final MessejiClient messejiClient,
                                              final FileInfoDAO fileInfoDAO,
                                              final FileManifestDAO fileManifestDAO)
     {
-        return new SleepSoundsResource(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO);
+        return new SleepSoundsResource(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO);
     }
 
 

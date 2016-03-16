@@ -10,7 +10,6 @@ import com.hello.suripu.core.db.FileInfoDAO;
 import com.hello.suripu.core.db.FileManifestDAO;
 import com.hello.suripu.core.db.SenseStateDynamoDB;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
-import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.models.DeviceAccountPair;
 import com.hello.suripu.core.models.FileInfo;
 import com.hello.suripu.core.models.SenseStateAtTime;
@@ -46,7 +45,6 @@ public class SleepSoundsResourceTest {
     private DeviceDAO deviceDAO;
     private SenseStateDynamoDB senseStateDynamoDB;
     private DurationDAO durationDAO;
-    private SoundDAO soundDAO;
     private MessejiClient messejiClient;
     private FileInfoDAO fileInfoDAO;
     private FileManifestDAO fileManifestDAO;
@@ -57,12 +55,11 @@ public class SleepSoundsResourceTest {
         deviceDAO = Mockito.mock(DeviceDAO.class);
         senseStateDynamoDB = Mockito.mock(SenseStateDynamoDB.class);
         durationDAO = Mockito.mock(DurationDAO.class);
-        soundDAO = Mockito.mock(SoundDAO.class);
         messejiClient = Mockito.mock(MessejiClient.class);
         fileInfoDAO = Mockito.mock(FileInfoDAO.class);
         fileManifestDAO = Mockito.mock(FileManifestDAO.class);
         sleepSoundsResource = SleepSoundsResource.create(
-                soundDAO, durationDAO, senseStateDynamoDB, deviceDAO,
+                durationDAO, senseStateDynamoDB, deviceDAO,
                 messejiClient, fileInfoDAO, fileManifestDAO);
     }
 

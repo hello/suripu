@@ -97,7 +97,6 @@ import com.hello.suripu.core.db.WifiInfoDynamoDB;
 import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.sleep_sounds.DurationDAO;
-import com.hello.suripu.core.db.sleep_sounds.SoundDAO;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
 import com.hello.suripu.core.filters.CacheFilterFactory;
@@ -484,12 +483,11 @@ public class SuripuApp extends Service<SuripuAppConfiguration> {
         final TrendsProcessor trendsProcessor = new TrendsProcessor(sleepStatsDAODynamoDB, accountDAO, timeZoneHistoryDAODynamoDB);
         environment.addResource(new TrendsResource(trendsProcessor));
 
-        final SoundDAO soundDAO = commonDB.onDemand(SoundDAO.class);
         final DurationDAO durationDAO = commonDB.onDemand(DurationDAO.class);
         final MessejiHttpClientConfiguration messejiHttpClientConfiguration = configuration.getMessejiHttpClientConfiguration();
         final MessejiClient messejiClient = MessejiHttpClient.create(
                 new HttpClientBuilder().using(messejiHttpClientConfiguration.getHttpClientConfiguration()).build(),
                 messejiHttpClientConfiguration.getEndpoint());
-        environment.addResource(SleepSoundsResource.create(soundDAO, durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO));
+        environment.addResource(SleepSoundsResource.create(durationDAO, senseStateDynamoDB, deviceDAO, messejiClient, fileInfoDAO, fileManifestDAO));
     }
 }
