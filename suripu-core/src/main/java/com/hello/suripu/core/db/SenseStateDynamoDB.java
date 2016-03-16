@@ -111,18 +111,6 @@ public class SenseStateDynamoDB {
         return Optional.absent();
     }
 
-    private AttributeValueUpdate putAction(final Long value) {
-        return new AttributeValueUpdate(new AttributeValue().withN(String.valueOf(value)), "PUT");
-    }
-
-    private AttributeValueUpdate putAction(final String value) {
-        return new AttributeValueUpdate(new AttributeValue().withS(value), "PUT");
-    }
-
-    private AttributeValueUpdate putAction(final Boolean value) {
-        return new AttributeValueUpdate(new AttributeValue().withBOOL(value), "PUT");
-    }
-
     private Map<String, AttributeValueUpdate> toDynamoDBUpdates(final SenseStateAtTime state) {
         final Map<String, AttributeValueUpdate> updates = Maps.newHashMap();
         updates.put(SenseStateAttribute.TIMESTAMP.shortName(), Util.putAction(state.timestamp.getMillis()));
