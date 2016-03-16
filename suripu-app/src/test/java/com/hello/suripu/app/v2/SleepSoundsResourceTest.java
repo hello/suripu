@@ -254,6 +254,7 @@ public class SleepSoundsResourceTest {
         assertThat(status.duration.isPresent(), is(true));
         assertThat(status.duration.get(), is(duration));
         assertThat(status.sound.get(), is(Sound.fromFileInfo(fileInfo)));
+        assertThat(status.volumePercent.isPresent(), is(false));
     }
     // endregion getStatus
 
