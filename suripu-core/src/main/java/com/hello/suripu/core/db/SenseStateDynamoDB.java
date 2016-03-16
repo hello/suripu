@@ -40,7 +40,8 @@ public class SenseStateDynamoDB {
         TIMESTAMP("timestamp", "N"),
         PLAYING_AUDIO("playing_audio", "B"),
         SLEEP_SOUND_DURATION("duration", "N"),
-        SLEEP_SOUND_FILE("sound", "S");
+        SLEEP_SOUND_FILE("sound", "S"),
+        SLEEP_SOUND_VOLUME("volume", "N");
 
         private final String name;
         private final String type;
@@ -90,6 +91,9 @@ public class SenseStateDynamoDB {
             if (isPlayingAudio) {
                 audioStateBuilder.setDurationSeconds(Integer.valueOf(item.get(SenseStateAttribute.SLEEP_SOUND_DURATION.shortName()).getN()));
                 audioStateBuilder.setFilePath(item.get(SenseStateAttribute.SLEEP_SOUND_FILE.shortName()).getS());
+                if (item.containsKey(SenseStateAttribute.SLEEP_SOUND_VOLUME.shortName())) {
+                    audioStateBuilder.setVolumePercent(Integer.valueOf(item.get(SenseStateAttribute.SLEEP_SOUND_VOLUME.shortName()).getN()));
+                }
             }
             senseStateBuilder.setAudioState(audioStateBuilder.build());
         }
@@ -122,6 +126,9 @@ public class SenseStateDynamoDB {
             if (audioState.getPlayingAudio()) {
                 updates.put(SenseStateAttribute.SLEEP_SOUND_FILE.shortName(), Util.putAction(audioState.getFilePath()));
                 updates.put(SenseStateAttribute.SLEEP_SOUND_DURATION.shortName(), Util.putAction((long) audioState.getDurationSeconds()));
+                if (audioState.hasVolumePercent()) {
+                    updates.put(SenseStateAttribute.SLEEP_SOUND_VOLUME.shortName(), Util.putAction((long) audioState.getVolumePercent()));
+                }
             }
         }
 
