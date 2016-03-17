@@ -39,7 +39,7 @@ public abstract class FileInfoDAO {
             @Bind("sense_id") final String senseId);
 
 
-    @SqlQuery("SELECT * FROM file_info WHERE type=:file_type;")
+    @SqlQuery("SELECT * FROM file_info WHERE type=:file_type ORDER BY sort_key;")
     public abstract List<FileInfo> getAllForType(@Bind("file_type") final FileInfo.FileType fileType);
 
 
