@@ -7,9 +7,9 @@ import org.joda.time.DateTime;
  */
 
 public class AccountData {
-    private final long accountId;
-    private final int offsetMillis;
-    private final DateTime lastSeenTimestamp;
+    public final long accountId;
+    public final int offsetMillis;
+    public final DateTime lastSeenTimestamp;
 
     public AccountData(final long accountId, final int offsetMillis, final DateTime lastSeenTimestamp) {
         this.accountId = accountId;

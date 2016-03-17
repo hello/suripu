@@ -73,9 +73,6 @@ import java.util.concurrent.TimeUnit;
 // docs: http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/Welcome.html
 public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueConfiguration> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineQueueWorkerCommand.class);
-
-    private static int NUM_EMPTY_ITERATIONS_BEFORE_DYING = 100;
-
     private Boolean isRunning = false;
     private ExecutorService executor;
 
@@ -147,8 +144,8 @@ public class TimelineQueueWorkerCommand extends EnvironmentCommand<SuripuQueueCo
 
         } else {
             // consumer
-            final int numGeneratorThreads = configuration.getNumGeneratorThreads();
-            executor = environment.managedExecutorService("timeline_queue", numGeneratorThreads, numGeneratorThreads, 2, TimeUnit.SECONDS);
+            final int numConsumerThreads = configuration.getNumConsumerThreads();
+            executor = environment.managedExecutorService("timeline_queue", numConsumerThreads, numConsumerThreads, 2, TimeUnit.SECONDS);
             isRunning = true;
             processMessages(queueProcessor, provider, configuration);
         }

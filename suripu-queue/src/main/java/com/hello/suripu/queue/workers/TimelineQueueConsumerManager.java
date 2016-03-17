@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -35,7 +34,6 @@ import com.hello.suripu.core.db.colors.SenseColorDAO;
 import com.hello.suripu.core.db.colors.SenseColorDAOSQLImpl;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.core.db.util.PostgresIntegerArrayArgumentFactory;
-import com.hello.suripu.core.metrics.RegexMetricPredicate;
 import com.hello.suripu.core.processors.TimelineProcessor;
 import com.hello.suripu.coredw.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.coredw.configuration.S3BucketConfiguration;
@@ -49,32 +47,38 @@ import com.yammer.dropwizard.jdbi.OptionalContainerFactory;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.reporting.GraphiteReporter;
 import org.skife.jdbi.v2.DBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by kingshy on 3/15/16.
+ * Created by ksg on 3/15/16
+ * docs: http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/Welcome.html
  */
-public class ProcessMessages implements Managed {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessMessages.class);
+
+public class TimelineQueueConsumerManager implements Managed {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TimelineQueueConsumerManager.class);
+
+    private static final long SLEEP_WHEN_NO_MESSAGES_MILLIS = 10000L; // 10 secs
 
     private final TimelineQueueProcessor queueProcessor;
     private final AWSCredentialsProvider provider;
     private final SuripuQueueConfiguration configuration;
-    private ExecutorService executor;
+    private final ExecutorService executor;
+    private final ExecutorService mainExecutor = Executors.newSingleThreadExecutor();
+
     private boolean isRunning = false;
 
-    public ProcessMessages(final TimelineQueueProcessor queueProcessor,
-                           final AWSCredentialsProvider provider,
-                           final SuripuQueueConfiguration configuration,
-                           final ExecutorService executor
+    public TimelineQueueConsumerManager(final TimelineQueueProcessor queueProcessor,
+                                        final AWSCredentialsProvider provider,
+                                        final SuripuQueueConfiguration configuration,
+                                        final ExecutorService executor
     ) {
         this.queueProcessor = queueProcessor;
         this.provider = provider;
@@ -84,14 +88,13 @@ public class ProcessMessages implements Managed {
 
     @Override
     public void start() throws Exception {
-
-        executor.submit(new Runnable() {
+        mainExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    LOGGER.debug("key=suripu-queue action=started");
+                    LOGGER.debug("key=suripu-queue-consumer action=started");
                     isRunning = true;
-                    process();
+                    processMessages();
                 } catch (Exception e) {
                     isRunning = false;
                     e.printStackTrace();
@@ -100,9 +103,10 @@ public class ProcessMessages implements Managed {
         });
 
     }
-    public void process() throws Exception {
 
-        // setup rollout module
+    private void processMessages() throws Exception {
+
+        // set up rollout module
         final AmazonDynamoDBClientFactory dynamoDBClientFactory = AmazonDynamoDBClientFactory.create(provider, configuration.dynamoDBConfiguration());
         final AmazonDynamoDB featuresDynamoDBClient = dynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
         final FeatureStore featureStore = new FeatureStore(featuresDynamoDBClient,
@@ -111,37 +115,20 @@ public class ProcessMessages implements Managed {
         final RolloutQueueModule module = new RolloutQueueModule(featureStore, 30);
         ObjectGraphRoot.getInstance().init(module);
 
-        // set up metrics
-        if (configuration.getMetricsEnabled()) {
-            final String graphiteHostName = configuration.getGraphite().getHost();
-            final String apiKey = configuration.getGraphite().getApiKey();
-            final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
+        // metrics
+        final Meter messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineQueueConsumerManager.class, "processed", "messages-processed", TimeUnit.SECONDS);
+        final Meter messagesReceived = Metrics.defaultRegistry().newMeter(TimelineQueueConsumerManager.class, "received", "messages-received", TimeUnit.SECONDS);
+        final Meter messagesDeleted = Metrics.defaultRegistry().newMeter(TimelineQueueConsumerManager.class, "deleted", "messages-deleted", TimeUnit.SECONDS);
+        final Meter validSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueConsumerManager.class, "ok-sleep-score", "valid-score", TimeUnit.SECONDS);
+        final Meter invalidSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueConsumerManager.class, "invalid-sleep-score", "invalid-score", TimeUnit.SECONDS);
+        final Meter noTimeline = Metrics.defaultRegistry().newMeter(TimelineQueueConsumerManager.class, "timeline-fail", "fail-to-created", TimeUnit.SECONDS);
 
-            final String env = (configuration.getDebug()) ? "dev" : "prod";
-            final String prefix = String.format("%s.%s.suripu-queue", apiKey, env);
-
-            final List<String> metrics = configuration.getGraphite().getIncludeMetrics();
-            final RegexMetricPredicate predicate = new RegexMetricPredicate(metrics);
-            final Joiner joiner = Joiner.on(", ");
-            LOGGER.info("Logging the following metrics: {}", joiner.join(metrics));
-            GraphiteReporter.enable(Metrics.defaultRegistry(), interval, TimeUnit.SECONDS, graphiteHostName, 2003, prefix, predicate);
-
-            LOGGER.info("Metrics enabled.");
-        } else {
-            LOGGER.warn("Metrics not enabled.");
-        }
-
-        final Meter messagesProcessed = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "processed", "messages-processed", TimeUnit.SECONDS);
-        final Meter messagesReceived = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "received", "messages-received", TimeUnit.SECONDS);
-        final Meter messagesDeleted = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "deleted", "messages-deleted", TimeUnit.SECONDS);
-        final Meter validSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "ok-sleep-score", "valid-score", TimeUnit.SECONDS);
-        final Meter invalidSleepScore = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "invalid-sleep-score", "invalid-score", TimeUnit.SECONDS);
-        final Meter noTimeline = Metrics.defaultRegistry().newMeter(TimelineQueueWorkerCommand.class, "timeline-fail", "fail-to-created", TimeUnit.SECONDS);
-
+        // set up TimelineProcessor
         final TimelineProcessor timelineProcessor = createTimelineProcessor(provider, configuration);
         int numEmptyQueueIterations = 0;
 
         do {
+            // get a bunch of messages from SQS
             final List<TimelineQueueProcessor.TimelineMessage> messages = queueProcessor.receiveMessages();
 
             messagesReceived.mark(messages.size());
@@ -149,12 +136,14 @@ public class ProcessMessages implements Managed {
             final List<Future<Optional<TimelineQueueProcessor.TimelineMessage>>> futures = Lists.newArrayListWithCapacity(messages.size());
 
             if (!messages.isEmpty()) {
+                // generate all the timelines
                 for (final TimelineQueueProcessor.TimelineMessage message : messages) {
                     final TimelineGenerator generator = new TimelineGenerator(timelineProcessor, message);
                     final Future<Optional<TimelineQueueProcessor.TimelineMessage>> future = executor.submit(generator);
                     futures.add(future);
                 }
 
+                // prepare to delete processed messages
                 final List<DeleteMessageBatchRequestEntry> processedHandlers = Lists.newArrayList();
                 for (final Future<Optional<TimelineQueueProcessor.TimelineMessage>> future : futures) {
                     final Optional<TimelineQueueProcessor.TimelineMessage> processed = future.get();
@@ -172,8 +161,9 @@ public class ProcessMessages implements Managed {
                     }
                 }
 
+                // delete messages
                 if (!processedHandlers.isEmpty()) {
-                    LOGGER.debug("action=delete-messages num={}", processedHandlers.size());
+                    LOGGER.debug("key=suripu-queue-consumer action=delete-messages num={}", processedHandlers.size());
                     messagesProcessed.mark(processedHandlers.size());
                     final int deleted = queueProcessor.deleteMessages(processedHandlers);
                     messagesDeleted.mark(deleted);
@@ -183,7 +173,8 @@ public class ProcessMessages implements Managed {
 
             } else {
                 numEmptyQueueIterations++;
-                LOGGER.debug("action=empty-iteration value={}", numEmptyQueueIterations);
+                LOGGER.debug("key=suripu-queue-consumer action=empty-iteration value={}", numEmptyQueueIterations);
+                Thread.sleep(SLEEP_WHEN_NO_MESSAGES_MILLIS);
             }
 
         } while (isRunning);
@@ -191,7 +182,7 @@ public class ProcessMessages implements Managed {
 
     @Override
     public void stop() throws Exception {
-        LOGGER.debug("key=suripu-queue action=stopped");
+        LOGGER.debug("key=suripu-queue-consumer action=stopped");
         isRunning = false;
     }
 

@@ -121,4 +121,6 @@ dynamodb:
     sleep_hmm: http://dynamodb.us-east-1.amazonaws.com
     sleep_stats: http://dynamodb.us-east-1.amazonaws.com
 
-num_generator_threads: 2
+num_queue_producer_threads: 1
+num_queue_consumer_threads: 1
+queue_producer_interval_minutes: 10

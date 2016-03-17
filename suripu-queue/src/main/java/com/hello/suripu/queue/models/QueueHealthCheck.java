@@ -15,7 +15,7 @@ public class QueueHealthCheck extends HealthCheck{
     }
 
     @Override
-    protected Result check() throws Exception {
+    public Result check() throws Exception {
         final String testString = String.format("%s", name);
         if (!testString.contains(name)) {
             return Result.unhealthy("Fail health check!");

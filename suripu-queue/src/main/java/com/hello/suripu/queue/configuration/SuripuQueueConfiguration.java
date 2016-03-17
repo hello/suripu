@@ -93,15 +93,23 @@ public class SuripuQueueConfiguration extends Configuration {
     }
 
 
-    @JsonProperty("num_generator_threads")
+    @JsonProperty("num_queue_consumer_threads")
     @Max(10)
     @Min(1)
-    private int numGeneratorThreads = 5;
-    public int getNumGeneratorThreads() { return this.numGeneratorThreads; }
+    private int numConsumerThreads = 5;
+    public int getNumConsumerThreads() { return this.numConsumerThreads; }
 
-//    @Valid
-//    @NotNull
-//    @JsonProperty("sundial")
-//    private SundialConfiguration sundialConfiguration = new SundialConfiguration();
-//    public SundialConfiguration getSundialConfiguration() { return this.sundialConfiguration; }
+    @JsonProperty("num_queue_producer_threads")
+    @Max(10)
+    @Min(1)
+    private int numProducerThreads = 5;
+    public int getNumProducerThreads() { return this.numProducerThreads; }
+
+
+    @JsonProperty("queue_producer_interval_minutes")
+    @Max(30)
+    @Min(1)
+    private long producerScheduleIntervalMinutes = 10L;
+    public long getProducerScheduleIntervalMinutes() { return this.producerScheduleIntervalMinutes; }
+
 }

@@ -109,4 +109,7 @@ dynamodb:
     sleep_hmm: http://localhost:7777
     sleep_stats: http://localhost:7777
 
-num_generator_threads: 2
+num_queue_producer_threads: 1
+num_queue_consumer_threads: 1
+
+queue_producer_interval_minutes: 10
