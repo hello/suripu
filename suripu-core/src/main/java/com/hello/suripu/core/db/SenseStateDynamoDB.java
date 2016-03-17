@@ -4,8 +4,11 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 import com.amazonaws.services.dynamodbv2.model.CreateTableResult;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hello.suripu.api.input.State;
 import com.hello.suripu.core.db.dynamo.Attribute;
@@ -17,6 +20,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -137,10 +141,16 @@ public class SenseStateDynamoDB {
 
     /**
      * WARNING: Last write wins
-     * @param state
      */
     public void updateState(final SenseStateAtTime state) {
-        dynamoDBClient.updateItem(tableName, getKey(state.state.getSenseId()), toDynamoDBUpdates(state));
+        final UpdateItemResult result = dynamoDBClient.updateItem(tableName, getKey(state.state.getSenseId()), toDynamoDBUpdates(state), "UPDATED_OLD");
+
+        // getAttributes may be null or empty if this is the first time we've created this item or if nothing was changed, respectively.
+        if ((result.getAttributes() != null) && (result.getAttributes().size() > 0)) {
+            // Only log if something changed.
+            final String loggableAttributes = Util.getLogFormattedAttributes(result.getAttributes());
+            LOGGER.info("info=changed-sense-state-attributes sense-id={} {}", state.state.getSenseId(), loggableAttributes);
+        }
     }
 
 }
