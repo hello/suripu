@@ -12,8 +12,10 @@ import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputExceededException;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.responses.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,4 +150,34 @@ public class Util {
         return new AttributeValueUpdate(new AttributeValue().withBOOL(value), "PUT");
     }
     // endregion AttributeValueUpdate
+
+
+    /**
+     * Format Dynamo attribute map as key=value log pairs.
+     * NOTE: Only handles the following attribute types currently: N, S, Bool, B
+     * @param attributes Attributes to format.
+     * @return String with key=value log pairs.
+     */
+    public static String getLogFormattedAttributes(final Map<String, AttributeValue> attributes) {
+        final List<String> parts = Lists.newArrayList();
+        for (final Map.Entry<String, AttributeValue> entry : attributes.entrySet()) {
+            final AttributeValue value = entry.getValue();
+            final String valueString;
+            if (value.getN() != null) {
+                valueString = value.getN();
+            } else if (value.getS() != null) {
+                valueString = value.getS();
+            } else if (value.getBOOL() != null) {
+                valueString = value.getBOOL().toString();
+            } else if (value.getB() != null) {
+                valueString = new String(value.getB().array());
+            } else {
+                // Don't handle other (nested) types for now.
+                valueString = "UNKOWN";
+            }
+            final String part = entry.getKey() + "=" + valueString;
+            parts.add(part);
+        }
+        return Joiner.on(" ").join(parts);
+    }
 }
