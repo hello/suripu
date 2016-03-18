@@ -43,6 +43,39 @@ common_db:
   # the maximum lifetime of an idle connection
   closeConnectionIfIdleFor: 1 minute
 
+sensors_db:
+  driverClass: org.postgresql.Driver
+
+  # use prod_sense_data on redshift
+  user: suripu_queue
+  password: Hello-suripu-queue-123
+  url: jdbc:postgresql://sensors2.cy7n0vzxfedi.us-east-1.redshift.amazonaws.com:5439/sensors1
+
+
+  # any properties specific to your JDBC driver:
+  properties:
+    charSet: UTF-8
+
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+
+  # the SQL query to run when validating a connection's liveness
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+
+  # the minimum number of connections to keep open
+  minSize: 2
+
+  # the maximum number of connections to keep open
+  maxSize: 24
+
+  # whether or not idle connections should be validated
+  checkConnectionWhileIdle: false
+
+  # how long a connection must be held before it can be validated
+  checkConnectionHealthWhenIdleFor: 10s
+
+  # the maximum lifetime of an idle connection
+  closeConnectionIfIdleFor: 1 minute
 http:
   # The port on which the HTTP server listens for service requests.
   # Because Java cannot drop privileges in a POSIX system, these

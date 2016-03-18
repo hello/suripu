@@ -12,8 +12,9 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 /**
- * Created by kingshy on 1/11/16.
+ * Created by kingshy on 1/11/16
  */
+
 public class TimelineGenerator implements Callable<Optional<TimelineQueueProcessor.TimelineMessage>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimelineGenerator.class);
 

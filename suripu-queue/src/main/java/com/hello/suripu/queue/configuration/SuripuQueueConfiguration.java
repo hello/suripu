@@ -21,15 +21,12 @@ public class SuripuQueueConfiguration extends Configuration {
     @NotNull
     @JsonProperty("common_db")
     private DatabaseConfiguration commonDB = new DatabaseConfiguration();
+    public DatabaseConfiguration getCommonDB() { return commonDB; }
 
-    public DatabaseConfiguration getCommonDB() {
-        return commonDB;
-    }
     @Valid
     @NotNull
     @JsonProperty("sensors_db")
     private DatabaseConfiguration sensorDB = new DatabaseConfiguration();
-
     public DatabaseConfiguration getSensorDB() {
         return sensorDB;
     }
@@ -38,7 +35,6 @@ public class SuripuQueueConfiguration extends Configuration {
     @NotNull
     @JsonProperty("metrics_enabled")
     private Boolean metricsEnabled;
-
     public Boolean getMetricsEnabled() {
         return metricsEnabled;
     }
@@ -55,7 +51,6 @@ public class SuripuQueueConfiguration extends Configuration {
     @NotNull
     @JsonProperty("graphite")
     private GraphiteConfiguration graphite;
-
     public GraphiteConfiguration getGraphite() {
         return graphite;
     }
@@ -96,15 +91,26 @@ public class SuripuQueueConfiguration extends Configuration {
     @JsonProperty("num_queue_consumer_threads")
     @Max(10)
     @Min(1)
-    private int numConsumerThreads = 5;
+    private int numConsumerThreads = 2;
     public int getNumConsumerThreads() { return this.numConsumerThreads; }
+
+    @JsonProperty("num_compute_timeline_threads")
+    @Max(10)
+    @Min(1)
+    private int numTimelineThreads = 5;
+    public int getNumTimelineThreads() { return this.numTimelineThreads; }
 
     @JsonProperty("num_queue_producer_threads")
     @Max(10)
     @Min(1)
-    private int numProducerThreads = 5;
+    private int numProducerThreads = 2;
     public int getNumProducerThreads() { return this.numProducerThreads; }
 
+    @JsonProperty("num_send_message_threads")
+    @Max(10)
+    @Min(1)
+    private int numSendMessageThreads = 5;
+    public int getNumSendMessageThreads() { return this.numSendMessageThreads; }
 
     @JsonProperty("queue_producer_interval_minutes")
     @Max(30)
